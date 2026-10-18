@@ -4,6 +4,7 @@ import type { DimensionStyleDef } from "./DimensionStyleDef";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { StyleEditOperation } from "./StyleEditOperation";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { WallStyleDef } from "./WallStyleDef";
 
 /**
  * Input of `cad.styles.edit` v1.
@@ -65,6 +66,11 @@ dimension?: DimensionStyleDef,
  * Create's and update's leader style (docs/adr/0326 §4).
  */
 leader?: LeaderStyleDef, 
+/**
+ * Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
+ * the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
+ */
+wall?: WallStyleDef, 
 /**
  * Export's styles, by id; absent: every style of the kind.
  */

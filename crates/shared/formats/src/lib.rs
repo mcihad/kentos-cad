@@ -55,5 +55,6 @@ pub mod workbook;
 pub mod xml;
 pub mod xml_scan;
 pub mod zip;
+pub mod walls;
 
 pub use kentos_contracts as contracts;

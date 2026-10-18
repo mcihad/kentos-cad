@@ -126,7 +126,9 @@ enum Kind {
 fn kind_of(s: &Shape) -> Option<Kind> {
     Some(match s {
         Shape::Point { .. } | Shape::Insert { .. } => Kind::Point,
-        Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } => Kind::Line,
+        Shape::Line { .. } | Shape::Polyline { .. } | Shape::Arc { .. } | Shape::Wall { .. } => {
+            Kind::Line
+        }
         Shape::Spline { closed, .. } | Shape::Nurbs { closed, .. } => {
             if *closed {
                 Kind::Area

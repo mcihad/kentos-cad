@@ -269,6 +269,17 @@ PARAMETER_FUNCTIONS = {"sin": 1, "cos": 1, "tan": 1, "asin": 1, "acos": 1, "atan
 LITERAL_UNITS = ("mm", "cm", "km", "m", "ft", "in", "deg", "grad", "rad")
 # Schema 74: schema 73 and the settings' `sources`: layers bound to a table of a file (docs/adr/0503).
 SCHEMA_WITH_SOURCES = 74
+# Schema 75: schema 74, the `wall` kind (its path, width, justification, offset, style, components, ends, fill, height
+# and architectural information) and the settings' `wallStyles` and `arch` (docs/adr/0339).
+SCHEMA_WITH_WALLS = 75
+# A wall's bounds (kentos_contracts::arch).
+WALL_MAX_POINTS = 10_000
+WALL_MAX_COMPONENTS = 16
+WALL_MAX_WIDTH = 100.0
+WALL_DETAILS = ("schematic", "standard", "detailed")
+ARCH_PHASES = ("existing", "demolish", "new", "temporary")
+ARCH_STATUSES = ("proposed", "approved", "underConstruction", "built")
+ARCH_DISCIPLINES = ("architecture", "structure", "mechanical", "electrical", "plumbing", "landscape", "interior")
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -451,7 +462,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2576,6 +2587,7 @@ class _Schema:
         self.forms = version >= SCHEMA_WITH_FORMS
         self.constraints = version >= SCHEMA_WITH_CONSTRAINTS
         self.sources = version >= SCHEMA_WITH_SOURCES
+        self.walls = version >= SCHEMA_WITH_WALLS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3113,6 +3125,7 @@ class _Schema:
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
                 **({"sources": (self.sources_, False)} if self.sources else {}),
+                **({"wallStyles": (self.wall_styles_, False), "arch": (self.arch_, False)} if self.walls else {}),
                 **({"forms": (self.forms_, False), "relations": (self.relations_, False),
                     "domains": (self.domains_, False)} if self.forms else {}),
                 **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
@@ -4761,7 +4774,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4780,6 +4793,10 @@ class _Schema:
         if kind == "pointcloud" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında nokta bulutu olamaz")
+        # Nor a wall (docs/adr/0339 §4).
+        if kind == "wall" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında duvar olamaz")
         # Nor a record without a geometry (docs/adr/0410 §2).
         if kind == "record" and self.inside is not None:
             self.path.append(kind)
@@ -4799,6 +4816,8 @@ class _Schema:
                 self.polyline_extras_rules(fields)
             if kind == "nurbs":
                 self.nurbs_rules(fields)
+            if kind == "wall":
+                self.wall_rules(fields)
             self.look_rules(fields)
             if "wipeout" in fields and kind != "polygon":
                 self.path.append("wipeout")
@@ -6233,6 +6252,143 @@ class _Schema:
                 self.fail("bad_value", f"“{st['name']}” kılavuz stilinin not yüksekliği {st['height']:g} mm; sıfırdan büyük, en çok 1000 olmalı")
         return styles
 
+    # ── Walls (schema 75, docs/adr/0339) ──────────────────────────────────────────────────────────────────────────
+
+    def wall_colour(self, what):
+        def read(v):
+            c = self.text(v)
+            if not COLOUR.fullmatch(c):
+                self.fail("bad_value", f"{what} “{c}”; #RRGGBB olmalı")
+            return c
+        return read
+
+    def wall_component(self, v):
+        def weight(v):
+            w = self.float(v)
+            if not 0.0 <= w <= MAX_LINE_WEIGHT:
+                self.fail("bad_value", f"bileşenin çizgi kalınlığı {w:g}; 0 ile 100 mm arasında olmalı")
+            return w
+        edge = self.fields({"color": (self.wall_colour("bileşenin çizgi rengi"), False), "lineWeight": (weight, False),
+                            "lineType": (self.enum(("continuous", "dashed", "dashdot", "dotted")), False)})
+        hatch = self.fields({"pattern": (self.text, True), "scale": (self.float, True), "angle": (self.float, True),
+                             "color": (self.wall_colour("bileşenin tarama rengi"), False)})
+        return self.fields({"name": (self.text, True), "material": (self.text, False), "thickness": (self.float, False),
+                            "edge": (edge, False), "hatch": (hatch, False), "detail": (self.enum(WALL_DETAILS), True)})(v)
+
+    def wall_components_rules(self, comps, width, owner):
+        """A wall's (or a style's, `width` None) components: names, thicknesses above 0, at most one without (it takes
+        the rest), hatches' scales above 0; with a width, the given ones leave the rest room, or add up to it."""
+        if len(comps) > WALL_MAX_COMPONENTS:
+            self.fail("bad_value", f"{owner} en çok {WALL_MAX_COMPONENTS} bileşeni olur; {len(comps)} var")
+        rest = [c for c in comps if "thickness" not in c]
+        if len(rest) > 1:
+            self.fail("bad_value", f"{owner} kalınlığı verilmeyen iki bileşeni var; genişliğin kalanını yalnız biri alır")
+        for c in comps:
+            if not c["name"].strip():
+                self.fail("bad_value", f"{owner} bir bileşeninin adı boş")
+            t = c.get("thickness")
+            if t is not None and not (math.isfinite(t) and 0 < t <= WALL_MAX_WIDTH):
+                self.fail("bad_value", f"“{c['name']}” bileşeninin kalınlığı {t:g}; sıfırdan büyük, en çok {WALL_MAX_WIDTH:g} m olmalı")
+            h = c.get("hatch")
+            if h is not None and (not h["pattern"].strip() or not (math.isfinite(h["scale"]) and h["scale"] > 0) or not math.isfinite(h["angle"])):
+                self.fail("bad_value", f"“{c['name']}” bileşeninin taraması: desen dolu, ölçek sıfırdan büyük, açı sonlu olmalı")
+        if width is None or not comps:
+            return
+        fixed = sum(c["thickness"] for c in comps if "thickness" in c)
+        slack = 1e-9 * max(1.0, width)
+        if rest and not fixed < width - slack:
+            self.fail("bad_value", f"{owner} genişliği {width:g} m; kalınlığı belli bileşenler {fixed:g} m, kalana yer kalmıyor")
+        if not rest and abs(fixed - width) > slack:
+            self.fail("bad_value", f"{owner} genişliği {width:g} m, bileşenlerinin toplamı {fixed:g} m; eşit olmalı")
+
+    def wall_rules(self, w):
+        """A wall (schema 75, docs/adr/0339 §1): two vertices or more (a closed one three, or two with an arc), as many
+        bulges as vertices with an open wall's last 0, no edge of no length, a width above 0 and at most 100 m, an offset
+        written only when not 0, its components fitting its width, a height above 0."""
+        pts, n = w["pts"], len(w["pts"])
+        closed = w.get("closed", False)
+        if not 2 <= n <= WALL_MAX_POINTS:
+            self.fail("bad_value", f"duvarın yolunun {n} noktası var; en az 2, en çok {WALL_MAX_POINTS}")
+        bulges = w.get("bulges")
+        if bulges is not None:
+            if len(bulges) != n:
+                self.fail("bad_value", f"duvarın {n} noktası, {len(bulges)} bükümü var; eşit olmalı")
+            if not closed and bulges[-1] != 0:
+                self.fail("bad_value", "açık duvarın son bükümü 0 olmalı")
+        for i in range(n if closed else n - 1):
+            a, b = pts[i], pts[(i + 1) % n]
+            if a["x"] == b["x"] and a["y"] == b["y"]:
+                self.fail("bad_value", f"duvarın {i + 1}. ve {(i + 1) % n + 1}. noktası aynı yerde")
+        if closed and n < 3 and not any(x != 0 for x in (bulges or [])):
+            self.fail("bad_value", "kapalı duvar düz kenarlarla en az üç noktadır")
+        if not (math.isfinite(w["width"]) and 0 < w["width"] <= WALL_MAX_WIDTH):
+            self.fail("bad_value", f"duvarın genişliği {w['width']:g}; sıfırdan büyük, en çok {WALL_MAX_WIDTH:g} m olmalı")
+        if "offset" in w and (w["offset"] == 0 or not abs(w["offset"]) <= 1000):
+            self.fail("bad_value", "duvarın ötelemesi 0 iken yazılmaz, en çok 1000 m")
+        if "components" in w and not w["components"]:
+            self.fail("bad_value", "boş bileşen listesi yazılmaz")
+        self.wall_components_rules(w.get("components", []), w["width"], "duvarın")
+        if "height" in w and not w["height"] > 0:
+            self.fail("bad_value", f"duvarın yüksekliği {w['height']:g}; sıfırdan büyük olmalı")
+        if "arch" in w and not w["arch"]:
+            self.fail("bad_value", "boş mimari bilgi yazılmaz")
+        if w.get("arch", {}).get("level", "x").strip() == "":
+            self.fail("bad_value", "duvarın katı boş olamaz")
+
+    def arch_info(self, v):
+        return self.fields({"level": (self.text, False), "phase": (self.enum(ARCH_PHASES), False),
+                            "status": (self.enum(ARCH_STATUSES), False), "discipline": (self.enum(ARCH_DISCIPLINES), False)})(v)
+
+    def wall_caps(self, v):
+        if self.text(v) != "open":
+            self.fail("bad_value", "uçlar kapalıyken yazılmaz; alan yalnız open iken yazılır")
+        return "open"
+
+    def wall_styles_(self, v):
+        """The project's wall styles (docs/adr/0339 §2): ids and names one of a kind, each's components holding."""
+        styles = self.array(self.fields({"id": (self.text, True), "name": (self.text, True),
+                                         "components": (self.array(self.wall_component), True),
+                                         "caps": (self.wall_caps, False), "fill": (self.wall_colour("duvar stilinin dolgu rengi"), False),
+                                         "width": (self.float, False)}))(v)
+        if not styles:
+            self.fail("bad_value", "boş duvar stili listesi yazılmaz")
+        ids, names = set(), set()
+        for st in styles:
+            if st["id"] in ids or not st["id"]:
+                self.fail("bad_value", f"duvar stilinin kimliği “{st['id']}” boş ya da iki kez var")
+            ids.add(st["id"])
+            name = st["name"]
+            if not name.strip() or name != name.strip() or name.lower() in names or name.lower() == "standart":
+                self.fail("bad_value", f"duvar stilinin adı “{name}” boş, kenarı boşluklu, Standart ya da iki kez var")
+            names.add(name.lower())
+            self.wall_components_rules(st["components"], None, f"“{name}” duvar stilinin")
+            if "width" in st:
+                fixed = sum(c["thickness"] for c in st["components"] if "thickness" in c)
+                if st["components"] and all("thickness" in c for c in st["components"]):
+                    self.fail("bad_value", f"“{name}” duvar stilinin genişliği bileşenlerinin toplamıdır, ayrıca yazılmaz")
+                if not fixed < st["width"] <= WALL_MAX_WIDTH:
+                    self.fail("bad_value", f"“{name}” duvar stilinin genişliği {st['width']:g} m; {fixed:g} m'den büyük olmalı")
+        return styles
+
+    def arch_(self, v):
+        """The project's levels and the walls' detail (docs/adr/0339 §3); an empty one is not written."""
+        a = self.fields({"levels": (self.array(self.fields({"id": (self.text, True), "name": (self.text, True),
+                                                            "elevation": (self.float, True), "height": (self.float, False)})), False),
+                         "detail": (self.enum(WALL_DETAILS), False)})(v)
+        if not a:
+            self.fail("bad_value", "boş mimari ayar yazılmaz")
+        ids, names = set(), set()
+        for lv in a.get("levels", []):
+            if not lv["id"] or lv["id"] in ids or not lv["name"].strip() or lv["name"].lower() in names or lv["name"].lower() == "standart":
+                self.fail("bad_value", f"kat “{lv['name']}”: kimliği ve adı dolu ve tek olmalı")
+            ids.add(lv["id"])
+            names.add(lv["name"].lower())
+            if "height" in lv and not lv["height"] > 0:
+                self.fail("bad_value", f"“{lv['name']}” katının yüksekliği sıfırdan büyük olmalı")
+        if "levels" in a and not a["levels"]:
+            self.fail("bad_value", "boş kat listesi yazılmaz")
+        return a
+
     def leader_points(self, v):
         pts = self.array(self.point)(v)
         if len(pts) < 2:
@@ -6782,6 +6938,21 @@ ENTITY_KINDS = {
     },
     # Schema 60 (docs/adr/0410 §2): a record without a geometry, no fields of its own.
     "record": lambda s: {},
+    # Schema 75 (docs/adr/0339 §4): a wall; `closed` only when true, `caps` only when open.
+    "wall": lambda s: {
+        "pts": (s.array(s.point), True),
+        "bulges": (s.array(s.float), False),
+        "closed": (s.only_true, False),
+        "width": (s.float, True),
+        "justify": (s.enum(("left", "center", "right")), True),
+        "offset": (s.float, False),
+        "style": (s.text, False),
+        "components": (s.array(s.wall_component), False),
+        "caps": (s.wall_caps, False),
+        "fill": (s.wall_colour("duvarın dolgu rengi"), False),
+        "height": (s.float, False),
+        "arch": (s.arch_info, False),
+    },
     # Schema 8 (docs/adr/0146): two vertices or more, a positive height, a note that is not empty, `mask` only when true.
     # Schema 30 (docs/adr/0205 §7): AutoCAD's arrowheads, the arrowhead's size times the note's height.
     "leader": lambda s: {

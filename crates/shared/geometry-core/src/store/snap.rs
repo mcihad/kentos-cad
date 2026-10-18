@@ -408,6 +408,12 @@ impl Store {
             {
                 ch.consider(SnapKind::Insertion, *q, id);
             }
+            // A wall's path's vertices: where the next wall goes on (docs/adr/0339 §1).
+            if let Shape::Wall { pts, .. } = &it.shape {
+                for q in pts {
+                    ch.consider(SnapKind::Endpoint, *q, id);
+                }
+            }
             for e in it.shapes() {
                 shape_snaps(&mut ch, &mut nearby, e, id, from, &reach);
             }
@@ -1015,8 +1021,8 @@ fn shape_snaps(
         }
         // Its boundary is snapped through the outline object itself.
         Shape::Hatch { .. } => return,
-        // A record has nothing to snap to (docs/adr/0410).
-        Shape::Record {} => {}
+        // A record has nothing to snap to (docs/adr/0410); a wall is snapped through its pieces (docs/adr/0339).
+        Shape::Record {} | Shape::Wall { .. } => {}
         // The part shown's corners and its sides' middles (docs/adr/0192 §4); a raster's frame's
         // (docs/adr/0204 §7).
         Shape::Image { .. } | Shape::Raster { .. } | Shape::PointCloud { .. } => {

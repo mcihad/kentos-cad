@@ -679,6 +679,9 @@ pub enum EntityGeometry {
     /// A point cloud (docs/adr/0207 §3): its files (each embedded, linked or
     /// an address), their points and bounds, the system, its look and opacity.
     PointCloud(crate::PointCloudFields),
+    /// A wall (docs/adr/0339 §1): its path (the base line, bulges one per vertex), width, justification, base line
+    /// offset, components from its left face, ends, schematic fill, height and architectural information.
+    Wall(crate::WallFields),
 }
 
 impl EntityGeometry {

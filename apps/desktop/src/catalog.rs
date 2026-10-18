@@ -816,6 +816,25 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
             size: Size::Large,
         });
     }
+    // Seçim süzgeci ▾ holds the kinds the desktop added after the web's (docs/adr/0339 §6: Duvar).
+    for item in tabs
+        .iter_mut()
+        .flat_map(|tab| tab.panels.iter_mut())
+        .flat_map(|panel| panel.items.iter_mut())
+    {
+        if let Item::Menu {
+            label: "Seçim süzgeci",
+            blocks,
+            ..
+        } = item
+            && let Some((_, kinds)) = blocks
+                .iter_mut()
+                .find(|(title, _)| *title == "Seçilebilir türler")
+            && !kinds.contains(&"edit.selectFilter.wall")
+        {
+            kinds.push("edit.selectFilter.wall");
+        }
+    }
 }
 
 /// Where a command stands, from the desktop's point of view.
@@ -1236,7 +1255,7 @@ impl Catalog {
         let mut tabs: Vec<Tab> = raw.layout.ribbon.into_iter().map(tab).collect();
         place_desktop_commands(&mut tabs);
         // The ribbon a project not asked its type shows is CBS's.
-        place_additions("gis", &mut tabs, &added.ribbon);
+        place_additions("gis", &mut tabs, &added.tabs, &added.ribbon);
         place_methods(&mut tabs, &methods);
         let mode_tabs = raw
             .layout
@@ -1246,7 +1265,7 @@ impl Catalog {
                 let mode = serde_json::from_value(serde_json::Value::String(name.clone())).ok()?;
                 let mut tabs: Vec<Tab> = tabs.into_iter().map(tab).collect();
                 place_desktop_commands(&mut tabs);
-                place_additions(&name, &mut tabs, &added.ribbon);
+                place_additions(&name, &mut tabs, &added.tabs, &added.ribbon);
                 place_methods(&mut tabs, &methods);
                 Some((mode, tabs))
             })
@@ -1411,7 +1430,29 @@ fn added_command(c: &kentos_contracts::AddedCommand) -> Command {
 
 /// Puts the additions' ribbon places of a project type (`cad`, `gis`) in its tabs: a new panel after
 /// the one it names (else last), or buttons at the end of a panel the tab has.
-fn place_additions(mode: &str, tabs: &mut [Tab], places: &[kentos_contracts::RibbonAddition]) {
+fn place_additions(
+    mode: &str,
+    tabs: &mut Vec<Tab>,
+    added: &[kentos_contracts::AddedTab],
+    places: &[kentos_contracts::RibbonAddition],
+) {
+    // The file's own tabs first, empty, after the tab named (docs/adr/0339 §6).
+    for t in added.iter().filter(|t| t.modes.iter().any(|m| m == mode)) {
+        let at = t
+            .after
+            .as_deref()
+            .and_then(|a| tabs.iter().position(|x| x.id == a))
+            .map_or(tabs.len(), |i| i + 1);
+        tabs.insert(
+            at,
+            Tab {
+                id: leak(t.id.clone()),
+                label: leak(t.label.clone()),
+                contextual: false,
+                panels: Vec::new(),
+            },
+        );
+    }
     let size = |size: &str| match size {
         "large" => Size::Large,
         "lead" => Size::Lead,

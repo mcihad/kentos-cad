@@ -538,6 +538,9 @@ fn command_tool(c: &Value) -> Value {
             | "cad.entities.reverse"
             // Uzat-kısalt moves an end or cuts the object back (docs/adr/0298).
             | "cad.entities.lengthen"
+            // A wall's fields changed; walls from lines take their sources away (docs/adr/0339 §5).
+            | "cad.walls.edit"
+            | "cad.walls.convert"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

@@ -638,6 +638,13 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   çelişenler işaretli; `cad.parameters.edit` ve `cad.constraints.edit` ile); başka ilişkinin taşıdığı nesneye kısıt konmaz
   (`constraint_governed`, `Document::governed`); DXF'te AutoCAD'in kısıt grupları okunmaz ve KentOS'unkiler yazılmaz, raporda
   söylenir (ADR 0338);
+  duvar: `wall` türü (taban çizgisi, genişlik, hiza, öteleme, stil, bileşenler, uçlar, dolgu, yükseklik, kat ve evre; `.kcad` şema
+  75, `FORMATS_VERSION` 82), yüzler ve bileşen sınırları çekirdekten türer (`geom::wall`), depo onu yerleştirme gibi açar; projenin
+  duvar stilleri (`settings.wallStyles`, KentOS'un beş stili kullanılınca projeye alınır, `cad.styles.edit`'in `wall` türü ve izleyen
+  duvarlar) ve katları (`settings.arch`, `cad.settings.set`'in `arch`'ı); görünüş şematik, standart ya da ayrıntılı (ayardan ya da
+  ölçekten; paftanın haritası kendi ölçeğiyle); `cad.walls.create`, `.convert` (Tek tek, Çiftler) ve `.edit`; Duvar ve Çizgiden duvar
+  araçları, Duvar stilleri, Proje ayarları › Mimari, Öznitelikler'in duvar satırları, seçim süzgecinde Duvar; CAD'de Mimari sekmesi
+  (ek kaydının `tabs`'ı); DXF'e seçilen ayrıntıda düz parçalarla; Python `kentos.cad.walls`, MCP (ADR 0339);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1238,6 +1245,8 @@ python3 scripts/fixtures/constraint_cases.py --check; KENTOS_CONSTRAINTS_OUT=$PW
 cargo test --release -p kentos-geometry-core --lib constraints::tests::timing -- --ignored --nocapture   # 1000 ayrı ve 10 × 10 … 50 × 50 bağlı dikdörtgenin çözüm süreleri (ADR 0334 §6)
 python3 scripts/fixtures/parameter_command_cases.py --check; KENTOS_TEST_DB=required cargo test -p kentos-application --test project_constraints   # cad.parameters.edit'in durumları KentOS kodu olmadan ve veritabanı projesinde kısıtlar (ADR 0336)
 python3 scripts/fixtures/constraint_follow_cases.py --check; KENTOS_SHOTS_ONLY=kisit-izle-onizleme,kisit-izle,kisit-izle-celiski,kisit-gevset cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # düzenlemelerde kısıtların 22 ortak durumu (izleme, çelişki, gevşetme, silme, köşe silme, kırma, kopyalar, dizi, pano) KentOS kodu olmadan ve resimleri, .run/shots/arac-kisit-izle-*, arac-kisit-gevset-* (ADR 0337)
+python3 scripts/fixtures/wall_cases.py --check; python3 scripts/fixtures/wall_command_cases.py --check   # duvarın çizimini (yüzler, bileşen sınırları, alan, üç ayrıntının parçaları) ve cad.walls.create, .convert, .edit durumlarını KentOS kodu olmadan denetle; durumlar fixtures/walls/v1/cases.json ve fixtures/commands/v1/cad.walls.*.json (ADR 0339)
+KENTOS_SHOTS_ONLY=duvar-serit,duvar-ciz,duvar-yazildi,duvar-ayrintili,duvar-sematik,duvar-oznitelikler,duvar-stilleri,duvar-cizgiden,duvar-katlar cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; KENTOS_TRACES_ONLY=wall-tool cargo test -p kentos-desktop every_trace_passes   # duvarın resimleri (.run/shots/arac-duvar-*) ve Duvar aracının izi (ADR 0339)
 cargo test -p kentos-interaction --test all constraint_marks; KENTOS_SHOTS_ONLY=kisit-isaretler,kisit-isaret-vurgu,kisit-parametreler,kisit-parametre-celiski cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # kısıt işaretleri, bağlı parçaların vurgusu ve Parametreler penceresi, çelişen değer; resimler .run/shots/arac-kisit-isaret*, arac-kisit-parametre* (ADR 0338)
 python3 scripts/fixtures/constraint_command_cases.py --check   # cad.constraints.edit ve .query durumlarını (yön, parametreler, tutma, retler; çözümler kısıt başvurusundan) KentOS kodu olmadan denetle (ADR 0335)
 KENTOS_SHOTS_ONLY=kisit-paralel,kisit-deger,kisit-genislik,kisit-celiski,kisit-teget cargo test -p kentos-desktop tools_screens -- --ignored --nocapture; KENTOS_TRACES_ONLY=constraint-tool cargo test -p kentos-desktop every_trace_passes   # Kısıt aracının resimleri (.run/shots/arac-kisit-*) ve ortak izi (ADR 0335)

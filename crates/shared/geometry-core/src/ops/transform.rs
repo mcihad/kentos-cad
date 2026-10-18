@@ -639,6 +639,26 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
         }
         // A cloud's place is its files': the commands refuse to move it (docs/adr/0207 §3).
         Shape::PointCloud { .. } | Shape::Record {} => shape.clone(),
+        // Its path maps and its lengths scale; mirrored, the path runs back, so its body stays on the side of its
+        // path it was on, its components in their order (docs/adr/0339 §1).
+        Shape::Wall { pts, bulges, wall } => {
+            let path = crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed);
+            let mapped = transform_shape_with(&path, m, policy);
+            let Shape::Polyline { pts, bulges, .. } = mapped else {
+                return shape.clone();
+            };
+            let (pts, bulges) = if is_reflection(m) {
+                let r = crate::geom::bulge::reverse_bulge_path(&pts, bulges.as_deref(), wall.closed);
+                (r.pts, r.bulges)
+            } else {
+                (pts, bulges)
+            };
+            Shape::Wall {
+                pts,
+                bulges: bulges.filter(|b| crate::geom::bulge::has_bulges(Some(b))),
+                wall: crate::geom::wall::scaled(wall, s),
+            }
+        }
         // Its affine composed: every pixel's corner goes where the drawing goes (docs/adr/0204 §7).
         Shape::Raster { affine, .. } => {
             let mut out = shape.clone();

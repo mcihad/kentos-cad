@@ -48,6 +48,7 @@
 //! | image | n if clip | p, width, height, rotation, clip (2n) if clip, opacity if any | asset if any, file if any |
 //! | raster | width, height, bands, sample (its place in `RASTER_SAMPLES`), srid; the look's kind (`RASTER_RENDERS`), its band count and bands, its stretch (`RASTER_STRETCHES`), its flags (`LOOK_*`); a dataset's dimension count and flags, each dimension's index, value count and flags | affine (6), opacity if any; the look's min, max, azimuth, altitude, z factor and nodata, each if any; each dimension's values | the look's ramp if any, its edges if any, asset if any, file if any, url if any; a dataset's variable, vector, mesh, each dimension's name and units |
 //! | record | | | |
+//! | wall | n, 1 if bulges | pts (2n), bulges (n) if any | the rest of its source (closed, width, justify, offset, style, components, caps, fill, height, arch) as one JSON object (docs/adr/0339) |
 //! | pointcloud | srid, n (files); the look's kind (its place in `CloudRender::ALL`), its flags (`CLOUD_*`), the hidden classes' count and classes; per file its format (its place in `CloudFormat::ALL`) and source (1 asset, 2 file, 4 url) | bounds (6), count, the look's size, opacity if any, the look's min and max if any; per file its count and bounds (6) | the look's ramp if any; per file its asset, file or url |
 //!
 //! A point is two floats, x then y. Flags: 1 colour, 2 label, 4 symbol, 8
@@ -173,7 +174,7 @@ const SOURCE_ASSET: u32 = 1;
 const SOURCE_FILE: u32 = 2;
 const SOURCE_URL: u32 = 4;
 
-pub const KINDS: [&str; 21] = [
+pub const KINDS: [&str; 22] = [
     "point",
     "line",
     "polyline",
@@ -195,6 +196,7 @@ pub const KINDS: [&str; 21] = [
     "pointcloud",
     "nurbs",
     "record",
+    "wall",
 ];
 
 const COLOR: u32 = 1;
@@ -408,6 +410,7 @@ fn kind_index(entity: &Entity) -> u8 {
         Entity::PointCloud(_) => 18,
         Entity::Nurbs(_) => 19,
         Entity::Record(_) => 20,
+        Entity::Wall(_) => 21,
     }
 }
 
@@ -1453,6 +1456,20 @@ impl Packer {
             }
             // A record has no fields of its own (docs/adr/0410 §2).
             Entity::Record(_) => {}
+            // A wall (docs/adr/0339 §4): its path, then the rest of its source as one JSON text.
+            Entity::Wall(kentos_contracts::WallEntity { base: _, wall }) => {
+                self.points(&wall.pts);
+                self.int(u32::from(wall.bulges.is_some()));
+                if let Some(b) = &wall.bulges {
+                    self.numbers(b);
+                }
+                let mut rest = serde_json::to_value(wall).unwrap_or_default();
+                if let Some(o) = rest.as_object_mut() {
+                    o.remove("pts");
+                    o.remove("bulges");
+                }
+                self.text(&rest.to_string());
+            }
             Entity::PointCloud(kentos_contracts::PointCloudEntity {
                 base: _,
                 cloud:
@@ -3248,6 +3265,31 @@ fn geometry(
         }
         // A record: nothing more (docs/adr/0410 §2).
         20 => Entity::Record(kentos_contracts::RecordEntity { base }),
+        // A wall (docs/adr/0339 §4): its path, then the rest of its source as one JSON text; checked as the file's
+        // reader checks it.
+        21 => {
+            let pts = c.points()?;
+            let bulges = if c.int()? & 1 != 0 {
+                Some(c.numbers()?)
+            } else {
+                None
+            };
+            let text = c.text(|| "duvarın alanları".into())?;
+            let mut v: serde_json::Value =
+                serde_json::from_str(&text).map_err(|_| broken("duvarın alanları"))?;
+            if let Some(o) = v.as_object_mut() {
+                o.insert("pts".into(), serde_json::to_value(&pts).unwrap_or_default());
+                if let Some(b) = bulges {
+                    o.insert("bulges".into(), serde_json::to_value(b).unwrap_or_default());
+                }
+            }
+            let wall: kentos_contracts::WallFields =
+                serde_json::from_value(v).map_err(|_| broken("duvarın alanları"))?;
+            if let Some((_, problem)) = wall.problem() {
+                return Err(broken(&problem));
+            }
+            Entity::Wall(kentos_contracts::WallEntity { base, wall })
+        }
         18 => {
             let srid = c.int()?;
             let n = c.usize()?;

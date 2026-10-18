@@ -350,6 +350,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0339 §4): its path, width and components; the drawing's only.
+        Wall(x) => {
+            if in_block {
+                return Err("Blok tanımında duvar olamaz".into());
+            }
+            if let Some((_, why)) = x.wall.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0192 §1): its size, one source, clip and opacity; the drawing's only.
         Image(x) => {
             if in_block {
@@ -627,6 +636,32 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         }
         // A record has none (docs/adr/0410 §5): its row's geometry is null.
         Entity::Record(_) => return None,
+        // Its body (docs/adr/0339 §4): the area its faces close, a closed wall's inside its hole; its source is its definition.
+        Entity::Wall(x) => {
+            let path: Vec<kentos_geometry_core::Vec2> = x
+                .wall
+                .pts
+                .iter()
+                .map(|q| kentos_geometry_core::Vec2::new(q.x, q.y))
+                .collect();
+            let (outer, holes) = kentos_geometry_core::geom::wall::body(
+                &path,
+                x.wall.bulges.as_deref(),
+                &kentos_formats::walls::spec(&x.wall),
+            )
+            .ok()?;
+            let ring = |r: Vec<kentos_geometry_core::Vec2>| {
+                let mut out: Vec<_> = r
+                    .into_iter()
+                    .map(|q| p(kentos_contracts::Vec2 { x: q.x, y: q.y }))
+                    .collect();
+                out.extend(out.first().copied());
+                out
+            };
+            let mut rings = vec![ring(outer)];
+            rings.extend(holes.into_iter().flatten().map(ring));
+            Geometry::Polygon(rings)
+        }
         // Its plan's rectangle (docs/adr/0207 §11): its points are its files'.
         Entity::PointCloud(x) => {
             let [x1, y1, x2, y2] = x.cloud.rect();

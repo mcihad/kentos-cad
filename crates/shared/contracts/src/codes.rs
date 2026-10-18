@@ -1162,6 +1162,28 @@ codes! {
     /// Constraints a copy did not take: naming an object not copied, or not met by the copy (docs/adr/0337 §3).
     CONSTRAINTS_NOT_COPIED = "constraints_not_copied", Warning, false, "Bazı kısıtlar kopyalanmadı: kopyalanmayan bir nesneyi anıyor ya da kopya ona uymuyor.";
 
+    // ── Walls (docs/adr/0339) ───────────────────────────────────────────
+    /// A wall's path, width, offset or components that make no wall.
+    INVALID_WALL = "invalid_wall", Failed, false, "Duvarın yolu, genişliği, ötelemesi ya da bileşenleri bir duvar tanımlamıyor: yol en az iki ayrı nokta, genişlik sıfırdan büyük ve en çok 100 m, bileşenler genişliğe sığar.";
+    /// A face that cannot be drawn: an arc tighter than the wall.
+    WALL_COLLAPSES = "wall_collapses", Failed, false, "Duvarın bir yüzü çizilemiyor: bir yayın yarıçapı o yüzün yoldan uzaklığından küçük. Duvarı inceltin ya da yayı büyütün.";
+    /// A level the project does not have.
+    LEVEL_NOT_FOUND = "level_not_found", Failed, false, "Projede bu kimlikte kat yok.";
+    /// Project levels that do not hold: two of one id or name, an elevation or a height.
+    INVALID_ARCH = "invalid_arch", Failed, false, "Katlar geçersiz: iki katın kimliği ya da adı aynı, ya da bir katın kotu ya da yüksekliği sayı değil.";
+    /// A level a wall names, not taken away.
+    LEVEL_IN_USE = "level_in_use", Failed, false, "Katı bir ya da daha çok duvar anıyor; kaldırılmadı. Önce duvarların katını değiştirin.";
+    /// An object that is no wall where a wall is asked.
+    NOT_A_WALL = "not_a_wall", Failed, false, "Nesne duvar değil.";
+    /// An object no wall is drawn along.
+    NOT_A_WALL_PATH = "not_a_wall_path", FailedOrWarning, false, "Nesneden duvar çizilmez: çizgi, çoklu çizgi, kapalı alan, yay ya da daire olmalı; bazılarında uyarı, hiçbirinde ret.";
+    /// Lines with no parallel line at a wall's width across them.
+    WALL_UNPAIRED = "wall_unpaired", FailedOrWarning, false, "Bazı çizgilerin karşısında en büyük genişlik içinde paralel ve örtüşen bir çizgi yok; duvara çevrilmedi. Hiçbiri eşleşmezse ret.";
+    /// A source the wall does not cover whole, kept.
+    SOURCE_KEPT = "source_kept", Warning, false, "Duvarın örtmediği parçası kalan kaynak çizgi silinmedi.";
+    /// A wall among a block definition's objects.
+    WALL_IN_BLOCK = "wall_in_block", Failed, false, "Blok tanımının nesneleri arasında duvar olamaz: blok duvarın kaynağını değil çizimini taşır.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

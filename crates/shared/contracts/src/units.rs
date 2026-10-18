@@ -384,6 +384,19 @@ pub fn scale_entity(e: &mut Entity, s: Scale) {
                 *v = s.apply(*v);
             }
         }
+        // Its path, width, offset, components' thicknesses and height are lengths (docs/adr/0339 §1).
+        Entity::Wall(e) => {
+            let w = &mut e.wall;
+            s.points(&mut w.pts);
+            w.width = s.apply(w.width);
+            w.offset = s.apply(w.offset);
+            for c in &mut w.components {
+                if let Some(t) = &mut c.thickness {
+                    *t = s.apply(*t);
+                }
+            }
+            s.height(&mut w.height);
+        }
         // A cloud's points are in its files, which no unit scales (docs/adr/0207 §11).
         Entity::PointCloud(_) | Entity::Record(_) => {}
     }

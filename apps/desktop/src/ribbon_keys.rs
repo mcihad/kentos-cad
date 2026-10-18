@@ -493,13 +493,28 @@ mod tests {
         app.key_tip(&key).map(|t| t.tip)
     }
 
-    /// The tabs each work mode shows are the web's, in its order (ribbon.json `tabs`).
+    /// The tabs each work mode shows are the web's, in its order (ribbon.json `tabs`); the additions' own tabs
+    /// (catalog/v1/additions.json, docs/adr/0339 §6) the desktop's alone while the web waits (docs/adr/0228).
     #[test]
     fn the_tabs_are_the_web_s_in_every_mode() {
         let fixture: Value = serde_json::from_str(FIXTURE).expect("ribbon.json reads");
+        let added: Value = serde_json::from_str(include_str!("../../../catalog/v1/additions.json"))
+            .expect("additions read");
         for (mode, workspace) in [("cad", Workspace::Cad), ("gis", Workspace::Gis)] {
+            let own: Vec<&str> = added["tabs"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter(|t| {
+                    t["modes"]
+                        .as_array()
+                        .is_some_and(|m| m.iter().any(|m| m == mode))
+                })
+                .filter_map(|t| t["id"].as_str())
+                .collect();
             let ours: Vec<(String, String, bool)> = catalog()
                 .tabs_in(workspace)
+                .filter(|t| !own.contains(&t.id))
                 .map(|t| (t.id.to_owned(), t.label.to_owned(), false))
                 .chain(
                     catalog()

@@ -868,7 +868,7 @@ pub struct DimensionStyleDef {
 
 /// The name rule both tables share: what is wrong with `names` (each its id
 /// and name), in the words of `kind` (“yazı stili”); none when they hold.
-fn names_problem<'a>(
+pub(crate) fn names_problem<'a>(
     kind: &str,
     names: impl Iterator<Item = (&'a str, &'a str)>,
 ) -> Option<String> {

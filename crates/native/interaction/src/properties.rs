@@ -66,6 +66,20 @@ pub fn set_parameters(
     ))
 }
 
+/// A wall's own fields from Öznitelikler (docs/adr/0339 §6) through `cad.walls.edit`'s `set`, one undo step “Duvarı
+/// düzenle”; what to say: the command's warnings or refusal.
+pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_contracts::WallChange) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::WallsEdit {
+        uids: vec![uid.to_string()],
+        operation: kentos_contracts::WallsOperation::Set(change),
+        expected_revision: None,
+    };
+    said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
 /// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
 pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_contracts::BoundaryForm) -> Vec<String> {

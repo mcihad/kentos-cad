@@ -139,6 +139,8 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         })
         .collect();
     DxfWriteInput {
+        // The project's own detail for its walls (docs/adr/0339 §4); absent: by the scale.
+        wall_detail: settings.arch.as_ref().and_then(|a| a.detail),
         uids,
         annotations: Default::default(),
         notes,

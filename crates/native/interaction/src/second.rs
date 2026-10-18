@@ -219,6 +219,8 @@ mod tests {
     fn settings(srid: u32, second: Option<u32>) -> ProjectSettings {
         ProjectSettings {
             leader_styles: Vec::new(),
+            wall_styles: Vec::new(),
+            arch: None,
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,

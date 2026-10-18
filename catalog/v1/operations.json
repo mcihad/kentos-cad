@@ -1511,6 +1511,34 @@
         "cad.relations.edit"
       ],
       "note": "İlişkiler projenin ayarıdır, cad.relations.edit ile yazılır; silme politikasını belge izler (ADR 0405)."
+    },
+    "tool.wall": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.create"
+      ],
+      "note": "Yol, genişlik, hiza, öteleme ve stil komuta verilir; yüzler ve bileşenler komutun hesabıdır, önizleme planından (ADR 0339 §5, §6)."
+    },
+    "tool.wallFromLines": {
+      "level": "semantic",
+      "via": [
+        "cad.walls.convert"
+      ],
+      "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5)."
+    },
+    "arch.wallStyles": {
+      "level": "semantic",
+      "via": [
+        "cad.styles.edit"
+      ],
+      "note": "Her stil kind wall'la oluşturulur, güncellenir ya da silinir; izleyen duvarlar aynı adımda (ADR 0339 §2)."
+    },
+    "arch.settings": {
+      "level": "semantic",
+      "via": [
+        "cad.settings.set"
+      ],
+      "note": "Katlar ve duvarların ayrıntısı arch anahtarıyla; duvarın andığı kat kaldırılmaz (ADR 0339 §3)."
     }
   },
   "tools": {

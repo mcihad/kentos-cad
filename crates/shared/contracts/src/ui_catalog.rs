@@ -34,6 +34,11 @@ pub struct CatalogAdditions {
     /// inventory's `icons`' form (the stroke, 1.4 units, rounded, is the drawer's).
     #[serde(default)]
     pub icons: BTreeMap<String, String>,
+    /// New tabs of a type's ribbon (docs/adr/0339 §6: CAD's Mimari), each after a tab it has; their panels come in
+    /// `ribbon` as any other tab's.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<AddedTab>>", optional))]
+    pub tabs: Vec<AddedTab>,
     #[serde(default)]
     pub ribbon: Vec<RibbonAddition>,
     /// A tool's methods added to its ribbon button (docs/adr/0287): its split's
@@ -113,6 +118,21 @@ pub enum AddedStatus {
     Pending,
 }
 
+/// A new tab of a ribbon: its id, its name and the tab it goes after (none: last).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct AddedTab {
+    /// The project types whose ribbons take it (`cad`, `gis`).
+    pub modes: Vec<String>,
+    pub id: String,
+    pub label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub after: Option<String>,
+}
+
 /// A place in a ribbon: a new panel of a tab (after a panel, else last), or
 /// commands added to the end of a panel the tab has (`into`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -168,6 +188,15 @@ pub struct KnownCatalog<'a> {
 }
 
 impl CatalogAdditions {
+    /// Whether a tab of `mode`'s ribbon is one of the file's own.
+    fn added_tab(&self, mode: &str, tab: &str) -> bool {
+        self.tabs
+            .iter()
+            .any(|t| t.id == tab && t.modes.iter().any(|m| m == mode))
+    }
+}
+
+impl CatalogAdditions {
     /// What is wrong with the file against the catalog it adds to; none when it holds.
     pub fn problem(&self, known: &KnownCatalog<'_>) -> Option<String> {
         if self.format != CATALOG_ADDITIONS_FORMAT || self.version != CATALOG_ADDITIONS_VERSION {
@@ -217,6 +246,37 @@ impl CatalogAdditions {
             }
         }
         let command = |id: &str| (known.command)(id) || self.commands.iter().any(|c| c.id == id);
+        for (i, t) in self.tabs.iter().enumerate() {
+            let at = format!("{}. sekme", i + 1);
+            if t.id.trim().is_empty() || t.label.trim().is_empty() {
+                return Some(format!("{at}: kimliği ya da adı boş"));
+            }
+            if t.modes.is_empty() {
+                return Some(format!("{at}: proje türü yok"));
+            }
+            for mode in &t.modes {
+                if !CATALOG_MODES.contains(&mode.as_str()) {
+                    return Some(format!("{at}: “{mode}” türü yok; cad ya da gis olmalı"));
+                }
+                if (known.panels)(mode, &t.id).is_some()
+                    || self.tabs[..i]
+                        .iter()
+                        .any(|o| o.id == t.id && o.modes.contains(mode))
+                {
+                    return Some(format!(
+                        "{at}: {mode} şeridinde “{}” sekmesi zaten var",
+                        t.id
+                    ));
+                }
+                if let Some(after) = t
+                    .after
+                    .as_deref()
+                    .filter(|a| (known.panels)(mode, a).is_none() && !self.added_tab(mode, a))
+                {
+                    return Some(format!("{at}: {mode} şeridinde “{after}” sekmesi yok"));
+                }
+            }
+        }
         let mut added: Vec<(String, String, String)> = Vec::new();
         for (i, r) in self.ribbon.iter().enumerate() {
             let at = format!("şeridin {}. eki", i + 1);
@@ -249,7 +309,8 @@ impl CatalogAdditions {
                 if !CATALOG_MODES.contains(&mode.as_str()) {
                     return Some(format!("{at}: “{mode}” türü yok; cad ya da gis olmalı"));
                 }
-                let Some(mut panels) = (known.panels)(mode, &r.tab) else {
+                let own = self.added_tab(mode, &r.tab).then(Vec::new);
+                let Some(mut panels) = (known.panels)(mode, &r.tab).or(own) else {
                     return Some(format!("{at}: {mode} şeridinde “{}” sekmesi yok", r.tab));
                 };
                 panels.extend(
@@ -362,6 +423,7 @@ mod tests {
             )]
             .into_iter()
             .collect(),
+            tabs: Vec::new(),
             ribbon: vec![RibbonAddition {
                 modes: vec!["gis".into()],
                 tab: "map".into(),
@@ -412,6 +474,33 @@ mod tests {
             icon: &icon,
             panels: &panels,
         })
+    }
+
+    /// A tab of its own (docs/adr/0339 §6): after a tab the ribbon has, its panels then as any tab's.
+    #[test]
+    fn a_tab_of_its_own_takes_panels() {
+        let mut f = file();
+        f.tabs.push(AddedTab {
+            modes: vec!["gis".into()],
+            id: "arch".into(),
+            label: "Mimari".into(),
+            after: Some("map".into()),
+        });
+        f.ribbon[0].tab = "arch".into();
+        f.ribbon[0].after = None;
+        assert_eq!(check(&f), None);
+        let mut g = f.clone();
+        g.tabs[0].id = "map".into();
+        assert!(check(&g).unwrap().contains("sekmesi zaten var"));
+        let mut g = f.clone();
+        g.tabs[0].after = Some("raster".into());
+        assert!(check(&g).unwrap().contains("“raster” sekmesi yok"));
+        let mut g = f;
+        g.tabs[0].modes = vec!["cad".into()];
+        assert!(
+            check(&g).unwrap().contains("sekmesi yok"),
+            "a cad tab is no gis ribbon's"
+        );
     }
 
     #[test]

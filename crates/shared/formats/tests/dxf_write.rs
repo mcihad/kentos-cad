@@ -520,6 +520,7 @@ fn input(entities: Vec<Entity>) -> DxfWriteInput {
         })
         .collect();
     DxfWriteInput {
+        wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -1032,6 +1033,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
         }),
     ];
     let (text, report) = write(&DxfWriteInput {
+        wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -1094,6 +1096,7 @@ fn names_and_attributes_that_dxf_cannot_hold_as_they_are() {
 #[test]
 fn nothing_to_write_is_still_a_file_autocad_opens() {
     let (text, report) = write(&DxfWriteInput {
+        wall_detail: None,
         uids: Default::default(),
         annotations: Default::default(),
         notes: Vec::new(),
@@ -3450,4 +3453,65 @@ fn a_hatch_boundary_goes_out_and_comes_back_exact() {
             }
         }
     }
+}
+
+/// A wall (docs/adr/0339 §4): DXF has no wall, so it goes out as the plain pieces the drawing shows at the detail
+/// asked for: at standard, the faces, the caps and its component's ANSI31 hatch; at schematic, its fill; the report
+/// says so.
+#[test]
+fn a_wall_goes_out_as_its_pieces_at_its_detail() {
+    use kentos_contracts::{ComponentHatch, WallComponent, WallDetail, WallEntity, WallFields};
+    let o = tm(0.0, 0.0);
+    let component = |name: &str, thickness: Option<f64>, hatch: Option<&str>| WallComponent {
+        name: name.into(),
+        material: None,
+        thickness,
+        edge: None,
+        hatch: hatch.map(|p| ComponentHatch {
+            pattern: p.into(),
+            scale: 1.0,
+            angle: 0.0,
+            color: None,
+        }),
+        detail: WallDetail::Standard,
+    };
+    let wall = Entity::Wall(WallEntity {
+        base: base("yapi"),
+        wall: WallFields {
+            pts: vec![o, v(o.x + 6.0, o.y), v(o.x + 6.0, o.y + 4.0)],
+            bulges: None,
+            closed: false,
+            width: 0.25,
+            justify: Default::default(),
+            offset: 0.0,
+            style: None,
+            components: vec![component("Tuğla", None, Some("ANSI31")), component("Sıva", Some(0.03), None)],
+            caps: Default::default(),
+            fill: Some("#5A5A5A".into()),
+            height: None,
+            arch: Default::default(),
+        },
+    });
+    let kinds = |detail: WallDetail| {
+        let mut i = input(vec![wall.clone()]);
+        i.wall_detail = Some(detail);
+        let (text, report) = write(&i);
+        assert!(report.notes.iter().any(|n| n.what == "Duvar"), "{:?}", report.notes);
+        let r = read(&text);
+        let mut kinds: Vec<String> = r
+            .entities
+            .iter()
+            .map(|e| serde_json::to_value(e).unwrap()["kind"].as_str().unwrap().to_owned())
+            .collect();
+        kinds.sort();
+        (r, kinds)
+    };
+    let (r, standard) = kinds(WallDetail::Standard);
+    assert!(standard.iter().any(|k| k == "hatch"), "{standard:?}");
+    assert!(standard.iter().filter(|k| *k == "polyline" || *k == "line").count() >= 4, "{standard:?}");
+    let ansi = r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31")));
+    assert!(ansi, "the brick's hatch");
+    let (r, schematic) = kinds(WallDetail::Schematic);
+    assert!(r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.kind == HatchPatternType::Solid)), "{schematic:?}");
+    assert!(!r.entities.iter().any(|e| matches!(e, Entity::Hatch(h) if h.pattern.name.as_deref() == Some("ANSI31"))));
 }

@@ -68,6 +68,8 @@ use crate::Vec2;
 #[derive(Default)]
 pub struct Spatial {
     store: Store,
+    /// The scale a sheet's map draws the walls at, none: the drawing's (docs/adr/0339 §4).
+    wall_scale: Option<f64>,
     /// The document's changes the store has taken.
     mark: ChangeMark,
     /// The document's revision at the last sync: nothing to do while it holds.
@@ -122,6 +124,27 @@ impl Spatial {
         spatial
     }
 
+    /// Draws the walls as a sheet's map at 1:`scale` does (docs/adr/0339 §4), none: at the drawing's scale. Set
+    /// before [`Spatial::reload`].
+    pub fn set_wall_scale(&mut self, scale: Option<f64>) {
+        self.wall_scale = scale;
+    }
+
+    /// Whether a sheet's map at 1:`scale` draws `doc`'s walls otherwise than the drawing does (docs/adr/0339 §4):
+    /// then the map wants a store of its own.
+    pub fn walls_differ_at(doc: &Document, scale: f64) -> bool {
+        doc.has_walls()
+            && kentos_native_application::walls::view_at(doc.settings(), scale)
+                != kentos_native_application::walls::view_of(doc.settings())
+    }
+
+    fn wall_view_of(&self, doc: &Document) -> kentos_geometry_core::geom::wall::View {
+        match self.wall_scale {
+            Some(scale) => kentos_native_application::walls::view_at(doc.settings(), scale),
+            None => kentos_native_application::walls::view_of(doc.settings()),
+        }
+    }
+
     /// Reads every object of `doc` again: a drawing was opened, or the
     /// document's journal no longer reaches back to the store's mark.
     pub fn reload(&mut self, doc: &Document) {
@@ -132,6 +155,7 @@ impl Spatial {
         }
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
+        self.store.set_wall_view(self.wall_view_of(doc));
         self.blocks = doc.blocks().to_vec();
         self.store.set_blocks(core_blocks(&self.blocks));
         self.store.put_many(doc.entities().map(record));
@@ -181,6 +205,8 @@ impl Spatial {
         }
         self.store
             .set_font(drawing_font(doc.settings().drawing_font));
+        // Walls at the detail the settings say now (docs/adr/0339 §4); the same view expands none again.
+        self.store.set_wall_view(self.wall_view_of(doc));
         match doc.changes_since(self.mark) {
             Changes::All => self.reload(doc),
             Changes::Slots(slots) => {

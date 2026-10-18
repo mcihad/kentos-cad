@@ -153,6 +153,38 @@
    "tests": 0
   },
   {
+   "id": "arch.settings",
+   "kind": "command",
+   "title": "Katlar",
+   "level": "semantic",
+   "via": [
+    "cad.settings.set"
+   ],
+   "operation": null,
+   "python": "kentos.cad.settings.set",
+   "mcp": "cad.settings.set",
+   "note": "Katlar ve duvarların ayrıntısı arch anahtarıyla; duvarın andığı kat kaldırılmaz (ADR 0339 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "arch.wallStyles",
+   "kind": "command",
+   "title": "Duvar stilleri",
+   "level": "semantic",
+   "via": [
+    "cad.styles.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.styles.edit",
+   "mcp": "cad.styles.edit",
+   "note": "Her stil kind wall'la oluşturulur, güncellenir ya da silinir; izleyen duvarlar aynı adımda (ADR 0339 §2).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "attachment.add",
    "kind": "command",
    "title": "Dosya ekle…",
@@ -10900,6 +10932,38 @@
    "mcp": null,
    "note": "Görünümün dönüşü oturumun kamerasıdır; çizim değişmez. Adlı görünümün dönüşü cad.views.edit ile saklanır (ADR 0285 §2).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wall",
+   "kind": "command",
+   "title": "Duvar",
+   "level": "semantic",
+   "via": [
+    "cad.walls.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.create",
+   "mcp": "cad.walls.create",
+   "note": "Yol, genişlik, hiza, öteleme ve stil komuta verilir; yüzler ve bileşenler komutun hesabıdır, önizleme planından (ADR 0339 §5, §6).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.wallFromLines",
+   "kind": "command",
+   "title": "Çizgiden duvar",
+   "level": "semantic",
+   "via": [
+    "cad.walls.convert"
+   ],
+   "operation": null,
+   "python": "kentos.cad.walls.convert",
+   "mcp": "cad.walls.convert",
+   "note": "Seçilen kaynakların kimlikleri, Tek tek ya da Çiftler, genişlik, hiza, stil ve Kaynağı koru komuta verilir (ADR 0339 §5).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

@@ -1748,6 +1748,8 @@ pub enum Entity {
     Raster(crate::RasterEntity),
     /// A point cloud: LAS, LAZ, COPC or text files (docs/adr/0207).
     PointCloud(crate::PointCloudEntity),
+    /// A wall (docs/adr/0339): its path, width, justification and components; its faces drawn from them.
+    Wall(crate::WallEntity),
     /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
     /// attachments and label; not drawn, picked or snapped to.
     Record(RecordEntity),
@@ -1800,6 +1802,7 @@ impl Entity {
             Entity::Ellipse(e) => &e.base,
             Entity::Spline(e) => &e.base,
             Entity::Nurbs(e) => &e.base,
+            Entity::Wall(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1826,6 +1829,7 @@ impl Entity {
             Entity::Ellipse(e) => &mut e.base,
             Entity::Spline(e) => &mut e.base,
             Entity::Nurbs(e) => &mut e.base,
+            Entity::Wall(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1852,6 +1856,7 @@ impl Entity {
             Entity::Ellipse(_) => "ellipse",
             Entity::Spline(_) => "spline",
             Entity::Nurbs(_) => "nurbs",
+            Entity::Wall(_) => "wall",
             Entity::Xline(_) => "xline",
             Entity::Ray(_) => "ray",
             Entity::Text(_) => "text",

@@ -193,7 +193,9 @@ use crate::layer::LineType;
 ///    columns inside the hatch's option 6 JSON. The web's copy stays 53.
 /// 81 (docs/adr/0410): a record without a geometry: `.kcad` document schema 72's `record` kind; in the typed
 ///    columns kind 20, with no fields of its own. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 81;
+/// 82 (docs/adr/0339): the wall: `.kcad` document schema 75's `wall` kind; in the typed columns kind 21, its path's
+///    points and bulges, the rest of its source as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 82;
 
 // ── Every import ────────────────────────────────────────────────────────
 
@@ -1209,6 +1211,10 @@ pub struct DxfWriteInput {
     #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<BTreeMap<u32, EntityId>>", optional))]
     pub uids: BTreeMap<u32, EntityId>,
+    /// The detail walls are drawn at (docs/adr/0339 §4): the project's own; absent: by the scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wall_detail: Option<crate::WallDetail>,
 }
 
 /// What a dimension or a leader becomes in DXF (docs/adr/0327 §6).

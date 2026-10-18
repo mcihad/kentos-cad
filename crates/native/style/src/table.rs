@@ -31,6 +31,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Ellipse(_) => "Elips",
         Entity::Spline(_) => "Eğri",
         Entity::Nurbs(_) => "NURBS eğrisi",
+        Entity::Wall(_) => "Duvar",
         Entity::Xline(_) => "Yardımcı çizgi",
         Entity::Ray(_) => "Işın",
         Entity::Text(_) => "Yazı",

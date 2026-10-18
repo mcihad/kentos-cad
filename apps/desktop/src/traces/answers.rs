@@ -83,6 +83,7 @@ impl App {
             Dialog::Domains => crate::forms::domains::TITLE.to_owned(),
             Dialog::FormAudit => crate::forms::audit::TITLE.to_owned(),
             Dialog::AnnotationStyles => self.annotation_styles_title().to_owned(),
+            Dialog::WallStyles => crate::wall_styles::TITLE.to_owned(),
             Dialog::LayerPurge => crate::layer_purge::PURGE_TITLE.to_owned(),
             Dialog::TakeFrom => crate::drawing_exchange::TAKE_TITLE.to_owned(),
             Dialog::LayerList => crate::layer_list::LIST_TITLE.to_owned(),

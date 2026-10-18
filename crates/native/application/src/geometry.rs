@@ -756,6 +756,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Raster(r) => core_raster(&r.raster),
         Entity::PointCloud(c) => core_cloud(&c.cloud),
         Entity::Record(_) => Shape::Record {},
+        Entity::Wall(w) => kentos_formats::walls::core_wall(&w.wall),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1291,6 +1292,7 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         (Entity::Image(e), s @ Shape::Image { .. }) => e.image = contract_image(s)?,
         (Entity::Raster(e), s @ Shape::Raster { .. }) => e.raster = contract_raster(s)?,
         (Entity::PointCloud(e), s @ Shape::PointCloud { .. }) => e.cloud = contract_cloud(s)?,
+        (Entity::Wall(e), s @ Shape::Wall { .. }) => e.wall = kentos_formats::walls::contract_wall(&s)?,
         _ => return None,
     }
     Some(out)
@@ -1640,6 +1642,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         EntityGeometry::PointCloud(cloud) => {
             Entity::PointCloud(kentos_contracts::PointCloudEntity { base, cloud })
         }
+        EntityGeometry::Wall(wall) => Entity::Wall(kentos_contracts::WallEntity { base, wall }),
     }
 }
 
@@ -1940,6 +1943,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         s @ Shape::Image { .. } => EntityGeometry::Image(contract_image(s)?),
         s @ Shape::Raster { .. } => EntityGeometry::Raster(contract_raster(s)?),
         s @ Shape::PointCloud { .. } => EntityGeometry::PointCloud(contract_cloud(s)?),
+        s @ Shape::Wall { .. } => EntityGeometry::Wall(kentos_formats::walls::contract_wall(&s)?),
         // A record has no geometry to edit (docs/adr/0410).
         Shape::Record {} => return None,
     })

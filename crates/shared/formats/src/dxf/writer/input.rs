@@ -718,6 +718,7 @@ impl<'de> Deserialize<'de> for WriteInput {
         let i = Input::deserialize(d)?;
         Ok(WriteInput(DxfWriteInput {
         uids: Default::default(),
+            wall_detail: None,
             annotations: i.annotations,
             notes: Vec::new(),
             entities: i.entities.0,

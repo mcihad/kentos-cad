@@ -2,6 +2,7 @@
 import type { AddressLocator } from "./AddressLocator";
 import type { AngleUnit } from "./AngleUnit";
 import type { AnnotationHeights } from "./AnnotationHeights";
+import type { ArchSettings } from "./ArchSettings";
 import type { AreaUnit } from "./AreaUnit";
 import type { CrsDefinition } from "./CrsDefinition";
 import type { DatumTransform } from "./DatumTransform";
@@ -26,6 +27,7 @@ import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
 import type { TopologySettings } from "./TopologySettings";
 import type { Ucs } from "./Ucs";
+import type { WallStyleDef } from "./WallStyleDef";
 import type { Workspace } from "./Workspace";
 
 /**
@@ -108,6 +110,14 @@ dimensionStyles?: Array<DimensionStyleDef>,
  * The project's named leader styles (docs/adr/0326 §4).
  */
 leaderStyles?: Array<LeaderStyleDef>, 
+/**
+ * The project's named wall styles (docs/adr/0339 §2), in the order they were made.
+ */
+wallStyles?: Array<WallStyleDef>, 
+/**
+ * The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
+ */
+arch?: ArchSettings, 
 /**
  * The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
  */

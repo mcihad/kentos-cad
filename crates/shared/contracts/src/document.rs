@@ -267,6 +267,14 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::LeaderStyleDef>>", optional))]
     pub leader_styles: Vec<crate::LeaderStyleDef>,
+    /// The project's named wall styles (docs/adr/0339 §2), in the order they were made.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::WallStyleDef>>", optional))]
+    pub wall_styles: Vec<crate::WallStyleDef>,
+    /// The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<crate::ArchSettings>,
     /// The project's topology rules, tolerance and exceptions (docs/adr/0202 §1).
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

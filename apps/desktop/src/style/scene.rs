@@ -113,6 +113,8 @@ pub struct StyledCache {
     /// The masks that cut with their source's placed labels (docs/adr/0226 §3): the
     /// composition's place in the scene, the mask's place in it and the source layer's id.
     label_masks: Vec<(usize, usize, String)>,
+    /// The view the walls were drawn at (docs/adr/0339 §4): when the store's changes, their parts again.
+    wall_view: Option<kentos_geometry_core::geom::wall::View>,
 }
 
 /// What a view-dependent layer was built for.
@@ -325,6 +327,7 @@ impl StyledCache {
             && self.scene.under == under
             && self.clip.is_some_and(|c| !clip_stale(view, &c))
             && self.window == store.time_window()
+            && self.wall_view == Some(store.wall_view())
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
         {
             return self.scene.clone();
@@ -383,6 +386,20 @@ impl StyledCache {
         }
         if !changed.is_empty() {
             self.blocks = doc.blocks().to_vec();
+        }
+        // The walls' detail or scale changed (docs/adr/0339 §4): the parts holding a wall again.
+        if self.wall_view != Some(store.wall_view()) {
+            if !all && self.wall_view.is_some() {
+                for e in doc.entities() {
+                    if let Entity::Wall(_) = e
+                        && self.layers.contains_key(e.base().layer_id.as_str())
+                        && let Some(place) = doc.place(Slot(e.base().id))
+                    {
+                        dirty_part(&mut dirty, &e.base().layer_id, place / PART_PLACES);
+                    }
+                }
+            }
+            self.wall_view = Some(store.wall_view());
         }
         // Zaman sürgüsü (docs/adr/0210 §6): a temporal layer shows the objects the slider's window
         // shows; when the window moves, the parts whose objects come or go are built again.

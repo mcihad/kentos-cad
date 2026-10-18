@@ -32,3 +32,4 @@ pub mod survey;
 pub mod table;
 pub mod tangent_circle;
 pub mod tiles;
+pub mod wall;

@@ -335,6 +335,9 @@ def settings(s):
                 "forms": (opaque, False),
                 # Schema 74 (docs/adr/0503): the layers bound to their sources, as their JSON.
                 "sources": (opaque, False),
+                # Schema 75 (docs/adr/0339 §2, §3): the wall styles and the architectural settings, as their JSON.
+                "wallStyles": (opaque, False),
+                "arch": (opaque, False),
                 # Schema 72 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -1446,6 +1449,23 @@ KINDS = {
     },
     "xline": {"p": (point, True), "dir": (point, True)},
     "ray": {"p": (point, True), "dir": (point, True)},
+    # Schema 75 (docs/adr/0339 §4): a wall; `closed` only when true, `offset` only when not 0, `caps` only when open;
+    # its components and architectural information as their JSON.
+    "wall": {
+        "pts": (points, True),
+        "bulges": (floats, False),
+        "closed": (lambda b: boolean(b) if b is True else None, False),
+        "width": (f64, True),
+        # Written as given: the readers refuse a justification they do not know (a broken sample writes one).
+        "justify": (text, True),
+        "offset": (lambda x: f64(x) if x != 0 else None, False),
+        "style": (text, False),
+        "components": (opaque, False),
+        "caps": (lambda c: text(c) if c == "open" else None, False),
+        "fill": (text, False),
+        "height": (f64, False),
+        "arch": (opaque, False),
+    },
     # Schema 7 (docs/adr/0145): an alignment by name, a width factor, `mask` only when true.
     "text": {
         "p": (point, True),
@@ -2003,6 +2023,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 75 (docs/adr/0339): a wall, a wall style or the architectural settings.
+    if any(e["kind"] == "wall" for e in entities) or "wallStyles" in (settings or {}) or "arch" in (settings or {}):
+        return 75
     # Schema 74 (docs/adr/0503): a layer bound to its source.
     if "sources" in (settings or {}):
         return 74
@@ -2496,7 +2519,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-75.kcad"] = container(root(cmap(parts), version=uint(75)))
+    files["schema-version-76.kcad"] = container(root(cmap(parts), version=uint(76)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -2613,6 +2636,16 @@ def broken(minimal_content, minimal_file):
     block_pinned = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5),
                                          "labelPins": array([cmap({"hidden": boolean(True)})])})})
     files["label-pins-in-block.kcad"] = with_blocks([block(1, "Rögar", [block_pinned])], version=36)
+    # A wall (docs/adr/0339 §4): `closed` only when true, `offset` only when not 0, `caps` only when open; and none in a
+    # block definition.
+    def wall_of(**extra):
+        return cmap({"wall": cmap({"attrs": cmap({}), "layerId": text("0"), "pts": array([point({"x": 0.0, "y": 0.0}), point({"x": 4.0, "y": 0.0})]),
+                                   "width": f64(0.2), "justify": text("center"), **extra})})
+
+    files["wall-closed-false.kcad"] = in_schema(75, wall_of(**common, closed=boolean(False)))
+    files["wall-offset-zero.kcad"] = in_schema(75, wall_of(**common, offset=f64(0.0)))
+    files["wall-caps-closed.kcad"] = in_schema(75, wall_of(**common, caps=text("closed")))
+    files["wall-in-block.kcad"] = with_blocks([block(1, "Duvarlı", [wall_of()])], [], version=75)
     # Nor has it attachments (docs/adr/0225 §1): they are the drawing's objects'.
     block_attached = cmap({"circle": cmap({"attrs": cmap({}), "layerId": text("0"), "c": point({"x": 0.0, "y": 0.0}), "r": f64(0.5),
                                            "attachments": array([cmap({"name": text("Foto"), "file": text("a.jpg")})])})})
@@ -4026,6 +4059,35 @@ def build():
     out["broken/sources-database-extent.kcad"] = sources_broken(lambda s: s[2].update(extent=[0.0, 0.0, 1.0, 1.0]))
     out["broken/sources-password.kcad"] = sources_broken(
         lambda s: s[2].update(path="postgresql://cbs:gizli@veri.belediye.local:5432/kent"))
+    # The walls (docs/adr/0339 §4): schema 75's; in schema 74 an unknown kind; each field's one way of writing, a path,
+    # a width and components that make a wall, no wall in a block, the styles and the levels one of a kind.
+    out["walls.kcad"] = container(document(load("walls.json")))
+    wall_payload = document(load("walls.json"))
+    assert wall_payload.count(b"\x67version\x18\x4b") == 1, "the walls are schema 75"
+    out["broken/walls-in-schema-74.kcad"] = container(wall_payload.replace(b"\x67version\x18\x4b", b"\x67version\x18\x4a"))
+
+    def walls_broken(change):
+        d = copy.deepcopy(load("walls.json"))
+        change(d)
+        return container(document(d))
+
+    def wall_field(i, key, value):
+        def change(d):
+            d["entities"][i][key] = value
+        return change
+
+    out["broken/wall-width-zero.kcad"] = walls_broken(wall_field(1, "width", 0.0))
+    out["broken/wall-bulges-count.kcad"] = walls_broken(wall_field(2, "bulges", [1.0]))
+    out["broken/wall-open-last-bulge.kcad"] = walls_broken(wall_field(1, "bulges", [0.0, 0.5]))
+    out["broken/wall-coincident.kcad"] = walls_broken(wall_field(1, "pts", [{"x": 4.0, "y": 0.3}, {"x": 4.0, "y": 0.3}]))
+    out["broken/wall-two-rest.kcad"] = walls_broken(lambda d: d["entities"][0]["components"][0].pop("thickness"))
+    out["broken/wall-components-too-wide.kcad"] = walls_broken(wall_field(0, "width", 0.09))
+    out["broken/wall-components-unknown-field.kcad"] = walls_broken(lambda d: d["entities"][0]["components"][1].update(colour="#FF0000"))
+    out["broken/wall-justify-unknown.kcad"] = walls_broken(wall_field(1, "justify", "middle"))
+    out["broken/wall-level-empty.kcad"] = walls_broken(lambda d: d["entities"][1]["arch"].update(level=" "))
+    out["broken/wall-styles-name-twice.kcad"] = walls_broken(
+        lambda d: d["settings"]["wallStyles"].append({**d["settings"]["wallStyles"][0], "id": "kentos-baska"}))
+    out["broken/wall-levels-id-twice.kcad"] = walls_broken(lambda d: d["settings"]["arch"]["levels"][1].update(id="zemin"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))

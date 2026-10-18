@@ -24,6 +24,7 @@ from .types import (  # noqa: F401
     StylesEdited,
     StylesImpact,
     TextStyleDef,
+    WallStyleDef,
 )
 
 if TYPE_CHECKING:
@@ -72,6 +73,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
+        wall: WallStyleDef | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> StylesEdited:
@@ -104,6 +106,8 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style: Rename's and remove's style, by its id.
             styles: Export's styles, by id; absent: every style of the kind.
             text: Create's and update's text style.
+            wall: Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
+                the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -128,6 +132,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style=style,
             styles=_opt(styles, lambda x: list(x)),
             text=text,
+            wall=wall,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -146,6 +151,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
+        wall: WallStyleDef | None | Unset = UNSET,
     ) -> StylesEdited:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -162,6 +168,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style=style,
             styles=_opt(styles, lambda x: list(x)),
             text=text,
+            wall=wall,
         ))
 
     def validate(
@@ -180,6 +187,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
+        wall: WallStyleDef | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -196,6 +204,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style=style,
             styles=_opt(styles, lambda x: list(x)),
             text=text,
+            wall=wall,
         ))
 
     def answer(
@@ -214,6 +223,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
         style: str | None | Unset = UNSET,
         styles: Sequence[str] | None | Unset = UNSET,
         text: TextStyleDef | None | Unset = UNSET,
+        wall: WallStyleDef | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -235,6 +245,7 @@ class _StylesEdit(LocalCommand[StylesEdit, StylesEdited, StylesEdited]):
             style=style,
             styles=_opt(styles, lambda x: list(x)),
             text=text,
+            wall=wall,
         ), op=op, request_id=request_id, expected=expected)
 
 

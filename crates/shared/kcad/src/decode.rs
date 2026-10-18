@@ -504,6 +504,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let mut leader_styles = Vec::new();
+    let mut wall_styles = Vec::new();
+    let mut arch = None;
     let (mut workspace, mut drawing_font, mut area_decimals, mut length_decimals) =
         (None, None, None, None);
     map(r, |r, key| {
@@ -794,6 +796,28 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             "namedViews" if has.views => named_views = views::named_views(r)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
+            "wallStyles" if has.walls => {
+                let (l, at): (Vec<kentos_contracts::WallStyleDef>, usize) =
+                    objects::json_part(r, "duvar stilleri")?;
+                if l.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş duvar stili listesi yazılmaz"));
+                }
+                if let Some(problem) = kentos_contracts::wall_styles_problem(&l) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                wall_styles = l;
+            }
+            "arch" if has.walls => {
+                let (a, at): (kentos_contracts::ArchSettings, usize) =
+                    objects::json_part(r, "mimari ayarlar")?;
+                if a.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş mimari ayar yazılmaz"));
+                }
+                if let Some((field, words)) = a.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &format!("{field}: {words}")));
+                }
+                arch = Some(a);
+            }
             "leaderStyles" if has.multileader => {
                 let (l, at): (Vec<kentos_contracts::LeaderStyleDef>, usize) =
                     objects::json_part(r, "kılavuz stilleri")?;
@@ -883,6 +907,8 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         text_styles,
         dimension_styles,
         leader_styles,
+        wall_styles,
+        arch,
         topology,
         annotation,
         connections,

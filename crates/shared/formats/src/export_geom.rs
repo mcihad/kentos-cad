@@ -437,6 +437,25 @@ pub(crate) fn geometry(
             rep.skip("Nokta bulutu", w.cloud, 0);
             return None;
         }
+        // Its body, an area (docs/adr/0339 §4): GeoJSON, KML and GPX have no wall.
+        Entity::Wall(e) => {
+            let pts: Vec<CoreVec2> = e.wall.pts.iter().map(|p| core(*p)).collect();
+            let Ok((outer, holes)) = kentos_geometry_core::geom::wall::body(
+                &pts,
+                e.wall.bulges.as_deref(),
+                &crate::walls::spec(&e.wall),
+            ) else {
+                rep.skip(
+                    "Duvar",
+                    "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı",
+                    0,
+                );
+                return None;
+            };
+            let plain = |pts| Ring::new(from_core(pts), std::iter::empty::<Option<f64>>());
+            let holes = holes.into_iter().flatten().map(plain).collect();
+            area(plain(outer), holes, rep, w)
+        }
         // A record has no geometry (docs/adr/0410 §4); GeoJSON writes it itself, with a null one.
         Entity::Record(_) => {
             rep.skip("Kayıt", w.record, 0);

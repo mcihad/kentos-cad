@@ -473,6 +473,24 @@ fn defs(shape: &Shape) -> Defs {
         }
         // A record's attributes are compared, it has no geometry (docs/adr/0410).
         Shape::Record {} => {}
+        // Its path, its lengths and the rest of its source (docs/adr/0339).
+        Shape::Wall { pts, bulges, wall } => {
+            comps.push(if wall.closed {
+                ring(pts, bulges.as_deref())
+            } else {
+                path(pts, bulges.as_deref())
+            });
+            lengths.extend([wall.width, wall.offset]);
+            lengths.extend(wall.components.iter().filter_map(|c| c.thickness));
+            others.push(Other::Text(wall.justify.name().into()));
+            others.push(Other::Flag(wall.caps_open));
+            others.push(text(wall.fill.as_deref()));
+            for c in &wall.components {
+                others.push(Other::Text(c.detail.name().into()));
+                others.push(text(c.name.as_deref()));
+                others.push(text(c.hatch.as_ref().map(|h| h.pattern.as_str())));
+            }
+        }
         // Its plan, its files and what it shows of them (docs/adr/0207).
         Shape::PointCloud {
             count,

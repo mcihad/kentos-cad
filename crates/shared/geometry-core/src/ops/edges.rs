@@ -68,6 +68,8 @@ pub fn entity_edges(e: &Shape) -> Vec<Edge> {
         // Its plan's sides: a cloud is picked by its edge (docs/adr/0207 §3).
         Shape::PointCloud { .. } => path_edges(&crate::entity::entity_vertices(e), true),
         Shape::Record {} => Vec::new(),
+        // Its faces and caps (docs/adr/0339 §1).
+        Shape::Wall { .. } => crate::geom::wall::outline_edges(e),
         // The lines it draws (docs/adr/0184 §2).
         Shape::Table { .. } => crate::geom::table::lines_of(e)
             .into_iter()

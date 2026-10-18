@@ -2036,6 +2036,148 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Duvar, Çizgiden duvar and the wall's own fields (docs/adr/0339 §5), held together by
+        // fixtures/commands/v1/cad.walls.{create,convert,edit}.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_WALLS_CREATE.into(),
+            version: crate::CAD_WALLS_CREATE_VERSION,
+            title: "Duvar oluştur".into(),
+            summary: "Açık çizimde verilen katmana duvarlar ekler; tek geri alma adımı “Duvar”. \
+                      Her duvar çizildiği yolla verilir: köşeler, kenar başına büküm (yay), kapalı ya da açık. \
+                      Genişlik (m), hiza (left: yol duvarın sol yüzü, center: ortası, right: sağ yüzü; yolun gidişine göre) ve öteleme (yol, hiza çizgisinden sola) duvarın gövdesinin yolun neresinde durduğunu söyler. \
+                      style projenin ya da KentOS'un duvar stilidir (kimliği ya da adı): bileşenleri (sıva, tuğla, yalıtım …), uçları ve şematik dolgusu duvara geçer; KentOS'un stili aynı adımda projeye eklenir. Bileşenlerin hepsinin kalınlığı belliyse genişlik onların toplamıdır, biri kalınlıksızsa genişliğin kalanını o alır. \
+                      Duvarın yüzleri, uçları, bileşen çizgileri ve taramaları yoldan çizilir, saklanmaz; ayrıntısı çizimin ölçeğine göredir. Yayı duvarın yüzünden dar olan duvar yazılmaz (wall_collapses). \
+                      arch duvarın katını (projenin katlarından), evresini, yapım durumunu ve disiplinini taşır. \
+                      Katman girdide açıkça verilir: kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz. Plan yazmadan duvarları gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsCreate>(),
+            output: schema::<crate::WallsCreated>(),
+            plan: Some(schema::<crate::WallsPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir odanın dış duvarı: kapalı yol, içi solda, KentOS'un dış duvar stiliyle".into(),
+                    input: json!({
+                        "layerId": "duvar",
+                        "walls": [{
+                            "pts": [ { "x": 0.0, "y": 0.0 }, { "x": 6.0, "y": 0.0 }, { "x": 6.0, "y": 4.0 }, { "x": 0.0, "y": 4.0 } ],
+                            "closed": true,
+                            "justify": "left",
+                            "style": "kentos-dis-duvar-25",
+                            "arch": { "level": "zemin", "phase": "new" }
+                        }]
+                    }),
+                    output: Some(json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "ids": [12],
+                        "stylesAdded": ["kentos-dis-duvar-25"],
+                        "revision": "38"
+                    })),
+                },
+                CommandExample {
+                    title: "Yaylı bir bölme duvarı: 10 cm, ortası yolda".into(),
+                    input: json!({
+                        "layerId": "duvar",
+                        "walls": [{
+                            "pts": [ { "x": 2.0, "y": 1.0 }, { "x": 5.0, "y": 1.0 } ],
+                            "bulges": [0.25],
+                            "width": 0.1
+                        }]
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_WALLS_FROM_LINES.into(),
+            version: crate::CAD_WALLS_FROM_LINES_VERSION,
+            title: "Çizgiden duvar".into(),
+            summary: "Çizimin çizgilerinden duvar yapar; tek geri alma adımı “Çizgiden duvar”. \
+                      mode each (Tek tek): her çizgi, açık ya da kapalı çoklu çizgi (yayları da), kapalı alanın dış halkası, yay ve daire boyunca verilen genişlik, hiza ve stille bir duvar. \
+                      mode pairs (Çiftler): düz çizgiler (çizgi, iki köşeli çoklu çizgi) eşlenir, en yakını önce: doğrultuları angle dereceden (verilmezse 1°) az farklı, aralarındaki uzaklık en çok maxWidth (verilmezse 0,6 m) ve izdüşümleri örtüşen iki çizgi; duvar örtüşen kısımda ikisinin ortasından, ilk çizginin yönünde, aralarındaki uzaklık genişliğinde, ortası yolda. Eşi bulunmayan çizgi söylenir (wall_unpaired). \
+                      Kaynak çizgiler keepSources verilmezse silinir; duvarın bütünüyle örtmediği kaynak kalır ve söylenir (source_kept). Duvar türünden olmayan nesne bırakılır (not_a_wall_path). \
+                      Duvarlar layerId verilmişse o katmana, verilmemişse her biri kaynağının katmanına yazılır. Plan yazmadan duvarları ve silinecek kaynakları gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsFromLines>(),
+            output: schema::<crate::WallsFromLinesDone>(),
+            plan: Some(schema::<crate::WallsFromLinesPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taranmış bir planın paralel çizgileri 30 cm'ye kadar duvar olur".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "mode": "pairs",
+                        "maxWidth": 0.3
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir çoklu çizgi boyunca 20 cm'lik gazbeton duvar; çizgi kalsın".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "style": "Gazbeton 20",
+                        "keepSources": true
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_WALLS_EDIT.into(),
+            version: crate::CAD_WALLS_EDIT_VERSION,
+            title: "Duvarı düzenle".into(),
+            summary: "Kalıcı kimlikleriyle verilen duvarların kendi alanlarını değiştirir; tek geri alma adımı “Duvarı düzenle”, hepsi ya da hiçbiri. \
+                      operation.kind set: genişlik, hiza, öteleme, stil (kimliği ya da adı; null stilsiz tek gövde), uçlar, şematik dolgu, yükseklik, kat (projenin katlarından), evre, yapım durumu ve disiplin; verilmeyenler kalır, null olanlar kalkar. \
+                      Stilin bileşenleri duvara geçer; bileşenlerin sığmadığı genişlik ya da yayı yeni genişlikte çizilemeyen duvar yazılmaz. Yolu değişmez: yolu tutamaçlar, dönüşümler ve Esnet değiştirir. Plan yazmadan duvarları gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::WallsEdit>(),
+            output: schema::<crate::WallsEdited>(),
+            plan: Some(schema::<crate::WallsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Duvarı 30 cm yap, sağ yüzü yolda kalsın".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"],
+                        "operation": { "kind": "set", "width": 0.3, "justify": "right" }
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İki duvar 1. katta, yıkılacak".into(),
+                    input: json!({
+                        "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f", "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e60"],
+                        "operation": { "kind": "set", "level": "kat-1", "phase": "demolish" }
+                    }),
+                    output: None,
+                },
+            ],
+        },
         // Yeniden bağla (docs/adr/0249 §3), held together by
         // fixtures/commands/v1/cad.dimensions.reassociate.json. The web is paused
         // (docs/adr/0228): the desktop's host alone runs it for now.
@@ -6481,6 +6623,15 @@ mod tests {
                     crate::CAD_NURBS_CREATE => {
                         serde_json::from_value::<crate::NurbsCreate>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_WALLS_CREATE => {
+                        serde_json::from_value::<crate::WallsCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_WALLS_FROM_LINES => {
+                        serde_json::from_value::<crate::WallsFromLines>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_WALLS_EDIT => {
+                        serde_json::from_value::<crate::WallsEdit>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_ENTITIES_ORDER => {
                         serde_json::from_value::<crate::EntitiesOrder>(e.input.clone()).map(|_| ())
                     }
@@ -7219,6 +7370,15 @@ mod tests {
                         }
                         crate::FILE_IMPORT_DXF => {
                             serde_json::from_value::<crate::DxfImported>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_WALLS_CREATE => {
+                            serde_json::from_value::<crate::WallsCreated>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_WALLS_FROM_LINES => {
+                            serde_json::from_value::<crate::WallsFromLinesDone>(output.clone()).map(|_| ())
+                        }
+                        crate::CAD_WALLS_EDIT => {
+                            serde_json::from_value::<crate::WallsEdited>(output.clone()).map(|_| ())
                         }
                         other => panic!("{other}: add its output type to this test"),
                     };

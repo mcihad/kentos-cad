@@ -47,19 +47,24 @@ pub const MAX_PLOT_SCALE: f64 = 1_000_000.0;
 /// - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
 ///   leaders, dimensions and tables at the old general height take the new
 ///   one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
-/// - `drawingFont`: the drawing's typeface.
+/// - `drawingFont`: the drawing's typeface;
+/// - `arch`: the project's levels and the detail its walls are drawn at
+///   (docs/adr/0339 §3), whole: the given settings take the place of the
+///   old ones, an empty object takes them away.
 ///
 /// Settings are an edit of the project, no undo step (docs/adr/0049).
 ///
 /// Refusals (`CommandError.code`), checked in this order: `nothing_to_set`
 /// (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
 /// (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
-/// (`srid`, then `secondSrid`: not 0 and not in the registry); then
+/// (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
+/// (two levels of one id or name, a level's elevation or height); then
 /// `invalid_revision`, `revision_conflict` (status `conflict`);
 /// `second_needs_system` (a second system for a project without one),
 /// `second_is_own` (the second system the project's own), `unit_needs_local`
 /// (a unit other than metres for a project with a system),
-/// `style_needs_imperial` (a feet-and-inches style for a metric unit).
+/// `style_needs_imperial` (a feet-and-inches style for a metric unit),
+/// `level_in_use` (a level a wall names taken away).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -109,6 +114,9 @@ pub struct SettingsSet {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing_font: Option<DrawingFont>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub arch: Option<crate::ArchSettings>,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

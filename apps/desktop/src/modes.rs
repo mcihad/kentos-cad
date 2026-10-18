@@ -252,6 +252,8 @@ mod tests {
                 "Ekle",
                 "Açıklama",
                 "Değiştir",
+                // The additions' own tab (catalog/v1/additions.json, docs/adr/0339 §6).
+                "Mimari",
                 "Görünüm",
                 "Yönet",
                 "Çıktı"

@@ -180,6 +180,14 @@ fn drawn_record(s: &Shape, oriented: bool, clip: Option<&Bounds>, refs: bool, ou
         },
         // A record is not drawn (docs/adr/0410).
         Shape::Record {} => out.push(NONE),
+        // Its path until the store expands it into its pieces (docs/adr/0339).
+        Shape::Wall { pts, bulges, wall } => drawn_record(
+            &crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),
+            oriented,
+            clip,
+            refs,
+            out,
+        ),
         // Its plan as a line, then as an area the points pass paints its picture on (docs/adr/0207 §6).
         Shape::PointCloud { .. } => match crate::geom::pointcloud::corners(s) {
             Some(c) => {

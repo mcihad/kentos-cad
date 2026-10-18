@@ -235,6 +235,7 @@ pub fn kind(kind: &str) -> &'static str {
         "hatch" => "Tarama",
         "insert" => "Blok",
         "leader" => "Kılavuz",
+        "wall" => "Duvar",
         _ => "Nesne",
     }
 }

@@ -890,6 +890,11 @@ pub(crate) fn finite_shape(s: &Shape) -> bool {
         Shape::Insert {
             p, scale, rotation, ..
         } => pt(p) && scale.is_finite() && rotation.is_finite(),
+        Shape::Wall {
+            pts: path,
+            bulges,
+            wall,
+        } => pts(path) && values(bulges) && wall.width.is_finite() && wall.offset.is_finite(),
         Shape::Image {
             p,
             width,

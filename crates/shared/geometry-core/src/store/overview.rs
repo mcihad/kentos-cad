@@ -392,6 +392,14 @@ impl Canvas {
             // A cloud's plan, filled (docs/adr/0207 §6).
             Shape::PointCloud { .. } => self.area(&[crate::entity::entity_vertices(s)], c),
             Shape::Record {} => {}
+            // Its body, filled (docs/adr/0339).
+            Shape::Wall { pts, bulges, wall } => {
+                if let Ok((ring, holes)) = crate::geom::wall::body(pts, bulges.as_deref(), wall) {
+                    let mut rings = vec![ring];
+                    rings.extend(holes.into_iter().flatten());
+                    self.area(&rings, c);
+                }
+            }
             // A table's outline (docs/adr/0184 §2).
             Shape::Table { .. } => {
                 if let Some(t) = crate::geom::table::table_geom(s) {

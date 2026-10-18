@@ -4,7 +4,7 @@
   "command": "cad.settings.set",
   "commandVersion": 1,
   "title": "Proje ayarları",
-  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5; do not edit by hand.",
+  "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3; do not edit by hand.",
   "setup": {
     "format": "kentos.document",
     "version": 1,
@@ -2083,6 +2083,599 @@
               "code": "style_needs_imperial",
               "message": "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın.",
               "path": "lengthStyle"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Mimari: katlar ve görünüş ayrıntısı (ADR 0339)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ],
+              "detail": "standard"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ],
+                "detail": "standard"
+              }
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "arch": {}
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "arch": null
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvarın andığı kat kaldırılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "k1",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_in_use",
+              "message": "“zemin” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın.",
+              "path": "arch.levels"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  },
+                  {
+                    "id": "k1",
+                    "name": "1. kat",
+                    "elevation": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400020
+              },
+              {
+                "x": 500005,
+                "y": 4400020
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "duvarın andığı kat kaldıkça öbürleri değişir",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "arch": {
+            "levels": [
+              {
+                "id": "zemin",
+                "name": "Zemin kat",
+                "elevation": 0,
+                "height": 3
+              },
+              {
+                "id": "k1",
+                "name": "1. kat",
+                "elevation": 3
+              }
+            ]
+          }
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          },
+          {
+            "kind": "wall",
+            "id": 5,
+            "layerId": "yazi",
+            "attrs": {},
+            "pts": [
+              {
+                "x": 500000,
+                "y": 4400020
+              },
+              {
+                "x": 500005,
+                "y": 4400020
+              }
+            ],
+            "width": 0.2,
+            "justify": "center",
+            "arch": {
+              "level": "zemin"
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                }
+              ],
+              "detail": "detailed"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "arch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "arch": {
+                "levels": [
+                  {
+                    "id": "zemin",
+                    "name": "Zemin kat",
+                    "elevation": 0,
+                    "height": 3
+                  }
+                ],
+                "detail": "detailed"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki kat aynı kimlikte",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 3
+                },
+                {
+                  "id": "zemin",
+                  "name": "1. kat",
+                  "elevation": 3
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "Katlar geçersiz: “zemin” kimlikli kat iki kez var. Her katın kimliği ve adı ayrı olmalı.",
+              "path": "arch.levels"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "katın yüksekliği sıfır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "arch": {
+              "levels": [
+                {
+                  "id": "zemin",
+                  "name": "Zemin kat",
+                  "elevation": 0,
+                  "height": 0
+                }
+              ]
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_arch",
+              "message": "“Zemin kat” katının yüksekliği sıfırdan büyük olmalı.",
+              "path": "arch.levels[0].height"
             }
           },
           "expect": {

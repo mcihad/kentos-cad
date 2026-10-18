@@ -66,7 +66,7 @@ use crate::{
     labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
     parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
     select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points,
+    station_offset, text, text_file, topology, vertex_points, wall, wall_from_lines,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -74,6 +74,9 @@ pub const TOOLS: &[&str] = &[
     path::POLYGON_ID,
     // Maske (docs/adr/0310 §5).
     path::WIPEOUT_ID,
+    // Duvar and Çizgiden duvar (docs/adr/0339 §6).
+    wall::ID,
+    wall_from_lines::ID,
     line::ID,
     path::POLYLINE_ID,
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
@@ -413,6 +416,8 @@ impl Session {
         let tool: Box<dyn Tool> = match id {
             path::POLYGON_ID => Box::new(Path::polygon()),
             path::WIPEOUT_ID => Box::new(Path::wipeout()),
+            wall::ID => Box::new(Path::wall()),
+            wall_from_lines::ID => Box::new(wall_from_lines::WallFromLines::tool()),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),

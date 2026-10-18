@@ -564,6 +564,13 @@ pub enum Shape {
     /// A record without a geometry (docs/adr/0410): a table's row. It has no vertices, edges or
     /// bounds; the store keeps it undrawn, unpicked and unsnapped.
     Record {},
+    /// A wall (docs/adr/0339): its path (the base line, bulges one per vertex) and the rest of its source; the store
+    /// draws, picks and snaps it by its pieces (`geom::wall::pieces`), its grips, stretch and transforms act on its path.
+    Wall {
+        pts: Vec<Vec2>,
+        bulges: Option<Vec<f64>>,
+        wall: crate::geom::wall::Spec,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -591,6 +598,7 @@ crate::json_tagged!(Shape, "kind",
     Raster => "raster" { affine, width, height, bands, sample, asset, file, url, srid, style, opacity, dataset },
     PointCloud => "pointcloud" { bounds, count, sources, srid, style, opacity },
     Record => "record" {},
+    Wall => "wall" { pts, bulges & wall: crate::geom::wall::Spec },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -756,7 +764,8 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         _ if is_multi_part(e) => area_parts(e).iter().flat_map(entity_vertices).collect(),
         Shape::Point { p, .. } | Shape::Text { p, .. } | Shape::Insert { p, .. } => vec![*p],
         Shape::Line { a, b } => vec![*a, *b],
-        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } => pts.clone(),
+        // A wall's are its path's (docs/adr/0339 §1): its faces' corners are its pieces'.
+        Shape::Polyline { pts, .. } | Shape::Leader { pts, .. } | Shape::Wall { pts, .. } => pts.clone(),
         Shape::Polygon { pts, holes, .. } => match holes {
             Some(h) if !h.is_empty() => pts
                 .iter()
@@ -841,6 +850,10 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
 /// Outline as a point list (curves tessellated): previews, bounds and hit tests.
 pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
     match e {
+        // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
+        Shape::Wall { pts, bulges, wall } => crate::geom::wall::body(pts, bulges.as_deref(), wall)
+            .map(|(ring, _)| ring)
+            .unwrap_or_else(|_| pts.clone()),
         Shape::Circle { c, r } => tessellate_circle(*c, *r, segments),
         Shape::Arc { c, r, a0, a1 } => tessellate_arc(
             &ArcGeom {
@@ -1648,6 +1661,15 @@ pub fn entity_bounds_in(e: &Shape, font: Font) -> Bounds {
             }
             return b;
         }
+        // Its body's outline (docs/adr/0339 §1); one that cannot be drawn its path's.
+        Shape::Wall { pts, bulges, wall } => {
+            if let Ok((ring, _)) = crate::geom::wall::body(pts, bulges.as_deref(), wall) {
+                for q in ring {
+                    extend_bounds(&mut b, q, 0.0);
+                }
+                return b;
+            }
+        }
         // Construction lines count by their base point only (zoom extents ignores their reach).
         Shape::Xline { p, .. } | Shape::Ray { p, .. } => {
             extend_bounds(&mut b, *p, 0.0);
@@ -1768,7 +1790,10 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
             a1: *a1,
         }),
         Shape::Line { a, b } => Vec2::new((a.x + b.x) / 2.0, (a.y + b.y) / 2.0),
-        Shape::Polyline { pts, .. } | Shape::Spline { pts, .. } | Shape::Leader { pts, .. } => {
+        Shape::Polyline { pts, .. }
+        | Shape::Spline { pts, .. }
+        | Shape::Leader { pts, .. }
+        | Shape::Wall { pts, .. } => {
             return pts.get(pts.len() / 2).copied();
         }
         // The point halfway along the curve (docs/adr/0259 §2).
@@ -1795,6 +1820,12 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
 
 pub fn entity_length(e: &Shape) -> Option<f64> {
     match e {
+        // Along its path, its base line (docs/adr/0339 §1).
+        Shape::Wall { pts, bulges, wall } => Some(crate::geom::bulge::bulge_path_length(
+            pts,
+            bulges.as_deref(),
+            wall.closed,
+        )),
         Shape::Line { a, b } => Some(path_length(&[*a, *b], false)),
         // A multi-part area's perimeter and a multi-part polyline's length
         // are their parts' (docs/adr/0143, 0174).
@@ -1854,6 +1885,8 @@ pub fn entity_length(e: &Shape) -> Option<f64> {
 
 pub fn entity_area(e: &Shape) -> Option<f64> {
     match e {
+        // Its body's, net of a closed wall's inside (docs/adr/0339 §1).
+        Shape::Wall { pts, bulges, wall } => crate::geom::wall::area(pts, bulges.as_deref(), wall),
         // A multi-part area's area is its parts' (docs/adr/0143).
         Shape::Polygon { .. } if is_multi_part(e) => {
             Some(area_parts(e).iter().filter_map(entity_area).sum())

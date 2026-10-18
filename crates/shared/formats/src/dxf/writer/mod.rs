@@ -302,6 +302,15 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
     for n in &input.notes {
         report.note_n(&n.what, &n.reason, n.lines.first().copied().unwrap_or(0), n.count);
     }
+    // A wall goes as the lines and hatches it draws at its detail (docs/adr/0339 §4): DXF has no wall of KentOS's.
+    let plain;
+    let input = match plain_walls(input, &mut report) {
+        Some(p) => {
+            plain = p;
+            &plain
+        }
+        None => input,
+    };
     let scale = if input.scale.is_finite() && input.scale > 0.0 {
         input.scale
     } else {
@@ -523,6 +532,51 @@ pub fn write(input: &DxfWriteInput) -> (Vec<u8>, ExportReport) {
 
 /// The objects and definitions to write in a local project's unit: every
 /// coordinate and length scaled, the rest as it is.
+/// `input` with every wall as its plain pieces at the input's detail and scale, said in the report; none without walls.
+fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInput> {
+    let walls = input
+        .entities
+        .iter()
+        .filter(|e| matches!(e, kentos_contracts::Entity::Wall(_)))
+        .count();
+    if walls == 0 {
+        return None;
+    }
+    let scale = if input.scale.is_finite() && input.scale > 0.0 { input.scale } else { 100.0 };
+    let detail = input
+        .wall_detail
+        .unwrap_or_else(|| kentos_contracts::WallDetail::at_scale(scale));
+    let view = kentos_geometry_core::geom::wall::View {
+        detail: crate::walls::detail(detail),
+        scale,
+    };
+    let mut out = input.clone();
+    out.entities = Vec::with_capacity(input.entities.len() + walls * 6);
+    let mut left = 0;
+    for e in &input.entities {
+        match e {
+            kentos_contracts::Entity::Wall(w) => match crate::walls::plain_pieces(&w.base, &w.wall, view) {
+                Some(pieces) => out.entities.extend(pieces),
+                None => left += 1,
+            },
+            _ => out.entities.push(e.clone()),
+        }
+    }
+    report.note_n(
+        "Duvar",
+        &format!(
+            "DXF'te KentOS'un duvarı yoktur: duvarlar {} ayrıntıda çizgiler ve taramalar olarak yazıldı; duvar olarak geri okunmaz",
+            detail.label().to_lowercase()
+        ),
+        0,
+        u32::try_from(walls - left).unwrap_or(u32::MAX),
+    );
+    if left > 0 {
+        report.skip("Duvar", "çizilemeyen duvar (yayı duvarın genişliğinden dar) yazılmadı", 0);
+    }
+    Some(out)
+}
+
 fn in_unit(input: &DxfWriteInput, to: units::Scale) -> DxfWriteInput {
     let mut scaled = input.clone();
     for e in &mut scaled.entities {

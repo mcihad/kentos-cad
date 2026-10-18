@@ -30,6 +30,7 @@
 //! | 20 raster | affine (6), width, height, bands, sample, asset?, file?, srid, style (its JSON text), opacity (NaN none) |
 //! | 22 closed polyline | path, holes (its last bulge the closing edge's; docs/adr/0258 §1) |
 //! | 23 NURBS curve | degree, control points, knots (values), weights (values), closed, periodic, fit points (−1 none, else points), fitTolerance (NaN none), tangents (4: NaN none) (docs/adr/0259) |
+//! | 28 wall | path (its holes −1), the rest of its source as its JSON text (closed, width, justify, offset, components, caps, fill; docs/adr/0339) |
 //!
 //! `layer`, `text` and `style` are indices into the strings (−1: none);
 //! `label` is 1 for a non-empty label. `points` is a count n and 2n
@@ -698,6 +699,17 @@ impl Reader<'_> {
             }
             // docs/adr/0410: a record, nothing more.
             27 => Shape::Record {},
+            // docs/adr/0339: the path, then the rest of the wall as its JSON text.
+            28 => {
+                let (pts, bulges, _) = self.path()?;
+                let text = self.string()?.unwrap_or_default();
+                let v = Json::parse(&text).map_err(|e| format!("duvar okunamadı: {e}"))?;
+                Shape::Wall {
+                    pts,
+                    bulges,
+                    wall: <crate::geom::wall::Spec as crate::api::json::Flat>::read_flat(&v)?,
+                }
+            }
             // docs/adr/0207 §3: the bounds, the points, the files (their JSON text), the
             // system, the look (its JSON text) and the opacity (NaN none).
             21 => {
@@ -1307,6 +1319,17 @@ impl Packer {
             }
             // docs/adr/0410, as the reader's kind 27 says.
             Shape::Record {} => self.put(&[27.0]),
+            // docs/adr/0339, as the reader's kind 28 says.
+            Shape::Wall { pts, bulges, wall } => {
+                self.put(&[28.0]);
+                self.path(pts, bulges.as_deref(), None);
+                let mut text = String::from("{");
+                let mut first = true;
+                crate::api::json::Flat::write_flat(wall, &mut text, &mut first);
+                text.push('}');
+                let at = self.string(&text);
+                self.put(&[at]);
+            }
             // docs/adr/0207, as the reader's kind 21 says.
             Shape::PointCloud {
                 bounds,

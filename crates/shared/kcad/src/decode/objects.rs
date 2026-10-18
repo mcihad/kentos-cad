@@ -75,6 +75,7 @@ enum Kind {
     Raster,
     PointCloud,
     Record,
+    Wall,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -102,6 +103,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("raster", Kind::Raster),
     ("pointcloud", Kind::PointCloud),
     ("record", Kind::Record),
+    ("wall", Kind::Wall),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -200,6 +202,8 @@ pub(super) struct Features {
     polyline_extras: bool,
     /// Schema 47: the NURBS curve (docs/adr/0259).
     nurbs: bool,
+    /// Schema 75: the wall and the settings' `wallStyles` and `arch` (docs/adr/0339).
+    pub(super) walls: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -337,6 +341,7 @@ impl Features {
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,
+            walls: schema >= crate::SCHEMA_WITH_WALLS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -397,6 +402,11 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                 "degree" | "ctrl" | "knots" | "weights" | "closed" | "periodic" | "fit" | "tangents" | "fitTolerance"
             ),
             Kind::Xline | Kind::Ray => matches!(key, "p" | "dir"),
+            Kind::Wall => matches!(
+                key,
+                "pts" | "bulges" | "closed" | "width" | "justify" | "offset" | "style" | "components" | "caps" | "fill"
+                    | "height" | "arch"
+            ),
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -577,6 +587,13 @@ struct Fields {
     fit: Option<Vec<Vec2>>,
     tangents: Option<[Option<Vec2>; 2]>,
     fit_tolerance: Option<f64>,
+    /// A wall's own fields (docs/adr/0339 §4).
+    wall_style: Option<String>,
+    wall_justify: Option<kentos_contracts::WallJustify>,
+    wall_caps: Option<kentos_contracts::WallCaps>,
+    wall_fill: Option<String>,
+    wall_components: Vec<kentos_contracts::WallComponent>,
+    wall_arch: Option<kentos_contracts::ArchInfo>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -840,6 +857,7 @@ pub(super) fn object(
             && (has.rasters || *kind != Kind::Raster)
             && (has.point_clouds || *kind != Kind::PointCloud)
             && (has.nurbs || *kind != Kind::Nurbs)
+            && (has.walls || *kind != Kind::Wall)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -864,6 +882,10 @@ pub(super) fn object(
     // Nor a point cloud (docs/adr/0207 §3).
     if kind == Kind::PointCloud && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında nokta bulutu olamaz"));
+    }
+    // Nor a wall (docs/adr/0339 §4): a block holds its drawing, not its source.
+    if kind == Kind::Wall && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında duvar olamaz"));
     }
     // Nor a record without a geometry (docs/adr/0410 §2).
     if kind == Kind::Record && !has.uids {
@@ -1160,6 +1182,42 @@ pub(super) fn object(
                 f.text = Some(note);
             }
             "text" => f.text = Some(text(r)?),
+            // Schema 75 (docs/adr/0339 §4): a wall's style, justification, ends, fill, components and information.
+            "style" if kind == Kind::Wall => f.wall_style = Some(text(r)?),
+            "justify" => {
+                f.wall_justify = Some(named(
+                    r,
+                    &[
+                        ("left", kentos_contracts::WallJustify::Left),
+                        ("center", kentos_contracts::WallJustify::Center),
+                        ("right", kentos_contracts::WallJustify::Right),
+                    ],
+                )?)
+            }
+            "caps" => {
+                let at = r.position();
+                if named(r, &[("open", kentos_contracts::WallCaps::Open), ("closed", kentos_contracts::WallCaps::Closed)])?
+                    != kentos_contracts::WallCaps::Open
+                {
+                    return Err(r.fail_at(Code::BadValue, at, "uçlar kapalıyken yazılmaz; alan yalnız open iken yazılır"));
+                }
+                f.wall_caps = Some(kentos_contracts::WallCaps::Open);
+            }
+            "fill" => f.wall_fill = Some(text(r)?),
+            "components" => {
+                let (v, at): (Vec<kentos_contracts::WallComponent>, usize) = json_part(r, "duvarın bileşenleri")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş bileşen listesi yazılmaz"));
+                }
+                f.wall_components = v;
+            }
+            "arch" => {
+                let (v, at): (kentos_contracts::ArchInfo, usize) = json_part(r, "duvarın mimari bilgisi")?;
+                if v.is_empty() {
+                    return Err(r.fail_at(Code::BadValue, at, "boş mimari bilgi yazılmaz"));
+                }
+                f.wall_arch = Some(v);
+            }
             "style" => {
                 // Schema 9's kinds after the first five (docs/adr/0147).
                 let styles = DIMENSION_STYLES.map(|s| (s.name(), s));
@@ -1814,6 +1872,36 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Nurbs(e)
+        }
+        Kind::Wall => {
+            let offset = f.offset.unwrap_or(0.0);
+            let e = kentos_contracts::WallEntity {
+                base,
+                wall: kentos_contracts::WallFields {
+                    pts: required(r, f.pts.take(), "pts")?,
+                    bulges: f.bulges.take(),
+                    closed: f.closed.unwrap_or(false),
+                    width: required(r, f.width, "width")?,
+                    justify: required(r, f.wall_justify, "justify")?,
+                    offset,
+                    style: f.wall_style.take(),
+                    components: std::mem::take(&mut f.wall_components),
+                    caps: f.wall_caps.unwrap_or_default(),
+                    fill: f.wall_fill.take(),
+                    height: f.height,
+                    arch: f.wall_arch.take().unwrap_or_default(),
+                },
+            };
+            if f.offset == Some(0.0) {
+                return Err(r.fail(Code::BadValue, "duvarın ötelemesi 0 iken yazılmaz"));
+            }
+            if f.closed == Some(false) {
+                return Err(r.fail(Code::BadValue, "closed false yazılmaz; alan yalnız true iken yazılır"));
+            }
+            if let Some((_, problem)) = e.wall.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::Wall(e)
         }
         Kind::Xline | Kind::Ray => {
             let line = ConstructionEntity {

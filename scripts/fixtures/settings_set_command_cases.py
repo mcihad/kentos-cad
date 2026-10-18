@@ -204,6 +204,29 @@ def cases():
                        "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın.", "lengthStyle"))
     out.append(refused("mm'ye geçerken kesirli biçim", {"srid": 0, "drawingUnit": "mm", "lengthStyle": "fractional"}, "style_needs_imperial",
                        "Ayak ve inç biçimleri (mimari, mühendislik, kesirli) yalnız inç ya da ayak biriminde seçilir; önce birimi inç ya da ayak yapın.", "lengthStyle"))
+    # The project's levels and the walls' detail (docs/adr/0339 §3): given whole; an empty object takes them away; a
+    # level a wall names stays.
+    levels = [{"id": "zemin", "name": "Zemin kat", "elevation": 0, "height": 3}, {"id": "k1", "name": "1. kat", "elevation": 3}]
+    out.append({"name": "Mimari: katlar ve görünüş ayrıntısı (ADR 0339)",
+                "steps": [step("execute", {"arch": {"levels": levels, "detail": "standard"}}, done(["arch"]),
+                               {**FLAGS, "settings": {"arch": {"levels": levels, "detail": "standard"}}}),
+                          step("execute", {"arch": {}}, done(["arch"]), {"settings": {"arch": None}, "revision": "changed"})]})
+    wall = {"kind": "wall", "id": 5, "layerId": "yazi", "attrs": {}, "pts": [{"x": X, "y": Y + 20}, {"x": X + 5, "y": Y + 20}],
+            "width": 0.2, "justify": "center", "arch": {"level": "zemin"}}
+    walled = setup(arch={"levels": levels})
+    walled["entities"].append(wall)
+    in_use = refused("duvarın andığı kat kaldırılmaz", {"arch": {"levels": levels[1:]}}, "level_in_use",
+                     "“zemin” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın.", "arch.levels", walled)
+    in_use["steps"][0]["expect"]["ids"] = IDS + [5]
+    in_use["steps"][0]["expect"]["settings"] = {"arch": {"levels": levels}}
+    out.append(in_use)
+    out.append({"name": "duvarın andığı kat kaldıkça öbürleri değişir", "setup": walled,
+                "steps": [step("execute", {"arch": {"levels": levels[:1], "detail": "detailed"}}, done(["arch"]),
+                               {**FLAGS, "ids": IDS + [5], "settings": {"arch": {"levels": levels[:1], "detail": "detailed"}}})]})
+    out.append(refused("iki kat aynı kimlikte", {"arch": {"levels": [levels[0], dict(levels[1], id="zemin")]}}, "invalid_arch",
+                       "Katlar geçersiz: “zemin” kimlikli kat iki kez var. Her katın kimliği ve adı ayrı olmalı.", "arch.levels"))
+    out.append(refused("katın yüksekliği sıfır", {"arch": {"levels": [dict(levels[0], height=0)]}}, "invalid_arch",
+                       "“Zemin kat” katının yüksekliği sıfırdan büyük olmalı.", "arch.levels[0].height"))
     out.append(refused("girdinin kuralları sürümden önce", {"lengthDecimals": 7, "expectedRevision": "on iki"}, "invalid_decimals",
                        "Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı.", "lengthDecimals"))
     out.append(refused("geçersiz beklenen sürüm", {"srid": 5255, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"))
@@ -223,7 +246,7 @@ def build():
         "command": "cad.settings.set",
         "commandVersion": 1,
         "title": "Proje ayarları",
-        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5; do not edit by hand.",
+        "note": "Written by scripts/fixtures/settings_set_command_cases.py from the contract's rules and docs/adr/0165, 0167, 0168, 0205, 0248 §5, 0339 §3; do not edit by hand.",
         "setup": setup(),
         "cases": cases(),
     }

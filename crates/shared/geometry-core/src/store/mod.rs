@@ -21,6 +21,8 @@
 pub mod draw;
 #[cfg(test)]
 mod inserts;
+#[cfg(test)]
+mod walls;
 pub mod labels;
 pub mod legible;
 pub mod overview;
@@ -203,6 +205,8 @@ pub struct Store {
     vacated_orders: IdSet,
     /// The drawing typeface text boxes are measured in (`ProjectSettings.drawingFont`).
     font: Font,
+    /// What walls are drawn for: the detail and the drawing's scale (`set_wall_view`, docs/adr/0339 §3).
+    wall_view: crate::geom::wall::View,
     /// The drawing's block definitions, flattened (`set_blocks`).
     blocks: Blocks,
     /// The objects whose label a text writes (`set_text_labelled`, docs/adr/0175 §4).
@@ -437,6 +441,34 @@ impl Store {
         self.maybe_rebuild();
     }
 
+    /// What walls are drawn for (docs/adr/0339 §3): the detail the drawing's scale asks and the scale, which sizes their
+    /// patterns on paper. A change expands every wall again; the same view changes nothing.
+    pub fn set_wall_view(&mut self, view: crate::geom::wall::View) {
+        if view == self.wall_view {
+            return;
+        }
+        self.wall_view = view;
+        let walls: Vec<u32> = (0..self.slots.len() as u32)
+            .filter(|&s| matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. })))
+            .collect();
+        for s in &walls {
+            let fresh = self.slots[*s as usize]
+                .as_ref()
+                .map(|it| self.expansion(&it.shape));
+            if let (Some(it), Some((expanded, bounds))) = (self.slots[*s as usize].as_mut(), fresh) {
+                it.bounds = bounds;
+                it.expanded = expanded;
+                it.veiled = None;
+            }
+            self.loosen(*s);
+        }
+        self.maybe_rebuild();
+    }
+
+    pub fn wall_view(&self) -> crate::geom::wall::View {
+        self.wall_view
+    }
+
     /// `set_blocks` from the contract's JSON of the definitions (`[{ id, base, entities, … }]`).
     pub fn set_blocks_json(&mut self, text: &str) -> Result<(), String> {
         let blocks = Blocks::from_json(&Json::parse(text)?)?;
@@ -454,10 +486,24 @@ impl Store {
     /// any other object its own box.
     fn expansion(&self, shape: &Shape) -> (Option<Arc<Expanded>>, Bounds) {
         let b = entity_bounds_in(shape, self.font);
-        if !matches!(shape, Shape::Insert { .. }) {
-            return (None, b);
-        }
-        let pieces = self.blocks.expand(shape);
+        let pieces = match shape {
+            Shape::Insert { .. } => self.blocks.expand(shape),
+            // A wall's faces, ends, lines and hatches at the view's detail; one that cannot be drawn its path
+            // (docs/adr/0339 §1).
+            Shape::Wall { pts, bulges, wall } => crate::geom::wall::pieces(pts, bulges.as_deref(), wall, self.wall_view)
+                .unwrap_or_else(|_| {
+                    vec![crate::block::Piece {
+                        shape: crate::geom::wall::path_shape(pts, bulges.as_deref(), wall.closed),
+                        color: None,
+                        line_weight: None,
+                        by_layer: Vec::new(),
+                        gates: Vec::new(),
+                        stroke: Default::default(),
+                        attribute: None,
+                    }]
+                }),
+            _ => return (None, b),
+        };
         if pieces.is_empty() {
             return (None, b);
         }
@@ -488,6 +534,7 @@ impl Store {
             std::mem::take(&mut self.flags),
         );
         let font = self.font;
+        let wall_view = self.wall_view;
         let blocks = std::mem::take(&mut self.blocks);
         let window = self.time_window;
         let labelling = placing::Labels {
@@ -499,6 +546,7 @@ impl Store {
         (self.layer_ids, self.flags) = layers;
         self.labelling = labelling;
         self.font = font;
+        self.wall_view = wall_view;
         self.blocks = blocks;
         self.time_window = window;
     }

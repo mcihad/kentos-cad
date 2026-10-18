@@ -13,6 +13,7 @@ from .protocol import Expected  # noqa: F401
 from .types import (  # noqa: F401
     AngleUnit,
     AngleUnitName,
+    ArchSettings,
     AreaUnit,
     AreaUnitName,
     DrawingFont,
@@ -61,6 +62,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         /,
         *,
         angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
+        arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
@@ -93,6 +95,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         Args:
             doc: The drawing it works on.
             angle_unit:
+            arch:
             area_decimals: Unit: count.
             area_unit:
             drawing_font:
@@ -120,6 +123,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         """
         return self.execute_input(doc, SettingsSet(
             angle_unit=angle_unit,
+            arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
             drawing_font=drawing_font,
@@ -140,6 +144,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         /,
         *,
         angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
+        arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
@@ -158,6 +163,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         """
         return self.plan_input(doc, SettingsSet(
             angle_unit=angle_unit,
+            arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
             drawing_font=drawing_font,
@@ -178,6 +184,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         /,
         *,
         angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
+        arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
@@ -196,6 +203,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         """
         return self.validate_input(doc, SettingsSet(
             angle_unit=angle_unit,
+            arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
             drawing_font=drawing_font,
@@ -216,6 +224,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         /,
         *,
         angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET,
+        arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
@@ -239,6 +248,7 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         """
         return self.answer_input(doc, SettingsSet(
             angle_unit=angle_unit,
+            arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
             drawing_font=drawing_font,

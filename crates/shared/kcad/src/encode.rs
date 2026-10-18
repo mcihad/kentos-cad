@@ -374,6 +374,8 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.text_styles.is_empty())
             + usize::from(!s.dimension_styles.is_empty())
             + usize::from(!s.leader_styles.is_empty())
+            + usize::from(!s.wall_styles.is_empty())
+            + usize::from(s.arch.is_some())
             + usize::from(s.topology.is_some())
             + usize::from(has_heights(s))
             + usize::from(!s.connections.is_empty())
@@ -394,6 +396,19 @@ impl<'d> Encoder<'d> {
         if let Some(u) = &s.ucs {
             self.key("ucs");
             self.at(Seg::Name("ucs"), |e| e.ucs(u))?;
+        }
+        // Schema 75 (docs/adr/0339 §3): the levels and the walls' detail, as their JSON.
+        if let Some(a) = &s.arch {
+            self.key("arch");
+            self.at(Seg::Name("arch"), |e| {
+                if a.is_empty() {
+                    return Err(e.fail(Code::BadValue, "boş mimari ayar yazılmaz"));
+                }
+                if let Some((field, words)) = a.problem() {
+                    return Err(e.fail(Code::BadValue, &format!("{field}: {words}")));
+                }
+                e.json(&serde_json::to_value(a).unwrap_or_default())
+            })?;
         }
         self.key("srid");
         self.w.uint(u64::from(s.srid));
@@ -513,6 +528,16 @@ impl<'d> Encoder<'d> {
         if !s.text_styles.is_empty() {
             self.key("textStyles");
             self.at(Seg::Name("textStyles"), |e| e.text_styles(&s.text_styles))?;
+        }
+        // Schema 75 (docs/adr/0339 §2): the wall styles, as their JSON.
+        if !s.wall_styles.is_empty() {
+            self.key("wallStyles");
+            self.at(Seg::Name("wallStyles"), |e| {
+                if let Some(problem) = kentos_contracts::wall_styles_problem(&s.wall_styles) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                e.json(&serde_json::to_value(&s.wall_styles).unwrap_or_default())
+            })?;
         }
         if !s.connections.is_empty() {
             self.key("connections");
@@ -1660,6 +1685,13 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 75 (docs/adr/0339): a wall, a wall style or the architectural settings.
+    if doc.entities.iter().any(|e| matches!(e, Entity::Wall(_)))
+        || !doc.settings.wall_styles.is_empty()
+        || doc.settings.arch.is_some()
+    {
+        return crate::SCHEMA_WITH_WALLS;
     }
     // Schema 74 (docs/adr/0503): a layer bound to its source.
     if !doc.settings.sources.is_empty() {

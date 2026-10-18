@@ -3,4 +3,4 @@
 /**
  * A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).
  */
-export type SelectKind = "point" | "line" | "polyline" | "polygon" | "circle" | "arc" | "ellipse" | "spline" | "xline" | "ray" | "text" | "dimension" | "hatch" | "insert" | "leader" | "table" | "image";
+export type SelectKind = "point" | "line" | "polyline" | "polygon" | "circle" | "arc" | "ellipse" | "spline" | "xline" | "ray" | "text" | "dimension" | "hatch" | "insert" | "leader" | "table" | "image" | "wall";

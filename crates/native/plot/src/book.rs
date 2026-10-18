@@ -216,9 +216,16 @@ pub fn book_pdf(
                 ) || e.base().label.is_some()
             });
             let at = m.view.scale.max(1);
-            if annotative && !scaled.contains_key(&at) {
-                let copy = doc.at_scale(f64::from(at)).map(|copy| {
+            // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
+            let walls = Spatial::walls_differ_at(doc, f64::from(at));
+            if (annotative || walls) && !scaled.contains_key(&at) {
+                let copy = annotative
+                    .then(|| doc.at_scale(f64::from(at)))
+                    .flatten()
+                    .or_else(|| walls.then(|| doc.reading_copy()));
+                let copy = copy.map(|copy| {
                     let mut spatial = Spatial::new();
+                    spatial.set_wall_scale(Some(f64::from(at)));
                     spatial.reload(&copy);
                     (copy, spatial)
                 });

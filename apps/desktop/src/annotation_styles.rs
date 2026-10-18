@@ -409,6 +409,7 @@ impl App {
         operation: kentos_contracts::StyleEditOperation,
     ) -> kentos_contracts::StylesEdit {
         kentos_contracts::StylesEdit {
+            wall: None,
             leader: None,
             kind: self.styles_kind(),
             operation,

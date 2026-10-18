@@ -18,6 +18,13 @@ impl Document {
             .any(|s| annotative_of(&s.entity).is_some())
     }
 
+    /// Whether the drawing has a wall (docs/adr/0339 §4): a map at another scale may draw it at another detail.
+    pub fn has_walls(&self) -> bool {
+        self.store
+            .iter()
+            .any(|s| matches!(&*s.entity, kentos_contracts::Entity::Wall(_)))
+    }
+
     /// The drawing as a map at 1:`scale` draws it; none when it is the drawing itself (no
     /// annotative object draws otherwise there).
     pub fn at_scale(&self, scale: f64) -> Option<Document> {

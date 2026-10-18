@@ -40,6 +40,10 @@ pub fn entity_grips(e: &Shape) -> Vec<Vec2> {
         Shape::Raster { .. } => Vec::new(),
         // None: a cloud's place is its files' (docs/adr/0207 §3).
         Shape::PointCloud { .. } | Shape::Record {} => Vec::new(),
+        // Its path's, as a polyline's: vertices then edges' middles (docs/adr/0339 §1).
+        Shape::Wall { .. } => crate::geom::wall::path_of(e)
+            .map(|p| entity_grips(&p))
+            .unwrap_or_default(),
         Shape::Line { a, b } => vec![*a, *b],
         Shape::Polyline { pts, bulges, .. } | Shape::Polygon { pts, bulges, .. } => {
             // A closed polyline's closing edge has its middle too (docs/adr/0258 §1).
@@ -247,6 +251,11 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         let moved = move_grip(&Entity::new(part), local, p)?;
         return Some(e.with(replace_part(&e.shape, k, moved.shape)?));
     }
+    // A wall's grips are its path's: the path moves as a polyline's and the wall follows it (docs/adr/0339 §1).
+    if let Some(path) = crate::geom::wall::path_of(&e.shape) {
+        let moved = move_grip(&Entity::new(path), index, p)?;
+        return Some(e.with(crate::geom::wall::with_path(&e.shape, moved.shape)?));
+    }
     let shape = match &e.shape {
         Shape::Point { z, .. } => Shape::Point {
             p,
@@ -308,6 +317,8 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
         Shape::Table { .. } => crate::geom::table::table_geom(&e.shape)?.moved_grip(index, p)?,
         // No grips (docs/adr/0204 §7, 0207 §3).
         Shape::Raster { .. } | Shape::PointCloud { .. } | Shape::Record {} => return None,
+        // Moved above by its path.
+        Shape::Wall { .. } => return None,
         // The lower left corner moves it; another corner scales it about the lower left, its
         // shape kept (docs/adr/0192 §4).
         Shape::Image { .. } => {

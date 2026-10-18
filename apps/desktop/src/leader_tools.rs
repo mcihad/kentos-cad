@@ -440,6 +440,7 @@ impl App {
         let before = doc.model.settings().leader_styles.clone();
         let mut inputs: Vec<StylesEdit> = Vec::new();
         let edit = |operation, leader: Option<LeaderStyleDef>, style: Option<String>| StylesEdit {
+            wall: None,
             kind: AnnotationStyleKind::Leader,
             operation,
             style,

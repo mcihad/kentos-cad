@@ -172,11 +172,13 @@ pub enum SelectKind {
     Leader,
     Table,
     Image,
+    /// Duvar (docs/adr/0339 §6).
+    Wall,
 }
 
 impl SelectKind {
     /// Every kind, in the filter's menu's order.
-    pub const ALL: [SelectKind; 17] = [
+    pub const ALL: [SelectKind; 18] = [
         SelectKind::Point,
         SelectKind::Line,
         SelectKind::Polyline,
@@ -194,6 +196,7 @@ impl SelectKind {
         SelectKind::Leader,
         SelectKind::Table,
         SelectKind::Image,
+        SelectKind::Wall,
     ];
 
     /// Its name on the wire, the entity kind's.
@@ -216,6 +219,7 @@ impl SelectKind {
             SelectKind::Leader => "leader",
             SelectKind::Table => "table",
             SelectKind::Image => "image",
+            SelectKind::Wall => "wall",
         }
     }
 }

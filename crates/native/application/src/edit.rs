@@ -1657,6 +1657,9 @@ fn finite(g: &EntityGeometry) -> bool {
                     .all(|q| pt(&q.p) && q.z.is_none_or(f64::is_finite))
         }
         EntityGeometry::Line { a, b, zs, ms } => pt(a) && pt(b) && heights(zs) && heights(ms),
+        EntityGeometry::Wall(w) => {
+            pts(&w.pts) && values(&w.bulges) && w.width.is_finite() && w.offset.is_finite()
+        }
         EntityGeometry::Polyline {
             pts: p,
             bulges,

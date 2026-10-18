@@ -94,6 +94,8 @@ pub enum Event {
     EmbedImage(Slot),
     /// Kaynak ▾'s Göm of a linked raster (docs/adr/0204 §8).
     EmbedRaster(Slot),
+    /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Evre): written through `cad.walls.edit` (docs/adr/0339 §6).
+    Wall(Slot, kentos_contracts::WallChange),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -200,6 +202,10 @@ pub enum Field {
     ImageClear(Slot),
     /// A raster's see-through share (0 to 90 %; docs/adr/0204 §8).
     RasterClear(Slot),
+    /// A wall's width, offset and height (docs/adr/0339 §6); an empty height, the level's.
+    WallWidth(Slot),
+    WallOffset(Slot),
+    WallHeight(Slot),
     /// A point cloud's see-through share (0 to 90 %; docs/adr/0207 §9).
     CloudClear(Slot),
     /// Leaders' note (trimmed; emptied, the arrow alone), height (above zero)
@@ -652,6 +658,7 @@ impl App {
             },
             Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
+            Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -994,6 +1001,38 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 })
             });
         }
+        Field::WallWidth(slot) | Field::WallOffset(slot) | Field::WallHeight(slot) => {
+            let n = f.to_metres(web_number(text));
+            let height = matches!(field, Field::WallHeight(_));
+            if height && text.trim().is_empty() {
+                return properties::edit_wall(
+                    model,
+                    *slot,
+                    kentos_contracts::WallChange {
+                        height: Some(None),
+                        ..Default::default()
+                    },
+                );
+            }
+            if !n.is_finite() {
+                return Vec::new();
+            }
+            let change = match field {
+                Field::WallWidth(_) => kentos_contracts::WallChange {
+                    width: Some(n),
+                    ..Default::default()
+                },
+                Field::WallOffset(_) => kentos_contracts::WallChange {
+                    offset: Some(n),
+                    ..Default::default()
+                },
+                _ => kentos_contracts::WallChange {
+                    height: Some(Some(n)),
+                    ..Default::default()
+                },
+            };
+            return properties::edit_wall(model, *slot, change);
+        }
         Field::LeaderTurn(slots) => {
             let n = web_number(text);
             if !n.is_finite() {
@@ -1084,7 +1123,10 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::CloudClear(s)
         | Field::Attribute(s, _) => *s,
         // Taken above.
-        Field::Elevation(..)
+        Field::WallWidth(_)
+        | Field::WallOffset(_)
+        | Field::WallHeight(_)
+        | Field::Elevation(..)
         | Field::PolylineWidth(_)
         | Field::Elevations(_)
         | Field::TextWidth(_)

@@ -28,6 +28,8 @@ pub enum AnnotationStyleKind {
     Dimension,
     /// A leader style (docs/adr/0326 §4).
     Leader,
+    /// A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.
+    Wall,
 }
 
 /// What `cad.styles.edit` does.
@@ -116,6 +118,11 @@ pub struct StylesEdit {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub leader: Option<crate::LeaderStyleDef>,
+    /// Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
+    /// the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub wall: Option<crate::WallStyleDef>,
     /// Export's styles, by id; absent: every style of the kind.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]

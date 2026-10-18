@@ -125,6 +125,71 @@ pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Save
     Saved { changed, locked, said: Vec::new() }
 }
 
+/// The walls that take a style table, and how many a locked layer keeps.
+pub type WallFollowers = (Vec<(Slot, Entity)>, usize);
+
+/// The walls that follow the wall styles `next` (docs/adr/0339 §2): a wall of a style changed takes its components,
+/// ends and fill, and the width they fix (its own when one component takes the rest); a wall of a style removed keeps
+/// its look without the link. Walls on locked layers are counted, not changed. A wall the new components do not fit,
+/// or whose faces they make undrawable, is the refusal (its code and words).
+pub fn wall_followers(doc: &Document, next: &[kentos_contracts::WallStyleDef]) -> Result<WallFollowers, (&'static str, String)> {
+    let before: HashMap<&str, &kentos_contracts::WallStyleDef> =
+        doc.settings().wall_styles.iter().map(|s| (s.id.as_str(), s)).collect();
+    let after: HashMap<&str, &kentos_contracts::WallStyleDef> = next.iter().map(|s| (s.id.as_str(), s)).collect();
+    let (mut updates, mut locked) = (Vec::new(), 0);
+    for e in doc.entities() {
+        let Entity::Wall(w) = e else { continue };
+        let Some(old) = w.wall.style.as_deref().and_then(|id| before.get(id)) else {
+            continue;
+        };
+        let mut next = w.clone();
+        match after.get(old.id.as_str()) {
+            None => next.wall.style = None,
+            Some(now) if now == old => continue,
+            Some(now) => {
+                next.wall.components = now.components.clone();
+                next.wall.caps = now.caps;
+                next.wall.fill = now.fill.clone();
+                if let Some(width) = kentos_contracts::fixed_width(&now.components) {
+                    next.wall.width = width;
+                }
+            }
+        }
+        if next == *w {
+            continue;
+        }
+        if doc.layers().is_locked(&w.base.layer_id) {
+            locked += 1;
+            continue;
+        }
+        let uid = doc.uid(Slot(w.base.id)).map(|u| u.to_string()).unwrap_or_default();
+        if let Some((_, why)) = next.wall.problem() {
+            return Err((crate::codes::INVALID_WALL, format!("“{uid}” kimlikli duvar stilin yeni bileşenleriyle olmaz: {why}")));
+        }
+        let spec = kentos_formats::walls::spec(&next.wall);
+        let pts = crate::walls::core_points(&next.wall.pts);
+        if let Err(why) = kentos_geometry_core::geom::wall::lines(&pts, next.wall.bulges.as_deref(), &spec) {
+            return Err((crate::codes::WALL_COLLAPSES, format!("“{uid}” kimlikli duvar: {why}")));
+        }
+        updates.push((Slot(w.base.id), Entity::Wall(next)));
+    }
+    Ok((updates, locked))
+}
+
+/// Saves the wall styles (docs/adr/0339 §2): the table, then the walls that follow them in one step “Duvar stili”;
+/// those on locked layers left and counted. The command has refused a table its walls cannot take.
+pub fn save_wall_styles(doc: &mut Document, next: Vec<kentos_contracts::WallStyleDef>) -> Saved {
+    let (updates, locked) = wall_followers(doc, &next).unwrap_or_default();
+    let mut settings = doc.settings().clone();
+    settings.wall_styles = next;
+    doc.set_settings(settings);
+    let changed = updates.len();
+    if changed > 0 {
+        doc.update_many(updates, "Duvar stili");
+    }
+    Saved { changed, locked, said: Vec::new() }
+}
+
 /// Saves the text styles: the table, then the texts that follow them (Yazı stili).
 pub fn save_text_styles(doc: &mut Document, next: Vec<TextStyleDef>) -> Saved {
     let mut settings = doc.settings().clone();

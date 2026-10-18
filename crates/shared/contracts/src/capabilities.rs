@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 20] = [
+pub const KINDS: [&str; 21] = [
     "point",
     "line",
     "polyline",
@@ -84,6 +84,7 @@ pub const KINDS: [&str; 20] = [
     "image",
     "raster",
     "pointcloud",
+    "wall",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -1068,6 +1069,71 @@ const ENTRIES: &[Entry] = &[
         warnings: &["layer_hidden"],
         targets: none,
     },
+    // The walls (docs/adr/0339 §5).
+    Entry {
+        id: "cad.walls.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "coincident_points",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+                "level_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+            ATTRS,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.walls.convert",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_wall_path",
+                "wall_unpaired",
+                "not_finite",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["not_a_wall_path", "wall_unpaired", "source_kept", "layer_hidden"],
+        targets: || {
+            vec![target(
+                None,
+                &["line", "polyline", "polygon", "arc", "circle"],
+                &[],
+                Some("not_a_wall_path"),
+                Some("Çiftler yalnız düz çizgileri (çizgi, iki köşeli çoklu çizgi) eşler"),
+            )]
+        },
+    },
+    Entry {
+        id: "cad.walls.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_wall",
+                "nothing_to_set",
+                "not_finite",
+                "style_not_found",
+                "invalid_wall",
+                "wall_collapses",
+                "level_not_found",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["wall"], &[], Some("not_a_wall"), None)],
+    },
     Entry {
         id: "cad.entities.offset",
         refusals: &[
@@ -1941,6 +2007,8 @@ const ENTRIES: &[Entry] = &[
                 "invalid_style",
                 "no_library",
                 "invalid_library",
+                "invalid_wall",
+                "wall_collapses",
             ],
             REVISION,
         ],
@@ -1957,10 +2025,12 @@ const ENTRIES: &[Entry] = &[
                 "invalid_decimals",
                 "invalid_scale",
                 "unknown_srid",
+                "invalid_arch",
                 "second_needs_system",
                 "second_is_own",
                 "unit_needs_local",
                 "style_needs_imperial",
+                "level_in_use",
             ],
             REVISION,
         ],
@@ -2407,6 +2477,7 @@ const ENTRIES: &[Entry] = &[
                         "dimension",
                         "hatch",
                         "table",
+                        "wall",
                         "image",
                         "raster",
                         "pointcloud",
@@ -2414,7 +2485,7 @@ const ENTRIES: &[Entry] = &[
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

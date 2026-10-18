@@ -1,0 +1,183 @@
+{
+  "format": "kentos.interaction-trace",
+  "version": 1,
+  "id": "wall-tool",
+  "title": "Duvar: Stil (S) ile KentOS'un Dış duvar 25'i seçilir, üç köşe tıklanır, Kapat (K) duvarı kapalı yazar; Hiza (H) Sol'a döner, Öteleme (Ö) 0.1 yazılır, iki köşeli duvar Enter ile yazılır; her yazma cad.walls.create ile, geri alınır",
+  "source": "docs/adr/0339 §6 (Duvar aracı, komutla yazma)",
+  "covers": [
+    "CAD-ARCH-03",
+    "CAD-ARCH-05"
+  ],
+  "document": "empty.kcad",
+  "view": {
+    "center": [
+      487000,
+      4420000
+    ],
+    "metresPerPixel": 0.02
+  },
+  "draft": {
+    "snap": false,
+    "grid": false,
+    "ortho": false,
+    "polar": false,
+    "tracking": false
+  },
+  "prefs": {
+    "cursorInput": true
+  },
+  "clickTolerance": 0.05,
+  "steps": [
+    {
+      "run": "tool.wall",
+      "expect": {
+        "tool": "wall"
+      }
+    },
+    {
+      "key": "S",
+      "note": "Stil'in adı sorulur."
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "Dış duvar 25"
+    },
+    {
+      "key": "Enter",
+      "expect": {
+        "tool": "wall",
+        "points": 0
+      }
+    },
+    {
+      "click": [
+        0,
+        0
+      ]
+    },
+    {
+      "click": [
+        6,
+        0
+      ]
+    },
+    {
+      "click": [
+        6,
+        4
+      ],
+      "expect": {
+        "points": 3
+      }
+    },
+    {
+      "key": "K",
+      "note": "Kapat: üç köşeli kapalı duvar, KentOS'un stili projeye alınır.",
+      "expect": {
+        "points": 0,
+        "newest": {
+          "kind": "wall",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              6,
+              4
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "key": "H",
+      "note": "Hiza Orta'dan Sağ'a."
+    },
+    {
+      "key": "H",
+      "note": "Hiza Sağ'dan Sol'a."
+    },
+    {
+      "key": "Ö"
+    },
+    {
+      "focus": "commandLine"
+    },
+    {
+      "text": "0.1"
+    },
+    {
+      "key": "Enter"
+    },
+    {
+      "click": [
+        0,
+        -3
+      ]
+    },
+    {
+      "click": [
+        6,
+        -3
+      ]
+    },
+    {
+      "key": "Enter",
+      "note": "İki köşeli duvar yazılır.",
+      "expect": {
+        "newest": {
+          "kind": "wall",
+          "points": [
+            [
+              0,
+              -3
+            ],
+            [
+              6,
+              -3
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "key": "Ctrl+Z",
+      "note": "Tek geri alma duvarı kaldırır.",
+      "expect": {
+        "newest": {
+          "kind": "wall",
+          "points": [
+            [
+              0,
+              0
+            ],
+            [
+              6,
+              0
+            ],
+            [
+              6,
+              4
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "key": "Esc"
+    },
+    {
+      "key": "Esc",
+      "expect": {
+        "tool": "select"
+      }
+    }
+  ]
+}

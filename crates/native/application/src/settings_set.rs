@@ -12,8 +12,8 @@
 use std::sync::OnceLock;
 
 use kentos_contracts::{
-    CommandResult, DrawingUnit, LengthStyle, MAX_PLOT_SCALE, MAX_SHOWN_DECIMALS, ProjectSettings,
-    ScaleChange, SettingsChanged, SettingsSet, Workspace,
+    CommandResult, DrawingUnit, Entity, LengthStyle, MAX_PLOT_SCALE, MAX_SHOWN_DECIMALS,
+    ProjectSettings, ScaleChange, SettingsChanged, SettingsSet, Workspace,
 };
 use kentos_domain::Document;
 
@@ -64,7 +64,8 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.area_unit.is_some()
         || input.angle_unit.is_some()
         || input.plot_scale.is_some()
-        || input.drawing_font.is_some();
+        || input.drawing_font.is_some()
+        || input.arch.is_some();
     if !given {
         return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
@@ -123,6 +124,9 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
                 path,
             ));
         }
+    }
+    if let Some((path, why)) = input.arch.as_ref().and_then(|a| a.problem()) {
+        return Err(fail(codes::INVALID_ARCH, why, &format!("arch.{path}")));
     }
     Ok(())
 }
@@ -207,6 +211,27 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
     }
     if let Some(f) = input.drawing_font {
         s.drawing_font = Some(f);
+    }
+    if let Some(arch) = &input.arch {
+        // A wall keeps the level it names (docs/adr/0339 §3).
+        if let Some(id) = doc.entities().find_map(|e| match e {
+            Entity::Wall(w) => w
+                .wall
+                .arch
+                .level
+                .as_deref()
+                .filter(|id| !arch.levels.iter().any(|l| l.id == *id)),
+            _ => None,
+        }) {
+            return Err(fail(
+                codes::LEVEL_IN_USE,
+                format!(
+                    "“{id}” katını duvarlar anıyor; kaldırılmadı. Önce duvarların katını değiştirin ya da katı bırakın."
+                ),
+                "arch.levels",
+            ));
+        }
+        s.arch = (!arch.is_empty()).then(|| arch.clone());
     }
     Ok(s)
 }
@@ -309,6 +334,7 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
     key(before.angle_unit != after.angle_unit, "angleUnit");
     key(before.plot_scale != after.plot_scale, "plotScale");
     key(before.drawing_font != after.drawing_font, "drawingFont");
+    key(before.arch != after.arch, "arch");
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

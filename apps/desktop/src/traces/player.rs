@@ -161,6 +161,11 @@ impl Seen {
             Entity::Spline(s) => (s.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             // A NURBS curve's control points (docs/adr/0259).
             Entity::Nurbs(n) => (n.ctrl.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
+            // A wall's path as drawn (docs/adr/0339 §1).
+            Entity::Wall(w) => (
+                w.wall.pts.iter().map(|v| [v.x, v.y]).collect(),
+                w.wall.bulges.clone().unwrap_or_default(),
+            ),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {
                     let (m, r) = (e.major, e.ratio);

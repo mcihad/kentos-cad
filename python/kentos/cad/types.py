@@ -153,13 +153,15 @@ class AnnotationStyleKind(_StrEnum):
     - ``text``
     - ``dimension``
     - ``leader``: A leader style (docs/adr/0326 §4).
+    - ``wall``: A wall style (docs/adr/0339 §2): its walls take its components, ends and fill.
     """
     TEXT = "text"
     DIMENSION = "dimension"
     LEADER = "leader"
+    WALL = "wall"
 
 
-AnnotationStyleKindName = Literal["text", "dimension", "leader"]
+AnnotationStyleKindName = Literal["text", "dimension", "leader", "wall"]
 """The names of :class:`AnnotationStyleKind`, for a plain string."""
 
 
@@ -183,6 +185,45 @@ class AnnotativeOperation(_StrEnum):
 
 AnnotativeOperationName = Literal["make", "unmake", "add", "remove", "set", "reset"]
 """The names of :class:`AnnotativeOperation`, for a plain string."""
+
+
+class ArchDiscipline(_StrEnum):
+    """The discipline an architectural object belongs to."""
+    ARCHITECTURE = "architecture"
+    STRUCTURE = "structure"
+    MECHANICAL = "mechanical"
+    ELECTRICAL = "electrical"
+    PLUMBING = "plumbing"
+    LANDSCAPE = "landscape"
+    INTERIOR = "interior"
+
+
+ArchDisciplineName = Literal["architecture", "structure", "mechanical", "electrical", "plumbing", "landscape", "interior"]
+"""The names of :class:`ArchDiscipline`, for a plain string."""
+
+
+class ArchPhase(_StrEnum):
+    """An architectural object's phase (renovation): what is there, what goes, what is new."""
+    EXISTING = "existing"
+    DEMOLISH = "demolish"
+    NEW = "new"
+    TEMPORARY = "temporary"
+
+
+ArchPhaseName = Literal["existing", "demolish", "new", "temporary"]
+"""The names of :class:`ArchPhase`, for a plain string."""
+
+
+class ArchStatus(_StrEnum):
+    """Where an architectural object is in its construction."""
+    PROPOSED = "proposed"
+    APPROVED = "approved"
+    UNDER_CONSTRUCTION = "underConstruction"
+    BUILT = "built"
+
+
+ArchStatusName = Literal["proposed", "approved", "underConstruction", "built"]
+"""The names of :class:`ArchStatus`, for a plain string."""
 
 
 class AreaLabelMode(_StrEnum):
@@ -2617,7 +2658,27 @@ SchemaKindName = Literal["layers", "forms", "domains", "relations"]
 
 
 class SelectKind(_StrEnum):
-    """A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`)."""
+    """A kind the selection filter holds (docs/adr/0187 §5): a NURBS curve is an Eğri (`spline`).
+
+    - ``point``
+    - ``line``
+    - ``polyline``
+    - ``polygon``
+    - ``circle``
+    - ``arc``
+    - ``ellipse``
+    - ``spline``
+    - ``xline``
+    - ``ray``
+    - ``text``
+    - ``dimension``
+    - ``hatch``
+    - ``insert``
+    - ``leader``
+    - ``table``
+    - ``image``
+    - ``wall``: Duvar (docs/adr/0339 §6).
+    """
     POINT = "point"
     LINE = "line"
     POLYLINE = "polyline"
@@ -2635,9 +2696,10 @@ class SelectKind(_StrEnum):
     LEADER = "leader"
     TABLE = "table"
     IMAGE = "image"
+    WALL = "wall"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "wall"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -3099,6 +3161,56 @@ class VertexAction(_StrEnum):
 
 VertexActionName = Literal["remove", "insert", "straighten", "arc", "width"]
 """The names of :class:`VertexAction`, for a plain string."""
+
+
+class WallCaps(_StrEnum):
+    """Whether an open wall's ends are closed by a line across it."""
+    CLOSED = "closed"
+    OPEN = "open"
+
+
+WallCapsName = Literal["closed", "open"]
+"""The names of :class:`WallCaps`, for a plain string."""
+
+
+class WallDetail(_StrEnum):
+    """How much of a wall is drawn (`CAD-ARCH-12`), the least first: `Schematic` its outline and its style's fill,
+    `Standard` the components shown at construction scales, `Detailed` every component.
+    """
+    SCHEMATIC = "schematic"
+    STANDARD = "standard"
+    DETAILED = "detailed"
+
+
+WallDetailName = Literal["schematic", "standard", "detailed"]
+"""The names of :class:`WallDetail`, for a plain string."""
+
+
+class WallJustify(_StrEnum):
+    """Where the wall's body lies across its path (AutoCAD Architecture's justification): `Left`, the path is the wall's
+    left face and the body to its right; `Center`, the path is its middle; `Right`, the path is its right face.
+    """
+    LEFT = "left"
+    CENTER = "center"
+    RIGHT = "right"
+
+
+WallJustifyName = Literal["left", "center", "right"]
+"""The names of :class:`WallJustify`, for a plain string."""
+
+
+class WallsFromMode(_StrEnum):
+    """How lines become walls.
+
+    - ``each``: Tek tek: a wall along each line, polyline, area's ring, arc or circle.
+    - ``pairs``: Çiftler: two parallel straight lines at most `maxWidth` apart, overlapping, a wall between them as wide as they
+    """
+    EACH = "each"
+    PAIRS = "pairs"
+
+
+WallsFromModeName = Literal["each", "pairs"]
+"""The names of :class:`WallsFromMode`, for a plain string."""
 
 
 class Workspace(_StrEnum):
@@ -3696,6 +3808,7 @@ class Entity(_Union):
     - :class:`ImageEntity` (``kind: image``)
     - :class:`RasterEntity` (``kind: raster``)
     - :class:`PointcloudEntity` (``kind: pointcloud``)
+    - :class:`WallEntity` (``kind: wall``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -3782,6 +3895,7 @@ class EntityGeometry(_Union):
     - :class:`ImageEntityGeometry` (``kind: image``)
     - :class:`RasterEntityGeometry` (``kind: raster``)
     - :class:`PointcloudEntityGeometry` (``kind: pointcloud``)
+    - :class:`WallEntityGeometry` (``kind: wall``)
     """
     __slots__ = ()
     TAG: ClassVar[str] = "kind"
@@ -4637,6 +4751,40 @@ class ViewsOp(_Union):
         return _variant(_VIEWS_OP, "ViewsOp", "kind", data).from_json(data)
 
 
+class WallsOperation(_Union):
+    """What `cad.walls.edit` does to the walls.
+
+    One of:
+
+    - :class:`SetWallsOperation` (``kind: set``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    if TYPE_CHECKING:
+        # Every variant has these.
+        caps: WallCaps | WallCapsName | None | Unset
+        discipline: ArchDiscipline | ArchDisciplineName | None | Unset
+        fill: str | None | Unset
+        height: float | None | Unset
+        justify: WallJustify | WallJustifyName | None | Unset
+        level: str | None | Unset
+        offset: float | None | Unset
+        phase: ArchPhase | ArchPhaseName | None | Unset
+        status: ArchStatus | ArchStatusName | None | Unset
+        style: str | None | Unset
+        width: float | None | Unset
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsOperation:
+        return _variant(_WALLS_OPERATION, "WallsOperation", "kind", data).from_json(data)
+
+
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
 
 
@@ -4662,6 +4810,9 @@ _RasterFieldsT = TypeVar("_RasterFieldsT", bound="RasterFields")
 
 
 _TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
+
+
+_WallFieldsT = TypeVar("_WallFieldsT", bound="WallFields")
 
 
 @dataclass(kw_only=True, slots=True)
@@ -5313,6 +5464,93 @@ class ArcPlan(_Model):
         return cls(
             entity=Entity.from_json(data["entity"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchInfo(_Model):
+    """What every architectural object carries beside its geometry (`CAD-ARCH-03`): its level (by the project level's
+    id), phase, construction status and discipline; absent fields are not said.
+    """
+    discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    status: ArchStatus | ArchStatusName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.discipline is not UNSET:
+            out["discipline"] = None if self.discipline is None else _enum_out(self.discipline)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchInfo:
+        return cls(
+            discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
+            level=data.get("level", UNSET),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchLevel(_Model):
+    """A level (kat) of the project: its id, name, floor's elevation and storey height.
+    Attributes:
+        elevation: The floor's elevation, metres. Unit: elevation.
+        height: Floor to floor, metres; absent: not said. Unit: elevation.
+    """
+    id: str
+    name: str
+    elevation: float
+    height: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["elevation"] = float(self.elevation)
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchLevel:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            elevation=float(data["elevation"]),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ArchSettings(_Model):
+    """The project's architectural settings: its levels, low to high as made, and the detail walls are drawn at (absent:
+    by the drawing's scale, `WallDetail::at_scale`).
+    """
+    detail: WallDetail | WallDetailName | None | Unset = UNSET
+    levels: list[ArchLevel] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.detail is not UNSET:
+            out["detail"] = None if self.detail is None else _enum_out(self.detail)
+        if self.levels is not UNSET:
+            out["levels"] = [e0.to_json() for e0 in self.levels]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ArchSettings:
+        return cls(
+            detail=UNSET if "detail" not in data else None if data["detail"] is None else _enum_in(WallDetail, data["detail"]),
+            levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
         )
 
 
@@ -8055,6 +8293,67 @@ class CommitResult(_Model):
             deleted=list(data["deleted"]),
             event_seq=data["eventSeq"],
             replayed=data["replayed"] if "replayed" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ComponentEdge(_Model):
+    """The lines along a component's sides: its own colour, line weight and line type; absent fields the wall's.
+    Attributes:
+        line_weight: Paper mm, 0 to 100. Unit: paper-mm.
+    """
+    color: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ComponentEdge:
+        return cls(
+            color=data.get("color", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ComponentHatch(_Model):
+    """A component's hatch: a pattern of the library or the project by its name (`SOLID` a solid fill), as large on paper
+    as at 1:1 times `scale` at every drawing scale, turned `angle` degrees along the wall's path, in its own colour.
+    Attributes:
+        scale: Times the pattern's paper size, above 0. Unit: 1.
+        angle: Unit: deg.
+    """
+    pattern: str
+    scale: float
+    angle: float
+    color: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pattern"] = self.pattern
+        out["scale"] = float(self.scale)
+        out["angle"] = float(self.angle)
+        if self.color is not UNSET:
+            out["color"] = self.color
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ComponentHatch:
+        return cls(
+            pattern=data["pattern"],
+            scale=float(data["scale"]),
+            angle=float(data["angle"]),
+            color=data.get("color", UNSET),
         )
 
 
@@ -21845,6 +22144,84 @@ class NewObject(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class NewWall(_Model):
+    """One wall to write: its path as drawn and what the user chose for it.
+    Attributes:
+        pts: The path's vertices, two or more (three or more for a closed one of straight edges); no two in a row at one
+            place. Unit: length.
+        arch: Its level (a project level's id), phase, construction status and discipline. Absent: none said.
+        attrs: GIS attributes, text in v1. Absent: none.
+        bulges: One per edge (DXF's bulge, tan(θ/4), counter-clockwise positive): one fewer than the points, as many on a
+            closed path. Absent: every edge straight. Unit: 1.
+        caps: Its ends. Absent: the style's, else closed.
+        closed: Kapat: the path's last vertex joins its first.
+        height: Its height above its level's floor, metres. Absent: the level's. Unit: elevation.
+        justify: Where the body lies across the path. Absent: centred.
+        label: The text shown beside it. Absent: none.
+        offset: The base line offset, metres, positive to the path's left. Absent: 0. Unit: length.
+        style: A wall style by its id or its name: the project's, or KentOS's own (taken into the project). Absent: a plain
+            wall of one body.
+        width: Metres, above 0, at most 100. Absent: the style's new width, else 0.2 m. Unit: length.
+    """
+    pts: list[Vec2]
+    arch: ArchInfo | None | Unset = UNSET
+    attrs: dict[str, str] | None | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    caps: WallCaps | WallCapsName | None | Unset = UNSET
+    closed: bool | Unset = UNSET
+    height: float | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | None | Unset = UNSET
+    label: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
+        if self.attrs is not UNSET:
+            out["attrs"] = None if self.attrs is None else dict(self.attrs)
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.caps is not UNSET:
+            out["caps"] = None if self.caps is None else _enum_out(self.caps)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.justify is not UNSET:
+            out["justify"] = None if self.justify is None else _enum_out(self.justify)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewWall:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchInfo.from_json(data["arch"]),
+            attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            caps=UNSET if "caps" not in data else None if data["caps"] is None else _enum_in(WallCaps, data["caps"]),
+            closed=data.get("closed", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
+            label=data.get("label", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            style=data.get("style", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NumberRule(_Model):
     """The values a number parameter may take: within `min` and `max`, on `step`s from `min` (from 0 without one), one
     of `list`; or computed by `expression` from the other number parameters (it is not set then).
@@ -24965,6 +25342,7 @@ class ProjectSettings(_Model):
         address_locators: The project's address data (docs/adr/0229 §2), in the order they were made.
         annotation: The project's annotation heights on paper (docs/adr/0205 §1); absent:
             every kind's default.
+        arch: The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
         connections: The project's service connections without their secrets (docs/adr/0208 §2).
         custom_crs: The project's own coordinate system when it is a definition
             (docs/adr/0168 §1); `srid` is then 0.
@@ -24999,6 +25377,7 @@ class ProjectSettings(_Model):
         ucs: The drawing's user coordinate system (docs/adr/0261 §1); none: the
             world. How points are typed and shown, never where they are.
         variables: The project's own `@` variables (docs/adr/0214 §2.3), in the settings window's order.
+        wall_styles: The project's named wall styles (docs/adr/0339 §2), in the order they were made.
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
@@ -25011,6 +25390,7 @@ class ProjectSettings(_Model):
     plot_scale: float
     address_locators: list[AddressLocator] | Unset = UNSET
     annotation: AnnotationHeights | None | Unset = UNSET
+    arch: ArchSettings | None | Unset = UNSET
     connections: list[ServiceConnection] | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
     datum_transforms: list[DatumTransform] | Unset = UNSET
@@ -25037,6 +25417,7 @@ class ProjectSettings(_Model):
     topology: TopologySettings | None | Unset = UNSET
     ucs: Ucs | None | Unset = UNSET
     variables: list[ProjectVariable] | Unset = UNSET
+    wall_styles: list[WallStyleDef] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -25051,6 +25432,8 @@ class ProjectSettings(_Model):
             out["addressLocators"] = [e0.to_json() for e0 in self.address_locators]
         if self.annotation is not UNSET:
             out["annotation"] = None if self.annotation is None else self.annotation.to_json()
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.connections is not UNSET:
             out["connections"] = [e0.to_json() for e0 in self.connections]
         if self.custom_crs is not UNSET:
@@ -25103,6 +25486,8 @@ class ProjectSettings(_Model):
             out["ucs"] = None if self.ucs is None else self.ucs.to_json()
         if self.variables is not UNSET:
             out["variables"] = [e0.to_json() for e0 in self.variables]
+        if self.wall_styles is not UNSET:
+            out["wallStyles"] = [e0.to_json() for e0 in self.wall_styles]
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
         return out
@@ -25118,6 +25503,7 @@ class ProjectSettings(_Model):
             plot_scale=float(data["plotScale"]),
             address_locators=[AddressLocator.from_json(e0) for e0 in data["addressLocators"]] if "addressLocators" in data else UNSET,
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
@@ -25144,6 +25530,7 @@ class ProjectSettings(_Model):
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
             ucs=UNSET if "ucs" not in data else None if data["ucs"] is None else Ucs.from_json(data["ucs"]),
             variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
+            wall_styles=[WallStyleDef.from_json(e0) for e0 in data["wallStyles"]] if "wallStyles" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
         )
 
@@ -27050,19 +27437,24 @@ class SettingsSet(_Model):
     - `plotScale`: a whole denominator from 1 to 1 000 000; the texts,
       leaders, dimensions and tables at the old general height take the new
       one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);
-    - `drawingFont`: the drawing's typeface.
+    - `drawingFont`: the drawing's typeface;
+    - `arch`: the project's levels and the detail its walls are drawn at
+      (docs/adr/0339 §3), whole: the given settings take the place of the
+      old ones, an empty object takes them away.
 
     Settings are an edit of the project, no undo step (docs/adr/0049).
 
     Refusals (`CommandError.code`), checked in this order: `nothing_to_set`
     (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
-    (`srid`, then `secondSrid`: not 0 and not in the registry); then
+    (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
+    (two levels of one id or name, a level's elevation or height); then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
-    `style_needs_imperial` (a feet-and-inches style for a metric unit).
+    `style_needs_imperial` (a feet-and-inches style for a metric unit),
+    `level_in_use` (a level a wall names taken away).
     Attributes:
         area_decimals: Unit: count.
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -27074,6 +27466,7 @@ class SettingsSet(_Model):
         srid: Unit: epsg.
     """
     angle_unit: AngleUnit | AngleUnitName | None | Unset = UNSET
+    arch: ArchSettings | None | Unset = UNSET
     area_decimals: int | None | Unset = UNSET
     area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
@@ -27091,6 +27484,8 @@ class SettingsSet(_Model):
         out: dict[str, Any] = {}
         if self.angle_unit is not UNSET:
             out["angleUnit"] = None if self.angle_unit is None else _enum_out(self.angle_unit)
+        if self.arch is not UNSET:
+            out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.area_decimals is not UNSET:
             out["areaDecimals"] = self.area_decimals
         if self.area_unit is not UNSET:
@@ -27121,6 +27516,7 @@ class SettingsSet(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> SettingsSet:
         return cls(
             angle_unit=UNSET if "angleUnit" not in data else None if data["angleUnit"] is None else _enum_in(AngleUnit, data["angleUnit"]),
+            arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             area_decimals=data.get("areaDecimals", UNSET),
             area_unit=UNSET if "areaUnit" not in data else None if data["areaUnit"] is None else _enum_in(AreaUnit, data["areaUnit"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
@@ -28492,6 +28888,8 @@ class StylesEdit(_Model):
         style: Rename's and remove's style, by its id.
         styles: Export's styles, by id; absent: every style of the kind.
         text: Create's and update's text style.
+        wall: Create's and update's wall style (docs/adr/0339 §2): an update's walls take its components, ends and fill (and
+            the width they fix); a wall its new components do not fit, or a face they make that cannot be drawn, refuses it.
     """
     kind: AnnotationStyleKind | AnnotationStyleKindName
     operation: StyleEditOperation | StyleEditOperationName
@@ -28504,6 +28902,7 @@ class StylesEdit(_Model):
     style: str | None | Unset = UNSET
     styles: list[str] | None | Unset = UNSET
     text: TextStyleDef | None | Unset = UNSET
+    wall: WallStyleDef | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -28527,6 +28926,8 @@ class StylesEdit(_Model):
             out["styles"] = None if self.styles is None else list(self.styles)
         if self.text is not UNSET:
             out["text"] = None if self.text is None else self.text.to_json()
+        if self.wall is not UNSET:
+            out["wall"] = None if self.wall is None else self.wall.to_json()
         return out
 
     @classmethod
@@ -28543,6 +28944,7 @@ class StylesEdit(_Model):
             style=data.get("style", UNSET),
             styles=UNSET if "styles" not in data else None if data["styles"] is None else list(data["styles"]),
             text=UNSET if "text" not in data else None if data["text"] is None else TextStyleDef.from_json(data["text"]),
+            wall=UNSET if "wall" not in data else None if data["wall"] is None else WallStyleDef.from_json(data["wall"]),
         )
 
 
@@ -30612,6 +31014,631 @@ class VisibilityState(_Model):
         return cls(
             name=data["name"],
             hidden=list(data["hidden"]) if "hidden" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallComponent(_Model):
+    """One layer of a wall's body, from its left face towards its right (`CAD-ARCH-04`): plaster, brick, insulation.
+    Attributes:
+        detail: The least detail it is drawn at as its own (its lines and hatch); below, it is part of the body.
+        edge: The lines along its sides; absent: the wall's.
+        thickness: Its thickness, metres; absent: what the wall's width leaves of the others (one component at most). Unit: length.
+    """
+    name: str
+    detail: WallDetail | WallDetailName = WallDetail.STANDARD
+    edge: ComponentEdge | None | Unset = UNSET
+    hatch: ComponentHatch | None | Unset = UNSET
+    material: str | None | Unset = UNSET
+    thickness: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["detail"] = _enum_out(self.detail)
+        if self.edge is not UNSET:
+            out["edge"] = None if self.edge is None else self.edge.to_json()
+        if self.hatch is not UNSET:
+            out["hatch"] = None if self.hatch is None else self.hatch.to_json()
+        if self.material is not UNSET:
+            out["material"] = self.material
+        if self.thickness is not UNSET:
+            out["thickness"] = None if self.thickness is None else float(self.thickness)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallComponent:
+        return cls(
+            name=data["name"],
+            detail=_enum_in(WallDetail, data["detail"]) if "detail" in data else WallDetail.STANDARD,
+            edge=UNSET if "edge" not in data else None if data["edge"] is None else ComponentEdge.from_json(data["edge"]),
+            hatch=UNSET if "hatch" not in data else None if data["hatch"] is None else ComponentHatch.from_json(data["hatch"]),
+            material=data.get("material", UNSET),
+            thickness=UNSET if "thickness" not in data else None if data["thickness"] is None else float(data["thickness"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallEntity(Entity):
+    """A wall (`CAD-ARCH-01`, `02`): its path, the base line it was drawn along, with arcs as a polyline's bulges (one per
+    vertex, as the document keeps a polyline's: an open wall's last is 0); its width; where its body lies across the
+    justification line (the path moved `offset` to its left); the components it is built of, from its left face; its
+    ends; its height above its level; its architectural information. Its faces, ends, component lines and hatches are
+    drawn from these (`geom::wall` of the shared core), at the detail the drawing's scale asks.
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        pts: Unit: length.
+        width: Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        bulges: Unit: 1.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        closed: Its path's last vertex joins its first: a ring of wall.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        components: Its body's layers from its left face; none: one plain body.
+        fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
+        height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        offset: The base line offset: the justification line is the path moved this far to its left (negative: right). Unit: length.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        style: The project's wall style it was made with, by its id; its components are the style's.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+    """
+    TAG_VALUE: ClassVar[str] = "wall"
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    pts: list[Vec2]
+    width: float
+    arch: ArchInfo | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    caps: WallCaps | WallCapsName | Unset = UNSET
+    closed: bool | Unset = UNSET
+    color: str | None | Unset = UNSET
+    components: list[WallComponent] | Unset = UNSET
+    fill: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName = WallJustify.CENTER
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    offset: float | Unset = UNSET
+    order: int | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wall"}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.caps is not UNSET:
+            out["caps"] = _enum_out(self.caps)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.components is not UNSET:
+            out["components"] = [e0.to_json() for e0 in self.components]
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        out["justify"] = _enum_out(self.justify)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallEntity:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
+            closed=data.get("closed", UNSET),
+            color=data.get("color", UNSET),
+            components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
+            fill=data.get("fill", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else WallJustify.CENTER,
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            order=data.get("order", UNSET),
+            style=data.get("style", UNSET),
+            symbol=data.get("symbol", UNSET),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallFields(_Model):
+    """A wall's own fields: what a command writes and an edit's geometry carries (`EntityGeometry::Wall`).
+    Attributes:
+        pts: Unit: length.
+        width: Unit: length.
+        bulges: Unit: 1.
+        closed: Its path's last vertex joins its first: a ring of wall.
+        components: Its body's layers from its left face; none: one plain body.
+        fill: The body's solid fill when drawn schematically (`#RRGGBB`); absent: none.
+        height: Its height above its level's floor, metres; absent: the level's height. Unit: elevation.
+        offset: The base line offset: the justification line is the path moved this far to its left (negative: right). Unit: length.
+        style: The project's wall style it was made with, by its id; its components are the style's.
+    """
+    pts: list[Vec2]
+    width: float
+    arch: ArchInfo | Unset = UNSET
+    bulges: list[float] | None | Unset = UNSET
+    caps: WallCaps | WallCapsName | Unset = UNSET
+    closed: bool | Unset = UNSET
+    components: list[WallComponent] | Unset = UNSET
+    fill: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName = WallJustify.CENTER
+    offset: float | Unset = UNSET
+    style: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pts"] = [_vec2_out(e0) for e0 in self.pts]
+        out["width"] = float(self.width)
+        if self.arch is not UNSET:
+            out["arch"] = self.arch.to_json()
+        if self.bulges is not UNSET:
+            out["bulges"] = None if self.bulges is None else [float(e0) for e0 in self.bulges]
+        if self.caps is not UNSET:
+            out["caps"] = _enum_out(self.caps)
+        if self.closed is not UNSET:
+            out["closed"] = self.closed
+        if self.components is not UNSET:
+            out["components"] = [e0.to_json() for e0 in self.components]
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        out["justify"] = _enum_out(self.justify)
+        if self.offset is not UNSET:
+            out["offset"] = float(self.offset)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        return out
+
+    @classmethod
+    def from_json(cls: type[_WallFieldsT], data: Mapping[str, Any]) -> _WallFieldsT:
+        return cls(
+            pts=[Vec2.from_json(e0) for e0 in data["pts"]],
+            width=float(data["width"]),
+            arch=ArchInfo.from_json(data["arch"]) if "arch" in data else UNSET,
+            bulges=UNSET if "bulges" not in data else None if data["bulges"] is None else [float(e0) for e0 in data["bulges"]],
+            caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
+            closed=data.get("closed", UNSET),
+            components=[WallComponent.from_json(e0) for e0 in data["components"]] if "components" in data else UNSET,
+            fill=data.get("fill", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            justify=_enum_in(WallJustify, data["justify"]) if "justify" in data else WallJustify.CENTER,
+            offset=float(data["offset"]) if "offset" in data else UNSET,
+            style=data.get("style", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallStyleDef(_Model):
+    """A named wall style (`CAD-ARCH-04`): the components a wall is built of, its ends, its schematic fill and the width a
+    new wall takes when one component takes the rest.
+    Attributes:
+        id: One of its kind among the project's wall styles; KentOS's own are named (`kentos-…`), the user's UUIDv7.
+        width: A new wall's width, metres, when one component takes the rest; the components' sum when none does. Unit: length.
+    """
+    id: str
+    name: str
+    components: list[WallComponent]
+    caps: WallCaps | WallCapsName | Unset = UNSET
+    fill: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["components"] = [e0.to_json() for e0 in self.components]
+        if self.caps is not UNSET:
+            out["caps"] = _enum_out(self.caps)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallStyleDef:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            components=[WallComponent.from_json(e0) for e0 in data["components"]],
+            caps=_enum_in(WallCaps, data["caps"]) if "caps" in data else UNSET,
+            fill=data.get("fill", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsCreate(_Model):
+    """Input of `cad.walls.create` v1: walls on a named layer, along their paths, written as one undo step “Duvar”. The
+    wall tool gives the path clicked and the width, justification, offset and style chosen (TODOS.md CMD-07: it reads
+    no active layer, colour or style).
+
+    A wall of a style takes the style's components, ends and fill; its width is the style's when all its components
+    have their thickness, else the input's (the style's new width when absent), the rest going to the component
+    without one. A style of KentOS's own is taken into the project's wall styles in the same step.
+
+    Refusals (`CommandError.code`), checked in this order: `no_objects` (no wall), `not_finite` (a coordinate, bulge
+    or length, at its place), `coincident_points`, `style_not_found`, `invalid_wall` (the path, the width, the offset
+    or the components), `wall_collapses` (an arc tighter than a face), `level_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict` (status `conflict`), `layer_not_found`, `not_a_layer`, `layer_locked`; on
+    the desktop also `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        layer_id: The layer they go on: a layer's id (`LayerNode.id`), not a group's.
+        color: Their own colour (`EntityBase.color`). Absent: the layer's.
+        expected_revision: The document revision the input was prepared against, as decimal text; another one writes nothing (`conflict`).
+        line_type: Their own line type. Absent: the layer's.
+        line_weight: Their own line weight, paper mm (0 to 100). Absent: the layer's. Unit: paper-mm.
+    """
+    layer_id: str
+    walls: list[NewWall]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsCreate:
+        return cls(
+            layer_id=data["layerId"],
+            walls=[NewWall.from_json(e0) for e0 in data["walls"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsCreated(_Model):
+    """Output of `cad.walls.create` v1.
+    Attributes:
+        uids: The walls' persistent ids, in the input's order.
+        ids: Their slots in the open document. Unit: id.
+        styles_added: The ids of KentOS's wall styles taken into the project.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+    styles_added: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        if self.styles_added is not UNSET:
+            out["stylesAdded"] = list(self.styles_added)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+            styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsEdit(_Model):
+    """Input of `cad.walls.edit` v1: walls named by their persistent ids changed as one undo step “Duvarı düzenle”, all
+    or none. A width a style's components do not fit, an arc a new width collapses, a level the project does not have:
+    nothing is written.
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall`, `nothing_to_set`, `not_finite`,
+    `style_not_found`, `invalid_wall`, `wall_collapses`, `level_not_found`, `invalid_revision`, `revision_conflict`,
+    `layer_locked`.
+    """
+    uids: list[str]
+    operation: WallsOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsEdit:
+        return cls(
+            uids=list(data["uids"]),
+            operation=WallsOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsEdited(_Model):
+    """Output of `cad.walls.edit` v1 (its plan's too: the walls as they would be, nothing written).
+    Attributes:
+        walls: The walls as written, in the input's order.
+    """
+    walls: list[Entity]
+    revision: str
+    styles_added: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        if self.styles_added is not UNSET:
+            out["stylesAdded"] = list(self.styles_added)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsEdited:
+        return cls(
+            walls=[Entity.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+            styles_added=list(data["stylesAdded"]) if "stylesAdded" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsFromLines(_Model):
+    """Input of `cad.walls.convert` v1 (`CAD-ARCH-09`): walls from the drawing's line work, one undo step “Çizgiden
+    duvar”; the sources are taken away unless kept, those a wall does not cover whole are kept (`source_kept`).
+
+    Tek tek (`each`): a line, an open or closed polyline (its arcs too), an area's outer ring, an arc and a circle each
+    give one wall along it, of the width, justification and style given; another kind is left (`not_a_wall_path`).
+
+    Çiftler (`pairs`): straight lines (a line, a polyline of two vertices) are paired, the nearest first: two whose
+    directions are within `angle` degrees, at most `maxWidth` apart and whose projections overlap; the wall runs along
+    the first line's direction over the overlap, midway between them, as wide as they are apart, centred. Lines left
+    without a pair are reported (`wall_unpaired`).
+
+    Refusals: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_wall_path` (no source a wall is drawn along),
+    `wall_unpaired` (no pair in pairs mode), `not_finite`, `style_not_found`, `invalid_wall`, `wall_collapses`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`. Warnings:
+    `not_a_wall_path`, `wall_unpaired`, `source_kept`, `layer_hidden`.
+    Attributes:
+        uids: The sources' persistent ids, at least one.
+        angle: Pairs: degrees two lines may be apart and be parallel. Absent: 1°. Unit: deg.
+        justify: Each mode's justification. Absent: centred.
+        keep_sources: Kaynağı koru: the sources stay. Absent: those a wall covers whole go.
+        layer_id: The layer the walls go on. Absent: each source's own.
+        max_width: Pairs: the widest wall, metres. Absent: 0.6 m. Unit: length.
+        style: A wall style by its id or name. Absent: plain walls.
+        width: Each mode's width, metres. Absent: the style's new width, else 0.2 m. Unit: length.
+    """
+    uids: list[str]
+    angle: float | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | None | Unset = UNSET
+    keep_sources: bool | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    max_width: float | None | Unset = UNSET
+    mode: WallsFromMode | WallsFromModeName = WallsFromMode.EACH
+    style: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.justify is not UNSET:
+            out["justify"] = None if self.justify is None else _enum_out(self.justify)
+        if self.keep_sources is not UNSET:
+            out["keepSources"] = self.keep_sources
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.max_width is not UNSET:
+            out["maxWidth"] = None if self.max_width is None else float(self.max_width)
+        out["mode"] = _enum_out(self.mode)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsFromLines:
+        return cls(
+            uids=list(data["uids"]),
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
+            keep_sources=data.get("keepSources", UNSET),
+            layer_id=data.get("layerId", UNSET),
+            max_width=UNSET if "maxWidth" not in data else None if data["maxWidth"] is None else float(data["maxWidth"]),
+            mode=_enum_in(WallsFromMode, data["mode"]) if "mode" in data else WallsFromMode.EACH,
+            style=data.get("style", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsFromLinesDone(_Model):
+    """Output of `cad.walls.convert` v1.
+    Attributes:
+        uids: The walls written, in the sources' order (a pair's at its first line's place).
+        left: The sources no wall was drawn from: another kind, or a line without a pair.
+        removed: The sources taken away.
+    """
+    uids: list[str]
+    revision: str
+    left: list[str] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = list(self.left)
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsFromLinesDone:
+        return cls(
+            uids=list(data["uids"]),
+            revision=data["revision"],
+            left=list(data["left"]) if "left" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsFromLinesPlan(_Model):
+    """What `cad.walls.convert` would write (plan mode): the walls, the sources that would go and those left."""
+    walls: list[Entity]
+    revision: str
+    left: list[str] | Unset = UNSET
+    removed: list[str] | Unset = UNSET
+    styles_added: list[WallStyleDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = list(self.left)
+        if self.removed is not UNSET:
+            out["removed"] = list(self.removed)
+        if self.styles_added is not UNSET:
+            out["stylesAdded"] = [e0.to_json() for e0 in self.styles_added]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsFromLinesPlan:
+        return cls(
+            walls=[Entity.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+            left=list(data["left"]) if "left" in data else UNSET,
+            removed=list(data["removed"]) if "removed" in data else UNSET,
+            styles_added=[WallStyleDef.from_json(e0) for e0 in data["stylesAdded"]] if "stylesAdded" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class WallsPlan(_Model):
+    """What `cad.walls.create` would write (plan mode); nothing is written.
+    Attributes:
+        walls: The walls as they would be stored, their `id` 0.
+        styles_added: KentOS's wall styles the project would take.
+    """
+    walls: list[Entity]
+    revision: str
+    styles_added: list[WallStyleDef] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["walls"] = [e0.to_json() for e0 in self.walls]
+        out["revision"] = self.revision
+        if self.styles_added is not UNSET:
+            out["stylesAdded"] = [e0.to_json() for e0 in self.styles_added]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WallsPlan:
+        return cls(
+            walls=[Entity.from_json(e0) for e0 in data["walls"]],
+            revision=data["revision"],
+            styles_added=[WallStyleDef.from_json(e0) for e0 in data["stylesAdded"]] if "stylesAdded" in data else UNSET,
         )
 
 
@@ -34916,6 +35943,17 @@ class PointcloudEntityGeometry(PointCloudFields, EntityGeometry):
 
     def to_json(self) -> dict[str, Any]:
         return {"kind": "pointcloud", **PointCloudFields.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class WallEntityGeometry(WallFields, EntityGeometry):
+    """A wall (docs/adr/0339 §1): its path (the base line, bulges one per vertex), width, justification, base line
+    offset, components from its left face, ends, schematic fill, height and architectural information.
+    """
+    TAG_VALUE: ClassVar[str] = "wall"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "wall", **WallFields.to_json(self)}
 
 
 @dataclass(kw_only=True, slots=True)
@@ -39448,6 +40486,73 @@ class DeleteViewsOp(ViewsOp):
         )
 
 
+@dataclass(kw_only=True, slots=True)
+class SetWallsOperation(WallsOperation):
+    """Değiştir: the fields given, on every wall named.
+    Attributes:
+        fill: The schematic fill (`#RRGGBB`); null: none.
+        height: Metres above its level's floor; null: the level's. Unit: elevation.
+        level: Its level by the project level's id; null: none.
+        offset: Unit: length.
+        style: A wall style by its id or name: its components, ends and fill; null: no style, one plain body.
+        width: Metres, above 0, at most 100; the component without a thickness takes the rest. Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    caps: WallCaps | WallCapsName | None | Unset = UNSET
+    discipline: ArchDiscipline | ArchDisciplineName | None | Unset = UNSET
+    fill: str | None | Unset = UNSET
+    height: float | None | Unset = UNSET
+    justify: WallJustify | WallJustifyName | None | Unset = UNSET
+    level: str | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    phase: ArchPhase | ArchPhaseName | None | Unset = UNSET
+    status: ArchStatus | ArchStatusName | None | Unset = UNSET
+    style: str | None | Unset = UNSET
+    width: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.caps is not UNSET:
+            out["caps"] = None if self.caps is None else _enum_out(self.caps)
+        if self.discipline is not UNSET:
+            out["discipline"] = None if self.discipline is None else _enum_out(self.discipline)
+        if self.fill is not UNSET:
+            out["fill"] = self.fill
+        if self.height is not UNSET:
+            out["height"] = None if self.height is None else float(self.height)
+        if self.justify is not UNSET:
+            out["justify"] = None if self.justify is None else _enum_out(self.justify)
+        if self.level is not UNSET:
+            out["level"] = self.level
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.phase is not UNSET:
+            out["phase"] = None if self.phase is None else _enum_out(self.phase)
+        if self.status is not UNSET:
+            out["status"] = None if self.status is None else _enum_out(self.status)
+        if self.style is not UNSET:
+            out["style"] = self.style
+        if self.width is not UNSET:
+            out["width"] = None if self.width is None else float(self.width)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetWallsOperation:
+        return cls(
+            caps=UNSET if "caps" not in data else None if data["caps"] is None else _enum_in(WallCaps, data["caps"]),
+            discipline=UNSET if "discipline" not in data else None if data["discipline"] is None else _enum_in(ArchDiscipline, data["discipline"]),
+            fill=data.get("fill", UNSET),
+            height=UNSET if "height" not in data else None if data["height"] is None else float(data["height"]),
+            justify=UNSET if "justify" not in data else None if data["justify"] is None else _enum_in(WallJustify, data["justify"]),
+            level=data.get("level", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            phase=UNSET if "phase" not in data else None if data["phase"] is None else _enum_in(ArchPhase, data["phase"]),
+            status=UNSET if "status" not in data else None if data["status"] is None else _enum_in(ArchStatus, data["status"]),
+            style=data.get("style", UNSET),
+            width=UNSET if "width" not in data else None if data["width"] is None else float(data["width"]),
+        )
+
+
 _ARRAY_EDIT: dict[str, type[ArrayEdit]] = {"layout": LayoutArrayEdit, "placement": PlacementArrayEdit, "replace": ReplaceArrayEdit, "remove": RemoveArrayEdit, "reset": ResetArrayEdit}
 
 
@@ -39508,13 +40613,13 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
 
 
-_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "nurbs": NurbsEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry}
+_ENTITY_GEOMETRY: dict[str, type[EntityGeometry]] = {"point": PointEntityGeometry, "line": LineEntityGeometry, "polyline": PolylineEntityGeometry, "polygon": PolygonEntityGeometry, "circle": CircleEntityGeometry, "arc": ArcEntityGeometry, "ellipse": EllipseEntityGeometry, "spline": SplineEntityGeometry, "nurbs": NurbsEntityGeometry, "xline": XlineEntityGeometry, "ray": RayEntityGeometry, "text": TextEntityGeometry, "dimension": DimensionEntityGeometry, "hatch": HatchEntityGeometry, "insert": InsertEntityGeometry, "leader": LeaderEntityGeometry, "table": TableEntityGeometry, "image": ImageEntityGeometry, "raster": RasterEntityGeometry, "pointcloud": PointcloudEntityGeometry, "wall": WallEntityGeometry}
 
 
 _EXPLODE_DENSITY: dict[str, type[ExplodeDensity]] = {"count": CountExplodeDensity, "step": StepExplodeDensity, "deviation": DeviationExplodeDensity}
@@ -39619,6 +40724,9 @@ _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "or
 _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
 
 
+_WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation}
+
+
 __all__ = [
     "AccessSource",
     "AccessSourceName",
@@ -39683,6 +40791,15 @@ __all__ = [
     "ArcStartEndDirectionCurveConstruction",
     "ArcStartEndRadiusCurveConstruction",
     "ArcThreePointsCurveConstruction",
+    "ArchDiscipline",
+    "ArchDisciplineName",
+    "ArchInfo",
+    "ArchLevel",
+    "ArchPhase",
+    "ArchPhaseName",
+    "ArchSettings",
+    "ArchStatus",
+    "ArchStatusName",
     "AreaLabelMode",
     "AreaLabelModeName",
     "AreaLevel",
@@ -39846,6 +40963,8 @@ __all__ = [
     "CombineTextEdit",
     "CommentFormsOp",
     "CommitResult",
+    "ComponentEdge",
+    "ComponentHatch",
     "ConcentricConstraintRule",
     "Constraint",
     "ConstraintDiagnosis",
@@ -40435,6 +41554,7 @@ __all__ = [
     "NetworkLayer",
     "NewConstraint",
     "NewObject",
+    "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
     "NumberPlace",
@@ -40713,6 +41833,7 @@ __all__ = [
     "ServiceParam",
     "SetCellTableEdit",
     "SetParameterEdit",
+    "SetWallsOperation",
     "SettingsChanged",
     "SettingsSet",
     "SharpRectangleCorners",
@@ -40907,6 +42028,28 @@ __all__ = [
     "ViewsOp",
     "VisibilityBlockParameter",
     "VisibilityState",
+    "WallCaps",
+    "WallCapsName",
+    "WallComponent",
+    "WallDetail",
+    "WallDetailName",
+    "WallEntity",
+    "WallEntityGeometry",
+    "WallFields",
+    "WallJustify",
+    "WallJustifyName",
+    "WallStyleDef",
+    "WallsCreate",
+    "WallsCreated",
+    "WallsEdit",
+    "WallsEdited",
+    "WallsFromLines",
+    "WallsFromLinesDone",
+    "WallsFromLinesPlan",
+    "WallsFromMode",
+    "WallsFromModeName",
+    "WallsOperation",
+    "WallsPlan",
     "WeightCurveEdit",
     "WindowSelectRegion",
     "Wipeout",

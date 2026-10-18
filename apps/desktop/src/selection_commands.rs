@@ -34,6 +34,7 @@ pub(crate) fn kind_icon(kind: &str) -> &'static str {
         "leader" => "leader",
         "table" => "table",
         "image" => "imageInsert",
+        "wall" => "wall",
         _ => "more",
     }
 }
@@ -197,7 +198,7 @@ mod tests {
     }
 
     #[test]
-    fn the_cell_s_menu_lists_seventeen_kinds_by_short_name_and_icon_and_stays_open() {
+    fn the_cell_s_menu_lists_every_kind_by_short_name_and_icon_and_stays_open() {
         let menu = format!("{:?}", app().select_filter_menu());
         assert!(menu.contains("Header(\"Seçilebilir türler\")"), "{menu}");
         for kind in KINDS {

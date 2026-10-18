@@ -56,6 +56,8 @@ pub use batches::{
     AtlasImage, Cap, FillPaintBatch, MarkerLook, StyledBatch, StyledLayer, TileMark, Unit,
 };
 pub use color::StylePalette;
+/// An object's geometry as the core takes it (the application's typed turn, docs/adr/0339 §1).
+pub use kentos_native_application::geometry::shape as entity_shape;
 /// What Görünüm kipleri leave out of a layer build (docs/adr/0195).
 pub use kentos_style_core::style::build::{View, raster_key};
 pub use library::{Item, ItemKind, Source, StyleLibrary};

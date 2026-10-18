@@ -873,6 +873,7 @@ fn finite(e: &Entity) -> bool {
             Entity::Arc(e) => p(&e.c) && fs(&[e.r, e.a0, e.a1]),
             Entity::Ellipse(e) => p(&e.c) && p(&e.major) && fs(&[e.ratio, e.t0, e.t1]),
             Entity::Spline(e) => ps(&e.pts),
+            Entity::Wall(e) => ps(&e.wall.pts) && fs(&[e.wall.width, e.wall.offset]),
             Entity::Nurbs(e) => {
                 ps(&e.ctrl)
                     && fs(&e.knots)

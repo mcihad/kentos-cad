@@ -9,6 +9,7 @@ import type { EntityId } from "./EntityId";
 import type { LineTypeDef } from "./LineTypeDef";
 import type { ReportItem } from "./ReportItem";
 import type { TextStyleDef } from "./TextStyleDef";
+import type { WallDetail } from "./WallDetail";
 
 /**
  * What `file.export.dxf` writes (an AutoCAD 2007 DXF).
@@ -72,4 +73,8 @@ notes?: Array<ReportItem>,
  * objects' handles (71 1, 97 and 330s) and they with its reactor, when they are written too. Absent: hatches
  * are written follows nothing (71 0).
  */
-uids?: { [key in number]: EntityId }, };
+uids?: { [key in number]: EntityId }, 
+/**
+ * The detail walls are drawn at (docs/adr/0339 §4): the project's own; absent: by the scale.
+ */
+wallDetail?: WallDetail, };

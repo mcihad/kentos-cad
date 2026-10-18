@@ -180,6 +180,10 @@ pub mod line_types_edit;
 pub mod match_props;
 pub mod network_define;
 pub mod nurbs;
+pub mod walls;
+pub mod walls_create;
+pub mod walls_edit;
+pub mod walls_from_lines;
 pub mod offset;
 pub mod point;
 pub mod points_construct;
@@ -422,6 +426,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_NURBS_CREATE,
         kentos_contracts::CAD_NURBS_CREATE_VERSION,
+    ),
+    // Duvar, Çizgiden duvar and Duvarı düzenle ([`walls_create`], [`walls_from_lines`], [`walls_edit`], docs/adr/0339).
+    (
+        kentos_contracts::CAD_WALLS_CREATE,
+        kentos_contracts::CAD_WALLS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_WALLS_FROM_LINES,
+        kentos_contracts::CAD_WALLS_FROM_LINES_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_WALLS_EDIT,
+        kentos_contracts::CAD_WALLS_EDIT_VERSION,
     ),
     // Rectangles and regular polygons ([`shapes`], docs/adr/0290).
     (

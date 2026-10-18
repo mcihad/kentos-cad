@@ -1454,6 +1454,71 @@
       "shortcuts": [],
       "category": "Veri",
       "status": "implemented"
+    },
+    {
+      "id": "tool.wall",
+      "title": "Duvar",
+      "icon": "wall",
+      "description": "Yol gibi çizilen tabanı boyunca bir duvar çizer: Genişlik (E), Hiza (H: sol, orta, sağ), Öteleme (Ö) ve Stil (S) seçilir; yay (Y), uzunluk (U) ve yazılan noktalar çoklu çizgideki gibidir, Kapat (K) duvarı kapatır. Önizleme komutun planından çizilir; Enter duvarı tek adımda yazar.",
+      "aliases": [
+        "DUVAR",
+        "WALL"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.wallFromLines",
+      "title": "Çizgiden duvar",
+      "icon": "wallFromLines",
+      "description": "Seçilen çizgileri, çoklu çizgileri, alanların sınırını, yayları ve daireleri duvara çevirir: Tek tek her birinin boyunca seçilen genişlik, hiza ve stille, Çiftler (Ç) iki paralel çizginin arasında aralarındaki genişlikte. Kaynağı koru (K) kapalıyken duvarın bütünüyle örttüğü çizgiler silinir. Tek adımda.",
+      "aliases": [
+        "CIZGIDENDUVAR",
+        "DUVARCEVIR"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.wallStyles",
+      "title": "Duvar stilleri",
+      "icon": "wallStyles",
+      "description": "Projenin duvar stillerini ve KentOS'un stillerini açar: bileşenler (ad, malzeme, kalınlık, tarama, gösterim ayrıntısı), uçlar, şematik dolgu ve yeni duvarın genişliği; kesit önizlemesiyle. Kaydet değişen stilleri ve onları izleyen duvarları tek adımda yazar.",
+      "aliases": [
+        "DUVARSTILI",
+        "DUVARSTILLERI",
+        "WALLSTYLE"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.settings",
+      "title": "Katlar",
+      "icon": "archSettings",
+      "description": "Proje ayarları'nın Mimari bölümünü açar: projenin katları (ad, kot, kat yüksekliği) ve duvarların çizim ayrıntısı (ölçeğe göre, şematik, standart, ayrıntılı).",
+      "aliases": [
+        "KATLAR",
+        "MIMARI",
+        "KAT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.wall",
+      "title": "Seçim süzgecinde Duvar",
+      "short": "Duvar",
+      "icon": "wall",
+      "description": "Seçim süzgecinde duvarları seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -1617,8 +1682,25 @@
     "sourceLinked": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M14 16.3 16.3 14\" stroke-width=\"1.3\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/>",
     "sourceWrite": "<ellipse cx=\"12.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M7.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M7.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M1.5 10.5h5.2M4.4 8l2.5 2.5-2.5 2.5\" stroke-width=\"1.4\"/>",
     "sourceRead": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"M13.3 10.5h5.2M16 8l2.5 2.5L16 13\" stroke-width=\"1.4\"/>",
-    "sourceUnlink": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/><path d=\"M12.4 12.4l6.1 6.1\" stroke-width=\"1.3\"/>"
+    "sourceUnlink": "<ellipse cx=\"7.5\" cy=\"5\" rx=\"5\" ry=\"1.9\" stroke-width=\"1.2\"/><path d=\"M2.5 5v9.2c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9V5M2.5 9.6c0 1.05 2.24 1.9 5 1.9s5-.85 5-1.9\" stroke-width=\"1.2\"/><path d=\"m13.1 14.4-.9.9a1.75 1.75 0 0 0 2.5 2.5l.9-.9M17.2 15.9l.9-.9a1.75 1.75 0 0 0-2.5-2.5l-.9.9\" stroke-width=\"1.3\"/><path d=\"M12.4 12.4l6.1 6.1\" stroke-width=\"1.3\"/>",
+    "wall": "<path d=\"M3 16.5V3.5h14\"/><path d=\"M6.5 16.5V7h10.5\"/><path d=\"M3 16.5h3.5M17 3.5V7\"/><path d=\"m3.6 10.4 2.3-2.3m-2.3 6.2 2.3-2.3m1.6-4 2.3-2.3m1.6 2.3 2.3-2.3m1.6 2.3 2.1-2.1\" stroke-width=\"1\"/>",
+    "wallFromLines": "<path d=\"M3.5 4v12\"/><path d=\"M6.5 10h4.5m-2-2 2 2-2 2\"/><path d=\"M13.5 4v12M17 4v12M13.5 4H17M13.5 16H17\"/>",
+    "wallStyles": "<rect x=\"3\" y=\"4\" width=\"14\" height=\"12\" rx=\"1\"/><path d=\"M6.5 4v12M13.5 4v12\"/><path d=\"m7.4 8.2 2.6-2.6m-2.6 6.6 5.2-5.2m-2.6 7.2 2.6-2.6\" stroke-width=\"1\"/>",
+    "wallLeft": "<rect x=\"7\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M7 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
+    "wallCenter": "<rect x=\"6\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M10 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
+    "wallRight": "<rect x=\"5\" y=\"4\" width=\"8\" height=\"12\"/><path d=\"M13 1.5v17\" stroke-dasharray=\"2.2 1.6\"/>",
+    "archSettings": "<path d=\"M3 17h14\"/><path d=\"M4.5 17V8L10 4l5.5 4v9\"/><path d=\"M4.5 12.5h11\"/><path d=\"M8.5 17v-2.5h3V17\"/>"
   },
+  "tabs": [
+    {
+      "modes": [
+        "cad"
+      ],
+      "id": "arch",
+      "label": "Mimari",
+      "after": "modify"
+    }
+  ],
   "ribbon": [
     {
       "modes": [
@@ -2479,6 +2561,42 @@
         {
           "command": "source.read",
           "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Duvar",
+      "icon": "wall",
+      "items": [
+        {
+          "command": "tool.wall",
+          "size": "large"
+        },
+        {
+          "command": "tool.wallFromLines",
+          "size": "small"
+        },
+        {
+          "command": "arch.wallStyles",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Proje",
+      "icon": "archSettings",
+      "items": [
+        {
+          "command": "arch.settings",
+          "size": "large"
         }
       ]
     }

@@ -7,6 +7,7 @@
 //! not an undo step, and a new coordinate system is assigned, never a
 //! transformation of the coordinates (CLAUDE.md §5).
 
+mod arch;
 mod ask_type;
 mod choices;
 mod content;
@@ -60,7 +61,7 @@ pub(crate) fn settings_message(e: SettingsEvent) -> Message {
 
 /// The web command ids this module runs; Koordinat sistemi… is Proje
 /// ayarları on its coordinate system page (the web's `openProjectSettings('crs')`).
-pub const COMMANDS: [&str; 3] = ["file.new", "file.settings", "crs.set"];
+pub const COMMANDS: [&str; 4] = ["file.new", "file.settings", "crs.set", "arch.settings"];
 
 impl App {
     pub(crate) fn project_command(&mut self, id: &'static str) -> Task<Message> {
@@ -69,11 +70,15 @@ impl App {
                 let state = wizard::State::new(self);
                 self.open_project_window(Window::New(Box::new(state)));
             }
-            "file.settings" | "crs.set" => match &self.document {
+            "file.settings" | "crs.set" | "arch.settings" => match &self.document {
                 Some(doc) => {
                     let mut state = settings::State::new(doc);
                     if id == "crs.set" {
                         state.section = settings::Section::Crs;
+                    }
+                    // Katlar: Mimari's page (docs/adr/0339 §6).
+                    if id == "arch.settings" {
+                        state.section = settings::Section::Arch;
                     }
                     self.open_project_window(Window::Settings(Box::new(state)));
                     // Izgaralar lists the device's grids as they are now (grids.rs).

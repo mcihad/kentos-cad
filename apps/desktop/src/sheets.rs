@@ -133,13 +133,18 @@ impl SheetMaps {
         let key = (drawing.session, drawing.model.generation(), scale);
         let kept = self.scaled.borrow().iter().find(|s| s.key == key).cloned();
         let at = kept.unwrap_or_else(|| {
+            let at = f64::from(scale.max(1));
+            // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
+            let walls = Spatial::walls_differ_at(&drawing.model, at);
             let view = drawing
                 .model
                 .has_annotative()
-                .then(|| drawing.model.at_scale(f64::from(scale.max(1))))
+                .then(|| drawing.model.at_scale(at))
                 .flatten()
+                .or_else(|| walls.then(|| drawing.model.reading_copy()))
                 .map(|model| {
                     let mut spatial = Spatial::new();
+                    spatial.set_wall_scale(Some(at));
                     spatial.reload(&model);
                     let copy = Document {
                         model,

@@ -33,6 +33,7 @@ import type { TextPath } from "./TextPath";
 import type { TextRun } from "./TextRun";
 import type { TextShift } from "./TextShift";
 import type { Vec2 } from "./Vec2";
+import type { WallFields } from "./WallFields";
 
 /**
  * A drawing object's geometry alone: its kind and the fields that place and
@@ -360,4 +361,4 @@ oblique?: number,
 /**
  * The fields set apart from its style by hand (docs/adr/0322 §5), by name (`TEXT_OVERRIDES`), as a dimension's.
  */
-overrides?: Array<string>, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields | { "kind": "pointcloud" } & PointCloudFields;
+overrides?: Array<string>, } | { "kind": "image" } & ImageFields | { "kind": "raster" } & RasterFields | { "kind": "pointcloud" } & PointCloudFields | { "kind": "wall" } & WallFields;

@@ -1,0 +1,3425 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.walls.edit",
+  "commandVersion": 1,
+  "title": "Duvarı düzenle: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik ve mimari bilgi; hepsi ya da hiçbiri",
+  "note": "ADR 0339 §5. Beklenenler scripts/fixtures/wall_command_cases.py'nin ADR'den yazılmış kurallarından, KentOS kodu olmadan.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Duvarlar",
+    "settings": {
+      "srid": 0,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "deg",
+      "plotScale": 50,
+      "workspace": "cad",
+      "wallStyles": [
+        {
+          "id": "proje-perde-20",
+          "name": "Perde 20",
+          "components": [
+            {
+              "name": "Betonarme",
+              "material": "Betonarme",
+              "thickness": 0.2,
+              "hatch": {
+                "pattern": "SOLID",
+                "scale": 1.0,
+                "angle": 0.0,
+                "color": "#A6A6A6"
+              },
+              "detail": "standard"
+            }
+          ],
+          "fill": "#3C3C3C"
+        }
+      ],
+      "arch": {
+        "levels": [
+          {
+            "id": "zemin",
+            "name": "Zemin kat",
+            "elevation": 0.0,
+            "height": 3.0
+          },
+          {
+            "id": "kat-1",
+            "name": "1. kat",
+            "elevation": 3.0,
+            "height": 3.0
+          }
+        ]
+      }
+    },
+    "origin": {
+      "x": 0,
+      "y": 0
+    },
+    "layers": [
+      {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "kilitli",
+        "name": "Kilitli katman",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "gizli",
+        "name": "Gizli katman",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      },
+      {
+        "id": "pafta",
+        "name": "Pafta",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "ink",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": [
+          {
+            "id": "sinir",
+            "name": "Sınır",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ]
+      }
+    ],
+    "activeLayer": "duvar",
+    "styles": {
+      "items": [],
+      "categories": []
+    },
+    "entities": [
+      {
+        "kind": "line",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 5.0,
+          "y": 0.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.25
+        },
+        "b": {
+          "x": 5.0,
+          "y": 0.25
+        }
+      },
+      {
+        "kind": "line",
+        "id": 3,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 6.0,
+          "y": 0.0
+        },
+        "b": {
+          "x": 10.0,
+          "y": 0.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 4,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 6.5,
+          "y": 0.2
+        },
+        "b": {
+          "x": 9.0,
+          "y": 0.2
+        }
+      },
+      {
+        "kind": "line",
+        "id": 5,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 5.0
+        },
+        "b": {
+          "x": 4.0,
+          "y": 5.0
+        }
+      },
+      {
+        "kind": "polyline",
+        "id": 6,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 10.0
+          },
+          {
+            "x": 4.0,
+            "y": 10.0
+          },
+          {
+            "x": 4.0,
+            "y": 13.0
+          }
+        ],
+        "bulges": [
+          0.0,
+          0.3,
+          0.0
+        ]
+      },
+      {
+        "kind": "polygon",
+        "id": 7,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 10.0,
+            "y": 10.0
+          },
+          {
+            "x": 14.0,
+            "y": 10.0
+          },
+          {
+            "x": 14.0,
+            "y": 13.0
+          },
+          {
+            "x": 10.0,
+            "y": 13.0
+          }
+        ]
+      },
+      {
+        "kind": "arc",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+          "x": 20.0,
+          "y": 0.0
+        },
+        "r": 3.0,
+        "a0": 0.0,
+        "a1": 1.5707963267948966
+      },
+      {
+        "kind": "circle",
+        "id": 9,
+        "layerId": "cizim",
+        "attrs": {},
+        "c": {
+          "x": 30.0,
+          "y": 0.0
+        },
+        "r": 2.0
+      },
+      {
+        "kind": "text",
+        "id": 10,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 0.0,
+          "y": 15.0
+        },
+        "text": "Not",
+        "height": 0.5,
+        "rotation": 0.0
+      },
+      {
+        "kind": "line",
+        "id": 11,
+        "layerId": "kilitli",
+        "attrs": {},
+        "a": {
+          "x": 12.0,
+          "y": 20.0
+        },
+        "b": {
+          "x": 16.0,
+          "y": 20.0
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 12,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 20.0
+          },
+          {
+            "x": 6.0,
+            "y": 20.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "wall",
+        "id": 13,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 8.0,
+            "y": 20.0
+          },
+          {
+            "x": 14.0,
+            "y": 20.0
+          },
+          {
+            "x": 14.0,
+            "y": 24.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "style": "proje-perde-20",
+        "components": [
+          {
+            "name": "Betonarme",
+            "material": "Betonarme",
+            "thickness": 0.2,
+            "hatch": {
+              "pattern": "SOLID",
+              "scale": 1.0,
+              "angle": 0.0,
+              "color": "#A6A6A6"
+            },
+            "detail": "standard"
+          }
+        ],
+        "fill": "#3C3C3C",
+        "arch": {
+          "level": "zemin"
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 14,
+        "layerId": "kilitli",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 20.0
+          },
+          {
+            "x": 24.0,
+            "y": 20.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center"
+      },
+      {
+        "kind": "polyline",
+        "id": 15,
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 20.0,
+            "y": 10.0
+          },
+          {
+            "x": 24.0,
+            "y": 10.0
+          }
+        ]
+      },
+      {
+        "kind": "line",
+        "id": 16,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 20.0,
+          "y": 10.15
+        },
+        "b": {
+          "x": 24.0,
+          "y": 10.15
+        }
+      },
+      {
+        "kind": "line",
+        "id": 17,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 0.0,
+          "y": 0.5
+        },
+        "b": {
+          "x": 5.0,
+          "y": 0.5
+        }
+      },
+      {
+        "kind": "line",
+        "id": 18,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 30.0,
+          "y": 10.0
+        },
+        "b": {
+          "x": 34.0,
+          "y": 10.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 19,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 30.0,
+          "y": 10.2
+        },
+        "b": {
+          "x": 34.0,
+          "y": 10.234907471163034
+        }
+      },
+      {
+        "kind": "line",
+        "id": 20,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 40.0,
+          "y": 10.0
+        },
+        "b": {
+          "x": 44.0,
+          "y": 10.0
+        }
+      },
+      {
+        "kind": "line",
+        "id": 21,
+        "layerId": "cizim",
+        "attrs": {},
+        "a": {
+          "x": 40.0,
+          "y": 10.2
+        },
+        "b": {
+          "x": 44.0,
+          "y": 10.33968307796699
+        }
+      },
+      {
+        "kind": "wall",
+        "id": 22,
+        "layerId": "duvar",
+        "attrs": {},
+        "pts": [
+          {
+            "x": 0.0,
+            "y": 30.0
+          },
+          {
+            "x": 4.0,
+            "y": 30.0
+          }
+        ],
+        "width": 0.2,
+        "justify": "center",
+        "bulges": [
+          1.0,
+          0.0
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "genişlik değişir; tek adım “Duvarı düzenle”, geri alınınca eski duvar döner",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.3,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "undo",
+          "returns": "Duvarı düzenle",
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": false,
+            "canRedo": true,
+            "dirty": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "öteleme 0 olunca kalkar: iki adım, ikincisi duvarı ilk hâline döndürür",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "offset": 0.05
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "offset": 0.05
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "offset": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "offset": 0.0
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sağ hiza ve öteleme",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "justify": "right",
+              "offset": 0.05
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "right",
+                  "offset": 0.05
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "right",
+                "offset": 0.05
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "KentOS'un stili: bileşenleri ve dolgusu gelir, genişlik kalır, stil projeye eklenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": "kentos-dis-duvar-25",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.3,
+                  "justify": "center",
+                  "style": "kentos-dis-duvar-25",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A"
+                }
+              ],
+              "stylesAdded": [
+                "kentos-dis-duvar-25"
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center",
+                "style": "kentos-dis-duvar-25",
+                "components": [
+                  {
+                    "name": "İç sıva",
+                    "material": "İç sıva",
+                    "thickness": 0.02,
+                    "detail": "detailed"
+                  },
+                  {
+                    "name": "Tuğla",
+                    "material": "Tuğla",
+                    "hatch": {
+                      "pattern": "ANSI31",
+                      "scale": 1.0,
+                      "angle": 0.0
+                    },
+                    "detail": "standard"
+                  },
+                  {
+                    "name": "Isı yalıtımı",
+                    "material": "Isı yalıtımı",
+                    "thickness": 0.05,
+                    "hatch": {
+                      "pattern": "ANSI37",
+                      "scale": 0.5,
+                      "angle": 0.0
+                    },
+                    "detail": "standard"
+                  },
+                  {
+                    "name": "Dış sıva",
+                    "material": "Dış sıva",
+                    "thickness": 0.03,
+                    "detail": "detailed"
+                  }
+                ],
+                "fill": "#5A5A5A"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                },
+                {
+                  "id": "kentos-dis-duvar-25",
+                  "name": "Dış duvar 25",
+                  "components": [
+                    {
+                      "name": "İç sıva",
+                      "material": "İç sıva",
+                      "thickness": 0.02,
+                      "detail": "detailed"
+                    },
+                    {
+                      "name": "Tuğla",
+                      "material": "Tuğla",
+                      "hatch": {
+                        "pattern": "ANSI31",
+                        "scale": 1.0,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Isı yalıtımı",
+                      "material": "Isı yalıtımı",
+                      "thickness": 0.05,
+                      "hatch": {
+                        "pattern": "ANSI37",
+                        "scale": 0.5,
+                        "angle": 0.0
+                      },
+                      "detail": "standard"
+                    },
+                    {
+                      "name": "Dış sıva",
+                      "material": "Dış sıva",
+                      "thickness": 0.03,
+                      "detail": "detailed"
+                    }
+                  ],
+                  "fill": "#5A5A5A",
+                  "width": 0.25
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "projenin stili: bileşenleri genişliği belirler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": "Perde 20"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "style": "proje-perde-20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "proje-perde-20",
+                "components": [
+                  {
+                    "name": "Betonarme",
+                    "material": "Betonarme",
+                    "thickness": 0.2,
+                    "hatch": {
+                      "pattern": "SOLID",
+                      "scale": 1.0,
+                      "angle": 0.0,
+                      "color": "#A6A6A6"
+                    },
+                    "detail": "standard"
+                  }
+                ],
+                "fill": "#3C3C3C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stil kaldırılınca tek gövde kalır, dolgu kalır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 13,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 8.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 24.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "fill": "#3C3C3C",
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "13": {
+                "kind": "wall",
+                "id": 13,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 24.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "fill": "#3C3C3C",
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "uçlar açılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "caps": "open"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "caps": "open"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "caps": "open"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dolgu kaldırılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "set",
+              "fill": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 13,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 8.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 24.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "style": "proje-perde-20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "arch": {
+                    "level": "zemin"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "13": {
+                "kind": "wall",
+                "id": 13,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 24.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "proje-perde-20",
+                "components": [
+                  {
+                    "name": "Betonarme",
+                    "material": "Betonarme",
+                    "thickness": 0.2,
+                    "hatch": {
+                      "pattern": "SOLID",
+                      "scale": 1.0,
+                      "angle": 0.0,
+                      "color": "#A6A6A6"
+                    },
+                    "detail": "standard"
+                  }
+                ],
+                "arch": {
+                  "level": "zemin"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "yükseklik verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "height": 2.7
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "height": 2.7
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "height": 2.7
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat değişir, evre, durum ve disiplin verilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "kat-1",
+              "phase": "demolish",
+              "status": "built",
+              "discipline": "structure"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 13,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 8.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 24.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "style": "proje-perde-20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C",
+                  "arch": {
+                    "level": "kat-1",
+                    "phase": "demolish",
+                    "status": "built",
+                    "discipline": "structure"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "13": {
+                "kind": "wall",
+                "id": 13,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 24.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "proje-perde-20",
+                "components": [
+                  {
+                    "name": "Betonarme",
+                    "material": "Betonarme",
+                    "thickness": 0.2,
+                    "hatch": {
+                      "pattern": "SOLID",
+                      "scale": 1.0,
+                      "angle": 0.0,
+                      "color": "#A6A6A6"
+                    },
+                    "detail": "standard"
+                  }
+                ],
+                "fill": "#3C3C3C",
+                "arch": {
+                  "level": "kat-1",
+                  "phase": "demolish",
+                  "status": "built",
+                  "discipline": "structure"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "kat kaldırılınca mimari bilgi de kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": null
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 13,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 8.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 14.0,
+                      "y": 24.0
+                    }
+                  ],
+                  "width": 0.2,
+                  "justify": "center",
+                  "style": "proje-perde-20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "13": {
+                "kind": "wall",
+                "id": 13,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 8.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 14.0,
+                    "y": 24.0
+                  }
+                ],
+                "width": 0.2,
+                "justify": "center",
+                "style": "proje-perde-20",
+                "components": [
+                  {
+                    "name": "Betonarme",
+                    "material": "Betonarme",
+                    "thickness": 0.2,
+                    "hatch": {
+                      "pattern": "SOLID",
+                      "scale": 1.0,
+                      "angle": 0.0,
+                      "color": "#A6A6A6"
+                    },
+                    "detail": "standard"
+                  }
+                ],
+                "fill": "#3C3C3C"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "iki duvar birlikte: ikisi de değişir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12",
+              "$uidOf:22"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.15,
+              "phase": "new"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.15,
+                  "justify": "center",
+                  "arch": {
+                    "phase": "new"
+                  }
+                },
+                {
+                  "kind": "wall",
+                  "id": 22,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 30.0
+                    },
+                    {
+                      "x": 4.0,
+                      "y": 30.0
+                    }
+                  ],
+                  "width": 0.15,
+                  "justify": "center",
+                  "bulges": [
+                    1.0,
+                    0.0
+                  ],
+                  "arch": {
+                    "phase": "new"
+                  }
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "arch": {
+                  "phase": "new"
+                }
+              },
+              "22": {
+                "kind": "wall",
+                "id": 22,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 30.0
+                  },
+                  {
+                    "x": 4.0,
+                    "y": 30.0
+                  }
+                ],
+                "width": 0.15,
+                "justify": "center",
+                "bulges": [
+                  1.0,
+                  0.0
+                ],
+                "arch": {
+                  "phase": "new"
+                }
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "plan yazmadan değişmiş duvarları gösterir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.3,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "doğrulama yazmaz",
+      "steps": [
+        {
+          "op": "validate",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kimlik verilmezse ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "no_entities",
+              "message": "Düzenlenecek duvar verilmedi. En az bir nesnenin kalıcı kimliğini verin.",
+              "path": "uids"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "D-1"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_uid",
+              "message": "“D-1” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "çizimde olmayan kimlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "entity_not_found",
+              "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "duvar olmayan nesne reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:1"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_a_wall",
+              "message": "Nesne duvar değil; Duvarı düzenle yalnız duvarları değiştirir.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "değişecek alan yoksa ret",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "nothing_to_set",
+              "message": "Değiştirilecek bir alan verilmedi: genişlik, hiza, öteleme, stil, uçlar, dolgu, yükseklik, kat, evre, durum ya da disiplin verin.",
+              "path": "operation"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sonsuz genişlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "nonFinite": {
+            "operation.width": "Infinity"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "not_finite",
+              "message": "Genişlik sonlu bir sayı değil (NaN ya da sonsuz). Sonlu bir sayı verin.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "olmayan stil reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "style": "Ahşap 12"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "style_not_found",
+              "message": "“Ahşap 12” adında ya da kimliğinde duvar stili yok. Var olanlar: Perde 20, Dış duvar 25, İç duvar 15, Gazbeton 20, Betonarme perde 25, Bölme duvar 10.",
+              "path": "operation.style"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "sıfır genişlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Duvarın genişliği 0; sıfırdan büyük, en çok 100 m olmalı.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bileşenleri belli stilde başka genişlik reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:13"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_wall",
+              "message": "Duvarın genişliği 0.3 m, bileşenlerin toplamı 0.2 m: kalınlığı verilmeyen bileşen olmadığından genişlik toplama eşit olmalı.",
+              "path": "operation.width"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaylı duvar yayından geniş olamaz: çizilemez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:22"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 5.0
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "wall_collapses",
+              "message": "Duvar çizilemiyor: Öteleme mesafesi bir yay parçasının yarıçapından büyük. Duvarı inceltin ya da yayı büyütün.",
+              "path": "uids[0]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "projede olmayan kat reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "level": "bodrum"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "level_not_found",
+              "message": "Projede “bodrum” kimlikli kat yok. Katı Proje ayarları › Mimari'de ekleyin ya da var olan bir katı seçin.",
+              "path": "operation.level"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kilitli katmandaki duvar bütün düzenlemeyi reddeder",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12",
+              "$uidOf:14"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "layer_locked",
+              "message": "“Kilitli katman” katmanı kilitli; üzerindeki duvar düzenlenemez. Kilidi Katmanlar panelinden açın.",
+              "path": "uids[1]"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "geçersiz beklenen sürüm reddedilir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            },
+            "expectedRevision": "07"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_revision",
+              "message": "Beklenen sürüm “07” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+              "path": "expectedRevision"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "hazırlandığı sürümden sonra değişen çizime yazılmaz: conflict",
+      "steps": [
+        {
+          "op": "captureRevision",
+          "as": "prepared"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.3
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "walls": [
+                {
+                  "kind": "wall",
+                  "id": 12,
+                  "layerId": "duvar",
+                  "attrs": {},
+                  "pts": [
+                    {
+                      "x": 0.0,
+                      "y": 20.0
+                    },
+                    {
+                      "x": 6.0,
+                      "y": 20.0
+                    }
+                  ],
+                  "width": 0.3,
+                  "justify": "center"
+                }
+              ],
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22
+            ],
+            "entities": {
+              "12": {
+                "kind": "wall",
+                "id": 12,
+                "layerId": "duvar",
+                "attrs": {},
+                "pts": [
+                  {
+                    "x": 0.0,
+                    "y": 20.0
+                  },
+                  {
+                    "x": 6.0,
+                    "y": 20.0
+                  }
+                ],
+                "width": 0.3,
+                "justify": "center"
+              }
+            },
+            "canUndo": true,
+            "dirty": true,
+            "revision": "changed",
+            "settings": {
+              "wallStyles": [
+                {
+                  "id": "proje-perde-20",
+                  "name": "Perde 20",
+                  "components": [
+                    {
+                      "name": "Betonarme",
+                      "material": "Betonarme",
+                      "thickness": 0.2,
+                      "hatch": {
+                        "pattern": "SOLID",
+                        "scale": 1.0,
+                        "angle": 0.0,
+                        "color": "#A6A6A6"
+                      },
+                      "detail": "standard"
+                    }
+                  ],
+                  "fill": "#3C3C3C"
+                }
+              ]
+            }
+          },
+          "note": "Girdi hazırlandıktan sonra duvar başka bir düzenlemeyle değişir."
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:12"
+            ],
+            "operation": {
+              "kind": "set",
+              "width": 0.4
+            },
+            "expectedRevision": "$prepared"
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "revision_conflict",
+              "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+              "path": "expectedRevision",
+              "revision": "$current"
+            }
+          },
+          "expect": {
+            "canUndo": true,
+            "canRedo": false,
+            "revision": "same"
+          }
+        }
+      ]
+    }
+  ]
+}

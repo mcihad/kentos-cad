@@ -407,8 +407,8 @@ pub fn layer_call(
                 }
             }
         };
-        // A block's insert: each piece's own look (docs/adr/0144).
-        if let Entity::Insert(_) = e
+        // A block's insert, a wall: each piece's own look (docs/adr/0144, 0339).
+        if let Entity::Insert(_) | Entity::Wall(_) = e
             && let Some(x) = store
                 .get(f64::from(base.id))
                 .and_then(|item| item.expanded.as_deref())

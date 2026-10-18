@@ -1,0 +1,775 @@
+//! A wall's drawing from its source (docs/adr/0339 §1, plan/cad.md `CAD-ARCH-02`, `12`): its path is its base line;
+//! the justification line is the path moved `offset` to its left; the left face lies `left_face` further left (all
+//! of the width for a right-justified wall, half for a centred one, none for a left one), the right face a width to
+//! the right of it, and the components' boundaries between, in their order from the left face. Each line is the
+//! path offset (`geom::offset::offset_bulge_path`: mitred corners, a corner sharper than the mitre limit bevelled,
+//! arcs about their centres). At a detail level the wall is drawn as:
+//!
+//! - its two faces, and across an open wall's two ends a cap each unless its ends are open;
+//! - schematically, its body's fill when it has one;
+//! - from the standard detail on, each component shown at that detail its hatch (its band, the pattern turned with the
+//!   wall's first edge, as large on paper at the drawing's scale as the library's pattern) and each boundary between
+//!   two shown components a line (the left one's edge look).
+//!
+//! The hatches come first, then the lines, so the lines are drawn over them. Nothing here is stored: the store
+//! expands a wall into these pieces as it expands a block's insert into its definition's.
+
+use crate::api::json::{FromJson, Json, ToJson, field};
+use crate::block::{Piece, PieceStroke};
+use crate::entity::{HatchPattern, Shape};
+use crate::geom::arc::DEFAULT_STEP;
+use crate::geom::bulge::{bulge_path_outline, has_bulges};
+use crate::geom::hatch_pattern::library_pattern;
+use crate::geom::offset::{OffsetResult, offset_bulge_path};
+use crate::geometry::signed_area;
+use crate::jsmath::{PI, atan2};
+use crate::vec2::Vec2;
+
+/// Where a wall's body lies across its path (the contract's `WallJustify`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Justify {
+    Left,
+    #[default]
+    Center,
+    Right,
+}
+
+impl Justify {
+    pub fn name(self) -> &'static str {
+        match self {
+            Justify::Left => "left",
+            Justify::Center => "center",
+            Justify::Right => "right",
+        }
+    }
+
+    pub fn of(name: &str) -> Option<Justify> {
+        [Justify::Left, Justify::Center, Justify::Right]
+            .into_iter()
+            .find(|j| j.name() == name)
+    }
+}
+
+/// How much of a wall is drawn, the least first (the contract's `WallDetail`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Detail {
+    Schematic,
+    #[default]
+    Standard,
+    Detailed,
+}
+
+impl Detail {
+    pub fn name(self) -> &'static str {
+        match self {
+            Detail::Schematic => "schematic",
+            Detail::Standard => "standard",
+            Detail::Detailed => "detailed",
+        }
+    }
+
+    pub fn of(name: &str) -> Option<Detail> {
+        [Detail::Schematic, Detail::Standard, Detail::Detailed]
+            .into_iter()
+            .find(|d| d.name() == name)
+    }
+}
+
+/// A component's hatch: a library pattern by name (`SOLID` a solid fill), times `scale` its paper size, turned
+/// `angle` degrees from the wall's first edge.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ComponentFill {
+    pub pattern: String,
+    pub scale: f64,
+    pub angle: f64,
+    pub color: Option<String>,
+}
+
+crate::json_struct!(ComponentFill {
+    pattern,
+    scale,
+    angle,
+    color
+});
+
+/// The lines along a component's sides.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct ComponentEdge {
+    pub color: Option<String>,
+    pub line_weight: Option<f64>,
+    pub line_type: Option<String>,
+}
+
+crate::json_struct!(ComponentEdge {
+    color,
+    line_weight => "lineWeight",
+    line_type => "lineType"
+});
+
+/// A layer of the body, from the left face: its thickness (none: the rest), its look, the least detail it shows.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Component {
+    pub name: Option<String>,
+    pub material: Option<String>,
+    pub thickness: Option<f64>,
+    pub edge: Option<ComponentEdge>,
+    pub hatch: Option<ComponentFill>,
+    pub detail: Detail,
+}
+
+impl ToJson for Component {
+    fn write_json(&self, out: &mut String) {
+        out.push('{');
+        let mut first = true;
+        field(out, &mut first, "name", &self.name);
+        field(out, &mut first, "material", &self.material);
+        field(out, &mut first, "thickness", &self.thickness);
+        field(out, &mut first, "edge", &self.edge);
+        field(out, &mut first, "hatch", &self.hatch);
+        field(out, &mut first, "detail", self.detail.name());
+        out.push('}');
+    }
+}
+
+impl FromJson for Component {
+    fn from_json(v: &Json) -> Result<Component, String> {
+        let detail = match v.get("detail") {
+            Json::Str(s) => Detail::of(s).ok_or_else(|| format!("bilinmeyen ayrıntı “{s}”"))?,
+            _ => Detail::Standard,
+        };
+        Ok(Component {
+            name: Option::from_json(v.get("name"))?,
+            material: Option::from_json(v.get("material"))?,
+            thickness: Option::from_json(v.get("thickness"))?,
+            edge: Option::from_json(v.get("edge"))?,
+            hatch: Option::from_json(v.get("hatch"))?,
+            detail,
+        })
+    }
+}
+
+/// A wall's fields beside its path: whether the path closes, its width, justification, base line offset, components,
+/// whether its ends are left open and its schematic fill; and, carried through untouched, its style, height and
+/// architectural information (the contract's JSON).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Spec {
+    pub closed: bool,
+    pub width: f64,
+    pub justify: Justify,
+    pub offset: f64,
+    pub components: Vec<Component>,
+    pub caps_open: bool,
+    pub fill: Option<String>,
+    pub style: Option<String>,
+    pub height: Option<f64>,
+    pub arch: Option<Json>,
+}
+
+impl Default for Spec {
+    fn default() -> Self {
+        Self {
+            closed: false,
+            width: 0.2,
+            justify: Justify::Center,
+            offset: 0.0,
+            components: Vec::new(),
+            caps_open: false,
+            fill: None,
+            style: None,
+            height: None,
+            arch: None,
+        }
+    }
+}
+
+impl crate::api::json::Flat for Spec {
+    const NAMES: &'static [&'static str] = &[
+        "closed",
+        "width",
+        "justify",
+        "offset",
+        "components",
+        "caps",
+        "fill",
+        "style",
+        "height",
+        "arch",
+    ];
+
+    fn read_flat(v: &Json) -> Result<Self, String> {
+        let justify = match v.get("justify") {
+            Json::Str(s) => Justify::of(s).ok_or_else(|| format!("bilinmeyen hiza “{s}”"))?,
+            _ => Justify::Center,
+        };
+        Ok(Spec {
+            closed: matches!(v.get("closed"), Json::Bool(true)),
+            width: f64::from_json(v.get("width"))?,
+            justify,
+            offset: Option::<f64>::from_json(v.get("offset"))?.unwrap_or(0.0),
+            components: Option::<Vec<Component>>::from_json(v.get("components"))?
+                .unwrap_or_default(),
+            caps_open: matches!(v.get("caps"), Json::Str(s) if s == "open"),
+            fill: Option::from_json(v.get("fill"))?,
+            style: Option::from_json(v.get("style"))?,
+            height: Option::from_json(v.get("height"))?,
+            arch: match v.get("arch") {
+                Json::Null => None,
+                a => Some(a.clone()),
+            },
+        })
+    }
+
+    fn write_flat(&self, out: &mut String, first: &mut bool) {
+        if self.closed {
+            field(out, first, "closed", &true);
+        }
+        field(out, first, "width", &self.width);
+        field(out, first, "justify", self.justify.name());
+        if self.offset != 0.0 {
+            field(out, first, "offset", &self.offset);
+        }
+        if !self.components.is_empty() {
+            field(out, first, "components", &self.components);
+        }
+        if self.caps_open {
+            field(out, first, "caps", "open");
+        }
+        field(out, first, "fill", &self.fill);
+        field(out, first, "style", &self.style);
+        field(out, first, "height", &self.height);
+        if let Some(a) = &self.arch {
+            field(out, first, "arch", a);
+        }
+    }
+}
+
+/// What a wall is drawn for: the detail and the drawing's scale (1:`scale`), which sizes its patterns on paper.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct View {
+    pub detail: Detail,
+    pub scale: f64,
+}
+
+impl Default for View {
+    fn default() -> Self {
+        Self {
+            detail: Detail::Standard,
+            scale: 100.0,
+        }
+    }
+}
+
+/// Each component's thickness, the rest given to the one without; none when they do not fit the width.
+pub fn thicknesses(spec: &Spec) -> Option<Vec<f64>> {
+    let w = spec.width;
+    let fixed: f64 = spec
+        .components
+        .iter()
+        .filter_map(|c| c.thickness)
+        .fold(0.0, |a, b| a + b);
+    let rest = spec
+        .components
+        .iter()
+        .filter(|c| c.thickness.is_none())
+        .count();
+    let slack = 1e-9 * if w > 1.0 { w } else { 1.0 };
+    match rest {
+        0 if (fixed - w).abs() <= slack => Some(
+            spec.components
+                .iter()
+                .map(|c| c.thickness.unwrap_or(0.0))
+                .collect(),
+        ),
+        1 if fixed < w - slack => Some(
+            spec.components
+                .iter()
+                .map(|c| c.thickness.unwrap_or(w - fixed))
+                .collect(),
+        ),
+        _ => None,
+    }
+}
+
+/// The left face's distance from the path, positive to its left.
+pub fn left_face(spec: &Spec) -> f64 {
+    spec.offset
+        + match spec.justify {
+            Justify::Left => 0.0,
+            Justify::Center => spec.width / 2.0,
+            Justify::Right => spec.width,
+        }
+}
+
+/// The distances from the path of the wall's lines, the left face first, then each boundary between two components,
+/// the right face last; a wall without components (or whose components do not fit) has its two faces only.
+pub fn boundaries(spec: &Spec) -> Vec<f64> {
+    let l = left_face(spec);
+    let mut out = vec![l];
+    if !spec.components.is_empty()
+        && let Some(t) = thicknesses(spec)
+    {
+        let mut at = l;
+        for x in &t[..t.len() - 1] {
+            at -= x;
+            out.push(at);
+        }
+    }
+    out.push(l - spec.width);
+    out
+}
+
+/// A line of the wall: the path offset `d` to its left, its bulges one per vertex.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Line {
+    pub pts: Vec<Vec2>,
+    pub bulges: Vec<f64>,
+}
+
+impl Line {
+    fn shape(&self, closed: bool) -> Shape {
+        Shape::Polyline {
+            pts: self.pts.clone(),
+            bulges: has_bulges(Some(&self.bulges)).then(|| self.bulges.clone()),
+            holes: None,
+            parts: None,
+            closed,
+            widths: None,
+        }
+    }
+
+    /// Its points with each arc as chords.
+    pub fn outline(&self, closed: bool) -> Vec<Vec2> {
+        bulge_path_outline(&self.pts, Some(&self.bulges), closed, DEFAULT_STEP)
+    }
+}
+
+/// The path offset `d` to its left, or why it cannot be (an arc's radius it would collapse).
+pub fn line_at(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool, d: f64) -> Result<Line, String> {
+    let n = pts.len();
+    let b: Vec<f64> = (0..n)
+        .map(|i| bulges.and_then(|b| b.get(i)).copied().unwrap_or(0.0))
+        .collect();
+    match offset_bulge_path(pts, &b, d, closed) {
+        OffsetResult::Path { pts, bulges } => Ok(Line { pts, bulges }),
+        OffsetResult::Error { error } => Err(error),
+    }
+}
+
+/// Every line of the wall (`boundaries`' order), or why one cannot be drawn.
+pub fn lines(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Result<Vec<Line>, String> {
+    if pts.len() < 2 {
+        return Err("Duvarın yolu en az iki noktadır.".into());
+    }
+    boundaries(spec)
+        .into_iter()
+        .map(|d| line_at(pts, bulges, spec.closed, d))
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|why| format!("Duvar çizilemiyor: {why} Duvarı inceltin ya da yayı büyütün."))
+}
+
+/// A wall's body: its outer ring, and a closed wall's hole.
+pub type Body = (Vec<Vec2>, Option<Vec<Vec<Vec2>>>);
+
+/// The region between two of its lines: an open wall's the first line on, the second back; a closed wall's the larger
+/// ring and the smaller as its hole.
+fn band(a: &Line, b: &Line, closed: bool) -> Body {
+    let (pa, pb) = (a.outline(closed), b.outline(closed));
+    if closed {
+        let (outer, inner) = if signed_area(&pa).abs() >= signed_area(&pb).abs() {
+            (pa, pb)
+        } else {
+            (pb, pa)
+        };
+        return (outer, Some(vec![inner]));
+    }
+    let mut ring = pa;
+    ring.extend(pb.into_iter().rev());
+    (ring, None)
+}
+
+/// The body's outline: the faces' band (a closed wall's outer ring and its hole).
+pub fn body(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    spec: &Spec,
+) -> Result<Body, String> {
+    let all = lines(pts, bulges, spec)?;
+    Ok(band(&all[0], &all[all.len() - 1], spec.closed))
+}
+
+/// The body's area, exact on its arcs: an open wall's ring (its left face on, its right face back), a closed wall's
+/// band between its faces; none when it cannot be drawn.
+pub fn area(pts: &[Vec2], bulges: Option<&[f64]>, spec: &Spec) -> Option<f64> {
+    use crate::geom::bulge::{bulge_ring_area, reverse_bulge_path};
+    let all = lines(pts, bulges, spec).ok()?;
+    let (left, right) = (&all[0], &all[all.len() - 1]);
+    if spec.closed {
+        return Some(
+            (bulge_ring_area(&left.pts, Some(&left.bulges)).abs()
+                - bulge_ring_area(&right.pts, Some(&right.bulges)).abs())
+            .abs(),
+        );
+    }
+    let back = reverse_bulge_path(&right.pts, Some(&right.bulges), false);
+    let mut ring = left.pts.clone();
+    let mut b = left.bulges.clone();
+    // The left face's last vertex goes straight across the end to the right face's last.
+    if let Some(x) = b.last_mut() {
+        *x = 0.0;
+    }
+    ring.extend(back.pts);
+    b.extend(back.bulges.unwrap_or_default());
+    Some(bulge_ring_area(&ring, Some(&b)).abs())
+}
+
+/// The direction of the path's first edge, degrees counter-clockwise from east (its chord when it is an arc).
+fn first_direction(pts: &[Vec2]) -> f64 {
+    let (a, b) = (pts[0], pts[1]);
+    atan2(b.y - a.y, b.x - a.x) * 180.0 / PI
+}
+
+fn hatch_of(fill: &ComponentFill, turn: f64, scale: f64) -> Option<HatchPattern> {
+    if fill.pattern.eq_ignore_ascii_case("solid") {
+        return Some(HatchPattern::user("solid", 0.0, 1.0));
+    }
+    let found = library_pattern(&fill.pattern)?;
+    Some(HatchPattern {
+        kind: "pattern".into(),
+        angle: turn + fill.angle,
+        spacing: 1.0,
+        name: Some(found.name.to_owned()),
+        scale: Some(fill.scale * scale / 1000.0),
+        lines: Some(found.lines.clone()),
+        gradient: None,
+        origin: None,
+    })
+}
+
+fn piece(shape: Shape, color: Option<String>, edge: Option<&ComponentEdge>) -> Piece {
+    let edge = edge.cloned().unwrap_or_default();
+    Piece {
+        shape,
+        color: edge.color.or(color),
+        line_weight: edge.line_weight,
+        by_layer: Vec::new(),
+        gates: Vec::new(),
+        stroke: PieceStroke {
+            line_type: edge.line_type,
+            ..PieceStroke::default()
+        },
+        attribute: None,
+    }
+}
+
+/// The wall's pieces at `view`, hatches and fill first, then its lines; or why it cannot be drawn.
+pub fn pieces(
+    pts: &[Vec2],
+    bulges: Option<&[f64]>,
+    spec: &Spec,
+    view: View,
+) -> Result<Vec<Piece>, String> {
+    let all = lines(pts, bulges, spec)?;
+    let closed = spec.closed;
+    let (left, right) = (&all[0], &all[all.len() - 1]);
+    let mut out = Vec::new();
+    let shown = |c: &Component| view.detail >= Detail::Standard && view.detail >= c.detail;
+    let comps = if all.len() == spec.components.len() + 1 {
+        &spec.components[..]
+    } else {
+        &[]
+    };
+    if view.detail == Detail::Schematic {
+        if let Some(fill) = &spec.fill {
+            let (ring, holes) = band(left, right, closed);
+            out.push(piece(
+                Shape::Hatch {
+                    ring,
+                    holes,
+                    pattern: HatchPattern::user("solid", 0.0, 1.0),
+                    assoc: None,
+                    boundary: None,
+                },
+                Some(fill.clone()),
+                None,
+            ));
+        }
+    } else {
+        let turn = first_direction(pts);
+        for (k, c) in comps.iter().enumerate() {
+            let Some(fill) = c.hatch.as_ref().filter(|_| shown(c)) else {
+                continue;
+            };
+            let Some(pattern) = hatch_of(fill, turn, view.scale) else {
+                continue;
+            };
+            let (ring, holes) = band(&all[k], &all[k + 1], closed);
+            out.push(piece(
+                Shape::Hatch {
+                    ring,
+                    holes,
+                    pattern,
+                    assoc: None,
+                    boundary: None,
+                },
+                fill.color.clone(),
+                None,
+            ));
+        }
+    }
+    out.push(piece(left.shape(closed), None, None));
+    out.push(piece(right.shape(closed), None, None));
+    if !closed && !spec.caps_open {
+        for (a, b) in [
+            (left.pts[0], right.pts[0]),
+            (left.pts[left.pts.len() - 1], right.pts[right.pts.len() - 1]),
+        ] {
+            out.push(piece(Shape::Line { a, b }, None, None));
+        }
+    }
+    for k in 1..comps.len() {
+        if shown(&comps[k - 1]) && shown(&comps[k]) {
+            let edge = comps[k - 1].edge.as_ref().or(comps[k].edge.as_ref());
+            out.push(piece(all[k].shape(closed), None, edge));
+        }
+    }
+    Ok(out)
+}
+
+/// The wall's base line as a polyline (what its grips, its stretch and its transforms act on).
+pub fn path_shape(pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> Shape {
+    Shape::Polyline {
+        pts: pts.to_vec(),
+        bulges: bulges.map(<[f64]>::to_vec),
+        holes: None,
+        parts: None,
+        closed,
+        widths: None,
+    }
+}
+
+/// A wall's base line, or none for another kind.
+pub fn path_of(shape: &Shape) -> Option<Shape> {
+    match shape {
+        Shape::Wall { pts, bulges, wall } => Some(path_shape(pts, bulges.as_deref(), wall.closed)),
+        _ => None,
+    }
+}
+
+/// `wall` along another base line (a polyline, what an edit of its path gave), its other fields kept; none when
+/// `path` is no polyline.
+pub fn with_path(wall: &Shape, path: Shape) -> Option<Shape> {
+    let (Shape::Wall { wall: spec, .. }, Shape::Polyline { pts, bulges, .. }) = (wall, path) else {
+        return None;
+    };
+    let n = pts.len();
+    let bulges = bulges.filter(|b| has_bulges(Some(b))).map(|mut b| {
+        b.resize(n, 0.0);
+        b
+    });
+    Some(Shape::Wall {
+        pts,
+        bulges,
+        wall: spec.clone(),
+    })
+}
+
+/// The spec with every length times `s` (`s` > 0): width, offset, thicknesses.
+pub fn scaled(spec: &Spec, s: f64) -> Spec {
+    let mut out = spec.clone();
+    out.width *= s;
+    out.offset *= s;
+    for c in &mut out.components {
+        if let Some(t) = &mut c.thickness {
+            *t *= s;
+        }
+    }
+    out
+}
+
+/// The wall's outline as edges: its two faces and, open, its caps; its path's when it cannot be drawn.
+pub fn outline_edges(shape: &Shape) -> Vec<crate::geom::intersect::Edge> {
+    use crate::geom::bulge::bulge_path_edges;
+    use crate::geom::intersect::Edge;
+    let Shape::Wall { pts, bulges, wall } = shape else {
+        return Vec::new();
+    };
+    let Ok(all) = lines(pts, bulges.as_deref(), wall) else {
+        return bulge_path_edges(pts, bulges.as_deref(), wall.closed);
+    };
+    let (left, right) = (&all[0], &all[all.len() - 1]);
+    let mut out = bulge_path_edges(&left.pts, Some(&left.bulges), wall.closed);
+    out.extend(bulge_path_edges(
+        &right.pts,
+        Some(&right.bulges),
+        wall.closed,
+    ));
+    if !wall.closed && !wall.caps_open {
+        out.push(Edge::Seg {
+            a: left.pts[0],
+            b: right.pts[0],
+        });
+        out.push(Edge::Seg {
+            a: left.pts[left.pts.len() - 1],
+            b: right.pts[right.pts.len() - 1],
+        });
+    }
+    out
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn v(x: f64, y: f64) -> Vec2 {
+        Vec2::new(x, y)
+    }
+
+    fn spec(width: f64, justify: Justify) -> Spec {
+        Spec {
+            width,
+            justify,
+            ..Spec::default()
+        }
+    }
+
+    fn layered() -> Spec {
+        let c = |t: Option<f64>, detail: Detail, hatch: Option<&str>| Component {
+            thickness: t,
+            hatch: hatch.map(|p| ComponentFill {
+                pattern: p.into(),
+                scale: 1.0,
+                angle: 0.0,
+                color: None,
+            }),
+            detail,
+            ..Component::default()
+        };
+        Spec {
+            width: 0.25,
+            components: vec![
+                c(Some(0.02), Detail::Detailed, None),
+                c(None, Detail::Standard, Some("ANSI31")),
+                c(Some(0.05), Detail::Standard, Some("ANSI37")),
+                c(Some(0.03), Detail::Detailed, None),
+            ],
+            fill: Some("#5A5A5A".into()),
+            ..Spec::default()
+        }
+    }
+
+    #[test]
+    fn the_faces_lie_where_the_justification_puts_them() {
+        assert_eq!(boundaries(&spec(0.2, Justify::Center)), [0.1, -0.1]);
+        assert_eq!(boundaries(&spec(0.2, Justify::Left)), [0.0, -0.2]);
+        assert_eq!(boundaries(&spec(0.2, Justify::Right)), [0.2, 0.0]);
+        let mut s = spec(0.2, Justify::Left);
+        s.offset = 0.05;
+        assert_eq!(boundaries(&s), [0.05, 0.05 - 0.2]);
+        let b = boundaries(&layered());
+        assert_eq!(b.len(), 5);
+        assert!((b[1] - 0.105).abs() < 1e-15 && (b[3] - -0.095).abs() < 1e-15);
+    }
+
+    #[test]
+    fn a_straight_wall_is_its_faces_and_its_caps() {
+        let p = [v(0.0, 0.0), v(4.0, 0.0)];
+        let got = pieces(&p, None, &spec(0.2, Justify::Center), View::default()).unwrap();
+        assert_eq!(got.len(), 4);
+        let Shape::Polyline { pts, .. } = &got[0].shape else {
+            panic!()
+        };
+        assert_eq!(pts, &[v(0.0, 0.1), v(4.0, 0.1)]);
+        let Shape::Line { a, b } = &got[3].shape else {
+            panic!()
+        };
+        assert_eq!((*a, *b), (v(4.0, 0.1), v(4.0, -0.1)));
+    }
+
+    #[test]
+    fn a_corner_is_mitred_on_both_faces() {
+        let p = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 3.0)];
+        let ls = lines(&p, None, &spec(0.2, Justify::Center)).unwrap();
+        assert_eq!(ls[0].pts[1], v(3.9, 0.1));
+        assert_eq!(ls[1].pts[1], v(4.1, -0.1));
+    }
+
+    #[test]
+    fn the_detail_decides_the_components_lines_and_hatches() {
+        let p = [v(0.0, 0.0), v(5.0, 0.0)];
+        let count = |detail| {
+            let got = pieces(
+                &p,
+                None,
+                &layered(),
+                View {
+                    detail,
+                    scale: 50.0,
+                },
+            )
+            .unwrap();
+            let hatches = got
+                .iter()
+                .filter(|x| matches!(x.shape, Shape::Hatch { .. }))
+                .count();
+            (got.len(), hatches)
+        };
+        // Schematic: the fill, two faces, two caps.
+        assert_eq!(count(Detail::Schematic), (5, 1));
+        // Standard: brick and insulation hatched, the line between them, faces and caps.
+        assert_eq!(count(Detail::Standard), (2 + 4 + 1, 2));
+        // Detailed: the same hatches and all three inner lines.
+        assert_eq!(count(Detail::Detailed), (2 + 4 + 3, 2));
+    }
+
+    #[test]
+    fn a_closed_wall_has_no_caps_and_a_hole_in_its_bands() {
+        let p = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 3.0), v(0.0, 3.0)];
+        let s = Spec {
+            closed: true,
+            fill: Some("#000000".into()),
+            ..spec(0.2, Justify::Center)
+        };
+        let got = pieces(
+            &p,
+            None,
+            &s,
+            View {
+                detail: Detail::Schematic,
+                scale: 100.0,
+            },
+        )
+        .unwrap();
+        assert_eq!(got.len(), 3);
+        let Shape::Hatch { ring, holes, .. } = &got[0].shape else {
+            panic!()
+        };
+        assert!(signed_area(ring).abs() > signed_area(&holes.as_ref().unwrap()[0]).abs());
+    }
+
+    #[test]
+    fn the_body_s_area_is_exact() {
+        let p = [v(0.0, 0.0), v(4.0, 0.0)];
+        assert!((area(&p, None, &spec(0.2, Justify::Center)).unwrap() - 0.8).abs() < 1e-12);
+        let ring = [v(0.0, 0.0), v(4.0, 0.0), v(4.0, 3.0), v(0.0, 3.0)];
+        let s = Spec {
+            closed: true,
+            ..spec(0.2, Justify::Center)
+        };
+        // 4.2 × 3.2 less 3.8 × 2.8.
+        assert!((area(&ring, None, &s).unwrap() - (13.44 - 10.64)).abs() < 1e-12);
+        // A half ring of radius 5, 0.2 wide: half the annulus between 5.1 and 4.9.
+        let arc = [v(-5.0, 0.0), v(5.0, 0.0)];
+        let want = PI * (5.1 * 5.1 - 4.9 * 4.9) / 2.0;
+        assert!(
+            (area(&arc, Some(&[-1.0, 0.0]), &spec(0.2, Justify::Center)).unwrap() - want).abs()
+                < 1e-12
+        );
+    }
+
+    #[test]
+    fn an_arc_too_tight_for_the_wall_is_refused() {
+        // A half circle of radius 0.05 on the left: the left face would be inside its centre.
+        let p = [v(0.0, 0.0), v(0.1, 0.0)];
+        assert!(lines(&p, Some(&[1.0, 0.0]), &spec(0.2, Justify::Center)).is_err());
+    }
+}

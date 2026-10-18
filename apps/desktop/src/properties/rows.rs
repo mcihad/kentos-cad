@@ -1162,6 +1162,167 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 metres("Uzunluk", length_of.unwrap_or(0.0)),
             ]);
         }
+        // A wall (docs/adr/0339 §6): its width, justification, offset, style, ends, height, level and phase, each
+        // written through `cad.walls.edit`; its length along its path and its body's area.
+        Entity::Wall(w) => {
+            let x = &w.wall;
+            let change = |c: kentos_contracts::WallChange| Message::Properties(Event::Wall(slot, c));
+            let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
+                label,
+                swatch: None,
+                icon,
+                wide: false,
+                chosen,
+                enabled: true,
+                message,
+            };
+            let select = |text: String, items: Vec<Choice>| {
+                edit(Editor::Select {
+                    text,
+                    swatch: None,
+                    icon: None,
+                    items,
+                })
+            };
+            let fixed = kentos_contracts::fixed_width(&x.components).is_some();
+            geo.push(metres("Genişlik", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
+            let justify = kentos_contracts::WallJustify::ALL
+                .iter()
+                .map(|&j| {
+                    let icon = match j {
+                        kentos_contracts::WallJustify::Left => "wallLeft",
+                        kentos_contracts::WallJustify::Center => "wallCenter",
+                        kentos_contracts::WallJustify::Right => "wallRight",
+                    };
+                    pick(
+                        j.label().to_owned(),
+                        j == x.justify,
+                        change(kentos_contracts::WallChange {
+                            justify: Some(j),
+                            ..Default::default()
+                        }),
+                        Some(icon),
+                    )
+                })
+                .collect();
+            geo.push(Row::text("Hiza", x.justify.label()).editor(select(x.justify.label().to_owned(), justify)));
+            geo.push(metres("Öteleme", x.offset).editor(number(Field::WallOffset(slot))));
+            let offered = kentos_interaction::wall::offered(doc.settings());
+            let style_name = x
+                .style
+                .as_deref()
+                .and_then(|id| offered.iter().find(|s| s.id == id))
+                .map_or_else(|| kentos_interaction::wall::NO_STYLE.to_owned(), |s| s.name.clone());
+            let mut styles = vec![pick(
+                kentos_interaction::wall::NO_STYLE.to_owned(),
+                x.style.is_none(),
+                change(kentos_contracts::WallChange {
+                    style: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            )];
+            styles.extend(offered.iter().map(|s| {
+                pick(
+                    s.name.clone(),
+                    x.style.as_deref() == Some(s.id.as_str()),
+                    change(kentos_contracts::WallChange {
+                        style: Some(Some(s.id.clone())),
+                        ..Default::default()
+                    }),
+                    None,
+                )
+            }));
+            styles.push(Choice::Separator);
+            styles.push(Choice::Command {
+                label: kentos_interaction::wall::WALL_STYLES_ENTRY,
+                icon: crate::icons::from_web(Some("wallStyles")),
+                id: kentos_interaction::wall::WALL_STYLES,
+            });
+            geo.push(Row::text("Stil", style_name.clone()).editor(select(style_name, styles)));
+            let open = x.caps == kentos_contracts::WallCaps::Open;
+            let caps = [(false, "Kapalı"), (true, "Açık")]
+                .into_iter()
+                .map(|(o, l)| {
+                    let caps = if o { kentos_contracts::WallCaps::Open } else { kentos_contracts::WallCaps::Closed };
+                    pick(
+                        l.to_owned(),
+                        o == open,
+                        change(kentos_contracts::WallChange {
+                            caps: Some(caps),
+                            ..Default::default()
+                        }),
+                        None,
+                    )
+                })
+                .collect();
+            let caps_text = if open { "Açık" } else { "Kapalı" };
+            geo.push(Row::text("Uçlar", caps_text).editor(select(caps_text.to_owned(), caps)));
+            let height = x.height.map_or_else(|| "Katın".to_owned(), |h| f.length_bare(h));
+            geo.push(
+                Row::figure("Yükseklik", height)
+                    .unit(if x.height.is_some() { f.length_unit_label() } else { "" })
+                    .editor(number(Field::WallHeight(slot))),
+            );
+            let levels = doc.settings().arch.as_ref().map(|a| a.levels.clone()).unwrap_or_default();
+            let level_name = x
+                .arch
+                .level
+                .as_deref()
+                .map(|id| levels.iter().find(|l| l.id == id).map_or_else(|| id.to_owned(), |l| l.name.clone()))
+                .unwrap_or_else(|| "Yok".to_owned());
+            let mut level_items = vec![pick(
+                "Yok".to_owned(),
+                x.arch.level.is_none(),
+                change(kentos_contracts::WallChange {
+                    level: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            )];
+            level_items.extend(levels.iter().map(|l| {
+                pick(
+                    l.name.clone(),
+                    x.arch.level.as_deref() == Some(l.id.as_str()),
+                    change(kentos_contracts::WallChange {
+                        level: Some(Some(l.id.clone())),
+                        ..Default::default()
+                    }),
+                    None,
+                )
+            }));
+            level_items.push(Choice::Separator);
+            level_items.push(Choice::Command {
+                label: "Katlar…",
+                icon: crate::icons::from_web(Some("archSettings")),
+                id: "arch.settings",
+            });
+            geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
+            let phase_name = x.arch.phase.map_or("Yok", kentos_contracts::ArchPhase::label);
+            let mut phases = vec![pick(
+                "Yok".to_owned(),
+                x.arch.phase.is_none(),
+                change(kentos_contracts::WallChange {
+                    phase: Some(None),
+                    ..Default::default()
+                }),
+                None,
+            )];
+            phases.extend(kentos_contracts::ArchPhase::ALL.iter().map(|&p| {
+                pick(
+                    p.label().to_owned(),
+                    x.arch.phase == Some(p),
+                    change(kentos_contracts::WallChange {
+                        phase: Some(Some(p)),
+                        ..Default::default()
+                    }),
+                    None,
+                )
+            }));
+            geo.push(Row::text("Evre", phase_name).editor(select(phase_name.to_owned(), phases)));
+            geo.push(metres("Uzunluk", length_of.unwrap_or(0.0)));
+            geo.extend(area(area_of.unwrap_or(0.0)));
+        }
         // A NURBS curve (docs/adr/0259 §6): its degree, control and fit points, whether it is rational
         // and closed, its length and, closed, the area it encloses.
         Entity::Nurbs(n) => {

@@ -451,6 +451,51 @@ impl<'d> Encoder<'d> {
                 f.push(("p", Val::Point(&e.p)));
                 f.push(("dir", Val::Point(&e.dir)));
             }
+            // A wall (docs/adr/0339 §4): written only when it is one.
+            Entity::Wall(e) => {
+                let w = &e.wall;
+                if let Some((_, problem)) = w.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("pts", Val::Points(&w.pts)));
+                if let Some(b) = &w.bulges {
+                    f.push(("bulges", Val::Floats(b)));
+                }
+                if w.closed {
+                    f.push(("closed", Val::Bool(true)));
+                }
+                f.push(("width", Val::Float(w.width)));
+                f.push((
+                    "justify",
+                    Val::Name(match w.justify {
+                        kentos_contracts::WallJustify::Left => "left",
+                        kentos_contracts::WallJustify::Center => "center",
+                        kentos_contracts::WallJustify::Right => "right",
+                    }),
+                ));
+                if w.offset != 0.0 {
+                    f.push(("offset", Val::Float(w.offset)));
+                }
+                if let Some(style) = &w.style {
+                    f.push(("style", Val::Text(style)));
+                }
+                if !w.components.is_empty() {
+                    f.push(("components", Val::Json(serde_json::to_value(&w.components).unwrap_or_default())));
+                }
+                if w.caps == kentos_contracts::WallCaps::Open {
+                    f.push(("caps", Val::Name("open")));
+                }
+                if let Some(c) = &w.fill {
+                    f.push(("fill", Val::Text(c)));
+                }
+                if let Some(h) = w.height {
+                    f.push(("height", Val::Float(h)));
+                }
+                if !w.arch.is_empty() {
+                    f.push(("arch", Val::Json(serde_json::to_value(&w.arch).unwrap_or_default())));
+                }
+            }
             Entity::Text(e) => {
                 f.push(("p", Val::Point(&e.p)));
                 f.push(("text", Val::Text(&e.text)));

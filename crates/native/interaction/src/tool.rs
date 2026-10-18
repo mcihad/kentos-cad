@@ -731,6 +731,16 @@ pub struct Memory {
     /// longer has is Standart.
     pub text_style: Option<kentos_domain::Uuid>,
     pub dimension_style: Option<kentos_domain::Uuid>,
+    /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
+    /// style) (docs/adr/0339 §6).
+    pub wall_width: f64,
+    pub wall_justify: kentos_contracts::WallJustify,
+    pub wall_offset: f64,
+    pub wall_style: Option<u64>,
+    /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
+    pub wall_pairs: bool,
+    pub wall_keep_sources: bool,
+    pub wall_pair_max: f64,
     /// Ötele's “İki yana” (both sides) and “Kaynağı sil” (delete the source).
     pub offset_both: bool,
     pub offset_erase: bool,
@@ -1119,6 +1129,13 @@ impl Default for Memory {
             last_dimension: None,
             text_style: None,
             dimension_style: None,
+            wall_width: kentos_contracts::DEFAULT_WALL_WIDTH,
+            wall_justify: kentos_contracts::WallJustify::Center,
+            wall_offset: 0.0,
+            wall_style: None,
+            wall_pairs: false,
+            wall_keep_sources: false,
+            wall_pair_max: kentos_contracts::DEFAULT_PAIR_WIDTH,
             offset_both: false,
             offset_erase: false,
             path_count: 5,

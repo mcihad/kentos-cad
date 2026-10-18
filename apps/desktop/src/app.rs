@@ -235,6 +235,8 @@ pub enum Dialog {
     /// Yazı stilleri and Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5); the window is
     /// `App::annotation_styles`.
     AnnotationStyles,
+    /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6); the window is `App::wall_styles`.
+    WallStyles,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
     LayerPurge,
     /// Başka çizimden al (drawing_exchange.rs, docs/adr/0193 §2); the window is `App::take_from`.
@@ -501,6 +503,7 @@ pub enum Message {
     /// An event of Formlar's preview (forms/entry.rs, docs/adr/0403 §3).
     FormPreview(crate::forms::entry::Event),
     AnnotationStyles(crate::annotation_styles::Event),
+    WallStyles(crate::wall_styles::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
     FontReport(crate::font_report::Event),
@@ -969,6 +972,8 @@ pub struct App {
     pub(crate) form_on_create: Option<kentos_domain::Slot>,
     /// Yazı stilleri or Ölçü stilleri (annotation_styles.rs, docs/adr/0183 §5).
     pub(crate) annotation_styles: Option<crate::annotation_styles::Window>,
+    /// Duvar stilleri (wall_styles.rs, docs/adr/0339 §6).
+    pub(crate) wall_styles: Option<crate::wall_styles::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
     pub(crate) layer_purge: Option<crate::layer_purge::Window>,
     /// Başka çizimden al's window (drawing_exchange.rs, docs/adr/0193 §2).
@@ -1285,6 +1290,7 @@ impl App {
             form_preview: None,
             form_on_create: None,
             annotation_styles: None,
+            wall_styles: None,
             layer_purge: None,
             take_from: None,
             layer_list: None,
@@ -1824,6 +1830,7 @@ impl App {
             Message::FormEntry(event) => return self.form_entry_event(event),
             Message::FormPreview(event) => return self.form_preview_event(event),
             Message::AnnotationStyles(event) => return self.annotation_styles_event(event),
+            Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
             Message::LayerList(event) => return self.layer_list_event(event),
@@ -2456,6 +2463,8 @@ impl App {
             "table.blockSchedule" => self.place_block_schedule(),
             // Yazı ve ölçü stilleri (docs/adr/0183 §5).
             "style.textStyles" => self.open_annotation_styles(crate::annotation_styles::Kind::Text),
+            // Duvar stilleri (docs/adr/0339 §6).
+            "arch.wallStyles" => self.open_wall_styles(),
             "style.dimensionStyles" => {
                 self.open_annotation_styles(crate::annotation_styles::Kind::Dimension)
             }

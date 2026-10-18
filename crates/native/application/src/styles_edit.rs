@@ -10,8 +10,8 @@
 
 use kentos_contracts::{
     ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef, LeaderStyleDef,
-    StyleEditOperation, StylesEdit, StylesEdited, TextStyleDef, dimension_styles_problem,
-    leader_styles_problem, text_styles_problem,
+    StyleEditOperation, StylesEdit, StylesEdited, TextStyleDef, WallStyleDef, dimension_styles_problem,
+    leader_styles_problem, text_styles_problem, wall_styles_problem,
 };
 use kentos_domain::{Document, Uuid};
 
@@ -29,6 +29,7 @@ enum Table {
     Text(Vec<TextStyleDef>),
     Dimension(Vec<DimensionStyleDef>),
     Leader(Vec<LeaderStyleDef>),
+    Wall(Vec<WallStyleDef>),
 }
 
 impl Table {
@@ -37,6 +38,7 @@ impl Table {
             Table::Text(t) => t.iter().map(|s| s.id.as_str()).collect(),
             Table::Dimension(t) => t.iter().map(|s| s.id.as_str()).collect(),
             Table::Leader(t) => t.iter().map(|s| s.id.as_str()).collect(),
+            Table::Wall(t) => t.iter().map(|s| s.id.as_str()).collect(),
         }
     }
 
@@ -45,6 +47,7 @@ impl Table {
             Table::Text(t) => text_styles_problem(t),
             Table::Dimension(t) => dimension_styles_problem(t),
             Table::Leader(t) => leader_styles_problem(t),
+            Table::Wall(t) => wall_styles_problem(t),
         }
     }
 }
@@ -58,11 +61,13 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
         AnnotationStyleKind::Text => ("text", "yazı stili"),
         AnnotationStyleKind::Dimension => ("dimension", "ölçü stili"),
         AnnotationStyleKind::Leader => ("leader", "kılavuz stili"),
+        AnnotationStyleKind::Wall => ("wall", "duvar stili"),
     };
     let mut table = match input.kind {
         AnnotationStyleKind::Text => Table::Text(settings.text_styles.clone()),
         AnnotationStyleKind::Dimension => Table::Dimension(settings.dimension_styles.clone()),
         AnnotationStyleKind::Leader => Table::Leader(settings.leader_styles.clone()),
+        AnnotationStyleKind::Wall => Table::Wall(settings.wall_styles.clone()),
     };
     let not_found = |id: &str, at: &str| {
         fail(
@@ -76,6 +81,7 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
             AnnotationStyleKind::Text => input.text.as_ref().map(|s| s.id.clone()),
             AnnotationStyleKind::Dimension => input.dimension.as_ref().map(|s| s.id.clone()),
             AnnotationStyleKind::Leader => input.leader.as_ref().map(|s| s.id.clone()),
+            AnnotationStyleKind::Wall => input.wall.as_ref().map(|s| s.id.clone()),
         }
         .unwrap_or_default(),
         Op::Rename | Op::Remove => input.style.clone().unwrap_or_default(),
@@ -128,6 +134,23 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
             }
         }
         (Table::Leader(t), Op::Remove) => t.retain(|s| s.id != id),
+        (Table::Wall(t), Op::Create) => {
+            if let Some(mut s) = input.wall.clone() {
+                s.id.clone_from(&id);
+                t.push(s);
+            }
+        }
+        (Table::Wall(t), Op::Update) => {
+            if let (Some(s), Some(at)) = (input.wall.clone(), t.iter().position(|s| s.id == id)) {
+                t[at] = s;
+            }
+        }
+        (Table::Wall(t), Op::Rename) => {
+            if let Some(s) = t.iter_mut().find(|s| s.id == id) {
+                s.name.clone_from(&name);
+            }
+        }
+        (Table::Wall(t), Op::Remove) => t.retain(|s| s.id != id),
         (Table::Text(t), Op::Update) => {
             if let (Some(s), Some(at)) = (input.text.clone(), t.iter().position(|s| s.id == id)) {
                 t[at] = s;
@@ -165,12 +188,19 @@ fn next_table(doc: &Document, input: &StylesEdit, fresh: &str) -> Result<(Table,
             AnnotationStyleKind::Text => "Yazı stilleri",
             AnnotationStyleKind::Dimension => "Ölçü stilleri",
             AnnotationStyleKind::Leader => "Kılavuz stilleri",
+            AnnotationStyleKind::Wall => "Duvar stilleri",
         };
         return Err(fail(
             codes::INVALID_STYLE,
             format!("{kind}: {problem}."),
             at,
         ));
+    }
+    // A wall style's walls take it: one its components do not fit, or whose faces it makes undrawable, refuses it.
+    if let Table::Wall(t) = &table
+        && let Err((code, why)) = style_tables::wall_followers(doc, t)
+    {
+        return Err(fail(code, why, path));
     }
     Ok((table, id))
 }
@@ -204,6 +234,7 @@ fn kind_name(kind: AnnotationStyleKind) -> &'static str {
         AnnotationStyleKind::Text => "text",
         AnnotationStyleKind::Dimension => "dimension",
         AnnotationStyleKind::Leader => "leader",
+        AnnotationStyleKind::Wall => "wall",
     }
 }
 
@@ -252,6 +283,14 @@ fn export(doc: &Document, input: &StylesEdit) -> Result<Planned, Stop> {
                     .into_iter()
                     .map(|i| &all[i])
                     .collect();
+            (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
+        }
+        AnnotationStyleKind::Wall => {
+            let all = &settings.wall_styles;
+            let chosen: Vec<&WallStyleDef> = picked(all.iter().map(|s| s.id.as_str()), input, "duvar stili")?
+                .into_iter()
+                .map(|i| &all[i])
+                .collect();
             (chosen.iter().map(|s| s.id.clone()).collect(), serde_json::json!(chosen))
         }
     };
@@ -378,18 +417,25 @@ fn import(
             Table::Dimension(merge!(settings.dimension_styles, DimensionStyleDef))
         }
         AnnotationStyleKind::Leader => Table::Leader(merge!(settings.leader_styles, LeaderStyleDef)),
+        AnnotationStyleKind::Wall => Table::Wall(merge!(settings.wall_styles, WallStyleDef)),
     };
     if let Some(problem) = table.problem() {
         let what = match input.kind {
             AnnotationStyleKind::Text => "Yazı stilleri",
             AnnotationStyleKind::Dimension => "Ölçü stilleri",
             AnnotationStyleKind::Leader => "Kılavuz stilleri",
+            AnnotationStyleKind::Wall => "Duvar stilleri",
         };
         return Err(fail(
             codes::INVALID_STYLE,
             format!("{what}: {problem}."),
             "library",
         ));
+    }
+    if let Table::Wall(t) = &table
+        && let Err((code, why)) = style_tables::wall_followers(doc, t)
+    {
+        return Err(fail(code, why, "library"));
     }
     planned.style = planned
         .added
@@ -408,12 +454,14 @@ fn check_input(input: &StylesEdit) -> Result<(), Stop> {
         AnnotationStyleKind::Text => input.text.is_some(),
         AnnotationStyleKind::Dimension => input.dimension.is_some(),
         AnnotationStyleKind::Leader => input.leader.is_some(),
+        AnnotationStyleKind::Wall => input.wall.is_some(),
     };
     if matches!(op, Op::Create | Op::Update) && !has {
         let path = match input.kind {
             AnnotationStyleKind::Text => "text",
             AnnotationStyleKind::Dimension => "dimension",
             AnnotationStyleKind::Leader => "leader",
+            AnnotationStyleKind::Wall => "wall",
         };
         return Err(fail(
             codes::NO_DEFINITION,
@@ -521,6 +569,10 @@ fn write(doc: &mut Document, planned: Planned) -> StylesEdited {
         }
         Some(Table::Leader(t)) => {
             let saved = style_tables::save_leader_styles(doc, t);
+            (saved.changed, saved.locked)
+        }
+        Some(Table::Wall(t)) => {
+            let saved = style_tables::save_wall_styles(doc, t);
             (saved.changed, saved.locked)
         }
         None => (0, 0),

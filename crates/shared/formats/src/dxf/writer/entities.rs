@@ -82,6 +82,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Raster(_) => "Raster",
         Entity::PointCloud(_) => "Nokta bulutu",
         Entity::Record(_) => "Kayıt",
+        Entity::Wall(_) => "Duvar",
     }
 }
 
@@ -189,6 +190,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Leader(l) => all_ok(&l.pts) && nums_ok(&[l.height, l.rotation]),
         // Never written (docs/adr/0192, 0204, Kapsam dışı): said in the report.
         Entity::Image(_) | Entity::Raster(_) | Entity::PointCloud(_) | Entity::Record(_) => true,
+        Entity::Wall(w) => w.wall.pts.iter().all(|p| ok(*p)) && w.wall.width.is_finite(),
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -691,6 +693,11 @@ impl Writer<'_> {
             Entity::Insert(i) => self.insert(i),
             Entity::Leader(l) => self.leader(l),
             Entity::Table(t) => self.table(t),
+            // A wall reaches here as its pieces (`writer::plain_walls`, docs/adr/0339 §4).
+            Entity::Wall(_) => {
+                self.report.skip("Duvar", "duvar çizgilerine açılmadan yazılamaz", 0);
+                false
+            }
             // Nor a record without a geometry (docs/adr/0410 §4).
             Entity::Record(_) => {
                 self.report.skip(

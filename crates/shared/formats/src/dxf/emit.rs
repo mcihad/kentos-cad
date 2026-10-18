@@ -511,6 +511,7 @@ fn anchor_points(e: &Entity) -> Vec<Vec2> {
         Entity::Raster(r) => crate::blocks::raster_corners(r),
         Entity::PointCloud(c) => crate::blocks::cloud_corners(c),
         Entity::Record(_) => Vec::new(),
+        Entity::Wall(w) => w.wall.pts.clone(),
     }
 }
 

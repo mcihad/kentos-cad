@@ -105,6 +105,7 @@ use crate::tool::{
     Tool,
 };
 use crate::trace_work::WorkCache;
+use crate::wall;
 
 /// The closed-area tool's id: its command is `tool.polygon`.
 pub const POLYGON_ID: &str = "polygon";
@@ -155,6 +156,8 @@ pub enum Shape {
     Reshape,
     /// Maske: an area that covers what is drawn before it (AutoCAD's WIPEOUT, docs/adr/0310 §5).
     Wipeout,
+    /// Duvar: a wall along the path (docs/adr/0339 §6).
+    Wall,
 }
 
 impl Shape {
@@ -170,6 +173,7 @@ impl Shape {
             Shape::Continue => continuation::ID,
             Shape::Reshape => reshape_by::ID,
             Shape::Wipeout => WIPEOUT_ID,
+            Shape::Wall => wall::ID,
         }
     }
 
@@ -185,6 +189,7 @@ impl Shape {
             Shape::Continue => continuation::LABEL,
             Shape::Reshape => reshape_by::LABEL,
             Shape::Wipeout => WIPEOUT_LABEL,
+            Shape::Wall => wall::LABEL,
         }
     }
 
@@ -304,6 +309,11 @@ pub struct Path {
     reshape_target: Option<reshape_by::Target>,
     /// Biçim değiştir: what the line to the cursor would make of it, for the preview.
     reshaped: Option<reshape_by::Reshaped>,
+    /// Duvar: the value waited for after its key, the styles offered (as of the last call) and the wall the path
+    /// to the cursor would make, from the command's plan (docs/adr/0339 §6).
+    wall_ask: Option<wall::Ask>,
+    wall_offer: Vec<kentos_contracts::WallStyleDef>,
+    wall_drawn: wall::Drawn,
 }
 
 /// The faces İçine tıkla finds regions in ([`faces::Faces`], which is neither
@@ -355,7 +365,15 @@ impl Path {
             cont: None,
             reshape_target: None,
             reshaped: None,
+            wall_ask: None,
+            wall_offer: Vec::new(),
+            wall_drawn: wall::Drawn::default(),
         }
+    }
+
+    /// Duvar (`tool.wall`, docs/adr/0339 §6).
+    pub fn wall() -> Self {
+        Self::new(Shape::Wall)
     }
 
     /// The closed-area tool (`tool.polygon`).
@@ -384,6 +402,43 @@ impl Path {
     fn see(&mut self, cx: &Context<'_>) {
         self.memory = *cx.memory;
         self.format = cx.format();
+        if self.shape == Shape::Wall {
+            self.wall_offer = wall::offered(cx.doc.settings());
+        }
+    }
+
+    /// Duvar: the wall the path to the cursor would make, from the command's plan.
+    fn redraw_wall(&mut self, cx: &Context<'_>) {
+        if self.shape != Shape::Wall {
+            return;
+        }
+        let (pts, bulges) = self.preview_path();
+        self.wall_drawn = wall::drawn(&pts, &bulges, false, cx);
+    }
+
+    /// Duvar's chips as they stand.
+    fn wall_chips(&self, prompt: Prompt) -> Prompt {
+        let style = wall::chosen_in(&self.memory, &self.wall_offer);
+        wall::chips(prompt, &self.memory, &self.format, style)
+    }
+
+    /// Duvar's Kapat: the wall closed on its first point (an arc tangent to the last edge in arc mode), written.
+    fn close_wall(&mut self, cx: &mut Context<'_>) {
+        let pts = self.pts.clone();
+        let mut bulges = self.bulges.clone();
+        let closing = match (self.arc_mode, self.tangent(), pts.last(), pts.first()) {
+            (true, Some(t), Some(&last), Some(&first)) => {
+                tangent_bulge(last, t, first).unwrap_or(0.0)
+            }
+            _ => 0.0,
+        };
+        bulges.push(closing);
+        let length = bulge_path_length(&pts, Some(&bulges), true);
+        if wall::write(&pts, &bulges, true, cx) {
+            let text = format!("Kapalı duvar eklendi: {}", cx.format().length(length));
+            cx.say(Level::Success, text);
+        }
+        self.reset();
     }
 
     /// Mesafe ölç with Sabit ilk nokta on: rays from the first point, not a chain.
@@ -506,6 +561,7 @@ impl Path {
         self.on_point(p, cx);
         self.sync_widths(cx);
         self.refill(false, cx);
+        self.redraw_wall(cx);
     }
 
     /// Çoklu çizgi (docs/adr/0288): every edge drawn since takes the session's widths; after an edge that tapers,
@@ -1041,6 +1097,29 @@ impl Path {
             self.square_close(cx);
             return true;
         }
+        // Duvar (docs/adr/0339 §6): its values, Hiza turning round, Kapat writing it closed.
+        if self.shape == Shape::Wall {
+            if key == "G" && self.wall_ask.is_some() {
+                self.wall_ask = None;
+                return true;
+            }
+            if self.wall_ask.is_none() {
+                if let Some(ask) = wall::ask_of(key) {
+                    self.wall_ask = Some(ask);
+                    return true;
+                }
+                if key == "H" {
+                    wall::next_justify(cx);
+                    self.see(cx);
+                    self.redraw_wall(cx);
+                    return true;
+                }
+                if key == "K" && self.pts.len() >= 2 {
+                    self.close_wall(cx);
+                    return true;
+                }
+            }
+        }
         // Çoklu çizgi (docs/adr/0258): Kapat closes it with a straight edge, a closed line and no
         // area; Genişlik asks for every edge's width, kept for the session.
         if self.shape == Shape::Open && !self.ask_width {
@@ -1239,6 +1318,13 @@ impl Path {
                 let length = bulge_path_length(&pts, bulges.as_deref(), false);
                 if self.create_polyline(&pts, false, cx) {
                     let text = format!("Çoklu çizgi eklendi: {}", cx.format().length(length));
+                    cx.say(Level::Success, text);
+                }
+            }
+            Shape::Wall => {
+                let length = bulge_path_length(&pts, bulges.as_deref(), false);
+                if wall::write(&pts, &self.bulges, false, cx) {
+                    let text = format!("Duvar eklendi: {}", cx.format().length(length));
                     cx.say(Level::Success, text);
                 }
             }
@@ -1600,6 +1686,8 @@ impl Path {
         self.target_rings.clear();
         self.cont = None;
         self.reshaped = None;
+        self.wall_ask = None;
+        self.wall_drawn = wall::Drawn::default();
     }
 
     /// The effective cursor for the next point: ortho (Shift turns it over)
@@ -1633,6 +1721,12 @@ impl Path {
         // Çoklu çizgi's width and Kapat in arc mode too (docs/adr/0288).
         if self.shape == Shape::Open {
             prompt = prompt.option_with("Genişlik", "E", self.width_text());
+            if self.pts.len() >= 2 {
+                prompt = prompt.option("Kapat", "K");
+            }
+        }
+        if self.shape == Shape::Wall {
+            prompt = self.wall_chips(prompt);
             if self.pts.len() >= 2 {
                 prompt = prompt.option("Kapat", "K");
             }
@@ -1734,6 +1828,8 @@ impl Path {
             Shape::Wipeout => prompt
                 .toggle("Çerçeve", "Ç", !self.memory.wipeout_no_frame)
                 .toggle("Nesne", "N", self.memory.wipeout_object),
+            // Duvar's options before its first point too (docs/adr/0339 §6).
+            Shape::Wall => self.wall_chips(prompt),
             _ => prompt,
         }
     }
@@ -1923,6 +2019,9 @@ impl Tool for Path {
                 "alanı ölçülecek bölgenin içine tıklayın",
             ));
         }
+        if let Some(ask) = self.wall_ask {
+            return wall::asked(ask);
+        }
         if n == 0 && self.shape == Shape::Adjoin {
             return Prompt::new(
                 label,
@@ -2010,6 +2109,12 @@ impl Tool for Path {
             if self.shape == Shape::Wipeout {
                 prompt = prompt.toggle("Çerçeve", "Ç", !self.memory.wipeout_no_frame);
             }
+            if self.shape == Shape::Wall {
+                prompt = self.wall_chips(prompt);
+                if n >= 2 {
+                    prompt = prompt.option("Kapat", "K");
+                }
+            }
             // Çoklu çizgi's width and Kapat (docs/adr/0258).
             if self.shape == Shape::Open {
                 prompt = prompt.option_with("Genişlik", "E", self.width_text());
@@ -2076,6 +2181,30 @@ impl Tool for Path {
 
     fn point_count(&self) -> usize {
         self.pts.len()
+    }
+
+    /// Duvar's Hiza and Stil menus (docs/adr/0339 §6).
+    fn option_choices(&self, key: &str) -> Vec<crate::tool::OptionChoice> {
+        if self.shape != Shape::Wall || self.wall_ask.is_some() {
+            return Vec::new();
+        }
+        wall::choices(key, &self.memory, &self.wall_offer)
+    }
+
+    fn choose_option(&mut self, key: &str, typed: &str, cx: &mut Context<'_>) -> bool {
+        if self.shape != Shape::Wall || !matches!(key, "H" | "S") {
+            return false;
+        }
+        self.wall_ask = None;
+        wall::choose(key, typed, cx);
+        self.see(cx);
+        self.redraw_wall(cx);
+        true
+    }
+
+    /// A wall style's name is words: Space types a space.
+    fn takes_words(&self) -> bool {
+        self.wall_ask == Some(wall::Ask::Style)
     }
 
     fn pointer_move(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -2149,6 +2278,7 @@ impl Tool for Path {
             self.target_rings = area.map_or_else(Vec::new, |slot| holes::rings_of(slot, cx));
         }
         self.refill(true, cx);
+        self.redraw_wall(cx);
     }
 
     fn pointer_down(&mut self, p: &Pointer, cx: &mut Context<'_>) {
@@ -2162,6 +2292,14 @@ impl Tool for Path {
     fn input(&mut self, text: &str, cx: &mut Context<'_>) -> bool {
         self.see(cx);
         let key = upper_tr(js_trim(text));
+        // A wall style's name is words, whatever its letters (docs/adr/0339 §6).
+        if self.wall_ask == Some(wall::Ask::Style) && key != "G" {
+            self.wall_ask = None;
+            wall::choose("S", text, cx);
+            self.see(cx);
+            self.redraw_wall(cx);
+            return true;
+        }
         if self.switch(&key, cx) || self.option(&key, cx) {
             return true;
         }
@@ -2170,6 +2308,13 @@ impl Tool for Path {
         let value = crate::points::plain_value(text, cx);
         let plain = value.map(|(n, _)| n);
         let metres = value.map_or(f64::NAN, |(_, m)| m);
+        if let (Some(ask), Some(_)) = (self.wall_ask, plain) {
+            self.wall_ask = None;
+            wall::typed(ask, metres, cx);
+            self.see(cx);
+            self.redraw_wall(cx);
+            return true;
+        }
         if let Some(n) = plain.filter(|_| self.ask_width) {
             if n >= 0.0 {
                 // The start width, then the end width (docs/adr/0288).
@@ -2341,6 +2486,10 @@ impl Tool for Path {
                 if let Some(r) = &self.reshaped {
                     lines.push(r.line.clone());
                 }
+                // Duvar: why the wall to the cursor cannot be drawn.
+                if let Some(why) = &self.wall_drawn.why {
+                    lines.push(why.clone());
+                }
                 // Bitişik alan: the path's length and the region's area.
                 if self.shape == Shape::Adjoin {
                     let length = bulge_path_length(&pts, Some(&bulges), false);
@@ -2375,6 +2524,7 @@ impl Tool for Path {
             )
             .chain(self.region.iter().map(|r| region_area(r, 0.16, None)))
             .chain(self.band_preview(&pts, &bulges))
+            .chain(self.wall_drawn.areas.iter().cloned())
             .collect();
         Preview {
             path,
@@ -2386,6 +2536,7 @@ impl Tool for Path {
                 .as_ref()
                 .and_then(|r| r.stroke.clone())
                 .into_iter()
+                .chain(self.wall_drawn.strokes.iter().cloned())
                 .collect(),
             tracking: tag.as_ref().and(self.tracking),
             tag,

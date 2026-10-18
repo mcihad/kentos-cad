@@ -40,16 +40,19 @@ pub enum Section {
     Survey,
     /// Değişkenler: the project's `@` values (docs/adr/0214 §4; variables.rs).
     Variables,
+    /// Mimari: the levels and the walls' detail (docs/adr/0339 §3; arch.rs).
+    Arch,
 }
 
 impl Section {
-    const ALL: [Section; 6] = [
+    const ALL: [Section; 7] = [
         Section::General,
         Section::Scale,
         Section::Crs,
         Section::Units,
         Section::Survey,
         Section::Variables,
+        Section::Arch,
     ];
 
     fn label(self) -> &'static str {
@@ -60,6 +63,7 @@ impl Section {
             Section::Units => "Birimler ve hassasiyet",
             Section::Survey => "Ölçme",
             Section::Variables => "Değişkenler",
+            Section::Arch => "Mimari",
         }
     }
 
@@ -73,6 +77,7 @@ impl Section {
             Section::Units => Icon::Ruler,
             Section::Survey => crate::icons::from_web(Some("surveyPolar")),
             Section::Variables => crate::icons::from_web(Some("projectVariables")),
+            Section::Arch => crate::icons::from_web(Some("archSettings")),
         }
     }
 
@@ -90,6 +95,9 @@ impl Section {
             }
             Section::Survey => {
                 "Saha ölçülerinin indirgenmesindeki katsayı, zemin değerlerinin yüksekliği ve karnenin denetlendiği toleranslar."
+            }
+            Section::Arch => {
+                "Projenin katları ve duvarların hangi ayrıntıda çizildiği. Duvar kendi katını anar; duvarın andığı kat kaldırılmaz."
             }
             Section::Variables => {
                 "Projenin ifadelerde @ad olarak okunan değerleri: iş numarası, idare, katsayı, teslim tarihi … Projeyle saklanır, projeyi açan herkes aynısını okur."
@@ -191,6 +199,10 @@ pub struct State {
     scale_typed: String,
     /// Değişkenler' rows as typed (docs/adr/0214 §4; variables.rs).
     variables: Vec<variable_form::Row>,
+    /// Mimari's levels as typed and the walls' detail (docs/adr/0339 §3; arch.rs); Kaydet writes them through
+    /// `cad.settings.set`.
+    arch: Vec<super::arch::Row>,
+    arch_detail: Option<kentos_contracts::WallDetail>,
     /// Kaydet's question when a local project's unit changes with a drawing
     /// in it (docs/adr/0256 §2; unit_change.rs), over this window.
     pub(super) unit_question: Option<super::unit_change::Question>,
@@ -244,6 +256,10 @@ pub enum Event {
     Variable(usize, super::variables::Edit),
     /// Değişken ekle: a new row, the keyboard to its name.
     AddVariable,
+    /// Mimari: a level's row changed, Kat ekle, the walls' detail (docs/adr/0339 §3).
+    Level(usize, super::arch::Edit),
+    AddLevel,
+    ArchDetail(Option<kentos_contracts::WallDetail>),
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
     Reduce(bool),
     /// The shown section's own values back to their defaults (the web's
@@ -283,6 +299,8 @@ impl State {
             reduce: doc.settings().reduces_to_grid(),
             scale_typed: kentos_processing::text::js_number(doc.settings().plot_scale),
             variables: variable_form::rows(&doc.settings().variables),
+            arch: super::arch::rows(doc.settings().arch.as_ref()),
+            arch_detail: doc.settings().arch.as_ref().and_then(|a| a.detail),
             unit_question: None,
         }
     }
@@ -307,6 +325,11 @@ impl State {
     /// Whether a variable's row has something to put right: Kaydet waits.
     fn variables_blocked(&self) -> bool {
         variable_form::read(&self.variables).blocked()
+    }
+
+    /// Whether Mimari's levels have something to put right: Kaydet waits.
+    fn arch_blocked(&self) -> bool {
+        super::arch::read(&self.arch, self.arch_detail).is_err()
     }
 
     /// The draft's system: its SRID, and whether it is the project's own definition.
@@ -481,6 +504,16 @@ impl App {
                     iced::widget::operation::select_all(id),
                 ]);
             }
+            Event::Level(i, edit) => super::arch::edit(&mut s.arch, i, edit),
+            Event::AddLevel => {
+                let row = super::arch::new_row(&s.arch);
+                s.arch.push(row);
+            }
+            Event::ArchDetail(detail) => s.arch_detail = detail,
+            Event::ResetSection if s.section == Section::Arch => {
+                s.arch.clear();
+                s.arch_detail = None;
+            }
             Event::ResetSection => {
                 reset_section(s.section, d);
                 s.survey = survey_form::texts(d.survey.as_ref(), d.angle_unit);
@@ -631,9 +664,33 @@ impl App {
             return;
         };
         // A datum choice, an Ölçme field or a variable with something to put right is not saved (its button waits too).
-        if s.choices.blocked() || s.survey_blocked() || s.variables_blocked() {
+        if s.choices.blocked() || s.survey_blocked() || s.variables_blocked() || s.arch_blocked() {
             return;
         }
+        // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
+        // saved then.
+        let arch = super::arch::read(&s.arch, s.arch_detail).unwrap_or_default();
+        if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
+        {
+            let input = kentos_contracts::SettingsSet {
+                arch: Some(arch.clone()),
+                ..Default::default()
+            };
+            let result = kentos_native_application::settings_set::execute(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                input,
+            );
+            if let kentos_contracts::CommandResult::Failed { error }
+            | kentos_contracts::CommandResult::Conflict { error }
+            | kentos_contracts::CommandResult::NeedsInput { error } = result
+            {
+                self.warn(error.message);
+                return;
+            }
+        }
+        let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
+            return;
+        };
         let name = s.name.trim();
         let name = if name.is_empty() {
             s.initial_name.clone()
@@ -642,6 +699,7 @@ impl App {
         };
         doc.model.set_name(&name);
         let mut settings = s.settings.clone();
+        settings.arch = doc.model.settings().arch.clone();
         // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres.
         if settings.has_system() {
             settings.drawing_unit = None;
@@ -765,6 +823,13 @@ impl App {
                 |i, e| event(Event::Variable(i, e)),
                 event(Event::AddVariable),
             ),
+            Section::Arch => super::arch::view(
+                &s.arch,
+                s.arch_detail,
+                |i, e| event(Event::Level(i, e)),
+                event(Event::AddLevel),
+                |d| event(Event::ArchDetail(d)),
+            ),
         };
         let content = column![
             text(s.section.label())
@@ -809,8 +874,11 @@ impl App {
                 // A datum choice, an Ölçme field or a variable with something to put right keeps it waiting.
                 .action(words::primary(
                     "Kaydet",
-                    (!s.choices.blocked() && !s.survey_blocked() && !s.variables_blocked())
-                        .then(|| event(Event::Save)),
+                    (!s.choices.blocked()
+                        && !s.survey_blocked()
+                        && !s.variables_blocked()
+                        && !s.arch_blocked())
+                    .then(|| event(Event::Save)),
                 ))
                 .width(900.0)
                 .max_height(760.0),
@@ -1306,6 +1374,7 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
         }
         Section::Survey => d.survey = None,
         Section::Variables => d.variables = Vec::new(),
+        Section::Arch => d.arch = None,
         Section::Crs => {}
     }
 }

@@ -18,8 +18,9 @@ import type { RecordEntity } from "./RecordEntity";
 import type { SplineEntity } from "./SplineEntity";
 import type { TableEntity } from "./TableEntity";
 import type { TextEntity } from "./TextEntity";
+import type { WallEntity } from "./WallEntity";
 
 /**
  * Any drawing object, tagged by `kind` as in the TypeScript model.
  */
-export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "nurbs" } & NurbsEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity | { "kind": "leader" } & LeaderEntity | { "kind": "table" } & TableEntity | { "kind": "image" } & ImageEntity | { "kind": "raster" } & RasterEntity | { "kind": "pointcloud" } & PointCloudEntity | { "kind": "record" } & RecordEntity;
+export type Entity = { "kind": "point" } & PointEntity | { "kind": "line" } & LineEntity | { "kind": "polyline" } & PathEntity | { "kind": "polygon" } & PathEntity | { "kind": "circle" } & CircleEntity | { "kind": "arc" } & ArcEntity | { "kind": "ellipse" } & EllipseEntity | { "kind": "spline" } & SplineEntity | { "kind": "nurbs" } & NurbsEntity | { "kind": "xline" } & ConstructionEntity | { "kind": "ray" } & ConstructionEntity | { "kind": "text" } & TextEntity | { "kind": "dimension" } & DimensionEntity | { "kind": "hatch" } & HatchEntity | { "kind": "insert" } & InsertEntity | { "kind": "leader" } & LeaderEntity | { "kind": "table" } & TableEntity | { "kind": "image" } & ImageEntity | { "kind": "raster" } & RasterEntity | { "kind": "pointcloud" } & PointCloudEntity | { "kind": "wall" } & WallEntity | { "kind": "record" } & RecordEntity;

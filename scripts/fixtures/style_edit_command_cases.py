@@ -241,6 +241,128 @@ def leader_cases():
     return out
 
 
+# ── Wall styles (docs/adr/0339 §2) ──────────────────────────────────────────────────────────────────────────────
+
+DIS = {"id": "019a0000-0000-7000-8000-00000000d001", "name": "Dış 30",
+       "components": [{"name": "Sıva", "thickness": 0.02, "detail": "detailed"},
+                      {"name": "Tuğla", "hatch": {"pattern": "ANSI31", "scale": 1.0, "angle": 0.0}, "detail": "standard"},
+                      {"name": "Sıva", "thickness": 0.03, "detail": "detailed"}],
+       "fill": "#5A5A5A", "width": 0.3}
+BOLME = {"id": "019a0000-0000-7000-8000-00000000d002", "name": "Bölme 10", "components": [], "width": 0.1}
+WALL_LABEL = "Duvar stili"
+
+
+def wall(id_, layer, y, style=None):
+    w = {"kind": "wall", "id": id_, "layerId": layer, "attrs": {}, "pts": [{"x": X, "y": Y + y}, {"x": X + 6, "y": Y + y}],
+         "width": 0.3, "justify": "center"}
+    if style:
+        w.update(style=style["id"], components=copy.deepcopy(style["components"]), fill=style["fill"])
+    return w
+
+
+WALLS = [wall(10, "yazi", 100, DIS), wall(11, "kilitli", 105, DIS), wall(12, "yazi", 110)]
+
+
+def wall_setup():
+    s = setup()
+    s["settings"]["wallStyles"] = [DIS]
+    s["entities"] = s["entities"] + copy.deepcopy(WALLS)
+    return s
+
+
+def follow_walls(new):
+    """The walls of Dış 30 as `new` gives them (none: removed): its components, ends and fill, the width they fix."""
+    out, locked = {}, 0
+    for w in WALLS:
+        if w.get("style") != DIS["id"]:
+            continue
+        after = dict(w)
+        if new is None:
+            after.pop("style")
+        else:
+            after["components"] = copy.deepcopy(new["components"])
+            if "fill" in new:
+                after["fill"] = new["fill"]
+            else:
+                after.pop("fill", None)
+            if new.get("caps") == "open":
+                after["caps"] = "open"
+            if new["components"] and all("thickness" in c for c in new["components"]):
+                after["width"] = sum(c["thickness"] for c in new["components"])
+        if after == w:
+            continue
+        if w["layerId"] == "kilitli":
+            locked += 1
+            continue
+        out[str(w["id"])] = after
+    return out, locked
+
+
+def wall_cases():
+    out = []
+    ids = IDS + [10, 11, 12]
+    out.append({"name": "Duvar stili oluştur: tablonun sonuna; duvarlar değişmez", "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "create", "wall": BOLME}, done(BOLME["id"]),
+                               {"ids": ids, "dirty": True, "revision": "changed", "canUndo": False,
+                                "settings": {"wallStyles": [DIS, BOLME]}})]})
+    new = copy.deepcopy(DIS)
+    new["components"][1]["hatch"]["pattern"] = "BRICK"
+    new["fill"] = "#404040"
+    walls, locked = follow_walls(new)
+    out.append({"name": "Duvar stilini güncelle: stildeki duvarlar yeni bileşenleri ve dolguyu alır, kilitli katmandaki sayılır; tek adım “Duvar stili”",
+                "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "update", "wall": new}, done(DIS["id"], True, len(walls), locked),
+                               {"ids": ids, "entities": walls, "settings": {"wallStyles": [new]}, "canUndo": True, "dirty": True}),
+                          step("undo", returns=WALL_LABEL, expect={"entities": {"10": WALLS[0]}})]})
+    fixed = copy.deepcopy(DIS)
+    fixed["components"][1]["thickness"] = 0.2
+    del fixed["width"]
+    walls, locked = follow_walls(fixed)
+    out.append({"name": "Duvar stilinin bütün bileşenleri belli olunca duvarlar onların toplamı genişliğinde olur",
+                "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "update", "wall": fixed}, done(DIS["id"], True, len(walls), locked),
+                               {"entities": walls, "settings": {"wallStyles": [fixed]}})]})
+    walls, locked = follow_walls(None)
+    out.append({"name": "Duvar stilini sil: duvarlar bileşenlerini korur, bağını yitirir", "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "remove", "style": DIS["id"]}, done(DIS["id"], True, len(walls), locked),
+                               {"entities": walls, "settings": {"wallStyles": None}})]})
+    thick = copy.deepcopy(DIS)
+    thick["components"][0]["thickness"] = 0.2
+    thick["components"][2]["thickness"] = 0.2
+    thick["width"] = 0.5
+    out.append({"name": "Duvarlarına sığmayan bileşenler reddedilir: hiçbir şey yazılmaz", "setup": wall_setup(),
+                "steps": [{"op": "captureUid", "id": 10, "as": "w10"},
+                          step("execute", {"kind": "wall", "operation": "update", "wall": thick},
+                               failed("invalid_wall", "“$uid:w10” kimlikli duvar stilin yeni bileşenleriyle olmaz: Duvarın genişliği 0.3 m, “Tuğla” dışındaki bileşenler 0.4 m; kalan bileşene yer kalmıyor. Duvarı genişletin ya da bileşenleri inceltin.",
+                                      "wall"), {"revision": "same", "settings": {"wallStyles": [DIS]}})]})
+    # A face the new components push past an arc's centre cannot be drawn: an arc wall of radius 0.5 m made 1.2 m wide
+    # by a style whose components all have their thickness.
+    curved = wall_setup()
+    arc = wall(13, "yazi", 120, DIS)
+    arc["pts"] = [{"x": X, "y": Y + 120}, {"x": X + 1, "y": Y + 120}]
+    arc["bulges"] = [1.0, 0.0]
+    curved["entities"].append(arc)
+    wide = copy.deepcopy(DIS)
+    for c in wide["components"]:
+        c["thickness"] = 0.4
+    del wide["width"]
+    collapse = "Duvar çizilemiyor: Öteleme mesafesi bir yay parçasının yarıçapından büyük. Duvarı inceltin ya da yayı büyütün."
+    out.append({"name": "Duvarın yayını çökerten bileşenler reddedilir: hiçbir şey yazılmaz", "setup": curved,
+                "steps": [{"op": "captureUid", "id": 13, "as": "w13"},
+                          step("execute", {"kind": "wall", "operation": "update", "wall": wide},
+                               failed("wall_collapses", f"“$uid:w13” kimlikli duvar: {collapse}", "wall"),
+                               {"revision": "same", "settings": {"wallStyles": [DIS]}})]})
+    bad = dict(BOLME, width=0.0)
+    out.append({"name": "Duvar stilinin genişliği bileşenlerininkinden büyük olmalı", "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "create", "wall": bad},
+                               failed("invalid_style", "Duvar stilleri: “Bölme 10” duvar stilinin genişliği 0 m; bileşenlerinin toplamından (0 m) büyük, en çok 100 m olmalı.",
+                                      "wall"), {"revision": "same"})]})
+    out.append({"name": "Duvar stillerini dışa aktar: dosyanın metni", "setup": wall_setup(),
+                "steps": [step("execute", {"kind": "wall", "operation": "export"}, done(DIS["id"], False, library=library("wall", [DIS])),
+                               {"revision": "same"})]})
+    return out
+
+
 def cases():
     out = []
     flags = {"ids": IDS, "dirty": True, "revision": "changed", "canUndo": False}
@@ -325,6 +447,7 @@ def cases():
     out.extend(transfer_cases())
     out.extend(override_cases())
     out.extend(leader_cases())
+    out.extend(wall_cases())
     return out
 
 

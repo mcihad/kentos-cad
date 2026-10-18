@@ -20,6 +20,7 @@ mod alias_profile_scenes;
 mod annotation_scale;
 mod annotative;
 mod annotation_styles;
+mod wall_styles;
 mod app;
 mod app_menu;
 mod appearance;
@@ -387,6 +388,8 @@ mod form_access_scenes;
 mod window_layers_tests;
 #[cfg(test)]
 mod wipeout_scenes;
+#[cfg(test)]
+mod wall_scenes;
 
 use kentos_ui::theme::typography;
 

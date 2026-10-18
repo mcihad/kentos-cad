@@ -43,7 +43,7 @@ use kentos_native_application::{
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
-    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset,
+    layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
     set, settings_set, sheets_edit, snap_find, styles_edit, transform, ucs_set, units_change,
     views_edit,
@@ -611,6 +611,48 @@ impl Input for kentos_domain::contracts::NurbsCreate {
                 .or_else(|| list_number(weights.as_deref_mut()?, "weights", rest))
                 .or_else(|| list_number(knots.as_deref_mut()?, "knots", rest)),
             NurbsBy::Fit { pts, .. } => named_point(pts, "pts", rest),
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::WallsCreate {
+    /// `walls[0].pts[1].y`, `walls[0].bulges[0]`, `walls[0].width`, `.offset`, `.height`, `lineWeight` (docs/adr/0339).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("walls[")?.split_once("].")?;
+        let w = self.walls.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "width" => w.width.as_mut(),
+            "offset" => w.offset.as_mut(),
+            "height" => w.height.as_mut(),
+            _ => named_point(&mut w.pts, "pts", rest).or_else(|| list_number(w.bulges.as_deref_mut()?, "bulges", rest)),
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::WallsFromLines {
+    /// `width`, `maxWidth`, `angle`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "width" => self.width.as_mut(),
+            "maxWidth" => self.max_width.as_mut(),
+            "angle" => self.angle.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::WallsEdit {
+    /// `operation.width`, `operation.offset`, `operation.height`.
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let kentos_domain::contracts::WallsOperation::Set(c) = &mut self.operation;
+        match path {
+            "operation.width" => c.width.as_mut(),
+            "operation.offset" => c.offset.as_mut(),
+            "operation.height" => c.height.as_mut()?.as_mut(),
+            _ => None,
         }
     }
 }
@@ -2208,6 +2250,23 @@ fn geometry_number<'a>(geometry: &'a mut EntityGeometry, rest: &str) -> Option<&
                 r.affine.get_mut(i)
             }
         },
+        // A wall's path, bulges, width, offset and components' thicknesses (docs/adr/0339): `pts[1].y`, `bulges[0]`,
+        // `width`, `offset`, `components[1].thickness`.
+        EntityGeometry::Wall(w) => match rest {
+            "width" => Some(&mut w.width),
+            "offset" => Some(&mut w.offset),
+            "height" => w.height.as_mut(),
+            _ if rest.starts_with("pts[") => point_number(&mut w.pts, rest),
+            _ if rest.starts_with("bulges[") => bulge_number(&mut w.bulges, rest),
+            _ => {
+                let (k, field) = rest.strip_prefix("components[")?.split_once("].")?;
+                let c = w.components.get_mut(k.parse::<usize>().ok()?)?;
+                match field {
+                    "thickness" => c.thickness.as_mut(),
+                    _ => None,
+                }
+            }
+        },
         // A point cloud's bounds, its files', its look's numbers and its opacity
         // (docs/adr/0207 §3): `bounds[2]`, `sources[0].bounds[5]`, `style.size` ….
         EntityGeometry::PointCloud(c) => match rest {
@@ -2456,6 +2515,15 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
         kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
+        kentos_domain::contracts::CAD_WALLS_CREATE => {
+            run!(walls_create, kentos_domain::contracts::WallsCreate)
+        }
+        kentos_domain::contracts::CAD_WALLS_FROM_LINES => {
+            run!(walls_from_lines, kentos_domain::contracts::WallsFromLines)
+        }
+        kentos_domain::contracts::CAD_WALLS_EDIT => {
+            run!(walls_edit, kentos_domain::contracts::WallsEdit)
+        }
         kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
         kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
@@ -3136,11 +3204,25 @@ fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()>
 
 /// Runs every file of `dir`: each a desktop command's, with at least `least`
 /// cases. Answers the commands they were for, the cases run and what failed.
+/// `KENTOS_CASES_ONLY=cad.walls,cad.nurbs` runs only the files whose names hold one of the words.
+fn only_cases() -> Option<Vec<String>> {
+    std::env::var("KENTOS_CASES_ONLY")
+        .ok()
+        .map(|v| v.split(',').map(str::to_owned).filter(|w| !w.is_empty()).collect())
+}
+
 fn run_folder(dir: &std::path::Path, least: usize) -> (Vec<String>, usize, Vec<String>) {
+    let only = only_cases();
     let mut files: Vec<PathBuf> = std::fs::read_dir(dir)
         .unwrap_or_else(|e| panic!("{}: {e}", dir.display()))
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .filter(|path| path.extension().is_some_and(|x| x == "json"))
+        .filter(|path| {
+            only.as_ref().is_none_or(|words| {
+                let name = path.to_string_lossy();
+                words.iter().any(|w| name.contains(w.as_str()))
+            })
+        })
         .collect();
     files.sort();
     assert!(!files.is_empty(), "{}: no files", dir.display());
@@ -3191,8 +3273,8 @@ fn every_command_case_matches_the_desktop_handlers() {
         problems.len(),
         problems.join("\n")
     );
-    // Every command the desktop runs has its cases.
-    for (id, _) in DESKTOP_COMMANDS {
+    // Every command the desktop runs has its cases (all the files run).
+    for (id, _) in DESKTOP_COMMANDS.iter().filter(|_| only_cases().is_none()) {
         assert!(
             commands.iter().any(|c| c == id),
             "{id}: no file in fixtures/commands/v1"

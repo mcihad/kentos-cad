@@ -374,6 +374,12 @@ Liste:
   (ortak durumlar `cad.entities.hatch.json`, `cad.entities.create.json`); belgenin bağlı yazı ve tarama turları (`model/hatchTies.ts`,
   kendi etiketi boş bırakılmaz), `cutout_gone` ve `hatch_text_cycle` uyarıları, Denetle'nin iki bulgusu (`cad.drawing.audit.json`);
   komutun 200 000 çizgilik bütçesi; Tarama'nın Saydamlık ve Sıra seçenekleri; izler `hatches.json` ve `hatch-patterns.json`'un M ve O'su.
+- [ ] `CAD-ARCH-02`, `03`, `04`, `05`, `09`, `12` duvar: kaynak modeli, stiller, katlar, görünüş ve araç (ADR 0339, 18 Ekim): web'de
+  gerekenler: `wall` türü (`.kcad` şema 75, `FORMATS_VERSION` 82, sütunlu kayıtta tür 21; web'in okuyucusu ve yazıcısı), çekirdeğin
+  `geom::wall`'ının WASM'ı ve deponun duvar görünümü (`set_wall_view`), `cad.walls.create`, `.convert`, `.edit` ve `cad.styles.edit`'in
+  `wall` türü, `cad.settings.set`'in `arch`'ı (`product/`), Duvar ve Çizgiden duvar araçları (`tools/`), Duvar stilleri penceresi,
+  Proje ayarları › Mimari, Öznitelikler'in duvar satırları, seçim süzgecinde Duvar (`SelectKind::Wall`), şeridin Mimari sekmesi
+  (`catalog/v1/additions.json`'un `tabs`'ı) ve ikonları, ortak iz `wall-tool.json`; bilinen bozulmalar: şema 75 ve `FORMATS_VERSION` 82.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`
