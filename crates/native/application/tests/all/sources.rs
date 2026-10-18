@@ -286,6 +286,7 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
             revision: "0".repeat(64),
             digest: "0".repeat(64),
             srid: None,
+            extent: None,
             writable: true,
         })
         .collect();

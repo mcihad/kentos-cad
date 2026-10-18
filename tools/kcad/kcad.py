@@ -4024,6 +4024,12 @@ class _Schema:
                 self.fail("bad_value", f"“{x}” bilinmeyen kaynak türü (geopackage, postgis)")
             return x
 
+        def box(x):
+            # docs/adr/0510: [minX, minY, maxX, maxY] as written, kept a list (the writer writes it back as one).
+            if type(x) is not list or len(x) != 4:
+                self.fail("bad_value", "alan sınırı 4 sayılık dizi olmalı")
+            return [self.at(i, self.float, v) for i, v in enumerate(x)]
+
         source = self.fields({
             "id": (self.text, True),
             "kind": (kind, True),
@@ -4034,6 +4040,7 @@ class _Schema:
             "revision": (self.text, True),
             "digest": (self.text, True),
             "srid": (self.uint(32), False),
+            "extent": (box, False),
             "writable": (self.bool, True),
         })
         lst = self.array(source)(v)
@@ -4044,6 +4051,11 @@ class _Schema:
             if not s["id"].strip() or s["id"] in ids:
                 self.fail("bad_value", f"“{s['id']}” kaynak kimliği boş ya da iki kez kullanılmış")
             ids.add(s["id"])
+            if s["kind"] == "geopackage" and "extent" in s:
+                # docs/adr/0510: the area of a part's working copy, finite, its minimum below its maximum.
+                e = s["extent"]
+                if any(x != x or x in (float("inf"), float("-inf")) for x in e) or e[0] >= e[2] or e[1] >= e[3]:
+                    self.fail("bad_value", "alan sınırının en küçüğü en büyüğünden küçük ve sonlu olmalı")
             if s["kind"] == "postgis":
                 # docs/adr/0505: a database's address, no password in it.
                 if not s["path"].startswith(("postgresql://", "postgres://")):
@@ -4056,6 +4068,8 @@ class _Schema:
                     self.fail("bad_value", "adreste parola var; parola projeye yazılmaz")
                 if "relative" in s:
                     self.fail("bad_value", "veritabanının göreli yolu olmaz")
+                if "extent" in s:
+                    self.fail("bad_value", "veritabanı tablosunun alan sınırı henüz olmaz")
             elif not (s["path"].startswith("/") or s["path"][1:3] == ":\\"):
                 self.fail("bad_value", f"“{s['path']}” mutlak bir yol değil")
             elif "relative" in s:

@@ -3995,6 +3995,9 @@ def build():
     out["broken/sources-relative-absolute.kcad"] = sources_broken(lambda s: s[0].update(relative="/veri/kadastro.gpkg"))
     out["broken/sources-relative-climbs.kcad"] = sources_broken(lambda s: s[0].update(relative="veri/../../kadastro.gpkg"))
     out["broken/sources-database-relative.kcad"] = sources_broken(lambda s: s[2].update(relative="veri/kent"))
+    # A part's area (docs/adr/0510): its minimum below its maximum; a database's table has none yet.
+    out["broken/sources-extent-reversed.kcad"] = sources_broken(lambda s: s[0].update(extent=[487100.0, 4420000.0, 487000.0, 4420100.0]))
+    out["broken/sources-database-extent.kcad"] = sources_broken(lambda s: s[2].update(extent=[0.0, 0.0, 1.0, 1.0]))
     out["broken/sources-password.kcad"] = sources_broken(
         lambda s: s[2].update(path="postgresql://cbs:gizli@veri.belediye.local:5432/kent"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.

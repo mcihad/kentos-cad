@@ -56,8 +56,26 @@ pub struct SourceLink {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
     pub srid: Option<u32>,
+    /// The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
+    /// only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
+    /// whole table.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub extent: Option<[f64; 4]>,
     /// Whether the table can be written: a feature or attribute table of a file KentOS may write.
     pub writable: bool,
+}
+
+/// Why an area is not one: four finite numbers, the minimum below the maximum on both axes.
+pub fn extent_problem(e: &[f64; 4]) -> Option<&'static str> {
+    if e.iter().any(|v| !v.is_finite()) {
+        Some("sayıları sonlu olmalı")
+    } else if e[0] >= e[2] || e[1] >= e[3] {
+        Some("en küçüğü en büyüğünden küçük olmalı")
+    } else {
+        None
+    }
 }
 
 /// What is wrong with the project's sources against its layers' ids, if anything.
@@ -79,6 +97,11 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
         }
         match s.kind {
             SourceKind::Geopackage => {
+                if let Some(e) = &s.extent
+                    && let Some(why) = extent_problem(e)
+                {
+                    return Some(format!("{at}: alan sınırının {why}"));
+                }
                 if s.path.trim().is_empty()
                     || !(s.path.starts_with('/') || s.path.get(1..3) == Some(":\\"))
                 {
@@ -99,6 +122,11 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
                 }
                 if s.relative.is_some() {
                     return Some(format!("{at}: veritabanının göreli yolu olmaz"));
+                }
+                if s.extent.is_some() {
+                    return Some(format!(
+                        "{at}: veritabanı tablosunun alan sınırı henüz olmaz"
+                    ));
                 }
             }
         }

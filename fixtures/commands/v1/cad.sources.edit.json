@@ -3039,6 +3039,264 @@
      }
     }
    ]
+  },
+  {
+   "name": "alan sınırıyla bağlanır: yalnız alandaki satırlar, alan bağda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487050.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/qgis.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487050.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "qgis.gpkg dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/qgis.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "9ca57cf6783529f64872267f1e2a545e1ab3150d3fe7dc382c83fe8d88b31de7",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487050.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "ters alan sınırı reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "extent": [
+        487050.0,
+        4419990.0,
+        486990.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "Alan sınırının en küçüğü en büyüğünden küçük olmalı.",
+       "path": "edit.extent"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "var olan katmana alan sınırıyla bağlanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "parsel",
+       "layer": "cizim",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487050.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "Var olan katmana bağlamada alan sınırı olmaz: katman tablonun bütün nesnelerini taşır. Yeni katmana bağlayın (layer vermeden).",
+       "path": "edit.extent"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geometrisiz tabloda alan sınırı olmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/qgis.gpkg",
+       "table": "malik",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487050.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_extent",
+       "message": "“malik” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur.",
+       "path": "edit.extent"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
   }
  ]
 }

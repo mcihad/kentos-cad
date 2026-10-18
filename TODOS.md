@@ -1802,6 +1802,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-02` bağlı katmanın parçası (dilim): `cad.sources.edit`'in `extent`'i (alan sınırlı çalışma kopyası, eşitleme alanın
+  dışına dokunmaz, dışarı taşınan nesne kendi satırına), GeoPackage kutu sorgusu dizinsiz tabloda da süzer; ortak durumlar
+  `bound_sources_cases.py`'de, 1 milyon parselde alan 372 ms ve 24 MB. Kalan: alanı değiştirme, görünüme göre okuma, PostGIS'te
+  alan, ucuz sürüm damgası. — **18 Ekim, [ADR 0510](docs/adr/0510-bound-layer-of-a-part.md).**
 - [ ] `CBS-42` ölçüm tabanı ve bağlamada bellek (ilk dilim): 1 milyon parsellik GeoPackage'da `provider_timing` (ilk sayfa 0,1 ms,
   kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar
   bir kez (100 000 parselde 1,3 GB'tan 323 MB'a). Kalan: görünür küme ve sayfalar, çizim alanının süreleri, soğuk önbellek, ağ,

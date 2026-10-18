@@ -205,6 +205,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
     ),
     (
+        "cad.sources.sync",
+        "invalid_extent",
+        "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510)",
+    ),
+    (
         "cad.processing.run",
         "file_unwritable",
         "yazılamayan disk ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp yerine konan dosya kentos-processing'in sink testinde",

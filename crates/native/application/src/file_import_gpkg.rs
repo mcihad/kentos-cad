@@ -62,7 +62,7 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportGpkg) -> CommandResul
     }
 }
 
-fn read_file(input: &ImportGpkg) -> Result<Read, Stop> {
+fn read_file(input: &ImportGpkg, area: Option<[f64; 4]>) -> Result<Read, Stop> {
     let path = Path::new(&input.path);
     if input.path.trim().is_empty() || !path.is_absolute() {
         return Err(refuse(
@@ -92,7 +92,7 @@ fn read_file(input: &ImportGpkg) -> Result<Read, Stop> {
         ));
     }
     let wanted = (!input.tables.is_empty()).then_some(&input.tables[..]);
-    geopackage::read(path, wanted).map_err(|why| {
+    geopackage::read_in(path, wanted, area).map_err(|why| {
         if let Some(i) = input
             .tables
             .iter()
@@ -248,16 +248,18 @@ fn run(
     doc: &mut Document,
     input: &ImportGpkg,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
-    run_with(doc, input, false)
+    run_with(doc, input, false, None)
 }
 
-/// The import; `fresh` puts every table onto a new layer (a bound layer holds its table's objects only, docs/adr/0503).
+/// The import; `fresh` puts every table onto a new layer (a bound layer holds its table's objects only, docs/adr/0503);
+/// `area` reads only the rows whose box meets it, in the tables' own system (a bound layer of a part, docs/adr/0510).
 pub(crate) fn run_with(
     doc: &mut Document,
     input: &ImportGpkg,
     fresh: bool,
+    area: Option<[f64; 4]>,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
-    let mut read = read_file(input)?;
+    let mut read = read_file(input, area)?;
     let mut warnings = Vec::new();
     let mut losses: BTreeSet<String> = read
         .tables

@@ -26739,6 +26739,9 @@ class SourceLink(_Model):
             and attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to
             tell the layer's own edits from the file's.
         writable: Whether the table can be written: a feature or attribute table of a file KentOS may write.
+        extent: The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
+            only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
+            whole table. Unit: length.
         relative: The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
             the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
             only when `path` is not there and the file it names has the same content. A database has none.
@@ -26752,6 +26755,7 @@ class SourceLink(_Model):
     revision: str
     digest: str
     writable: bool
+    extent: list[float] | None | Unset = UNSET
     relative: str | None | Unset = UNSET
     srid: int | None | Unset = UNSET
 
@@ -26765,6 +26769,8 @@ class SourceLink(_Model):
         out["revision"] = self.revision
         out["digest"] = self.digest
         out["writable"] = self.writable
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
         if self.relative is not UNSET:
             out["relative"] = self.relative
         if self.srid is not UNSET:
@@ -26782,6 +26788,7 @@ class SourceLink(_Model):
             revision=data["revision"],
             digest=data["digest"],
             writable=data["writable"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
             relative=data.get("relative", UNSET),
             srid=data.get("srid", UNSET),
         )
@@ -26929,7 +26936,8 @@ class SourcesEdit(_Model):
     """Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
     `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
     the table is bound already), `source_differs` (the layer given does not hold the table's objects),
-    `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`.
+    `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
+    that is not one, on a table without geometry, onto a layer given, or of a database).
     """
     edit: SourcesEditOp
 
@@ -36327,10 +36335,14 @@ class LinkSourcesEditOp(SourcesEditOp):
     `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
     only with `reproject` (docs/adr/0504): the layer holds its objects in the project's system, the table keeps
     its own, and every sync moves them across.
+    Attributes:
+        extent: Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
+            north, in the project's system; docs/adr/0510): the working copy of a part of a large table. Unit: length.
     """
     TAG_VALUE: ClassVar[str] = "link"
     path: str
     table: str
+    extent: list[float] | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
 
@@ -36338,6 +36350,8 @@ class LinkSourcesEditOp(SourcesEditOp):
         out: dict[str, Any] = {"kind": "link"}
         out["path"] = self.path
         out["table"] = self.table
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
         if self.layer is not UNSET:
             out["layer"] = self.layer
         if self.reproject is not UNSET:
@@ -36349,6 +36363,7 @@ class LinkSourcesEditOp(SourcesEditOp):
         return cls(
             path=data["path"],
             table=data["table"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
             layer=data.get("layer", UNSET),
             reproject=data.get("reproject", UNSET),
         )

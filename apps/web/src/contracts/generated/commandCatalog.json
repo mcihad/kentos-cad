@@ -12356,6 +12356,20 @@
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
               },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
@@ -21342,6 +21356,20 @@
               "digest": {
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
+              },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
@@ -34690,6 +34718,20 @@
               "digest": {
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
+              },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
@@ -504124,6 +504166,20 @@
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
               },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
@@ -504427,6 +504483,20 @@
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
               },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
@@ -504636,7 +504706,7 @@
       "id": "cad.sources.edit",
       "version": 1,
       "title": "Kaynağa bağla",
-      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.",
+      "summary": "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma adımı değildir. extent [minX, minY, maxX, maxY] (projenin sisteminde) yeni katmana bağlamada yalnız kutusu o alana değen satırları alır: büyük tablonun bir parçasının çalışma kopyası; eşitleme alanın dışındaki satırları silinmiş saymaz, alanın dışına taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.",
       "aliases": [
         "kaynakbagla"
       ],
@@ -504659,6 +504729,20 @@
               {
                 "description": "Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the\n`layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound\nonly with `reproject` (docs/adr/0504): the layer holds its objects in the project's system, the table keeps\nits own, and every sync moves them across.",
                 "properties": {
+                  "extent": {
+                    "description": "Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,\nnorth, in the project's system; docs/adr/0510): the working copy of a part of a large table.",
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
                   "kind": {
                     "const": "link",
                     "type": "string"
@@ -504728,7 +504812,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`.",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/SourcesEditOp"
@@ -504781,6 +504865,20 @@
               "digest": {
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
+              },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
               },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
@@ -504920,6 +505018,20 @@
                 "description": "The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries\nand attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to\ntell the layer's own edits from the file's.",
                 "type": "string"
               },
+              "extent": {
+                "description": "The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):\nonly the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the\nwhole table.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
@@ -505033,7 +505145,8 @@
           "source_differs",
           "source_not_found",
           "source_changed",
-          "too_many_sources"
+          "too_many_sources",
+          "invalid_extent"
         ],
         "warnings": [
           "crs_undeclared",
@@ -506507,7 +506620,8 @@
           "source_changed",
           "geometry_mismatch",
           "file_unwritable",
-          "pending_changes"
+          "pending_changes",
+          "invalid_extent"
         ],
         "warnings": [
           "export_losses"
@@ -538772,6 +538886,12 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı."
+    },
+    {
+      "code": "invalid_extent",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler."
     },
     {
       "code": "unknown_tool",

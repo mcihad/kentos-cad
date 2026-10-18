@@ -1,8 +1,8 @@
 //! The provider's baseline on a large GeoPackage (plan/gis.md CBS-42, docs/perf/provider-2026-10-18.md): a synthetic
 //! city of `KENTOS_PERF_ROWS` parcels (1 000 000 by default), ten vertices each, written once to
 //! `.run/perf/provider-<rows>.gpkg`; then the first table page, the next page by key, a box query through the
-//! spatial index, the count, and linking the table as a bound layer (the whole table read into the drawing, as the
-//! working copy does today), each with its time and the process's resident memory after it.
+//! spatial index, the count, linking the view's area as a part's working copy (docs/adr/0510) and planning its write,
+//! and linking the whole table as a bound layer, each with its time and the process's resident memory after it.
 //!
 //! ```text
 //! cargo test --release -p kentos-native-application --test all provider_timing -- --ignored --nocapture
@@ -218,6 +218,40 @@ fn provider_timing() {
         t.elapsed().as_secs_f64() * 1000.0,
     );
     drop(gp);
+
+    // A part's working copy (docs/adr/0510): the same view's area bound, only its rows read.
+    let mut part = empty_drawing();
+    let t = Instant::now();
+    let linked = registry::run(
+        &mut ExecutionContext::new(&mut part),
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path.display().to_string(), "table": "parsel",
+                          "extent": [mx, my, mx + 400.0, my + 300.0] } }),
+    )
+    .expect("runs");
+    assert_eq!(linked["status"], "completed", "{linked}");
+    report(
+        &format!(
+            "alan sınırlı bağlı katman ({} nesne)",
+            linked["output"]["objects"]
+        ),
+        t.elapsed().as_secs_f64() * 1000.0,
+    );
+    let t = Instant::now();
+    let synced = registry::run(
+        &mut ExecutionContext::new(&mut part),
+        "cad.sources.sync",
+        CallOp::Plan,
+        json!({ "layer": "import-parsel", "direction": "write" }),
+    )
+    .expect("runs");
+    assert_eq!(synced["status"], "completed", "{synced}");
+    report(
+        "alan sınırlı katmanın yazma planı",
+        t.elapsed().as_secs_f64() * 1000.0,
+    );
+    drop(part);
 
     let mut doc = empty_drawing();
     let t = Instant::now();

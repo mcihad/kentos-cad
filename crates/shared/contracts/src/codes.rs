@@ -1095,6 +1095,8 @@ codes! {
     INVALID_VALUES = "invalid_values", Failed, false, "Bazı değerler alanların kurallarına uymuyor; hiçbiri yazılmadı. Sorunlar nesne ve alanıyla plan'da.";
     /// Values a write left out, the others written (docs/adr/0507).
     VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı.";
+    /// An area a bound layer cannot hold (docs/adr/0510).
+    INVALID_EXTENT = "invalid_extent", Failed, false, "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler.";
     /// A processing tool not among İşlemler's (docs/adr/0508).
     UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
     /// A processing tool's values do not fit its parameters (docs/adr/0508).

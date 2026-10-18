@@ -277,6 +277,7 @@ impl App {
         for table in &tables {
             let input = SourcesEdit {
                 edit: SourcesEditOp::Link {
+                    extent: None,
                     path: path.clone(),
                     table: table.clone(),
                     layer: None,

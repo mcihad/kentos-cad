@@ -294,9 +294,13 @@ def fx(name):
     return f"$fixture:geopackage/v1/{name}"
 
 
-def imported(name, tables=None, routes=None, start=2, taken=()):
-    """The command's answer and the objects it adds (their fields by id), for `tables` (all when none)."""
+def imported(name, tables=None, routes=None, start=2, taken=(), keep=None):
+    """The command's answer and the objects it adds (their fields by id), for `tables` (all when none); `keep`, a
+    table's fids, takes only those rows (a part's working copy, docs/adr/0510)."""
     r = read(name)
+    if keep is not None:
+        r = {**r, "tables": [{**t, "rows": [x for x in t["rows"] if x["fid"] in keep.get(t["name"], ())]}
+                             for t in r["tables"]]}
     chosen = [t for t in r["tables"] if tables is None or t["name"] in tables]
     chosen = [t for t in chosen if t["rows"]]
     out_tables, made, fields, ids, losses = [], [], {}, [], set()

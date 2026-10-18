@@ -148,6 +148,7 @@ impl App {
         for table in &tables {
             let input = SourcesEdit {
                 edit: SourcesEditOp::Link {
+                    extent: None,
                     path: address.clone(),
                     table: table.clone(),
                     layer: None,

@@ -149,6 +149,9 @@ struct Stored {
     rows: HashMap<Uuid, (i64, Option<Geometry>, Vec<Value>)>,
     /// The rows as the import reads them, in the table's own system.
     objects: Vec<(Uuid, kentos_contracts::Entity)>,
+    /// A part's working copy (docs/adr/0510): the table's rows outside the area, by lasting id. An object of the layer
+    /// moved out of the area is written over its row, not as a new one.
+    outside: HashMap<Uuid, i64>,
     /// The columns as the layer's fields, and what does not come over (linking onto a new layer).
     fields: Vec<kentos_contracts::LayerField>,
     losses: BTreeSet<String>,
@@ -186,8 +189,10 @@ impl Stored {
     }
 }
 
-fn load(path: &Path, table: &str) -> Result<Stored, String> {
-    let read = gp::read(path, Some(&[table.to_owned()]))?;
+/// A file's table with its rows; with `area` (in the table's system, docs/adr/0510) only the rows whose box meets it,
+/// the others' lasting ids kept apart.
+fn load(path: &Path, table: &str, area: Option<[f64; 4]>) -> Result<Stored, String> {
+    let read = gp::read_in(path, Some(&[table.to_owned()]), area)?;
     let Some(t) = read.tables.into_iter().next() else {
         return Err(format!("“{table}” tablosu dosyada yok"));
     };
@@ -201,12 +206,37 @@ fn load(path: &Path, table: &str) -> Result<Stored, String> {
         return Err(format!("“{table}” tablosu dosyada yok"));
     };
     let mut raw: HashMap<i64, gpkg::Row> = file
-        .rows(&layer, &Query::default())
+        .rows(
+            &layer,
+            &Query {
+                bbox: area,
+                ..Query::default()
+            },
+        )
         .map_err(|e| e.0)?
         .into_iter()
         .map(|r| (r.fid, r))
         .collect();
+    let outside: HashMap<Uuid, i64> = match area {
+        None => HashMap::new(),
+        Some(_) => {
+            let ids = file.uids(table).map_err(|e| e.0)?;
+            file.fids(&layer)
+                .map_err(|e| e.0)?
+                .into_iter()
+                .filter(|fid| !raw.contains_key(fid))
+                .map(|fid| {
+                    let uid = ids
+                        .get(&fid)
+                        .and_then(|u| Uuid::parse_str(u).ok())
+                        .unwrap_or_else(|| gp::row_uid(table, fid));
+                    (uid, fid)
+                })
+                .collect()
+        }
+    };
     Ok(Stored {
+        outside,
         srid: layer
             .srs_id
             .and_then(|id| read.systems.get(&id).cloned().flatten())
@@ -238,6 +268,7 @@ fn stored_of(layer: gpkg::Layer, raw: &mut HashMap<i64, gpkg::Row>, t: gp::Table
         srid: None,
         rows,
         objects: t.objects,
+        outside: HashMap::new(),
         fields: t.fields,
         losses: t.losses,
         writable: false,
@@ -401,6 +432,7 @@ fn load_meta(path: &Path, table: &str) -> Result<Stored, String> {
         srid,
         rows: HashMap::new(),
         objects: Vec::new(),
+        outside: HashMap::new(),
         fields: Vec::new(),
         losses: BTreeSet::new(),
         writable,
@@ -408,15 +440,39 @@ fn load_meta(path: &Path, table: &str) -> Result<Stored, String> {
     })
 }
 
-fn load_at(origin: Origin<'_>, table: &str, at: At<'_>) -> Result<Stored, Stop> {
+fn load_at(
+    origin: Origin<'_>,
+    table: &str,
+    at: At<'_>,
+    area: Option<[f64; 4]>,
+) -> Result<Stored, Stop> {
     match origin {
-        Origin::File(path) => load_or_refuse(path, table, at.table),
+        Origin::File(path) => load_or_refuse(path, table, at.table, area),
         Origin::Database(address) => load_database(address, table, at),
     }
 }
 
-fn load_or_refuse(path: &Path, table: &str, at: &str) -> Result<Stored, Stop> {
-    refused_load(path, table, at, load(path, table))
+fn load_or_refuse(
+    path: &Path,
+    table: &str,
+    at: &str,
+    area: Option<[f64; 4]>,
+) -> Result<Stored, Stop> {
+    refused_load(path, table, at, load(path, table, area))
+}
+
+/// A bound layer's area in its table's system (docs/adr/0510): the project's box moved across, its sides densified;
+/// none for the whole table, or when the box does not reach the table's system.
+fn table_area(area: Option<[f64; 4]>, mover: Option<&Mover>) -> Result<Option<[f64; 4]>, ()> {
+    let Some(a) = area else { return Ok(None) };
+    match mover {
+        None => Ok(Some(a)),
+        Some(m) => {
+            kentos_geometry_core::crs::transform_bounds(&m.project, &m.source, a, 16, &m.choices)
+                .map(Some)
+                .ok_or(())
+        }
+    }
 }
 
 fn refused_load(
@@ -618,6 +674,8 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
             }
         };
         match s.rows.get(&uid) {
+            // Moved out of a part's area (docs/adr/0510): its row is written, not a new one.
+            None if s.outside.contains_key(&uid) => d.update.push((s.outside[&uid], row)),
             None => d.insert.push((uid.to_string(), row)),
             Some((fid, g, values)) => {
                 seen.insert(uid);
@@ -775,10 +833,14 @@ fn state_of(doc: &Document, link: &SourceLink) -> SourceState {
         modified: 0,
         removed: 0,
     };
+    let area = mover_for(doc, link.srid)
+        .ok()
+        .and_then(|m| table_area(link.extent, m.as_ref()).ok())
+        .flatten();
     let loaded = match origin_of(link) {
         Origin::File(path) => {
             state.found = path.is_file();
-            load(path, &link.table).ok()
+            load(path, &link.table, area).ok()
         }
         // A database is there when it answers.
         Origin::Database(address) => {
@@ -909,8 +971,26 @@ fn link_table(
     table: &str,
     layer: Option<&str>,
     reproject: bool,
+    extent: Option<[f64; 4]>,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     let at = origin(path, "edit.path")?;
+    if let Some(e) = &extent {
+        let why = kentos_contracts::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
+        let why = why.or_else(|| {
+            layer.map(|_| {
+                "Var olan katmana bağlamada alan sınırı olmaz: katman tablonun bütün nesnelerini taşır. Yeni katmana bağlayın (layer vermeden).".to_owned()
+            })
+        });
+        let why = why.or_else(|| {
+            matches!(at, Origin::Database(_)).then(|| {
+                "Veritabanı tablosunda alan sınırı henüz yok; GeoPackage tablosu için verin."
+                    .to_owned()
+            })
+        });
+        if let Some(why) = why {
+            return Err(refuse(codes::INVALID_EXTENT, why, "edit.extent"));
+        }
+    }
     if doc.settings().sources.len() >= MAX_SOURCES {
         return Err(refuse(
             codes::TOO_MANY_SOURCES,
@@ -945,6 +1025,7 @@ fn link_table(
                 address: "edit.path",
                 table: "edit.table",
             },
+            None,
         )?,
     };
     let project = doc.settings().srid;
@@ -962,6 +1043,20 @@ fn link_table(
             codes::CRS_MISMATCH,
             format!("“{table}” bağlanamaz: {why}."),
             "edit.reproject",
+        )
+    })?;
+    if extent.is_some() && stored.layer.geometry.is_none() {
+        return Err(refuse(
+            codes::INVALID_EXTENT,
+            format!("“{table}” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur."),
+            "edit.extent",
+        ));
+    }
+    let area = table_area(extent, mover.as_ref()).map_err(|()| {
+        refuse(
+            codes::INVALID_EXTENT,
+            format!("Alan sınırı “{table}” tablosunun sistemine çevrilemiyor."),
+            "edit.extent",
         )
     })?;
     stored.reachable(mover.as_ref());
@@ -1007,7 +1102,7 @@ fn link_table(
                 layers: Default::default(),
                 reproject: mover.is_some(),
             };
-            let (out, w) = crate::file_import_gpkg::run_with(doc, &input, true)?;
+            let (out, w) = crate::file_import_gpkg::run_with(doc, &input, true, area)?;
             // A table without geometry has no system to declare.
             let geometry = stored.layer.geometry.is_some();
             warnings.extend(
@@ -1040,6 +1135,7 @@ fn link_table(
         layer,
         revision,
         srid,
+        extent,
         writable,
     };
     set_link(doc, Some(link.clone()), None);
@@ -1134,7 +1230,8 @@ fn edit_run(
             table,
             layer,
             reproject,
-        } => link_table(doc, path, table, layer.as_deref(), *reproject),
+            extent,
+        } => link_table(doc, path, table, layer.as_deref(), *reproject, *extent),
         SourcesEditOp::Unlink { id } => {
             if link_of(doc, id).is_none() {
                 return Err(refuse(
@@ -1176,7 +1273,7 @@ fn edit_run(
                 Origin::File(p) => {
                     file_sha(p).map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "edit.path"))?
                 }
-                Origin::Database(_) => load_at(at, &link.table, at_one("edit.path"))?.sha256,
+                Origin::Database(_) => load_at(at, &link.table, at_one("edit.path"), None)?.sha256,
             };
             if sha != link.revision {
                 return Err(conflict(
@@ -1187,7 +1284,15 @@ fn edit_run(
                     "edit.path",
                 ));
             }
-            load_at(at, &link.table, at_one("edit.path"))?;
+            // Only the table is asked for: its rows are read again by the next sync.
+            match at {
+                Origin::File(p) => {
+                    refused_load(p, &link.table, "edit.path", load_meta(p, &link.table))?;
+                }
+                Origin::Database(_) => {
+                    load_at(at, &link.table, at_one("edit.path"), None)?;
+                }
+            }
             link.path = path.clone();
             // The next save writes the new place's relative path (docs/adr/0506).
             link.relative = None;
@@ -1283,7 +1388,6 @@ fn sync_run(
             "layer",
         ));
     }
-    let mut stored = load_at(source, &link.table, at_one("layer"))?;
     let mover = mover_for(doc, link.srid).map_err(|why| {
         refuse(
             codes::CRS_MISMATCH,
@@ -1291,6 +1395,17 @@ fn sync_run(
             "layer",
         )
     })?;
+    let area = table_area(link.extent, mover.as_ref()).map_err(|()| {
+        refuse(
+            codes::INVALID_EXTENT,
+            format!(
+                "“{}” katmanının alan sınırı tablonun sistemine çevrilemiyor.",
+                link.layer
+            ),
+            "layer",
+        )
+    })?;
+    let mut stored = load_at(source, &link.table, at_one("layer"), area)?;
     stored.reachable(mover.as_ref());
     match input.direction {
         SyncDirection::Write => {

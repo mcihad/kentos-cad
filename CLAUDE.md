@@ -388,7 +388,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   fotoğrafları ve belgeleri, en az ve en çok), renk öğesi ve katmanın değerlerinden öneri (`suggest`); çok değerli alan
   (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶; çoktan çoğa
   ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
-  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0509 sağlayıcının ölçüm tabanı (`provider_timing`, 1 milyon parsel;
+  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0510 bağlı katmanın parçası: `cad.sources.edit`'in `extent`'i (alan
+  sınırlı çalışma kopyası, `SourceLink.extent`; eşitleme alanın dışına dokunmaz, dışarı taşınan nesne kendi satırına),
+  GeoPackage kutu sorgusu dizinsiz tabloda da süzer, `fids`; 0509 sağlayıcının ölçüm tabanı (`provider_timing`, 1 milyon parsel;
   `docs/perf/provider-2026-10-18.md`) ve bağlamada bellek (katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada
   satırlar bir kez); 0508 İşlemler'in araçları komut olarak: `cad.processing.tools` ve
   `cad.processing.run` (pencerenin çalıştırıcısı, açık değerler, nesneler kalıcı kimliklerle ya da girdinin `selection` ve

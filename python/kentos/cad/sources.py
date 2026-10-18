@@ -153,10 +153,14 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
     sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri
     çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda
     dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin
-    ayarıdır (.kcad şema 73), geri alma adımı değildir. unlink bağı çözer, nesneler
-    kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256)
-    olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok
-    1000 bağ. path bir PostGIS adresi de olabilir
+    ayarıdır (.kcad şema 73), geri alma adımı değildir. extent [minX, minY, maxX, maxY]
+    (projenin sisteminde) yeni katmana bağlamada yalnız kutusu o alana değen satırları
+    alır: büyük tablonun bir parçasının çalışma kopyası; eşitleme alanın dışındaki
+    satırları silinmiş saymaz, alanın dışına taşınan nesne kendi satırına yazılır; ters
+    alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. unlink bağı
+    çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı
+    SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa
+    (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir
     (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese
     yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam
     sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.
@@ -188,12 +192,17 @@ class _SourcesEdit(LocalCommand[SourcesEdit, SourcesEdited, SourcesEdited]):
         seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler
         kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın
         SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 73), geri alma
-        adımı değildir. unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni
-        yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir
-        katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS adresi de olabilir
-        (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese
-        yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam
-        sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable.
+        adımı değildir. extent [minX, minY, maxX, maxY] (projenin sisteminde) yeni katmana
+        bağlamada yalnız kutusu o alana değen satırları alır: büyük tablonun bir parçasının
+        çalışma kopyası; eşitleme alanın dışındaki satırları silinmiş saymaz, alanın dışına
+        taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo
+        ve veritabanı invalid_extent. unlink bağı çözer, nesneler kalır. relink taşınan
+        dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed).
+        Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. path bir PostGIS
+        adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table
+        şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da
+        ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan
+        veritabanı source_unreachable.
 
         Args:
             doc: The drawing it works on.

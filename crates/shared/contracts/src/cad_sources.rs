@@ -151,6 +151,12 @@ pub enum SourcesEditOp {
         #[serde(default, skip_serializing_if = "std::ops::Not::not")]
         #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
         reproject: bool,
+        /// Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
+        /// north, in the project's system; docs/adr/0510): the working copy of a part of a large table.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        extent: Option<[f64; 4]>,
     },
     /// Unbinds a layer; its objects stay.
     Unlink { id: String },
@@ -161,7 +167,8 @@ pub enum SourcesEditOp {
 /// Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
 /// `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
 /// the table is bound already), `source_differs` (the layer given does not hold the table's objects),
-/// `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`.
+/// `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
+/// that is not one, on a table without geometry, onto a layer given, or of a database).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]

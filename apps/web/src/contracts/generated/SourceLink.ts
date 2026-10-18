@@ -42,6 +42,12 @@ digest: string,
  */
 srid?: number, 
 /**
+ * The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
+ * only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
+ * whole table.
+ */
+extent?: [number, number, number, number], 
+/**
  * Whether the table can be written: a feature or attribute table of a file KentOS may write.
  */
 writable: boolean, };

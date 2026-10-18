@@ -313,6 +313,8 @@
     { "file": "broken/sources-relative-absolute.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/sources-relative-climbs.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/sources-database-relative.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/sources-extent-reversed.kcad", "sniff": "kcad", "error": "bad_value" },
+    { "file": "broken/sources-database-extent.kcad", "sniff": "kcad", "error": "bad_value" },
     { "file": "broken/forms-in-schema-71.kcad", "sniff": "kcad", "error": "unknown_field" },
     { "file": "records.kcad", "sniff": "kcad", "content": "records.json" },
     { "file": "broken/record-in-schema-71.kcad", "sniff": "kcad", "error": "unknown_kind" },

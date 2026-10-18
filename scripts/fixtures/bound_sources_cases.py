@@ -207,6 +207,77 @@ def link_step(table, name=Q, start=2, cmd=None, more_ids=()):
                 command=cmd), b, ids
 
 
+def in_area(name, table, area):
+    """The fids of a table's rows whose geometry's box meets `area` (sides included), by OGR's envelopes; a row without
+    geometry is in no area (docs/adr/0510)."""
+    from osgeo import ogr
+    ds = ogr.Open(str(DIR / name))
+    out = set()
+    for f in ds.GetLayerByName(table):
+        g = f.GetGeometryRef()
+        if g is None or g.IsEmpty():
+            continue
+        x0, x1, y0, y1 = g.GetEnvelope()
+        if x1 >= area[0] and x0 <= area[2] and y1 >= area[1] and y0 <= area[3]:
+            out.add(f.GetFID())
+    return out
+
+
+AREA = [486990.0, 4419990.0, 487050.0, 4420030.0]
+
+
+def area_link_step(table, area, name=Q, start=2, cmd=None):
+    """`link` with an area onto a new layer: only the rows in the area, the area kept in the binding."""
+    keep = {table: in_area(name, table, area)}
+    out, warnings, fields, ids, r = gi.imported(name, [table], start=start, keep=keep)
+    t = next(t for t in r["tables"] if t["name"] == table)
+    b = {**link(table, gi.slug(table), name=name, srid=t["srid"]), "extent": area}
+    b = {k: b[k] for k in ("id", "kind", "path", "table", "layer", "revision", "digest", "srid", "extent", "writable")}
+    answer = {"link": b, "objects": len(ids), "layers": [{"id": gi.slug(table), "name": table}], "revision": "$current"}
+    expect = {"ids": [1, *ids], "fields": fields, "revision": "changed", "canUndo": True, "settings": {"sources": [b]}}
+    return step({"edit": {"kind": "link", "path": fx(name), "table": table, "extent": area}}, done(answer, warnings),
+                expect, command=cmd), b, ids
+
+
+def area_cases():
+    a_link, _, ids = area_link_step("parsel", AREA)
+    parsel = rows_of(Q, "parsel")
+    inside = in_area(Q, "parsel", AREA)
+    assert inside and len(inside) < len(parsel), "the area takes a part of the table"
+    first = next(p for p in parsel if p["fid"] in inside)
+    out = [
+        case("alan sınırıyla bağlanır: yalnız alandaki satırlar, alan bağda", a_link),
+        case("ters alan sınırı reddedilir",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "extent": [487050.0, 4419990.0, 486990.0, 4420030.0]}},
+                  failed("invalid_extent", "Alan sınırının en küçüğü en büyüğünden küçük olmalı.", "edit.extent"))),
+        case("var olan katmana alan sınırıyla bağlanmaz",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "layer": "cizim", "extent": AREA}},
+                  failed("invalid_extent", "Var olan katmana bağlamada alan sınırı olmaz: katman tablonun bütün "
+                         "nesnelerini taşır. Yeni katmana bağlayın (layer vermeden).", "edit.extent"))),
+        case("geometrisiz tabloda alan sınırı olmaz",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "malik", "extent": AREA}},
+                  failed("invalid_extent", "“malik” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur.",
+                         "edit.extent"))),
+    ]
+    sync_out = [
+        case("alan sınırlı katmanın yazılacak bir şeyi yok: alanın dışındaki satırlar silinecek sayılmaz",
+             area_link_step("parsel", AREA, cmd="cad.sources.edit")[0],
+             step({"layer": "import-parsel", "direction": "write"}, done(synced()), op="plan",
+                  command="cad.sources.sync")),
+        case("alan sınırlı katmanda silinen nesne yalnız kendisi silinecek",
+             area_link_step("parsel", AREA, cmd="cad.sources.edit")[0],
+             other("cad.entities.delete", {"uids": [first["uid"]]}),
+             step({"layer": "import-parsel", "direction": "write"}, done(synced(removed=1)), op="plan",
+                  command="cad.sources.sync")),
+        case("alanın dışına taşınan nesne yeni satır değil, kendi satırına yazılacak",
+             area_link_step("parsel", AREA, cmd="cad.sources.edit")[0],
+             other("cad.entities.transform", {"uids": [first["uid"]], "transform": {"kind": "move", "dx": 500, "dy": 0}}),
+             step({"layer": "import-parsel", "direction": "write"}, done(synced(modified=1)), op="plan",
+                  command="cad.sources.sync")),
+    ]
+    return out, sync_out
+
+
 def edit_cases():
     parsel = rows_of(Q, "parsel")
     s_link, b, _ = link_step("parsel")
@@ -562,8 +633,10 @@ def sync_cases():
 
 FILES = {
     "cad.sources.describe": ("Kaynakları tanı: dosyanın tabloları ve bağlı katmanların durumu", describe_cases),
-    "cad.sources.edit": ("Kaynağa bağla: tablo katmana, bağı çöz, yeniden bağla", edit_cases),
-    "cad.sources.sync": ("Kaynakla eşitle: katmanın değişiklikleri tabloya, tablonun satırları katmana", sync_cases),
+    "cad.sources.edit": ("Kaynağa bağla: tablo katmana, bağı çöz, yeniden bağla",
+                         lambda: edit_cases() + area_cases()[0]),
+    "cad.sources.sync": ("Kaynakla eşitle: katmanın değişiklikleri tabloya, tablonun satırları katmana",
+                         lambda: sync_cases() + area_cases()[1]),
 }
 NOTE = ("ADR 0503. Tablolar sqlite3 ile dosyanın kendi tablolarından okunur (gpkg_contents, gpkg_geometry_columns, "
         "gpkg_spatial_ref_sys, PRAGMA table_info); satırlar gpkg_import_cases.py'nin OGR okuyucusuyla ADR 0502'nin "

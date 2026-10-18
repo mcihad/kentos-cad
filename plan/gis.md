@@ -108,6 +108,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
 
+  *Kısmen (18 Ekim 2026; [ADR 0510](../docs/adr/0510-bound-layer-of-a-part.md)): GeoPackage tablosunun bir alanı çalışma kopyası olur (`cad.sources.edit`'in `extent`'i, `.kcad`'de bağla): yalnız kutusu alana değen satırlar okunur (mekânsal dizinle; dizinsiz tabloda geometrinin kutusuyla, eskiden sessizce bütün tablo dönüyordu), eşitleme alanın dışını silmez, dışarı taşınan nesne kendi satırına yazılır. 1 milyon parselde 400 × 300 m'lik alan 372 ms ve 24 MB. Kalan: alanı değiştirmek, görünüme göre kendiliğinden okuma, PostGIS'te alan, sürüm damgasının dosyanın tamamından ucuzlaması.*
+
   *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): GeoPackage sağlayıcısının ilk dilimi: tablo keşfi ve ayrı yetenekler (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri; `cad.sources.describe`), kalıcı kimlik, dosyanın sürümü (SHA-256) ve katmanın özeti, desteklenmeyen yazmanın gerekçeli reddi. Kalan: genel `Source/Dataset` arayüzü, kaynağa itilen bbox ve sütun sorgusu, sayfa ve akış, sorgu planının açıklaması (PostGIS ile).*
 
   **Mevcut:** Native `Document` ve yönetilen sunucu projesi var; harici veri için genel provider sözleşmesi yok [K02–K04]. Bu, GIS'in diğer birçok açığının ortak köküdür.

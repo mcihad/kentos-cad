@@ -399,6 +399,15 @@ fn value_text(
 
 /// Reads the tables `wanted` names (every feature and attribute table when none).
 pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
+    read_in(path, wanted, None)
+}
+
+/// [`read`], only the rows whose box meets `area` (in the tables' own system; docs/adr/0510) when one is given.
+pub fn read_in(
+    path: &Path,
+    wanted: Option<&[String]>,
+    area: Option<[f64; 4]>,
+) -> Result<Read, String> {
     // The file's digest read a piece at a time: a large file is not held whole beside its rows (plan/gis.md CBS-42).
     let (size, sha256) = std::fs::File::open(path)
         .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
@@ -431,7 +440,15 @@ pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
             systems.insert(id, org);
         }
         let uids = gp.uids(&layer.name).map_err(|e| e.0)?;
-        let rows = gp.rows(&layer, &Query::default()).map_err(|e| e.0)?;
+        let rows = gp
+            .rows(
+                &layer,
+                &Query {
+                    bbox: area,
+                    ..Query::default()
+                },
+            )
+            .map_err(|e| e.0)?;
         let name = layer.name.clone();
         tables.push(table_of_rows(&layer, &rows, &uids, &|fid| {
             row_uid(&name, fid)

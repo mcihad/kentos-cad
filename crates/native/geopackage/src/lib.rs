@@ -563,7 +563,21 @@ impl GeoPackage {
         Ok(n.max(0) as u64)
     }
 
-    /// The rows `q` asks for, in fid order.
+    /// Every row's fid, in order.
+    pub fn fids(&self, layer: &Layer) -> Result<Vec<i64>> {
+        let mut st = self.conn.prepare(&format!(
+            "SELECT {} FROM {} ORDER BY 1",
+            quote(&layer.fid),
+            quote(&layer.name)
+        ))?;
+        let rows = st
+            .query_map([], |r| r.get::<_, i64>(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        Ok(rows)
+    }
+
+    /// The rows `q` asks for, in fid order. A box takes the rows whose geometry's box meets it (sides included): through
+    /// the spatial index, or without one by each geometry's own box; a row without geometry is not in a box.
     pub fn rows(&self, layer: &Layer, q: &Query) -> Result<Vec<Row>> {
         let t = quote(&layer.name);
         let fid = quote(&layer.fid);
@@ -627,7 +641,21 @@ impl GeoPackage {
                     values,
                 })
             })?
-            .collect::<rusqlite::Result<_>>()?;
+            .collect::<rusqlite::Result<Vec<Row>>>()?;
+        // Without a spatial index the box is each geometry's own.
+        if let Some(b) = q.bbox
+            && !(layer.indexed && layer.geometry.is_some())
+        {
+            return Ok(rows
+                .into_iter()
+                .filter(|r| match &r.geometry {
+                    Some(Ok(g)) => g.bounds().is_some_and(|g| {
+                        g[2] >= b[0] && g[0] <= b[2] && g[3] >= b[1] && g[1] <= b[3]
+                    }),
+                    _ => false,
+                })
+                .collect());
+        }
         Ok(rows)
     }
 
