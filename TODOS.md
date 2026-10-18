@@ -203,6 +203,8 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-02` bağlı katmanın parçası (ADR 0510, 18 Ekim): web'de gerekenler: bağlama penceresinde “Yalnız görünen alanın
+  satırları”, `SourceLink.extent`'in okunması ve yazılması (TS türleri üretildi).
 - [ ] `CBS-41` işlem araçları komut olarak (ADR 0508, 18 Ekim): web'de gerekenler: `cad.processing.tools` ve `.run`'ın işleyicisi
   (web'in `processing/` çalıştırıcısıyla); TS türleri üretildi.
 - [ ] `CBS-20` toplu yazma (ADR 0507, 18 Ekim): web'de gerekenler: `cad.fields.write` işleyicisi, Öznitelik tablosunda Alan
@@ -1804,7 +1806,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
 - [ ] `CBS-02` bağlı katmanın parçası (dilim): `cad.sources.edit`'in `extent`'i (alan sınırlı çalışma kopyası, eşitleme alanın
   dışına dokunmaz, dışarı taşınan nesne kendi satırına), GeoPackage kutu sorgusu dizinsiz tabloda da süzer; ortak durumlar
-  `bound_sources_cases.py`'de, 1 milyon parselde alan 372 ms ve 24 MB. Kalan: alanı değiştirme, görünüme göre okuma, PostGIS'te
+  `bound_sources_cases.py`'de, 1 milyon parselde alan 372 ms ve 24 MB; masaüstünde “Yalnız görünen alanın satırları”. Kalan: alanı değiştirme, görünüme göre okuma, PostGIS'te
   alan, ucuz sürüm damgası. — **18 Ekim, [ADR 0510](docs/adr/0510-bound-layer-of-a-part.md).**
 - [ ] `CBS-42` ölçüm tabanı ve bağlamada bellek (ilk dilim): 1 milyon parsellik GeoPackage'da `provider_timing` (ilk sayfa 0,1 ms,
   kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar

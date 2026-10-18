@@ -35,6 +35,10 @@ gereksizdir.
    - Tablonun sürümü bugünkü gibi bütün dosyanın SHA-256'sıdır: alanın dışında bir değişiklik de çakışmadır. Güvenli
      yön budur.
 4. Python ve MCP katalogdan gelir (`extent`).
+5. **Masaüstü:**
+   - Kaynağa bağla penceresinde, Bağlı katman olarak aç işaretliyken **Yalnız görünen alanın satırları** seçeneği
+     çıkar. Görünen alan ve boyu yazılır.
+   - Seçilince geometrili her tablo görünen alanla bağlanır; geometrisiz tablo bütün bağlanır.
 
 ## Doğrulama
 
@@ -42,6 +46,8 @@ gereksizdir.
   - Alan sınırlı bağlama: yalnız alandaki satırlar, alan bağda.
   - Dört ret.
   - Eşitlemenin planı: yazılacak bir şey yok, silinen yalnız kendisi silinecek, alanın dışına taşınan bir değişiklik.
+- Masaüstü (`exchange::gpkg_tests`): görünüm ilk parsele getirilir ve seçenekle bağlanır; katmanda yalnız o parsel,
+  bağda görünen alan. Resimler `.run/shots/gpkg-*-8-alan-*`, `gpkg-*-9-alan-bagli-*`.
 - KCAD: bağımsız okuyucunun kuralı, örnek dosyada alan, iki bozuk dosya (ters alan, veritabanında alan).
 - 1 milyon parsellik dosyada (`provider_timing`):
   - 400 × 300 m'lik alanın bağlanması 372 ms ve 24 MB, 374 nesne (bütün tablo 13,7 s ve 3 GB);

@@ -44,6 +44,8 @@ pub struct State {
     pub reproject: bool,
     /// Bağlı katman olarak aç: each table bound to its layer (`cad.sources.edit`).
     pub bind: bool,
+    /// With `bind`: only the rows in the view's area (docs/adr/0510).
+    pub area: bool,
     pub status: Option<(bool, String)>,
 }
 
@@ -54,6 +56,7 @@ pub enum Event {
     Toggle(usize),
     Reproject,
     Bind,
+    Area,
     Run,
     Save(Option<PathBuf>),
 }
@@ -97,6 +100,7 @@ pub fn describe(path: &std::path::Path) -> Result<State, String> {
         srid,
         reproject: false,
         bind: false,
+        area: false,
         status: None,
     })
 }
@@ -171,6 +175,11 @@ impl App {
             Event::Bind => {
                 if let Some(Window::Gpkg(s)) = &mut self.exchange {
                     s.bind = !s.bind;
+                }
+            }
+            Event::Area => {
+                if let Some(Window::Gpkg(s)) = &mut self.exchange {
+                    s.area = !s.area;
                 }
             }
             Event::Run => self.gpkg_run(),
@@ -262,22 +271,27 @@ impl App {
         let path = s.path.display().to_string();
         let file = s.file.clone();
         let reproject = s.reproject;
-        let tables: Vec<String> = s
+        // The view's area, for the tables with geometry (docs/adr/0510): a table without one is bound whole.
+        let area = s.area.then(|| {
+            let b = self.viewport.camera.visible_bounds();
+            [b.min_x, b.min_y, b.max_x, b.max_y]
+        });
+        let tables: Vec<(String, bool)> = s
             .tables
             .iter()
             .zip(&s.chosen)
             .filter(|(_, c)| **c)
-            .map(|(t, _)| t.name.clone())
+            .map(|(t, _)| (t.name.clone(), t.geometry.is_some()))
             .collect();
         let Some(doc) = &mut self.document else {
             return;
         };
         let first = doc.model.next_slot();
         let (mut bound, mut objects, mut warnings) = (Vec::new(), 0u32, Vec::new());
-        for table in &tables {
+        for (table, geometry) in &tables {
             let input = SourcesEdit {
                 edit: SourcesEditOp::Link {
-                    extent: None,
+                    extent: area.filter(|_| *geometry),
                     path: path.clone(),
                     table: table.clone(),
                     layer: None,
@@ -425,6 +439,8 @@ impl App {
             if chosen == 0 { Line::Warn } else { Line::Info },
             if chosen == 0 {
                 "Alınacak tablo seçilmedi.".to_owned()
+            } else if s.bind && s.area {
+                format!("{chosen} tablo bağlanacak, yalnız görünen alandaki satırlarıyla (tablolarda {rows} satır var); her tablo kendi bağlı katmanı olur.")
             } else if s.bind {
                 format!("{chosen} tablo, {rows} satır bağlanacak; her tablo kendi bağlı katmanı olur, sütunları alan.")
             } else {
@@ -448,6 +464,29 @@ impl App {
                 "Katman tablonun çalışma kopyası olur: değişiklikler Kaynağa yaz ile dosyaya yazılır, dosyadaki değişiklikler Kaynaktan oku ile gelir.".to_owned()
             }),
         ));
+        if s.bind {
+            let b = self.viewport.camera.visible_bounds();
+            let (w, h) = (b.max_x - b.min_x, b.max_y - b.min_y);
+            let format = self
+                .document
+                .as_ref()
+                .map(|d| kentos_project::format::Format::of(d.model.settings()));
+            let size = format.map_or_else(
+                || format!("{w:.0} × {h:.0} m"),
+                |f| format!("{} × {}", f.length_bare(w), f.length(h)),
+            );
+            body = body.push(words::field(
+                "Alan",
+                words::check(
+                    s.area,
+                    "Yalnız görünen alanın satırları".to_owned(),
+                    Some(event(Event::Area)),
+                ),
+                Some(format!(
+                    "Görünen alan {size}. Yalnız kutusu bu alana değen satırlar alınır; eşitleme alanın dışındaki satırlara dokunmaz, dışarı taşınan nesne kendi satırına yazılır. Geometrisiz tablo bütün bağlanır."
+                )),
+            ));
+        }
         if mismatch {
             body = body.push(words::field(
                 "Koordinat sistemi",

@@ -279,8 +279,64 @@ fn screens() {
                 )))),
             );
             picture(&mut app, &format!("gpkg-{mode}-7-paket"));
+            // A part of the table (docs/adr/0510): Yalnız görünen alanın satırları over the first parcel's view.
+            let mut app = fresh();
+            // The first frames settle the window and its view; the view is brought to the parcel after them.
+            let mut settled = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            settled.settle(&mut app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            view_first_parcel(&mut app);
+            app.picker = Picker::File(gpkg("qgis.gpkg"));
+            run(&mut app, "source.link");
+            parcels_only(&mut app);
+            send(&mut app, Event::Gpkg(G::Area));
+            picture(&mut app, &format!("gpkg-{mode}-8-alan"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-9-alan-bagli"));
         }
     }
+}
+
+/// The view brought to the first parcel only (docs/adr/0510's area).
+fn view_first_parcel(app: &mut App) {
+    app.viewport.camera.fit_size(
+        kentos_render_wgpu::Vec2 {
+            x: 487_020.0,
+            y: 4_420_010.0,
+        },
+        60.0,
+        40.0,
+        0.0,
+    );
+}
+
+#[test]
+fn a_part_of_a_table_is_bound_from_the_view() {
+    // docs/adr/0510: Yalnız görünen alanın satırları binds the rows in the view; the area kept in the binding.
+    let mut app = app_with_drawing();
+    view_first_parcel(&mut app);
+    let b = app.viewport.camera.visible_bounds();
+    assert!(b.max_x < 487_100.0 && b.min_x <= 487_000.0, "{b:?}");
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Area));
+    assert!(window(&app).area);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let link = app.bound_link("import-parsel").expect("bound");
+    assert_eq!(link.extent, Some([b.min_x, b.min_y, b.max_x, b.max_y]));
+    let doc = app.document.as_ref().expect("a drawing");
+    assert_eq!(
+        doc.model.by_layer_with_uids("import-parsel").count(),
+        1,
+        "only the parcel in the view"
+    );
 }
 
 #[test]
