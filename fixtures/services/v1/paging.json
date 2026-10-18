@@ -1,0 +1,630 @@
+{
+ "format": "kentos.feed-paging",
+ "version": 1,
+ "page": 2000,
+ "maxPages": 1000,
+ "profiles": [
+  {
+   "name": "Bölüm 1, 2, 3 ve CQL2 metni ile JSON (1.0)",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/oas30\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/html\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson\", \"http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/filter\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/features-filter\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/queryables\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/queryables-query-parameters\", \"http://www.opengis.net/spec/cql2/1.0/conf/basic-cql2\", \"http://www.opengis.net/spec/cql2/1.0/conf/cql2-text\", \"http://www.opengis.net/spec/cql2/1.0/conf/cql2-json\", \"http://www.opengis.net/spec/cql2/1.0/conf/basic-spatial-functions\", \"http://www.opengis.net/spec/cql2/1.0/conf/temporal-functions\"]}",
+   "profile": {
+    "core": true,
+    "geojson": true,
+    "crs": true,
+    "filter": true,
+    "featuresFilter": true,
+    "queryables": true,
+    "cql2Text": true,
+    "cql2Json": true,
+    "basicCql2": true,
+    "spatial": true,
+    "temporal": true,
+    "write": false,
+    "read": true,
+    "filters": true
+   }
+  },
+  {
+   "name": "Yalnız Bölüm 1 ve 2",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/html\", \"http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs\"]}",
+   "profile": {
+    "core": true,
+    "geojson": true,
+    "crs": true,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "Bölüm 3 taslak sürümüyle, CQL2 SNAPSHOT",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0.0-draft.1/conf/filter\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0.0-draft.1/conf/features-filter\", \"http://www.opengis.net/spec/cql2/1.0.0-SNAPSHOT/conf/cql2-text\", \"http://www.opengis.net/spec/cql2/1.0.0-SNAPSHOT/conf/basic-spatial-operators\"]}",
+   "profile": {
+    "core": true,
+    "geojson": false,
+    "crs": false,
+    "filter": true,
+    "featuresFilter": true,
+    "queryables": false,
+    "cql2Text": true,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": true,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": true
+   }
+  },
+  {
+   "name": "Bölüm 3 var, CQL2 metni yok (yalnız JSON)",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/filter\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/features-filter\", \"http://www.opengis.net/spec/cql2/1.0/conf/cql2-json\"]}",
+   "profile": {
+    "core": true,
+    "geojson": false,
+    "crs": false,
+    "filter": true,
+    "featuresFilter": true,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": true,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "CQL2 metni var, nesne süzgeci yok",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/filter\", \"http://www.opengis.net/spec/cql2/1.0/conf/cql2-text\"]}",
+   "profile": {
+    "core": true,
+    "geojson": false,
+    "crs": false,
+    "filter": true,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": true,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "Bölüm 4 taslağı (yazma)",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson\", \"http://www.opengis.net/spec/ogcapi-features-4/1.0/conf/create-replace-delete\"]}",
+   "profile": {
+    "core": true,
+    "geojson": true,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": true,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "Sonunda eğik çizgi ve boşluk",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core/\", \" http://www.opengis.net/spec/ogcapi-features-3/1.0/conf/features-filter \", \"http://www.opengis.net/spec/cql2/1.0/conf/cql2-text\"]}",
+   "profile": {
+    "core": true,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": true,
+    "queryables": false,
+    "cql2Text": true,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": true
+   }
+  },
+  {
+   "name": "Başka belgelerin sınıfları",
+   "page": "{\"links\": [], \"conformsTo\": [\"http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core\", \"http://www.opengis.net/spec/ogcapi-tiles-1/1.0/conf/core\"]}",
+   "profile": {
+    "core": false,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "Boş liste",
+   "page": "{\"links\": [], \"conformsTo\": []}",
+   "profile": {
+    "core": false,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": true,
+    "filters": false
+   }
+  },
+  {
+   "name": "Uygunluk sayfası değil",
+   "page": "{\"links\": [], \"title\": \"A\\u00e7\\u0131l\\u0131\\u015f\"}",
+   "profile": {
+    "core": false,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": false,
+    "filters": false
+   }
+  },
+  {
+   "name": "JSON değil",
+   "page": "<html>404</html>",
+   "profile": {
+    "core": false,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": false,
+    "filters": false
+   }
+  },
+  {
+   "name": "İstek başarısız",
+   "page": null,
+   "profile": {
+    "core": false,
+    "geojson": false,
+    "crs": false,
+    "filter": false,
+    "featuresFilter": false,
+    "queryables": false,
+    "cql2Text": false,
+    "cql2Json": false,
+    "basicCql2": false,
+    "spatial": false,
+    "temporal": false,
+    "write": false,
+    "read": false,
+    "filters": false
+   }
+  }
+ ],
+ "takes": [
+  {
+   "name": "WFS 2.0, eşleşen sayıyla, tek sayfa",
+   "service": {
+    "kind": "wfs",
+    "total": 150,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 150,
+    "received": 150,
+    "ending": "complete",
+    "matched": 150
+   }
+  },
+  {
+   "name": "WFS 2.0, eşleşen sayıyla, üç tam sayfa",
+   "service": {
+    "kind": "wfs",
+    "total": 6000,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 3,
+    "taken": 6000,
+    "received": 6000,
+    "ending": "complete",
+    "matched": 6000
+   }
+  },
+  {
+   "name": "WFS 2.0, sunucu sayfayı 500'de kesiyor, eşleşen sayıyla",
+   "service": {
+    "kind": "wfs",
+    "total": 1800,
+    "cap": 500,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 4,
+    "taken": 1800,
+    "received": 1800,
+    "ending": "complete",
+    "matched": 1800
+   }
+  },
+  {
+   "name": "WFS 2.0, sunucu 500'de kesiyor, eşleşen sayı yok: boş sayfaya dek",
+   "service": {
+    "kind": "wfs",
+    "total": 1800,
+    "cap": 500,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 5,
+    "taken": 1800,
+    "received": 1800,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "WFS 2.0, eşleşen sayı yok, kısa ilk sayfa",
+   "service": {
+    "kind": "wfs",
+    "total": 30,
+    "cap": null,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 2,
+    "taken": 30,
+    "received": 30,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "WFS 2.0, en çok nesneye ulaşıldı",
+   "service": {
+    "kind": "wfs",
+    "total": 6000,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 2500,
+   "expect": {
+    "requests": 2,
+    "taken": 2500,
+    "received": 4000,
+    "ending": "capped",
+    "matched": 6000
+   }
+  },
+  {
+   "name": "WFS 2.0, en çok nesne tam eşleşene eşit",
+   "service": {
+    "kind": "wfs",
+    "total": 2500,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 2500,
+   "expect": {
+    "requests": 2,
+    "taken": 2500,
+    "received": 2500,
+    "ending": "complete",
+    "matched": 2500
+   }
+  },
+  {
+   "name": "WFS 1.1, sayfalamaz: kısa sayfada durur",
+   "service": {
+    "kind": "wfs",
+    "total": 300,
+    "cap": null,
+    "matched": true,
+    "version": "1.1.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 300,
+    "received": 300,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "WFS 1.1, sunucunun sınırı sayfadan küçük",
+   "service": {
+    "kind": "wfs",
+    "total": 5000,
+    "cap": 1000,
+    "matched": true,
+    "version": "1.1.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 1000,
+    "received": 1000,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "OGC API, next bağlantılarıyla",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 4500,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 3,
+    "taken": 4500,
+    "received": 4500,
+    "ending": "complete",
+    "matched": 4500
+   }
+  },
+  {
+   "name": "OGC API, sunucu 100'de kesiyor, next bağlantılarıyla",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 450,
+    "cap": 100,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 5,
+    "taken": 450,
+    "received": 450,
+    "ending": "complete",
+    "matched": 450
+   }
+  },
+  {
+   "name": "OGC API, next yok ama eşleşen fazla: eksik",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 4500,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": false
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 2000,
+    "received": 2000,
+    "ending": "short",
+    "matched": 4500
+   }
+  },
+  {
+   "name": "OGC API, next yok, eşleşen sayı yok",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 4500,
+    "cap": null,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": false
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 2000,
+    "received": 2000,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "OGC API, en çok nesneye ulaşıldı",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 4500,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 3000,
+   "expect": {
+    "requests": 2,
+    "taken": 3000,
+    "received": 4000,
+    "ending": "capped",
+    "matched": 4500
+   }
+  },
+  {
+   "name": "OGC API, boş koleksiyon",
+   "service": {
+    "kind": "ogcFeatures",
+    "total": 0,
+    "cap": null,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1,
+    "taken": 0,
+    "received": 0,
+    "ending": "complete",
+    "matched": 0
+   }
+  },
+  {
+   "name": "ArcGIS, exceededTransferLimit ile üç sayfa",
+   "service": {
+    "kind": "arcgis",
+    "total": 5000,
+    "cap": null,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 3,
+    "taken": 5000,
+    "received": 5000,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "ArcGIS, sunucu 1000'de kesiyor",
+   "service": {
+    "kind": "arcgis",
+    "total": 2500,
+    "cap": 1000,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 3,
+    "taken": 2500,
+    "received": 2500,
+    "ending": "complete",
+    "matched": null
+   }
+  },
+  {
+   "name": "ArcGIS, en çok nesneye ulaşıldı",
+   "service": {
+    "kind": "arcgis",
+    "total": 5000,
+    "cap": null,
+    "matched": false,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 1200,
+   "expect": {
+    "requests": 1,
+    "taken": 1200,
+    "received": 1200,
+    "ending": "capped",
+    "matched": null
+   }
+  },
+  {
+   "name": "Sayfa sınırı: sunucu her sayfada bir nesne veriyor",
+   "service": {
+    "kind": "wfs",
+    "total": 1500,
+    "cap": 1,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1000,
+    "taken": 1000,
+    "received": 1000,
+    "ending": "pages",
+    "matched": 1500
+   }
+  },
+  {
+   "name": "Sayfa sınırı tam bitişte değil: 1000 nesne, birer birer",
+   "service": {
+    "kind": "wfs",
+    "total": 1000,
+    "cap": 1,
+    "matched": true,
+    "version": "2.0.0",
+    "nextLinks": true
+   },
+   "most": 50000,
+   "expect": {
+    "requests": 1000,
+    "taken": 1000,
+    "received": 1000,
+    "ending": "complete",
+    "matched": 1000
+   }
+  }
+ ]
+}

@@ -147,6 +147,8 @@ pub enum Dialog {
     RemoveLayer,
     /// Şablonlar → Sil (templates_panel.rs); the template is the panel's `deleting`.
     RemoveTemplate,
+    /// Kaynaktan oku over the layer's own edits (bound.rs); the layer is `App::bound_pending`.
+    SourceDiscard,
     /// Şablon düzenleyici (template_editor.rs); its form is `App::template_editor`.
     TemplateEditor,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
@@ -186,6 +188,8 @@ pub enum Dialog {
     LayerFields,
     /// Katman süzgeci (layer_filters.rs, docs/adr/0211 §4); the window is `App::layer_filter`.
     LayerFilter,
+    /// Alan hesapla and Yapıştır (features/write.rs, docs/adr/0507); the window is `App::features.write`.
+    FieldsWrite,
     /// Etiketler (labelling/, docs/adr/0212 §4); the window is `App::labelling`.
     Labelling,
     /// Bağlantılar (services/connections.rs).
@@ -520,6 +524,8 @@ pub enum Message {
     Navigation(crate::navigation_cards::Event),
     /// The map services' credits and windows (services/app.rs, docs/adr/0208).
     Services(crate::services::app::Event),
+    /// Bağlı katmanlar (bound.rs, docs/adr/0503).
+    Bound(crate::bound::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// Resim ekle's file: its name, path and bytes, or none (cancelled).
@@ -1008,6 +1014,8 @@ pub struct App {
     pub(crate) ribbon_peek: bool,
     /// The layer or group Katmanlar → Sil asks about (`Dialog::RemoveLayer`).
     pub removing_layer: Option<String>,
+    /// The bound layer Kaynaktan oku asks about (bound.rs, `Dialog::SourceDiscard`).
+    pub bound_pending: Option<String>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -1300,6 +1308,7 @@ impl App {
             alt_armed: false,
             ribbon_peek: false,
             removing_layer: None,
+            bound_pending: None,
             settings,
             settings_draft: None,
             reported_failure: None,
@@ -1730,6 +1739,7 @@ impl App {
             }
             Message::PointClouds(event) => return self.pointclouds_event(event),
             Message::Services(event) => return self.services_event(event),
+            Message::Bound(event) => return self.bound_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -1861,7 +1871,14 @@ impl App {
                 }
             }
             Message::Opened(None) | Message::Saved(None) => {}
-            Message::Opened(Some(Ok(doc))) => {
+            Message::Opened(Some(Ok(mut doc))) => {
+                // Bound GeoPackages moved with the project are found again (docs/adr/0506).
+                let located = match doc.path.clone() {
+                    Some(path) if doc.cloud_source().is_none() => {
+                        kentos_native_application::source_places::relocate(&mut doc.model, &path)
+                    }
+                    _ => Default::default(),
+                };
                 match doc.cloud_source() {
                     Some(source) => self.say(
                         Level::Success,
@@ -1886,6 +1903,7 @@ impl App {
                     );
                 }
                 self.show_document(*doc);
+                self.say_located(&located);
                 // A drawing opened from a file goes first in the recent files (a recovered one has none).
                 self.remember_file();
             }
@@ -1964,6 +1982,7 @@ impl App {
                     }
                 }
                 Some(Dialog::RemoveTemplate) => self.remove_template(),
+                Some(Dialog::SourceDiscard) => self.bound_discard(),
                 _ => {}
             },
             Message::DialogClosed => self.close_dialog(),
@@ -2613,6 +2632,12 @@ impl App {
             // Harita servisleri (services/, docs/adr/0208 §14).
             "basemap.remove" => self.remove_basemap(),
             "service.connections" => self.open_connections(None),
+            // Bağlı katmanlar (bound.rs, docs/adr/0503): the layer selected in the tree, else the active one.
+            "source.write" => return self.bound_event(crate::bound::Event::Write(None)),
+            "source.read" => return self.bound_event(crate::bound::Event::Read(None)),
+            "source.status" => return self.bound_event(crate::bound::Event::Status),
+            "source.unlink" => return self.bound_event(crate::bound::Event::Unlink(None)),
+            "source.relink" => return self.bound_event(crate::bound::Event::Relink(None)),
             "service.add" => self.open_service_window(None),
             "service.feed" => self.open_feed_window(),
             "service.info" => self.start_service_info(),

@@ -333,6 +333,8 @@ def settings(s):
                 "lineTypeScale": (line_type_scale, False),
                 # Schema 72 (docs/adr/0401 §3): the project's forms, as their JSON.
                 "forms": (opaque, False),
+                # Schema 74 (docs/adr/0503): the layers bound to their sources, as their JSON.
+                "sources": (opaque, False),
                 # Schema 72 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
@@ -2001,6 +2003,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 74 (docs/adr/0503): a layer bound to its source.
+    if "sources" in (settings or {}):
+        return 74
     # Schema 73 (docs/adr/0334): constraints or parameters.
     if has_constraints:
         return 73
@@ -2491,7 +2496,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-74.kcad"] = container(root(cmap(parts), version=uint(74)))
+    files["schema-version-75.kcad"] = container(root(cmap(parts), version=uint(75)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3997,6 +4002,30 @@ def build():
     out["broken/constraints-reference-written.kcad"] = constraints_broken(lambda d: param(d, "d3").update(expression="7"))
     out["broken/constraints-unknown-field.kcad"] = constraints_broken(lambda d: d["constraints"]["constraints"][0].update(weight=1.0))
     out["forms.kcad"] = container(document(load("forms.json")))
+    # The layers bound to their sources (docs/adr/0503): schema 74's; in schema 73 an unknown field; an empty list, an id
+    # twice, a short revision and a relative path refused.
+    out["sources.kcad"] = container(document(load("sources.json")))
+    src_payload = document(load("sources.json"))
+    assert src_payload.count(b"\x67version\x18\x4a") == 1, "the sources alone are schema 74"
+    out["broken/sources-in-schema-73.kcad"] = container(src_payload.replace(b"\x67version\x18\x4a", b"\x67version\x18\x49"))
+
+    def sources_broken(change):
+        d = copy.deepcopy(load("sources.json"))
+        change(d["settings"]["sources"])
+        return container(document(d))
+
+    out["broken/sources-empty.kcad"] = sources_broken(lambda s: s.clear())
+    out["broken/sources-id-twice.kcad"] = sources_broken(lambda s: s[1].update(id="kaynak-1"))
+    out["broken/sources-revision-short.kcad"] = sources_broken(lambda s: s[0].update(revision="9f2c"))
+    out["broken/sources-relative-path.kcad"] = sources_broken(lambda s: s[0].update(path="veri/kadastro.gpkg"))
+    out["broken/sources-relative-absolute.kcad"] = sources_broken(lambda s: s[0].update(relative="/veri/kadastro.gpkg"))
+    out["broken/sources-relative-climbs.kcad"] = sources_broken(lambda s: s[0].update(relative="veri/../../kadastro.gpkg"))
+    out["broken/sources-database-relative.kcad"] = sources_broken(lambda s: s[2].update(relative="veri/kent"))
+    # A part's area (docs/adr/0510): its minimum below its maximum; a database's table has none yet.
+    out["broken/sources-extent-reversed.kcad"] = sources_broken(lambda s: s[0].update(extent=[487100.0, 4420000.0, 487000.0, 4420100.0]))
+    out["broken/sources-database-extent.kcad"] = sources_broken(lambda s: s[2].update(extent=[0.0, 0.0, 1.0, 1.0]))
+    out["broken/sources-password.kcad"] = sources_broken(
+        lambda s: s[2].update(path="postgresql://cbs:gizli@veri.belediye.local:5432/kent"))
     # A record without a geometry (docs/adr/0410 §2): schema 72's; in schema 71 an unknown kind.
     out["records.kcad"] = container(document(load("records.json")))
     records_payload = document(load("records.json"))

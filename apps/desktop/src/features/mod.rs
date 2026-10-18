@@ -37,6 +37,7 @@ mod records;
 #[cfg(test)]
 mod tests;
 pub(crate) mod view;
+pub(crate) mod write;
 
 /// The tab's words (the web's `FEATURE_TEXTS`).
 pub mod texts {
@@ -60,6 +61,10 @@ pub mod texts {
         "Seçili nesneleri yerlerinde kopyalar; bileşik ilişkilerindeki alt kayıtlar da kopyalanır";
     pub const FIELDS_HINT: &str =
         "Katmanın alanları: adları, türleri, kuralları, varsayılanları ve değer listeleri";
+    pub const CALCULATE: &str = "Alan hesapla…";
+    pub const CALCULATE_HINT: &str = "Bir alana her nesne için bir ifadenin değerini yazar: seçililere, gösterilenlere ya da bütün katmana; önce önizler, değerler alanların kurallarıyla denetlenir.";
+    pub const PASTE: &str = "Yapıştır";
+    pub const PASTE_HINT: &str = "Panodaki hücreleri (elektronik tablodan, sekmeyle ayrılmış) ilk seçili satırdan başlayarak alanlara yazar; ilk satır alan adlarıysa başlık sayılır. Önce önizler.";
     pub const EXPORT: &str = "Dışa aktar";
     pub const EXPORT_HINT: &str = "Tablonun gösterilen satırlarını Excel (XLSX), OpenDocument (ODS) ya da CSV dosyasına yazar; alanlar türleriyle (sayı, tarih, evet/hayır).";
     pub const NO_LAYERS: &str = "Çizimde katman yok.";
@@ -152,6 +157,8 @@ pub enum Event {
     Enter,
     /// Esc: the edit given up.
     Cancel,
+    /// Alan hesapla and Yapıştır (write.rs, docs/adr/0507).
+    Write(write::WriteEvent),
 }
 
 /// The rows as worked out for a drawing, a selection, the view and a query.
@@ -233,10 +240,12 @@ pub(crate) struct FeaturesPanel {
     text: String,
     version: u64,
     cache: RefCell<Option<(Key, Rows)>>,
+    /// Alan hesapla or Yapıştır while open (write.rs).
+    pub(crate) write: Option<write::WriteWindow>,
 }
 
 impl FeaturesPanel {
-    fn changed(&mut self) {
+    pub(crate) fn changed(&mut self) {
         self.version += 1;
     }
 
@@ -492,6 +501,7 @@ impl App {
                 self.features.changed();
             }
             Event::Builder => return self.open_builder_for_features(),
+            Event::Write(e) => return self.features_write_event(e),
             Event::Sort(column) => {
                 let Some(doc) = &self.document else {
                     return Task::none();

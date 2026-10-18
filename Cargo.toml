@@ -57,6 +57,8 @@ members = [
     # A drawing's project model (the coordinate system registry, a new project's content),
     # and the headless command host over the product commands (Python, AI; TODOS.md §14–15).
     "crates/native/project",
+    "crates/native/geopackage",
+    "crates/native/postgis",
     "crates/native/headless",
     # The Python SDK's extension module kentos._native (docs/adr/0131): built by maturin, tested
     # from Python; not a default member, as it links a Python.
@@ -115,6 +117,8 @@ default-members = [
     "crates/native/interaction",
     "crates/native/processing",
     "crates/native/project",
+    "crates/native/geopackage",
+    "crates/native/postgis",
     "crates/native/headless",
     "crates/native/mcp",
     "crates/native/cloud",
@@ -185,6 +189,8 @@ sqlx = { version = "=0.9.0", default-features = false, features = ["runtime-toki
 tower = { version = "=0.5.3", features = ["util"] }
 tower-http = { version = "=0.7.1", features = ["request-id", "timeout", "limit", "trace", "catch-panic", "util"] }
 uuid = { version = "=1.26.1", features = ["v4", "v7", "serde"] }
+# GeoPackage is SQLite (docs/adr/0502): SQLite compiled in, no system library; only crates/native/geopackage.
+rusqlite = { version = "=0.39.0", features = ["bundled", "functions"] }
 jsonwebtoken = { version = "=11.1.0", default-features = false, features = ["rust_crypto", "use_pem"] }
 reqwest = { version = "=0.13.5", default-features = false, features = ["rustls", "json", "form"] }
 # The desktop's cloud client (docs/adr/0040): a file's bytes as a request body that every retry of

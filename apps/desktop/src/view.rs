@@ -1080,6 +1080,29 @@ impl App {
                 iced::widget::tooltip::Position::Top,
             ));
         }
+        // Bağlı katman (bound.rs, docs/adr/0503): its file and table.
+        if let Some(link) = doc
+            .model
+            .settings()
+            .sources
+            .iter()
+            .find(|s| s.layer == node.id)
+        {
+            badges.push(kentos_ui::widget::tip(
+                kentos_ui::icon::icon(crate::icons::from_web(Some("sourceLinked")))
+                    .size(12.0)
+                    .tone(kentos_ui::icon::Tone::Accent),
+                kentos_ui::widget::Tip::new(format!(
+                    "Bağlı katman: {} › {}\n{}\nSağ tık › Kaynak: yaz, oku, durumu, bağı çöz.",
+                    std::path::Path::new(&link.path)
+                        .file_name()
+                        .map_or_else(|| link.path.clone(), |n| n.to_string_lossy().into_owned()),
+                    link.table,
+                    link.path
+                )),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
         let cells: Vec<Element<'_, Message>> = if badges.is_empty() {
             vec![count]
         } else {
@@ -1733,6 +1756,7 @@ impl App {
             }
             Asking::RemoveLayer => self.remove_layer_question(),
             Asking::RemoveTemplate => self.remove_template_question(),
+            Asking::SourceDiscard => self.bound_discard_question(),
             Asking::TemplateEditor => self.template_editor_view(),
             Asking::CloudRename => self.rename_view(),
             Asking::CloudTrash => self.trash_view(),
@@ -1773,6 +1797,7 @@ impl App {
             Asking::StyleImpact => self.style_impact_view(),
             Asking::LayerFields => self.layer_fields_view(),
             Asking::LayerFilter => self.layer_filter_view(),
+            Asking::FieldsWrite => self.features_write_view(),
             Asking::Attachment => self.attachment_form_view(),
             Asking::PhotoViewer => self.photo_viewer_view(),
             Asking::LayerInfo => self.layer_info_view(),

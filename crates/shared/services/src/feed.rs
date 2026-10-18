@@ -14,6 +14,7 @@ use crate::caps::arcgis::{self, ArcgisService};
 use crate::caps::ogc::{self, Collection};
 use crate::caps::wfs::{self, WfsCapabilities};
 use crate::features;
+use crate::profile::{self, FeedProfile};
 use crate::query::{join, with_params};
 use crate::request::{self, Request};
 
@@ -43,7 +44,7 @@ pub fn taken_words(
     matched: Option<u64>,
     skipped: &[ReportItem],
     dropped: usize,
-    capped: bool,
+    ending: Ending,
     srid: u32,
 ) -> String {
     let null = kentos_formats::geojson::NULL_GEOMETRY;
@@ -77,11 +78,59 @@ pub fn taken_words(
             " {dropped} nesne projenin sisteminde yer bulamadığı için alınmadı."
         ));
     }
-    if capped {
-        s.push_str(" En çok nesne sınırına ulaşıldı; servisin başka nesneleri de olabilir.");
+    match ending {
+        Ending::Complete => {}
+        Ending::Capped => {
+            s.push_str(" En çok nesne sınırına ulaşıldı; servisin başka nesneleri de olabilir.")
+        }
+        Ending::Short => s.push_str(
+            " Sonuç eksik: servis eşleştiğini söylediği nesnelerin hepsini vermeden sayfaları bitirdi (servisin kendi sınırı olabilir).",
+        ),
+        Ending::Pages => s.push_str(&format!(
+            " Sonuç eksik: {MAX_PAGES} sayfa sınırına ulaşıldı; alanı daraltıp yeniden alın."
+        )),
     }
     s
 }
+
+/// How a take ended (docs/adr/0513): a limited or paged service's short answer is not passed off as all of it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Ending {
+    /// The service said it had no more.
+    Complete,
+    /// The most objects were taken and the service had more (or may have).
+    Capped,
+    /// The service stopped giving pages before the number it said it matched.
+    Short,
+    /// The pages' limit stopped it while the service had more.
+    Pages,
+}
+
+impl Ending {
+    pub fn name(self) -> &'static str {
+        match self {
+            Ending::Complete => "complete",
+            Ending::Capped => "capped",
+            Ending::Short => "short",
+            Ending::Pages => "pages",
+        }
+    }
+
+    pub fn from_name(s: &str) -> Option<Ending> {
+        [
+            Ending::Complete,
+            Ending::Capped,
+            Ending::Short,
+            Ending::Pages,
+        ]
+        .into_iter()
+        .find(|e| e.name() == s)
+    }
+}
+
+/// The most pages a take asks.
+pub const MAX_PAGES: u64 = 1000;
 
 /// The most objects a take may bring.
 pub const MOST: u32 = 500_000;
@@ -114,6 +163,9 @@ pub struct FeedOffer {
     pub kind: FeedKind,
     pub title: String,
     pub items: Vec<FeedItem>,
+    /// An OGC API service's conformance (docs/adr/0513), once asked.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub profile: Option<FeedProfile>,
 }
 
 /// What the window chose.
@@ -156,6 +208,8 @@ pub struct FeedConnecting {
     arcgis_layer: Option<arcgis::ArcgisLayerInfo>,
     asked: Option<String>,
     offer: Option<FeedOffer>,
+    /// An OGC API landing page's `conformance` link.
+    conformance_link: Option<String>,
 }
 
 impl FeedConnecting {
@@ -175,6 +229,7 @@ impl FeedConnecting {
             arcgis_layer: None,
             asked: None,
             offer: None,
+            conformance_link: None,
         };
         let first = match kind {
             FeedKind::Geojson => {
@@ -189,6 +244,7 @@ impl FeedConnecting {
                         wgs84: None,
                         geometry: None,
                     }],
+                    profile: None,
                 });
                 return Ok((c, None));
             }
@@ -241,6 +297,7 @@ impl FeedConnecting {
                             geometry: None,
                         })
                         .collect(),
+                    profile: None,
                 });
                 self.wfs = Some(caps);
                 self.stage = Stage::Done;
@@ -277,6 +334,7 @@ impl FeedConnecting {
                                 geometry: None,
                             })
                             .collect(),
+                        profile: None,
                     });
                     self.stage = Stage::Done;
                     return Ok(None);
@@ -307,12 +365,21 @@ impl FeedConnecting {
                                     geometry: None,
                                 })
                                 .collect(),
+                            profile: None,
                         });
                         self.stage = Stage::Done;
                         return Ok(None);
                     }
                 }
                 let page = ogc::landing(body, &asked)?;
+                self.conformance_link = ogc::link(
+                    &page.links,
+                    &[
+                        "conformance",
+                        "http://www.opengis.net/def/rel/ogc/1.0/conformance",
+                    ],
+                )
+                .map(|l| l.href.clone());
                 let next = ogc::link(&page.links, &["data"])
                     .map(|l| l.href.clone())
                     .unwrap_or_else(|| join(&self.url, "collections"));
@@ -346,6 +413,7 @@ impl FeedConnecting {
                             wgs84: None,
                             geometry: info.geometry.clone(),
                         }],
+                        profile: None,
                     });
                     self.arcgis_layer = Some(info);
                 } else {
@@ -370,6 +438,7 @@ impl FeedConnecting {
                         kind: self.kind,
                         title: s.title.clone(),
                         items,
+                        profile: None,
                     });
                     self.arcgis = Some(s);
                 }
@@ -377,6 +446,27 @@ impl FeedConnecting {
                 Ok(None)
             }
             Stage::Done => Ok(None),
+        }
+    }
+
+    /// An OGC API service's conformance page, asked once the offer is ready (docs/adr/0513); none for another kind,
+    /// before the offer or once read. Optional: when it fails the host gives [`FeedConnecting::read_conformance`] none.
+    pub fn conformance_request(&self) -> Option<Request> {
+        let offer = self.offer.as_ref()?;
+        (self.kind == FeedKind::OgcFeatures && offer.profile.is_none()).then(|| {
+            Request::get(profile::conformance_url(
+                &self.url,
+                self.conformance_link.as_deref(),
+            ))
+        })
+    }
+
+    /// The conformance page's answer, or none when asking failed: the offer's profile (unread when it is not a
+    /// conformance page).
+    pub fn read_conformance(&mut self, body: Option<&str>) {
+        let profile = body.and_then(FeedProfile::of_page).unwrap_or_default();
+        if let Some(o) = &mut self.offer {
+            o.profile = Some(profile);
         }
     }
 
@@ -463,6 +553,14 @@ impl FeedConnecting {
             .ok_or("Listeden bir tür seçin.")?;
         let srid = self.asked_srid(&item.id, choice.srid, project);
         let some = |t: &Option<String>| t.clone().filter(|v| !v.trim().is_empty());
+        // A filter goes only to a service that says it reads one (docs/adr/0513): another would give every object.
+        if self.kind == FeedKind::OgcFeatures && some(&choice.filter).is_some() {
+            let unread = FeedProfile::default();
+            let profile = offer.profile.as_ref().unwrap_or(&unread);
+            if let Some(p) = profile.filter_problem() {
+                return Err(p);
+            }
+        }
         let (url, name, version) = match self.kind {
             FeedKind::Wfs => {
                 let caps = self.wfs.as_ref().ok_or("Önce Bağlan ile servisi okuyun.")?;
@@ -538,6 +636,10 @@ pub struct Taking {
     offset: u64,
     /// The next request's address.
     next: Option<String>,
+    /// The pages answered.
+    pages: u64,
+    /// How it ended, once it did.
+    ending: Option<Ending>,
 }
 
 impl Taking {
@@ -563,6 +665,8 @@ impl Taking {
             page: PAGE.min(most),
             offset: 0,
             next: None,
+            pages: 0,
+            ending: None,
         };
         let url = t.page_url();
         (t, Request::get(url))
@@ -606,6 +710,16 @@ impl Taking {
         }
     }
 
+    /// How the take ended (docs/adr/0513); none while pages follow.
+    pub fn ending(&self) -> Option<Ending> {
+        self.ending
+    }
+
+    /// The features the service gave (those the readers left out too).
+    pub fn received(&self) -> u64 {
+        self.offset
+    }
+
     /// A page's answer: its objects on layer `layer` (in [`Taking::srid`]),
     /// and the next page's request when there is one.
     pub fn answer(
@@ -634,7 +748,19 @@ impl Taking {
                 }
                 let n = features::feature_count(&text) as u64;
                 let r = features::read_geojson(&text, layer, cap)?;
-                let more = n >= self.page && self.matched.is_none_or(|m| self.taken + n < m);
+                // A service may give fewer than asked (its own page limit): with the number it matched the pages go on
+                // to it; without it, WFS 2.0 (which pages) is asked until an empty page, WFS 1.x (which does not)
+                // stops at a short page.
+                let paging = self
+                    .feed
+                    .version
+                    .as_deref()
+                    .is_none_or(|v| v.starts_with('2'));
+                let more = match self.matched {
+                    Some(m) => n > 0 && self.offset + n < m,
+                    None if paging => n > 0,
+                    None => n >= self.page,
+                };
                 (r, n, more)
             }
             FeedKind::OgcFeatures => {
@@ -681,9 +807,30 @@ impl Taking {
                 }),
             }
         }
-        self.taken += result.entities.len() as u64;
+        let read = result.entities.len() as u64;
+        let cut = count
+            > read
+                + result
+                    .report
+                    .skipped
+                    .iter()
+                    .map(|i| u64::from(i.count))
+                    .sum::<u64>();
+        self.taken += read;
         self.offset += count;
-        let go_on = more && count > 0 && self.taken < self.most;
+        self.pages += 1;
+        let go_on = more && count > 0 && self.taken < self.most && self.pages < MAX_PAGES;
+        if !go_on {
+            self.ending = Some(if self.taken >= self.most && (more || cut) {
+                Ending::Capped
+            } else if more && count > 0 {
+                Ending::Pages
+            } else if self.matched.is_some_and(|m| m > self.offset) {
+                Ending::Short
+            } else {
+                Ending::Complete
+            });
+        }
         let next = go_on.then(|| Request::get(self.page_url()));
         Ok((result, next))
     }
@@ -762,6 +909,7 @@ mod tests {
         let last = r#"{"type":"FeatureCollection","features":[{"type":"Feature","properties":{},"geometry":null}]}"#;
         let (r, next) = t.answer(last, "").expect("reads");
         assert!(r.entities.is_empty() && next.is_none());
+        assert_eq!(t.ending(), Some(Ending::Complete));
         assert_eq!(t.skipped.len(), 1);
         assert_eq!(
             (t.skipped[0].what.as_str(), t.skipped[0].count),
@@ -769,11 +917,11 @@ mod tests {
         );
         assert!(t.skipped[0].lines.is_empty());
         assert_eq!(
-            taken_words(1, None, &t.skipped, 0, false, t.srid),
+            taken_words(1, None, &t.skipped, 0, Ending::Complete, t.srid),
             "1 nesne alındı. 2 nesne servisten geometrisi boş geldi ve alınmadı. Geometrisi boş gelen nesne, servisin istenen sistemde (EPSG:5255) gösteremediği nesne olabilir: İstenen sistem'i WGS 84 (EPSG:4326) yapıp yeniden alabilirsiniz."
         );
         assert_eq!(
-            taken_words(1, None, &t.skipped, 0, false, 4326),
+            taken_words(1, None, &t.skipped, 0, Ending::Complete, 4326),
             "1 nesne alındı. 2 nesne servisten geometrisi boş geldi ve alınmadı."
         );
     }
@@ -787,11 +935,11 @@ mod tests {
             lines: vec![4],
         };
         assert_eq!(
-            taken_words(10, Some(25), &[other], 2, true, 4326),
+            taken_words(10, Some(25), &[other], 2, Ending::Capped, 4326),
             "10 nesne alındı. Servis 25 nesne eşleştiğini söyledi. 3 nesne alınmadı: Geometri türü “Circle” (desteklenmiyor; alınmadı). 2 nesne projenin sisteminde yer bulamadığı için alınmadı. En çok nesne sınırına ulaşıldı; servisin başka nesneleri de olabilir."
         );
         assert_eq!(
-            taken_words(5, Some(5), &[], 0, false, 4326),
+            taken_words(5, Some(5), &[], 0, Ending::Complete, 4326),
             "5 nesne alındı."
         );
     }

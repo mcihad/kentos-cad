@@ -962,6 +962,7 @@ impl App {
             Some(Dialog::LayerMerge) => self.layer_merge = None,
             Some(Dialog::TimeLayer) => self.time.layer = None,
             Some(Dialog::LayerFilter) => self.layer_filter = None,
+            Some(Dialog::FieldsWrite) => self.features.write = None,
             Some(Dialog::LayerInfo) => self.layer_info = None,
             Some(Dialog::Attachment) => self.attachment_form = None,
             Some(Dialog::PhotoViewer) => self.photo_viewer = None,

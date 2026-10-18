@@ -217,5 +217,5 @@ formla kaydetme hatası olan formu reddeder. Kaydetme reddetmez: sorunlu taslak 
 Formların bütün anahtarları (ayarların `forms`, `relations`, `domains`'i; alanın `id`'si ve ekleri; katmanın `tableStyles`, `subtypes`,
 `contingents`, `rules`'u; `record` türü) şema **72**'ye taşındı; yazıcı onu formların bir parçası varken yazar ve şema 71'den önce gelir.
 `FORMATS_VERSION` 81'dir (geometrisiz kayıt), geometri deposunun paketinde kayıt türü 27'dir. Kırık örnekler `*-in-schema-71.kcad`,
-sürüm reddi `broken/schema-version-73.kcad`. `field_not_found` kodu iki işte de aynı anlamdadır (adı verilen katman alanı ya da
+sürüm reddi `broken/schema-version-75.kcad`. `field_not_found` kodu iki işte de aynı anlamdadır (adı verilen katman alanı ya da
 sırası verilen yazı alanı yok) ve tek tanımdır.

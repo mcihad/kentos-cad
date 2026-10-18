@@ -560,6 +560,38 @@ impl App {
                 )
                 .icon(crate::icons::from_web(Some("feedRefresh")));
         }
+        // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503).
+        if self.bound_link(&id).is_some() {
+            let bound = |e: crate::bound::Event| Message::Bound(e);
+            menu = menu
+                .submenu(
+                    "Kaynak",
+                    Menu::new()
+                        .item(
+                            "Kaynağa yaz",
+                            bound(crate::bound::Event::Write(Some(id.clone()))),
+                        )
+                        .icon(crate::icons::from_web(Some("sourceWrite")))
+                        .item(
+                            "Kaynaktan oku",
+                            bound(crate::bound::Event::Read(Some(id.clone()))),
+                        )
+                        .icon(crate::icons::from_web(Some("sourceRead")))
+                        .item("Kaynak durumu", bound(crate::bound::Event::Status))
+                        .icon(crate::icons::from_web(Some("sourceLinked")))
+                        .item(
+                            "Yeniden bağla…",
+                            bound(crate::bound::Event::Relink(Some(id.clone()))),
+                        )
+                        .separator()
+                        .item(
+                            "Bağı çöz",
+                            bound(crate::bound::Event::Unlink(Some(id.clone()))),
+                        )
+                        .icon(crate::icons::from_web(Some("sourceUnlink"))),
+                )
+                .icon(crate::icons::from_web(Some("sourceLinked")));
+        }
         // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).
         if let Some(doc) = &self.document {
             menu = menu

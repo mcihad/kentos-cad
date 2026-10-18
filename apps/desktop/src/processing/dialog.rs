@@ -468,6 +468,7 @@ impl ToolDialog {
                 touched,
                 edited,
                 record,
+                ..
             } => {
                 let table = self
                     .tool

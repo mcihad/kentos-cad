@@ -1091,6 +1091,20 @@ EditOperationName = Literal["offset", "trim", "extend", "fillet", "chamfer", "br
 """The names of :class:`EditOperation`, for a plain string."""
 
 
+class EmptyResult(_StrEnum):
+    """What an empty result of the expression does.
+
+    - ``keep``: The old value stays.
+    - ``clear``: The value is taken away.
+    """
+    KEEP = "keep"
+    CLEAR = "clear"
+
+
+EmptyResultName = Literal["keep", "clear"]
+"""The names of :class:`EmptyResult`, for a plain string."""
+
+
 class FeedKind(_StrEnum):
     """What a layer's objects were taken from (docs/adr/0208 §10).
 
@@ -1738,6 +1752,22 @@ LeaderArrowName = Literal["open", "dot", "none", "closed", "open30", "open90", "
 """The names of :class:`LeaderArrow`, for a plain string."""
 
 
+class LeftWhy(_StrEnum):
+    """Why a link was not packed.
+
+    - ``missing``: The file is not there.
+    - ``database``: A database's table: the link stays, the computer that opens the package reaches the database itself.
+    - ``address``: An address (http, https): read where the package opens, not copied.
+    """
+    MISSING = "missing"
+    DATABASE = "database"
+    ADDRESS = "address"
+
+
+LeftWhyName = Literal["missing", "database", "address"]
+"""The names of :class:`LeftWhy`, for a plain string."""
+
+
 class LengthStyle(_StrEnum):
     """How lengths are written (docs/adr/0262 §2); none (no setting) is decimal
     in the drawing's unit. The three are an inch or foot drawing's.
@@ -2101,6 +2131,26 @@ OrderToName = Literal["front", "back", "above", "under"]
 """The names of :class:`OrderTo`, for a plain string."""
 
 
+class PackagedKind(_StrEnum):
+    """What a packed or left link is.
+
+    - ``source``: A bound layer's source.
+    - ``picture``: A linked image or raster, or a point cloud's file.
+    - ``sidecar``: A raster's world file or auxiliary file beside it.
+    - ``table``: A linked table's file.
+    - ``attachment``: An object's attachment.
+    """
+    SOURCE = "source"
+    PICTURE = "picture"
+    SIDECAR = "sidecar"
+    TABLE = "table"
+    ATTACHMENT = "attachment"
+
+
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment"]
+"""The names of :class:`PackagedKind`, for a plain string."""
+
+
 class ParameterKind(_StrEnum):
     """What a parameter's value is: a length in the drawing's unit, an angle in the project's angle unit, or a number."""
     LENGTH = "length"
@@ -2457,6 +2507,26 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class RelatePredicate(_StrEnum):
+    """A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's
+    relations, which allow 1 mm.
+    """
+    INTERSECTS = "intersects"
+    DISJOINT = "disjoint"
+    CONTAINS = "contains"
+    WITHIN = "within"
+    COVERS = "covers"
+    COVERED_BY = "coveredBy"
+    TOUCHES = "touches"
+    CROSSES = "crosses"
+    OVERLAPS = "overlaps"
+    EQUALS = "equals"
+
+
+RelatePredicateName = Literal["intersects", "disjoint", "contains", "within", "covers", "coveredBy", "touches", "crosses", "overlaps", "equals"]
+"""The names of :class:`RelatePredicate`, for a plain string."""
+
+
 class RelatedView(_StrEnum):
     """How a related item shows its objects (docs/adr/0425).
 
@@ -2638,6 +2708,20 @@ SolveStatusName = Literal["fully", "under", "over", "inconsistent", "singular", 
 """The names of :class:`SolveStatus`, for a plain string."""
 
 
+class SourceKind(_StrEnum):
+    """What a source is.
+
+    - ``geopackage``
+    - ``postgis``: A PostGIS table (docs/adr/0505): `path` is the database's address without a password.
+    """
+    GEOPACKAGE = "geopackage"
+    POSTGIS = "postgis"
+
+
+SourceKindName = Literal["geopackage", "postgis"]
+"""The names of :class:`SourceKind`, for a plain string."""
+
+
 class SourceOverrides(_StrEnum):
     """What Tabloyu güncelle does with a cell changed by hand since its file was last read (docs/adr/0327 §5).
 
@@ -2742,6 +2826,20 @@ class StyleEditOperation(_StrEnum):
 
 StyleEditOperationName = Literal["create", "update", "rename", "remove", "export", "import"]
 """The names of :class:`StyleEditOperation`, for a plain string."""
+
+
+class SyncDirection(_StrEnum):
+    """Which way a sync goes.
+
+    - ``write``: The layer's changes into its table.
+    - ``read``: The table's rows into the layer.
+    """
+    WRITE = "write"
+    READ = "read"
+
+
+SyncDirectionName = Literal["write", "read"]
+"""The names of :class:`SyncDirection`, for a plain string."""
 
 
 class TableAlign(_StrEnum):
@@ -3017,6 +3115,20 @@ class Workspace(_StrEnum):
 
 WorkspaceName = Literal["cad", "gis", "plan3d", "disaster"]
 """The names of :class:`Workspace`, for a plain string."""
+
+
+class WritePolicy(_StrEnum):
+    """What to do when a value does not fit.
+
+    - ``all``: Every value or none (`invalid_values`).
+    - ``valid``: The values that fit; the others reported (`values_skipped`).
+    """
+    ALL = "all"
+    VALID = "valid"
+
+
+WritePolicyName = Literal["all", "valid"]
+"""The names of :class:`WritePolicy`, for a plain string."""
 
 
 #: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
@@ -3779,6 +3891,27 @@ class FieldSource(_Union):
         return _variant(_FIELD_SOURCE, "FieldSource", "kind", data).from_json(data)
 
 
+class FieldsWriteOp(_Union):
+    """What is written.
+
+    One of:
+
+    - :class:`CalculateFieldsWriteOp` (``kind: calculate``)
+    - :class:`ValuesFieldsWriteOp` (``kind: values``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWriteOp:
+        return _variant(_FIELDS_WRITE_OP, "FieldsWriteOp", "kind", data).from_json(data)
+
+
 class FormItem(_Union):
     """An item of a form: a tab (only at the top), a group, a field or a note.
 
@@ -4237,6 +4370,28 @@ class SelectRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SelectRegion:
         return _variant(_SELECT_REGION, "SelectRegion", "kind", data).from_json(data)
+
+
+class SourcesEditOp(_Union):
+    """An edit of the project's bound layers.
+
+    One of:
+
+    - :class:`LinkSourcesEditOp` (``kind: link``)
+    - :class:`UnlinkSourcesEditOp` (``kind: unlink``)
+    - :class:`RelinkSourcesEditOp` (``kind: relink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEditOp:
+        return _variant(_SOURCES_EDIT_OP, "SourcesEditOp", "kind", data).from_json(data)
 
 
 class SubPlace(_Union):
@@ -12048,6 +12203,74 @@ class EntitiesPropertiesSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class EntitiesRelate(_Model):
+    """Input of `cad.entities.relate` v1 (docs/adr/0501): how each object of `a` stands to each of `b` by the standard
+    DE-9IM profile, exact up to the floating point. With `predicate` or `pattern` (a nine-letter `ST_Relate` pattern of
+    `T`, `F`, `*`, `0`, `1`, `2`) only the pairs it holds for are answered; with neither, every pair and its matrix. An
+    object is read as a query reads it: its areas with their holes (arcs exact), its open paths or its points; Z is not
+    read. Hidden and locked objects are read as well: the ids are given.
+
+    Refusals (`CommandError.code`), in this order: `no_objects` (`a` or `b` empty), `invalid_input` (both `predicate`
+    and `pattern`), `invalid_pattern` (`pattern`), `entity_not_found` (an id the drawing lacks), `too_many_pairs` (more
+    than 1 000 000 pairs).
+    Attributes:
+        a: The objects related, by their lasting ids.
+        b: The objects they are related to.
+    """
+    a: list[str]
+    b: list[str]
+    pattern: str | None | Unset = UNSET
+    predicate: RelatePredicate | RelatePredicateName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = list(self.a)
+        out["b"] = list(self.b)
+        if self.pattern is not UNSET:
+            out["pattern"] = self.pattern
+        if self.predicate is not UNSET:
+            out["predicate"] = None if self.predicate is None else _enum_out(self.predicate)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRelate:
+        return cls(
+            a=list(data["a"]),
+            b=list(data["b"]),
+            pattern=data.get("pattern", UNSET),
+            predicate=UNSET if "predicate" not in data else None if data["predicate"] is None else _enum_in(RelatePredicate, data["predicate"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class EntitiesRelated(_Model):
+    """Output of `cad.entities.relate` v1, and its plan: the pairs in `a`'s then `b`'s order, the objects the profile
+    does not read (a construction line, a ray), the revision.
+    Attributes:
+        revision: The document's revision the objects were read at, as decimal text.
+    """
+    pairs: list[RelatedPair]
+    revision: str
+    unread: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pairs"] = [e0.to_json() for e0 in self.pairs]
+        out["revision"] = self.revision
+        if self.unread is not UNSET:
+            out["unread"] = list(self.unread)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EntitiesRelated:
+        return cls(
+            pairs=[RelatedPair.from_json(e0) for e0 in data["pairs"]],
+            revision=data["revision"],
+            unread=list(data["unread"]) if "unread" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class EntitiesReverse(_Model):
     """Input of `cad.entities.reverse` v1, Yönü çevir (AutoCAD's REVERSE): the
     objects of `uids` run the other way round, the same outline, as one undo
@@ -12989,6 +13212,39 @@ class ExportDxf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGpkg(_Model):
+    """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
+    a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
+    coordinate system as the tables'. Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`,
+    `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects a GeoPackage has no geometry for, curves
+    written as chords).
+    Attributes:
+        path: The file to write, an absolute path (`.gpkg`).
+        layers: The layers, by id; empty: every layer with objects.
+        overwrite: Write over a file that is there.
+    """
+    path: str
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGpkg:
+        return cls(
+            path=data["path"],
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportPdf(_Model):
     """Input of `file.export.pdf` v1. Refusals: `invalid_file_path`,
     `file_exists`, `no_sheets` (the project has no sheet), `unknown_sheet`
@@ -13106,6 +13362,34 @@ class FieldBinding(_Model):
         return cls(
             from_=data["from"],
             to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldChange(_Model):
+    """A value changed."""
+    uid: str
+    field: str
+    after: str | None | Unset = UNSET
+    before: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        if self.after is not UNSET:
+            out["after"] = self.after
+        if self.before is not UNSET:
+            out["before"] = self.before
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldChange:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            after=data.get("after", UNSET),
+            before=data.get("before", UNSET),
         )
 
 
@@ -13378,6 +13662,29 @@ class FieldRename(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FieldRow(_Model):
+    """One object's pasted values: field → value (null takes the value away).
+    Attributes:
+        uid: The object's persistent id.
+    """
+    uid: str
+    values: dict[str, str | None]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["values"] = dict(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldRow:
+        return cls(
+            uid=data["uid"],
+            values=dict(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FieldUse(_Model):
     """One place that names a field.
     Attributes:
@@ -13576,6 +13883,82 @@ class FieldsUsed(_Model):
             field=data["field"],
             uses=[FieldUse.from_json(e0) for e0 in data["uses"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsWrite(_Model):
+    """Input of `cad.fields.write` v1. Refusals, in order: `layer_not_found`, `not_a_layer`, `layer_locked`,
+    `nothing_to_set` (no rows, or a row without values), `invalid_attribute` (a field's name empty), `invalid_uid`,
+    `entity_not_found` (an object not in the drawing or not on the layer), `field_not_found` (a field the layer's
+    fields do not name, on a layer with fields), `invalid_expression`, `invalid_values` (with `policy: all`, a value
+    that does not fit: the answer's first problem, every one in the plan). Warning: `values_skipped` (with
+    `policy: valid`).
+    Attributes:
+        layer: The layer (its id).
+    """
+    layer: str
+    write: FieldsWriteOp
+    policy: WritePolicy | WritePolicyName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["write"] = self.write.to_json()
+        if self.policy is not UNSET:
+            out["policy"] = _enum_out(self.policy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWrite:
+        return cls(
+            layer=data["layer"],
+            write=FieldsWriteOp.from_json(data["write"]),
+            policy=_enum_in(WritePolicy, data["policy"]) if "policy" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FieldsWritten(_Model):
+    """What `cad.fields.write` wrote, or with `plan` would write.
+    Attributes:
+        changed: Objects whose values change, objects already as asked, empty results kept, objects with a problem. Unit: count.
+        unchanged: Unit: count.
+        kept: Unit: count.
+        invalid: Unit: count.
+        changes: The first changes and problems, in the objects' order.
+    """
+    changed: int
+    unchanged: int
+    kept: int
+    invalid: int
+    revision: str
+    changes: list[FieldChange] | Unset = UNSET
+    problems: list[ValueProblem] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["unchanged"] = self.unchanged
+        out["kept"] = self.kept
+        out["invalid"] = self.invalid
+        out["revision"] = self.revision
+        if self.changes is not UNSET:
+            out["changes"] = [e0.to_json() for e0 in self.changes]
+        if self.problems is not UNSET:
+            out["problems"] = [e0.to_json() for e0 in self.problems]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FieldsWritten:
+        return cls(
+            changed=data["changed"],
+            unchanged=data["unchanged"],
+            kept=data["kept"],
+            invalid=data["invalid"],
+            revision=data["revision"],
+            changes=[FieldChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
+            problems=[ValueProblem.from_json(e0) for e0 in data["problems"]] if "problems" in data else UNSET,
         )
 
 
@@ -15459,6 +15842,170 @@ class GeographicDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GpkgExported(_Model):
+    """What `file.export.gpkg` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        approximated: Curves (ellipses, splines, NURBS) written as chords within 0.1 mm. Unit: count.
+        left: Objects not written, by kind. Unit: count.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    tables: list[GpkgTableExported]
+    approximated: int
+    left: dict[str, int] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["approximated"] = self.approximated
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            tables=[GpkgTableExported.from_json(e0) for e0 in data["tables"]],
+            approximated=data["approximated"],
+            left=dict(data["left"]) if "left" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgImported(_Model):
+    """What `file.import.gpkg` took in, or with `plan` would take.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256.
+        bytes: Unit: bytes.
+        objects: Unit: count.
+        layers: The layers made, in the tree's order, and the group they went into.
+        revision: The drawing's revision after the step (plan: before it).
+        moved: Whether the coordinates were moved into the project's system.
+        srid: The EPSG code the tables declare, none for an undefined system. Unit: epsg.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    objects: int
+    tables: list[GpkgTableImported]
+    layers: list[ImportedLayer]
+    revision: str
+    group: str | None | Unset = UNSET
+    moved: bool | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["objects"] = self.objects
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.moved is not UNSET:
+            out["moved"] = self.moved
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            objects=data["objects"],
+            tables=[GpkgTableImported.from_json(e0) for e0 in data["tables"]],
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
+            group=data.get("group", UNSET),
+            moved=data.get("moved", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgTableExported(_Model):
+    """A table written.
+    Attributes:
+        rows: Unit: count.
+        geometry: Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.
+    """
+    table: str
+    layer: str
+    rows: int
+    geometry: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["rows"] = self.rows
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTableExported:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            rows=data["rows"],
+            geometry=data.get("geometry", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GpkgTableImported(_Model):
+    """A table taken.
+    Attributes:
+        layer: The drawing's layer its rows went onto.
+        read: Rows read, objects taken (records among them), rows left out. Unit: count.
+        objects: Unit: count.
+        records: Unit: count.
+        skipped: Unit: count.
+    """
+    table: str
+    layer: str
+    read: int
+    objects: int
+    records: int
+    skipped: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["read"] = self.read
+        out["objects"] = self.objects
+        out["records"] = self.records
+        out["skipped"] = self.skipped
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GpkgTableImported:
+        return cls(
+            table=data["table"],
+            layer=data["layer"],
+            read=data["read"],
+            objects=data["objects"],
+            records=data["records"],
+            skipped=data["skipped"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GridChoice(_Model):
     """An NTv2 grid the project's datum choice names: its SHA-256 (the
     device's grid library keeps it by that), the file's name and size, the
@@ -16448,6 +16995,47 @@ class ImportDxf(_Model):
             group=data.get("group", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportGpkg(_Model):
+    """Input of `file.import.gpkg` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `file_not_found`,
+    `import_unreadable` (not a GeoPackage, or broken), `table_not_found` (a table of `tables`), `layer_not_found` and
+    `not_a_layer` (a target of `layers`), `layer_locked`, `crs_mismatch` (the file's system is not the project's and
+    `reproject` was not asked), `entity_exists` (a row's lasting id is an object of the drawing already),
+    `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.
+    Attributes:
+        path: The file to read, an absolute path.
+        layers: A table → the drawing's layer (its id) its rows go onto. A table not named here goes onto the drawing's layer
+            of the same name (case and Turkish marks aside), else onto a new layer with the table's fields.
+        reproject: Move the coordinates from the file's system into the project's (the project's datum choices taken); without
+            it a file in another system is refused.
+        tables: The tables to take; empty: every feature and attribute table.
+    """
+    path: str
+    layers: dict[str, str] | Unset = UNSET
+    reproject: bool | Unset = UNSET
+    tables: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        if self.tables is not UNSET:
+            out["tables"] = list(self.tables)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportGpkg:
+        return cls(
+            path=data["path"],
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            reproject=data.get("reproject", UNSET),
+            tables=list(data["tables"]) if "tables" in data else UNSET,
         )
 
 
@@ -21615,6 +22203,107 @@ class ObjectEnd(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PackageLeft(_Model):
+    """A link left as it was.
+    Attributes:
+        path: The path or address as the project keeps it.
+        at: The object (its lasting id) or bound layer (its id) that keeps it.
+    """
+    kind: PackagedKind | PackagedKindName
+    path: str
+    why: LeftWhy | LeftWhyName
+    at: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["path"] = self.path
+        out["why"] = _enum_out(self.why)
+        out["at"] = self.at
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageLeft:
+        return cls(
+            kind=_enum_in(PackagedKind, data["kind"]),
+            path=data["path"],
+            why=_enum_in(LeftWhy, data["why"]),
+            at=data["at"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PackageProject(_Model):
+    """Input of `file.package` v1. Refusals, in order: `invalid_file_path` (`path` not absolute, its folder not there,
+    `name` not a file name, `from` not an absolute folder), `file_exists` (`path` is there and not an empty folder),
+    `file_unwritable`. Warning: `package_left` (what was not copied, each said).
+    Attributes:
+        path: The folder to make, an absolute path; it must not be there, or be an empty folder.
+        from_: The project file's folder, an absolute path: linked files written relative to it are read from there. None:
+            a relative link is not found (the drawing was never saved).
+        name: The project file's name in it (`.kcad` added when missing); none: the drawing's name.
+    """
+    path: str
+    from_: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackageProject:
+        return cls(
+            path=data["path"],
+            from_=data.get("from", UNSET),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PackagedFile(_Model):
+    """A file copied into the package.
+    Attributes:
+        path: Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).
+        from_: The file it was copied from.
+        bytes: Unit: bytes.
+        links: How many links point to it. Unit: count.
+    """
+    path: str
+    from_: str
+    kind: PackagedKind | PackagedKindName
+    bytes: int
+    sha256: str
+    links: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["from"] = self.from_
+        out["kind"] = _enum_out(self.kind)
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["links"] = self.links
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PackagedFile:
+        return cls(
+            path=data["path"],
+            from_=data["from"],
+            kind=_enum_in(PackagedKind, data["kind"]),
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            links=data["links"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParagraphLayout(_Model):
     """A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\\p` codes):
     every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
@@ -23177,6 +23866,199 @@ class PolylinePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProcessingRan(_Model):
+    """What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).
+    Attributes:
+        summary: The tool's sentence of what it did.
+        added: The objects it made and changed (persistent ids).
+        inputs: The layers the features inputs read, in the inputs' order.
+        layers: The layers it made (ids).
+        notes: Its notes (what resolving left out, what it skipped).
+        outputs: Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).
+        selected: The objects it chose (a selecting tool's result; persistent ids).
+        sink: The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink.
+        step: The undo step's name; none when the drawing did not change.
+    """
+    tool: str
+    summary: str
+    revision: str
+    added: list[str] | Unset = UNSET
+    changed: list[str] | Unset = UNSET
+    inputs: list[RunInput] | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    notes: list[ToolNote] | Unset = UNSET
+    outputs: dict[str, Any] | None | Unset = UNSET
+    selected: list[str] | Unset = UNSET
+    sink: GpkgExported | None | Unset = UNSET
+    step: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["summary"] = self.summary
+        out["revision"] = self.revision
+        if self.added is not UNSET:
+            out["added"] = list(self.added)
+        if self.changed is not UNSET:
+            out["changed"] = list(self.changed)
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.notes is not UNSET:
+            out["notes"] = [e0.to_json() for e0 in self.notes]
+        if self.outputs is not UNSET:
+            out["outputs"] = None if self.outputs is None else dict(self.outputs)
+        if self.selected is not UNSET:
+            out["selected"] = list(self.selected)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
+        if self.step is not UNSET:
+            out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRan:
+        return cls(
+            tool=data["tool"],
+            summary=data["summary"],
+            revision=data["revision"],
+            added=list(data["added"]) if "added" in data else UNSET,
+            changed=list(data["changed"]) if "changed" in data else UNSET,
+            inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            notes=[ToolNote.from_json(e0) for e0 in data["notes"]] if "notes" in data else UNSET,
+            outputs=UNSET if "outputs" not in data else None if data["outputs"] is None else dict(data["outputs"]),
+            selected=list(data["selected"]) if "selected" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
+            step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingRun(_Model):
+    """Input of `cad.processing.run` v1: the tool (its id) and the values of its parameters; a parameter not given takes
+    its default for the drawing. A features input is `{ "scope": "all" }` (the visible layers), `{ "scope": "layer",
+    "layerId": … }`, `{ "scope": "uids", "uids": [ … ] }`, `{ "scope": "selection" }` (the objects `selection` names)
+    or `{ "scope": "visible" }` (those in `view`), optionally with `kinds`; a features input's default is the
+    selection, so a run on chosen objects gives `selection`. A file parameter is `{ "path": … }` (a table file read
+    as the dialog reads it) or `{ "name": …, "rows": [[…]] }`. Refusals, in order: `tools_unavailable`,
+    `unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters` (each named: a parameter the tool has
+    not, a value its rules refuse, a file unread, the visible scope without `view`), `tool_failed` (it ran and
+    stopped: a locked layer, nothing to do, its own refusal; nothing written).
+    Attributes:
+        selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
+        sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
+        view: The box taken as on screen (minimum east, north, maximum east, north): a features input's `visible` scope. Unit: length.
+    """
+    tool: str
+    parameters: dict[str, Any] | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    sink: RunSink | None | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.sink is not UNSET:
+            out["sink"] = None if self.sink is None else self.sink.to_json()
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRun:
+        return cls(
+            tool=data["tool"],
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            sink=UNSET if "sink" not in data else None if data["sink"] is None else RunSink.from_json(data["sink"]),
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingTool(_Model):
+    """A tool.
+    Attributes:
+        category: Its category's path (“Geometri › Tampon”).
+        aliases: The names the command line takes for it.
+    """
+    id: str
+    label: str
+    category: str
+    description: str
+    parameters: list[ToolParameter]
+    aliases: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["label"] = self.label
+        out["category"] = self.category
+        out["description"] = self.description
+        out["parameters"] = [e0.to_json() for e0 in self.parameters]
+        out["aliases"] = list(self.aliases)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingTool:
+        return cls(
+            id=data["id"],
+            label=data["label"],
+            category=data["category"],
+            description=data["description"],
+            parameters=[ToolParameter.from_json(e0) for e0 in data["parameters"]],
+            aliases=list(data["aliases"]) if "aliases" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingTools(_Model):
+    """Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
+    (case and Turkish marks aside), or one category's (`category`, its id).
+    """
+    category: str | None | Unset = UNSET
+    query: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.category is not UNSET:
+            out["category"] = self.category
+        if self.query is not UNSET:
+            out["query"] = self.query
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingTools:
+        return cls(
+            category=data.get("category", UNSET),
+            query=data.get("query", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingToolsListed(_Model):
+    """What `cad.processing.tools` lists."""
+    tools: list[ProcessingTool]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tools"] = [e0.to_json() for e0 in self.tools]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingToolsListed:
+        return cls(
+            tools=[ProcessingTool.from_json(e0) for e0 in data["tools"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectAccessChange(_Model):
     """The result of `project.share` and `project.access.revoke`; a retry with the
     same idempotency key gets the same one (`replayed`).
@@ -23868,6 +24750,48 @@ class ProjectMetadataUpdate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProjectPackaged(_Model):
+    """What `file.package` made, or with `plan` would make.
+    Attributes:
+        path: The folder.
+        project: The project file, its bytes and their SHA-256.
+        project_bytes: Unit: bytes.
+        bytes: Every byte written: the project file and the copies. Unit: bytes.
+    """
+    path: str
+    project: str
+    project_bytes: int
+    project_sha256: str
+    files: list[PackagedFile]
+    bytes: int
+    left: list[PackageLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["project"] = self.project
+        out["projectBytes"] = self.project_bytes
+        out["projectSha256"] = self.project_sha256
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["bytes"] = self.bytes
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProjectPackaged:
+        return cls(
+            path=data["path"],
+            project=data["project"],
+            project_bytes=data["projectBytes"],
+            project_sha256=data["projectSha256"],
+            files=[PackagedFile.from_json(e0) for e0 in data["files"]],
+            bytes=data["bytes"],
+            left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectPatch(_Model):
     """Metadata to replace; absent fields stay. Needs `expectedVersions["@project"]`.
     Attributes:
@@ -24067,6 +24991,7 @@ class ProjectSettings(_Model):
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
             the project's own system, never a local project's. Unit: epsg.
+        sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
         text_styles: The project's named text styles (docs/adr/0183 §2), in the order they were made.
@@ -24106,6 +25031,7 @@ class ProjectSettings(_Model):
     relations: list[ProjectRelation] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
+    sources: list[SourceLink] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
     topology: TopologySettings | None | Unset = UNSET
@@ -24165,6 +25091,8 @@ class ProjectSettings(_Model):
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
+        if self.sources is not UNSET:
+            out["sources"] = [e0.to_json() for e0 in self.sources]
         if self.survey is not UNSET:
             out["survey"] = None if self.survey is None else self.survey.to_json()
         if self.text_styles is not UNSET:
@@ -24210,6 +25138,7 @@ class ProjectSettings(_Model):
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
+            sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
             topology=UNSET if "topology" not in data else None if data["topology"] is None else TopologySettings.from_json(data["topology"]),
@@ -25270,6 +26199,32 @@ class RegularPolygonCreate(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RelatedPair(_Model):
+    """A pair and its matrix.
+    Attributes:
+        matrix: The DE-9IM matrix as `ST_Relate` writes it (`F`, `0`, `1`, `2`; II, IB, IE, BI, BB, BE, EI, EB, EE).
+    """
+    a: str
+    b: str
+    matrix: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = self.a
+        out["b"] = self.b
+        out["matrix"] = self.matrix
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelatedPair:
+        return cls(
+            a=data["a"],
+            b=data["b"],
+            matrix=data["matrix"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RelationFollowed(_Model):
     """What a relation did to a deleted parent's children (docs/adr/0440 §1).
     Attributes:
@@ -25431,6 +26386,65 @@ class RubberLink(_Model):
         return cls(
             from_=Vec2.from_json(data["from"]),
             to=Vec2.from_json(data["to"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RunInput(_Model):
+    """A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).
+    Attributes:
+        digest: The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id
+            (`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.
+    """
+    layer: str
+    digest: str
+    revision: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["digest"] = self.digest
+        if self.revision is not UNSET:
+            out["revision"] = self.revision
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RunInput:
+        return cls(
+            layer=data["layer"],
+            digest=data["digest"],
+            revision=data.get("revision", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RunSink(_Model):
+    """A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,
+    the objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the
+    drawing does not change. The file is written whole or not at all; one that is there is replaced only with
+    `overwrite`, and the old file stays until the new one is complete.
+    Attributes:
+        path: The GeoPackage's path (`.gpkg`).
+    """
+    path: str
+    overwrite: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RunSink:
+        return cls(
+            path=data["path"],
+            overwrite=data.get("overwrite", UNSET),
         )
 
 
@@ -26384,6 +27398,406 @@ class SnapFound(_Model):
         return cls(
             snaps=[FoundSnap.from_json(e0) for e0 in data["snaps"]],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceCapabilities(_Model):
+    """What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.
+    Attributes:
+        transaction: Every write of a sync in one transaction.
+        curves: Arcs kept as arcs.
+    """
+    read: bool
+    insert: bool
+    update: bool
+    delete: bool
+    transaction: bool
+    z: bool
+    m: bool
+    curves: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["read"] = self.read
+        out["insert"] = self.insert
+        out["update"] = self.update
+        out["delete"] = self.delete
+        out["transaction"] = self.transaction
+        out["z"] = self.z
+        out["m"] = self.m
+        out["curves"] = self.curves
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceCapabilities:
+        return cls(
+            read=data["read"],
+            insert=data["insert"],
+            update=data["update"],
+            delete=data["delete"],
+            transaction=data["transaction"],
+            z=data["z"],
+            m=data["m"],
+            curves=data["curves"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceColumn(_Model):
+    """A column of a table and the field kind it reads as; none for one that is not read (a blob).
+    Attributes:
+        declared: As the file declares it (`MEDIUMINT`, `TEXT(40)` …).
+    """
+    name: str
+    declared: str
+    kind: LayerFieldKind | LayerFieldKindName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["declared"] = self.declared
+        if self.kind is not UNSET:
+            out["kind"] = None if self.kind is None else _enum_out(self.kind)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceColumn:
+        return cls(
+            name=data["name"],
+            declared=data["declared"],
+            kind=UNSET if "kind" not in data else None if data["kind"] is None else _enum_in(LayerFieldKind, data["kind"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceLink(_Model):
+    """A layer bound to a table of a file.
+    Attributes:
+        id: Its own id, `kaynak-N`.
+        path: The file, an absolute path.
+        table: The table in it.
+        layer: The drawing's layer that is its working copy.
+        revision: The SHA-256 (64 hex digits) of the file when the layer last matched it: what a write or a reload compares with.
+        digest: The layer's digest when it last matched the file (64 hex digits: the SHA-256 of its objects' kinds, geometries
+            and attributes by lasting id, `kentos_native_application::sources::layer_digest`): a reload compares with it to
+            tell the layer's own edits from the file's.
+        writable: Whether the table can be written: a feature or attribute table of a file KentOS may write.
+        extent: The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
+            only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
+            whole table. Unit: length.
+        relative: The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
+            the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
+            only when `path` is not there and the file it names has the same content. A database has none.
+        srid: The EPSG code the table declares, none for an undefined system. Unit: epsg.
+    """
+    id: str
+    kind: SourceKind | SourceKindName
+    path: str
+    table: str
+    layer: str
+    revision: str
+    digest: str
+    writable: bool
+    extent: list[float] | None | Unset = UNSET
+    relative: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["path"] = self.path
+        out["table"] = self.table
+        out["layer"] = self.layer
+        out["revision"] = self.revision
+        out["digest"] = self.digest
+        out["writable"] = self.writable
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceLink:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(SourceKind, data["kind"]),
+            path=data["path"],
+            table=data["table"],
+            layer=data["layer"],
+            revision=data["revision"],
+            digest=data["digest"],
+            writable=data["writable"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            relative=data.get("relative", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceState(_Model):
+    """A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
+    how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
+    and the layer lacks).
+    Attributes:
+        changed: The file changed since the layer last matched it.
+        edited: The layer changed since it last matched the file.
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+    """
+    link: SourceLink
+    found: bool
+    changed: bool
+    edited: bool
+    added: int
+    modified: int
+    removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["link"] = self.link.to_json()
+        out["found"] = self.found
+        out["changed"] = self.changed
+        out["edited"] = self.edited
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceState:
+        return cls(
+            link=SourceLink.from_json(data["link"]),
+            found=data["found"],
+            changed=data["changed"],
+            edited=data["edited"],
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceTable(_Model):
+    """A table of a file.
+    Attributes:
+        data: `features` or `attributes`.
+        rows: Unit: count.
+        geometry: The geometry column's type, none for an attribute table.
+        srid: Unit: epsg.
+    """
+    name: str
+    data: str
+    rows: int
+    columns: list[SourceColumn]
+    capabilities: SourceCapabilities
+    geometry: str | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["data"] = self.data
+        out["rows"] = self.rows
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["capabilities"] = self.capabilities.to_json()
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceTable:
+        return cls(
+            name=data["name"],
+            data=data["data"],
+            rows=data["rows"],
+            columns=[SourceColumn.from_json(e0) for e0 in data["columns"]],
+            capabilities=SourceCapabilities.from_json(data["capabilities"]),
+            geometry=data.get("geometry", UNSET),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesDescribe(_Model):
+    """Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'
+    state (none). Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_address`,
+    `source_unreachable` (docs/adr/0505).
+    """
+    path: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.path is not UNSET:
+            out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesDescribe:
+        return cls(
+            path=data.get("path", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesDescribed(_Model):
+    """Output of `cad.sources.describe` v1, and its plan.
+    Attributes:
+        links: The project's bound layers (without `path`).
+        tables: The file's tables (with `path`).
+    """
+    revision: str
+    links: list[SourceState] | Unset = UNSET
+    tables: list[SourceTable] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        if self.links is not UNSET:
+            out["links"] = [e0.to_json() for e0 in self.links]
+        if self.tables is not UNSET:
+            out["tables"] = [e0.to_json() for e0 in self.tables]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesDescribed:
+        return cls(
+            revision=data["revision"],
+            links=[SourceState.from_json(e0) for e0 in data["links"]] if "links" in data else UNSET,
+            tables=[SourceTable.from_json(e0) for e0 in data["tables"]] if "tables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesEdit(_Model):
+    """Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,
+    `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
+    the table is bound already), `source_differs` (the layer given does not hold the table's objects),
+    `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
+    that is not one, on a table without geometry, onto a layer given, or of a database).
+    """
+    edit: SourcesEditOp
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEdit:
+        return cls(
+            edit=SourcesEditOp.from_json(data["edit"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesEdited(_Model):
+    """Output of `cad.sources.edit` v1, and its plan.
+    Attributes:
+        objects: The objects taken in, and the layers made (linking onto a new layer). Unit: count.
+        link: The binding as it is now; none after unlinking.
+    """
+    objects: int
+    revision: str
+    layers: list[ImportedLayer] | Unset = UNSET
+    link: SourceLink | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["objects"] = self.objects
+        out["revision"] = self.revision
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.link is not UNSET:
+            out["link"] = None if self.link is None else self.link.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesEdited:
+        return cls(
+            objects=data["objects"],
+            revision=data["revision"],
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
+            link=UNSET if "link" not in data else None if data["link"] is None else SourceLink.from_json(data["link"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesSync(_Model):
+    """Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
+    `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
+    `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
+    the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
+    for stay in the drawing only).
+    Attributes:
+        layer: The bound layer, by id.
+        discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+    """
+    layer: str
+    direction: SyncDirection | SyncDirectionName
+    discard: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["direction"] = _enum_out(self.direction)
+        if self.discard is not UNSET:
+            out["discard"] = self.discard
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesSync:
+        return cls(
+            layer=data["layer"],
+            direction=_enum_in(SyncDirection, data["direction"]),
+            discard=data.get("discard", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesSynced(_Model):
+    """Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,
+    the columns a write added to the table, and the file's revision after.
+    Attributes:
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+        source: The file's SHA-256 after (plan: before).
+    """
+    added: int
+    modified: int
+    removed: int
+    source: str
+    revision: str
+    columns: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        out["source"] = self.source
+        out["revision"] = self.revision
+        if self.columns is not UNSET:
+            out["columns"] = list(self.columns)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesSynced:
+        return cls(
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+            source=data["source"],
+            revision=data["revision"],
+            columns=list(data["columns"]) if "columns" in data else UNSET,
         )
 
 
@@ -28506,6 +29920,75 @@ class TmDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ToolNote(_Model):
+    """A note the tool made while it ran.
+    Attributes:
+        level: `info` or `warn`.
+    """
+    level: str
+    text: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["level"] = self.level
+        out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolNote:
+        return cls(
+            level=data["level"],
+            text=data["text"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ToolParameter(_Model):
+    """A parameter of a tool.
+    Attributes:
+        kind: What it takes: `features`, `number`, `text`, `boolean`, `choice`, `layer`, `point`, `expression`, `field`,
+            `file`, `saveFile`, `network`, `addressSource`, `rasterValues`, `rasterPairs`, `fieldMap`, `layers`.
+        advanced: Shown under the window's Gelişmiş ayarlar.
+        default: Its value when not given, for this drawing (null: none).
+        options: A choice's values (empty for another kind).
+    """
+    name: str
+    label: str
+    kind: str
+    advanced: bool = False
+    default: Any | Unset = UNSET
+    description: str | None = None
+    optional: bool = False
+    options: list[str] = field(default_factory=list)
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["label"] = self.label
+        out["kind"] = self.kind
+        out["advanced"] = self.advanced
+        if self.default is not UNSET:
+            out["default"] = self.default
+        out["description"] = self.description
+        out["optional"] = self.optional
+        out["options"] = list(self.options)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ToolParameter:
+        return cls(
+            name=data["name"],
+            label=data["label"],
+            kind=data["kind"],
+            advanced=data["advanced"] if "advanced" in data else False,
+            default=data.get("default", UNSET),
+            description=data["description"] if "description" in data else None,
+            optional=data["optional"] if "optional" in data else False,
+            options=list(data["options"]) if "options" in data else list(),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TopologyException(_Model):
     """A finding marked as left on purpose: its rule, its objects' persistent
     ids in the finding's order, and its place.
@@ -28985,6 +30468,40 @@ class UnusedResource(_Model):
             id=data["id"],
             name=data["name"],
             purged=data["purged"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ValueProblem(_Model):
+    """A value that does not fit.
+    Attributes:
+        code: The code `cad.entities.set` would refuse it with (`invalid_attribute`, `attribute_required`, `rule_broken`,
+            `not_unique`, `subtype_misfit`, `invalid_combination`).
+    """
+    uid: str
+    field: str
+    code: str
+    message: str
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["field"] = self.field
+        out["code"] = self.code
+        out["message"] = self.message
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValueProblem:
+        return cls(
+            uid=data["uid"],
+            field=data["field"],
+            code=data["code"],
+            message=data["message"],
+            value=data.get("value", UNSET),
         )
 
 
@@ -33685,6 +35202,57 @@ class ProjectFieldSource(FieldSource):
 
 
 @dataclass(kw_only=True, slots=True)
+class CalculateFieldsWriteOp(FieldsWriteOp):
+    """Alan hesapla: the expression's value (İfadeyle seç's language, the layer's fields typed, geometry values in
+    the project's drawing unit) into `field` of each object, as text in the field's canonical form.
+    Attributes:
+        uids: The objects (persistent ids); empty: every object of the layer.
+    """
+    TAG_VALUE: ClassVar[str] = "calculate"
+    field: str
+    expression: str
+    empty: EmptyResult | EmptyResultName | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "calculate"}
+        out["field"] = self.field
+        out["expression"] = self.expression
+        if self.empty is not UNSET:
+            out["empty"] = _enum_out(self.empty)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CalculateFieldsWriteOp:
+        return cls(
+            field=data["field"],
+            expression=data["expression"],
+            empty=_enum_in(EmptyResult, data["empty"]) if "empty" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ValuesFieldsWriteOp(FieldsWriteOp):
+    """Yapıştır: the values of each row into its object."""
+    TAG_VALUE: ClassVar[str] = "values"
+    rows: list[FieldRow]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "values"}
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValuesFieldsWriteOp:
+        return cls(
+            rows=[FieldRow.from_json(e0) for e0 in data["rows"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TabFormItem(FormItem):
     """A tab: its items show when it is chosen. Tabs stand at the top only, and then the top holds
     nothing but tabs.
@@ -36145,6 +37713,85 @@ class SimilarSelectRegion(SelectRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class LinkSourcesEditOp(SourcesEditOp):
+    """Binds a table: onto a new layer with its rows (one undo step, as `file.import.gpkg` takes it), or onto the
+    `layer` given, which must hold the table's objects as they are. A table in another coordinate system is bound
+    only with `reproject` (docs/adr/0504): the layer holds its objects in the project's system, the table keeps
+    its own, and every sync moves them across.
+    Attributes:
+        extent: Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
+            north, in the project's system; docs/adr/0510): the working copy of a part of a large table. Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "link"
+    path: str
+    table: str
+    extent: list[float] | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    reproject: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "link"}
+        out["path"] = self.path
+        out["table"] = self.table
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.reproject is not UNSET:
+            out["reproject"] = self.reproject
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LinkSourcesEditOp:
+        return cls(
+            path=data["path"],
+            table=data["table"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            layer=data.get("layer", UNSET),
+            reproject=data.get("reproject", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnlinkSourcesEditOp(SourcesEditOp):
+    """Unbinds a layer; its objects stay."""
+    TAG_VALUE: ClassVar[str] = "unlink"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unlink"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnlinkSourcesEditOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkSourcesEditOp(SourcesEditOp):
+    """The file moved: binds the layer to the file at `path`, which must be the same file (the revision's)."""
+    TAG_VALUE: ClassVar[str] = "relink"
+    id: str
+    path: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "relink"}
+        out["id"] = self.id
+        out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkSourcesEditOp:
+        return cls(
+            id=data["id"],
+            path=data["path"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NodeSubPlace(SubPlace):
     """A point object's position: part 0 its own, `k` its `k`th extra point (docs/adr/0174).
     Attributes:
@@ -37882,6 +39529,9 @@ _FIELD_EDIT: dict[str, type[FieldEdit]] = {"insert": InsertFieldEdit, "remove": 
 _FIELD_SOURCE: dict[str, type[FieldSource]] = {"object": ObjectFieldSource, "project": ProjectFieldSource}
 
 
+_FIELDS_WRITE_OP: dict[str, type[FieldsWriteOp]] = {"calculate": CalculateFieldsWriteOp, "values": ValuesFieldsWriteOp}
+
+
 _FORM_ITEM: dict[str, type[FormItem]] = {"tab": TabFormItem, "group": GroupFormItem, "field": FieldFormItem, "note": NoteFormItem, "related": RelatedFormItem, "attachments": AttachmentsFormItem, "location": LocationFormItem, "divider": DividerFormItem, "action": ActionFormItem}
 
 
@@ -37937,6 +39587,9 @@ _RELATIONS_OP: dict[str, type[RelationsOp]] = {"create": CreateRelationsOp, "upd
 
 
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
+
+
+_SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
@@ -38130,6 +39783,7 @@ __all__ = [
     "BreakLineName",
     "CadElement",
     "CadParameter",
+    "CalculateFieldsWriteOp",
     "CalloutKind",
     "CalloutKindName",
     "Cell",
@@ -38332,6 +39986,8 @@ __all__ = [
     "Ellipsoid",
     "EmptyCell",
     "EmptyInput",
+    "EmptyResult",
+    "EmptyResultName",
     "EndSubPlace",
     "EnforceFormsOp",
     "EntitiesArray",
@@ -38374,6 +40030,8 @@ __all__ = [
     "EntitiesPick",
     "EntitiesPicked",
     "EntitiesPropertiesSet",
+    "EntitiesRelate",
+    "EntitiesRelated",
     "EntitiesReverse",
     "EntitiesSelect",
     "EntitiesSelected",
@@ -38398,6 +40056,7 @@ __all__ = [
     "ExplodeDensity",
     "ExportBlock",
     "ExportDxf",
+    "ExportGpkg",
     "ExportPdf",
     "ExtensionPointConstruction",
     "FeatureChange",
@@ -38408,6 +40067,7 @@ __all__ = [
     "FieldBinding",
     "FieldBroken",
     "FieldBrokenName",
+    "FieldChange",
     "FieldChoice",
     "FieldCount",
     "FieldDomain",
@@ -38418,6 +40078,7 @@ __all__ = [
     "FieldMigration",
     "FieldNetworkDirection",
     "FieldRename",
+    "FieldRow",
     "FieldSource",
     "FieldTableEdit",
     "FieldUnit",
@@ -38431,6 +40092,9 @@ __all__ = [
     "FieldsMigrated",
     "FieldsUsage",
     "FieldsUsed",
+    "FieldsWrite",
+    "FieldsWriteOp",
+    "FieldsWritten",
     "FileCommit",
     "FileCommitted",
     "FileTableSource",
@@ -38502,6 +40166,10 @@ __all__ = [
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
+    "GpkgExported",
+    "GpkgImported",
+    "GpkgTableExported",
+    "GpkgTableImported",
     "GradientShape",
     "GradientShapeName",
     "GrantRole",
@@ -38549,6 +40217,7 @@ __all__ = [
     "ImportBlock",
     "ImportDomainsOp",
     "ImportDxf",
+    "ImportGpkg",
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",
@@ -38677,6 +40346,8 @@ __all__ = [
     "LeadersEdit",
     "LeadersEdited",
     "LeadersPlan",
+    "LeftWhy",
+    "LeftWhyName",
     "LengthStyle",
     "LengthStyleName",
     "LengthenChange",
@@ -38708,6 +40379,7 @@ __all__ = [
     "LinearDimensionMeasure",
     "LinesCornerPick",
     "LinkDomainsOp",
+    "LinkSourcesEditOp",
     "LinkTablesOperation",
     "ListedConstraint",
     "LocalCrsSystem",
@@ -38793,6 +40465,11 @@ __all__ = [
     "OrderToName",
     "OrdinateDimensionMeasure",
     "OriginUcsTo",
+    "PackageLeft",
+    "PackageProject",
+    "PackagedFile",
+    "PackagedKind",
+    "PackagedKindName",
     "ParagraphLayout",
     "ParallelConstraintRule",
     "ParallelPointConstruction",
@@ -38871,6 +40548,11 @@ __all__ = [
     "PolylineEntity",
     "PolylineEntityGeometry",
     "PolylinePlan",
+    "ProcessingRan",
+    "ProcessingRun",
+    "ProcessingTool",
+    "ProcessingTools",
+    "ProcessingToolsListed",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -38890,6 +40572,7 @@ __all__ = [
     "ProjectInvitation",
     "ProjectInvite",
     "ProjectMetadataUpdate",
+    "ProjectPackaged",
     "ProjectPatch",
     "ProjectPermission",
     "ProjectPermissionName",
@@ -38953,7 +40636,10 @@ __all__ = [
     "RegistryDatumName",
     "RegularFrame",
     "RegularPolygonCreate",
+    "RelatePredicate",
+    "RelatePredicateName",
     "RelatedFormItem",
+    "RelatedPair",
     "RelatedView",
     "RelatedViewName",
     "RelationDelete",
@@ -38962,6 +40648,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkSourcesEditOp",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveConstraintEdit",
@@ -38993,6 +40680,8 @@ __all__ = [
     "RowHeightTableEdit",
     "RubberLink",
     "RubbersheetTransform",
+    "RunInput",
+    "RunSink",
     "SaveUcsTo",
     "SaveViewsOp",
     "ScaleBasis",
@@ -39045,8 +40734,22 @@ __all__ = [
     "SolveConstraintEdit",
     "SolveStatus",
     "SolveStatusName",
+    "SourceCapabilities",
+    "SourceColumn",
+    "SourceKind",
+    "SourceKindName",
+    "SourceLink",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourceState",
+    "SourceTable",
+    "SourcesDescribe",
+    "SourcesDescribed",
+    "SourcesEdit",
+    "SourcesEditOp",
+    "SourcesEdited",
+    "SourcesSync",
+    "SourcesSynced",
     "SpaceDimensionEdit",
     "SplineEntity",
     "SplineEntityGeometry",
@@ -39088,6 +40791,8 @@ __all__ = [
     "SubtypeField",
     "SurveySettings",
     "SymmetricConstraintRule",
+    "SyncDirection",
+    "SyncDirectionName",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
@@ -39141,6 +40846,8 @@ __all__ = [
     "ToSplineCurveEdit",
     "ToleranceKind",
     "ToleranceKindName",
+    "ToolNote",
+    "ToolParameter",
     "TopologyException",
     "TopologyRule",
     "TopologyRuleKind",
@@ -39170,6 +40877,7 @@ __all__ = [
     "UnitSourceName",
     "UnitsChange",
     "UnitsChanged",
+    "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
     "UnmergeTableEdit",
@@ -39182,6 +40890,8 @@ __all__ = [
     "UpdateFieldEdit",
     "UpdateFormsOp",
     "UpdateRelationsOp",
+    "ValueProblem",
+    "ValuesFieldsWriteOp",
     "VariableKind",
     "VariableKindName",
     "VariableValue",
@@ -39206,6 +40916,8 @@ __all__ = [
     "WorkspaceName",
     "WorldHatchOrigin",
     "WorldUcsTo",
+    "WritePolicy",
+    "WritePolicyName",
     "XlineEntity",
     "XlineEntityGeometry",
 ]

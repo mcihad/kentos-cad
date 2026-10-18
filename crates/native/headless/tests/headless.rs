@@ -1044,3 +1044,292 @@ fn constraints_are_said_not_written_to_dxf() {
     assert!(notes.contains("Kısıt"), "{notes}");
     assert!(notes.contains("1 parametre"), "{notes}");
 }
+
+/// Every object of the drawing as the wire carries it, by persistent id, without its slot.
+fn objects_by_uid(s: &Session) -> std::collections::BTreeMap<String, Value> {
+    let page = s
+        .entities(None, None, None, None, Some(10_000))
+        .expect("a page");
+    let page = serde_json::to_value(&page).expect("JSON");
+    let mut out = std::collections::BTreeMap::new();
+    for item in page["items"].as_array().expect("items") {
+        let mut e = item.clone();
+        let uid = e["uid"].as_str().expect("a uid").to_owned();
+        if let Some(o) = e.as_object_mut() {
+            o.remove("id");
+            if let Some(entity) = o.get_mut("entity").and_then(Value::as_object_mut) {
+                entity.remove("id");
+            }
+        }
+        out.insert(uid, e);
+    }
+    out
+}
+
+#[test]
+fn a_geopackage_goes_in_and_out_keeping_ids_values_and_arcs() {
+    // docs/adr/0502: QGIS's file into a drawing, the drawing out as a GeoPackage, that into another drawing: the same
+    // objects with the same lasting ids; plan writes nothing; the refusals.
+    let dir = scratch("gpkg");
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    assert_eq!(took["output"]["objects"], 10, "{took}");
+    let first = objects_by_uid(&s);
+    let out = dir.join("teslim.gpkg");
+    let p = out.display().to_string();
+    let planned = s
+        .call(json!({ "command": "file.export.gpkg", "op": "plan", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(!out.exists());
+    let written = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(
+        written["output"]["tables"].as_array().map(Vec::len),
+        Some(6),
+        "{written}"
+    );
+    assert!(
+        written["warnings"].as_array().is_some_and(Vec::is_empty),
+        "{written}"
+    );
+    assert!(out.exists());
+    let again = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let unknown = s
+        .call(json!({ "command": "file.export.gpkg", "input": { "path": p, "layers": ["yok"], "overwrite": true } }))
+        .expect("answers");
+    assert_eq!(unknown["error"]["code"], "layer_not_found", "{unknown}");
+    let mut t = new_drawing();
+    let back = t
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(back["status"], "completed", "{back}");
+    let second = objects_by_uid(&t);
+    assert_eq!(first.len(), second.len());
+    for (uid, a) in &first {
+        let b = second
+            .get(uid)
+            .unwrap_or_else(|| panic!("{uid} geri gelmedi"));
+        // An arc's bulge goes out through its middle point and back: within a few units in the last place.
+        let (sa, sb) = (a.to_string(), b.to_string());
+        if sa != sb {
+            let (ea, eb) = (&a["entity"], &b["entity"]);
+            assert_eq!(ea["kind"], eb["kind"], "{uid}");
+            assert_eq!(ea["attrs"], eb["attrs"], "{uid}");
+            assert_eq!(ea["pts"], eb["pts"], "{uid}");
+            for (x, y) in ea["bulges"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .zip(eb["bulges"].as_array().into_iter().flatten())
+            {
+                let (x, y) = (x.as_f64().expect("bulge"), y.as_f64().expect("bulge"));
+                assert!((x - y).abs() <= 1e-12, "{uid}: {x} ≠ {y}");
+            }
+        }
+    }
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        let keep = format!(
+            "{}/../../../fixtures/geopackage/v1/kentos-export.gpkg",
+            env!("CARGO_MANIFEST_DIR")
+        );
+        std::fs::copy(&out, keep).expect("copied");
+    }
+}
+
+#[test]
+fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
+    // docs/adr/0506: a bound GeoPackage, a linked picture (relative to the project's folder), a raster with its world
+    // file, a missing file and a database's table; the package copies the files once each, rewrites the links, says
+    // what it left; moved elsewhere and opened, the bound layer finds its copy again and matches it.
+    let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    let dir = scratch("package");
+    let work = dir.join("is");
+    std::fs::create_dir_all(work.join("foto")).expect("folders");
+    let gpkg = work.join("kadastro.gpkg");
+    std::fs::copy(fixtures.join("geopackage/v1/qgis.gpkg"), &gpkg).expect("copied");
+    std::fs::copy(
+        fixtures.join("interaction/v1/logo.png"),
+        work.join("foto/logo.png"),
+    )
+    .expect("copied");
+    let mut s = new_drawing();
+    let linked = s
+        .call(json!({ "command": "cad.sources.edit", "input": { "edit": {
+            "kind": "link", "path": gpkg.display().to_string(), "table": "parsel" } } }))
+        .expect("answers");
+    assert_eq!(linked["status"], "completed", "{linked}");
+    // Pictures and a database's link: written into the drawing as a project file keeps them.
+    let mut snapshot = serde_json::to_value(s.document().to_snapshot_v2()).expect("json");
+    let layer = snapshot["activeLayer"].clone();
+    let raster = fixtures
+        .join("raster/v1/files/rgb.png")
+        .display()
+        .to_string();
+    let picture = |id: u64, file: &str| {
+        json!({ "kind": "image", "id": id, "layerId": layer, "attrs": {},
+        "p": { "x": 0.0, "y": 0.0 }, "width": 10.0, "height": 10.0, "rotation": 0.0, "file": file })
+    };
+    let next = snapshot["entities"].as_array().map_or(0, Vec::len) as u64 + 100;
+    let list = snapshot["entities"].as_array_mut().expect("entities");
+    list.push(picture(next, "foto/logo.png"));
+    list.push(picture(next + 1, "foto/logo.png"));
+    list.push(picture(next + 2, "/yok/kayip.jpg"));
+    list.push(json!({ "kind": "raster", "id": next + 3, "layerId": layer, "attrs": {},
+        "affine": [0.0, 1.0, 0.0, 0.0, 0.0, -1.0], "width": 4, "height": 4, "bands": 3, "sample": "u8",
+        "file": raster, "srid": 5256, "style": { "render": "rgb", "bands": [1, 2, 3] } }));
+    let uids = snapshot["uids"].as_array_mut().expect("uids");
+    for k in 0..4 {
+        uids.push(json!(format!(
+            "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d{:04x}",
+            0x3000 + k
+        )));
+    }
+    let mut db = snapshot["settings"]["sources"][0].clone();
+    db["id"] = json!("kaynak-2");
+    db["kind"] = json!("postgis");
+    db["path"] = json!("postgresql://cbs@veri.belediye.local/kent");
+    db["layer"] = json!("cizim");
+    snapshot["settings"]["sources"]
+        .as_array_mut()
+        .expect("sources")
+        .push(db);
+    let typed: kentos_contracts::DocumentSnapshotV2 =
+        serde_json::from_value(snapshot).expect("a snapshot");
+    let project = work.join("proje.kcad");
+    std::fs::write(
+        &project,
+        kentos_kcad::encode_verified(&typed).expect("encoded"),
+    )
+    .expect("written");
+    let mut s = Session::open(&project).expect("opens");
+    let out = dir.join("teslim");
+    let input = json!({ "path": out.display().to_string(), "name": "kadastro", "from": work.display().to_string() });
+    let planned = s
+        .call(json!({ "command": "file.package", "op": "plan", "input": input }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(!out.exists(), "plan writes nothing");
+    let done = s
+        .call(json!({ "command": "file.package", "input": input }))
+        .expect("answers");
+    assert_eq!(done["status"], "completed", "{done}");
+    let files: Vec<(String, String, u64)> = done["output"]["files"]
+        .as_array()
+        .expect("files")
+        .iter()
+        .map(|f| {
+            (
+                f["path"].as_str().unwrap_or_default().to_owned(),
+                f["kind"].as_str().unwrap_or_default().to_owned(),
+                f["links"].as_u64().unwrap_or(0),
+            )
+        })
+        .collect();
+    assert_eq!(
+        files,
+        vec![
+            ("veri/logo.png".into(), "picture".into(), 2),
+            ("veri/rgb.png".into(), "picture".into(), 1),
+            ("veri/rgb.pgw".into(), "sidecar".into(), 1),
+            ("veri/kadastro.gpkg".into(), "source".into(), 1),
+        ],
+        "{done}"
+    );
+    let left: Vec<String> = done["output"]["left"]
+        .as_array()
+        .expect("left")
+        .iter()
+        .map(|l| {
+            format!(
+                "{}:{}",
+                l["why"].as_str().unwrap_or_default(),
+                l["path"].as_str().unwrap_or_default()
+            )
+        })
+        .collect();
+    assert_eq!(
+        left,
+        [
+            "missing:/yok/kayip.jpg",
+            "database:postgresql://cbs@veri.belediye.local/kent"
+        ]
+    );
+    assert_eq!(done["warnings"][0]["code"], "package_left", "{done}");
+    for f in &files {
+        assert!(out.join(&f.0).is_file(), "{}", f.0);
+    }
+    let again = s
+        .call(json!({ "command": "file.package", "input": input }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    // The folder moved and the old data gone: the bound layer finds its copy by its relative path.
+    let moved = dir.join("baska-bilgisayar");
+    std::fs::rename(&out, &moved).expect("moved");
+    std::fs::remove_file(&gpkg).expect("old data gone");
+    let mut opened = Session::open(&moved.join("kadastro.kcad")).expect("opens");
+    assert_eq!(opened.located().moved.len(), 1, "{:?}", opened.located());
+    let state = opened
+        .call(json!({ "command": "cad.sources.describe", "input": {} }))
+        .expect("answers");
+    let link = &state["output"]["links"][0];
+    assert_eq!(
+        (
+            link["found"].clone(),
+            link["changed"].clone(),
+            link["edited"].clone()
+        ),
+        (json!(true), json!(false), json!(false)),
+        "{state}"
+    );
+    assert_eq!(
+        link["link"]["path"],
+        moved.join("veri/kadastro.gpkg").display().to_string()
+    );
+    let pictures: Vec<String> = opened
+        .document()
+        .to_snapshot_v2()
+        .entities
+        .iter()
+        .filter_map(|e| {
+            serde_json::to_value(e)
+                .ok()?
+                .get("file")?
+                .as_str()
+                .map(str::to_owned)
+        })
+        .collect();
+    assert_eq!(
+        pictures,
+        [
+            "veri/logo.png",
+            "veri/logo.png",
+            "/yok/kayip.jpg",
+            "veri/rgb.png"
+        ]
+    );
+    let refused = s
+        .call(json!({ "command": "file.package", "input": { "path": "goreli/klasor" } }))
+        .expect("answers");
+    assert_eq!(refused["error"]["code"], "invalid_file_path", "{refused}");
+    // scripts/fixtures/package_cases.py reads the moved package with the independent KCAD reader and hashlib.
+    if let Ok(out) = std::env::var("KENTOS_PACKAGE_OUT") {
+        std::fs::write(
+            out,
+            json!({ "package": moved.display().to_string() }).to_string(),
+        )
+        .expect("written");
+    }
+}

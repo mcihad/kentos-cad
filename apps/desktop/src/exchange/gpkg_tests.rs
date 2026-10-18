@@ -1,0 +1,408 @@
+//! GeoPackage içe ve dışa aktar on the desktop (docs/adr/0502): the window lists the tables, takes the chosen ones as
+//! one undo step through `file.import.gpkg`; a file in another system waits for Projenin sistemine çevir; Dışa aktar
+//! writes through `file.export.gpkg`. Pictures: `gpkg-*` (`screens`, ignored).
+
+use std::path::PathBuf;
+
+use super::gpkg::Event as G;
+use super::tests::{count, run, said, send};
+use super::{Event, Window};
+use crate::app::{App, Message, Picker};
+use crate::files_testing::{app_with_drawing, scratch};
+
+fn gpkg(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/geopackage/v1")
+        .join(name)
+}
+
+fn window(app: &App) -> &super::gpkg::State {
+    match &app.exchange {
+        Some(Window::Gpkg(s)) => s,
+        _ => panic!("the GeoPackage window"),
+    }
+}
+
+#[test]
+fn a_geopackage_goes_in_as_one_undo_step_with_its_tables_as_layers() {
+    let mut app = app_with_drawing();
+    let before = count(&app);
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    let s = window(&app);
+    assert_eq!(s.tables.len(), 6);
+    assert_eq!(s.srid, Some(5256));
+    assert!(s.chosen.iter().all(|c| *c));
+    // Without the road table.
+    send(&mut app, Event::Gpkg(G::Toggle(1)));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.exchange.as_ref().map(|_| "open")
+    );
+    assert_eq!(count(&app), before + 8);
+    assert!(
+        said(&app, "“qgis.gpkg” alındı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Run("edit.undo"));
+    assert_eq!(count(&app), before);
+}
+
+#[test]
+fn a_file_in_another_system_waits_for_the_move_to_be_asked() {
+    let mut app = app_with_drawing();
+    let before = count(&app);
+    app.picker = Picker::File(gpkg("wgs84.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    assert_eq!(window(&app).srid, Some(4326));
+    // İçe aktar is off until the move is asked; asked, the point goes into TM36.
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before, "nothing moved silently");
+    assert!(
+        window(&app)
+            .status
+            .as_ref()
+            .is_some_and(|(e, t)| *e && t.contains("reproject"))
+    );
+    send(&mut app, Event::Gpkg(G::Reproject));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before + 1);
+}
+
+#[test]
+fn the_drawing_goes_out_as_a_geopackage() {
+    let dir = scratch("gpkg-export");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "file.import.gpkg");
+    send(&mut app, Event::Gpkg(G::Run));
+    let out = dir.join("teslim.gpkg");
+    app.picker = Picker::File(out.clone());
+    run(&mut app, "file.export.gpkg");
+    assert!(
+        out.exists(),
+        "{:?}",
+        app.log.lines().map(|l| l.text.clone()).collect::<Vec<_>>()
+    );
+    assert!(
+        said(&app, "“teslim.gpkg” yazıldı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+}
+
+/// Whether a line says `part` anywhere.
+fn says(app: &App, part: &str) -> bool {
+    app.log.lines().any(|l| l.text.contains(part))
+}
+
+/// The tables after the first unticked: only the parcels taken.
+fn parcels_only(app: &mut App) {
+    for i in 1..window(app).tables.len() {
+        send(app, Event::Gpkg(G::Toggle(i)));
+    }
+}
+
+fn delete_first(app: &mut App, layer: &str) {
+    let doc = app.document.as_mut().expect("a drawing");
+    let slot = doc
+        .model
+        .by_layer_with_uids(layer)
+        .next()
+        .and_then(|(u, _)| doc.model.slot_of(u))
+        .expect("an object");
+    doc.model.remove(&[slot]);
+}
+
+#[test]
+fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
+    let dir = scratch("gpkg-bound");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(file.clone());
+    run(&mut app, "source.link");
+    assert!(
+        window(&app).bind,
+        "Kaynağa bağla opens with the binding ticked"
+    );
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(app.exchange.is_none());
+    assert!(
+        said(&app, "“kadastro.gpkg” bağlandı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let link = app.bound_link("import-parsel").expect("bound");
+    assert_eq!(link.table, "parsel");
+    let node = app
+        .document
+        .as_ref()
+        .and_then(|d| d.model.layers().get("import-parsel").cloned())
+        .expect("the layer");
+    assert!(format!("{:?}", app.layer_menu(&node, false)).contains("Kaynağa yaz"));
+    // An edit written back: the file changes, the binding follows it.
+    delete_first(&mut app, "import-parsel");
+    let before = std::fs::read(&file).expect("read");
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(
+        says(&app, "tablosuna yazıldı: 1 silindi"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    assert_ne!(std::fs::read(&file).expect("read"), before);
+    assert_ne!(
+        app.bound_link("import-parsel").expect("bound").revision,
+        link.revision
+    );
+    // A reload over the layer's own edit asks first; Değişiklikleri at ve oku brings the table's rows back.
+    delete_first(&mut app, "import-parsel");
+    let _ = app.update(Message::Bound(crate::bound::Event::Read(Some(
+        "import-parsel".into(),
+    ))));
+    assert_eq!(app.dialog, Some(crate::app::Dialog::SourceDiscard));
+    let _ = app.update(Message::DialogConfirmed);
+    assert!(
+        says(&app, "tablosundan okundu: 1 eklendi"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Run("source.status"));
+    assert!(
+        says(&app, "ile aynı."),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Unlink(Some(
+        "import-parsel".into(),
+    ))));
+    assert!(app.bound_link("import-parsel").is_none());
+}
+
+#[test]
+fn a_file_in_another_system_is_bound_only_when_the_move_is_asked() {
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(gpkg("wgs84.gpkg"));
+    run(&mut app, "source.link");
+    let before = count(&app);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before, "nothing moved silently");
+    send(&mut app, Event::Gpkg(G::Reproject));
+    send(&mut app, Event::Gpkg(G::Run));
+    assert_eq!(count(&app), before + 1);
+    let link = app.bound_link("import-yer").expect("bound");
+    assert_eq!(link.srid, Some(4326), "the table keeps its own system");
+}
+
+#[test]
+#[ignore = "pictures, run by hand"]
+fn screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    let only = std::env::var("KENTOS_SHOTS_ONLY").unwrap_or_default();
+    let wanted = |name: &str| only.is_empty() || only.split(',').any(|w| name.contains(w));
+    for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+        let picture = |app: &mut App, name: &str| {
+            if !wanted(name) {
+                return;
+            }
+            let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            let mut update = |app: &mut App, message| {
+                let _ = app.update(message);
+            };
+            snapshot.settle(app, App::view, &mut update);
+            let _ = snapshot.render(app.view(), &app.theme());
+            let file = out.join(format!("{name}-{width}x{height}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&file)
+                .expect("writes the picture");
+            println!("{}", file.display());
+        };
+        for mode in ["dark", "light"] {
+            let fresh = || {
+                let mut app = app_with_drawing();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                app
+            };
+            let mut app = fresh();
+            app.picker = Picker::File(gpkg("qgis.gpkg"));
+            run(&mut app, "file.import.gpkg");
+            picture(&mut app, &format!("gpkg-{mode}-1-ice-aktar"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-3-alindi"));
+            let mut app = fresh();
+            app.picker = Picker::File(gpkg("wgs84.gpkg"));
+            run(&mut app, "file.import.gpkg");
+            send(&mut app, Event::Gpkg(G::Reproject));
+            picture(&mut app, &format!("gpkg-{mode}-2-cevir"));
+            // Bağlı katman (docs/adr/0503): the window, the badge, the question over the layer's own edit.
+            let mut app = fresh();
+            app.picker = Picker::File(gpkg("qgis.gpkg"));
+            run(&mut app, "source.link");
+            picture(&mut app, &format!("gpkg-{mode}-4-bagla"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-5-bagli"));
+            delete_first(&mut app, "import-parsel");
+            let _ = app.update(Message::Bound(crate::bound::Event::Read(Some(
+                "import-parsel".into(),
+            ))));
+            picture(&mut app, &format!("gpkg-{mode}-6-soru"));
+            // Paketle (docs/adr/0506): a real package of the drawing, its answer said.
+            let _ = app.update(Message::DialogClosed);
+            let out = scratch(&format!("gpkg-paket-{mode}-{width}")).join("teslim");
+            let doc = app.document.as_ref().expect("a drawing");
+            let input = kentos_contracts::PackageProject {
+                path: out.display().to_string(),
+                name: Some("kadastro".into()),
+                from: None,
+            };
+            let planned = kentos_headless::package::plan(&doc.model, &input).expect("planned");
+            kentos_headless::package::write(&planned).expect("packed");
+            send(
+                &mut app,
+                Event::Package(super::package::Event::Done(Ok((
+                    planned.output,
+                    planned.warnings,
+                )))),
+            );
+            picture(&mut app, &format!("gpkg-{mode}-7-paket"));
+            // A part of the table (docs/adr/0510): Yalnız görünen alanın satırları over the first parcel's view.
+            let mut app = fresh();
+            // The first frames settle the window and its view; the view is brought to the parcel after them.
+            let mut settled = Snapshot::new(Size::new(width, height)).expect("a renderer");
+            settled.settle(&mut app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            view_first_parcel(&mut app);
+            app.picker = Picker::File(gpkg("qgis.gpkg"));
+            run(&mut app, "source.link");
+            parcels_only(&mut app);
+            send(&mut app, Event::Gpkg(G::Area));
+            picture(&mut app, &format!("gpkg-{mode}-8-alan"));
+            send(&mut app, Event::Gpkg(G::Run));
+            picture(&mut app, &format!("gpkg-{mode}-9-alan-bagli"));
+        }
+    }
+}
+
+/// The view brought to the first parcel only (docs/adr/0510's area).
+fn view_first_parcel(app: &mut App) {
+    app.viewport.camera.fit_size(
+        kentos_render_wgpu::Vec2 {
+            x: 487_020.0,
+            y: 4_420_010.0,
+        },
+        60.0,
+        40.0,
+        0.0,
+    );
+}
+
+#[test]
+fn a_part_of_a_table_is_bound_from_the_view() {
+    // docs/adr/0510: Yalnız görünen alanın satırları binds the rows in the view; the area kept in the binding.
+    let mut app = app_with_drawing();
+    view_first_parcel(&mut app);
+    let b = app.viewport.camera.visible_bounds();
+    assert!(b.max_x < 487_100.0 && b.min_x <= 487_000.0, "{b:?}");
+    app.picker = Picker::File(gpkg("qgis.gpkg"));
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Area));
+    assert!(window(&app).area);
+    send(&mut app, Event::Gpkg(G::Run));
+    assert!(
+        app.exchange.is_none(),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let link = app.bound_link("import-parsel").expect("bound");
+    assert_eq!(link.extent, Some([b.min_x, b.min_y, b.max_x, b.max_y]));
+    let doc = app.document.as_ref().expect("a drawing");
+    assert_eq!(
+        doc.model.by_layer_with_uids("import-parsel").count(),
+        1,
+        "only the parcel in the view"
+    );
+}
+
+#[test]
+fn a_moved_file_is_bound_again_and_a_package_is_said() {
+    // docs/adr/0506: Kaynak ▸ Yeniden bağla takes the same file in its new place, refuses another; Paketle's answer
+    // is said with what it left.
+    let dir = scratch("gpkg-relink");
+    let file = dir.join("kadastro.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    app.picker = Picker::File(file.clone());
+    run(&mut app, "source.link");
+    parcels_only(&mut app);
+    send(&mut app, Event::Gpkg(G::Run));
+    let moved = dir.join("tasindi.gpkg");
+    std::fs::rename(&file, &moved).expect("moved");
+    app.picker = Picker::File(moved.clone());
+    let task = app.update(Message::Bound(crate::bound::Event::Relink(Some(
+        "import-parsel".into(),
+    ))));
+    drop(task);
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        "kaynak-1".into(),
+        Some(moved.clone()),
+    )));
+    assert!(
+        says(&app, "yeniden bağlandı"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    assert_eq!(
+        app.bound_link("import-parsel").expect("bound").path,
+        moved.display().to_string()
+    );
+    let _ = app.update(Message::Bound(crate::bound::Event::Relinked(
+        "kaynak-1".into(),
+        Some(gpkg("kentos.gpkg")),
+    )));
+    assert!(
+        says(&app, "son eşleştiği dosya değil"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
+    let out = kentos_contracts::ProjectPackaged {
+        path: "/teslim/paket".into(),
+        project: "/teslim/paket/proje.kcad".into(),
+        project_bytes: 10,
+        project_sha256: "0".repeat(64),
+        files: Vec::new(),
+        left: vec![kentos_contracts::PackageLeft {
+            kind: kentos_contracts::PackagedKind::Picture,
+            path: "/yok/kayip.jpg".into(),
+            why: kentos_contracts::LeftWhy::Missing,
+            at: String::new(),
+        }],
+        bytes: 10,
+    };
+    let warning = kentos_contracts::CommandWarning {
+        code: "package_left".into(),
+        message: "1 bağ pakete kopyalanmadı".into(),
+        path: None,
+    };
+    send(
+        &mut app,
+        Event::Package(super::package::Event::Done(Ok((out, vec![warning])))),
+    );
+    assert!(says(&app, "Paket yapıldı: /teslim/paket/proje.kcad"));
+    assert!(says(&app, "1 bağ pakete kopyalanmadı"));
+}

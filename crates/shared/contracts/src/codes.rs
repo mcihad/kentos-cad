@@ -839,7 +839,9 @@ codes! {
     /// A layer states file against its rules.
     INVALID_STATES = "invalid_states", Failed, false, "Katman durumları dosyası kurallarına uymuyor.";
     /// A layer name pattern that does not read (docs/adr/0311 §4).
-    INVALID_PATTERN = "invalid_pattern", Failed, false, "Katman adı örüntüsü okunmuyor: boş ya da kapanmayan küme.";
+    INVALID_PATTERN = "invalid_pattern", Failed, false, "Örüntü okunmuyor: katman adında boş ya da kapanmayan küme, DE-9IM deseninde T, F, *, 0, 1, 2 dışında harf ya da dokuzdan başka uzunluk.";
+    /// More pairs than `cad.entities.relate` answers (docs/adr/0501 §3).
+    TOO_MANY_PAIRS = "too_many_pairs", Failed, false, "1 000 000'dan çok çift olurdu; nesneleri daha küçük kümelere bölün.";
     /// Katmanları çevir without a rule (docs/adr/0311 §5).
     NO_RULES = "no_rules", Failed, false, "Çevirme kuralı verilmedi.";
     /// A drawing standard neither named nor given (docs/adr/0312 §1).
@@ -1059,6 +1061,54 @@ codes! {
     BLOCK_UNITS_DIFFER = "block_units_differ", Warning, false, "Bazı blokların birimi dosyanınkinden başka; yerleştirmelerin ölçeği oranı taşır.";
     /// What the reader could not take (the report says each).
     IMPORT_LOSSES = "import_losses", Warning, false, "Okuyucu dosyanın bazı nesnelerini ya da özelliklerini alamadı; rapor nedenlerini söyler.";
+    /// A table the input names that the GeoPackage lacks (docs/adr/0502).
+    TABLE_NOT_FOUND = "table_not_found", Failed, false, "Adı verilen tablo dosyada yok.";
+    /// The file's coordinate system is not the project's, and moving was not asked (docs/adr/0502).
+    CRS_MISMATCH = "crs_mismatch", Failed, false, "Dosyanın koordinat sistemi projeninkinden başka; çevirmeyi isteyin ya da projeyi o sistemde açın.";
+    /// The file declares no coordinate system: its numbers went in as they are (docs/adr/0502).
+    CRS_UNDECLARED = "crs_undeclared", Warning, false, "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı.";
+    /// A row's lasting id is an object of the drawing already (docs/adr/0502).
+    ENTITY_EXISTS = "entity_exists", Failed, false, "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz.";
+    /// A layer or a table bound already (docs/adr/0503).
+    SOURCE_BOUND = "source_bound", Failed, false, "Katman ya da tablo zaten bir kaynağa bağlı.";
+    /// The layer given does not hold the table's objects as they are (docs/adr/0503).
+    SOURCE_DIFFERS = "source_differs", Failed, false, "Verilen katman tablonun nesnelerini olduğu gibi taşımıyor; bağlanamaz.";
+    /// No bound layer of the id or the layer given (docs/adr/0503).
+    SOURCE_NOT_FOUND = "source_not_found", Failed, false, "Bu kimlikte ya da bu katmanda bir bağ yok.";
+    /// The file changed since the layer last matched it (docs/adr/0503).
+    SOURCE_CHANGED = "source_changed", Conflict, true, "Dosya, katman onunla son eşleştiğinden beri değişti.";
+    /// A bound layer's file is not where it was (docs/adr/0503).
+    SOURCE_GONE = "source_gone", Failed, false, "Bağlı katmanın dosyası yerinde yok; yeniden bağlayın.";
+    /// The table cannot be written (docs/adr/0503).
+    SOURCE_READONLY = "source_readonly", Failed, false, "Bu tabloya yazılamaz.";
+    /// An object whose geometry the table's column cannot hold (docs/adr/0503).
+    GEOMETRY_MISMATCH = "geometry_mismatch", Failed, false, "Nesnenin geometrisi tablonun geometri sütununa uymuyor.";
+    /// The layer differs from its table; reading would replace it (docs/adr/0503).
+    PENDING_CHANGES = "pending_changes", Conflict, true, "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür.";
+    /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
+    INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
+    /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).
+    SOURCE_UNREACHABLE = "source_unreachable", Failed, false, "Veritabanına ulaşılamadı ya da bu ortamda onun sağlayıcısı yok.";
+    /// More bound layers than a project keeps (docs/adr/0503).
+    TOO_MANY_SOURCES = "too_many_sources", Failed, false, "Bir projede en çok 1000 bağlı katman olur.";
+    /// Values a whole-or-nothing write would not take (docs/adr/0507).
+    INVALID_VALUES = "invalid_values", Failed, false, "Bazı değerler alanların kurallarına uymuyor; hiçbiri yazılmadı. Sorunlar nesne ve alanıyla plan'da.";
+    /// Values a write left out, the others written (docs/adr/0507).
+    VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; öbürleri yazıldı.";
+    /// An area a bound layer cannot hold (docs/adr/0510).
+    INVALID_EXTENT = "invalid_extent", Failed, false, "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler.";
+    /// A processing tool not among İşlemler's (docs/adr/0508).
+    UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
+    /// A processing tool's values do not fit its parameters (docs/adr/0508).
+    INVALID_PARAMETERS = "invalid_parameters", Failed, false, "Aracın parametrelerinden birinin değeri uymuyor; ileti parametreyi ve nedenini söyler.";
+    /// A processing tool ran and stopped: nothing written (docs/adr/0508).
+    TOOL_FAILED = "tool_failed", Failed, false, "Araç çalıştı ama bitiremedi; çizim değişmedi. İleti nedenini söyler.";
+    /// The host has not registered İşlemler's tools (docs/adr/0508).
+    TOOLS_UNAVAILABLE = "tools_unavailable", Failed, false, "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır.";
+    /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
+    PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı.";
+    /// Objects a file format has no place for, or written approximately (docs/adr/0502).
+    EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 

@@ -386,6 +386,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.forms.is_empty())
             + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
+            + usize::from(!s.sources.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some());
@@ -419,6 +420,18 @@ impl<'d> Encoder<'d> {
                     return Err(e.fail(Code::BadValue, &problem));
                 }
                 let value = serde_json::to_value(&s.domains)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
+            })?;
+        }
+        // Schema 74 (docs/adr/0503): the layers bound to their sources, written whole and checked.
+        if !s.sources.is_empty() {
+            self.key("sources");
+            self.at(Seg::Name("sources"), |e| {
+                if let Some(problem) = kentos_contracts::sources_problem(&s.sources, &[]) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.sources)
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
@@ -1647,6 +1660,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 74 (docs/adr/0503): a layer bound to its source.
+    if !doc.settings.sources.is_empty() {
+        return crate::SCHEMA_WITH_SOURCES;
     }
     // Schema 72 (docs/adr/0401, 0408, 0410, 0412, 0413, 0418): a form of the project, a layer field's
     // stable id, its several values, a retired value or its date-and-time or time kind, a layer's

@@ -500,6 +500,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut forms = Vec::new();
     let mut domains = Vec::new();
     let mut relations = Vec::new();
+    let mut sources = Vec::new();
     let mut length_style = None;
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let mut leader_styles = Vec::new();
@@ -591,6 +592,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 domains = list;
+            }
+            // Schema 74 (docs/adr/0503): the layers bound to their sources, read whole and checked.
+            "sources" if has.sources => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::SourceLink> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("kaynaklar okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "kaynaklar yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; bağlı katman yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::sources_problem(&list, &[]) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                sources = list;
             }
             // Schema 72 (docs/adr/0405 §1): the project's relations, read whole and checked.
             "relations" if has.forms => {
@@ -860,6 +894,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         named_views,
         forms,
         relations,
+        sources,
         length_style,
         domains,
     })

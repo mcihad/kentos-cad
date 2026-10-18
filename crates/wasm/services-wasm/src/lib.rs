@@ -389,7 +389,12 @@ pub fn taken_words(
         matched.map(|m| m as u64),
         &skipped,
         dropped as usize,
-        capped,
+        // The web's binding keeps its call (ADR 0228); the take's ending is the desktop's (docs/adr/0513).
+        if capped {
+            feed::Ending::Capped
+        } else {
+            feed::Ending::Complete
+        },
         srid,
     ))
 }

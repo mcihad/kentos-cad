@@ -5317,6 +5317,242 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Bound layers (docs/adr/0503), held together by fixtures/commands/v1/cad.sources.*.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_DESCRIBE.into(),
+            version: crate::CAD_SOURCES_DESCRIBE_VERSION,
+            title: "Kaynakları tanı".into(),
+            summary: "path verilirse o GeoPackage'ın obje ve öznitelik tablolarını söyler: satır sayısı, geometri türü, bildirdiği EPSG, sütunlar (dosyadaki bildirimi ve alan türü) ve neler yapılabildiği (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri). \
+                      path verilmezse projenin bağlı katmanlarını söyler: bağ, dosya yerinde mi (found), dosya katman onunla son eşleştiğinden beri değişti mi (changed), katman değişti mi (edited) ve katmanın tablodan farkı: tabloda olmayan (added), ikisinde olup farklı (modified) ve katmanda olmayan (removed) nesne sayıları. \
+                      Nesne ile satır kalıcı kimlikle eşlenir, satır olarak karşılaştırılır (koordinatlar 0,001 mm içinde). Hiçbir şey yazmaz. \
+                      path bir PostGIS adresiyse (postgresql://kullanıcı@sunucu:5432/veritabanı; parolasız: invalid_address) veritabanının tek tam sayı anahtarlı tablolarını şema.tablo adlarıyla söyler; ulaşılamayan veritabanı source_unreachable, bağlı katmanında found false."
+                .into(),
+            aliases: vec!["kaynaklar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesDescribe>(),
+            output: schema::<crate::SourcesDescribed>(),
+            plan: Some(schema::<crate::SourcesDescribed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bir dosyanın tabloları".into(),
+                    input: json!({ "path": "/veri/kadastro.gpkg" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Projenin bağlı katmanları".into(),
+                    input: json!({}),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_EDIT.into(),
+            version: crate::CAD_SOURCES_EDIT_VERSION,
+            title: "Kaynağa bağla".into(),
+            summary: "Bir katmanı bir GeoPackage tablosunun çalışma kopyası yapar ya da bağı değiştirir. link: layer verilmezse tablonun satırları yeni bir katmana alınır (file.import.gpkg gibi, tek geri alma adımı; boş tablo boş katman); layer verilirse o katman tablonun nesnelerini olduğu gibi taşımalıdır (source_differs). \
+                      Başka sistemdeki tablo yalnız reproject ile bağlanır (yoksa crs_mismatch): katmanın nesneleri projenin sisteminde, tablonunkiler kendi sisteminde kalır; eşitleme her seferinde çevirir, yazma tablonun sistemine geri çevirerek yazar, yaylı nesneler kesin çevrilemediği için bağlanmaz ve tabloda dokunulmadan kalır. Bağ dosyanın SHA-256'sını ve katmanın özetini tutar; projenin ayarıdır (.kcad şema 74), geri alma adımı değildir. \
+                      extent [minX, minY, maxX, maxY] (projenin sisteminde) yeni katmana bağlamada yalnız kutusu o alana değen satırları alır: büyük tablonun bir parçasının çalışma kopyası; eşitleme alanın dışındaki satırları silinmiş saymaz, alanın dışına taşınan nesne kendi satırına yazılır; ters alan, var olan katman, geometrisiz tablo ve veritabanı invalid_extent. \
+                      unlink bağı çözer, nesneler kalır. relink taşınan dosyanın yeni yerini verir; dosya aynı (aynı SHA-256) olmalıdır (source_changed). Bir tablo ve bir katman tek bağa (source_bound), en çok 1000 bağ. \
+                      path bir PostGIS adresi de olabilir (postgresql://kullanıcı@sunucu:5432/veritabanı, table şema.tablo): parola adrese yazılmaz (invalid_address), PGPASSWORD ya da ~/.pgpass'tan okunur; tablo tek tam sayı birincil anahtarlı olmalıdır; ulaşılamayan veritabanı source_unreachable."
+                .into(),
+            aliases: vec!["kaynakbagla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesEdit>(),
+            output: schema::<crate::SourcesEdited>(),
+            plan: Some(schema::<crate::SourcesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel tablosunu yeni katman olarak bağla".into(),
+                    input: json!({ "edit": { "kind": "link", "path": "/veri/kadastro.gpkg", "table": "parsel" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Taşınan dosyanın yeni yeri".into(),
+                    input: json!({ "edit": { "kind": "relink", "id": "kaynak-1", "path": "/arsiv/kadastro.gpkg" } }),
+                    output: None,
+                },
+            ],
+        },
+        // Toplu yazma of the attribute table (docs/adr/0507), held together by fixtures/commands/v1/cad.fields.write.json.
+        CommandDescriptor {
+            id: crate::CAD_FIELDS_WRITE.into(),
+            version: crate::CAD_FIELDS_WRITE_VERSION,
+            title: "Alanlara toplu yaz".into(),
+            summary: "Bir katmanın nesnelerine öznitelik değerlerini tek geri alma adımında yazar. calculate (Alan hesapla): expression'ın (İfadeyle seç'in dili; geometri değerleri projenin çizim biriminde, $sıra nesnelerin sırası) her nesnedeki değeri field'a; uids boşsa katmanın bütün nesneleri; boş sonuçta değer kalır (empty: keep) ya da kalkar (clear). values (Yapıştır): her satırın değerleri kendi nesnesine, null değeri kaldırır. \
+                      Her değer cad.entities.set'in kurallarıyla denetlenir: alanın türü ve kuralları (kanonik metne çevrilir), zorunlu alan, alt türler, değer bileşimleri, kayıt kuralları, tekil alanlar (yazılanlar birlikte). Alanı olan katmanda alanların adlarıyla yazılır (field_not_found). \
+                      policy all (varsayılan): uymayan bir değer bütün yazmayı reddeder (invalid_values); policy valid: uyanlar yazılır, öbürleri values_skipped ile söylenir. Bir değeri gösteren etiket yeni değeri gösterir. \
+                      plan yazmadan değişecekleri (nesne, alan, eski ve yeni değer; ilk 200) ve sorunları (nesne, alan, değer, kod, ileti) sayılarıyla verir; policy all'da da reddetmez, sorunları listeler. Adım “Alan hesapla: alan” ya da “Yapıştır”."
+                .into(),
+            aliases: vec!["alanhesapla".into(), "toplu-yaz".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::FieldsWrite>(),
+            output: schema::<crate::FieldsWritten>(),
+            plan: Some(schema::<crate::FieldsWritten>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsellerin alanını iki ondalıkla yaz".into(),
+                    input: json!({ "layer": "parsel", "write": { "kind": "calculate", "field": "Alan", "expression": "metin($alan, 2)" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Elektronik tablodan yapıştır".into(),
+                    input: json!({ "layer": "parsel", "write": { "kind": "values", "rows": [
+                        { "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401", "values": { "Ada": "101", "Parsel": "5" } }
+                    ] }, "policy": "valid" }),
+                    output: None,
+                },
+            ],
+        },
+        // İşlemler's tools as commands (docs/adr/0508).
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_TOOLS.into(),
+            version: crate::CAD_PROCESSING_TOOLS_VERSION,
+            title: "İşlem araçları".into(),
+            summary: "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. \
+                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez."
+                .into(),
+            aliases: vec!["islemler".into(), "araclar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingTools>(),
+            output: schema::<crate::ProcessingToolsListed>(),
+            plan: Some(schema::<crate::ProcessingToolsListed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Geometri araçları".into(),
+                input: json!({ "category": "geometry" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_RUN.into(),
+            version: crate::CAD_PROCESSING_RUN_VERSION,
+            title: "İşlem aracını çalıştır".into(),
+            summary: "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. \
+                      Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
+                      Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
+                      Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed. \
+                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman)."
+                .into(),
+            aliases: vec!["islem".into(), "process".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingRun>(),
+            output: schema::<crate::ProcessingRan>(),
+            plan: Some(schema::<crate::ProcessingRan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Seçili parsellerin köşelerini numarala".into(),
+                    input: json!({ "tool": "points.numberVertices", "selection": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel ve imar kesişimi dosyaya".into(),
+                    input: json!({ "tool": "geometry.intersection", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "overlay": { "scope": "layer", "layerId": "imar" } }, "sink": { "path": "/is/kesisim.gpkg" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir katmanın nesnelerine tampon".into(),
+                    input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "distance": 5 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_SYNC.into(),
+            version: crate::CAD_SOURCES_SYNC_VERSION,
+            title: "Kaynakla eşitle".into(),
+            summary: "Bağlı katmanı tablosuyla eşitler. write: katmanın değişikliklerini tabloya yazar, tek SQLite işleminde: yeni nesneler kalıcı kimlikleriyle eklenir (kentos_uids), değişenler fid'leriyle güncellenir, silinenler silinir, katmanın tabloda olmayan alanları sütun olarak eklenir; mekânsal dizin kendi tetikleyicileriyle izler, tanımadığı tablolara dokunulmaz. \
+                      Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
+                      read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). \
+                      PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. \
+                      plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler."
+                .into(),
+            aliases: vec!["kaynakesitle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesSync>(),
+            output: schema::<crate::SourcesSynced>(),
+            plan: Some(schema::<crate::SourcesSynced>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanının değişikliklerini dosyaya yaz".into(),
+                    input: json!({ "layer": "import-parsel", "direction": "write" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Başkasının değiştirdiği tabloyu yeniden oku".into(),
+                    input: json!({ "layer": "import-parsel", "direction": "read" }),
+                    output: None,
+                },
+            ],
+        },
+        // A GeoPackage into the drawing (docs/adr/0502), held together by fixtures/commands/v1/file.import.gpkg.json.
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_GPKG.into(),
+            version: crate::FILE_IMPORT_GPKG_VERSION,
+            title: "GeoPackage içe aktar".into(),
+            summary: "path'teki GeoPackage'ın (.gpkg) obje ve öznitelik tablolarını açık çizime alır: her tablo çizimde aynı adlı katmana, yoksa tablonun sütunlarını alan olarak taşıyan yeni bir katmana gider; yeni katmanlar dosyanın adındaki gruba girer. tables yalnız adı verilen tabloları alır, layers bir tabloyu var olan bir katmana yönlendirir. \
+                      Nokta ve çok nokta nokta nesnesi, çizgi ve eğri (dairesel yay, birleşik eğri) çoklu çizgi (yaylar bulge olarak kesin), alan ve eğri alan delikleriyle alan, çok parçalılar parçalarıyla gelir; Z köşelerin kotu, M çoklu çizginin ölçüsüdür. Geometrisi olmayan ya da boş satır geometrisiz kayıttır. \
+                      NULL değer özniteliğin yokluğu, boş metin boş metindir; 2⁵³'ten büyük tam sayılar metin alanına her basamağıyla gelir; UTC tarih ve saat yerel tarih-saat alanına diliminsiz gelir (import_losses söyler). Her satırın kalıcı kimliği dosyanın kentos_uids'i ya da tablo ve fid'den türetilmiş kimliktir: aynı dosya ikinci kez alınmaz (entity_exists). \
+                      Dosyanın koordinat sistemi projeninkinden başkaysa reproject ile projenin sistemine çevrilir (projenin datum seçimleriyle), yoksa crs_mismatch; sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared). Telde geometri metredir. Bütün alınanlar tek geri alma adımıdır (“GeoPackage: ad.gpkg”); plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["gpkgin".into(), "geopackage".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportGpkg>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Belediyenin parsel ve bina GeoPackage'ı".into(),
+                input: json!({ "path": "/veri/kadastro.gpkg", "tables": ["parsel", "bina"] }),
+                output: None,
+            }],
+        },
         // A DXF into the drawing, its unit decided by one rule (docs/adr/0257), held together by
         // fixtures/commands/v1/file.import.dxf.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -5626,6 +5862,32 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_ENTITIES_RELATE.into(),
+            version: crate::CAD_ENTITIES_RELATE_VERSION,
+            title: "Standart ilişkiler".into(),
+            summary: "a'nın her nesnesinin b'nin her nesnesiyle DE-9IM matrisini standart profille verir: kayan noktaya kadar kesin, Konuma göre seç'in 1 mm'lik toleransı yok (OGC SFA, PostGIS ST_Relate gibi). \
+                      predicate (intersects, disjoint, contains, within, covers, coveredBy, touches, crosses, overlaps, equals) ya da pattern (dokuz harf: T, F, *, 0, 1, 2) verilirse yalnız tutan çiftler; ikisi de yoksa bütün çiftler matrisleriyle. \
+                      Sınırdaki nokta covers'ta tutar, contains'te tutmaz. Nesne alanları ve delikleriyle (yaylar kesin), açık yollarıyla ya da noktalarıyla okunur; Z okunmaz; yardımcı çizgi ve ışın okunmaz (unread). Kimlikler verildiği için gizli ve kilitli nesneler de okunur. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["iliski".into(), "relate".into(), "de9im".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::EntitiesRelate>(),
+            output: schema::<crate::EntitiesRelated>(),
+            plan: Some(schema::<crate::EntitiesRelated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parselin sınırındaki nokta: kapsar ama içermez".into(),
+                input: json!({ "a": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"], "b": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"], "predicate": "covers" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_ENTITIES_SELECT.into(),
             version: crate::CAD_ENTITIES_SELECT_VERSION,
             title: "Nesne seç".into(),
@@ -5757,6 +6019,62 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                     output: None,
                 },
             ],
+        },
+        // The project with the files it uses, in one folder (docs/adr/0506).
+        CommandDescriptor {
+            id: crate::FILE_PACKAGE.into(),
+            version: crate::FILE_PACKAGE_VERSION,
+            title: "Paketle".into(),
+            summary: "Projeyi kullandığı dosyalarla path klasörüne toplar, başka bilgisayarda açılsın diye: klasörde proje dosyası (name, yoksa çizimin adı) ve veri/ altında bağlı katmanların GeoPackage'larının, bağlı resim ve rasterlerin (dünya dosyalarıyla), nokta bulutu dosyalarının, bağlı tabloların ve eklerin kopyaları; her dosya bir kez, aynı adlılar numaralanarak. \
+                      Projedeki bağlar kopyalara yazılır: bağlı dosyalar klasöre göre göreli (veri/…), bağlı katmanın kaynağı kopyası (göreli yolu veri/…, klasör nereye giderse açılışta bulunur). Göreli bağlar from klasöründen okunur. \
+                      Veritabanı tablosu, adres ve yerinde olmayan dosya kopyalanmaz; bağları olduğu gibi kalır, package_left her birini söyler. Parola ve belirteç projede olmadığından pakete girmez. \
+                      Klasör bütün yapılır ya da hiç: geçici adla yazılır, her kopya geri okunup SHA-256'sı karşılaştırılır, proje dosyası doğrulanır, sonra tek adımla yerine konur; path var olan ve boş olmayan bir klasörse reddedilir (file_exists). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["paketle".into(), "package".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PackageProject>(),
+            output: schema::<crate::ProjectPackaged>(),
+            plan: Some(schema::<crate::ProjectPackaged>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Teslim klasörü".into(),
+                input: json!({ "path": "/teslim/kadastro-paket", "name": "kadastro", "from": "/is/kadastro" }),
+                output: None,
+            }],
+        },
+        // The drawing's layers as a GeoPackage (docs/adr/0502).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GPKG.into(),
+            version: crate::FILE_EXPORT_GPKG_VERSION,
+            title: "GeoPackage dışa aktar".into(),
+            summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) path'e yeni bir GeoPackage olarak yazar: her katman bir tablo, her nesne bir satır; katmanın alanları türleriyle, öbür öznitelikler metin sütunu olarak; nesnenin kalıcı kimliği kentos_uids uzantısında (geri alınınca aynı kimlikle gelir). \
+                      Nokta ve çok nokta, çizgi ve çoklu çizgi (yaylar dairesel eğri olarak kesin), alan delikleri ve parçalarıyla, daire eğri alan, yay dairesel eğri olarak yazılır; Z ve M taşınır; elips, eğri ve NURBS 0,1 mm'lik kirişlerle yazılır, geometrisiz kayıt geometrisiz satırdır. \
+                      Yazı, ölçü, blok, tarama, tablo, resim ve rasterin GeoPackage'da geometrisi yoktur: yazılmaz, export_losses türlerine göre sayar. Tabloların sistemi projeninkidir (EPSG kodu ve WKT'si; yerel proje tanımsız kartezyen). \
+                      Dosya bütün yazılır ya da hiç: geçici adla yazılır, geri okunur, tek adımla yerine konur; var olan dosyanın üzerine yalnız overwrite ile yazılır. plan dosyayı yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["gpkg".into(), "gpkgout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGpkg>(),
+            output: schema::<crate::GpkgExported>(),
+            plan: Some(schema::<crate::GpkgExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel ve yol katmanları".into(),
+                input: json!({ "path": "/veri/teslim.gpkg", "layers": ["parsel", "yol"], "overwrite": true }),
+                output: None,
+            }],
         },
         CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
@@ -6445,11 +6763,38 @@ mod tests {
                     crate::FILE_IMPORT_DXF => {
                         serde_json::from_value::<crate::ImportDxf>(e.input.clone()).map(|_| ())
                     }
+                    crate::FILE_IMPORT_GPKG => {
+                        serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_DESCRIBE => {
+                        serde_json::from_value::<crate::SourcesDescribe>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_EDIT => {
+                        serde_json::from_value::<crate::SourcesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_SYNC => {
+                        serde_json::from_value::<crate::SourcesSync>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_FIELDS_WRITE => {
+                        serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_TOOLS => {
+                        serde_json::from_value::<crate::ProcessingTools>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_RUN => {
+                        serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_DXF => {
                         serde_json::from_value::<crate::ExportDxf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_GPKG => {
+                        serde_json::from_value::<crate::ExportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_PACKAGE => {
+                        serde_json::from_value::<crate::PackageProject>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_PDF => {
                         serde_json::from_value::<crate::ExportPdf>(e.input.clone()).map(|_| ())
@@ -6470,6 +6815,9 @@ mod tests {
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ENTITIES_RELATE => {
+                        serde_json::from_value::<crate::EntitiesRelate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_SELECT => {
                         serde_json::from_value::<crate::EntitiesSelect>(e.input.clone()).map(|_| ())

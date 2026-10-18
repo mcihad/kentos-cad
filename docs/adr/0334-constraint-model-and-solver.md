@@ -62,7 +62,7 @@ bilmeden çalışmaya devam eder, izleme bir sonraki grubun kuralıdır.
 parametre varken yazar; başka her çizim eskisiyle bayt bayt aynıdır. Okuyucu değeri sözleşmenin türüyle çözer, yeniden JSON'a
 çevirdiğinde aynı değeri bulmalıdır (yazıcının biçimi: varsayılan değerinde alan yazılmaz), boş küme reddedilir, kurallar önce
 nesnesiz, nesneler okunduktan sonra kimliklerle denetlenir. Altı adımın hepsi (ADR 0265): `constraints.kcad` bağımsız Python
-yazıcısının baytlarıyla aynıdır; `constraints-in-schema-72.kcad`, `schema-version-74.kcad` ve altı bozuk örnek
+yazıcısının baytlarıyla aynıdır; `constraints-in-schema-72.kcad`, `schema-version-75.kcad` ve altı bozuk örnek
 (`-empty`, `-unfit`, `-object-missing`, `-round`, `-reference-written`, `-unknown-field`); `tools/kcad/kcad.py` aynı kuralları
 alan alan ve ifade dilbilgisinin kendi yazımıyla okur.
 

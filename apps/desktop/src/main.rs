@@ -38,6 +38,7 @@ mod constraint_ui_scenes;
 #[cfg(test)]
 mod attachment_scenes;
 mod attachments;
+mod bound;
 #[cfg(test)]
 mod attachments_tests;
 mod attribute_table;
@@ -392,6 +393,9 @@ use kentos_ui::theme::typography;
 fn main() -> iced::Result {
     // Embedded faces: nothing has to be installed on the machine.
     typography::load();
+    // Bound layers on PostGIS (docs/adr/0505).
+    kentos_postgis::register();
+    kentos_processing::command::register();
 
     // `kentos-cad snapshot çıktı.png [çizim.kcad]`: the window without a window.
     let mut args = std::env::args().skip(1).peekable();

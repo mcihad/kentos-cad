@@ -6,7 +6,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=servis-osm,servis-uydu,servis-vektor,servis-topo,servis-atif,servis-baglantilar,servis-pencere,servis-wms,servis-wms-cizim,servis-arcgis,servis-veri,servis-veri-alindi,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=servis-osm,servis-uydu,servis-vektor,servis-topo,servis-atif,servis-baglantilar,servis-pencere,servis-wms,servis-wms-cizim,servis-arcgis,servis-veri,servis-ogc-uygunluk,servis-veri-alindi,servis-oznitelik,servis-bilgi cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -177,6 +177,43 @@ fn feed_connected(app: &mut App) {
     feed_event(app, crate::services::feed_window::Event::Connected(answer));
 }
 
+/// Servisten veri al on an OGC API service of the test's own answers (no network): its collection and its conformance
+/// page without Part 3, a filter typed (docs/adr/0513).
+fn ogc_connected(app: &mut App) {
+    let _ = app.run("service.feed");
+    feed_event(app, crate::services::feed_window::Event::Kind(1));
+    let url = "https://cbs.ornek.gov.tr/ogc/collections";
+    feed_event(app, crate::services::feed_window::Event::Url(url.into()));
+    let collections = r#"{"collections":[{"id":"durak","title":"Otobüs durakları",
+        "links":[{"rel":"items","href":"https://cbs.ornek.gov.tr/ogc/collections/durak/items"}],
+        "crs":["http://www.opengis.net/def/crs/OGC/1.3/CRS84","http://www.opengis.net/def/crs/EPSG/0/5255"]}]}"#;
+    let conformance = r#"{"conformsTo":["http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/core",
+        "http://www.opengis.net/spec/ogcapi-features-1/1.0/conf/geojson",
+        "http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs"]}"#;
+    let answer = (|| {
+        let (mut c, mut next) = kentos_services::feed::FeedConnecting::start(
+            kentos_contracts::FeedKind::OgcFeatures,
+            url,
+        )?;
+        while next.is_some() {
+            next = c.answer(collections)?;
+        }
+        if c.conformance_request().is_some() {
+            c.read_conformance(Some(conformance));
+        }
+        Ok(Box::new(c))
+    })();
+    feed_event(app, crate::services::feed_window::Event::Connected(answer));
+    feed_event(
+        app,
+        crate::services::feed_window::Event::Item("durak".into()),
+    );
+    feed_event(
+        app,
+        crate::services::feed_window::Event::Filter("hat = '410'".into()),
+    );
+}
+
 fn settled(s: &mut Snapshot, app: &mut App) {
     let mut update = |app: &mut App, message: Message| {
         let _ = app.update(message);
@@ -300,6 +337,16 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 let (s, c) = preset("osm-standard");
                 opened(app, s, c);
                 feed_connected(app);
+            },
+            settled,
+        ),
+        // An OGC API service's conformance in the window, a filter it does not read (docs/adr/0513).
+        (
+            "servis-ogc-uygunluk",
+            |app| {
+                let (s, c) = preset("osm-standard");
+                opened(app, s, c);
+                ogc_connected(app);
             },
             settled,
         ),

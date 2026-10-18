@@ -267,6 +267,8 @@ PARAMETER_NAME_MAX = 64
 PARAMETER_FUNCTIONS = {"sin": 1, "cos": 1, "tan": 1, "asin": 1, "acos": 1, "atan": 1, "sqrt": 1, "abs": 1, "round": 1,
                        "floor": 1, "ceil": 1, "min": 2, "max": 2}
 LITERAL_UNITS = ("mm", "cm", "km", "m", "ft", "in", "deg", "grad", "rad")
+# Schema 74: schema 73 and the settings' `sources`: layers bound to a table of a file (docs/adr/0503).
+SCHEMA_WITH_SOURCES = 74
 # A definition opens into at most a million pieces (kentos_contracts::blocks::MAX_BLOCK_PIECES, docs/adr/0316 §4).
 MAX_BLOCK_PIECES = 1_000_000
 # A pattern has at most 12 elements (AutoCAD's LIN, kentos_contracts::MAX_PATTERN_ELEMENTS).
@@ -449,7 +451,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2573,6 +2575,7 @@ class _Schema:
         self.hatch_extras = version >= SCHEMA_WITH_HATCH_EXTRAS
         self.forms = version >= SCHEMA_WITH_FORMS
         self.constraints = version >= SCHEMA_WITH_CONSTRAINTS
+        self.sources = version >= SCHEMA_WITH_SOURCES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3109,6 +3112,7 @@ class _Schema:
                 **({"lengthStyle": (self.enum(("architectural", "engineering", "fractional")), False)} if self.imperial else {}),
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
+                **({"sources": (self.sources_, False)} if self.sources else {}),
                 **({"forms": (self.forms_, False), "relations": (self.relations_, False),
                     "domains": (self.domains_, False)} if self.forms else {}),
                 **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
@@ -4351,6 +4355,87 @@ class _Schema:
         problem = relations_problem(lst)
         if problem:
             self.fail("bad_value", problem)
+        return lst
+
+    def sources_(self, v):
+        """Schema 74 (docs/adr/0503): the layers bound to a table of a file; `srid` written only when the table
+        declares one; ids and layers once each, an absolute path, a table, the file's SHA-256."""
+        def kind(x):
+            if x not in ("geopackage", "postgis"):
+                self.fail("bad_value", f"“{x}” bilinmeyen kaynak türü (geopackage, postgis)")
+            return x
+
+        def box(x):
+            # docs/adr/0510: [minX, minY, maxX, maxY] as written, kept a list (the writer writes it back as one).
+            if type(x) is not list or len(x) != 4:
+                self.fail("bad_value", "alan sınırı 4 sayılık dizi olmalı")
+            return [self.at(i, self.float, v) for i, v in enumerate(x)]
+
+        source = self.fields({
+            "id": (self.text, True),
+            "kind": (kind, True),
+            "path": (self.text, True),
+            "relative": (self.text, False),
+            "table": (self.text, True),
+            "layer": (self.text, True),
+            "revision": (self.text, True),
+            "digest": (self.text, True),
+            "srid": (self.uint(32), False),
+            "extent": (box, False),
+            "writable": (self.bool, True),
+        })
+        lst = self.array(source)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
+        ids, layers = set(), set()
+        for s in lst:
+            if not s["id"].strip() or s["id"] in ids:
+                self.fail("bad_value", f"“{s['id']}” kaynak kimliği boş ya da iki kez kullanılmış")
+            ids.add(s["id"])
+            if s["kind"] == "geopackage" and "extent" in s:
+                # docs/adr/0510: the area of a part's working copy, finite, its minimum below its maximum.
+                e = s["extent"]
+                if any(x != x or x in (float("inf"), float("-inf")) for x in e) or e[0] >= e[2] or e[1] >= e[3]:
+                    self.fail("bad_value", "alan sınırının en küçüğü en büyüğünden küçük ve sonlu olmalı")
+            if s["kind"] == "postgis":
+                # docs/adr/0505: a database's address, no password in it.
+                if not s["path"].startswith(("postgresql://", "postgres://")):
+                    self.fail("bad_value", f"“{s['path']}” bir veritabanı adresi değil")
+                rest = s["path"].split("://", 1)[1]
+                authority, _, tail = rest.partition("/")
+                user, at, _ = authority.rpartition("@")
+                if (at and ":" in user) or any(kv.split("=")[0].lower() == "password"
+                                               for kv in tail.partition("?")[2].split("&") if kv):
+                    self.fail("bad_value", "adreste parola var; parola projeye yazılmaz")
+                if "relative" in s:
+                    self.fail("bad_value", "veritabanının göreli yolu olmaz")
+                if "extent" in s:
+                    self.fail("bad_value", "veritabanı tablosunun alan sınırı henüz olmaz")
+            elif not (s["path"].startswith("/") or s["path"][1:3] == ":\\"):
+                self.fail("bad_value", f"“{s['path']}” mutlak bir yol değil")
+            elif "relative" in s:
+                # docs/adr/0506: from the project file's folder, parts by "/", ".." only at the start.
+                r, up = s["relative"], True
+                if not r or len(r) > 4096 or "\0" in r or r.startswith("/") or "\\" in r or r[1:2] == ":":
+                    self.fail("bad_value", f"“{r}” göreli bir yol değil")
+                for part in r.split("/"):
+                    if part in ("", "."):
+                        self.fail("bad_value", f"“{r}” boş ya da . parçası taşıyor")
+                    if part == "..":
+                        if not up:
+                            self.fail("bad_value", f"“{r}” ortasında .. taşıyor")
+                    else:
+                        up = False
+                if up:
+                    self.fail("bad_value", f"“{r}” bir dosyayı göstermiyor")
+            if not s["table"].strip():
+                self.fail("bad_value", "kaynağın tablosu boş")
+            if s["layer"] in layers:
+                self.fail("bad_value", f"“{s['layer']}” katmanı iki kaynağa bağlı")
+            layers.add(s["layer"])
+            for k, what in (("revision", "sürümü"), ("digest", "katmanın özeti")):
+                if len(s[k]) != 64 or any(c not in "0123456789abcdef" for c in s[k]):
+                    self.fail("bad_value", f"kaynağın {what} 64 küçük onaltılı hane değil")
         return lst
 
     # The project's coordinate systems and datum choices (schema 13, spec §6.4.1, docs/adr/0168).

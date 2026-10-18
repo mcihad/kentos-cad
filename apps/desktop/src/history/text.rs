@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 124] = [
+pub(crate) const TITLES: [(&str, &str); 134] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -122,6 +122,13 @@ pub(crate) const TITLES: [(&str, &str); 124] = [
     ("cad.relations.edit", "İlişkiler"),
     ("cad.forms.fill", "Formla toplu yaz"),
     ("cad.units.change", "Birimi değiştir"),
+    ("cad.sources.describe", "Kaynakları tanı"),
+    ("cad.sources.edit", "Kaynağa bağla"),
+    ("cad.fields.write", "Alanlara toplu yaz"),
+    ("cad.processing.tools", "İşlem araçları"),
+    ("cad.processing.run", "İşlem aracını çalıştır"),
+    ("cad.sources.sync", "Kaynakla eşitle"),
+    ("file.import.gpkg", "GeoPackage içe aktar"),
     ("file.import.dxf", "DXF içe aktar"),
     ("cad.sheets.edit", "Pafta kitabı"),
     ("cad.changeset.apply", "Değişiklik kümesi"),
@@ -129,10 +136,13 @@ pub(crate) const TITLES: [(&str, &str); 124] = [
     ("cad.polygon.regular", "Düzgün çokgen oluştur"),
     ("cad.entities.vertex", "Köşe ve kenar"),
     ("cad.entities.pick", "Tıklanan nesneler"),
+    ("cad.entities.relate", "Standart ilişkiler"),
     ("cad.entities.select", "Nesne seç"),
     ("cad.snap.find", "Kenet bul"),
     ("cad.points.construct", "Nokta yapımı"),
     ("cad.curves.construct", "Eğri yapımı"),
+    ("file.package", "Paketle"),
+    ("file.export.gpkg", "GeoPackage dışa aktar"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),

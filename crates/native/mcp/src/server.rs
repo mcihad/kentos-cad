@@ -69,6 +69,8 @@ impl Default for Server {
 
 impl Server {
     pub fn new() -> Self {
+        // Bound layers on PostGIS (docs/adr/0505): the provider, once per process.
+        kentos_postgis::register();
         let catalog = kentos_headless::catalog();
         let tools = tools::list(&catalog);
         Self {

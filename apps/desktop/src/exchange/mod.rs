@@ -34,9 +34,16 @@ mod gis_tests;
 mod gnss_import;
 #[cfg(test)]
 mod gnss_tests;
+pub(crate) mod gpkg;
+#[cfg(test)]
+mod gpkg_tests;
 #[cfg(test)]
 mod kml_tests;
+pub(super) mod package;
 pub(crate) mod photo_import;
+mod postgis;
+#[cfg(test)]
+mod postgis_tests;
 #[cfg(test)]
 mod tests;
 mod wgs84_export;
@@ -104,6 +111,10 @@ pub enum Window {
     Wgs84Export(wgs84_export::State),
     /// Konumlu fotoğraflar (docs/adr/0225 §3); boxed: the photos' bytes and the plan.
     PhotoImport(Box<photo_import::State>),
+    /// GeoPackage içe aktar (docs/adr/0502).
+    Gpkg(gpkg::State),
+    /// PostGIS'e bağlan (docs/adr/0505).
+    Postgis(postgis::State),
 }
 
 #[derive(Debug, Clone)]
@@ -123,6 +134,9 @@ pub enum Event {
     FieldSend(field_send::Event),
     Wgs84Export(wgs84_export::Event),
     PhotoImport(photo_import::Event),
+    Gpkg(gpkg::Event),
+    Postgis(postgis::Event),
+    Package(package::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -130,7 +144,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 15] = [
+pub const COMMANDS: [&str; 20] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -146,6 +160,11 @@ pub const COMMANDS: [&str; 15] = [
     "file.export.kml",
     "file.export.gpx",
     "file.import.photos",
+    "file.import.gpkg",
+    "file.export.gpkg",
+    "source.link",
+    "source.postgis",
+    "file.package",
 ];
 
 fn message(event: Event) -> Message {
@@ -178,6 +197,11 @@ impl App {
             "file.import.gnss" => self.pick(Kind::Gnss),
             "file.import.kml" => self.pick(Kind::Kml),
             "file.import.photos" => self.pick_photos(),
+            "file.import.gpkg" => self.gpkg_pick(false),
+            "source.link" => self.gpkg_pick(true),
+            "source.postgis" => self.postgis_open(),
+            "file.package" => self.package_pick(),
+            "file.export.gpkg" => self.gpkg_save(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -357,6 +381,9 @@ impl App {
             Event::FieldSend(e) => self.field_send_event(e),
             Event::Wgs84Export(e) => self.wgs84_export_event(e),
             Event::PhotoImport(e) => self.photo_import_event(e),
+            Event::Gpkg(e) => self.gpkg_event(e),
+            Event::Postgis(e) => self.postgis_event(e),
+            Event::Package(e) => self.package_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -393,6 +420,8 @@ impl App {
             Some(Window::FieldSend(s)) => self.field_send_view(s),
             Some(Window::Wgs84Export(s)) => self.wgs84_export_view(s),
             Some(Window::PhotoImport(s)) => self.photo_import_view(s),
+            Some(Window::Gpkg(s)) => self.gpkg_view(s),
+            Some(Window::Postgis(s)) => self.postgis_view(s),
             None => iced::widget::text("").into(),
         }
     }

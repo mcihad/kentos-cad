@@ -65,6 +65,7 @@ impl App {
             Dialog::AddressProviders => crate::address::providers::TITLE.to_owned(),
             Dialog::TimeLayer => crate::temporal::layer::TITLE.to_owned(),
             Dialog::LayerFilter => crate::layer_filters::TITLE.to_owned(),
+            Dialog::FieldsWrite => crate::features::write::TITLE_CALC.to_owned(),
             Dialog::LayerInfo => crate::layer_info::TITLE.to_owned(),
             Dialog::Attachment => self.attachment_title().to_owned(),
             Dialog::PhotoViewer => crate::attachments::VIEWER_TITLE.to_owned(),

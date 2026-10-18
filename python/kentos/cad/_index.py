@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, parameters, point, points, polygon, polyline, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, standards, styles, tables, texts, ucs, units, views
+from . import addresses, annotations, arc, arrays, attachments, blocks, changeset, circle, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, parameters, point, points, polygon, polyline, processing, project, records, rectangle, relations, scenarios, schema, settings, sheets, snap, sources, standards, styles, tables, texts, ucs, units, views
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -57,6 +57,7 @@ COMMANDS: dict[str, Any] = {
     "cad.entities.order": entities.order,
     "cad.entities.paste": entities.paste,
     "cad.entities.pick": entities.pick,
+    "cad.entities.relate": entities.relate,
     "cad.entities.reverse": entities.reverse,
     "cad.entities.select": entities.select,
     "cad.entities.set": entities.set,
@@ -67,6 +68,7 @@ COMMANDS: dict[str, Any] = {
     "cad.fields.edit": fields.edit,
     "cad.fields.migrate": fields.migrate,
     "cad.fields.usage": fields.usage,
+    "cad.fields.write": fields.write,
     "cad.fonts.report": fonts.report,
     "cad.forms.audit": forms.audit,
     "cad.forms.compare": forms.compare,
@@ -110,6 +112,8 @@ COMMANDS: dict[str, Any] = {
     "cad.polygon.create": polygon.create,
     "cad.polygon.regular": polygon.regular,
     "cad.polyline.create": polyline.create,
+    "cad.processing.run": processing.run,
+    "cad.processing.tools": processing.tools,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,
     "cad.rectangle.create": rectangle.create,
@@ -119,6 +123,9 @@ COMMANDS: dict[str, Any] = {
     "cad.settings.set": settings.set,
     "cad.sheets.edit": sheets.edit,
     "cad.snap.find": snap.find,
+    "cad.sources.describe": sources.describe,
+    "cad.sources.edit": sources.edit,
+    "cad.sources.sync": sources.sync,
     "cad.standards.apply": standards.apply,
     "cad.standards.check": standards.check,
     "cad.styles.edit": styles.edit,
@@ -131,9 +138,12 @@ COMMANDS: dict[str, Any] = {
     "cad.views.edit": views.edit,
     "file.export.block": file.export.block,
     "file.export.dxf": file.export.dxf,
+    "file.export.gpkg": file.export.gpkg,
     "file.export.pdf": file.export.pdf,
     "file.import.block": file.import_.block,
     "file.import.dxf": file.import_.dxf,
+    "file.import.gpkg": file.import_.gpkg,
+    "file.package": file.package,
     "project.access.revoke": project.access.revoke,
     "project.archive": project.archive,
     "project.changes": project.changes,
@@ -158,4 +168,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "parameters", "point", "points", "polygon", "polyline", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "standards", "styles", "tables", "texts", "ucs", "units", "views",)
+NAMESPACES = ("addresses", "annotations", "arc", "arrays", "attachments", "blocks", "changeset", "circle", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "records", "rectangle", "relations", "scenarios", "schema", "settings", "sheets", "snap", "sources", "standards", "styles", "tables", "texts", "ucs", "units", "views",)

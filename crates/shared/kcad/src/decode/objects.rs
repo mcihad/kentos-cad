@@ -243,6 +243,8 @@ pub(super) struct Features {
     pub(super) forms: bool,
     /// Schema 73: the document's `constraints` (docs/adr/0334).
     pub(super) constraints: bool,
+    /// Schema 74: the settings' `sources` (docs/adr/0503).
+    pub(super) sources: bool,
     /// Schema 48: an object's `lineType`, `lineTypeScale`, `transparency`,
     /// `order` and a block's object's `byLayer` (docs/adr/0260).
     pub(super) look: bool,
@@ -331,6 +333,7 @@ impl Features {
             hatch_extras: schema >= crate::SCHEMA_WITH_HATCH_EXTRAS,
             forms: schema >= crate::SCHEMA_WITH_FORMS,
             constraints: schema >= crate::SCHEMA_WITH_CONSTRAINTS,
+            sources: schema >= crate::SCHEMA_WITH_SOURCES,
             imperial: schema >= crate::SCHEMA_WITH_IMPERIAL,
             subref_extras: schema >= crate::SCHEMA_WITH_SUBREF_EXTRAS,
             nurbs: schema >= SCHEMA_WITH_NURBS,

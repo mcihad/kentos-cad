@@ -13,16 +13,16 @@ use kentos_contracts::{
     DrawingAudit, EntitiesArray, EntitiesBoundary, EntitiesBreak, EntitiesChamfer, EntitiesCleanup,
     EntitiesCopy, EntitiesCreate, EntitiesDelete, EntitiesDivide, EntitiesEdit, EntitiesExplode,
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
-    EntitiesOrder, EntitiesPaste, EntitiesPick, EntitiesReverse, EntitiesSelect,
+    EntitiesOrder, EntitiesPaste, EntitiesPick, EntitiesRelate, EntitiesReverse, EntitiesSelect,
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
-    FieldsUsage, ImportDxf, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable,
+    FieldsUsage, ImportDxf, ImportGpkg, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable,
     LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
     LayersTranslate, LibraryEdit, LineCreate, LineTypesEdit, HatchPatternsEdit, NetworkDefine, NurbsCreate,
     PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -30,6 +30,9 @@ use crate::{
 use serde_json::Value;
 
 use crate::blocks_insert;
+use crate::fields_write;
+use crate::{processing_run, processing_tools};
+use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, parameters_edit, blocks_define,
@@ -37,8 +40,8 @@ use crate::{
     dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
-    entities_match, entities_order, entities_paste, entities_pick, entities_reverse,
-    entities_select, entities_trim, entities_vertex, file_import, labels_pin, layers_compose,
+    entities_match, entities_order, entities_paste, entities_pick, entities_relate, entities_reverse,
+    entities_select, entities_trim, entities_vertex, file_import, file_import_gpkg, labels_pin, layers_compose,
     fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table,
     layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line,
     hatch_patterns_edit, line_types_edit, network_define, nurbs, offset, point, points_construct, polygon,
@@ -117,6 +120,13 @@ macro_rules! by_command {
             kentos_contracts::CAD_SNAP_FIND => $then!(snap_find, SnapFind),
             kentos_contracts::CAD_ENTITIES_SELECT => $then!(entities_select, EntitiesSelect),
             kentos_contracts::CAD_ENTITIES_PICK => $then!(entities_pick, EntitiesPick),
+            kentos_contracts::CAD_ENTITIES_RELATE => $then!(entities_relate, EntitiesRelate),
+            kentos_contracts::CAD_SOURCES_DESCRIBE => $then!(sources_describe, SourcesDescribe),
+            kentos_contracts::CAD_SOURCES_EDIT => $then!(sources_edit, SourcesEdit),
+            kentos_contracts::CAD_SOURCES_SYNC => $then!(sources_sync, SourcesSync),
+            kentos_contracts::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
+            kentos_contracts::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
+            kentos_contracts::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
             kentos_contracts::CAD_ENTITIES_VERTEX => $then!(entities_vertex, EntitiesVertex),
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),
@@ -218,6 +228,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_SETTINGS_SET => $then!(settings_set, SettingsSet),
             kentos_contracts::CAD_UNITS_CHANGE => $then!(units_change, UnitsChange),
             kentos_contracts::FILE_IMPORT_DXF => $then!(file_import, ImportDxf),
+            kentos_contracts::FILE_IMPORT_GPKG => $then!(file_import_gpkg, ImportGpkg),
             kentos_contracts::CAD_SHEETS_EDIT => $then!(sheets_edit, SheetsEdit),
             kentos_contracts::CAD_CHANGESET_APPLY => $then!(changeset, ChangesetApply),
             other => Err(unknown(other)),

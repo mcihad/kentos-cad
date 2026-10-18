@@ -29,7 +29,9 @@ FILES = sorted((ROOT / "fixtures/commands/v1").glob("*.json"))
 class Case:
     def __init__(self, command: str, setup: dict[str, Any], steps: list[dict[str, Any]], at: str) -> None:
         self.wrapper = cad.command(command)
-        self.doc = cad.Document.from_bytes(json.dumps(setup).encode())
+        # A bound layer's file in the setup is a fixture's path (docs/adr/0503).
+        setup_text = re.sub(r"\$fixture:([^\s\"]+)", lambda m: str(ROOT / "fixtures" / m.group(1)), json.dumps(setup))
+        self.doc = cad.Document.from_bytes(setup_text.encode())
         info = self.doc.info()
         assert not info.dirty and not info.can_undo, f"{at}: the setup is not clean"
         self.steps = steps
@@ -303,7 +305,7 @@ class Case:
                 # The project's settings, only the keys given; an absent one is None (docs/adr/0248).
                 settings = json.loads(self.doc._session.summary())["settings"]
                 for k, v in want.items():
-                    same(settings.get(k), v, f"{at}: settings.{k}")
+                    same(settings.get(k), self.fill(v, at), f"{at}: settings.{k}")
             elif key == "styleNames":
                 # The text and dimension styles without their ids: a new one's is a UUIDv7 (docs/adr/0312 §3).
                 settings = json.loads(self.doc._session.summary())["settings"]

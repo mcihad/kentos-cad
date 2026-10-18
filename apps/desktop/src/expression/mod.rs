@@ -82,6 +82,8 @@ pub(crate) enum Target {
     Network(crate::networks::window::Field),
     /// Katman süzgeci's condition (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter,
+    /// Alan hesapla's expression (features/write.rs, docs/adr/0507).
+    FieldsWrite,
     /// Etiketler's class condition or label text (labelling/, docs/adr/0212 §4).
     Labels(crate::labelling::Field),
     /// A rule of Formlar's designer (forms/designer.rs, docs/adr/0401 §5).
@@ -824,6 +826,17 @@ impl App {
         self.open_builder_on_layer(Target::LayerFilter, context, &layer, &value)
     }
 
+    /// Alan hesapla's ε (features/write.rs, docs/adr/0507): the builder on the expression, the layer's keys and
+    /// objects.
+    pub(crate) fn open_builder_for_fields_write(
+        &mut self,
+        layer: &str,
+        value: &str,
+    ) -> Task<Message> {
+        let context = format!("{} · İfade", crate::features::write::TITLE_CALC);
+        self.open_builder_on_layer(Target::FieldsWrite, context, layer, value)
+    }
+
     /// Etiketler's ε (labelling/, docs/adr/0212 §4): the builder on a class's condition or a
     /// label's text, the layer's keys and objects.
     pub(crate) fn open_builder_for_labels(
@@ -1302,6 +1315,11 @@ impl App {
             }
             Target::LayerFilter => {
                 return self.layer_filter_event(crate::layer_filters::Event::Expression(text));
+            }
+            Target::FieldsWrite => {
+                return self.features_event(crate::features::Event::Write(
+                    crate::features::write::WriteEvent::Expression(text),
+                ));
             }
             Target::Labels(field) => {
                 return self.labelling_event(crate::labelling::Event::Expression(field, text));

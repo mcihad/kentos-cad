@@ -11,6 +11,7 @@ name = "kentos-cad"
 path = "src/main.rs"
 
 [dependencies]
+kentos-postgis = { path = "../../crates/native/postgis" }
 kentos-ui = { path = "../../crates/ui", default-features = false, features = ["fonts", "snapshot"] }
 kentos-contracts = { path = "../../crates/shared/contracts", default-features = false }
 # The project file, .kcad v2 (docs/specs/kcad-v2.md, docs/adr/0025): the shared codec the web runs in WASM.
@@ -33,6 +34,7 @@ kentos-processing = { path = "../../crates/native/processing" }
 kentos-project = { path = "../../crates/native/project" }
 # The Python console's requests on the open drawing (docs/adr/0132): the headless host's `rpc`.
 kentos-headless = { path = "../../crates/native/headless" }
+kentos-geopackage = { path = "../../crates/native/geopackage" }
 # The cloud client (docs/adr/0040): signing in, the catalog, opening, saving and following
 # cloud projects, device drafts; its own runtime, awaited on Iced's executor (docs/adr/0041).
 kentos-cloud = { path = "../../crates/native/cloud" }

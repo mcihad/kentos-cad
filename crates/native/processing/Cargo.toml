@@ -16,6 +16,8 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
+# A run's result written to a GeoPackage carries its lineage in the metadata extension (docs/adr/0511).
+kentos-geopackage = { path = "../geopackage" }
 kentos-native-application = { path = "../application" }
 # Point clouds read whole and their results written (docs/adr/0207 §7): the machines
 # of the point cloud core; the host's files do the reading and writing (files.rs).

@@ -15,6 +15,7 @@ kentos-contracts = { path = "../../shared/contracts", default-features = false }
 kentos-domain = { path = "../domain" }
 # Patlat (docs/adr/0302): a dimension exploded writes its value as the project shows it (the project's Format).
 kentos-project = { path = "../project" }
+kentos-geopackage = { path = "../geopackage" }
 # The shared geometry core: what a transform does to each kind of object (docs/adr/0037),
 # the same code the web reaches through WASM.
 kentos-geometry-core = { path = "../../shared/geometry-core" }
@@ -44,3 +45,6 @@ serde_json = { workspace = true }
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+# The processing commands' shared cases run İşlemler's tools (docs/adr/0508); the crate is above this one, so only the
+# integration tests (one copy of this crate) link it.
+kentos-processing = { path = "../processing" }

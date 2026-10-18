@@ -2285,6 +2285,74 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sources.describe",
+        refusals: &[&["invalid_file_path", "file_not_found", "import_unreadable", "invalid_address", "source_unreachable"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.edit",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found", "invalid_address", "source_unreachable"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.fields.write",
+        refusals: &[
+            LAYER,
+            &["nothing_to_set", "invalid_attribute", "invalid_uid", "entity_not_found", "field_not_found"],
+            &["invalid_expression", "invalid_values"],
+        ],
+        warnings: &["values_skipped"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.processing.tools",
+        refusals: &[&["tools_unavailable", "invalid_input"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.processing.run",
+        refusals: &[&[
+            "tools_unavailable",
+            "unknown_tool",
+            "invalid_uid",
+            "entity_not_found",
+            "invalid_parameters",
+            "tool_failed",
+            "invalid_file_path",
+            "file_exists",
+            "file_unwritable",
+            "nothing_to_export",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.sync",
+        refusals: &[
+            &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
+            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+        ],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.gpkg",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "nothing_to_import"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.dxf",
         refusals: &[
             &["invalid_file_path"],
@@ -2442,6 +2510,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.entities.relate",
+        refusals: &[&[
+            "no_objects",
+            "invalid_input",
+            "invalid_pattern",
+            "entity_not_found",
+            "too_many_pairs",
+        ]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.entities.select",
         refusals: &[&[
             "not_finite",
@@ -2464,6 +2544,24 @@ const ENTRIES: &[Entry] = &[
         id: "cad.snap.find",
         refusals: &[&["not_finite", "invalid_aperture", "no_snap_kinds"]],
         warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "file.package",
+        refusals: &[&["invalid_file_path", "file_exists", "file_unwritable"]],
+        warnings: &["package_left"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.gpkg",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
         targets: none,
     },
     Entry {

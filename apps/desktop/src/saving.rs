@@ -390,8 +390,15 @@ impl App {
                     let _ = out.try_send(Message::Saving(Event::Progress { id, stage }));
                 }
             };
-            let snapshot = model.to_snapshot_v2();
+            let mut snapshot = model.to_snapshot_v2();
             drop(model);
+            // Bound GeoPackages get their path from the file's folder (docs/adr/0506).
+            if let Target::File(path) = &target {
+                kentos_native_application::source_places::with_relative(
+                    &mut snapshot.settings,
+                    path,
+                );
+            }
             let done = match &target {
                 Target::File(path) => Event::Done {
                     id,

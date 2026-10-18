@@ -1,0 +1,2456 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.processing.tools",
+ "commandVersion": 1,
+ "title": "İşlem araçları",
+ "note": "Üretici: scripts/fixtures/processing_command_cases.py (docs/adr/0508). Araçların kimlikleri, adları, takma adları ve parametreleri web'in donmuş envanterinden (docs/inventory/web.json).",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "İşlem durumları: parseller",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "hybrid",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000,
+   "y": 4420000
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#E5484D",
+     "lineType": "continuous",
+     "lineWeight": 0.35,
+     "fill": "#E5484D1F"
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli katman",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg-dim",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli katman",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "mevcut",
+    "name": "Mevcut noktalar",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "#3E9BF0",
+     "lineType": "continuous",
+     "lineWeight": 0.25,
+     "point": {
+      "symbol": "cross",
+      "size": 7
+     }
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "label": "1",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "1",
+     "Nitelik": "Arsa"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487020,
+      "y": 4420030
+     },
+     {
+      "x": 487000,
+      "y": 4420030
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "label": "2",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "2",
+     "Nitelik": "Arsa"
+    },
+    "pts": [
+     {
+      "x": 487020,
+      "y": 4420000
+     },
+     {
+      "x": 487045,
+      "y": 4420000
+     },
+     {
+      "x": 487045,
+      "y": 4420030
+     },
+     {
+      "x": 487020,
+      "y": 4420030
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "label": "3",
+    "attrs": {
+     "Ada": "101",
+     "Parsel": "3",
+     "Nitelik": "Tarla"
+    },
+    "pts": [
+     {
+      "x": 487045,
+      "y": 4420000
+     },
+     {
+      "x": 487060,
+      "y": 4420000
+     },
+     {
+      "x": 487060,
+      "y": 4420030
+     },
+     {
+      "x": 487045,
+      "y": 4420030
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "kilitli",
+    "label": "1",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "1",
+     "Nitelik": "Arsa"
+    },
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4419960
+     },
+     {
+      "x": 487020,
+      "y": 4419960
+     },
+     {
+      "x": 487020,
+      "y": 4419980
+     },
+     {
+      "x": 487000,
+      "y": 4419980
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "gizli",
+    "label": "2",
+    "attrs": {
+     "Ada": "102",
+     "Parsel": "2",
+     "Nitelik": "Arsa"
+    },
+    "pts": [
+     {
+      "x": 487030,
+      "y": 4419960
+     },
+     {
+      "x": 487050,
+      "y": 4419960
+     },
+     {
+      "x": 487050,
+      "y": 4419980
+     },
+     {
+      "x": 487030,
+      "y": 4419980
+     }
+    ]
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "cizim",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487000,
+      "y": 4420040
+     },
+     {
+      "x": 487030,
+      "y": 4420040
+     },
+     {
+      "x": 487030,
+      "y": 4420055
+     }
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "cizim",
+    "attrs": {},
+    "a": {
+     "x": 487040,
+     "y": 4420040
+    },
+    "b": {
+     "x": 487060,
+     "y": 4420040
+    }
+   },
+   {
+    "kind": "point",
+    "id": 8,
+    "layerId": "mevcut",
+    "label": "P00001",
+    "attrs": {
+     "Nokta": "P00001",
+     "Tür": "Köşe noktası"
+    },
+    "p": {
+     "x": 487000,
+     "y": 4420030
+    }
+   },
+   {
+    "kind": "point",
+    "id": 9,
+    "layerId": "mevcut",
+    "label": "P00002",
+    "attrs": {
+     "Nokta": "P00002",
+     "Tür": "Köşe noktası"
+    },
+    "p": {
+     "x": 487020,
+     "y": 4420030
+    }
+   },
+   {
+    "kind": "point",
+    "id": 10,
+    "layerId": "mevcut",
+    "label": "P00003",
+    "attrs": {
+     "Nokta": "P00003",
+     "Tür": "Köşe noktası"
+    },
+    "p": {
+     "x": 487020,
+     "y": 4420000
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Köşe noktalarını numarala, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "points.numberVertices"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "points.numberVertices",
+         "label": "Köşe noktalarını numarala",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KOSENUMARA",
+          "KNUM",
+          "NUMARALA"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Alanlar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "direction",
+           "label": "Yön",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "start",
+           "label": "Başlangıç köşesi",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "startPoint",
+           "label": "Başlangıç noktası",
+           "kind": "point",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "length",
+           "label": "Toplam uzunluk",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "pad",
+           "label": "Doldurma karakteri",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "first",
+           "label": "İlk numara",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "step",
+           "label": "Artış",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shared",
+           "label": "Ortak köşelere tek numara",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "tolerance",
+           "label": "Aynı nokta toleransı",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "output",
+           "label": "Oluşturulacak",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeight",
+           "label": "Yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Hedef katman",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Öznitelik hesapla, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "attributes.calculate"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "attributes.calculate",
+         "label": "Öznitelik hesapla",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "OZHESAP",
+          "ALANHESAP"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "field",
+           "label": "Yazılacak alan",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "value",
+           "label": "Değer",
+           "kind": "expression",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "where",
+           "label": "Yalnızca şu koşulda",
+           "kind": "expression",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "empty",
+           "label": "Sonuç boşsa",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "label",
+           "label": "Etiketi de güncelle",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İfadeyle seç, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "selection.byExpression"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "selection.byExpression",
+         "label": "İfadeyle seç",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "IFADESEC",
+          "SORGU"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Aranacak nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "condition",
+           "label": "Koşul",
+           "kind": "expression",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "mode",
+           "label": "Seçim biçimi",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenar uzunluklarını yaz, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "annotation.edgeLengths"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "annotation.edgeLengths",
+         "label": "Kenar uzunluklarını yaz",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KENARYAZ",
+          "KENARUZUNLUK"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "decimals",
+           "label": "Ondalık basamak",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "side",
+           "label": "Yazının yeri",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeight",
+           "label": "Yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "suffix",
+           "label": "Sonek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "minLength",
+           "label": "En kısa kenar",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shared",
+           "label": "Ortak kenarlara bir kez yaz",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Hedef katman",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kenar uzunluklarını yaz, takma adıyla (kenaryaz)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "kenaryaz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "annotation.edgeLengths",
+         "label": "Kenar uzunluklarını yaz",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KENARYAZ",
+          "KENARUZUNLUK"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "decimals",
+           "label": "Ondalık basamak",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "side",
+           "label": "Yazının yeri",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeight",
+           "label": "Yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "suffix",
+           "label": "Sonek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "minLength",
+           "label": "En kısa kenar",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shared",
+           "label": "Ortak kenarlara bir kez yaz",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Hedef katman",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Köşe noktalarını numarala, takma adıyla (kosenumara)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "kosenumara"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "points.numberVertices",
+         "label": "Köşe noktalarını numarala",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KOSENUMARA",
+          "KNUM",
+          "NUMARALA"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Alanlar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "direction",
+           "label": "Yön",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "start",
+           "label": "Başlangıç köşesi",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "startPoint",
+           "label": "Başlangıç noktası",
+           "kind": "point",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "length",
+           "label": "Toplam uzunluk",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "pad",
+           "label": "Doldurma karakteri",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "first",
+           "label": "İlk numara",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "step",
+           "label": "Artış",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shared",
+           "label": "Ortak köşelere tek numara",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "tolerance",
+           "label": "Aynı nokta toleransı",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "output",
+           "label": "Oluşturulacak",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeight",
+           "label": "Yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Hedef katman",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Öznitelik hesapla, takma adıyla (ozhesap)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "ozhesap"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "attributes.calculate",
+         "label": "Öznitelik hesapla",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "OZHESAP",
+          "ALANHESAP"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "field",
+           "label": "Yazılacak alan",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "value",
+           "label": "Değer",
+           "kind": "expression",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "where",
+           "label": "Yalnızca şu koşulda",
+           "kind": "expression",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "empty",
+           "label": "Sonuç boşsa",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "label",
+           "label": "Etiketi de güncelle",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İfadeyle seç, takma adıyla (ifadesec)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "ifadesec"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "selection.byExpression",
+         "label": "İfadeyle seç",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "IFADESEC",
+          "SORGU"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Aranacak nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "condition",
+           "label": "Koşul",
+           "kind": "expression",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "mode",
+           "label": "Seçim biçimi",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Anahtarla birleştir, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "attributes.joinByField"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "attributes.joinByField",
+         "label": "Anahtarla birleştir",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "ANAHTARBIRLESTIR"
+         ],
+         "parameters": [
+          {
+           "name": "target",
+           "label": "Hedef nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "targetKey",
+           "label": "Hedef anahtar",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "sourceKind",
+           "label": "Kaynak",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "source",
+           "label": "Kaynak nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "file",
+           "label": "Dosya",
+           "kind": "file",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "sourceKey",
+           "label": "Kaynak anahtar",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "fields",
+           "label": "Aktarılacak alanlar",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "existing",
+           "label": "Var olan değerler",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "duplicates",
+           "label": "Yinelenen anahtar",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçindekinden bilgi al, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "attributes.fromInside"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "attributes.fromInside",
+         "label": "İçindekinden bilgi al",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "ICBILGI",
+          "ICINDEKIBILGI"
+         ],
+         "parameters": [
+          {
+           "name": "target",
+           "label": "Hedef alanlar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "source",
+           "label": "Kaynak nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "relation",
+           "label": "İlişki",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "stat",
+           "label": "İstatistik",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "field",
+           "label": "Alan",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "output",
+           "label": "Yazılacak alan",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "En yakını bul, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "proximity.nearest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "proximity.nearest",
+         "label": "En yakını bul",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "ENYAKIN",
+          "YAKINBUL",
+          "NEAR"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "targets",
+           "label": "Hedefler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "measure",
+           "label": "Ölçü",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "max",
+           "label": "En çok uzaklık",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "fields",
+           "label": "Alınacak alanlar",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "bearing",
+           "label": "Semt de yaz",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ağ oluştur, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "sample.grid"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "sample.grid",
+         "label": "Ağ oluştur",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "AG",
+          "AGOLUSTUR",
+          "FISHNET"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Kapsam",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shape",
+           "label": "Biçim",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "dx",
+           "label": "Doğu aralığı",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "dy",
+           "label": "Kuzey aralığı",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "side",
+           "label": "Kenar",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "snap",
+           "label": "Koordinatlara otur",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "keep",
+           "label": "Hücreler",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kırp, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "geometry.clip"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "geometry.clip",
+         "label": "Kırp",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KIRP",
+          "CLIP"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "cut",
+           "label": "Kesen alanlar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gruplayarak birleştir, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "geometry.dissolve"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "geometry.dissolve",
+         "label": "Gruplayarak birleştir",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "GRUPBIRLESTIR",
+          "DISSOLVE"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "group",
+           "label": "Grupla",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "sums",
+           "label": "Toplanacak alanlar",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "multi",
+           "label": "Çok parçalı",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geçerliliği denetle, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "geometry.validity"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "geometry.validity",
+         "label": "Geçerliliği denetle",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "GECERLILIK",
+          "CHECKGEOMETRY"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sadeleştir, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "geometry.simplify"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "geometry.simplify",
+         "label": "Sadeleştir",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "SADELESTIRKATMAN",
+          "GENERALIZE"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "tolerance",
+           "label": "Tolerans",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Özniteliğe göre böl, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "layers.splitByAttribute"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "layers.splitByAttribute",
+         "label": "Özniteliğe göre böl",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "OZNITELIKBOL"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "fields",
+           "label": "Alanlar",
+           "kind": "field",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "mode",
+           "label": "İşlem",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yinelenenleri sil, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "layers.deleteDuplicates"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "layers.deleteDuplicates",
+         "label": "Yinelenenleri sil",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "YINELENENSIL"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "fields",
+           "label": "Alanlar",
+           "kind": "field",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "geometry",
+           "label": "Geometri de aynı olsun",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesneden nokta, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "convert.toPoints"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "convert.toPoints",
+         "label": "Nesneden nokta",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "NESNEDENNOKTA",
+          "MERKEZNOKTA"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Nesneler",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "location",
+           "label": "Konum",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "parts",
+           "label": "Her parça için",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Voronoi alanları, kimliğiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "generate.voronoi"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "generate.voronoi",
+         "label": "Voronoi alanları",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "VORONOI",
+          "THIESSEN"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Noktalar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "margin",
+           "label": "Genişletme",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Çıktı katmanı",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hiçbir aracın tutmadığı sözcük: boş liste",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "qqqzzz"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen kategori: invalid_input",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "category": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“yok” bir işlem kategorisi değil.",
+       "path": "category"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan da listeler, çizimi değiştirmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "query": "points.numberVertices"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "points.numberVertices",
+         "label": "Köşe noktalarını numarala",
+         "category": "$any",
+         "description": "$any",
+         "aliases": [
+          "KOSENUMARA",
+          "KNUM",
+          "NUMARALA"
+         ],
+         "parameters": [
+          {
+           "name": "input",
+           "label": "Alanlar",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "direction",
+           "label": "Yön",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "start",
+           "label": "Başlangıç köşesi",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "startPoint",
+           "label": "Başlangıç noktası",
+           "kind": "point",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Önek",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "length",
+           "label": "Toplam uzunluk",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "pad",
+           "label": "Doldurma karakteri",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "first",
+           "label": "İlk numara",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "step",
+           "label": "Artış",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "shared",
+           "label": "Ortak köşelere tek numara",
+           "kind": "boolean",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "tolerance",
+           "label": "Aynı nokta toleransı",
+           "kind": "number",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "output",
+           "label": "Oluşturulacak",
+           "kind": "choice",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "textHeight",
+           "label": "Yazı yüksekliği",
+           "kind": "number",
+           "description": "$any",
+           "optional": true,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "layer",
+           "label": "Hedef katman",
+           "kind": "layer",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

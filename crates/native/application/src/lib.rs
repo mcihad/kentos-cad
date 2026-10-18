@@ -65,6 +65,15 @@ pub mod blocks_query;
 pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
+pub mod file_import_gpkg;
+pub mod provider;
+pub mod fields_write;
+pub mod processing_host;
+pub mod processing_run;
+pub mod processing_tools;
+pub mod source_places;
+pub mod sources;
+pub mod geopackage;
 pub mod blocks_library;
 pub mod break_join;
 pub mod call;
@@ -124,6 +133,7 @@ pub use region::{entities_boundary, entities_hatch};
 pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
+pub mod entities_relate;
 pub mod entities_select;
 pub mod entities_vertex;
 pub mod shapes;
@@ -431,6 +441,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_PICK,
         kentos_contracts::CAD_ENTITIES_PICK_VERSION,
+    ),
+    // The standard DE-9IM relations ([`entities_relate`], docs/adr/0501).
+    (
+        kentos_contracts::CAD_ENTITIES_RELATE,
+        kentos_contracts::CAD_ENTITIES_RELATE_VERSION,
     ),
     // The selection as one explicit query ([`entities_select`], docs/adr/0275).
     (
@@ -749,6 +764,37 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_DXF,
         kentos_contracts::FILE_IMPORT_DXF_VERSION,
+    ),
+    // Toplu yazma of the attribute table ([`fields_write`], docs/adr/0507).
+    (
+        kentos_contracts::CAD_FIELDS_WRITE,
+        kentos_contracts::CAD_FIELDS_WRITE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_PROCESSING_TOOLS,
+        kentos_contracts::CAD_PROCESSING_TOOLS_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_PROCESSING_RUN,
+        kentos_contracts::CAD_PROCESSING_RUN_VERSION,
+    ),
+    // Bound layers ([`sources`], docs/adr/0503).
+    (
+        kentos_contracts::CAD_SOURCES_DESCRIBE,
+        kentos_contracts::CAD_SOURCES_DESCRIBE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SOURCES_EDIT,
+        kentos_contracts::CAD_SOURCES_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SOURCES_SYNC,
+        kentos_contracts::CAD_SOURCES_SYNC_VERSION,
+    ),
+    // A GeoPackage into the drawing ([`file_import_gpkg`], docs/adr/0502).
+    (
+        kentos_contracts::FILE_IMPORT_GPKG,
+        kentos_contracts::FILE_IMPORT_GPKG_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

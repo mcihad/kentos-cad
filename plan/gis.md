@@ -98,6 +98,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-01 — Kaynak gezginine canlı GeoPackage/PostGIS ve servis bağlantıları ekle — P0**
 
+  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): GeoPackage tablosu bağlı katman olarak açılır (`cad.sources.edit`), bağ proje kapatılıp açılınca korunur (`.kcad` şema 74), taşınan dosya yeniden bağlanır (relink), yeri bilinmeyen kaynak nesneleriyle açılır; Katmanlar'da rozet ve Kaynak ▸. Kalan: kaynak gezgininde dosyanın katmanlarını eklemeden önizleme ve servis katalogları. PostGIS tablosu ADR 0505'le bağlanır.*
+
   **Mevcut:** Kaynaklar paneli klasörleri ve KentOS projelerinden katman kopyalamayı biliyor [K03]. GIS kullanıcısı için verinin nerede olduğu, canlı mı kopya mı olduğu ve neden yazılamadığı aynı yerde anlaşılmalı.
 
   **Yapılacak kalan iş:** Kaynak gezginine GeoPackage içindeki katman/tablo, PostGIS bağlantısı, raster klasörü ve servis kataloglarını ekle. Ad/konum/tür/CRS/şema araması, sık kullanılanlar, son kaynaklar, örnek satırlar, kapsam önizlemesi ve sürükleyerek ekleme sun. Katman kartında kaynak, yazma yeteneği, kimlik alanı, filtre, yükleme kapsamı ve güncellik görülsün. Aynı kaynağın başka stilli iki görünümü iki ayrı veri kopyası oluşturmasın; kopyalama ayrı ürün eylemi olsun. QGIS 4.2'nin kaynak ve sağlayıcı yaklaşımı kıyastır. [Q01], [Q04]
@@ -105,6 +107,10 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/36. Bir belediye çalışanı dosyanın katmanlarını veriyi içe aktarmadan görebilsin, doğru katmanı ekleyebilsin ve kapatıp açınca bağlantıyı korusun. Taşınan kaynak için yeniden konumlandırma sunulsun; erişilemeyen kaynak boş katman diye kaydedilmesin. İlk dilimde yerel kaynaklar yeterli; STAC ve kurumsal katalog CBS-10/31'de genişler.
 
 - [ ] **CBS-02 — Dış dataset'ler için ortak provider sözleşmesini uygula — P0**
+
+  *Kısmen (18 Ekim 2026; [ADR 0510](../docs/adr/0510-bound-layer-of-a-part.md)): GeoPackage tablosunun bir alanı çalışma kopyası olur (`cad.sources.edit`'in `extent`'i, `.kcad`'de bağla): yalnız kutusu alana değen satırlar okunur (mekânsal dizinle; dizinsiz tabloda geometrinin kutusuyla, eskiden sessizce bütün tablo dönüyordu), eşitleme alanın dışını silmez, dışarı taşınan nesne kendi satırına yazılır. 1 milyon parselde 400 × 300 m'lik alan 372 ms ve 24 MB. Kalan: alanı değiştirmek, görünüme göre kendiliğinden okuma, PostGIS'te alan, sürüm damgasının dosyanın tamamından ucuzlaması.*
+
+  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): GeoPackage sağlayıcısının ilk dilimi: tablo keşfi ve ayrı yetenekler (okuma, ekleme, güncelleme, silme, tek işlem, Z, M, eğri; `cad.sources.describe`), kalıcı kimlik, dosyanın sürümü (SHA-256) ve katmanın özeti, desteklenmeyen yazmanın gerekçeli reddi. Kalan: genel `Source/Dataset` arayüzü, kaynağa itilen bbox ve sütun sorgusu, sayfa ve akış, sorgu planının açıklaması (PostGIS ile).*
 
   **Mevcut:** Native `Document` ve yönetilen sunucu projesi var; harici veri için genel provider sözleşmesi yok [K02–K04]. Bu, GIS'in diğer birçok açığının ortak köküdür.
 
@@ -114,6 +120,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-03 — GeoPackage feature ve tablolarını doğrudan oku/yaz — P0; uzantılar P1**
 
+  *Kısmen (17 Ekim 2026; [ADR 0502](../docs/adr/0502-geopackage.md)): GDAL'sız kendi crate'i `kentos-geopackage` (keşif, tipli sütunlar, geometri Z/M ve eğrilerle, R-tree, tek işlemde toplu yazma, `kentos_uids` ile fid ↔ UUID); `file.import.gpkg`/`file.export.gpkg` ve masaüstü penceresi; QGIS 4.2.3'ün gerçek dosyası okunur, KentOS'un yazdığı QGIS'te açılır, GDAL'ın doğrulayıcısından geçer. Dosyada yerinde düzenleme ve bilinmeyen uzantıları koruyarak geri yazma ADR 0503'le geldi. Kalan: raster karo ve ilişki profilleri.*
+
   **Mevcut:** GeoJSON/Shapefile temeli var; kaynakta GeoPackage provider/codec bulunamadı [K03]. Kullanılabilir bir açık GIS için en büyük günlük veri alışverişi boşluklarından biridir.
 
   **Yapılacak kalan iş:** `.gpkg` keşfetme, feature ve geometrisiz tablo okuma/oluşturma/düzenleme, CRS ve tipli kolonlar, spatial index, tek işlemde toplu yazma ve güvenli dosya kapatma uygula. Desteklenen geometry type, empty/null geometry, Z/M ve extension'ları açıkça bildir. Kaynak `fid` ile KentOS kalıcı UUID eşlemesi korunmalı; aç/kapa veya VACUUM sonrası rastgele yeni kimlik üretilmemeli. Bilinmeyen extension silinmesin. İlişki/stil/form paketinin GeoPackage standardı mı KentOS uzantısı mı olduğu belgeli olsun. SQLite native adapter ile GDAL/OGR adapter seçeneklerini gerçek round-trip ve paketleme denemesiyle seç; kendi SQLite motorunu yazma. [S01], [F01]
@@ -122,6 +130,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-04 — Kurumun mevcut PostGIS tablo/view'larına doğrudan bağlan — P1**
 
+  *Kısmen (17 Ekim 2026; [ADR 0505](../docs/adr/0505-postgis-bound-layers.md)): PostGIS tablosu bağlı katman olarak açılır (`cad.sources.*`'ın adresle çalışması), TLS'li sqlx sağlayıcısı `kentos-postgis` ev sahiplerince kaydedilir; sürüm satırların SHA-256'sı (`xmin` değil), yazma kilit altında sürüm denetimiyle tek işlemde, kalıcı kimlikler `kentos_uids`'te; parola projeye yazılmaz; masaüstünde PostGIS'e bağlan. Geçici PostGIS'te ogr2ogr ve psycopg2'yle denetlendi. Kalan: sorguyu kaynağa itmek ve sayfa sayfa ilk harita, view ve SQL katmanı, tetikleyici/outbox izleme, milyon satır ölçümü, QGIS'le eşzamanlı düzenleme senaryosu.*
+
   **Mevcut:** KentOS bulutunun kendi şeması ve sayfalaması mevcut; kurumun var olan `parsel`, `bina`, `hat` tablolarına provider olarak bağlanmak ayrı iş [K04].
 
   **Yapılacak kalan iş:** TLS/sertifika doğrulamalı bağlantı, şema/tablo/view keşfi, geometri kolonu/SRID/birincil anahtar seçimi, geometrisiz tablolar ve başlangıçta salt okunur query layer sun. Dış şemayı kendiliğinden `kentos.*` yapısına dönüştürme. Bbox/kolon/filtre/aggregate sorgusunu kaynağa it; uygun GiST/B-tree/KNN kullanımını sorgu planıyla ölç. Yazılabilir kaynakta PK ve revision stratejisi, transaction, rollback ve optimistic conflict zorunlu olsun. Kalıcı revision yerine tek başına `xmin` kullanılmasın; güvenilir sürümlemeye sahip olmayan kaynak sınırlı/salt okunur açılsın. İzinli trigger/outbox veya polling seçenekleri; `LISTEN/NOTIFY` dayanıklı geçmişin yerine geçmesin. [D01], [D02]
@@ -129,6 +139,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** `PG-01…18` burada birleşir; CBS-02/06/37/38. Milyon kayıtlı dış tabloda ilk harita tüm satırları indirmeden gelsin. QGIS 4.2 aynı kaydı değiştirince KentOS bunu algılasın; iki editör birbirini sessizce ezmesin. DB bağlantı hatasında yerel taslak korunsun; eksik sayfa doğru toplam diye gösterilmesin.
 
 - [ ] **CBS-05 — Eksik açık biçim aktarımlarını ve kayıp raporlu ETL'yi tamamla — P0/P1**
+
+  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage iki yönde, kayıplar türlerine göre (`import_losses`, `export_losses`), başka sistemdeki dosya açık onayla çevrilir. Kalan: CSV/XYZ ve Shapefile dışa aktarımı, GML, FlatGeobuf, GeoParquet, staging ve upsert.*
 
   **Mevcut:** Ortak okuyucular, GeoJSON, Shapefile okuma, KML/GPX, DXF ve tablo dosyaları var [K03/K11]. “Desteklenen uzantı” listesi yerine okuma/yazma ve semantik kayıp matrisi gerekir.
 
@@ -140,6 +152,10 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-06 — Provider'da null/boş ayrımı, geniş tipler ve kararlı field eşlemesini tamamla — P0/P1**
 
+  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage yolunda NULL özniteliğin yokluğu, boş metin boş metin; 2⁵³'ü aşan tam sayı her basamağıyla metin alanına, söylenerek; UTC zamanın dilimi söylenir. Kalan: int64/decimal/UUID/zaman dilimli anın kendi türleri ve dosya↔Python yolu.*
+
+  *Kısmen (18 Ekim 2026; [ADR 0512](../docs/adr/0512-wide-values-through-a-bound-layer.md)): bağlı katmanın eşitlemesi hücreleri sütunun okuma kuralıyla karşılaştırır: 2⁵³'ü aşan tam sayının değişikliği yazılır, çizimin tutmadığı saat dilimi dokunulmamış satırı yeniden yazdırmaz. `9007199254740993`, `-9223372036854775807`, `0`, `false`, `""`, NULL ve +03:00 dilimli zaman dosya↔sağlayıcı↔tablo↔Python yolunda aynı; OGR'ın yazdığı dosya ve geri yazılan kopyası sqlite3'le hücre hücre denetlenir. Kalan: öznitelik modelinin kendi türleri, PostGIS'te aynı denetim, alan adı değişiminin stil ve birleştirmeye kadar izlenmesi.*
+
   **Mevcut:** `attrs: BTreeMap<String,String>` korunuyor. PR #25 stable field binding, tarih-saat/saat, domain, alt tür ve göç ekliyor; `MAX_INTEGER` hâlâ `2^53−1`, boş değer alanın yokluğu [K02/P25-A]. Bunları “tam tipli GIS veri modeli bitti” diye kabul etme.
 
   **Yapılacak kalan iş:** Form planının kimlik ve value adapter'ını kullanarak absent, SQL NULL, boş metin, boş liste ve sıfır ayrımını taşı. `int64`, exact decimal, UUID, timezone'lu instant, yerel datetime/date/time, JSON/array ve binary reference için kayıpsız provider codec'leri belirle. Büyük sayı metin temsilinden kayan noktaya zorlanmasın. Alan adı değişimi form, stil, ifade, join ve indeksi kararlı field ID üzerinden izlesin. Şema göçü dry-run, uyumsuz satır raporu ve geri dönüş yolu sunsun; PR'nin `cad.fields.migrate` işini yeniden yazma.
@@ -147,6 +163,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/04/15; `FORM-DATA`/`PG-08`. İlk G1'de desteklenen tipler ve açık ret yeterli; bütün eski çizimlere zorunlu büyük göç yapılmaz. `9007199254740993`, uzun decimal, `NULL`, `""`, `0`, `false` ve saat dilimi geçişi dosya↔provider↔tablo↔Python yolunda aynı anlamı korumalı. Değer kaybolacaksa commit öncesi raporlanmalı.
 
 - [ ] **CBS-07 — Katman CRS'sini koruyan genel on-the-fly provider dönüşümü ekle — P0**
+
+  *Kısmen (17 Ekim 2026; [ADR 0504](../docs/adr/0504-source-crs-and-box-transform.md)): bağlı katmanda kaynak sistemi korunur (`reproject`: katman projenin, tablo kendi sisteminde; yazma tablonun sistemine geri çevirerek, gidip gelen koordinat aynı sayılır), sıklaştırılmış ve antimeridyeni bilen kutu dönüşümü `crs::transform_bounds` (PROJ'un `transform_bounds`'uyla). Kalan: her katmanın kendi sistemiyle çizimde anında dönüşüm, ters dönüşümlü tıklama ve kenet, WKT2 ve kullanım alanı, genel PROJ bağdaştırıcısı.*
 
   **Mevcut:** Türkiye odaklı dönüşüm/ikinci CRS ve servis dönüşümleri var. Genel feature içe alma/servis verisi çoğunlukla proje sistemine kopyalanıyor [K05/K12]. Bir harita CRS'si ile her veri kaynağının CRS'si ayrı olmalı.
 
@@ -172,6 +190,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-10 — Dataset metadata'sını ve analiz soy ağacını kalıcılaştır — P0 asgari; P1 katalog**
 
+  *Kısmen (18 Ekim 2026; [ADR 0511](../docs/adr/0511-result-lineage.md)): analiz damgası: `cad.processing.run`'ın girdileri içeriklerinin özetiyle (`digest`) ve bağlı katmanın kaynak sürümüyle; dosyaya yazılan sonucun her tablosu soyunu GeoPackage'ın metadata uzantısında taşır (araç, istek, girdiler ve özetleri, çizimin sürümü, motor, zaman; `https://kentos.app/lineage/1`), sqlite3 ve GDAL'ın doğrulayıcısıyla denetlenir. Kalan: çizimin katmanına yazılan sonucun soyu, bağımlılık grafı ve eski türev göstergesi, veri kümesinin tanımı (başlık, sorumlu, lisans, kalite), katalog adaptörleri.*
+
   **Mevcut:** Proje bilgileri, layer info kartı ve işlem geçmişi var; bunlar veri üretim yöntemi/kalite/provenance standardının bütünü değil [K06/K09].
 
   **Yapılacak kalan iş:** Dataset başlığı, açıklama, sorumlu, lisans/kullanım kısıtı, kapsam, tarih/güncellik, CRS/datum, ölçek/çözünürlük, veri sözlüğü ve kalite özetini kaynak kimliğiyle sakla. Her türev; girdi revision/hash'leri, filtre/kapsam, algoritma/sürüm, parametre/birim, engine ve üretim zamanını taşısın. “Bu harita hangi veriden üretildi?” sorusuna bağımlılık grafıyla cevap ver. Yerel arama sonrasında kurum kataloğu, OGC API Records ve görüntü varlıklarında STAC adapter'ı eklenebilir; taslak standardı yayımlanmış sürüm diye kullanma. [S03], [F06]
@@ -181,6 +201,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 ## C — Güvenilir veri üretimi, topoloji ve CAD/GIS ortaklığı
 
 - [ ] **CBS-11 — Mevcut çizim araçlarına provider düzenleme/commit oturumu bağla — P0**
+
+  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md)): bütün çizim araçları bağlı katmanda çalışır; yerel geri alma, kaynağa yazma (`cad.sources.sync` write, tek SQLite işlemi) ve kaynaktan yeniden okuma ayrı durumlar; başkasının değiştirdiği dosya ezilmez (`source_changed`), katmandaki yazılmamış iş sorulmadan atılmaz (`pending_changes`). Kalan: aynı kaynaktaki katmanların birlikte commit'i, nesne nesne üç yollu birleştirme (CBS-37), PostGIS işlemi.*
 
   **Mevcut:** CAD araçları, transaction/undo ve PR'nin yeni nesnede form açması güçlü bir temel. Harici kaynağa yazma, yerel undo ile veritabanında kalıcı commit'in farkını görünür kılmalı [K07/P25-A].
 
@@ -196,7 +218,9 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/04/07/11/13/14/16. Dış PostGIS kaynağında iki komşudan yalnız biri haritaya yüklenmişken ortak sınırı düzenle; ikisi de aynı transaction'da ve beklenen revision'larla güncellenmeli. Komşuda yetki/sürüm engeli varsa sıkı profil hiçbirini yazmamalı. Yerel topolojik düzenlemenin mevcut fixture'ları değişmeden korunmalı. Dış provider olmadan bu genişleme tamamlandı sayılmaz; yerel özellik ise zaten tamamdır.
 
-- [ ] **CBS-13 — GEO-01 birleşim hatasını gider ve zincirli overlay doğruluğunu doğrula — P0**
+- [x] **CBS-13 — GEO-01 birleşim hatasını gider ve zincirli overlay doğruluğunu doğrula — P0**
+
+  *Yapıldı (17 Ekim 2026; [ADR 0500](../docs/adr/0500-overlay-correctness-corpus.md)): GEO-01 testi açık ve geçiyor; `fixtures/overlay/v1` 30 durum (GEOS ve 50 basamaklı kapalı formüller), geçerlilik, idempotentlik, özdeşlik ve zincir denetimiyle; çekirdeğin 10⁻⁶ m toleransı durumda açık. GEO-02 ayrı.*
 
   **Mevcut:** Robust predicate'ler ve analitik CAD kenarları var. Ancak GEO-01'in yok sayılan testi kaynakta duruyor; sabit toleranslarla farklı işlemlerin aynı sınırı farklı yorumlama riski incelenmeli [K08]. Bu konu yeni analiz eklemekten önce gelir.
 
@@ -256,6 +280,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-20 — Öznitelik tablosunda provider paging/sıralama/toplu yazmayı tamamla — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0507](../docs/adr/0507-attribute-table-bulk-writes.md)): toplu yazma komutu `cad.fields.write` (Alan hesapla: ifade, kapsam, boş sonuç; Yapıştır: satır başına değerler), değerler `cad.entities.set`'in kurallarıyla denetlenir (tür, kanonik metin, zorunlu, alt tür, bileşim, kayıt kuralı, tekil alan birlikte), bütün ya da hiç (`invalid_values`) ya da uyanlar (`values_skipped`), plan önizleme ve satır satır sorun raporu; masaüstünde tablonun çubuğunda Alan hesapla… (kapsam sayılarıyla) ve Yapıştır (başlık satırı, ilk seçili satırdan). Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar, gizli sütunun kopya ve dışa aktarmada süzülmesi, grafiklerin aynı süzgeçle çalışması.*
+
   **Mevcut:** Arama, ifade, türüne göre sıralama, harita seçimi, hücre düzenleme ve spreadsheet export var [K06]. PR de geometrisiz kayıt, koşullu tablo görünüşü ve ilişkili tablo ekliyor [P25-B].
 
   **Yapılacak kalan iş:** Mevcut sanallaştırma, hücre düzenleme, filtre/arama, seçim ve tablo export'unu yeniden yazma. Sıralama/filtre/aggregate'i provider'a it; tabloyu source revision'ına bağlı kararlı cursor sayfalarıyla besle. Yüklü, seçili, filtreli ve tüm dataset kapsamlarını açık sayılarla ayır. Provider'a toplu yapıştırma/alan hesaplama için önizleme, hedef tip kontrolü ve atomik yazma adapter'ı ekle. Grafik/istatistik aynı kaynak filtresini kullansın; yetkisiz kolon daha sonra kopya/export'tan okunamasın. QGIS 4.2 kolon başlığından alan hesabı mevcut araca erişim örneğidir. [Q02]
@@ -272,7 +298,9 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 ## E — Vektör analizleri ve tekrarlanabilir işlemler
 
-- [ ] **CBS-22 — Mevcut ilişkilerden ayrı sürümlü standart DE-9IM profili ekle — P0**
+- [x] **CBS-22 — Mevcut ilişkilerden ayrı sürümlü standart DE-9IM profili ekle — P0**
+
+  *Yapıldı (17 Ekim 2026; [ADR 0501](../docs/adr/0501-standard-relations-de9im.md)): `ops::de9im` (kesin matris, yaylar kesin, on yüklem, desen), `cad.entities.relate` (Python, MCP), 33 durum GEOS'la (QGIS 4.2.3). Konuma göre seç'in toleranslı anlamı değişmedi. Arayüzde seçenek CBS-40'ta, PostGIS'e itilen sorguyla karşılaştırma CBS-04'te.*
 
   **Mevcut:** Altı ilişki ve sabit metrik toleranslı sorgu var [K06]. `contains`, sınırda içerme ve yakınlık aynı anlamda kullanılmamalı; PostGIS ile yerel sorgu farkı ürün hatasına dönüşmemeli.
 
@@ -281,6 +309,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/08/13. Parselin sınırındaki nokta için covers ve contains beklenen farklı sonucu vermeli; açık çizginin uç noktası, multipart ve boş geometri fixture'ları olmalı. PG'ye itilen sorgu ile aynı destek profilinin yerel sonucu eşleşmeli. Bbox dönüşümü veya yüklenmemiş kayıtlar yüzünden yanlış negatif oluşmamalı; metre toleransı coğrafi derece gibi uygulanmamalı.
 
 - [ ] **CBS-23 — Mevcut geoprocessing'e provider girdisi ve parça parça çıktı bağla — P0/P1**
+
+  *Kısmen (18 Ekim 2026; [ADR 0508](../docs/adr/0508-processing-tools-as-commands.md) §4): `cad.processing.run`'ın `sink`'i sonucu çizim yerine yeni bir GeoPackage'a yazar (araç kopyada, yaptığı nesnelerin katmanları birer tablo, alanlar sütun, kimlikler `kentos_uids`'te, yaylar kesin, kalanlar `export_losses`; dosya bütün ya da hiç, var olan yalnız `overwrite` ile); cevabın `inputs`'u okunan katmanlar ve bağlı katmanın kaynak sürümü. G1'in kesişimi, yola tamponu ve Ada'ya göre birleştirmesi dosyaya yazılıp OGR'la bağımsız denetlenir (alanlar, öznitelik soyu, geçerlilik). Kalan: var olan GeoPackage'a tablo ekleme, kaynaktan sayfa sayfa okuma ve parça parça yazma, disk üstünde ara depo, iptalin dosyaya etkisi, PostGIS'e yazma.*
 
   **Mevcut:** Buffer, clip, dissolve, union/intersection/difference, repair, simplify, yakınlık, grid ve genelleştirme zaten var [K09]. Yapılacak iş bu algoritmaları yeniden listelemek değil, gerçek dataset ve çıktı kurallarıyla tamamlamaktır.
 
@@ -392,6 +422,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-36 — Mevcut .kcad projesine provider kaynak manifesti ve taşınabilir paket ekle — P0**
 
+  *Kısmen (17 Ekim 2026; [ADR 0503](../docs/adr/0503-bound-layers.md), [ADR 0506](../docs/adr/0506-relative-sources-and-package.md)): `.kcad` şema 74'ün `sources`'ı: kaynak kimliği, dosya ve tablo, katman eşlemesi, içerik özeti (SHA-256), EPSG, göreli yol (kaydetmede yazılır, açılışta aynı içerikteki dosya bulunur); Kaynak ▸ Yeniden bağla; Paketle (`file.package`): proje ve veri/ altında bağlı GeoPackage, resim, raster (dünya dosyalarıyla), bulut, tablo ve ek kopyaları, bütün ya da hiç, SHA-256 denetimiyle; veritabanı, adres ve eksik dosya söylenir. Kalan: PostGIS tablosunun çevrimdışı kopyası, lisans ve erişim süzgeci, bağı gömülü kopyaya çevirme.*
+
   **Mevcut:** `.kcad`, bağlı/gömülü raster ve kitaplık, sunucu snapshot/revision ve kurtarma temeli mevcut [K01/K04/K11]. Genel sağlayıcı eklenince proje açmanın veri kopyalamaktan ayrılması gerekir.
 
   **Yapılacak kalan iş:** Proje manifesti; kaynak kimliği/bağlantı referansı, dataset/layer mapping, CRS dönüşüm bağlamı, şema/alan ID, stil, form/ilişki, named view, model ve pafta bağımlılıklarını sürümlü saklasın. Relative path, yeniden konumlandırma ve içerik hash'i desteklensin. Bağlı kaynak, gömülü snapshot ve offline çalışma kopyası kullanıcı seçimi olsun; parola/refresh token/signed URL proje içine yazılmasın. Paketle komutu lisans/erişim sınırına göre asset'leri ve kaynakları toplasın; bütünlüğü doğrulayıp atomik dosya değişimiyle bitirsin. `.kcad` hızlı sorgu/replica veritabanı yapılmasın.
@@ -434,6 +466,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-41 — Yeni GIS provider ve Processing seçeneklerini komut/Python/MCP'ye aç — P0/P1**
 
+  *Kısmen (18 Ekim 2026; [ADR 0508](../docs/adr/0508-processing-tools-as-commands.md)): İşlemler'in yerleşik araçları `cad.processing.tools` (araçlar, parametreleri, çizimin varsayılanları) ve `cad.processing.run` (pencerenin çalıştırıcısı, açık değerler, nesneler kalıcı kimliklerle ya da girdinin açık `selection` ve `view`'u; retler sırayla, eklenen, değişen, seçilen, katmanlar, çıktılar, notlar; plan kopyada) ile Python'a ve MCP'ye açık; ev sahipleri araçları kaydeder (`processing_host`). Kalan: başsız dosya erişimi (raster, bulut, NetCDF araçları), modeller, pencerenin yazmasının komut kaydına girmesi, uzun iş yolu, işlem + seçenek + veri türü + ev sahibi kapsam matrisi, doğal dil başarısının ayrı ölçümü.*
+
   **Mevcut:** Headless/native registry, Python ve MCP mevcut; ağ/servis/zaman için de Python yolları bulunuyor [K13]. Bütün GIS veri kaynaklarının ve Processing seçeneklerinin ortak yüzeyi ayrıca kapatılmalı.
 
   **Yapılacak kalan iş:** Source discovery/query, schema/domain, feature edit, form/ilişki, CRS, analiz/model, job ve export sürümlü tipli command/query sözleşmesiyle erişilsin. `validate/plan/execute`, etki sayıları, scope, unit, expected revision, uyarı, cancellation ve artifact cevabı ortak olsun. UI hesaplarını Python/AI kullanıcısına yeniden yazdırma; doğrudan SQL/repository ile iş kuralı atlatma. Ekrana ait locator/selection etkileşimleri session ID ile yönetilsin; headless yolu fare istemesin. `.kek` ve üçüncü taraf Processing/widget lifecycle'i `python.md`'yi kullansın; yerleşik GIS araçları Python kurulmadan çalışsın.
@@ -441,6 +475,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** Bütün maddelerin kendi çıkış kapısı; CBS-02/15/24/38. Aynı proje ve açık parametrelerle UI, Python ve MCP aynı semantic changeset/uyarıyı vermeli. Kapsam matrisi yalnız komut adı değil **işlem+seçenek+veri türü+host** düzeyinde tutulmalı. AI planı görünmeyen kayıt veya yetki uyduramasın; salt okunur plan belge revision/dirty/undo durumunu değiştirmesin. Doğal dil başarısı API kapsamından ayrı ölçülsün.
 
 - [ ] **CBS-42 — Yeni provider akışında sınırlı bellek ve performans bütçelerini doğrula — P0/P1**
+
+  *Kısmen (18 Ekim 2026; [ADR 0509](../docs/adr/0509-provider-baseline-and-link-memory.md), [ölçüm](../docs/perf/provider-2026-10-18.md)): 1 milyon parsel ve 10 milyon köşelik GeoPackage'da ölçüm tabanı (makine, release derleme, verinin SHA-256'sı, sıcak önbellek). Sağlayıcının ilk sayfası 0,1 ms, anahtarla sonraki sayfa 0,1 ms, mekânsal dizinle görünen kutu 0,6 ms; bellek veriyle büyümüyor. Bağlamanın belleği düzeltildi: katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar bir kez okunuyor; 100 000 parselde 1,3 GB'tan 323 MB'a. Kalan: bağlı katman bugün çalışma kopyası (1 milyonda 13,7 s, 3 GB): görünür küme ve sayfa sayfa okuma; çizim alanında kenet, seçim ve kare süreleri; soğuk önbellek, yavaş ağ; 10 milyon satır ve 20 GB stres.*
 
   **Mevcut:** Spatial index, kirli güncelleme, GPU batching, tablo sanallaştırma, raster/cloud range ve arka plan işi temelleri var [K01/K09…K12]. Bunlar korunur; tüm belgeyi dolaşma/indirme varsayımı provider katmanında kaldırılır.
 
@@ -450,6 +486,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-43 — Mevcut servis istemcisini canlı feature provider ve açık filtre profiliyle genişlet — P1; yayın P2**
 
+  *Kısmen (18 Ekim 2026; [ADR 0513](../docs/adr/0513-feed-completeness-and-filter-profile.md)): Servisten veri al'ın bitişi `complete`, `capped`, `short`, `pages` (sınırlı ya da sayfalı servisin eksik sonucu tam sayılmaz; WFS 2.0 sunucunun kestiği sayfada sürer); OGC API'nin uygunluk sayfası profil olarak okunur (Bölüm 1–4, CQL2; Bölüm 4 taslak, kullanılmaz), CQL2 metin süzgeci yalnız bildiren servise gider. Bağımsız başvuru `feed_paging_cases.py` sahte sunucuyla; Python yerel sunucuyla uçtan uca. Kalan: canlı sağlayıcı (servis üstünde sorgu ve düzenleme), expires/ETag, belirteç yenileme, kesilen ağ, CQL2 JSON ve queryables, QGIS'in FeatureServer kıyası, yayın (P2).*
+
   **Mevcut:** WMS/WMTS/XYZ/MVT, WFS/OGC API Features/ArcGIS REST okuma, auth/cache/atıf ve feed yenileme mevcut [K12]. İlk GIS için harita sunucusu/Martin eşdeğeri kurmak zorunlu değildir; mevcut yayın kapsamı sınırı korunur.
 
   **Yapılacak kalan iş:** Mevcut WMS/WMTS/XYZ/MVT ve feature feed/auth/cache istemcilerini yeniden geliştirme. Ayrı kalan canlı feature provider'ını mevcut bağlantı/capability okumaya bağla; kopya veri alma ile source üzerinde canlı sorgu/düzenlemeyi ayrı göster. OGC API Features Part 1/2/3 ve CQL2 için desteklenen filtre/CRS profilini açık capability olarak bildir; yeni query adapter'ının paging/filtre sonucunu tam veriyle karşılaştır. QGIS 4.2 FeatureServer bbox veri çekme yaklaşımı yeni provider'ın performans kıyasıdır. [S08], [S09], [Q02]
@@ -457,6 +495,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/07/38/39/42. Limitli/sayfalı servis eksik sonucu “tam veri” saymamalı; expires/ETag, token yenileme, kesilen ağ ve attribution çalışmalı. **P2'de ayrıca seçilirse** açık OGC API/tiles yayın servisi veya açık kaynak server adapter'ı; immutable yayın revision'ı, stil/metadata, erişim ve cache izolasyonuyla eklenir. Ticari servis/DB bağımlılığı oluşmaz; kaynak CAD/GIS ile yayın tile'ı ayrı kalır. İlgili OGC standardının yazma kısmı taslaksa bu durum sürüm profilinde açıkça yazılır.
 
 - [ ] **CBS-44 — Yeni provider'lar için QGIS 4.2 round-trip ve uçtan uca kabul korpusu ekle — P0**
+
+  *Kısmen (17 Ekim 2026; ADR 0502): `fixtures/geopackage/v1` — QGIS 4.2.3'ün yazdığı GeoPackage → KentOS → GeoPackage → GDAL/OGR ve QGIS 4.2; kimlik, Türkçe metin, NULL/boş, delik, çok parça, Z/M, eğri korunumu; GDAL doğrulayıcısı. Kalan: PostGIS, yetki, restore ve performans kabulü.*
 
   **Mevcut:** Bağımsız Python referansları, ortak fixture'lar, interaction izleri, hata testleri ve performans kayıtları mevcut [K01/K08/K09]. Yeni GIS kabiliyeti bu altyapıya bağlanır; ekran veya komut ismi tamamlandı sayılmaz.
 

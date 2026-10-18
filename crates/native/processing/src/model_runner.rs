@@ -411,7 +411,9 @@ pub fn run_model_with(
     let mut outputs: BTreeMap<String, Values> = BTreeMap::new();
     let mut added: Vec<Slot> = Vec::new();
     let mut touched: Vec<Slot> = Vec::new();
+    let mut updated: Vec<Slot> = Vec::new();
     let mut seen = BTreeSet::new();
+    let mut seen_updated = BTreeSet::new();
     let mut summaries: Vec<String> = Vec::new();
     let mut edited = false;
     let mut select: Option<Vec<Slot>> = None;
@@ -435,9 +437,15 @@ pub fn run_model_with(
                 result,
                 added: step_added,
                 touched: step_touched,
+                updated: step_updated,
                 edited: step_edited,
                 record,
             } => {
+                for id in step_updated {
+                    if seen_updated.insert(id) {
+                        updated.push(id);
+                    }
+                }
                 outputs.insert(step.id.clone(), step_outputs(&tool, &result, &step_added));
                 added.extend(step_added);
                 for id in step_touched {
@@ -501,6 +509,7 @@ pub fn run_model_with(
         result,
         added,
         touched,
+        updated,
         edited,
         record,
     }
