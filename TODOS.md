@@ -1804,6 +1804,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-06` bağlı katmanda geniş değerler (dilim): eşitleme hücreleri sütunun okuma kuralıyla karşılaştırır (`geopackage::same_cell`):
+  2⁵³ üstü tam sayının değişikliği yazılır, saat dilimi dokunulmamış satırı yeniden yazdırmaz; `genis.gpkg` (OGR) ve
+  `wide_values_cases.py`, Python'dan `test_wide_values.py`. Kalan: kendi türler, PostGIS. — **18 Ekim,
+  [ADR 0512](docs/adr/0512-wide-values-through-a-bound-layer.md).**
 - [ ] `CBS-10` işlem sonucunun soyu (ilk dilim): girdilerin içerik özeti (`RunInput.digest`), dosyaya yazılan sonucun tablolarında
   GeoPackage metadata uzantısıyla `kentos.lineage` 1 (araç, istek, girdiler, motor, zaman); `processing_sink_cases.py` sqlite3 ve
   `validate_gpkg.py` ile denetler. Kalan: çizimdeki katmanın soyu, bağımlılık grafı, veri kümesinin tanımı, katalog. — **18 Ekim,

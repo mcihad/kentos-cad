@@ -439,3 +439,97 @@ fn without_a_provider_a_database_is_not_reached() {
     ));
     assert!(d.settings().sources.is_empty());
 }
+
+/// The values whose meaning a round trip keeps (plan/gis.md CBS-06, docs/adr/0512): OGR's `genis.gpkg` holds an integer
+/// past 2⁵³ and the smallest 64-bit one, 0 and false, a double that has no short decimal, an empty text beside NULL, a
+/// time with its zone and one in UTC. Linked, one row's text changed and written back: every other cell is as it was,
+/// its value and its type. With KENTOS_WRITE_GPKG the written copy is kept as fixtures/geopackage/v1/kentos-genis.gpkg,
+/// which scripts/fixtures/wide_values_cases.py compares with the source cell by cell (sqlite3).
+#[test]
+fn wide_values_keep_their_meaning_through_a_bound_layer() {
+    let tmp = std::env::temp_dir().join(format!("kentos-genis-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("genis.gpkg"), &tmp).expect("copied");
+    let path = tmp.display().to_string();
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "deger" } }),
+    );
+    assert_eq!(ok(&linked)["objects"], 3, "{linked}");
+    let layer = link_of(&d).layer;
+    let (uid, attrs) = d
+        .by_layer_with_uids(&layer)
+        .find(|(_, e)| {
+            e.base()
+                .attrs
+                .get("metin")
+                .is_some_and(|m| m.starts_with('ş'))
+        })
+        .map(|(u, e)| (u, e.base().attrs.clone()))
+        .expect("the third row");
+    assert!(
+        !attrs.contains_key("buyuk"),
+        "NULL is the attribute's absence: {attrs:?}"
+    );
+    // Right after linking nothing differs: a zone the drawing does not keep is not a change.
+    let fresh = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Plan,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(ok(&fresh)["modified"], 0, "{fresh}");
+    let first = d
+        .by_layer_with_uids(&layer)
+        .find(|(_, e)| e.base().attrs.get("sayi").map(String::as_str) == Some("0"))
+        .map(|(_, e)| e.base().attrs.clone())
+        .expect("the first row");
+    assert_eq!(
+        first.get("buyuk").map(String::as_str),
+        Some("9007199254740993"),
+        "{first:?}"
+    );
+    assert_eq!(
+        first.get("metin").map(String::as_str),
+        Some(""),
+        "an empty text is one: {first:?}"
+    );
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [uid.to_string()], "attrs": { "metin": "değişti" }, "operation": "attributes" }),
+    ));
+    let synced = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(ok(&synced)["modified"], 1, "{synced}");
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-genis.gpkg")).expect("kept");
+    }
+    // One past 2⁵³ to one below it: the same double, a different integer, a change.
+    let big = d
+        .by_layer_with_uids(&layer)
+        .find(|(_, e)| e.base().attrs.get("buyuk").map(String::as_str) == Some("9007199254740993"))
+        .map(|(u, _)| u)
+        .expect("the first row");
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [big.to_string()], "attrs": { "buyuk": "9007199254740992" }, "operation": "attributes" }),
+    ));
+    let planned = run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Plan,
+        json!({ "layer": layer, "direction": "write" }),
+    );
+    assert_eq!(ok(&planned)["modified"], 1, "{planned}");
+    let _ = std::fs::remove_file(&tmp);
+}

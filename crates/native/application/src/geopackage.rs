@@ -397,6 +397,15 @@ fn value_text(
     }
 }
 
+/// Whether two cells of a column mean the same to the drawing (plan/gis.md CBS-06, docs/adr/0512): both read to the same
+/// attribute text. An integer is compared by its digits (past 2⁵³ as well), a double by the text it reads back to, a
+/// time by its date and time of day (a zone the drawing does not keep is not a change: a row is not written over for
+/// it), NULL only with NULL.
+pub(crate) fn same_cell(a: &Value, b: &Value, kind: &ColumnKind) -> bool {
+    let mut quiet = BTreeSet::new();
+    value_text(a, kind, false, &mut quiet, "") == value_text(b, kind, false, &mut quiet, "")
+}
+
 /// Reads the tables `wanted` names (every feature and attribute table when none).
 pub fn read(path: &Path, wanted: Option<&[String]>) -> Result<Read, String> {
     read_in(path, wanted, None)

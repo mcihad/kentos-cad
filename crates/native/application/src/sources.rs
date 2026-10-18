@@ -595,15 +595,12 @@ fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>, tol: f64) -> bool {
     }
 }
 
-fn same_value(a: &Value, b: &Value) -> bool {
-    let num = |v: &Value| match v {
-        Value::Integer(i) => Some(*i as f64),
-        Value::Real(r) => Some(*r),
-        _ => None,
-    };
-    match (num(a), num(b)) {
-        (Some(x), Some(y)) => x == y,
-        _ => a == b,
+/// Whether a cell the layer would write is the table's: by the column's reading rule (docs/adr/0512) when the column is
+/// known, else exactly.
+fn same_value(a: &Value, b: &Value, kind: Option<&gpkg::ColumnKind>) -> bool {
+    match kind {
+        Some(k) => gp::same_cell(a, b, k),
+        None => a == b,
     }
 }
 
@@ -681,7 +678,11 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
                 seen.insert(uid);
                 let same = same_geometry(row.geometry.as_ref(), g.as_ref(), tol)
                     && row.values.iter().enumerate().all(|(i, v)| {
-                        same_value(v, if i < width { &values[i] } else { &Value::Null })
+                        same_value(
+                            v,
+                            if i < width { &values[i] } else { &Value::Null },
+                            columns.get(i).map(|c| &c.kind),
+                        )
                     });
                 if !same {
                     d.update.push((*fid, row));
