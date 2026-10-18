@@ -72,6 +72,8 @@ pub(crate) struct Store {
     computed: BTreeSet<Slot>,
     /// The tags (docs/adr/0344 §1): written again when their objects change.
     tags: BTreeSet<Slot>,
+    /// The view marks (docs/adr/0345 §2): written again when their targets change.
+    viewmarks: BTreeSet<Slot>,
 }
 
 /// Whether a table has cells the document works out (docs/adr/0327).
@@ -167,6 +169,7 @@ fn has_lost(stored: &Stored) -> bool {
         Entity::Space(s) => s.space.broken.is_some(),
         Entity::Column(c) => c.column.broken.is_some(),
         Entity::Tag(t) => t.tag.broken.is_some(),
+        Entity::ViewMark(m) => m.mark.broken.is_some(),
         _ => false,
     }
 }
@@ -258,12 +261,25 @@ impl Store {
         !self.tags.is_empty()
     }
 
+    /// Whether the drawing has a view mark.
+    pub fn has_viewmarks(&self) -> bool {
+        !self.viewmarks.is_empty()
+    }
+
+    /// The view marks, in slot order.
+    pub fn viewmark_slots(&self) -> impl Iterator<Item = Slot> + '_ {
+        self.viewmarks.iter().copied()
+    }
+
     fn link(&mut self, stored: &Stored) {
         if computed_table(stored) {
             self.computed.insert(stored.slot());
         }
         if matches!(&*stored.entity, Entity::Tag(_)) {
             self.tags.insert(stored.slot());
+        }
+        if matches!(&*stored.entity, Entity::ViewMark(_)) {
+            self.viewmarks.insert(stored.slot());
         }
         if let Some((of, always)) = fields_of(stored) {
             for uid in of {
@@ -291,6 +307,7 @@ impl Store {
     fn unlink(&mut self, stored: &Stored) {
         self.computed.remove(&stored.slot());
         self.tags.remove(&stored.slot());
+        self.viewmarks.remove(&stored.slot());
         if let Some((of, _)) = fields_of(stored) {
             for uid in of {
                 if let Some(texts) = self.fielded.get_mut(&uid) {

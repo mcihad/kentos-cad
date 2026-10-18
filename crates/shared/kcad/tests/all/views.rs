@@ -33,6 +33,7 @@ fn schema(file: &[u8]) -> u8 {
 
 fn view(name: &str) -> NamedView {
     NamedView {
+        id: String::new(),
         name: name.into(),
         center: Vec2 { x: 1.0, y: 2.0 },
         width: 30.0,
@@ -60,6 +61,7 @@ fn the_views_come_back_through_the_codec_and_the_columns() {
     let mut doc = content("views.json");
     for (twist, size) in [(1e-300, 2.0e7), (6.283185307179585, 1e-9), (3.0, 0.125)] {
         doc.settings.named_views[1] = NamedView {
+            id: String::new(),
             name: "Uç".into(),
             center: Vec2 {
                 x: -1.0e7,
@@ -141,7 +143,7 @@ fn the_readers_errors_name_their_places() {
             "namedViews/0/note",
         ),
         ("broken/named-views-no-twist.kcad", Code::MissingField, "twist"),
-        ("broken/schema-version-81.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-82.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

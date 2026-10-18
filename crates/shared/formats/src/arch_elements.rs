@@ -97,6 +97,29 @@ pub fn core_tag(t: &TagFields) -> Shape {
     }
 }
 
+/// The view mark as the core's shape (docs/adr/0345 §1).
+pub fn core_viewmark(m: &kentos_contracts::ViewMarkFields) -> Shape {
+    use kentos_contracts::ViewMarkForm;
+    use kentos_geometry_core::geom::viewmark::{Form, Spec};
+    Shape::ViewMark {
+        points: m.points.iter().map(|p| CoreVec2::new(p.x, p.y)).collect(),
+        mark: Spec {
+            form: match m.form {
+                ViewMarkForm::Section => Form::Section,
+                ViewMarkForm::Elevation => Form::Elevation,
+                ViewMarkForm::Detail => Form::Detail,
+            },
+            radius: m.radius,
+            at: m.at.map(|a| CoreVec2::new(a.x, a.y)),
+            angle: m.angle,
+            flip: m.flip,
+            size: m.size,
+            top: m.words.top.clone(),
+            bottom: m.words.bottom.clone(),
+        },
+    }
+}
+
 /// One of the four, or a tag, as the core's shape; none for another object.
 pub fn core_of(e: &Entity) -> Option<Shape> {
     Some(match e {
@@ -105,6 +128,7 @@ pub fn core_of(e: &Entity) -> Option<Shape> {
         Entity::Stair(s) => core_stair(&s.stair),
         Entity::Ramp(r) => core_ramp(&r.ramp),
         Entity::Tag(t) => core_tag(&t.tag),
+        Entity::ViewMark(m) => core_viewmark(&m.mark),
         _ => return None,
     })
 }
@@ -175,6 +199,19 @@ pub fn simple(e: &Entity) -> Option<Entity> {
         }
         Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) => {
             Entity::Polygon(path(e.base(), outline_points(e)?, None))
+        }
+        // A view mark a point at its first point, its words its label (docs/adr/0345 §1).
+        Entity::ViewMark(m) => {
+            let mut base = m.base.clone();
+            if base.label.is_none() {
+                base.label = Some(format!("{}/{}", m.mark.words.top, m.mark.words.bottom));
+            }
+            Entity::Point(kentos_contracts::PointEntity {
+                base,
+                p: m.mark.points.first().copied().unwrap_or(kentos_contracts::Vec2 { x: 0.0, y: 0.0 }),
+                z: None,
+                parts: None,
+            })
         }
         // A tag a point at its middle, its words its label (docs/adr/0344 §1).
         Entity::Tag(t) => {

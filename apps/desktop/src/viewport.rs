@@ -1026,6 +1026,7 @@ impl Viewport {
     pub fn named(&self, name: &str) -> kentos_contracts::NamedView {
         let (width, height) = self.camera.view_size();
         kentos_contracts::NamedView {
+            id: String::new(),
             name: name.to_owned(),
             center: kentos_contracts::Vec2 {
                 x: self.camera.center.x,

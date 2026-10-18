@@ -1104,7 +1104,9 @@ def named_views(list_):
         assert math.isfinite(v["twist"]) and 0.0 <= v["twist"] < TAU, v
 
     def one(v):
-        return cmap(fields(v, {"name": (text, True), "center": (point, True), "width": (f64, True), "height": (f64, True), "twist": (f64, True)}, "namedViews"))
+        # Schema 81 (docs/adr/0345 §2): a view's id when it has its own, never empty.
+        assert v.get("id", "?"), "boş görünüm kimliği yazılmaz"
+        return cmap(fields(v, {"id": (text, False), "name": (text, True), "center": (point, True), "width": (f64, True), "height": (f64, True), "twist": (f64, True)}, "namedViews"))
 
     return nonempty(one)(list_)
 
@@ -1478,6 +1480,8 @@ KINDS = {
     "ramp": {"ramp": (opaque, True)},
     # Schema 80 (docs/adr/0344 §1): a tag; its fields as one map.
     "tag": {"tag": (opaque, True)},
+    # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
+    "viewmark": {"viewmark": (opaque, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields, each as one map.
     "space": {
         "parts": (opaque, True),
@@ -1815,8 +1819,8 @@ def entity(e, uid, index):
     if kind == "opening":
         assert uid is not None, "blok tanımında açıklık olamaz"
         e = opening_parts(e)
-    if kind in ("grid", "column", "stair", "ramp", "tag"):
-        assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa ya da etiket olamaz"
+    if kind in ("grid", "column", "stair", "ramp", "tag", "viewmark"):
+        assert uid is not None, "blok tanımında aks, kolon, merdiven, rampa, etiket ya da görünüm işareti olamaz"
         keep = ("kind", "id", "layerId", "color", "attrs", "label", "symbol", "lineWeight", "labelPins", "attachments",
                 "lineType", "lineTypeScale", "transparency", "order", "linePattern")
         own = {k: v for k, v in e.items() if k not in keep}
@@ -2081,6 +2085,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
+    if any(e["kind"] == "viewmark" for e in entities) or any("id" in v for v in (settings or {}).get("namedViews", [])):
+        return 81
     # Schema 80 (docs/adr/0344): a tag, or a schedule of the drawing's objects.
     if any(e["kind"] == "tag" or (e["kind"] == "table" and e.get("source", {}).get("kind") == "schedule") for e in entities):
         return 80
@@ -2595,7 +2602,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-81.kcad"] = container(root(cmap(parts), version=uint(81)))
+    files["schema-version-82.kcad"] = container(root(cmap(parts), version=uint(82)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4201,6 +4208,24 @@ def build():
     out["broken/tag-size-zero.kcad"] = tags_broken(lambda d: d["entities"][2].update(size=0.0))
     out["broken/tag-unknown-place.kcad"] = tags_broken(lambda d: d["entities"][2].update(content="{nummer}"))
     out["broken/schedule-no-columns.kcad"] = tags_broken(lambda d: d["entities"][3]["source"].update(columns=[]))
+    # The view marks and a named view's id (docs/adr/0345 §1, §2): schema 81's; in schema 80 an unknown kind; a false
+    # flip, a detail without its radius, a section's one point, empty words and an empty view id refused.
+    out["viewmarks.kcad"] = container(document(load("viewmarks.json")))
+    marks_payload = document(load("viewmarks.json"))
+    assert marks_payload.count(b"\x67version\x18\x51") == 1, "the view marks are schema 81"
+    out["broken/viewmarks-in-schema-80.kcad"] = container(marks_payload.replace(b"\x67version\x18\x51", b"\x67version\x18\x50"))
+
+    def marks_broken(change):
+        d = copy.deepcopy(load("viewmarks.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/viewmark-flip-false.kcad"] = marks_broken(lambda d: d["entities"][0].update(flip=False))
+    out["broken/viewmark-detail-no-radius.kcad"] = marks_broken(lambda d: d["entities"][2].pop("radius"))
+    out["broken/viewmark-section-one-point.kcad"] = marks_broken(lambda d: d["entities"][3].update(points=[{"x": 0.0, "y": 0.0}]))
+    out["broken/viewmark-words-empty.kcad"] = marks_broken(lambda d: d["entities"][3].update(words={"top": "", "bottom": ""}))
+    assert marks_payload.count(b"\x62id\x67v-kesit") == 1
+    out["broken/view-id-empty.kcad"] = container(marks_payload.replace(b"\x62id\x67v-kesit", b"\x62id\x60"))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

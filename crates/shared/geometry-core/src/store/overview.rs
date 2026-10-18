@@ -417,7 +417,7 @@ impl Canvas {
                 }
             }
             // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343).
-            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
+            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
                 if let Some(o) = crate::geom::arch::outline(s) {
                     self.shape(&o, c);
                 }

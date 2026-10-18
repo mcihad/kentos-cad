@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 153] = [
+pub(crate) const TITLES: [(&str, &str); 157] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -52,6 +52,10 @@ pub(crate) const TITLES: [(&str, &str); 153] = [
     ("cad.tags.create", "Etiket"),
     ("cad.tags.edit", "Etiketi düzenle"),
     ("cad.tags.check", "Etiketleri denetle"),
+    ("cad.viewmarks.create", "Görünüm işareti"),
+    ("cad.viewmarks.edit", "Görünüm işaretini düzenle"),
+    ("cad.viewmarks.references", "Başvurular"),
+    ("cad.spaces.finish", "Döşeme ve tavan"),
     ("cad.schedules.create", "Çizelge"),
     ("cad.schedules.edit", "Çizelgeyi düzenle"),
     ("cad.openings.create", "Açıklık ekle"),
@@ -211,6 +215,15 @@ fn field_name(key: &str) -> Option<&'static str> {
         "slope" => "Eğim",
         "tags" => "Etiketler",
         "of" => "Nesne",
+        "marks" => "İşaretler",
+        "form" => "Biçim",
+        "target" => "Hedef",
+        "mark" => "Numara",
+        "flip" => "Çevir",
+        "surface" => "Yüzey",
+        "grid" => "Izgara",
+        "size" => "Yazı yüksekliği",
+        "origin" => "Başlangıç",
         "content" => "Şablon",
         "leader" => "Kol",
         "all" => "Hepsi",

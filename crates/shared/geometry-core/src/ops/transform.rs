@@ -719,6 +719,30 @@ pub fn transform_shape_with(shape: &Shape, m: &Affine, policy: TextPolicy) -> Sh
             at: apply(m, *at),
             tag: tag.clone(),
         },
+        // Its points and bubble map; a detail's radius and an elevation's direction with them (docs/adr/0345 §1).
+        Shape::ViewMark { points, mark } => {
+            let mut mark = mark.clone();
+            mark.at = mark.at.map(|a| apply(m, a));
+            // The linear part: [a, b, c, d] maps (x, y) to (a x + c y, b x + d y).
+            let (ma, mb, mc, md) = (m[0], m[1], m[2], m[3]);
+            let scale = crate::jsmath::js_hypot(ma, mb);
+            if let Some(r) = &mut mark.radius {
+                *r *= scale;
+            }
+            if let Some(a) = &mut mark.angle {
+                let rad = *a * crate::jsmath::PI / 180.0;
+                let (dx, dy) = (crate::jsmath::cos(rad), crate::jsmath::sin(rad));
+                *a = crate::jsmath::atan2(mb * dx + md * dy, ma * dx + mc * dy) * 180.0 / crate::jsmath::PI;
+            }
+            // A mirror turns which side a section looks to.
+            if ma * md - mb * mc < 0.0 {
+                mark.flip = !mark.flip;
+            }
+            Shape::ViewMark {
+                points: points.iter().map(|p| apply(m, *p)).collect(),
+                mark,
+            }
+        }
         Shape::Ramp { pts, ramp } => {
             let mut spec = ramp.clone();
             spec.width *= s;

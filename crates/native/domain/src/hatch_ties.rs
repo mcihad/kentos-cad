@@ -37,7 +37,19 @@ use crate::store::Stored;
 /// The geometry core's reading of an object (the contract's own JSON). The JSON reads a polyline open; a closed one
 /// is closed here, so a hatch inside it follows it (docs/adr/0258 §1, 0333 §2).
 fn core(e: &Entity) -> Option<CoreEntity> {
-    let json = serde_json::to_string(e).ok()?;
+    let mut value = serde_json::to_value(e).ok()?;
+    // A space's part leaves out its empty holes; the core's area reads them (docs/adr/0345 §4: a finish follows its
+    // space).
+    if let Some(parts) = value.get_mut("parts").and_then(|p| p.as_array_mut())
+        && matches!(e, Entity::Space(_))
+    {
+        for part in parts {
+            if let Some(o) = part.as_object_mut() {
+                o.entry("holes").or_insert_with(|| serde_json::Value::Array(Vec::new()));
+            }
+        }
+    }
+    let json = value.to_string();
     let mut c = CoreEntity::from_json(&Json::parse(&json).ok()?).ok()?;
     if let (Entity::Polyline(p), Shape::Polyline { closed, .. }) = (e, &mut c.shape) {
         *closed = p.closed;

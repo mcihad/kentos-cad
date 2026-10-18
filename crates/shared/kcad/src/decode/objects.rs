@@ -83,6 +83,7 @@ enum Kind {
     Stair,
     Ramp,
     Tag,
+    ViewMark,
 }
 
 /// The dimension's kinds in the contract's order: schema 9 added the last five.
@@ -118,6 +119,7 @@ const KINDS: &[(&str, Kind)] = &[
     ("stair", Kind::Stair),
     ("ramp", Kind::Ramp),
     ("tag", Kind::Tag),
+    ("viewmark", Kind::ViewMark),
 ];
 
 /// What a payload's schema lets an object hold beyond schema 2's fields.
@@ -227,6 +229,8 @@ pub(super) struct Features {
     arch_elements: bool,
     /// Schema 80: the tag and a table's schedule of the drawing's objects (docs/adr/0344).
     tags: bool,
+    /// Schema 81: the view mark and a named view's id (docs/adr/0345).
+    pub(super) viewmarks: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -370,6 +374,7 @@ impl Features {
             spaces: schema >= crate::SCHEMA_WITH_SPACES,
             arch_elements: schema >= crate::SCHEMA_WITH_ARCH_ELEMENTS,
             tags: schema >= crate::SCHEMA_WITH_TAGS,
+            viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,
@@ -442,6 +447,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
             Kind::Stair => key == "stair",
             Kind::Ramp => key == "ramp",
             Kind::Tag => key == "tag",
+            Kind::ViewMark => key == "viewmark",
             Kind::Text => {
                 matches!(key, "p" | "text" | "height" | "rotation")
                     || (has.texts && matches!(key, "align" | "widthFactor" | "mask"))
@@ -642,6 +648,7 @@ struct Fields {
     stair: Option<kentos_contracts::StairFields>,
     ramp: Option<kentos_contracts::RampFields>,
     tag: Option<kentos_contracts::TagFields>,
+    viewmark: Option<kentos_contracts::ViewMarkFields>,
     p: Option<Vec2>,
     a: Option<Vec2>,
     b: Option<Vec2>,
@@ -910,6 +917,7 @@ pub(super) fn object(
             && (has.spaces || *kind != Kind::Space)
             && (has.arch_elements || !matches!(kind, Kind::Grid | Kind::Column | Kind::Stair | Kind::Ramp))
             && (has.tags || *kind != Kind::Tag)
+            && (has.viewmarks || *kind != Kind::ViewMark)
             && (has.forms || *kind != Kind::Record)
     }) else {
         return Err(r.fail(
@@ -946,6 +954,10 @@ pub(super) fn object(
     // Nor a tag: its object is the drawing's (docs/adr/0344 §1).
     if kind == Kind::Tag && !has.uids {
         return Err(r.fail(Code::BadValue, "blok tanımında etiket olamaz"));
+    }
+    // Nor a view mark: its target is the drawing's (docs/adr/0345 §1).
+    if kind == Kind::ViewMark && !has.uids {
+        return Err(r.fail(Code::BadValue, "blok tanımında görünüm işareti olamaz"));
     }
     // Nor a space: its walls are the drawing's (docs/adr/0342 §1).
     if kind == Kind::Space && !has.uids {
@@ -1182,6 +1194,10 @@ pub(super) fn object(
             "ramp" if kind == Kind::Ramp => f.ramp = Some(json_part(r, "rampanın alanları")?.0),
             // Schema 80 (docs/adr/0344 §1): a tag's fields.
             "tag" if kind == Kind::Tag => f.tag = Some(json_part(r, "etiketin alanları")?.0),
+            // Schema 81 (docs/adr/0345 §1): a view mark's fields.
+            "viewmark" if kind == Kind::ViewMark => {
+                f.viewmark = Some(json_part(r, "görünüm işaretinin alanları")?.0)
+            }
             // Schema 78 (docs/adr/0342 §1): a space's parts and the rest of its fields.
             "parts" if kind == Kind::Space => {
                 let (v, _): (Vec<kentos_contracts::SpacePart>, usize) = json_part(r, "mahalin sınırı")?;
@@ -2053,6 +2069,13 @@ fn build(
                 return Err(r.fail(Code::BadValue, &problem));
             }
             Entity::Tag(kentos_contracts::TagEntity { base, tag })
+        }
+        Kind::ViewMark => {
+            let mark = required(r, f.viewmark.take(), "viewmark")?;
+            if let Some((_, problem)) = mark.problem() {
+                return Err(r.fail(Code::BadValue, &problem));
+            }
+            Entity::ViewMark(kentos_contracts::ViewMarkEntity { base, mark })
         }
         Kind::Space => {
             let rest = required(r, f.space.take(), "space")?;

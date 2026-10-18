@@ -85,6 +85,13 @@ def name_ok(name):
     return 0 < len(name) <= MOST_NAME and not any(unicodedata.category(c) == "Cc" for c in name)
 
 
+def fnv(name):
+    h = 0x811C9DC5
+    for b in name.encode():
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return f"v-{h:08x}"
+
+
 def view(name, center, width, height, twist=0.0):
     return {"name": name, "center": P(*center), "width": width, "height": height, "twist": norm(twist)}
 
@@ -163,13 +170,26 @@ class Project:
             kept = view(name, (op["center"]["x"], op["center"]["y"]), op["width"], op["height"], op.get("twist", 0.0))
             at = next((j for j, v in enumerate(self.views) if v["name"] == name), None)
             if at is None:
+                # A new view whose name gives an id another view keeps takes the next free one (`-2`, `-3` …).
+                keys = {v.get("id") or fnv(v["name"]) for v in self.views}
+                if fnv(name) in keys:
+                    k = 2
+                    while f"{fnv(name)}-{k}" in keys:
+                        k += 1
+                    kept = {"id": f"{fnv(name)}-{k}", **kept}
                 self.views.append(kept)
             else:
+                # A view saved over one of its name keeps that one's id (docs/adr/0345 §2).
+                if "id" in self.views[at]:
+                    kept = {"id": self.views[at]["id"], **kept}
                 self.views[at] = kept
                 warnings.append(replaced(name))
         elif k == "rename":
             name, to = op["name"].strip(), op["to"].strip()
             at = next(j for j, v in enumerate(self.views) if v["name"] == name)
+            # The id the old name gave stays the view's (docs/adr/0345 §2): `v-` and the name's FNV-1a, 32 bits.
+            if "id" not in self.views[at] and to != name:
+                self.views[at] = {"id": fnv(name), **self.views[at]}
             self.views[at] = {**self.views[at], "name": to}
             kept = self.views[at]
         elif k == "delete":

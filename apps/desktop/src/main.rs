@@ -22,6 +22,7 @@ mod annotative;
 mod annotation_styles;
 mod wall_joins;
 mod tags_check;
+mod viewmark_refs;
 mod quantities;
 mod wall_styles;
 mod app;
@@ -401,6 +402,8 @@ mod space_scenes;
 mod arch_scenes;
 #[cfg(test)]
 mod tag_scenes;
+#[cfg(test)]
+mod viewmark_scenes;
 
 use kentos_ui::theme::typography;
 

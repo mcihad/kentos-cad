@@ -610,7 +610,7 @@ fn plain_walls(input: &DxfWriteInput, report: &mut Report) -> Option<DxfWriteInp
     if elements > 0 {
         report.note_n(
             "Mimari nesne",
-            "DXF'te KentOS'un aksı, kolonu, merdiveni, rampası ve etiketi yoktur: çizimlerinin çizgileri, daireleri, yazıları ve taramaları olarak yazıldı; etiketlerin bağları, ölçüleri ve aks bağları taşınmaz, geri okunmaz",
+            "DXF'te KentOS'un aksı, kolonu, merdiveni, rampası, etiketi ve görünüm işareti yoktur: çizimlerinin çizgileri, daireleri, yazıları ve taramaları olarak yazıldı; etiketlerin ve işaretlerin bağları, ölçüleri ve aks bağları taşınmaz, geri okunmaz",
             0,
             u32::try_from(elements).unwrap_or(u32::MAX),
         );

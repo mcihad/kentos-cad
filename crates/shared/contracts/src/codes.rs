@@ -1288,6 +1288,18 @@ codes! {
     /// An opening or space without a tag (Etiketleri denetle).
     TAG_UNTAGGED = "tag_untagged", Warning, false, "Açıklığın ya da mahalin etiketi yok.";
 
+    // ── View marks and finishes (docs/adr/0345) ─────────────────────────
+    /// A view mark's fields that make none.
+    INVALID_VIEWMARK = "invalid_viewmark", Failed, false, "İşaretin alanları bir görünüm işareti tanımlamıyor: kesit 2–32 nokta, görünüş ve detay tek nokta, detayın yarıçapı, en çok 16 harfli numara, 0–50 mm yazı yüksekliği.";
+    /// A view mark's target that is not in the project.
+    VIEWMARK_TARGET_NOT_FOUND = "target_not_found", Failed, false, "İşaretin hedefi projede yok: adlı görünüm ya da paftadaki görünüm penceresi.";
+    /// An object that is no view mark where one is asked.
+    NOT_A_VIEWMARK = "not_a_viewmark", Failed, false, "Nesne görünüm işareti değil.";
+    /// A finish whose pattern or grid makes none.
+    INVALID_FINISH = "invalid_finish", Failed, false, "Kaplama bir desen ya da ızgara tanımlamıyor: döşemeye desen, tavana ızgara; aralıklar ve ölçek sıfırdan büyük.";
+    /// A space's earlier finish of the same face taken away.
+    FINISH_REPLACED = "finish_replaced", Warning, false, "Mahalin aynı yüzdeki eski kaplaması kaldırıldı.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

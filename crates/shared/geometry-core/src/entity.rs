@@ -612,6 +612,11 @@ pub enum Shape {
         at: Vec2,
         tag: crate::geom::tag::Spec,
     },
+    /// A view mark (docs/adr/0345): its points, form and bubble words; drawn by `geom::viewmark`.
+    ViewMark {
+        points: Vec<Vec2>,
+        mark: crate::geom::viewmark::Spec,
+    },
 }
 
 crate::json_tagged!(Shape, "kind",
@@ -647,6 +652,7 @@ crate::json_tagged!(Shape, "kind",
     Stair => "stair" { pts & stair: crate::geom::arch::StairSpec },
     Ramp => "ramp" { pts & ramp: crate::geom::arch::RampSpec },
     Tag => "tag" { at & tag: crate::geom::tag::Spec },
+    ViewMark => "viewmark" { points & mark: crate::geom::viewmark::Spec },
 );
 
 /// An entity: its geometry and every other field, untouched and in order.
@@ -819,7 +825,7 @@ pub fn entity_vertices(e: &Shape) -> Vec<Vec2> {
         // Its rings' (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_vertices(&crate::geom::space::as_polygon(parts)),
         // A grid's path's, a column's outline's, a stair's or ramp's band's (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
             crate::geom::arch::outline(e).map(|o| entity_vertices(&o)).unwrap_or_default()
         }
         Shape::Polygon { pts, holes, .. } => match holes {
@@ -911,7 +917,7 @@ pub fn entity_outline(e: &Shape, segments: f64) -> Vec<Vec2> {
         // Its largest part's outer ring (docs/adr/0342 §2).
         Shape::Space { parts, .. } => entity_outline(&crate::geom::space::as_polygon(parts), segments),
         // A grid's path, a column's outline, a stair's or ramp's band (docs/adr/0343 §2).
-        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
+        Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
             crate::geom::arch::outline(e).map(|o| entity_outline(&o, segments)).unwrap_or_default()
         }
         // Its body's outer ring (docs/adr/0339 §1); one that cannot be drawn its path.
@@ -1869,6 +1875,7 @@ pub fn entity_anchor(e: &Shape) -> Option<Vec2> {
             return pts.get(pts.len() / 2).copied();
         }
         Shape::Column { at, .. } | Shape::Tag { at, .. } => *at,
+        Shape::ViewMark { points, .. } => *points.first()?,
         // The point halfway along the curve (docs/adr/0259 §2).
         Shape::Nurbs { ctrl, .. } => match crate::geom::nurbs::of(e) {
             Some(n) => n.point(n.param_at_length(n.length() / 2.0)),

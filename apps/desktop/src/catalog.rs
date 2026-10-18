@@ -844,6 +844,8 @@ fn place_desktop_commands(tabs: &mut [Tab]) {
                 "edit.selectFilter.ramp",
                 // Etiket (docs/adr/0344 §5).
                 "edit.selectFilter.tag",
+                // Görünüm işareti (docs/adr/0345 §5).
+                "edit.selectFilter.viewmark",
             ] {
                 if !kinds.contains(&kind) {
                     kinds.push(kind);

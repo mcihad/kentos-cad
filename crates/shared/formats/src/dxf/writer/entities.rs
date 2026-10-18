@@ -90,6 +90,7 @@ fn kind_label(e: &Entity) -> &'static str {
         Entity::Stair(_) => "Merdiven",
         Entity::Ramp(_) => "Rampa",
         Entity::Tag(_) => "Etiket",
+        Entity::ViewMark(_) => "Görünüm işareti",
     }
 }
 
@@ -205,6 +206,7 @@ fn finite(e: &Entity) -> bool {
         Entity::Stair(s) => all_ok(&s.stair.pts) && nums_ok(&[s.stair.width, s.stair.tread]),
         Entity::Ramp(r) => all_ok(&r.ramp.pts) && nums_ok(&[r.ramp.width, r.ramp.rise]),
         Entity::Tag(t) => ok(t.tag.at),
+        Entity::ViewMark(m) => m.mark.points.iter().all(|p| ok(*p)),
         Entity::Table(t) => {
             ok(t.p)
                 && nums_ok(&[t.height, t.rotation])
@@ -718,7 +720,7 @@ impl Writer<'_> {
                 false
             }
             // Nor a grid, column, stair or ramp: its pieces (`writer::plain_walls`, docs/adr/0343 §5).
-            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) => {
+            Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
                 self.report.skip("Mimari nesne", "parçalarına açılmadan yazılamaz", 0);
                 false
             }

@@ -108,6 +108,22 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             at: mv(*at),
             tag: tag.clone(),
         })?,
+        // A view mark's points inside the window move; a detail's bubble with its middle (docs/adr/0345 §1).
+        Shape::ViewMark { points, mark } => {
+            if !points.iter().any(|p| inside(*p, r)) {
+                return None;
+            }
+            let mut mark = mark.clone();
+            if let (Some(a), Some(c)) = (mark.at, points.first())
+                && inside(*c, r)
+            {
+                mark.at = Some(mv(a));
+            }
+            Shape::ViewMark {
+                points: points.iter().map(|p| if inside(*p, r) { mv(*p) } else { *p }).collect(),
+                mark,
+            }
+        }
         // Its path's vertices in the window move, as a polyline's; the wall follows its path (docs/adr/0339 §1).
         Shape::Wall { .. } => {
             let path = crate::geom::wall::path_of(&geom.shape)?;

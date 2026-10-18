@@ -1686,6 +1686,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 81 (docs/adr/0345): a view mark, or a named view with its own id.
+    if doc.entities.iter().any(|e| matches!(e, Entity::ViewMark(_)))
+        || doc.settings.named_views.iter().any(|v| !v.id.is_empty())
+    {
+        return crate::SCHEMA_WITH_VIEWMARKS;
+    }
     // Schema 80 (docs/adr/0344): a tag, or a table's schedule of the drawing's objects.
     let scheduled = |list: &[Entity]| {
         list.iter().any(|e| {

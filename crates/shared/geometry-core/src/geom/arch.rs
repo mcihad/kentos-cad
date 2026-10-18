@@ -834,6 +834,19 @@ pub fn outline(shape: &Shape) -> Option<Shape> {
             z: None,
             parts: None,
         },
+        // A view mark's points: its bubbles are sized on paper (docs/adr/0345 §1); a detail's circle is in the world.
+        Shape::ViewMark { points, mark } => match (mark.form, mark.radius, points.first()) {
+            (crate::geom::viewmark::Form::Detail, Some(r), Some(&c)) => Shape::Circle { c, r },
+            (_, _, Some(&p)) if points.len() == 1 => Shape::Point { p, z: None, parts: None },
+            _ => Shape::Polyline {
+                pts: points.clone(),
+                bulges: None,
+                holes: None,
+                parts: None,
+                closed: false,
+                widths: None,
+            },
+        },
         _ => return None,
     })
 }
@@ -846,6 +859,7 @@ pub fn pieces(shape: &Shape, scale: f64) -> Vec<Piece> {
         Shape::Stair { pts, stair } => stair_pieces(pts, stair, scale),
         Shape::Ramp { pts, ramp } => ramp_pieces(pts, ramp, scale),
         Shape::Tag { at, tag } => crate::geom::tag::pieces(*at, tag, scale),
+        Shape::ViewMark { points, mark } => crate::geom::viewmark::pieces(points, mark, scale),
         _ => Vec::new(),
     }
 }

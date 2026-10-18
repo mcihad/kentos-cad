@@ -59,6 +59,7 @@ pub mod space_follow;
 pub mod arch_follow;
 pub mod arch_values;
 mod tag_follow;
+pub mod viewmark_follow;
 pub mod schedules;
 mod linked;
 mod patch;

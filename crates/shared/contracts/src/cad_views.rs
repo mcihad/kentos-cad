@@ -37,6 +37,10 @@ pub const MOST_VIEW_SIZE: f64 = 2.0e7;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct NamedView {
+    /// Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<String>", optional))]
+    pub id: String,
     /// Trimmed, 1–64 characters, no control characters; unique.
     pub name: String,
     /// The world point in the middle of the area.
@@ -51,6 +55,25 @@ pub struct NamedView {
     /// The screen's x axis from east, counter-clockwise; 0 shows the north up.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "rad")))]
     pub twist: f64,
+}
+
+/// The id a view's name gives: `v-` and the name's FNV-1a (32 bits) in eight lowercase hexadecimal digits.
+pub fn view_id_of_name(name: &str) -> String {
+    let mut h: u32 = 0x811c_9dc5;
+    for b in name.as_bytes() {
+        h ^= u32::from(*b);
+        h = h.wrapping_mul(0x0100_0193);
+    }
+    format!("v-{h:08x}")
+}
+
+/// A view's stable id: its own, or the one its name gives (docs/adr/0345 §2).
+pub fn view_key(v: &NamedView) -> String {
+    if v.id.is_empty() {
+        view_id_of_name(&v.name)
+    } else {
+        v.id.clone()
+    }
 }
 
 /// Whether `name` (trimmed) can name a view.
@@ -93,6 +116,12 @@ pub fn views_problem(views: &[NamedView]) -> Option<String> {
         if views[..i].iter().any(|w| w.name == v.name) {
             return Some(format!("“{}” adlı iki görünüm var.", v.name));
         }
+        if v.id.chars().count() > MOST_VIEW_NAME || v.id.chars().any(char::is_control) {
+            return Some(format!("“{}” görünümünün kimliği tutmuyor.", v.name));
+        }
+        if views[..i].iter().any(|w| view_key(w) == view_key(v)) {
+            return Some(format!("“{}” görünümünün kimliği başka bir görünümünkiyle aynı.", v.name));
+        }
         if !view_holds(v) {
             return Some(format!(
                 "“{}” görünümünün ortası 10 000 km içinde, eni ve boyu 0'dan büyük ve en çok 20 000 km, dönüşü [0, 2π) aralığında olmalı.",
@@ -110,7 +139,10 @@ pub fn sanitized_named_views(views: Vec<NamedView>) -> Vec<NamedView> {
         if kept.len() == MOST_NAMED_VIEWS {
             break;
         }
-        if views_problem(std::slice::from_ref(&v)).is_none() && !kept.iter().any(|k| k.name == v.name)
+        if views_problem(std::slice::from_ref(&v)).is_none()
+            && !kept
+                .iter()
+                .any(|k| k.name == v.name || view_key(k) == view_key(&v))
         {
             kept.push(v);
         }

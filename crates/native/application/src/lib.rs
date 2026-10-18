@@ -194,6 +194,9 @@ pub mod tags;
 pub mod schedules;
 pub use tags::{check_tags as tags_check, create as tags_create, edit as tags_edit};
 pub use schedules::{create as schedules_create, edit as schedules_edit};
+pub mod viewmarks;
+pub mod spaces_finish;
+pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
 pub mod spaces_quantities;
 pub mod walls_edit;
@@ -483,6 +486,24 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SCHEDULES_EDIT,
         kentos_contracts::CAD_SCHEDULES_EDIT_VERSION,
+    ),
+    // Görünüm işareti, Görünüm işaretini düzenle, Başvurular and Döşeme ve tavan ([`viewmarks`], [`spaces_finish`],
+    // docs/adr/0345).
+    (
+        kentos_contracts::CAD_VIEWMARKS_CREATE,
+        kentos_contracts::CAD_VIEWMARKS_CREATE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_VIEWMARKS_EDIT,
+        kentos_contracts::CAD_VIEWMARKS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_VIEWMARKS_REFERENCES,
+        kentos_contracts::CAD_VIEWMARKS_REFERENCES_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_SPACES_FINISH,
+        kentos_contracts::CAD_SPACES_FINISH_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

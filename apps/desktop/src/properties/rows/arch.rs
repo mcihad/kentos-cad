@@ -405,6 +405,56 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
                 });
             }
         }
+        Entity::ViewMark(m) => {
+            use kentos_contracts::{ViewMarkChange, ViewMarkForm, ViewMarksOperation};
+            let x = &m.mark;
+            let op = |o: ViewMarksOperation| Message::Properties(Event::ViewMark(slot, o));
+            out.push(Row::text("Biçim", x.form.label()));
+            out.push(
+                Row::text("Numara", if x.mark.is_empty() { "Pencerenin sırası" } else { &x.mark })
+                    .editor(edit(Editor::Text(Field::Arch(slot, ArchField::MarkNumber)))),
+            );
+            // The project's targets, none first; the mark's own marked.
+            let refs = kentos_native_application::viewmarks::references_of(&doc.model);
+            let own = refs.targets.iter().find(|t| Some(&t.target) == x.target.as_ref());
+            let now = match (&x.target, own) {
+                (None, _) => "Yok".to_owned(),
+                (Some(_), Some(t)) => t.name.clone(),
+                (Some(_), None) => "Kayıp".to_owned(),
+            };
+            let mut targets = vec![pick("Yok".into(), x.target.is_none(), op(ViewMarksOperation::Detach), None)];
+            for t in &refs.targets {
+                targets.push(pick(
+                    t.name.clone(),
+                    Some(&t.target) == x.target.as_ref(),
+                    op(ViewMarksOperation::Retarget { target: t.target.clone() }),
+                    None,
+                ));
+            }
+            out.push(Row::text("Hedef", now.clone()).editor(edit(select(now, targets))));
+            out.push(Row::text("Yazısı", format!("{} / {}", x.words.top, x.words.bottom)));
+            if x.form == ViewMarkForm::Section {
+                let side = if x.flip { "Sağa" } else { "Sola" };
+                out.push(Row::text("Bakış", side).editor(edit(select(
+                    side.to_owned(),
+                    vec![
+                        pick("Sola".into(), !x.flip, op(ViewMarksOperation::Set(Box::new(ViewMarkChange { flip: Some(false), ..Default::default() }))), None),
+                        pick("Sağa".into(), x.flip, op(ViewMarksOperation::Set(Box::new(ViewMarkChange { flip: Some(true), ..Default::default() }))), None),
+                    ],
+                ))));
+            }
+            out.push(
+                Row::figure("Yazı yüksekliği", fixed(x.size(), 1))
+                    .unit("mm")
+                    .editor(edit(Editor::Number(Field::Arch(slot, ArchField::MarkSize)))),
+            );
+            if let Some(b) = x.broken {
+                out.push(Row {
+                    warn: true,
+                    ..Row::text("Durum", b.words())
+                });
+            }
+        }
         _ => {}
     }
     out

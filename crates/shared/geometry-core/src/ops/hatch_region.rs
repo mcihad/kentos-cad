@@ -207,7 +207,11 @@ pub fn region_cut(
     cutouts: &[Vec<Vec2>],
     seed: Vec2,
 ) -> Option<(Area, Cut)> {
-    let parts = areas_of_entity(outer);
+    // A space bounds a hatch by its own rings (docs/adr/0345 §4).
+    let parts = match outer {
+        Shape::Space { parts, .. } => parts.clone(),
+        _ => areas_of_entity(outer),
+    };
     let base = pick(&parts, seed)?;
     let islands: Vec<Vec<Area>> = islands.iter().map(areas_of_entity).collect();
     let cut = cut_base(base, &islands, cutouts);

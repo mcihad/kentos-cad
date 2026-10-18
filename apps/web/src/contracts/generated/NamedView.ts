@@ -9,6 +9,10 @@ import type { Vec2 } from "./Vec2";
  */
 export type NamedView = { 
 /**
+ * Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).
+ */
+id?: string, 
+/**
  * Trimmed, 1–64 characters, no control characters; unique.
  */
 name: string, 

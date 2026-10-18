@@ -615,6 +615,7 @@ impl Document {
         self.calls
             .set_status(step.seq, kentos_contracts::CallStatus::Undone);
         self.history.redo.push(step);
+        self.refresh_viewmarks();
         self.mark_edited();
         Some(label)
     }
@@ -632,6 +633,7 @@ impl Document {
         self.calls
             .set_status(step.seq, kentos_contracts::CallStatus::Done);
         self.history.undo.push_back(step);
+        self.refresh_viewmarks();
         self.mark_edited();
         Some(label)
     }
@@ -707,6 +709,9 @@ impl Document {
         // Then: the tags with their objects (docs/adr/0344 §1).
         let tags = self.follow_tags(ops);
         ops.extend(tags);
+        // Then: the view marks with their targets (docs/adr/0345 §2).
+        let marks = self.follow_viewmarks(ops);
+        ops.extend(marks);
         // Then: a hatch's ring drawn from its exact boundary, or the boundary dropped (docs/adr/0328 §1).
         let settled = self.settle_boundaries(ops);
         ops.extend(settled);

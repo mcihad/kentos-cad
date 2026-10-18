@@ -514,11 +514,14 @@ pub const SCHEMA_WITH_ARCH_ELEMENTS: u32 = 79;
 /// spaces, columns or walls (as a block schedule, its source's JSON under `schedule`), written only when the drawing
 /// has one.
 pub const SCHEMA_WITH_TAGS: u32 = 80;
+/// Schema 81 (docs/adr/0345 §1, §2): the view mark (its fields as one map under `viewmark`) and a named view's `id`,
+/// written only when the drawing has one.
+pub const SCHEMA_WITH_VIEWMARKS: u32 = 81;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 79] = [
+pub const SCHEMAS: [u32; 80] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -598,6 +601,7 @@ pub const SCHEMAS: [u32; 79] = [
     SCHEMA_WITH_SPACES,
     SCHEMA_WITH_ARCH_ELEMENTS,
     SCHEMA_WITH_TAGS,
+    SCHEMA_WITH_VIEWMARKS,
 ];
 
 /// The file a drawing is saved as.

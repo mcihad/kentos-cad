@@ -1764,6 +1764,8 @@ pub enum Entity {
     Ramp(crate::RampEntity),
     /// A tag (docs/adr/0344): its object, its words and frame.
     Tag(crate::TagEntity),
+    /// A view mark (docs/adr/0345): a section, elevation or detail mark pointing at a view.
+    ViewMark(crate::ViewMarkEntity),
     /// A record without a geometry (docs/adr/0410): a table's row, with the base's attributes,
     /// attachments and label; not drawn, picked or snapped to.
     Record(RecordEntity),
@@ -1824,6 +1826,7 @@ impl Entity {
             Entity::Stair(e) => &e.base,
             Entity::Ramp(e) => &e.base,
             Entity::Tag(e) => &e.base,
+            Entity::ViewMark(e) => &e.base,
             Entity::Xline(e) | Entity::Ray(e) => &e.base,
             Entity::Text(e) => &e.base,
             Entity::Dimension(e) => &e.base,
@@ -1858,6 +1861,7 @@ impl Entity {
             Entity::Stair(e) => &mut e.base,
             Entity::Ramp(e) => &mut e.base,
             Entity::Tag(e) => &mut e.base,
+            Entity::ViewMark(e) => &mut e.base,
             Entity::Xline(e) | Entity::Ray(e) => &mut e.base,
             Entity::Text(e) => &mut e.base,
             Entity::Dimension(e) => &mut e.base,
@@ -1892,6 +1896,7 @@ impl Entity {
             Entity::Stair(_) => "stair",
             Entity::Ramp(_) => "ramp",
             Entity::Tag(_) => "tag",
+            Entity::ViewMark(_) => "viewmark",
             Entity::Xline(_) => "xline",
             Entity::Ray(_) => "ray",
             Entity::Text(_) => "text",

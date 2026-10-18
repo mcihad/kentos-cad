@@ -1269,6 +1269,20 @@ FileUnitName = Literal["mm", "cm", "dm", "m", "km", "yd", "mi", "in", "ft", "usF
 """The names of :class:`FileUnit`, for a plain string."""
 
 
+class FinishSurface(_StrEnum):
+    """Which face of a space a finish covers.
+
+    - ``floor``: Döşeme deseni.
+    - ``ceiling``: Tavan ızgarası.
+    """
+    FLOOR = "floor"
+    CEILING = "ceiling"
+
+
+FinishSurfaceName = Literal["floor", "ceiling"]
+"""The names of :class:`FinishSurface`, for a plain string."""
+
+
 class FontMatch(_StrEnum):
     """How a named typeface is drawn.
 
@@ -1401,6 +1415,20 @@ class GridBubbles(_StrEnum):
 
 GridBubblesName = Literal["both", "start", "end", "none"]
 """The names of :class:`GridBubbles`, for a plain string."""
+
+
+class GridOrigin(_StrEnum):
+    """Where a ceiling grid's lines start.
+
+    - ``center``: The space's bounding box's middle: the tiles are cut alike on opposite walls.
+    - ``corner``: The space's bounding box's lower left corner.
+    """
+    CENTER = "center"
+    CORNER = "corner"
+
+
+GridOriginName = Literal["center", "corner"]
+"""The names of :class:`GridOrigin`, for a plain string."""
 
 
 class HatchDrawOrder(_StrEnum):
@@ -2904,6 +2932,7 @@ class SelectKind(_StrEnum):
     - ``space``: Mahal (docs/adr/0342 §5).
     - ``grid``: Aks, Kolon, Merdiven, Rampa (docs/adr/0343 §5).
     - ``tag``: Etiket (docs/adr/0344 §5).
+    - ``viewMark``: Görünüm işareti (docs/adr/0345 §5).
     """
     POINT = "point"
     LINE = "line"
@@ -2930,9 +2959,10 @@ class SelectKind(_StrEnum):
     SPACE = "space"
     GRID = "grid"
     TAG = "tag"
+    VIEW_MARK = "viewMark"
 
 
-SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag"]
+SelectKindName = Literal["point", "line", "polyline", "polygon", "circle", "arc", "ellipse", "spline", "xline", "ray", "text", "dimension", "hatch", "insert", "leader", "table", "image", "column", "stair", "ramp", "wall", "opening", "space", "grid", "tag", "viewMark"]
 """The names of :class:`SelectKind`, for a plain string."""
 
 
@@ -3468,6 +3498,34 @@ class VertexAction(_StrEnum):
 
 VertexActionName = Literal["remove", "insert", "straighten", "arc", "width"]
 """The names of :class:`VertexAction`, for a plain string."""
+
+
+class ViewMarkBreak(_StrEnum):
+    """Why a mark's words are no longer its target's.
+
+    - ``targetGone``: Its named view or sheet frame is gone.
+    """
+    TARGET_GONE = "targetGone"
+
+
+ViewMarkBreakName = Literal["targetGone"]
+"""The names of :class:`ViewMarkBreak`, for a plain string."""
+
+
+class ViewMarkForm(_StrEnum):
+    """What a view mark marks.
+
+    - ``section``: Kesit: a cut line with a bubble at each end, looking to one side.
+    - ``elevation``: Görünüş: a bubble looking one way.
+    - ``detail``: Detay: a circle around the detail and a bubble on a leader.
+    """
+    SECTION = "section"
+    ELEVATION = "elevation"
+    DETAIL = "detail"
+
+
+ViewMarkFormName = Literal["section", "elevation", "detail"]
+"""The names of :class:`ViewMarkForm`, for a plain string."""
 
 
 class WallCaps(_StrEnum):
@@ -4189,6 +4247,7 @@ class Entity(_Union):
     - :class:`StairEntity` (``kind: stair``)
     - :class:`RampEntity` (``kind: ramp``)
     - :class:`TagEntity` (``kind: tag``)
+    - :class:`ViewmarkEntity` (``kind: viewmark``)
     - :class:`RecordEntity` (``kind: record``)
     """
     __slots__ = ()
@@ -5176,6 +5235,28 @@ class UcsTo(_Union):
         return _variant(_UCS_TO, "UcsTo", "kind", data).from_json(data)
 
 
+class ViewMarksOperation(_Union):
+    """What `cad.viewmarks.edit` does.
+
+    One of:
+
+    - :class:`SetViewMarksOperation` (``kind: set``)
+    - :class:`RetargetViewMarksOperation` (``kind: retarget``)
+    - :class:`DetachViewMarksOperation` (``kind: detach``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksOperation:
+        return _variant(_VIEW_MARKS_OPERATION, "ViewMarksOperation", "kind", data).from_json(data)
+
+
 class ViewsOp(_Union):
     """What `cad.views.edit` does (docs/adr/0285 §1).
 
@@ -5255,6 +5336,9 @@ _RasterFieldsT = TypeVar("_RasterFieldsT", bound="RasterFields")
 
 
 _TmDefinitionT = TypeVar("_TmDefinitionT", bound="TmDefinition")
+
+
+_ViewMarkEntityT = TypeVar("_ViewMarkEntityT", bound="ViewMarkEntity")
 
 
 _WallFieldsT = TypeVar("_WallFieldsT", bound="WallFields")
@@ -15125,6 +15209,37 @@ class FileCommitted(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class FinishGrid(_Model):
+    """A ceiling grid: two families of lines `dx` and `dy` apart, turned by `angle`.
+    Attributes:
+        dx: Unit: length.
+        dy: Unit: length.
+        angle: Unit: deg.
+    """
+    dx: float
+    dy: float
+    angle: float = 0.0
+    origin: GridOrigin | GridOriginName = GridOrigin.CENTER
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["dx"] = float(self.dx)
+        out["dy"] = float(self.dy)
+        out["angle"] = float(self.angle)
+        out["origin"] = _enum_out(self.origin)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FinishGrid:
+        return cls(
+            dx=float(data["dx"]),
+            dy=float(data["dy"]),
+            angle=float(data["angle"]) if "angle" in data else 0.0,
+            origin=_enum_in(GridOrigin, data["origin"]) if "origin" in data else GridOrigin.CENTER,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FontsReport(_Model):
     """Input of `cad.fonts.report` v1. Refusals: `empty_name`, `invalid_name`.
     Attributes:
@@ -22821,6 +22936,47 @@ class LookupSpatial(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MarkReference(_Model):
+    """A mark as `cad.viewmarks.references` lists it.
+    Attributes:
+        broken: Its target is gone.
+        at: Where to look: its first point. Unit: length.
+    """
+    uid: str
+    form: ViewMarkForm | ViewMarkFormName
+    words: ViewMarkLabel
+    broken: bool
+    at: Vec2
+    mark: str | Unset = UNSET
+    target: ViewTarget | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["form"] = _enum_out(self.form)
+        out["words"] = self.words.to_json()
+        out["broken"] = self.broken
+        out["at"] = _vec2_out(self.at)
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.target is not UNSET:
+            out["target"] = None if self.target is None else self.target.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MarkReference:
+        return cls(
+            uid=data["uid"],
+            form=_enum_in(ViewMarkForm, data["form"]),
+            words=ViewMarkLabel.from_json(data["words"]),
+            broken=data["broken"],
+            at=Vec2.from_json(data["at"]),
+            mark=data.get("mark", UNSET),
+            target=UNSET if "target" not in data else None if data["target"] is None else ViewTarget.from_json(data["target"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NamedFont(_Model):
     """A name given, resolved.
     Attributes:
@@ -22887,12 +23043,14 @@ class NamedView(_Model):
         width: The world width the area shows, along the screen's x. Unit: length.
         height: The world height the area shows, along the screen's y. Unit: length.
         twist: The screen's x axis from east, counter-clockwise; 0 shows the north up. Unit: rad.
+        id: Its stable id, which a view mark points at (docs/adr/0345 §2); empty: the one its name gives (`view_key`).
     """
     name: str
     center: Vec2
     width: float
     height: float
     twist: float
+    id: str | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -22901,6 +23059,8 @@ class NamedView(_Model):
         out["width"] = float(self.width)
         out["height"] = float(self.height)
         out["twist"] = float(self.twist)
+        if self.id is not UNSET:
+            out["id"] = self.id
         return out
 
     @classmethod
@@ -22911,6 +23071,7 @@ class NamedView(_Model):
             width=float(data["width"]),
             height=float(data["height"]),
             twist=float(data["twist"]),
+            id=data.get("id", UNSET),
         )
 
 
@@ -23631,6 +23792,61 @@ class NewTag(_Model):
             leader=data.get("leader", UNSET),
             shape=UNSET if "shape" not in data else None if data["shape"] is None else _enum_in(TagShape, data["shape"]),
             size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NewViewMark(_Model):
+    """One mark to put.
+    Attributes:
+        points: Unit: length.
+        angle: Unit: deg.
+        at: A detail's bubble; absent: on the circle's upper right at twice its radius. Unit: length.
+        radius: Unit: length.
+        size: Unit: paper-mm.
+    """
+    form: ViewMarkForm | ViewMarkFormName
+    points: list[Vec2]
+    angle: float | None | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    flip: bool | Unset = UNSET
+    mark: str | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+    target: ViewTarget | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["form"] = _enum_out(self.form)
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.flip is not UNSET:
+            out["flip"] = self.flip
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        if self.target is not UNSET:
+            out["target"] = None if self.target is None else self.target.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NewViewMark:
+        return cls(
+            form=_enum_in(ViewMarkForm, data["form"]),
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            flip=data.get("flip", UNSET),
+            mark=data.get("mark", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+            target=UNSET if "target" not in data else None if data["target"] is None else ViewTarget.from_json(data["target"]),
         )
 
 
@@ -31007,6 +31223,82 @@ class SpacesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SpacesFinish(_Model):
+    """Input of `cad.spaces.finish` v1 (“Döşeme ve tavan”): a hatch tied to each space, its floor pattern (`pattern`, a
+    library's or the project's pattern's name; absent: the space's floor finish's name if a pattern is so named, else
+    ANSI31) or its ceiling grid (`grid`), on a layer (absent: A-ZEMN-DSN or A-TAVN-IZG, opened if missing); a space's
+    earlier hatch of the same face is replaced. One undo step.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_space`, `not_finite`,
+    `invalid_finish`, `unknown_pattern`, `invalid_revision`, `revision_conflict`, `not_a_layer`, `layer_locked`; on the
+    desktop also `slots_exhausted`. Warnings: `finish_replaced`, `layer_hidden`.
+    Attributes:
+        scale: The pattern's scale; absent: 1. Unit: 1.
+    """
+    uids: list[str]
+    surface: FinishSurface | FinishSurfaceName
+    expected_revision: str | None | Unset = UNSET
+    grid: FinishGrid | None | Unset = UNSET
+    layer_id: str | None | Unset = UNSET
+    pattern: str | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["surface"] = _enum_out(self.surface)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.grid is not UNSET:
+            out["grid"] = None if self.grid is None else self.grid.to_json()
+        if self.layer_id is not UNSET:
+            out["layerId"] = self.layer_id
+        if self.pattern is not UNSET:
+            out["pattern"] = self.pattern
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesFinish:
+        return cls(
+            uids=list(data["uids"]),
+            surface=_enum_in(FinishSurface, data["surface"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            grid=UNSET if "grid" not in data else None if data["grid"] is None else FinishGrid.from_json(data["grid"]),
+            layer_id=data.get("layerId", UNSET),
+            pattern=data.get("pattern", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SpacesFinished(_Model):
+    """Output of `cad.spaces.finish` v1 (its plan's too: the hatches as they would be, `id` 0).
+    Attributes:
+        replaced: The earlier hatches taken away, by their persistent ids.
+    """
+    hatches: list[Entity]
+    replaced: list[str]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["hatches"] = [e0.to_json() for e0 in self.hatches]
+        out["replaced"] = list(self.replaced)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SpacesFinished:
+        return cls(
+            hatches=[Entity.from_json(e0) for e0 in data["hatches"]],
+            replaced=list(data["replaced"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SpacesPlan(_Model):
     """What `cad.spaces.create` would write (plan mode)."""
     spaces: list[Entity]
@@ -33126,6 +33418,42 @@ class TagsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TargetReference(_Model):
+    """A target as `cad.viewmarks.references` lists it: a named view, or a map frame on a sheet.
+    Attributes:
+        name: The named view's name, or the sheet's name and the frame's name joined by “ › ”.
+        number: What a mark pointing at it writes in its bottom half.
+        marks: The marks pointing at it, in the drawing's order.
+        order: A sheet frame's order among its sheet's frames, from 1; none for a named view. Unit: count.
+    """
+    target: ViewTarget
+    name: str
+    number: str
+    marks: list[str]
+    order: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["target"] = self.target.to_json()
+        out["name"] = self.name
+        out["number"] = self.number
+        out["marks"] = list(self.marks)
+        if self.order is not UNSET:
+            out["order"] = self.order
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TargetReference:
+        return cls(
+            target=ViewTarget.from_json(data["target"]),
+            name=data["name"],
+            number=data["number"],
+            marks=list(data["marks"]),
+            order=data.get("order", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TextColumns(_Model):
     """A multi-line text's static columns (docs/adr/0324 §1): `count` columns of the box's width, `gap` heights
     apart, each `height` metres tall; lines past the last column's height go on down in it.
@@ -34472,6 +34800,381 @@ class Vec2(NamedTuple):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> Vec2:
         return cls(float(data["x"]), float(data["y"]))
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarkEntity(_Model):
+    """A view mark (docs/adr/0345).
+    Attributes:
+        id: Unit: id.
+        attrs: GIS attributes; text in v1 (typed attributes: CLAUDE.md §15).
+        points: A section's cut line (2 or more points); an elevation's bubble, a detail's circle's middle (one point). Unit: length.
+        angle: An elevation's looking direction, degrees from east, counter-clockwise; absent: 90 (north). Unit: deg.
+        at: A detail's bubble's middle. Unit: length.
+        attachments: The photos and documents it carries, in their order (docs/adr/0225
+            §1); none on a block's objects.
+        by_layer: On a block's object, the parts without a value of their own that
+            follow the object's layer instead of the insert; in order, once each,
+            never one with a value of its own.
+        color: Colour override; absent = the layer's colour ("katmana göre").
+        flip: A section looks to the right of its cut line's direction (absent: the left).
+        label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
+            §3.7), one a class at most.
+        line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
+            `line_type`.
+        line_type: Its own line type; absent: its source's (the layer's, or the insert's in a block).
+        line_type_scale: Its pattern's own factor, above 0, at most 1000; absent: 1. Always the object's own. Unit: 1.
+        line_weight: Its own line weight, paper millimetres as the layer's
+            (`LayerStyle.line_weight`), 0 the thinnest line; absent = the layer's
+            ("katmana göre"). What a DXF's group 370 and an NCZ's pen give an
+            object (docs/adr/0139). Unit: paper-mm.
+        mark: The mark's number; empty: a sheet frame's order on its sheet.
+        order: Its place in its layer's drawing order: lower first, equals in the
+            document's order; absent: 0; a 32-bit integer. Only a drawing's object has it. Unit: count.
+        radius: A detail's circle's radius. Unit: length.
+        size: Its words' height on paper, millimetres; absent: 2.5. Unit: paper-mm.
+        symbol: Library symbol overriding the layer's style.
+        transparency: How transparent it is, 0 to 0.9; absent: its source's (none for a layer). Unit: 1.
+        wipeout: An area's mask (AutoCAD's WIPEOUT, docs/adr/0264 §3, 0310): it fills with the drawing's background and covers
+            what is drawn before it; only an area has it.
+        words: The bubble's words, which the document writes.
+    """
+    id: int
+    layer_id: str
+    attrs: dict[str, str]
+    form: ViewMarkForm | ViewMarkFormName
+    points: list[Vec2]
+    angle: float | None | Unset = UNSET
+    at: Vec2 | None | Unset = UNSET
+    attachments: list[Attachment] | Unset = UNSET
+    broken: ViewMarkBreak | ViewMarkBreakName | None | Unset = UNSET
+    by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    color: str | None | Unset = UNSET
+    flip: bool | Unset = UNSET
+    label: str | None | Unset = UNSET
+    label_pins: list[LabelPin] | Unset = UNSET
+    line_pattern: str | None | Unset = UNSET
+    line_type: LineType | LineTypeName | None | Unset = UNSET
+    line_type_scale: float | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+    mark: str | Unset = UNSET
+    order: int | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+    symbol: str | None | Unset = UNSET
+    target: ViewTarget | None | Unset = UNSET
+    transparency: float | None | Unset = UNSET
+    wipeout: Wipeout | None | Unset = UNSET
+    words: ViewMarkLabel | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["layerId"] = self.layer_id
+        out["attrs"] = dict(self.attrs)
+        out["form"] = _enum_out(self.form)
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.attachments is not UNSET:
+            out["attachments"] = [e0.to_json() for e0 in self.attachments]
+        if self.broken is not UNSET:
+            out["broken"] = None if self.broken is None else _enum_out(self.broken)
+        if self.by_layer is not UNSET:
+            out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.flip is not UNSET:
+            out["flip"] = self.flip
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.label_pins is not UNSET:
+            out["labelPins"] = [e0.to_json() for e0 in self.label_pins]
+        if self.line_pattern is not UNSET:
+            out["linePattern"] = self.line_pattern
+        if self.line_type is not UNSET:
+            out["lineType"] = None if self.line_type is None else _enum_out(self.line_type)
+        if self.line_type_scale is not UNSET:
+            out["lineTypeScale"] = None if self.line_type_scale is None else float(self.line_type_scale)
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.order is not UNSET:
+            out["order"] = self.order
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        if self.symbol is not UNSET:
+            out["symbol"] = self.symbol
+        if self.target is not UNSET:
+            out["target"] = None if self.target is None else self.target.to_json()
+        if self.transparency is not UNSET:
+            out["transparency"] = None if self.transparency is None else float(self.transparency)
+        if self.wipeout is not UNSET:
+            out["wipeout"] = None if self.wipeout is None else self.wipeout.to_json()
+        if self.words is not UNSET:
+            out["words"] = self.words.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls: type[_ViewMarkEntityT], data: Mapping[str, Any]) -> _ViewMarkEntityT:
+        return cls(
+            id=data["id"],
+            layer_id=data["layerId"],
+            attrs=dict(data["attrs"]),
+            form=_enum_in(ViewMarkForm, data["form"]),
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
+            broken=UNSET if "broken" not in data else None if data["broken"] is None else _enum_in(ViewMarkBreak, data["broken"]),
+            by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            color=data.get("color", UNSET),
+            flip=data.get("flip", UNSET),
+            label=data.get("label", UNSET),
+            label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
+            line_pattern=data.get("linePattern", UNSET),
+            line_type=UNSET if "lineType" not in data else None if data["lineType"] is None else _enum_in(LineType, data["lineType"]),
+            line_type_scale=UNSET if "lineTypeScale" not in data else None if data["lineTypeScale"] is None else float(data["lineTypeScale"]),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+            mark=data.get("mark", UNSET),
+            order=data.get("order", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+            symbol=data.get("symbol", UNSET),
+            target=UNSET if "target" not in data else None if data["target"] is None else ViewTarget.from_json(data["target"]),
+            transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
+            wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+            words=ViewMarkLabel.from_json(data["words"]) if "words" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarkLabel(_Model):
+    """The bubble's words, which the document writes from the target.
+    Attributes:
+        top: The top half: the mark's number.
+        bottom: The bottom half: the target's number.
+    """
+    top: str
+    bottom: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["top"] = self.top
+        out["bottom"] = self.bottom
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarkLabel:
+        return cls(
+            top=data["top"],
+            bottom=data["bottom"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksCreate(_Model):
+    """Input of `cad.viewmarks.create` v1 (“Görünüm işareti”): the marks on a named layer, their words written from their
+    targets, as one undo step.
+
+    Refusals, in this order: `no_objects`, `not_finite`, `invalid_viewmark`, `target_not_found`, `invalid_line_weight`,
+    `invalid_revision`, `revision_conflict`, `layer_not_found`, `not_a_layer`, `layer_locked`; on the desktop also
+    `slots_exhausted`. Warning: `layer_hidden`.
+    Attributes:
+        line_weight: Unit: paper-mm.
+    """
+    layer_id: str
+    marks: list[NewViewMark]
+    color: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    line_weight: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layerId"] = self.layer_id
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        if self.color is not UNSET:
+            out["color"] = self.color
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.line_weight is not UNSET:
+            out["lineWeight"] = None if self.line_weight is None else float(self.line_weight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksCreate:
+        return cls(
+            layer_id=data["layerId"],
+            marks=[NewViewMark.from_json(e0) for e0 in data["marks"]],
+            color=data.get("color", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksCreated(_Model):
+    """Output of `cad.viewmarks.create` v1.
+    Attributes:
+        ids: Unit: id.
+    """
+    uids: list[str]
+    ids: list[int]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["ids"] = list(self.ids)
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksCreated:
+        return cls(
+            uids=list(data["uids"]),
+            ids=list(data["ids"]),
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksEdit(_Model):
+    """Input of `cad.viewmarks.edit` v1 (“Görünüm işaretini düzenle”): one undo step, all or none.
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `not_a_viewmark`, `nothing_to_set`,
+    `not_finite`, `invalid_viewmark`, `target_not_found`, `invalid_revision`, `revision_conflict`, `layer_locked`.
+    """
+    uids: list[str]
+    operation: ViewMarksOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksEdit:
+        return cls(
+            uids=list(data["uids"]),
+            operation=ViewMarksOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksEdited(_Model):
+    """Output of `cad.viewmarks.edit` v1 (its plan's too: the marks as they would be, nothing written)."""
+    marks: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksEdited:
+        return cls(
+            marks=[Entity.from_json(e0) for e0 in data["marks"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksPlan(_Model):
+    """What `cad.viewmarks.create` would write (plan mode): the marks as they would be stored, their words written, `id` 0."""
+    marks: list[Entity]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksPlan:
+        return cls(
+            marks=[Entity.from_json(e0) for e0 in data["marks"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksReferenced(_Model):
+    """Output of `cad.viewmarks.references` v1 (its plan's too).
+    Attributes:
+        marks: In the drawing's order.
+        targets: The named views in the project's order, then the sheets' map frames in the book's order.
+    """
+    marks: list[MarkReference]
+    targets: list[TargetReference]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["marks"] = [e0.to_json() for e0 in self.marks]
+        out["targets"] = [e0.to_json() for e0 in self.targets]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksReferenced:
+        return cls(
+            marks=[MarkReference.from_json(e0) for e0 in data["marks"]],
+            targets=[TargetReference.from_json(e0) for e0 in data["targets"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewMarksReferences(_Model):
+    """Input of `cad.viewmarks.references` v1 (“Başvurular”), read-only."""
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewMarksReferences:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewTarget(_Model):
+    """What a mark points at: a named view (`view`, its id), or a map frame on a sheet (`sheet` and `item`, their ids)."""
+    item: str | None | Unset = UNSET
+    sheet: str | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.item is not UNSET:
+            out["item"] = self.item
+        if self.sheet is not UNSET:
+            out["sheet"] = self.sheet
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ViewTarget:
+        return cls(
+            item=data.get("item", UNSET),
+            sheet=data.get("sheet", UNSET),
+            view=data.get("view", UNSET),
+        )
 
 
 @dataclass(kw_only=True, slots=True)
@@ -38757,6 +39460,15 @@ class PointcloudEntity(PointCloudEntity, Entity):
 
     def to_json(self) -> dict[str, Any]:
         return {"kind": "pointcloud", **PointCloudEntity.to_json(self)}
+
+
+@dataclass(kw_only=True, slots=True)
+class ViewmarkEntity(ViewMarkEntity, Entity):
+    """A view mark (docs/adr/0345): a section, elevation or detail mark pointing at a view."""
+    TAG_VALUE: ClassVar[str] = "viewmark"
+
+    def to_json(self) -> dict[str, Any]:
+        return {"kind": "viewmark", **ViewMarkEntity.to_json(self)}
 
 
 @dataclass(kw_only=True, slots=True)
@@ -44825,6 +45537,78 @@ class DeleteUcsTo(UcsTo):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetViewMarksOperation(ViewMarksOperation):
+    """The marks' number, words' height, side, direction or radius changed.
+    Attributes:
+        angle: Unit: deg.
+        radius: Unit: length.
+        size: Unit: paper-mm.
+    """
+    TAG_VALUE: ClassVar[str] = "set"
+    angle: float | None | Unset = UNSET
+    flip: bool | None | Unset = UNSET
+    mark: str | None | Unset = UNSET
+    radius: float | None | Unset = UNSET
+    size: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        if self.angle is not UNSET:
+            out["angle"] = None if self.angle is None else float(self.angle)
+        if self.flip is not UNSET:
+            out["flip"] = self.flip
+        if self.mark is not UNSET:
+            out["mark"] = self.mark
+        if self.radius is not UNSET:
+            out["radius"] = None if self.radius is None else float(self.radius)
+        if self.size is not UNSET:
+            out["size"] = None if self.size is None else float(self.size)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetViewMarksOperation:
+        return cls(
+            angle=UNSET if "angle" not in data else None if data["angle"] is None else float(data["angle"]),
+            flip=data.get("flip", UNSET),
+            mark=data.get("mark", UNSET),
+            radius=UNSET if "radius" not in data else None if data["radius"] is None else float(data["radius"]),
+            size=UNSET if "size" not in data else None if data["size"] is None else float(data["size"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RetargetViewMarksOperation(ViewMarksOperation):
+    """The marks point at another target."""
+    TAG_VALUE: ClassVar[str] = "retarget"
+    target: ViewTarget
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "retarget"}
+        out["target"] = self.target.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RetargetViewMarksOperation:
+        return cls(
+            target=ViewTarget.from_json(data["target"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachViewMarksOperation(ViewMarksOperation):
+    """The marks let go of their target: the bottom half writes “—”."""
+    TAG_VALUE: ClassVar[str] = "detach"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachViewMarksOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class SaveViewsOp(ViewsOp):
     """Kaydet: a view kept under a name; one of that name is replaced.
     Attributes:
@@ -45199,7 +45983,7 @@ _DIVISION: dict[str, type[Division]] = {"parts": PartsDivision, "step": StepDivi
 _DOMAINS_OP: dict[str, type[DomainsOp]] = {"create": CreateDomainsOp, "fromField": FromFieldDomainsOp, "update": UpdateDomainsOp, "remove": RemoveDomainsOp, "import": ImportDomainsOp, "link": LinkDomainsOp}
 
 
-_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "record": RecordEntity}
+_ENTITY: dict[str, type[Entity]] = {"point": PointEntity, "line": LineEntity, "polyline": PolylineEntity, "polygon": PolygonEntity, "circle": CircleEntity, "arc": ArcEntity, "ellipse": EllipseEntity, "spline": SplineEntity, "nurbs": NurbsEntity, "xline": XlineEntity, "ray": RayEntity, "text": TextEntity, "dimension": DimensionEntity, "hatch": HatchEntity, "insert": InsertEntity, "leader": LeaderEntity, "table": TableEntity, "image": ImageEntity, "raster": RasterEntity, "pointcloud": PointcloudEntity, "wall": WallEntity, "opening": OpeningEntity, "space": SpaceEntity, "grid": GridEntity, "column": ColumnEntity, "stair": StairEntity, "ramp": RampEntity, "tag": TagEntity, "viewmark": ViewmarkEntity, "record": RecordEntity}
 
 
 _ENTITY_EDIT: dict[str, type[EntityEdit]] = {"update": UpdateEntityEdit, "replace": ReplaceEntityEdit, "add": AddEntityEdit, "remove": RemoveEntityEdit}
@@ -45314,6 +46098,9 @@ _TRIM_BOUNDARIES: dict[str, type[TrimBoundaries]] = {"all": AllTrimBoundaries, "
 
 
 _UCS_TO: dict[str, type[UcsTo]] = {"world": WorldUcsTo, "frame": FrameUcsTo, "origin": OriginUcsTo, "rotate": RotateUcsTo, "twoPoints": TwoPointsUcsTo, "object": ObjectUcsTo, "named": NamedUcsTo, "save": SaveUcsTo, "delete": DeleteUcsTo}
+
+
+_VIEW_MARKS_OPERATION: dict[str, type[ViewMarksOperation]] = {"set": SetViewMarksOperation, "retarget": RetargetViewMarksOperation, "detach": DetachViewMarksOperation}
 
 
 _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameViewsOp, "delete": DeleteViewsOp}
@@ -45630,6 +46417,7 @@ __all__ = [
     "DeleteViewsOp",
     "DeltaLengthenChange",
     "DetachArchOperation",
+    "DetachViewMarksOperation",
     "DeviationExplodeDensity",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
@@ -45832,6 +46620,9 @@ __all__ = [
     "FileUnit",
     "FileUnitName",
     "FilletRectangleCorners",
+    "FinishGrid",
+    "FinishSurface",
+    "FinishSurfaceName",
     "FitNurbsBy",
     "FitTableEdit",
     "FixConstraintRule",
@@ -45912,6 +46703,8 @@ __all__ = [
     "GridBubblesName",
     "GridChoice",
     "GridEntity",
+    "GridOrigin",
+    "GridOriginName",
     "GridSeries",
     "GridTableEdit",
     "GridsCreate",
@@ -46140,6 +46933,7 @@ __all__ = [
     "LookupRow",
     "LookupSort",
     "LookupSpatial",
+    "MarkReference",
     "MatchProperty",
     "MatchPropertyName",
     "MeasuredPoint",
@@ -46186,6 +46980,7 @@ __all__ = [
     "NewSpace",
     "NewStair",
     "NewTag",
+    "NewViewMark",
     "NewWall",
     "NodeSubPlace",
     "NoteFormItem",
@@ -46461,6 +47256,7 @@ __all__ = [
     "ResolveFormsOp",
     "ResourceKind",
     "ResourceKindName",
+    "RetargetViewMarksOperation",
     "RingGeometry",
     "RotateBlockAction",
     "RotateTransform",
@@ -46521,6 +47317,7 @@ __all__ = [
     "SetParameterEdit",
     "SetScheduleOperation",
     "SetSpacesOperation",
+    "SetViewMarksOperation",
     "SetWallsOperation",
     "SettingsChanged",
     "SettingsSet",
@@ -46573,6 +47370,8 @@ __all__ = [
     "SpacesCreated",
     "SpacesEdit",
     "SpacesEdited",
+    "SpacesFinish",
+    "SpacesFinished",
     "SpacesOperation",
     "SpacesPlan",
     "SpacesQuantified",
@@ -46661,6 +47460,7 @@ __all__ = [
     "TagsPlan",
     "TangentConstraintRule",
     "TangentsCurveEdit",
+    "TargetReference",
     "TenantKind",
     "TenantKindName",
     "TextAlign",
@@ -46752,6 +47552,22 @@ __all__ = [
     "VertexCornerPick",
     "VertexSubPlace",
     "VerticalConstraintRule",
+    "ViewMarkBreak",
+    "ViewMarkBreakName",
+    "ViewMarkEntity",
+    "ViewMarkForm",
+    "ViewMarkFormName",
+    "ViewMarkLabel",
+    "ViewMarksCreate",
+    "ViewMarksCreated",
+    "ViewMarksEdit",
+    "ViewMarksEdited",
+    "ViewMarksOperation",
+    "ViewMarksPlan",
+    "ViewMarksReferenced",
+    "ViewMarksReferences",
+    "ViewTarget",
+    "ViewmarkEntity",
     "ViewsEdit",
     "ViewsEdited",
     "ViewsOp",

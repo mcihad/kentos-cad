@@ -217,6 +217,24 @@
    "tests": 0
   },
   {
+   "id": "arch.viewRefs",
+   "kind": "command",
+   "title": "Başvurular",
+   "level": "semantic",
+   "via": [
+    "cad.viewmarks.references",
+    "cad.viewmarks.edit",
+    "cad.views.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.viewmarks.references, kentos.cad.viewmarks.edit, kentos.cad.views.edit",
+   "mcp": "cad.viewmarks.references, cad.viewmarks.edit, cad.views.edit",
+   "note": "Liste cad.viewmarks.references'ten; Bağla ve Bağı kopar cad.viewmarks.edit, Görünüm oluştur cad.views.edit ile (ADR 0345 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "arch.wallJoinCheck",
    "kind": "command",
    "title": "Birleşimleri denetle",
@@ -2683,6 +2701,20 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "edit.selectFilter.viewmark",
+   "kind": "command",
+   "title": "Seçim süzgecinde Görünüm işareti",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": null,
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "edit.selectFilter.wall",
@@ -10768,6 +10800,38 @@
    "tests": 0
   },
   {
+   "id": "tool.spaceCeiling",
+   "kind": "command",
+   "title": "Tavan ızgarası",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.finish"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.finish",
+   "mcp": "cad.spaces.finish",
+   "note": "Tıklanan mahal, aralıklar ve başlangıç komuta verilir; ızgara komutun hesabı, mahale bağlı (ADR 0345 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.spaceFloor",
+   "kind": "command",
+   "title": "Döşeme deseni",
+   "level": "semantic",
+   "via": [
+    "cad.spaces.finish"
+   ],
+   "operation": null,
+   "python": "kentos.cad.spaces.finish",
+   "mcp": "cad.spaces.finish",
+   "note": "Tıklanan mahal ve desen komuta verilir; tarama komutun hesabı, mahale bağlı (ADR 0345 §4).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "tool.spaceSplit",
    "kind": "command",
    "title": "Mahali böl",
@@ -11352,6 +11416,54 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "tool.viewDetail",
+   "kind": "command",
+   "title": "Detay",
+   "level": "semantic",
+   "via": [
+    "cad.viewmarks.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.viewmarks.create",
+   "mcp": "cad.viewmarks.create",
+   "note": "Orta, yarıçap, balonun yeri, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.viewElevation",
+   "kind": "command",
+   "title": "Görünüş",
+   "level": "semantic",
+   "via": [
+    "cad.viewmarks.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.viewmarks.create",
+   "mcp": "cad.viewmarks.create",
+   "note": "Nokta, bakış yönü, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.viewSection",
+   "kind": "command",
+   "title": "Kesit",
+   "level": "semantic",
+   "via": [
+    "cad.viewmarks.create"
+   ],
+   "operation": null,
+   "python": "kentos.cad.viewmarks.create",
+   "mcp": "cad.viewmarks.create",
+   "note": "Kesme çizgisinin noktaları, numara, bakış ve hedef komuta verilir; balonlar ve yazılar komutun ve belgenin hesabı, önizleme planından (ADR 0345 §1, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "tool.viewTwist",

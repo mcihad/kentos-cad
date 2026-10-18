@@ -39,6 +39,7 @@ pub fn kind_label(e: &Entity) -> &'static str {
         Entity::Stair(_) => "Merdiven",
         Entity::Ramp(_) => "Rampa",
         Entity::Tag(_) => "Etiket",
+        Entity::ViewMark(_) => "Görünüm işareti",
         Entity::Xline(_) => "Yardımcı çizgi",
         Entity::Ray(_) => "Işın",
         Entity::Text(_) => "Yazı",

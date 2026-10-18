@@ -1969,6 +1969,101 @@
       "shortcuts": [],
       "category": "Düzen",
       "status": "implemented"
+    },
+    {
+      "id": "tool.viewSection",
+      "title": "Kesit",
+      "icon": "viewSection",
+      "description": "Kesitin kesme çizgisini noktalarıyla çizin, Enter bitirir; her uçta balon ve bakış oku. Balonun üst yarısı kesitin numarası, alt yarısı baktığı paftanın ya da adlı görünümün adı; pafta ya da görünüm yeniden adlandırılınca yazı da değişir. Numara (N), Çevir (Ç: bakış sola ya da sağa), Hedef (H: adlı görünümler ve paftaların pencereleri sırayla).",
+      "aliases": [
+        "KESITISARETI",
+        "KESİTİŞARETİ",
+        "SECTIONMARK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.viewElevation",
+      "title": "Görünüş",
+      "icon": "viewElevation",
+      "description": "Görünüş işaretinin yerine, sonra bakış yönüne tıklayın (Enter: kuzeye). Balonun alt yarısı hedefin adı; Numara (N), Hedef (H).",
+      "aliases": [
+        "GORUNUS",
+        "GÖRÜNÜŞ",
+        "ELEVATIONMARK"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.viewDetail",
+      "title": "Detay",
+      "icon": "viewDetail",
+      "description": "Detayın ortasına, sınırına (ya da yarıçapı yazın), sonra balonun yerine tıklayın (Enter: sağ üste). Sınır kesikli çember; balon detayın numarası ve baktığı paftayla. Numara (N), Hedef (H).",
+      "aliases": [
+        "DETAY",
+        "DETAILMARK",
+        "CALLOUT"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "arch.viewRefs",
+      "title": "Başvurular",
+      "icon": "viewRefs",
+      "description": "Çizimin kesit, görünüş ve detay işaretlerini ve bakabilecekleri hedefleri (adlı görünümler, paftaların pencereleri) listeler. İşareti seçip bir hedefe bağlayın, bağını koparın; detayın sınırından adlı görünüm oluşturun. Hedefi olmayan işaret uyarıyla gösterilir.",
+      "aliases": [
+        "BASVURULAR",
+        "BAŞVURULAR",
+        "REFERENCES"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceFloor",
+      "title": "Döşeme deseni",
+      "short": "Döşeme",
+      "icon": "spaceFloor",
+      "description": "Mahallerin içine tıklayın: her birine mahale bağlı döşeme taraması yazılır, mahal duvarlarıyla değişince tarama da değişir. Desen (D) kitaplığın ya da projenin desen adı; verilmezse mahalin döşeme kaplamasının adıyla aynı adlı desen, o da yoksa ANSI31. Aynı mahalin eski döşeme deseni yerine geçer. Katman A-ZEMN-DSN.",
+      "aliases": [
+        "DOSEMEDESENI",
+        "FLOORPATTERN"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "tool.spaceCeiling",
+      "title": "Tavan ızgarası",
+      "short": "Tavan",
+      "icon": "spaceCeiling",
+      "description": "Mahallerin içine tıklayın: her birine mahale bağlı asma tavan ızgarası yazılır. Aralık (A: 0.6 ya da 0.6x1.2), Başlangıç (B: mahalin ortası, karşılıklı duvarlarda eşit kesik; ya da sol alt köşe). Katman A-TAVN-IZG.",
+      "aliases": [
+        "TAVANIZGARASI",
+        "CEILINGGRID"
+      ],
+      "shortcuts": [],
+      "category": "Mimari",
+      "status": "implemented"
+    },
+    {
+      "id": "edit.selectFilter.viewmark",
+      "title": "Seçim süzgecinde Görünüm işareti",
+      "short": "Görünüm işareti",
+      "icon": "viewSection",
+      "description": "Seçim süzgecinde kesit, görünüş ve detay işaretlerini seçilebilir yapar ya da dışarıda bırakır; süzgeç açılır.",
+      "aliases": [],
+      "shortcuts": [],
+      "category": "Düzen",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -2182,7 +2277,13 @@
     "tagAll": "<path d=\"M1.5 6.5 3.7 2.8H8l2.2 3.7L8 10.2H3.7z\"/><path d=\"M9.8 13.5 12 9.8h4.3l2.2 3.7-2.2 3.7H12z\"/><path d=\"M1.5 14.5h5M4 12v5\" stroke-width=\"1.1\"/>",
     "tagsCheck": "<path d=\"M1.5 9 4.6 3.8h6l3.1 5.2-3.1 5.2h-6z\"/><path d=\"M10.8 15.2l2.4 2.3 4.8-5.3\" stroke-width=\"1.5\"/>",
     "scheduleOpenings": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><path d=\"M3 5.5V1.5M3 1.5a4 4 0 0 1 4 4\" stroke-width=\"1\"/>",
-    "scheduleSpaces": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><rect x=\"2.5\" y=\"1.5\" width=\"5.5\" height=\"3.5\" stroke-width=\"1\"/><path d=\"M4 3.3h2.5\" stroke-width=\"0.8\"/>"
+    "scheduleSpaces": "<rect x=\"2.5\" y=\"6.5\" width=\"15\" height=\"11\"/><path d=\"M2.5 9.8h15M2.5 13.6h15M7.5 6.5v11\" stroke-width=\"0.9\"/><rect x=\"2.5\" y=\"1.5\" width=\"5.5\" height=\"3.5\" stroke-width=\"1\"/><path d=\"M4 3.3h2.5\" stroke-width=\"0.8\"/>",
+    "viewSection": "<path d=\"M2.5 12.5h15\" stroke-dasharray=\"3.2 1.4 0.8 1.4\"/><circle cx=\"4\" cy=\"7\" r=\"2.3\"/><circle cx=\"16\" cy=\"7\" r=\"2.3\"/><path d=\"M1.7 7h4.6M13.7 7h4.6\" stroke-width=\"0.9\"/><path d=\"M4 9.3v3.2M16 9.3v3.2\" stroke-width=\"1.6\"/>",
+    "viewElevation": "<circle cx=\"9\" cy=\"11\" r=\"4.2\"/><path d=\"M4.8 11h8.4\" stroke-width=\"0.9\"/><path d=\"m13 7.8 4.7-1.6-1.6 4.7z\" fill=\"currentColor\" stroke=\"none\"/>",
+    "viewDetail": "<circle cx=\"7\" cy=\"12\" r=\"4.8\" stroke-dasharray=\"2 1.3\"/><circle cx=\"15\" cy=\"5\" r=\"3\"/><path d=\"M12 5h6\" stroke-width=\"0.9\"/><path d=\"m10.4 8.6 2.3-1.6\" stroke-width=\"1.1\"/>",
+    "viewRefs": "<circle cx=\"5\" cy=\"5.5\" r=\"3\"/><path d=\"M2 5.5h6\" stroke-width=\"0.9\"/><rect x=\"11\" y=\"10.5\" width=\"7\" height=\"7\" rx=\"0.8\"/><path d=\"M8 7.5c3 0 4.5 1 4.5 3\" stroke-width=\"1.1\"/><path d=\"m11 9.6 1.5 1.2 1.3-1.4\" stroke-width=\"1.1\"/><path d=\"M12.5 13h3M12.5 15h3\" stroke-width=\"0.8\"/>",
+    "spaceFloor": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 9.8h15M7.5 3.5v6.3M12.5 9.8v6.7\" stroke-width=\"0.9\"/>",
+    "spaceCeiling": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7.8h15M2.5 12.2h15M6.2 3.5v13M10 3.5v13M13.8 3.5v13\" stroke-width=\"0.7\"/>"
   },
   "tabs": [
     {
@@ -3178,6 +3279,14 @@
         {
           "command": "arch.spaceMerge",
           "size": "small"
+        },
+        {
+          "command": "tool.spaceFloor",
+          "size": "small"
+        },
+        {
+          "command": "tool.spaceCeiling",
+          "size": "small"
         }
       ]
     },
@@ -3226,6 +3335,32 @@
         "cad"
       ],
       "tab": "arch",
+      "label": "Görünüm",
+      "icon": "viewSection",
+      "items": [
+        {
+          "command": "tool.viewSection",
+          "size": "large"
+        },
+        {
+          "command": "tool.viewElevation",
+          "size": "small"
+        },
+        {
+          "command": "tool.viewDetail",
+          "size": "small"
+        },
+        {
+          "command": "arch.viewRefs",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
       "label": "Etiket",
       "icon": "tag",
       "items": [
@@ -3258,6 +3393,24 @@
         {
           "command": "tool.scheduleSpaces",
           "size": "large"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "arch",
+      "label": "Donatı",
+      "icon": "blockLibrary",
+      "items": [
+        {
+          "command": "block.library",
+          "size": "large"
+        },
+        {
+          "command": "tool.blockInsert",
+          "size": "small"
         }
       ]
     },

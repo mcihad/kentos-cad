@@ -394,6 +394,7 @@ fn anchor(s: &Shape) -> Option<f64> {
         | Shape::Stair { pts, .. }
         | Shape::Ramp { pts, .. } => pts.first()?.x,
         Shape::Column { at, .. } | Shape::Tag { at, .. } => at.x,
+        Shape::ViewMark { points, .. } => points.first()?.x,
         Shape::Opening { place, .. } => place.first()?.x,
         Shape::Space { parts, .. } => parts.first()?.outer.pts.first()?.x,
         Shape::Nurbs { ctrl, .. } => ctrl.first()?.x,

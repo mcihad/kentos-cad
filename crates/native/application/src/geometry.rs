@@ -764,6 +764,7 @@ pub fn shape(entity: &Entity) -> Shape {
         Entity::Stair(st) => kentos_formats::arch_elements::core_stair(&st.stair),
         Entity::Ramp(r) => kentos_formats::arch_elements::core_ramp(&r.ramp),
         Entity::Tag(t) => kentos_formats::arch_elements::core_tag(&t.tag),
+        Entity::ViewMark(m) => kentos_formats::arch_elements::core_viewmark(&m.mark),
         Entity::Arc(a) => Shape::Arc {
             c: v(&a.c),
             r: a.r,
@@ -1327,6 +1328,14 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         // A tag's middle (docs/adr/0344 §1): its words are sized on paper.
         (Entity::Tag(e), Shape::Tag { at, .. }) => {
             e.tag.at = Point { x: at.x, y: at.y };
+        }
+        // A view mark's points, bubble, radius, direction and side (docs/adr/0345 §1): its words are the document's.
+        (Entity::ViewMark(e), Shape::ViewMark { points, mark }) => {
+            e.mark.points = points.iter().map(|p| Point { x: p.x, y: p.y }).collect();
+            e.mark.at = mark.at.map(|a| Point { x: a.x, y: a.y });
+            e.mark.radius = mark.radius;
+            e.mark.angle = mark.angle;
+            e.mark.flip = mark.flip;
         }
         (Entity::Ramp(e), Shape::Ramp { pts, ramp }) => {
             e.ramp.pts = pts.iter().map(|q| Point { x: q.x, y: q.y }).collect();
@@ -1999,7 +2008,8 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
         | Shape::Column { .. }
         | Shape::Stair { .. }
         | Shape::Ramp { .. }
-        | Shape::Tag { .. } => return None,
+        | Shape::Tag { .. }
+        | Shape::ViewMark { .. } => return None,
     })
 }
 

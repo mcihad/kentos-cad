@@ -243,6 +243,7 @@ pub fn kind(kind: &str) -> &'static str {
         "stair" => "Merdiven",
         "ramp" => "Rampa",
         "tag" => "Etiket",
+        "viewmark" => "Görünüm işareti",
         _ => "Nesne",
     }
 }

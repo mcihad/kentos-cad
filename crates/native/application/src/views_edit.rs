@@ -99,7 +99,30 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             twist,
         } => {
             let name = name.trim();
+            // A view saved over one of its name keeps that one's id (docs/adr/0345 §2).
+            let id = s
+                .named_views
+                .iter()
+                .find(|v| v.name == name)
+                .map(|v| v.id.clone())
+                .unwrap_or_default();
+            // A new view whose name gives an id another view keeps (renamed from that name) takes the next free one.
+            let id = if id.is_empty() && !s.named_views.iter().any(|v| v.name == name) {
+                let own = kentos_contracts::view_id_of_name(name);
+                let taken = |k: &str| s.named_views.iter().any(|v| kentos_contracts::view_key(v) == k);
+                if taken(&own) {
+                    (2..)
+                        .map(|k| format!("{own}-{k}"))
+                        .find(|k| !taken(k))
+                        .unwrap_or_default()
+                } else {
+                    String::new()
+                }
+            } else {
+                id
+            };
             let entry = NamedView {
+                id,
                 name: name.to_owned(),
                 center: *center,
                 width: *width,
@@ -141,6 +164,10 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                     ),
                     "edit.to",
                 ));
+            }
+            // The id the old name gave stays the view's (docs/adr/0345 §2): marks pointing at it keep pointing.
+            if s.named_views[at].id.is_empty() && to != name {
+                s.named_views[at].id = kentos_contracts::view_key(&s.named_views[at]);
             }
             s.named_views[at].name = to.to_owned();
             Some(s.named_views[at].clone())

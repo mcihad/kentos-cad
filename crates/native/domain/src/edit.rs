@@ -1113,6 +1113,7 @@ impl Document {
         if self.settings != settings {
             let (framed, base) = (self.before_part(ProjectPart::Settings), self.edits);
             self.settings = settings;
+            self.refresh_viewmarks();
             self.mark_edited();
             self.after_part(ProjectPart::Settings, framed, true, base);
         }
@@ -1142,6 +1143,7 @@ impl Document {
         if self.sheets.as_deref() != sheets.as_ref() {
             let (framed, base) = (self.before_part(ProjectPart::Sheets), self.edits);
             self.sheets = sheets.map(Arc::new);
+            self.refresh_viewmarks();
             self.mark_edited();
             self.after_part(ProjectPart::Sheets, framed, true, base);
         }

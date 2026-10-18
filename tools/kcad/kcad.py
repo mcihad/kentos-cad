@@ -296,6 +296,9 @@ TAG_PLACES = ("number", "type", "form", "width", "height", "sill", "head", "name
               "phase", "tag", "place", "label", "style", "risers", "slope")
 SCHEDULE_FIELDS = ("number", "type", "form", "width", "height", "sill", "head", "wall", "level", "phase", "count", "area",
                    "perimeter", "volume", "name", "usage", "tag", "place", "length", "thickness", "attr")
+# Schema 81: schema 80, the `viewmark` kind (its fields as one map under `viewmark`) and a named view's `id`
+# (docs/adr/0345 §1, §2).
+SCHEMA_WITH_VIEWMARKS = 81
 SPACE_METHODS = ("net", "centerline", "gross")
 SPACE_MAX_POINTS = 10_000
 # A wall's bounds (kentos_contracts::arch).
@@ -488,7 +491,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2388,6 +2391,14 @@ def decode_payload(payload):
 # ── Document schemas 2 to 10 (spec §6) ──────────────────────────────────
 
 
+def view_id_of_name(name):
+    """A named view's id from its name (docs/adr/0345 §2): `v-` and the name's FNV-1a, 32 bits, 8 lowercase hex digits."""
+    h = 0x811C9DC5
+    for b in name.encode():
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return f"v-{h:08x}"
+
+
 class _Schema:
     """Checks the decoded payload and turns it into the contract's JSON form (`DocumentSnapshotV2`)."""
 
@@ -2619,6 +2630,7 @@ class _Schema:
         self.spaces = version >= SCHEMA_WITH_SPACES
         self.arch_elements = version >= SCHEMA_WITH_ARCH_ELEMENTS
         self.tags = version >= SCHEMA_WITH_TAGS
+        self.viewmarks = version >= SCHEMA_WITH_VIEWMARKS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4047,13 +4059,13 @@ class _Schema:
         """The named views (schema 52, docs/adr/0285 §1): each a name, a middle within 10 000 km, a width and a height
         above 0 and at most 20 000 km, a twist in [0, 2π); names trimmed, 1 to 64 characters without control
         characters, unique, at most 100; an empty list is not written."""
-        read = self.fields({"name": (self.text, True), "center": (self.point, True), "width": (self.float, True), "height": (self.float, True), "twist": (self.float, True)})
+        read = self.fields({**({"id": (self.text, False)} if self.viewmarks else {}), "name": (self.text, True), "center": (self.point, True), "width": (self.float, True), "height": (self.float, True), "twist": (self.float, True)})
         all_ = self.array(read)(v)
         if not all_:
             self.fail("bad_value", "boş adlı görünüm listesi yazılmaz")
         if len(all_) > MOST_NAMED_VIEWS:
             self.fail("bad_value", f"en çok {MOST_NAMED_VIEWS} adlı görünüm olur")
-        seen = set()
+        seen, keys = set(), set()
         for w in all_:
             name = w["name"]
             if name != name.strip() or not name or len(name) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in name):
@@ -4061,6 +4073,15 @@ class _Schema:
             if name in seen:
                 self.fail("bad_value", f"“{name}” adlı iki görünüm var")
             seen.add(name)
+            # A view's stable id (schema 81, docs/adr/0345 §2): its own, else `v-` and its name's FNV-1a; unique.
+            if w.get("id") == "":
+                self.fail("bad_value", "boş görünüm kimliği yazılmaz")
+            if len(w.get("id", "")) > MOST_UCS_NAME or any(unicodedata.category(c) == "Cc" for c in w.get("id", "")):
+                self.fail("bad_value", f"“{name}” görünümünün kimliği tutmuyor")
+            key = w.get("id") or view_id_of_name(name)
+            if key in keys:
+                self.fail("bad_value", f"“{name}” görünümünün kimliği başka bir görünümünkiyle aynı")
+            keys.add(key)
             if abs(w["center"]["x"]) > UCS_REACH or abs(w["center"]["y"]) > UCS_REACH:
                 self.fail("bad_value", "görünümün ortası 10 000 km içinde olmalı")
             if not all(0.0 < w[k] <= MOST_VIEW_SIZE for k in ("width", "height")):
@@ -4805,7 +4826,7 @@ class _Schema:
         if len(v) != 1:
             self.fail("bad_value", f"nesne haritasında tek anahtar (tür) olmalı, {len(v)} var")
         ((kind, body),) = v.items()
-        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags):
+        if kind not in ENTITY_KINDS or (kind == "insert" and not self.blocks) or (kind == "leader" and not self.leaders) or (kind == "table" and not self.tables) or (kind == "image" and not self.images) or (kind == "raster" and not self.rasters) or (kind == "pointcloud" and not self.point_clouds) or (kind == "nurbs" and not self.nurbs) or (kind == "record" and not self.forms) or (kind == "wall" and not self.walls) or (kind == "opening" and not self.openings) or (kind == "space" and not self.spaces) or (kind in ARCH_ELEMENTS and not self.arch_elements) or (kind == "tag" and not self.tags) or (kind == "viewmark" and not self.viewmarks):
             self.path.append(kind)
             self.fail("unknown_kind", f"“{kind}” nesne türü bilinmiyor")
         # A block definition holds no table (docs/adr/0184 §1).
@@ -4836,6 +4857,10 @@ class _Schema:
         if kind == "tag" and self.inside is not None:
             self.path.append(kind)
             self.fail("bad_value", "blok tanımında etiket olamaz")
+        # Nor a view mark: its target is the project's (docs/adr/0345 §1).
+        if kind == "viewmark" and self.inside is not None:
+            self.path.append(kind)
+            self.fail("bad_value", "blok tanımında görünüm işareti olamaz")
         # Nor a space: its walls are the drawing's (docs/adr/0342 §1).
         if kind == "space" and self.inside is not None:
             self.path.append(kind)
@@ -4935,7 +4960,7 @@ class _Schema:
             fields = {**{k: v for k, v in fields.items() if k != "opening"}, **fields["opening"]}
         if kind == "space":
             fields = {**{k: v for k, v in fields.items() if k != "space"}, **fields["space"]}
-        if kind in ARCH_ELEMENTS or kind == "tag":
+        if kind in ARCH_ELEMENTS or kind in ("tag", "viewmark"):
             fields = {**{k: v for k, v in fields.items() if k != kind}, **fields[kind]}
         if self.inside is None:
             fields.pop("uid")
@@ -5944,6 +5969,60 @@ class _Schema:
             bad("Etiketin yazı yüksekliği sıfırdan büyük, en çok 50 mm olmalı.")
         if f.get("text") == "":
             bad("boş yazı yazılmaz")
+        return f
+
+    def viewmark_fields(self, v):
+        """A view mark's fields (schema 81, docs/adr/0345 §1), as the contract's JSON has them; a flag only when true,
+        no empty number or words; then the contract's rule (`ViewMarkFields::problem`)."""
+        def true_only(x):
+            x = self.bool(x)
+            if x is not True:
+                self.fail("bad_value", "false yazılmaz; varsayılandır")
+            return x
+        target = self.fields({"view": (self.text, False), "sheet": (self.text, False), "item": (self.text, False)})
+        words = self.fields({"top": (self.text, True), "bottom": (self.text, True)})
+        f = self.fields({"form": (self.enum(("section", "elevation", "detail")), True), "points": (self.array(self.jpoint), True),
+                         "radius": (self.float, False), "at": (self.jpoint, False), "angle": (self.float, False),
+                         "flip": (true_only, False), "mark": (self.text, False), "target": (target, False),
+                         "size": (self.float, False), "words": (words, False), "broken": (self.enum(("targetGone",)), False)})(v)
+        bad = lambda words: self.fail("bad_value", words)  # noqa: E731
+        pts = f["points"]
+        if not all(math.isfinite(p["x"]) and math.isfinite(p["y"]) for p in pts):
+            bad("İşaretin noktalarının koordinatları sonlu olmalı.")
+        if f["form"] == "section":
+            if not 2 <= len(pts) <= 32:
+                bad("Kesitin kesme çizgisi 2 ile 32 arası nokta ister.")
+            if any(pts[k] == pts[k + 1] for k in range(len(pts) - 1)):
+                bad("Kesme çizgisinin art arda iki noktası aynı olamaz.")
+        elif len(pts) != 1:
+            bad("Görünüş ve detay tek nokta ister.")
+        if f["form"] == "detail":
+            if not ("radius" in f and math.isfinite(f["radius"]) and f["radius"] > 0):
+                bad("Detayın sınırının yarıçapı sıfırdan büyük olmalı.")
+        elif "radius" in f:
+            bad("Yarıçap yalnız detayın sınırınındır.")
+        if "at" in f and not (math.isfinite(f["at"]["x"]) and math.isfinite(f["at"]["y"])):
+            bad("Balonun yerinin koordinatları sonlu olmalı.")
+        if "angle" in f and not math.isfinite(f["angle"]):
+            bad("Bakış yönü sonlu olmalı.")
+        if f.get("mark") == "":
+            bad("boş numara yazılmaz")
+        if len(f.get("mark", "")) > 16 or any(unicodedata.category(c) == "Cc" for c in f.get("mark", "")):
+            bad("İşaretin numarası en çok 16 harftir, denetim karakteri olmaz.")
+        if "size" in f and not (math.isfinite(f["size"]) and 0 < f["size"] <= 50):
+            bad("İşaretin yazı yüksekliği sıfırdan büyük, en çok 50 mm olmalı.")
+        t = f.get("target")
+        if t is not None:
+            if any(not x.strip() for x in t.values()):
+                bad("Hedefin kimlikleri boş olamaz.")
+            if set(t) not in ({"view"}, {"sheet", "item"}):
+                bad("Hedef ya bir adlı görünümdür ya da bir paftadaki görünüm penceresi.")
+        w = f.get("words")
+        if w is not None:
+            if not w["top"] and not w["bottom"]:
+                bad("boş yazı yazılmaz")
+            if any(len(x) > 128 or any(unicodedata.category(c) == "Cc" for c in x) for x in w.values()):
+                bad("İşaretin yazısı en çok 128 harftir, denetim karakteri olmaz.")
         return f
 
     def table_sources(self, t):
@@ -7315,6 +7394,8 @@ ENTITY_KINDS = {
     "ramp": lambda s: {"ramp": (s.arch_element("ramp"), True)},
     # Schema 80 (docs/adr/0344 §1): a tag; its fields as one map.
     "tag": lambda s: {"tag": (s.tag_fields, True)},
+    # Schema 81 (docs/adr/0345 §1): a view mark; its fields as one map.
+    "viewmark": lambda s: {"viewmark": (s.viewmark_fields, True)},
     # Schema 78 (docs/adr/0342 §1): a space; its parts and the rest of its fields.
     "space": lambda s: {
         "parts": (s.array(s.space_part), True),

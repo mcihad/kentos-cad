@@ -66,7 +66,7 @@ use crate::{
     labels_to_text, layer_move, layer_tools, leader, match_properties, meeting, paragraph,
     parallel, polygonize, quick_dimension, reshape_by, revcloud, sector, select_circle,
     select_containing, select_fence, select_polygon, select_similar, set_elevation, spline, split,
-    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines, opening_tools, space_tools, arch_tools, tag_tools,
+    station_offset, text, text_file, topology, vertex_points, wall, wall_edit_tools, wall_from_lines, opening_tools, space_tools, arch_tools, tag_tools, viewmark_tools,
 };
 
 /// Ids of the tools the session runs; each is the web command `tool.<id>`.
@@ -103,6 +103,11 @@ pub const TOOLS: &[&str] = &[
     tag_tools::TAG_ALL_ID,
     tag_tools::SCHEDULE_ID,
     tag_tools::SCHEDULE_SPACES_ID,
+    viewmark_tools::SECTION_ID,
+    viewmark_tools::ELEVATION_ID,
+    viewmark_tools::DETAIL_ID,
+    viewmark_tools::FLOOR_ID,
+    viewmark_tools::CEILING_ID,
     line::ID,
     path::POLYLINE_ID,
     // Mesafe ölç, Alan hesapla and Parsel oluştur: the path tool's other shapes (docs/adr/0067).
@@ -468,6 +473,11 @@ impl Session {
             tag_tools::TAG_ALL_ID => Box::new(tag_tools::TagAllTool::new()),
             tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(kentos_contracts::ScheduleOf::Openings)),
             tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_contracts::ScheduleOf::Spaces)),
+            viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Section)),
+            viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Elevation)),
+            viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Detail)),
+            viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(kentos_contracts::FinishSurface::Floor)),
+            viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(kentos_contracts::FinishSurface::Ceiling)),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),

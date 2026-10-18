@@ -63,7 +63,7 @@ pub struct CommandTarget {
 }
 
 /// Every object kind, as `Entity` tags it.
-pub const KINDS: [&str; 28] = [
+pub const KINDS: [&str; 29] = [
     "point",
     "line",
     "polyline",
@@ -92,6 +92,7 @@ pub const KINDS: [&str; 28] = [
     "stair",
     "ramp",
     "tag",
+    "viewmark",
 ];
 
 /// The codes any call may answer with, whatever its command: the
@@ -1422,6 +1423,56 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &[],
         targets: || vec![target(None, &["table"], &[], Some("not_schedule"), None)],
+    },
+    // View marks and finishes (docs/adr/0345 §3, §4).
+    Entry {
+        id: "cad.viewmarks.create",
+        refusals: &[
+            &[
+                "no_objects",
+                "not_finite",
+                "invalid_viewmark",
+                "target_not_found",
+                "invalid_line_weight",
+            ],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.viewmarks.edit",
+        refusals: &[
+            OBJECTS,
+            &[
+                "not_a_viewmark",
+                "nothing_to_set",
+                "not_finite",
+                "invalid_viewmark",
+                "target_not_found",
+            ],
+            REVISION,
+        ],
+        warnings: &[],
+        targets: || vec![target(None, &["viewmark"], &[], Some("not_a_viewmark"), None)],
+    },
+    Entry {
+        id: "cad.viewmarks.references",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.spaces.finish",
+        refusals: &[
+            OBJECTS,
+            &["not_a_space", "not_finite", "invalid_finish", "unknown_pattern"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["finish_replaced", "layer_hidden"],
+        targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
@@ -2784,11 +2835,12 @@ const ENTRIES: &[Entry] = &[
                         "image",
                         "raster",
                         "pointcloud",
+                        "viewmark",
                     ],
                     &[],
                     Some("no_straight_edge"),
                     Some(
-                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
+                        "Paralelin doğrultusu nesnenin near'a en yakın düz kenarından: çizgiler, yolların düz kenarları, duvarın yüzleri, mahalin halkaları, aksın çizgisi, kolonun, merdivenin ve rampanın çevresi, kesitin kesme çizgisi, taramanın, tablonun ve resmin çerçevesi; eğrinin ve elipsin kirişleri kenar sayılmaz.",
                     ),
                 ),
             ]

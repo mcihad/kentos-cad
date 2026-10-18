@@ -241,6 +241,8 @@ pub enum Dialog {
     WallJoins,
     /// Etiketleri denetle (tags_check.rs, docs/adr/0344 §2); the window is `App::tags_check`.
     TagsCheck,
+    /// Başvurular (viewmark_refs.rs, docs/adr/0345 §3); the window is `App::view_refs`.
+    ViewRefs,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
     Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
@@ -512,6 +514,7 @@ pub enum Message {
     WallStyles(crate::wall_styles::Event),
     WallJoins(crate::wall_joins::Event),
     TagsCheck(crate::tags_check::Event),
+    ViewRefs(crate::viewmark_refs::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -987,6 +990,8 @@ pub struct App {
     pub(crate) wall_joins: Option<crate::wall_joins::Window>,
     /// Etiketleri denetle's window (tags_check.rs, docs/adr/0344 §2).
     pub(crate) tags_check: Option<crate::tags_check::Window>,
+    /// Başvurular' window (viewmark_refs.rs, docs/adr/0345 §3).
+    pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1308,6 +1313,7 @@ impl App {
             wall_styles: None,
             wall_joins: None,
             tags_check: None,
+            view_refs: None,
             quantities: None,
             layer_purge: None,
             take_from: None,
@@ -1851,6 +1857,7 @@ impl App {
             Message::WallStyles(event) => return self.wall_styles_event(event),
             Message::WallJoins(event) => return self.wall_joins_event(event),
             Message::TagsCheck(event) => return self.tags_check_event(event),
+            Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2488,6 +2495,7 @@ impl App {
             "arch.wallStyles" => self.open_wall_styles(),
             "arch.wallJoinCheck" => self.open_wall_joins(),
             "arch.tagsCheck" => self.open_tags_check(),
+            "arch.viewRefs" => self.open_view_refs(),
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).
             "arch.quantities" => self.open_quantities(),
             "arch.spaceMerge" => self.space_merge(),

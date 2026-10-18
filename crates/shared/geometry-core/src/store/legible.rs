@@ -216,7 +216,7 @@ impl Store {
         // sized round them (docs/adr/0344 §1).
         let fixed = kind == LABEL_CELL
             || matches!(shape, Shape::Text { path: Some(_), .. })
-            || matches!(item.shape, Shape::Tag { .. });
+            || matches!(item.shape, Shape::Tag { .. } | Shape::ViewMark { .. });
         if fixed {
             if !(TRUE_MIN_PX..=TRUE_MAX_PX).contains(&px) {
                 return None;

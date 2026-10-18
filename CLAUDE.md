@@ -689,6 +689,15 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `cell_computed`; `set`), `cad.tables.edit` çizelgenin hücresini reddeder (`schedule_cell`); Mimari › Etiket (Etiket, Hepsini
   etiketle, Etiketleri denetle) ve Çizelge (Kapı ve pencere çizelgesi, Mahal çizelgesi), Tabloyu düzenle'nin çizelge yolu,
   Öznitelikler'in etiket satırları, seçim süzgecinde Etiket; Python `kentos.cad.tags`, `.schedules`, MCP (ADR 0344);
+  görünüm işaretleri ve mahalin kaplamaları: `viewmark` türü (kesit, görünüş, detay; noktalar, yarıçap, balonun yeri, bakış,
+  numara, hedef: adlı görünüm ya da paftadaki harita çerçevesi; yazısı `words` ve `broken: targetGone` belgenin; `.kcad` şema 81,
+  `FORMATS_VERSION` 88, sunucuda göç 0028), adlı görünümün kararlı kimliği (`id`, `view_key`; yeniden adlandırma korur), çekirdeğin
+  `geom::viewmark`'ı (balon yazıdan, bakış oku, kalın uçlar, kesikli detay çemberi); belge işaretin yazısını hedefinden işaretin
+  adımında ve adım dışında görünümler ya da pafta kitabı değişince, geri almada yerinde yazar (`kentos_domain::viewmark_follow`);
+  `cad.viewmarks.create`, `.edit` (set, retarget, detach), salt okunur `.references` ve `cad.spaces.finish` (mahale bağlı döşeme deseni
+  ya da tavan ızgarası, aynı yüzün eskisinin yerine; tarama izleyicisi mahali dış sınır alır); Mimari › Görünüm (Kesit, Görünüş, Detay,
+  Başvurular), Mahal'de Döşeme deseni ve Tavan ızgarası, Donatı (KentOS blok kitaplığı, Blok ekle); Öznitelikler'in işaret satırları,
+  seçim süzgecinde Görünüm işareti, kopuk işaretin uyarı üçgeni; Python `kentos.cad.viewmarks`, MCP (ADR 0345);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

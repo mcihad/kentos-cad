@@ -910,7 +910,8 @@ def emit_command(em: Emit, c: Command) -> str:
     params = ["self", f"{first[0]}: {first[1]}", "/", "*"] + [param_decl(em, f) for f in fields]
     if not c.local:
         params += ["expected_versions: Mapping[str, str] | None = None", "idempotency_key: str | None = None"]
-    sig = ",\n        ".join(params)
+    # A bare `*` takes a named argument after it: none when the command has no field and no keywords follow.
+    sig = ",\n        ".join(params[:-1] if params[-1] == "*" else params)
     # The protocol's own (docs/adr/0253): a write's request id and what it expects.
     if c.local and any(f.py in ("request_id", "expected", "op") for f in fields):
         raise Fail(f"{c.id}: an input field is named request_id, expected or op")

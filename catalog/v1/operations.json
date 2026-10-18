@@ -1735,6 +1735,50 @@
         "cad.schedules.create"
       ],
       "note": "Mahal çizelgesi: Tür, grup, toplam, sıra ve köşe komuta verilir (ADR 0344 §3, §5)."
+    },
+    "tool.viewSection": {
+      "level": "semantic",
+      "via": [
+        "cad.viewmarks.create"
+      ],
+      "note": "Kesme çizgisinin noktaları, numara, bakış ve hedef komuta verilir; balonlar ve yazılar komutun ve belgenin hesabı, önizleme planından (ADR 0345 §1, §5)."
+    },
+    "tool.viewElevation": {
+      "level": "semantic",
+      "via": [
+        "cad.viewmarks.create"
+      ],
+      "note": "Nokta, bakış yönü, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5)."
+    },
+    "tool.viewDetail": {
+      "level": "semantic",
+      "via": [
+        "cad.viewmarks.create"
+      ],
+      "note": "Orta, yarıçap, balonun yeri, numara ve hedef komuta verilir; önizleme planından (ADR 0345 §5)."
+    },
+    "arch.viewRefs": {
+      "level": "semantic",
+      "via": [
+        "cad.viewmarks.references",
+        "cad.viewmarks.edit",
+        "cad.views.edit"
+      ],
+      "note": "Liste cad.viewmarks.references'ten; Bağla ve Bağı kopar cad.viewmarks.edit, Görünüm oluştur cad.views.edit ile (ADR 0345 §3)."
+    },
+    "tool.spaceFloor": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.finish"
+      ],
+      "note": "Tıklanan mahal ve desen komuta verilir; tarama komutun hesabı, mahale bağlı (ADR 0345 §4)."
+    },
+    "tool.spaceCeiling": {
+      "level": "semantic",
+      "via": [
+        "cad.spaces.finish"
+      ],
+      "note": "Tıklanan mahal, aralıklar ve başlangıç komuta verilir; ızgara komutun hesabı, mahale bağlı (ADR 0345 §4)."
     }
   },
   "tools": {

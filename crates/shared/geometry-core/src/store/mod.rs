@@ -465,7 +465,7 @@ impl Store {
         let walls: Vec<u32> = (0..self.slots.len() as u32)
             // A space's label is sized on paper too (docs/adr/0342 §2).
             .filter(|&s| {
-                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. }))
+                matches!(&self.slots[s as usize], Some(it) if matches!(it.shape, Shape::Wall { .. } | Shape::Space { .. } | Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. }))
             })
             .collect();
         for s in &walls {
@@ -520,7 +520,7 @@ impl Store {
                     }]
                 }),
             // Its line, outline, flights and words at the view's scale (docs/adr/0343 §2).
-            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
+            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } | Shape::ViewMark { .. } => {
                 crate::geom::arch::pieces(shape, self.wall_view.scale)
             }
             // Its rings and its label at the view's scale (docs/adr/0342 §2).

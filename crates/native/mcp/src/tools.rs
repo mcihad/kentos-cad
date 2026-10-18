@@ -550,6 +550,9 @@ fn command_tool(c: &Value) -> Value {
             // A tag's template and frame changed (docs/adr/0344 §4); a schedule's cell written to its objects.
             | "cad.tags.edit"
             | "cad.schedules.edit"
+            // A view mark's number, target and words changed; a finish replaces the space's earlier one (docs/adr/0345).
+            | "cad.viewmarks.edit"
+            | "cad.spaces.finish"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

@@ -410,6 +410,15 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
                 return Err(why);
             }
         }
+        // The file's rules (docs/adr/0345 §1); the drawing's only.
+        ViewMark(x) => {
+            if in_block {
+                return Err("Blok tanımında görünüm işareti olamaz".into());
+            }
+            if let Some((_, why)) = x.mark.problem() {
+                return Err(why);
+            }
+        }
         // The file's rules (docs/adr/0341 §1): its wall, place, width, leaves and jambs; the drawing's only.
         Opening(x) => {
             if in_block {
@@ -725,7 +734,7 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         // Its area, as an area object's (docs/adr/0342 §1); its source is its definition.
         Entity::Space(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
         // A grid's path, a column's, stair's or ramp's outline (docs/adr/0343 §5); its source is its definition.
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) => {
+        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
             return projection(&kentos_formats::arch_elements::simple(e)?, blocks);
         }
         // Its jambs' footprint (docs/adr/0341 §1); its source is its definition.

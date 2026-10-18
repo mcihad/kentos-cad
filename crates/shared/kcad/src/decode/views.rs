@@ -10,13 +10,22 @@ use crate::cbor::Reader;
 use crate::error::{Code, KcadError};
 
 /// The named views: not empty, then checked whole.
-pub(super) fn named_views(r: &mut Reader<'_>) -> Result<Vec<NamedView>, KcadError> {
+/// Schema 81 (docs/adr/0345 §2) adds a view's `id`.
+pub(super) fn named_views(r: &mut Reader<'_>, ids: bool) -> Result<Vec<NamedView>, KcadError> {
     let at = r.position();
     let all = list(r, |r, _| {
-        let (mut name, mut center, mut width, mut height, mut twist) =
-            (None, None, None, None, None);
+        let (mut id, mut name, mut center, mut width, mut height, mut twist) =
+            (None, None, None, None, None, None);
         map(r, |r, key| {
             match key {
+                "id" if ids => {
+                    let at = r.position();
+                    let t = text(r)?;
+                    if t.is_empty() {
+                        return Err(r.fail_at(Code::BadValue, at, "boş görünüm kimliği yazılmaz"));
+                    }
+                    id = Some(t);
+                }
                 "name" => name = Some(text(r)?),
                 "center" => center = Some(point(r)?),
                 "width" => width = Some(r.float()?),
@@ -26,7 +35,9 @@ pub(super) fn named_views(r: &mut Reader<'_>) -> Result<Vec<NamedView>, KcadErro
             }
             Ok(())
         })?;
+        let id = id.unwrap_or_default();
         Ok(NamedView {
+            id,
             name: required(r, name, "name")?,
             center: required(r, center, "center")?,
             width: required(r, width, "width")?,

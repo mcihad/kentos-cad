@@ -38,6 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
+use kentos_native_application::{spaces_finish, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -775,6 +776,59 @@ impl Input for kentos_domain::contracts::TagsEdit {
 impl Input for kentos_domain::contracts::TagsCheck {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
+    }
+}
+
+impl Input for kentos_domain::contracts::ViewMarksCreate {
+    /// `marks[0].points[k].x` and `.y`, `.at.x`, `.radius`, `.angle`, `.size`, `lineWeight` (docs/adr/0345).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if path == "lineWeight" {
+            return self.line_weight.as_mut();
+        }
+        let (i, rest) = path.strip_prefix("marks[")?.split_once("].")?;
+        let m = self.marks.get_mut(i.parse::<usize>().ok()?)?;
+        match rest {
+            "radius" => m.radius.as_mut(),
+            "angle" => m.angle.as_mut(),
+            "size" => m.size.as_mut(),
+            "at.x" => m.at.as_mut().map(|p| &mut p.x),
+            "at.y" => m.at.as_mut().map(|p| &mut p.y),
+            _ => named_point(&mut m.points, "points", rest),
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::ViewMarksEdit {
+    /// `operation.size`, `.angle`, `.radius` (docs/adr/0345).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        let kentos_domain::contracts::ViewMarksOperation::Set(c) = &mut self.operation else {
+            return None;
+        };
+        match path {
+            "operation.size" => c.size.as_mut().and_then(Option::as_mut),
+            "operation.angle" => c.angle.as_mut(),
+            "operation.radius" => c.radius.as_mut(),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::ViewMarksReferences {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::SpacesFinish {
+    /// `scale`, `grid.dx`, `.dy`, `.angle` (docs/adr/0345).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        match path {
+            "scale" => self.scale.as_mut(),
+            "grid.dx" => self.grid.as_mut().map(|g| &mut g.dx),
+            "grid.dy" => self.grid.as_mut().map(|g| &mut g.dy),
+            "grid.angle" => self.grid.as_mut().map(|g| &mut g.angle),
+            _ => None,
+        }
     }
 }
 
@@ -2802,6 +2856,18 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_TAGS_EDIT => {
             run!(tags_edit, kentos_domain::contracts::TagsEdit)
+        }
+        kentos_domain::contracts::CAD_VIEWMARKS_CREATE => {
+            run!(viewmarks_create, kentos_domain::contracts::ViewMarksCreate)
+        }
+        kentos_domain::contracts::CAD_VIEWMARKS_EDIT => {
+            run!(viewmarks_edit, kentos_domain::contracts::ViewMarksEdit)
+        }
+        kentos_domain::contracts::CAD_VIEWMARKS_REFERENCES => {
+            run!(viewmarks_references, kentos_domain::contracts::ViewMarksReferences)
+        }
+        kentos_domain::contracts::CAD_SPACES_FINISH => {
+            run!(spaces_finish, kentos_domain::contracts::SpacesFinish)
         }
         kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
             run!(schedules_create, kentos_domain::contracts::SchedulesCreate)

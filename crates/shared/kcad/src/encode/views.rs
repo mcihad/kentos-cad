@@ -17,7 +17,12 @@ impl<'d> Encoder<'d> {
         self.open(list.len(), false)?;
         for (i, v) in list.iter().enumerate() {
             self.at(Seg::Index(i), |e| {
-                e.open(5, true)?;
+                e.open(5 + usize::from(!v.id.is_empty()), true)?;
+                // Schema 81 (docs/adr/0345 §2): a view's own id, first as RFC 8949 sorts the keys.
+                if !v.id.is_empty() {
+                    e.key("id");
+                    e.at(Seg::Name("id"), |e| e.text(&v.id))?;
+                }
                 e.key("name");
                 e.at(Seg::Name("name"), |e| e.text(&v.name))?;
                 e.key("twist");

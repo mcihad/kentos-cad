@@ -294,6 +294,7 @@ impl ObjectAction {
             Shape::Stair { .. } => "merdiven",
             Shape::Ramp { .. } => "rampa",
             Shape::Tag { .. } => "etiket",
+            Shape::ViewMark { .. } => "görünüm işareti",
             Shape::Xline { .. } => "yardımcı çizgi",
             Shape::Ray { .. } => "ışın",
             Shape::Text { .. } => "yazı",

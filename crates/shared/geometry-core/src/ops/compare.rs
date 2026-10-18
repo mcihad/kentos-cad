@@ -526,6 +526,17 @@ fn defs(shape: &Shape) -> Defs {
             others.push(Other::Num(tag.size.unwrap_or(0.0)));
             others.push(Other::Flag(tag.leader));
         }
+        // Its points, form and words (docs/adr/0345).
+        Shape::ViewMark { points, mark } => {
+            comps.push(path(points, None));
+            others.push(Other::Text(format!("{:?}", mark.form)));
+            others.push(Other::Text(mark.top.clone()));
+            others.push(Other::Text(mark.bottom.clone()));
+            others.push(Other::Num(mark.radius.unwrap_or(0.0)));
+            others.push(Other::Num(mark.angle.unwrap_or(90.0)));
+            others.push(Other::Flag(mark.flip));
+            others.push(Other::Num(mark.size.unwrap_or(0.0)));
+        }
         Shape::Stair { pts, stair } => {
             comps.push(path(pts, None));
             lengths.extend([stair.width, stair.riser_height, stair.tread, stair.landing()]);

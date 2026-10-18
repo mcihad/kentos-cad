@@ -2596,6 +2596,128 @@ pub fn catalog() -> CommandCatalog {
             }],
         },
         CommandDescriptor {
+            id: crate::CAD_VIEWMARKS_CREATE.into(),
+            version: crate::CAD_VIEWMARKS_CREATE_VERSION,
+            title: "Görünüm işareti".into(),
+            summary: "Kesit, görünüş ve detay işaretleri ekler; tek geri alma adımı “Görünüm işareti”. Her işaret biçimiyle (form: section, elevation, detail) ve noktalarıyla verilir: kesitin kesme çizgisi 2–32 nokta (flip bakış yönünü çevirir), görünüş tek nokta ve bakış yönü (angle, derece, doğudan saat yönünün tersine; yoksa 90), detay merkezi ve sınırının yarıçapı (radius), balonun yeri (at; yoksa sağ üstte iki yarıçap uzakta). \
+                      mark balonun üst yarısındaki numaradır (en çok 16 harf); target işaretin baktığı yerdir: adlı görünüm ({view}) ya da paftadaki görünüm penceresi ({sheet, item}); projede olmayan hedef target_not_found. Balonun alt yarısına hedefin numarası yazılır (paftanın adı ya da görünümün adı; hedef yoksa “—”), mark boşsa üst yarıya pencerenin paftadaki sırası; yazılar belgenindir: pafta ya da görünüm yeniden adlandırılınca aynı anda yeniden yazılır, hedef silinince işaret son yazısıyla targetGone kalır. \
+                      size yazının kâğıttaki yüksekliğidir (mm, yoksa 2,5). Katman açıkça verilir; kilitli katmana yazılmaz, gizli katmana uyarıyla yazılır."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ViewMarksCreate>(),
+            output: schema::<crate::ViewMarksCreated>(),
+            plan: Some(schema::<crate::ViewMarksPlan>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "A-A kesiti, A3 paftasının ilk penceresine".into(),
+                    input: json!({ "layerId": "isaret", "marks": [{ "form": "section", "points": [{ "x": -1.0, "y": 2.0 }, { "x": 9.0, "y": 2.0 }], "mark": "A", "target": { "sheet": "pafta-1", "item": "harita-1" } }] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Mutfağın detayı".into(),
+                    input: json!({ "layerId": "isaret", "marks": [{ "form": "detail", "points": [{ "x": 4.0, "y": 3.0 }], "radius": 1.2, "mark": "1" }] }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_VIEWMARKS_EDIT.into(),
+            version: crate::CAD_VIEWMARKS_EDIT_VERSION,
+            title: "Görünüm işaretini düzenle".into(),
+            summary: "Kalıcı kimlikleri verilen görünüm işaretlerini değiştirir; tek geri alma adımı “Görünüm işaretini düzenle”, hepsi ya da hiçbiri. operation: set (mark, size: kâğıtta mm, null 2,5; flip; angle yalnız görünüşte; radius yalnız detayda), retarget (target: adlı görünüm ya da paftadaki pencere; projede yoksa target_not_found), detach (hedefi bırakır, alt yarıya “—” yazılır). \
+                      Yazıları hedeflerinden yeniden yazılır. Kilitli katmandaki işaret bütün değişikliği reddeder. Plan yazmadan işaretleri olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ViewMarksEdit>(),
+            output: schema::<crate::ViewMarksEdited>(),
+            plan: Some(schema::<crate::ViewMarksEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Kesiti adlı görünüme bağla".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"], "operation": { "kind": "retarget", "target": { "view": "v-1a2b3c4d" } } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bakış yönünü çevir".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"], "operation": { "kind": "set", "flip": true } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_VIEWMARKS_REFERENCES.into(),
+            version: crate::CAD_VIEWMARKS_REFERENCES_VERSION,
+            title: "Başvurular".into(),
+            summary: "Çizimin görünüm işaretlerini ve bakabilecekleri hedefleri listeler; çizimi değiştirmez. Her işaret: kimliği, biçimi, numarası, hedefi, yazısı, kopukluğu, ilk noktası (çizimdeki sırayla). Her hedef: adlı görünümler projenin sırasıyla, sonra pafta kitabının görünüm pencereleri kitabın sırasıyla; adı (paftada “Pafta › Pencere”), alt yarıya yazılacak numarası, pencerenin paftadaki sırası ve ona bakan işaretler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ViewMarksReferences>(),
+            output: schema::<crate::ViewMarksReferenced>(),
+            plan: Some(schema::<crate::ViewMarksReferenced>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "İşaretler ve hedefler".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SPACES_FINISH.into(),
+            version: crate::CAD_SPACES_FINISH_VERSION,
+            title: "Döşeme ve tavan".into(),
+            summary: "Mahallere döşeme deseni ya da tavan ızgarası yazar: her mahalin her parçasına mahale bağlı bir tarama, Kaplama özniteliğiyle (Döşeme, Tavan); mahal duvarlarıyla değişince tarama da izler. Tek geri alma adımı “Döşeme ve tavan”. \
+                      surface: floor ise pattern kitaplığın ya da projenin desen adıdır (yoksa mahalin döşeme kaplamasının adıyla aynı adlı desen, o da yoksa ANSI31; bilinmeyen ad unknown_pattern), scale desenin ölçeği; desen mahalin sol alt köşesinden başlar. surface: ceiling ise grid ızgaradır: dx ve dy aralıklar (m), angle derece, origin center (mahalin ortası, karşılıklı duvarlarda eşit kesik) ya da corner. Döşemeye ızgara, tavana desen invalid_finish. \
+                      Aynı yüzün eski taraması yerine geçer (finish_replaced). layerId verilmezse A-ZEMN-DSN ya da A-TAVN-IZG, yoksa aynı adımda açılır. Plan yazmadan taramaları olacakları gibi gösterir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SpacesFinish>(),
+            output: schema::<crate::SpacesFinished>(),
+            plan: Some(schema::<crate::SpacesFinished>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Salona NET deseni".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e91"], "surface": "floor", "pattern": "NET", "scale": 2.0 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "60 × 60 asma tavan".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e91"], "surface": "ceiling", "grid": { "dx": 0.6, "dy": 0.6 } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_SCHEDULES_CREATE.into(),
             version: crate::CAD_SCHEDULES_CREATE_VERSION,
             title: "Çizelge".into(),
@@ -7241,6 +7363,18 @@ mod tests {
                     }
                     crate::CAD_TAGS_EDIT => {
                         serde_json::from_value::<crate::TagsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_VIEWMARKS_CREATE => {
+                        serde_json::from_value::<crate::ViewMarksCreate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_VIEWMARKS_EDIT => {
+                        serde_json::from_value::<crate::ViewMarksEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_VIEWMARKS_REFERENCES => {
+                        serde_json::from_value::<crate::ViewMarksReferences>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SPACES_FINISH => {
+                        serde_json::from_value::<crate::SpacesFinish>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

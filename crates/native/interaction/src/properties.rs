@@ -108,6 +108,20 @@ pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_contracts::TagCha
     said(kentos_native_application::tags_edit::execute(&mut ExecutionContext::new(doc), input))
 }
 
+/// A view mark's field or target from Öznitelikler (docs/adr/0345 §5): `operation` through `cad.viewmarks.edit`; what
+/// to say.
+pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_contracts::ViewMarksOperation) -> Vec<String> {
+    let Some(uid) = doc.uid(slot) else {
+        return Vec::new();
+    };
+    let input = kentos_contracts::ViewMarksEdit {
+        uids: vec![uid.to_string()],
+        operation,
+        expected_revision: None,
+    };
+    said(kentos_native_application::viewmarks_edit::execute(&mut ExecutionContext::new(doc), input))
+}
+
 /// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
 /// `cad.arch.edit`; what to say.
 pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_contracts::ArchOperation) -> Vec<String> {

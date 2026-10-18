@@ -154,6 +154,7 @@ pub fn kind_title(kind: &str) -> &'static str {
         "stair" => "Merdiven",
         "ramp" => "Rampa",
         "tag" => "Etiket",
+        "viewmark" => "Görünüm işareti",
         "nurbs" => "NURBS eğrisi",
         "raster" => "Raster",
         "pointcloud" => "Nokta bulutu",

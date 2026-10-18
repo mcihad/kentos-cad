@@ -539,6 +539,14 @@ impl<'d> Encoder<'d> {
                 }
                 f.push(("tag", Val::Json(serde_json::to_value(&e.tag).unwrap_or_default())));
             }
+            // A view mark (docs/adr/0345 §1): its fields as one map.
+            Entity::ViewMark(e) => {
+                if let Some((_, problem)) = e.mark.problem() {
+                    self.path.push(Seg::Name(kind));
+                    return Err(self.fail(Code::BadValue, &problem));
+                }
+                f.push(("viewmark", Val::Json(serde_json::to_value(&e.mark).unwrap_or_default())));
+            }
             // A space (docs/adr/0342 §1): its parts and the rest of its fields.
             Entity::Space(e) => {
                 let s = &e.space;

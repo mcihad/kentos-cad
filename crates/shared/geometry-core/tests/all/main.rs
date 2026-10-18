@@ -73,5 +73,6 @@ mod openings;
 mod spaces;
 mod arch;
 mod tags;
+mod viewmarks;
 mod wall_joins;
 mod walls;

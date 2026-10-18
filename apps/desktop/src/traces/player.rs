@@ -178,6 +178,7 @@ impl Seen {
             Entity::Stair(st) => (st.stair.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Ramp(r) => (r.ramp.pts.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Tag(t) => (vec![[t.tag.at.x, t.tag.at.y]], Vec::new()),
+            Entity::ViewMark(m) => (m.mark.points.iter().map(|v| [v.x, v.y]).collect(), Vec::new()),
             Entity::Column(c) => (vec![[c.column.at.x, c.column.at.y]], Vec::new()),
             Entity::Ellipse(e) => {
                 let at = |t: f64| {

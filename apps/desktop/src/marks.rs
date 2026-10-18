@@ -1303,6 +1303,12 @@ impl crate::app::App {
                 Some(kentos_contracts::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
                 // A tag whose object is gone (docs/adr/0344 §1), above its middle.
                 Some(kentos_contracts::Entity::Tag(t)) => out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above)),
+                // A view mark whose target is gone (docs/adr/0345 §2), above its first point.
+                Some(kentos_contracts::Entity::ViewMark(m)) => {
+                    if let Some(p) = m.mark.points.first() {
+                        out.push(Vec2::new(p.x, p.y + above));
+                    }
+                }
                 _ => {}
             }
         }

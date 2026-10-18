@@ -205,7 +205,9 @@ use crate::layer::LineType;
 ///    `ramp` kinds; in the typed columns kinds 24–27, each's source as one JSON text. The web's copy stays 53.
 /// 87 (docs/adr/0344): the tag and the schedule: `.kcad` document schema 80's `tag` kind and a table's `schedule`
 ///    source; in the typed columns kind 28, its source as one JSON text. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 87;
+/// 88 (docs/adr/0345): the view mark: `.kcad` document schema 81's `viewmark` kind and a named view's `id`; in the typed
+///    columns kind 29, its fields as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 88;
 
 // ── Every import ────────────────────────────────────────────────────────
 

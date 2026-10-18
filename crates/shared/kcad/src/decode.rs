@@ -793,7 +793,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "ucs" if has.ucs => ucs = Some(ucs::ucs(r)?),
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
-            "namedViews" if has.views => named_views = views::named_views(r)?,
+            "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
             "wallStyles" if has.walls => {

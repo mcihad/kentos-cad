@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, texts, ucs, units, views, walls
+from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, texts, ucs, units, viewmarks, views, walls
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -136,6 +136,7 @@ COMMANDS: dict[str, Any] = {
     "cad.sources.sync": sources.sync,
     "cad.spaces.create": spaces.create,
     "cad.spaces.edit": spaces.edit,
+    "cad.spaces.finish": spaces.finish,
     "cad.spaces.quantities": spaces.quantities,
     "cad.stairs.create": stairs.create,
     "cad.standards.apply": standards.apply,
@@ -150,6 +151,9 @@ COMMANDS: dict[str, Any] = {
     "cad.texts.edit": texts.edit,
     "cad.ucs.set": ucs.set,
     "cad.units.change": units.change,
+    "cad.viewmarks.create": viewmarks.create,
+    "cad.viewmarks.edit": viewmarks.edit,
+    "cad.viewmarks.references": viewmarks.references,
     "cad.views.edit": views.edit,
     "cad.walls.convert": walls.convert,
     "cad.walls.create": walls.create,
@@ -187,4 +191,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "texts", "ucs", "units", "views", "walls",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "texts", "ucs", "units", "viewmarks", "views", "walls",)

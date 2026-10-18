@@ -108,6 +108,8 @@ pub enum Event {
     Arch(Slot, kentos_contracts::ArchOperation),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
     Tag(Slot, kentos_contracts::TagChange),
+    /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.
+    ViewMark(Slot, kentos_contracts::ViewMarksOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
     TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
     /// Zemin ▾ of texts.
@@ -173,6 +175,10 @@ pub enum ArchField {
     TagContent,
     /// A tag's words' height on paper, mm; empty 2.5.
     TagSize,
+    /// A view mark's number (docs/adr/0345 §5); empty: its sheet frame's order.
+    MarkNumber,
+    /// A view mark's words' height on paper, mm; empty 2.5.
+    MarkSize,
 }
 
 /// The value a cell edits.
@@ -719,6 +725,7 @@ impl App {
             Event::Space(slot, op) => properties::edit_space(model, slot, op),
             Event::Arch(slot, op) => properties::edit_arch(model, slot, op),
             Event::Tag(slot, change) => properties::edit_tag(model, slot, change),
+            Event::ViewMark(slot, op) => properties::edit_viewmark(model, slot, op),
             Event::Parameter(slot, name, value) => {
                 properties::set_parameters(model, slot, Some(BTreeMap::from([(name, value)])), None)
             }
@@ -1106,6 +1113,26 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             };
             return properties::edit_opening(model, *slot, op);
         }
+        Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
+            use kentos_contracts::{ViewMarkChange, ViewMarksOperation};
+            let t = kentos_interaction::js_trim(text);
+            let c = if *which == ArchField::MarkNumber {
+                ViewMarkChange {
+                    mark: Some(t.to_owned()),
+                    ..Default::default()
+                }
+            } else {
+                let n = web_number(text);
+                if !t.is_empty() && !n.is_finite() {
+                    return Vec::new();
+                }
+                ViewMarkChange {
+                    size: Some((!t.is_empty()).then_some(n)),
+                    ..Default::default()
+                }
+            };
+            return properties::edit_viewmark(model, *slot, ViewMarksOperation::Set(Box::new(c)));
+        }
         Field::Arch(slot, which @ (ArchField::TagContent | ArchField::TagSize)) => {
             use kentos_contracts::TagChange;
             let t = kentos_interaction::js_trim(text);
@@ -1157,7 +1184,9 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 ArchField::RiserHeight => ArchChange { riser_height: Some(length()), ..Default::default() },
                 ArchField::Tread => ArchChange { tread: Some(length()), ..Default::default() },
                 ArchField::Rise => ArchChange { rise: Some(length()), ..Default::default() },
-                ArchField::TagContent | ArchField::TagSize => return Vec::new(),
+                ArchField::TagContent | ArchField::TagSize | ArchField::MarkNumber | ArchField::MarkSize => {
+                    return Vec::new();
+                }
             };
             return properties::edit_arch(model, *slot, ArchOperation::Set(Box::new(c)));
         }

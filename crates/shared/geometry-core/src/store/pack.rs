@@ -724,8 +724,8 @@ impl Reader<'_> {
                     opening: <crate::geom::opening::Spec as crate::api::json::Flat>::read_flat(&v)?,
                 }
             }
-            // docs/adr/0343, 0344: a grid, a column, a stair, a ramp or a tag as its JSON text.
-            31..=35 => {
+            // docs/adr/0343, 0344, 0345: a grid, a column, a stair, a ramp, a tag or a view mark as its JSON text.
+            31..=36 => {
                 let text = self.string()?.unwrap_or_default();
                 let v = Json::parse(&text).map_err(|e| format!("mimari nesne okunamadı: {e}"))?;
                 let shape = <Shape as crate::api::json::FromJson>::from_json(&v)?;
@@ -734,7 +734,8 @@ impl Reader<'_> {
                     32 => matches!(shape, Shape::Column { .. }),
                     33 => matches!(shape, Shape::Stair { .. }),
                     34 => matches!(shape, Shape::Ramp { .. }),
-                    _ => matches!(shape, Shape::Tag { .. }),
+                    35 => matches!(shape, Shape::Tag { .. }),
+                    _ => matches!(shape, Shape::ViewMark { .. }),
                 };
                 if !want {
                     return Err(format!("paketin {}. sayısının türü ({kind}) metnindeki türle aynı değil", self.at));
@@ -1370,14 +1371,20 @@ impl Packer {
                 let at = self.string(&text);
                 self.put(&[at]);
             }
-            // docs/adr/0343, 0344, as the reader's kinds 31–35 say: the shape as its JSON text.
-            Shape::Grid { .. } | Shape::Column { .. } | Shape::Stair { .. } | Shape::Ramp { .. } | Shape::Tag { .. } => {
+            // docs/adr/0343, 0344, 0345, as the reader's kinds 31–36 say: the shape as its JSON text.
+            Shape::Grid { .. }
+            | Shape::Column { .. }
+            | Shape::Stair { .. }
+            | Shape::Ramp { .. }
+            | Shape::Tag { .. }
+            | Shape::ViewMark { .. } => {
                 let kind = match shape {
                     Shape::Grid { .. } => 31.0,
                     Shape::Column { .. } => 32.0,
                     Shape::Stair { .. } => 33.0,
                     Shape::Ramp { .. } => 34.0,
-                    _ => 35.0,
+                    Shape::Tag { .. } => 35.0,
+                    _ => 36.0,
                 };
                 self.put(&[kind]);
                 let text = crate::api::json::to_string(shape);

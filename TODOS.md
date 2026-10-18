@@ -415,6 +415,14 @@ Liste:
   Etiketleri denetle, Kapı ve pencere çizelgesi, Mahal çizelgesi, Tabloyu düzenle'nin çizelge yolu, Mimari'nin Etiket ve Çizelge
   panelleri ve ikonları, Öznitelikler'in etiket satırları, seçim süzgecinde Etiket, kopuk etiketin uyarı üçgeni; bilinen bozulmalar:
   şema 80 ve `FORMATS_VERSION` 87.
+- [ ] `CAD-ARCH-37`…`40` görünüm işaretleri ve mahalin kaplamaları (ADR 0345, 18 Ekim): web'de gerekenler: `.kcad` şema 81
+  (`viewmark` türü, adlı görünümün `id`'si; sütunlu kayıtta tür 29; `FORMATS_VERSION` 88), çekirdeğin `geom::viewmark`'ı WASM'da
+  (balon, ok, kesme çizgisi, detay çemberi), deponun paket türü 36, belgenin işaret izleyicisi (`viewmark_follow`'un karşılığı:
+  işaretin adımında, görünümler ya da pafta kitabı değişince, geri almada yerinde), tarama izleyicisinin mahali dış sınır alması,
+  `cad.viewmarks.create`, `.edit`, `.references`, `cad.spaces.finish` (`product/`), `cad.views.edit`'in kimlik kuralı, Kesit,
+  Görünüş, Detay, Döşeme deseni, Tavan ızgarası araçları, Başvurular penceresi, Mimari'nin Görünüm ve Donatı panelleri ve ikonları,
+  Öznitelikler'in işaret satırları, seçim süzgecinde Görünüm işareti, kopuk işaretin uyarı üçgeni; bilinen bozulmalar: şema 81 ve
+  `FORMATS_VERSION` 88.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`
