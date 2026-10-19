@@ -2195,6 +2195,38 @@ MirrorTextName = Literal["readable", "mirrored"]
 """The names of :class:`MirrorText`, for a plain string."""
 
 
+class MosaicOrder(_StrEnum):
+    """Which file lies on top where files overlap.
+
+    - ``given``: The order of `sources`: the first on top.
+    - ``finest``: The smaller pixel on top; equal ones in the order given.
+    - ``newest``: The newer date (a TIFF's DateTime) on top; files without one at the bottom; equal ones in the order given.
+    """
+    GIVEN = "given"
+    FINEST = "finest"
+    NEWEST = "newest"
+
+
+MosaicOrderName = Literal["given", "finest", "newest"]
+"""The names of :class:`MosaicOrder`, for a plain string."""
+
+
+class MosaicResolution(_StrEnum):
+    """The mosaic's pixel from the files' (each axis on its own, as gdalbuildvrt's `-resolution`).
+
+    - ``highest``: The finest file's: no detail lost.
+    - ``lowest``: The coarsest file's.
+    - ``average``: The files' mean.
+    """
+    HIGHEST = "highest"
+    LOWEST = "lowest"
+    AVERAGE = "average"
+
+
+MosaicResolutionName = Literal["highest", "lowest", "average"]
+"""The names of :class:`MosaicResolution`, for a plain string."""
+
+
 class NetworkConnect(_StrEnum):
     """Where edges connect (docs/adr/0209 §3).
 
@@ -23621,6 +23653,65 @@ class MarkReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MosaicSource(_Model):
+    """A file of the mosaic.
+    Attributes:
+        file: As the VRT holds it: from the VRT's folder when the file is under it, else absolute.
+        read: Where it was read from.
+        rank: 1 on top. Unit: index.
+        width: Unit: count.
+        height: Unit: count.
+        pixel: Its pixel's width and height, in the system's units. Unit: system.
+        src: The rectangle of its pixels taken, `[x, y, width, height]` (the VRT's SrcRect): all of it, or cut where the
+            mosaic's rounded size ends. Unit: px.
+        dst: Its rectangle on the mosaic, `[x, y, width, height]` in the mosaic's pixels (the VRT's DstRect). Unit: px.
+        date: Its TIFF's DateTime, `YYYY-MM-DDTHH:MM:SS`.
+        nodata: Its nodata, which lets the files below show. Unit: value.
+    """
+    file: str
+    read: str
+    rank: int
+    width: int
+    height: int
+    pixel: list[float]
+    src: list[float]
+    dst: list[float]
+    date: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["read"] = self.read
+        out["rank"] = self.rank
+        out["width"] = self.width
+        out["height"] = self.height
+        out["pixel"] = [float(e0) for e0 in self.pixel]
+        out["src"] = [float(e0) for e0 in self.src]
+        out["dst"] = [float(e0) for e0 in self.dst]
+        if self.date is not UNSET:
+            out["date"] = self.date
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MosaicSource:
+        return cls(
+            file=data["file"],
+            read=data["read"],
+            rank=data["rank"],
+            width=data["width"],
+            height=data["height"],
+            pixel=[float(e0) for e0 in data["pixel"]],
+            src=[float(e0) for e0 in data["src"]],
+            dst=[float(e0) for e0 in data["dst"]],
+            date=data.get("date", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class NamedFont(_Model):
     """A name given, resolved.
     Attributes:
@@ -29108,6 +29199,133 @@ class RasterStyle(_Model):
             resampling=_enum_in(RasterResampling, data["resampling"]) if "resampling" in data else UNSET,
             stretch=_enum_in(RasterStretch, data["stretch"]) if "stretch" in data else UNSET,
             z_factor=UNSET if "zFactor" not in data else None if data["zFactor"] is None else float(data["zFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersMosaic(_Model):
+    """Input of `cad.rasters.mosaic` v1. Refusals, in this order: `mosaic_empty`, `mosaic_too_large` (more than
+    10 000 files), `invalid_file_path` (a source or the mosaic's path), `invalid_pixel_size`, `file_not_found`,
+    `import_unreadable`, `mosaic_unplaced`, `mosaic_rotated`, `mosaic_mismatch`, `mosaic_too_large` (the mosaic's
+    size), `file_exists`, then with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        sources: The GeoTIFF files, absolute or from the drawing's folder; with `order` `given` the first lies on top.
+        path: The VRT file written (`.vrt`), absolute or from the drawing's folder.
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        layer: The layer the mosaic is added to as a raster (linked to `path`); none: only the file is written.
+        nodata: The mosaic's nodata (what no file covers); none: the first file's (in the order given) that has one. Unit: value.
+        overwrite: An existing `path` is written over.
+        pixel_size: A square pixel of this size, in the files' system's units, instead of `resolution`'s. Unit: system.
+    """
+    sources: list[str]
+    path: str
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    order: MosaicOrder | MosaicOrderName = MosaicOrder.GIVEN
+    overwrite: bool | None | Unset = UNSET
+    pixel_size: float | None | Unset = UNSET
+    resolution: MosaicResolution | MosaicResolutionName = MosaicResolution.HIGHEST
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sources"] = list(self.sources)
+        out["path"] = self.path
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        out["order"] = _enum_out(self.order)
+        if self.overwrite is not UNSET:
+            out["overwrite"] = self.overwrite
+        if self.pixel_size is not UNSET:
+            out["pixelSize"] = None if self.pixel_size is None else float(self.pixel_size)
+        out["resolution"] = _enum_out(self.resolution)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersMosaic:
+        return cls(
+            sources=list(data["sources"]),
+            path=data["path"],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            layer=data.get("layer", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            order=_enum_in(MosaicOrder, data["order"]) if "order" in data else MosaicOrder.GIVEN,
+            overwrite=data.get("overwrite", UNSET),
+            pixel_size=UNSET if "pixelSize" not in data else None if data["pixelSize"] is None else float(data["pixelSize"]),
+            resolution=_enum_in(MosaicResolution, data["resolution"]) if "resolution" in data else MosaicResolution.HIGHEST,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersMosaicked(_Model):
+    """Output of `cad.rasters.mosaic` v1 (its plan's too: what it would write, nothing written).
+    Attributes:
+        path: The VRT file, as written.
+        width: Unit: count.
+        height: Unit: count.
+        bands: Unit: count.
+        affine: `[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform. Unit: system.
+        srid: The files' coordinate system; 0: they name none. Unit: epsg.
+        sources: The files, top first.
+        bytes: The VRT's size. Unit: bytes.
+        nodata: Unit: value.
+        uid: The raster added, when `layer` was given.
+    """
+    path: str
+    width: int
+    height: int
+    bands: int
+    sample: RasterSample | RasterSampleName
+    affine: list[float]
+    srid: int
+    sources: list[MosaicSource]
+    bytes: int
+    revision: str
+    nodata: float | None | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["width"] = self.width
+        out["height"] = self.height
+        out["bands"] = self.bands
+        out["sample"] = _enum_out(self.sample)
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["srid"] = self.srid
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        out["bytes"] = self.bytes
+        out["revision"] = self.revision
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersMosaicked:
+        return cls(
+            path=data["path"],
+            width=data["width"],
+            height=data["height"],
+            bands=data["bands"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            affine=[float(e0) for e0 in data["affine"]],
+            srid=data["srid"],
+            sources=[MosaicSource.from_json(e0) for e0 in data["sources"]],
+            bytes=data["bytes"],
+            revision=data["revision"],
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            uid=data.get("uid", UNSET),
         )
 
 
@@ -48646,6 +48864,11 @@ __all__ = [
     "MirrorTextName",
     "MirrorTransform",
     "ModeConstraintEdit",
+    "MosaicOrder",
+    "MosaicOrderName",
+    "MosaicResolution",
+    "MosaicResolutionName",
+    "MosaicSource",
     "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
@@ -48893,6 +49116,8 @@ __all__ = [
     "RasterStretch",
     "RasterStretchName",
     "RasterStyle",
+    "RastersMosaic",
+    "RastersMosaicked",
     "RayEntity",
     "RayEntityGeometry",
     "ReboundSpacesOperation",

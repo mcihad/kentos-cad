@@ -22,6 +22,7 @@ pub mod source;
 pub mod stats;
 pub mod style;
 pub mod tiff;
+pub mod vrt;
 pub mod warp;
 pub mod world;
 pub mod write;

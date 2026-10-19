@@ -158,6 +158,7 @@ impl Beside<'_> {
             ".jpg",
             ".jpeg",
             ".nc",
+            ".vrt",
         ]
         .iter()
         .find(|e| lower.ends_with(*e))
@@ -256,7 +257,7 @@ pub fn with_extension(path: &str, ext: &str) -> String {
         return path.to_owned();
     }
     let lower = path.to_ascii_lowercase();
-    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc", ".nc"]
+    let cut = [".copc.laz", ".laz", ".las", ".tif", ".tiff", ".vpc", ".nc", ".vrt"]
         .iter()
         .find(|e| lower.ends_with(*e))
         .map_or(path.len(), |e| path.len() - e.len());

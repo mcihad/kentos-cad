@@ -2838,6 +2838,54 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_RASTERS_MOSAIC.into(),
+            version: crate::CAD_RASTERS_MOSAIC_VERSION,
+            title: "Sanal mozaik".into(),
+            summary: "Birçok GeoTIFF dosyasını tek raster gibi gösterilen ve çözümlenen sanal mozaik yapar: path'e GDAL'ın VRT dosyası yazılır (piksel kopyalanmaz; GDAL ve QGIS de açar). \
+                      sources kuzeyi yukarıda, GeoTIFF etiketleriyle yerinde, aynı koordinat sisteminde, bant sayısında ve veri türünde dosyalardır (mutlak ya da drawing'in klasöründen göreli). \
+                      Örtüşen yerde üstteki: order given (sources'un sırası, ilki üstte), finest (küçük piksel üstte) ya da newest (TIFF DateTime'ı yeni olan üstte; tarihsizler en altta, mosaic_undated). \
+                      Bir dosyanın nodata'sı alttakini gösterir; hiçbir dosyanın örtmediği yer mozaiğin nodata'sıdır (nodata, yoksa sırayla ilk nodata'lı dosyanınki). \
+                      Mozaiğin pikseli resolution highest (en ince), lowest (en kaba) ya da average (ortalama), ya da pixelSize; kapsamı dosyaların birleşimi (gdalbuildvrt'nin kuralı). Pikseli başka olan dosya en yakın pikselden okunur (mosaic_resampled). \
+                      Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir, sonra yerine konur; var olan path overwrite verilmezse reddedilir (file_exists). \
+                      layer verilirse mozaik o katmana path'e bağlı raster olarak eklenir (tek geri alma adımı “Sanal mozaik”; sistemi projeninkinden başkaysa crs_mismatch); verilmezse çizim değişmez. plan yazmadan mozaiği söyler."
+                .into(),
+            aliases: vec!["sanalmozaik".into(), "vrt".into(), "buildvrt".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RastersMosaic>(),
+            output: schema::<crate::RastersMosaicked>(),
+            plan: Some(schema::<crate::RastersMosaicked>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Üç ortofotoyu yeni tarihli üstte mozaik yap ve katmana ekle".into(),
+                    input: json!({
+                        "sources": ["orto/2019.tif", "orto/2021.tif", "orto/2023.tif"],
+                        "path": "orto/mozaik.vrt",
+                        "order": "newest",
+                        "layer": "altlik",
+                        "drawing": "/proje/imar.kcad"
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yükseklik paftalarını 5 m pikselle birleştir".into(),
+                    input: json!({
+                        "sources": ["/veri/dem/a.tif", "/veri/dem/b.tif"],
+                        "path": "/veri/dem/dem.vrt",
+                        "pixelSize": 5.0,
+                        "nodata": -9999.0
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_IMAGES_EDIT.into(),
             version: crate::CAD_IMAGES_EDIT_VERSION,
             title: "Resmin kaynağı".into(),
@@ -7655,6 +7703,9 @@ mod tests {
                     }
                     crate::CAD_IMAGES_EDIT => {
                         serde_json::from_value::<crate::ImagesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RASTERS_MOSAIC => {
+                        serde_json::from_value::<crate::RastersMosaic>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ASSETS_CHECK => {
                         serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())

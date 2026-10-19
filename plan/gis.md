@@ -358,6 +358,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-28 — Raster kaynağına sanal mozaik ve doğrulanan COG export ekle — P0 provider; P1 genişleme**
 
+  *Kısmen (19 Ekim 2026; [ADR 0517](../docs/adr/0517-virtual-raster-mosaic.md)): çok dosyalı sanal mozaik GDAL'ın VRT'siyle, sıra, çözünürlük ve tarih önceliği, kopyasız; okuyucu ve komutun yazdığı GDAL'la piksel piksel aynı.*
+
   *Kısmen (19 Ekim 2026; [ADR 0515](../docs/adr/0515-cloud-optimized-geotiff.md)): KentOS'un yazdığı her raster COG'dur (dizinler başta, küçük katlar önce; GDAL'ın COG denetleyicisi hatasız ve uyarısız geçirir), Raster işlemleri'nde COG olarak kaydet; başsız sunucu bağlı ve gömülü GeoTIFF ve PNG'yi okur, raster araçları Python ve MCP'den çalışır. Kalan: sanal mozaik, ortak raster sağlayıcısı (Range, ETag, disk ve RAM bütçesi), codec profili.*
 
   **Mevcut:** GeoTIFF/BigTIFF, parçalı okuma, LZW/Deflate/PackBits, piramit/cache ve native raster katmanı var [K11]. COG yazma uygunluğu, mozaik kaynak yönetimi ve geniş codec desteği ayrıca kabul edilmelidir.

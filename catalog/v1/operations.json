@@ -713,6 +713,13 @@
       ],
       "operation": "raster"
     },
+    "raster.mosaic": {
+      "level": "semantic",
+      "via": [
+        "cad.rasters.mosaic"
+      ],
+      "note": "VRT'yi ve isteğe bağlı rasteri komut yazar; pencere planını gösterir (ADR 0517 §5)."
+    },
     "pointcloud.add": {
       "level": "semantic",
       "via": [

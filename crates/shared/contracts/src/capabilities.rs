@@ -1492,6 +1492,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Sanal mozaik (docs/adr/0517).
+    Entry {
+        id: "cad.rasters.mosaic",
+        refusals: &[
+            &["mosaic_empty", "mosaic_too_large", "invalid_file_path", "invalid_pixel_size"],
+            &["file_not_found", "import_unreadable", "mosaic_unplaced", "mosaic_rotated", "mosaic_mismatch"],
+            &["file_exists", "crs_mismatch"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
+        targets: none,
+    },
     // Resmin kaynağı (docs/adr/0350 §1).
     Entry {
         id: "cad.images.edit",

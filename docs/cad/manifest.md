@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 126 | 140 | 40 | 53 | 359 |
+| semantic | 126 | 141 | 40 | 53 | 360 |
 | geometry | 16 | 59 | 0 | 8 | 83 |
 | processing | 0 | 11 | 2 | 141 | 154 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 7 | 23 | 2 | 4 | 36 |
 | session | 0 | 82 | 57 | 5 | 144 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 149 | 350 | 115 | 221 | 835 |
+| **toplam** | 149 | 351 | 115 | 221 | 836 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 614 satırdan 136'i: geometry 75, none 20, processing 13, query 28.
+CBS'ye özgü olmayan 615 satırdan 136'i: geometry 75, none 20, processing 13, query 28.
 
 ### Sonucu çağıran hesaplar (geometry) — 75
 

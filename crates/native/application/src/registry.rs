@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AssetsCheck, ImagesEdit, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
+use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -45,7 +45,7 @@ use crate::{
     fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table,
     layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line,
     hatch_patterns_edit, line_types_edit, network_define, nurbs, offset, point, points_construct, polygon,
-    assets_check, images_edit, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities, grids_create, columns_create, stairs_create, ramps_create, arch_edit, tags_create, tags_check, tags_edit, viewmarks_create, viewmarks_edit, viewmarks_references, spaces_finish, templates_apply, sheets_set, xrefs_edit, xrefs_list, schedules_create, schedules_edit,
+    assets_check, images_edit, rasters_mosaic, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities, grids_create, columns_create, stairs_create, ramps_create, arch_edit, tags_create, tags_check, tags_edit, viewmarks_create, viewmarks_edit, viewmarks_references, spaces_finish, templates_apply, sheets_set, xrefs_edit, xrefs_list, schedules_create, schedules_edit,
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
@@ -157,6 +157,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_XREFS_LIST => $then!(xrefs_list, XrefsList),
             kentos_contracts::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_contracts::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
+            kentos_contracts::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
             kentos_contracts::CAD_SCHEDULES_CREATE => $then!(schedules_create, SchedulesCreate),
             kentos_contracts::CAD_SCHEDULES_EDIT => $then!(schedules_edit, SchedulesEdit),
             kentos_contracts::CAD_SPACES_EDIT => $then!(spaces_edit, SpacesEdit),

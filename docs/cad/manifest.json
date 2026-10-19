@@ -6146,6 +6146,22 @@
    "tests": 0
   },
   {
+   "id": "raster.mosaic",
+   "kind": "command",
+   "title": "Sanal mozaik",
+   "level": "semantic",
+   "via": [
+    "cad.rasters.mosaic"
+   ],
+   "operation": null,
+   "python": "kentos.cad.rasters.mosaic",
+   "mcp": "cad.rasters.mosaic",
+   "note": "VRT'yi ve isteğe bağlı rasteri komut yazar; pencere planını gösterir (ADR 0517 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.style",
    "kind": "command",
    "title": "Raster stili…",

@@ -63,6 +63,34 @@ fn adding(app: &mut App, file: &str) {
     run(app, "raster.add");
 }
 
+/// The mosaic's photographs and elevation models (fixtures/raster/v1/mosaic, `raster_mosaic_cases.py --files`).
+const ORTO: &[&str] = &["orto-2019.tif", "orto-2021.tif", "orto-2023.tif"];
+const DEMS: &[&str] = &["dem-a.tif", "dem-b.tif", "dem-c.tif", "dem-d.tif", "dem-e.tif"];
+
+/// Sanal mozaik over the valley's drawing, its own rasters hidden, with `files` chosen.
+fn mosaic_window(app: &mut App, files: &[&str], order: crate::rasters::mosaic::Order) {
+    opened(app, [X0 - 60.0, Y0 - 560.0, X0 + 760.0, Y0 + 40.0]);
+    if let Some(doc) = app.document.as_mut() {
+        for layer in ["dem", "orto", "tarama"] {
+            doc.model.set_layer_visible(layer, false);
+        }
+    }
+    let folder = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/raster/v1/mosaic");
+    app.raster_mosaic_with(files.iter().map(|f| folder.join(f)).collect(), order);
+}
+
+/// Oluştur, the VRT written to a folder of the pictures' (never beside the fixtures).
+fn mosaic_run(app: &mut App, name: &str) {
+    let out = std::env::temp_dir().join(format!("kentos-mozaik-{}", std::process::id()));
+    let _ = std::fs::create_dir_all(&out);
+    let send = |app: &mut App, e: crate::rasters::mosaic::Event| {
+        let task = app.update(Message::Rasters(crate::rasters::Event::Mosaic(e)));
+        crate::files_testing::drive(app, task);
+    };
+    send(app, crate::rasters::mosaic::Event::PathPicked(Some(out.join(name))));
+    send(app, crate::rasters::mosaic::Event::Run);
+}
+
 /// The raster of `layer` selected.
 fn select(app: &mut App, layer: &str) {
     let doc = app.document.as_ref().expect("a drawing");
@@ -179,6 +207,28 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     })
                     .collect();
                 form.solve();
+            },
+            tiles_made,
+        ),
+        // Sanal mozaik (docs/adr/0517 §5): three years' photographs, the newest on top; the plan's size and order.
+        ("mozaik-pencere", |app| mosaic_window(app, ORTO, crate::rasters::mosaic::Order::Newest), tiles_made),
+        // The mosaic written and added as a raster on its own layer: the seams where the newer year lies over.
+        (
+            "mozaik-cizim",
+            |app| {
+                mosaic_window(app, ORTO, crate::rasters::mosaic::Order::Newest);
+                mosaic_run(app, "orto.vrt");
+            },
+            tiles_made,
+        ),
+        // Elevation models of 10, 7.5 and 5 m, one undated: the warnings of the plan.
+        ("mozaik-dem", |app| mosaic_window(app, DEMS, crate::rasters::mosaic::Order::Newest), tiles_made),
+        // The elevation mosaic drawn: the 5 m model's hole shows the one below, no seam.
+        (
+            "mozaik-dem-cizim",
+            |app| {
+                mosaic_window(app, DEMS, crate::rasters::mosaic::Order::Finest);
+                mosaic_run(app, "dem.vrt");
             },
             tiles_made,
         ),

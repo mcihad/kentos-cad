@@ -1,0 +1,29 @@
+<VRTDataset rasterXSize="130" rasterYSize="80">
+  <SRS>EPSG:5256</SRS>
+  <GeoTransform>487200, 5, 0, 4420600, 0, -5</GeoTransform>
+  <VRTRasterBand dataType="Float32" band="1">
+    <NoDataValue>-9999</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-c.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="30" ySize="30" />
+      <DstRect xOff="40" yOff="10" xSize="30" ySize="30" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-b.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="40" ySize="30" />
+      <DstRect xOff="50" yOff="20" xSize="80" ySize="60" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-a.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SrcRect xOff="0" yOff="0" xSize="40" ySize="30" />
+      <DstRect xOff="0" yOff="0" xSize="80" ySize="60" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

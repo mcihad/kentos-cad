@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import json
 import keyword
+import os
 import math
 import re
+import tempfile
 import unittest
 from pathlib import Path
 from typing import Any
@@ -23,7 +25,17 @@ from typing import Any
 import kentos.cad as cad
 
 ROOT = Path(__file__).resolve().parents[2]
-FILES = sorted((ROOT / "fixtures/commands/v1").glob("*.json"))
+# `KENTOS_CASES_ONLY=cad.rasters,cad.walls` runs only the files whose names hold one of the words (the desktop's rule).
+ONLY = [w for w in os.environ.get("KENTOS_CASES_ONLY", "").split(",") if w]
+FILES = sorted(p for p in (ROOT / "fixtures/commands/v1").glob("*.json") if not ONLY or any(w in p.name for w in ONLY))
+# The folder `$tmp:name` files are written in (a command that writes a file, docs/adr/0517): the run's own.
+TMP = Path(tempfile.mkdtemp(prefix="kentos-cases-"))
+
+
+def paths(value: str) -> str:
+    """`$fixture:` and `$tmp:` paths made absolute, anywhere in a text."""
+    value = re.sub(r"\$fixture:(\S+)", lambda m: str(ROOT / "fixtures" / m.group(1)), value)
+    return re.sub(r"\$tmp:(\S+)", lambda m: str(TMP / m.group(1)), value)
 
 
 class Case:
@@ -72,8 +84,8 @@ class Case:
             if value == "$any":
                 return value
             # A fixture file's absolute path, anywhere in a text (docs/adr/0257 §3).
-            if "$fixture:" in value:
-                return re.sub(r"\$fixture:(\S+)", lambda m: str(ROOT / "fixtures" / m.group(1)), value)
+            if "$fixture:" in value or "$tmp:" in value:
+                return paths(value)
             if value.startswith("$blockOf:"):
                 block = self.block_named(value[len("$blockOf:"):])
                 assert block is not None, f"{at}: {value}: no such block"
@@ -334,7 +346,7 @@ class Case:
         parent, docs/adr/0405) and an external reference's source file (`$fixture:`, docs/adr/0348) filled in; nothing else
         is a placeholder."""
         if isinstance(value, str):
-            placeholder = value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) or "$fixture:" in value
+            placeholder = value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) or "$fixture:" in value or "$tmp:" in value
             return self.fill(value, at) if placeholder else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
@@ -468,7 +480,8 @@ class CommandCases(unittest.TestCase):
                     Case(fixture["command"], case.get("setup", fixture["setup"]), case["steps"], at).run()
                 except (AssertionError, cad.KentosError, KeyError, TypeError, ValueError) as e:
                     problems.append(f"{at}: {type(e).__name__}: {e}")
-        self.assertGreaterEqual(cases, 300)
+        if not ONLY:
+            self.assertGreaterEqual(cases, 300)
         self.assertEqual(problems, [], f"{len(problems)} of {cases} cases failed:\n" + "\n".join(problems[:40]))
 
 

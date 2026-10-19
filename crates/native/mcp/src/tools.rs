@@ -557,6 +557,8 @@ fn command_tool(c: &Value) -> Value {
             | "cad.xrefs.edit"
             // Göm and Yeniden bağla change an image's source (docs/adr/0350 §1).
             | "cad.images.edit"
+            // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
+            | "cad.rasters.mosaic"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

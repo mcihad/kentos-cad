@@ -203,6 +203,8 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-28` sanal mozaik (ADR 0517, 19 Ekim): web'in raster işçisinde VRT açma (`vrt::open_mosaic`, `BlockNeed.member`'a göre dosya
+  dilimleri), Raster ekle'de `.vrt`, `cad.rasters.mosaic`'in TS işleyicisi ve Sanal mozaik penceresi.
 - [ ] `CBS-25` (ADR 0520, 19 Ekim): web'in Moran I ve Sıcak nokta araçlarına Çıkarım, Permütasyon sayısı, Tohum, Çoklu test
   düzeltmesi; Yerel Moran aracı (çekirdek çağrıları `statsMoranWith`, `statsHotSpotsWith`, `statsLocalMoran`); deney profili tablosu
   ve `experiment`; Analiz panelinde Yerel Moran; WASM süreleri.
@@ -1955,6 +1957,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);
   alt küme ve alan sınırlı kaynak söylenir; bağımsız başvuru `spatial_inference_cases.py`, 13 ortak durum. — **19 Ekim,
   [ADR 0520](docs/adr/0520-permutation-and-fdr.md).**
+- [ ] `CBS-28` sanal mozaik (ikinci dilim): GDAL VRT okuma ve yazma (`kentos_formats::raster::vrt`), okuyucuda mozaik
+  (`Reader::mosaic`, `BlockNeed.member`), `cad.rasters.mosaic` (gdalbuildvrt'nin kuralı; öncelik sıra, ince piksel, yeni tarih; `layer`
+  ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,
+  adresten VRT, başsız sunucuda VRT, ETag ve bütçe. — **19 Ekim, [ADR 0517](docs/adr/0517-virtual-raster-mosaic.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

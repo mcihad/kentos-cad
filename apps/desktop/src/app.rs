@@ -272,6 +272,8 @@ pub enum Dialog {
     DataCompare,
     /// Raster ekle (rasters/add.rs, docs/adr/0204 §8); the window is `App::rasters.add`.
     RasterAdd,
+    /// Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5); the window is `App::rasters.mosaic`.
+    RasterMosaic,
     /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
     RasterStyle,
     /// Mesh ekle and Raster ekle's NetCDF (rasters/multidim.rs, docs/adr/0243 §11); the window
@@ -2720,6 +2722,8 @@ impl App {
             "service.info" => self.start_service_info(),
             // Raster ekle and Raster stili (rasters/, docs/adr/0204 §8); Raster oturt is a Hesap window.
             "raster.add" => return self.raster_add_command(),
+            // Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5).
+            "raster.mosaic" => return self.raster_mosaic_command(),
             "raster.style" => return self.raster_look_command(),
             // Mesh ekle (rasters/multidim.rs, docs/adr/0243 §11).
             "mesh.add" => return self.mesh_add_command(),
