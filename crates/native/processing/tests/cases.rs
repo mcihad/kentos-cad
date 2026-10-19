@@ -2315,6 +2315,40 @@ fn the_spatial_stats_cases_do_what_they_say() {
     );
 }
 
+/// Permutation inference, multiple testing correction and the experiment profile (docs/adr/0520): Moran I, Sıcak
+/// nokta and Yerel Moran against `scripts/fixtures/spatial_inference_cases.py`, here and on the drawing's reading
+/// copy (the same seed, the same p values).
+#[test]
+fn the_spatial_inference_cases_do_what_they_say() {
+    let file = case_file("spatial-inference.json");
+    let tol = file["tolerance"].as_f64().expect("a tolerance");
+    let registry = Registry::builtin();
+    let mut problems = Vec::new();
+    let mut report = Vec::new();
+    for c in file["cases"].as_array().expect("cases") {
+        let mut found = Vec::new();
+        for on_copy in [false, true] {
+            let seen = play(c, &registry, on_copy, &json!({}));
+            found.extend(check(c, seen, tol));
+        }
+        report.push(format!(
+            "{} {}: {}",
+            if found.is_empty() { "✓" } else { "✗" },
+            c["id"].as_str().unwrap_or("?"),
+            c["title"].as_str().unwrap_or("")
+        ));
+        problems.extend(found);
+    }
+    println!("{}", report.join("\n"));
+    assert!(report.len() >= 13, "{} cases", report.len());
+    assert!(
+        problems.is_empty(),
+        "\n{}\n\n{}",
+        report.join("\n"),
+        problems.join("\n")
+    );
+}
+
 /// Ağ analizi's tools' cases (docs/adr/0209 §6, §7): the same run here and on the drawing's reading copy; new
 /// objects measured (the areas within the file's tolerance: shapely's against the core's exact arcs).
 #[test]
@@ -2368,6 +2402,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         distance,
         suitability,
         spatial_stats,
+        spatial_inference,
         remote,
         multidim,
     ) = (
@@ -2382,6 +2417,7 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         case_file("distance.json"),
         case_file("suitability.json"),
         case_file("spatial-stats.json"),
+        case_file("spatial-inference.json"),
         case_file("remote.json"),
         case_file("multidim.json"),
     );
@@ -2401,6 +2437,11 @@ fn the_defaults_the_tools_take_from_the_drawing() {
         .chain(distance["documents"].as_object().expect("documents"))
         .chain(suitability["documents"].as_object().expect("documents"))
         .chain(spatial_stats["documents"].as_object().expect("documents"))
+        .chain(
+            spatial_inference["documents"]
+                .as_object()
+                .expect("documents"),
+        )
         .chain(remote["documents"].as_object().expect("documents"))
         .chain(multidim["documents"].as_object().expect("documents"));
     for (name, d) in documents {

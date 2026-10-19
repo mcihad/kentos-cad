@@ -128,6 +128,56 @@ fn every_block_is_copied_in_its_class_colour() {
     assert!(copies.iter().any(|e| e.base().attrs["Güven sınıfı"] == "3"));
 }
 
+/// Yerel Moran (docs/adr/0520): every block's copy in its cluster type's colour, the experiment profile in the
+/// window, and the same seed gives the same p values again.
+#[test]
+fn the_local_moran_writes_cluster_types_and_its_profile() {
+    use crate::stats_scenes::lisa;
+    let run_once = || {
+        let mut app = district();
+        window(&mut app, "processing.run.stats.localMoran", &lisa());
+        let table = match run(&mut app) {
+            RunStatus::Ok {
+                text, undo, table, ..
+            } => {
+                assert!(undo);
+                assert!(text.starts_with("36 nesne yazıldı: "), "{text}");
+                table.expect("the profile")
+            }
+            s => panic!("{s:?}"),
+        };
+        let copies: Vec<(String, String)> = on_layer(&app, "Yerel Moran")
+            .iter()
+            .map(|e| {
+                let b = e.base();
+                (
+                    b.attrs["Permütasyon p"].clone(),
+                    b.attrs["Küme türü"].clone(),
+                )
+            })
+            .collect();
+        (table, copies)
+    };
+    let (table, copies) = run_once();
+    assert_eq!(table.columns, ["Alan", "Değer"]);
+    let get = |label: &str| {
+        table
+            .rows
+            .iter()
+            .find(|r| r[0] == label)
+            .map(|r| r[1].clone())
+            .unwrap_or_default()
+    };
+    assert_eq!(get("Tohum"), "1");
+    assert_eq!(get("Permütasyon sayısı"), "999");
+    assert_eq!(get("Çoklu test düzeltmesi"), "FDR (Benjamini–Hochberg)");
+    assert_eq!(get("Girdi özeti (SHA-256)").chars().count(), 17);
+    assert_eq!(copies.len(), 36);
+    assert!(copies.iter().any(|(_, k)| k == "Yüksek-Yüksek"));
+    // The same seed: the same p values and types.
+    assert_eq!(run_once().1, copies);
+}
+
 #[test]
 fn the_accidents_clusters_are_numbered() {
     let mut app = district();

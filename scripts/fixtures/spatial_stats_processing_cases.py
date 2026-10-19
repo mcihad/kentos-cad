@@ -273,8 +273,11 @@ def defaults():
         "stats.standardDistance": {**center("Standart uzaklık"), "deviations": "1"},
         "stats.directionalDistribution": {**center("Yön dağılımı"), "deviations": "1"},
         "stats.nearestNeighbor": {"input": here, "area": None},
-        "stats.moransI": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "standardize": True},
-        "stats.hotSpot": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "layer": {"newName": "Sıcak noktalar"}},
+        # Çıkarım, Permütasyon sayısı, Tohum and Çoklu test düzeltmesi: docs/adr/0520 (spatial_inference_cases.py).
+        "stats.moransI": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "standardize": True,
+                          "inference": "analytic", "permutations": 999, "seed": 1},
+        "stats.hotSpot": {"input": here, "valueField": "", "concept": "band", "band": None, "neighbors": 8, "inference": "analytic",
+                          "permutations": 999, "seed": 1, "correction": "none", "layer": {"newName": "Sıcak noktalar"}},
         "stats.dbscan": {"input": here, "radius": 50, "minPoints": 5, "borderNoise": False, "layer": {"newName": "Kümeler (DBSCAN)"}},
         "stats.kMeans": {"input": here, "clusters": 5, "layer": {"newName": "Kümeler (k-ortalamalar)"}},
     }

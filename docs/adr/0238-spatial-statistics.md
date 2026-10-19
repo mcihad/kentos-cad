@@ -258,3 +258,9 @@ taşma bu maddenin ayrı panelinden geliyordu. Mekânsal istatistik'in araçlar�
 yolu): Moran I ve Sıcak nokta panelde; Ortalama ve Ortanca merkez, Standart uzaklık, Yön dağılımı, En yakın komşu, DBSCAN ve
 k-ortalamalar panelin ▾'inde (`SPATIAL_STATS_COMMANDS`, `SPATIAL_STATS_UNDER`, `app/ribbon.ts`): sekme 1100 px'e sığar, geniş pencerede
 3200 px'in altında kalır (üç araçla 3208 px'ti). İşlemler'deki kategori değişmedi.
+
+## Ek (19 Ekim): permütasyon, FDR ve Yerel Moran
+
+Kapsam dışı bırakılan Anselin'in yerel Moran'ı (LISA) ve FDR düzeltmesi ADR 0520'yle geldi: Moran I ve Sıcak nokta'ya permütasyon
+çıkarımı (tohumlu), Sıcak nokta'ya FDR ve Bonferroni, yeni Yerel Moran aracı ve deney profili. Bu ADR'nin varsayılanları ve 18 ortak
+durumu değişmedi.

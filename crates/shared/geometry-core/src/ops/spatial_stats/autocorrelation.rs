@@ -2,12 +2,17 @@
 //! (docs/adr/0238 §8–§9): the objects with a place and a value, their
 //! neighbours by the chosen concept (`weights`).
 
+use super::inference::{
+    Inference, MOST_WORK, Profile, TIE, each_permutation, folded_p, moments, sim_z,
+};
 use super::weights::{Concept, Neighbours, neighbours};
 use super::{
-    Number, ObjectCopy, Pattern, Placed, StatsRun, Table, number_of, p_value, pair, text,
-    unplaced_note, unread_note,
+    Number, Pattern, Placed, StatsRun, Table, number_of, p_value, place, text, unplaced_note,
+    unread_note,
 };
 use crate::entity::Shape;
+use crate::jsmath::js_max;
+use crate::ops::sampling::random::Sequence;
 
 /// The neighbourhood a run asks for: the concept, the band (none: the
 /// largest nearest-neighbour distance) and k.
@@ -20,7 +25,7 @@ pub struct Neighbourhood {
 
 /// The objects with a place and a value: their places, values and places
 /// in the input; the warnings about the others.
-fn valued(
+pub(super) fn valued(
     shapes: &[Shape],
     values: &[Option<String>],
     field: &str,
@@ -46,7 +51,7 @@ fn valued(
 }
 
 /// The neighbourhood's line in the table.
-fn described(nb: &Neighbours, concept: Concept) -> String {
+pub(super) fn described(nb: &Neighbours, concept: Concept) -> String {
     match (concept, nb.band) {
         (Concept::Band, Some(b)) => format!("Sabit uzaklık bandı, {} m", text(b, 3)),
         (Concept::Inverse, Some(b)) => format!("Ters uzaklık, {} m", text(b, 3)),
@@ -62,6 +67,27 @@ pub fn morans_i(
     hood: Neighbourhood,
     standardize: bool,
 ) -> Result<StatsRun, String> {
+    morans_i_with(
+        shapes,
+        values,
+        field,
+        hood,
+        standardize,
+        Inference::ANALYTIC,
+    )
+}
+
+/// [`morans_i`] with permutation inference too (docs/adr/0520 §3): the I of
+/// `R` permutations of the values, the pseudo z and p, the profile.
+pub fn morans_i_with(
+    shapes: &[Shape],
+    values: &[Option<String>],
+    field: &str,
+    hood: Neighbourhood,
+    standardize: bool,
+    inference: Inference,
+) -> Result<StatsRun, String> {
+    let inference = inference.checked()?;
     let mut run = StatsRun::default();
     let (placed, xs) = valued(shapes, values, field, &mut run);
     let n = xs.len();
@@ -143,20 +169,17 @@ pub fn morans_i(
     let p = p_value(zs);
     let pattern = Pattern::of(zs, p, false);
     let row = |k: &str, v: String| vec![k.to_owned(), v];
-    run.table = Some(Table {
-        columns: vec!["Ölçü".into(), "Değer".into()],
-        rows: vec![
-            row("Nesne sayısı", n.to_string()),
-            row("Moran I", text(i_value, 6)),
-            row("Beklenen I", text(expected, 6)),
-            row("Varyans", text(variance, 8)),
-            row("z", text(zs, 4)),
-            row("p", text(p, 6)),
-            row("Desen", pattern.title().to_owned()),
-            row("Komşuluk", described(&nb, hood.concept)),
-            row("Komşusu olmayan", isolated.to_string()),
-        ],
-    });
+    let mut rows = vec![
+        row("Nesne sayısı", n.to_string()),
+        row("Moran I", text(i_value, 6)),
+        row("Beklenen I", text(expected, 6)),
+        row("Varyans", text(variance, 8)),
+        row("z", text(zs, 4)),
+        row("p", text(p, 6)),
+        row("Desen", pattern.title().to_owned()),
+        row("Komşuluk", described(&nb, hood.concept)),
+        row("Komşusu olmayan", isolated.to_string()),
+    ];
     run.numbers = vec![
         Number {
             name: "moransI",
@@ -178,7 +201,223 @@ pub fn morans_i(
         text(p, 6),
         pattern.word()
     );
+    if inference.permuted() {
+        permute_moran(
+            &mut run,
+            &mut rows,
+            &Moran {
+                nb: &nb,
+                z: &z,
+                s0,
+                m2,
+                i_value,
+            },
+            inference,
+        )?;
+        run.profile = Some(profile_of(
+            "Moran I",
+            inference,
+            false,
+            described(&nb, hood.concept),
+            Some(standardize),
+            field,
+            shapes,
+            &placed,
+            &xs,
+        ));
+    }
+    run.table = Some(Table {
+        columns: vec!["Ölçü".into(), "Değer".into()],
+        rows,
+    });
     Ok(run)
+}
+
+/// What the permutations of Moran's I need: the weights, the deviations, S₀,
+/// Σ z² and the observed I.
+struct Moran<'a> {
+    nb: &'a Neighbours,
+    z: &'a [f64],
+    s0: f64,
+    m2: f64,
+    i_value: f64,
+}
+
+/// The I of `R` permutations of the values (docs/adr/0520 §3): the table's
+/// rows, the numbers, the summary.
+fn permute_moran(
+    run: &mut StatsRun,
+    rows: &mut Vec<Vec<String>>,
+    m: &Moran<'_>,
+    inference: Inference,
+) -> Result<(), String> {
+    let n = m.z.len();
+    let nf = n as f64;
+    let r = inference.permutations;
+    let pairs: usize = m.nb.lists.iter().map(Vec::len).sum();
+    if r.saturating_mul(n + pairs) > MOST_WORK {
+        return Err(too_much_work());
+    }
+    // Every permuted I is at most this in size: what a tie is measured against.
+    let total: f64 = m.nb.lists.iter().flatten().map(|&(_, w)| w.abs()).sum();
+    let zmax = m.z.iter().fold(0.0f64, |a, v| js_max(a, v.abs()));
+    let bound = nf / m.s0 * total * zmax * zmax / m.m2;
+    let mut seq = Sequence::new(inference.seed);
+    let mut sims = Vec::with_capacity(r);
+    let mut shuffled = vec![0.0; n];
+    each_permutation(n, r, &mut seq, |perm| {
+        for (to, &from) in shuffled.iter_mut().zip(perm) {
+            *to = m.z[from as usize];
+        }
+        let mut cross = 0.0;
+        for (i, list) in m.nb.lists.iter().enumerate() {
+            let mut lag = 0.0;
+            for &(j, w) in list {
+                lag += w * shuffled[j as usize];
+            }
+            cross += shuffled[i] * lag;
+        }
+        sims.push(nf / m.s0 * cross / m.m2);
+    });
+    let (mean, sd) = moments(&sims);
+    let spread = sd > TIE * bound;
+    let larger = sims
+        .iter()
+        .filter(|&&s| s >= m.i_value - TIE * bound)
+        .count();
+    let ps = spread.then(|| folded_p(larger, r));
+    let zsim = if spread {
+        sim_z(m.i_value, mean, sd)
+    } else {
+        None
+    };
+    let pattern = match (zsim, ps) {
+        (Some(z), Some(p)) => Pattern::of(z, p, false),
+        _ => Pattern::Random,
+    };
+    let opt = |v: Option<f64>, d: u32| v.map_or_else(String::new, |v| text(v, d));
+    let row = |k: &str, v: String| vec![k.to_owned(), v];
+    rows[6] = row("Desen", pattern.title().to_owned());
+    rows.extend([
+        row("Permütasyon sayısı", r.to_string()),
+        row("Tohum", inference.seed.to_string()),
+        row("Permütasyon ortalaması", text(mean, 6)),
+        row("Permütasyon z", opt(zsim, 4)),
+        row("Permütasyon p", opt(ps, 6)),
+        row(
+            "p'nin standart hatası",
+            opt(ps.map(|p| (p * (1.0 - p) / r as f64).sqrt()), 6),
+        ),
+    ]);
+    if !spread {
+        run.warnings.push(
+            "Permütasyonların I'ları yayılmıyor; permütasyon p'si yok, desen rastgele sayıldı."
+                .into(),
+        );
+    }
+    run.numbers.push(Number {
+        name: "zPermutation",
+        value: zsim.unwrap_or(f64::NAN),
+    });
+    run.numbers.push(Number {
+        name: "pPermutation",
+        value: ps.unwrap_or(f64::NAN),
+    });
+    run.summary = format!(
+        "Moran I {} (permütasyon z {}, p {}; {r} permütasyon, tohum {}): {}.",
+        text(m.i_value, 6),
+        opt(zsim, 4),
+        opt(ps, 6),
+        inference.seed,
+        pattern.word()
+    );
+    Ok(())
+}
+
+/// The refusal of a run whose permutations are too much work.
+pub(super) fn too_much_work() -> String {
+    format!(
+        "Permütasyonların işi çok büyük: permütasyon sayısı ile komşu çiftlerinin çarpımı {MOST_WORK}'ı aşıyor; permütasyon sayısını ya da komşuluğu küçültün."
+    )
+}
+
+/// A run's profile (docs/adr/0520 §5): what makes it again, and the canonical
+/// text of the objects it analysed (their place in the input, their place and
+/// value).
+#[allow(clippy::too_many_arguments)]
+pub(super) fn profile_of(
+    tool: &str,
+    inference: Inference,
+    conditional: bool,
+    hood: String,
+    standardize: Option<bool>,
+    field: &str,
+    shapes: &[Shape],
+    placed: &Placed,
+    xs: &[f64],
+) -> Profile {
+    let mut p = Profile::default();
+    let permuted = inference.permuted();
+    p.push("rule", "Kural", super::inference::RULE);
+    p.push("tool", "Araç", tool);
+    p.push(
+        "inference",
+        "Çıkarım",
+        match (permuted, conditional) {
+            (false, _) => "Normal dağılım",
+            (true, false) => "Permütasyon",
+            (true, true) => "Koşullu permütasyon",
+        },
+    );
+    p.push(
+        "permutations",
+        "Permütasyon sayısı",
+        inference.permutations.to_string(),
+    );
+    p.push(
+        "seed",
+        "Tohum",
+        if permuted {
+            inference.seed.to_string()
+        } else {
+            "—".into()
+        },
+    );
+    p.push(
+        "generator",
+        "Sayı üreteci",
+        if permuted {
+            super::inference::GENERATOR
+        } else {
+            "—"
+        },
+    );
+    p.push(
+        "correction",
+        "Çoklu test düzeltmesi",
+        if tool == "Moran I" {
+            "Yok (tek sınama)"
+        } else {
+            inference.correction.title()
+        },
+    );
+    p.push("weights", "Komşuluk", hood);
+    p.push(
+        "standardize",
+        "Satır standartlaştırma",
+        match standardize {
+            Some(true) => "Evet",
+            Some(false) => "Hayır",
+            None => "Uygulanmaz",
+        },
+    );
+    p.push("objects", "Nesne sayısı", xs.len().to_string());
+    p.push("field", "Değer alanı", field);
+    for (k, &i) in placed.index.iter().enumerate() {
+        let at = place(&shapes[i]).unwrap_or_default();
+        super::inference::input_line(&mut p.inputs, i, at.x, at.y, xs[k]);
+    }
+    p
 }
 
 /// The confidence classes' colours (ColorBrewer's RdBu), −3 … 3.
@@ -207,82 +446,5 @@ pub fn hot_spots(
     field: &str,
     hood: Neighbourhood,
 ) -> Result<StatsRun, String> {
-    let mut run = StatsRun::default();
-    let (placed, xs) = valued(shapes, values, field, &mut run);
-    let n = xs.len();
-    if n < 3 {
-        return Err(format!(
-            "Sıcak nokta en az üç nesne ister; yeri ve değeri olan {n} nesne var."
-        ));
-    }
-    let nf = n as f64;
-    let mean = xs.iter().sum::<f64>() / nf;
-    let dev: Vec<f64> = xs.iter().map(|x| x - mean).collect();
-    let s = (dev.iter().map(|d| d * d).sum::<f64>() / nf).sqrt();
-    if s.is_nan() || s <= 0.0 {
-        return Err("Değerlerin hepsi aynı; sıcak nokta aranamaz.".into());
-    }
-    let nb = neighbours(&placed.pts, hood.concept, hood.band, hood.k, true)?;
-    let mut counts = [0usize; 7];
-    let mut undefined = 0usize;
-    for (k, list) in nb.lists.iter().enumerate() {
-        let (mut sw, mut sw2, mut num) = (0.0, 0.0, 0.0);
-        for &(j, w) in list {
-            sw += w;
-            sw2 += w * w;
-            num += w * dev[j as usize];
-        }
-        let den = s * ((nf * sw2 - sw * sw) / (nf - 1.0)).sqrt();
-        let (attrs, class) = if den > 0.0 && den.is_finite() {
-            let z = num / den;
-            let p = p_value(z);
-            let class = hot_class(z, p);
-            (
-                vec![
-                    pair("z puanı", text(z, 4)),
-                    pair("p değeri", text(p, 6)),
-                    pair("Güven sınıfı", class.to_string()),
-                ],
-                class,
-            )
-        } else {
-            undefined += 1;
-            (
-                vec![
-                    pair("z puanı", ""),
-                    pair("p değeri", ""),
-                    pair("Güven sınıfı", "0"),
-                ],
-                0,
-            )
-        };
-        counts[(class + 3) as usize] += 1;
-        run.copies.push(ObjectCopy {
-            index: placed.index[k],
-            attrs,
-            color: HOT_COLORS[(class + 3) as usize],
-        });
-    }
-    run.warn_if(undefined, |n| {
-        format!("{n} nesnenin bütün nesneler komşusu; z'si hesaplanamadı.")
-    });
-    let hot = counts[4] + counts[5] + counts[6];
-    let cold = counts[0] + counts[1] + counts[2];
-    run.infos.push(format!(
-        "Sıcak: %99 {}, %95 {}, %90 {}; soğuk: %99 {}, %95 {}, %90 {}.",
-        counts[6], counts[5], counts[4], counts[0], counts[1], counts[2]
-    ));
-    run.numbers = vec![
-        Number {
-            name: "hot",
-            value: hot as f64,
-        },
-        Number {
-            name: "cold",
-            value: cold as f64,
-        },
-    ];
-    run.summary =
-        format!("{n} nesne yazıldı: {hot} sıcak, {cold} soğuk nokta (%90 ve üstü güvenle).");
-    Ok(run)
+    super::local::hot_spots_with(shapes, values, field, hood, Inference::ANALYTIC)
 }

@@ -5788,6 +5788,20 @@
    "tests": 0
   },
   {
+   "id": "processing.run.stats.localMoran",
+   "kind": "command",
+   "title": "Yerel Moran (LISA)…",
+   "level": "processing",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.run.stats.meanCenter",
    "kind": "command",
    "title": "Ortalama merkez…",
