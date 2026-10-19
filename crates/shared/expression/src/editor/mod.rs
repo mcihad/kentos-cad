@@ -21,6 +21,7 @@ mod catalog;
 mod check;
 mod complete;
 pub mod flow;
+mod format;
 mod lex;
 mod place;
 mod rename;
@@ -31,6 +32,7 @@ pub use catalog::{
 };
 pub use check::{Check, Diagnostic, check};
 pub use complete::{Bracket, Completion, Signature, SignatureArg, bracket, complete, signature};
+pub use format::format;
 pub use lex::{Class, Span, tokens};
 pub use place::place;
 pub use rename::{fields_of, names_field, rename_field, rename_in_template, template_names_field};

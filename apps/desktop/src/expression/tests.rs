@@ -289,7 +289,7 @@ fn screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["cagri", "oneri", "hata", "uzun"] {
+            for name in ["cagri", "oneri", "hata", "uzun", "bicimli", "son"] {
                 let mut app = opened();
                 let _ = app
                     .settings
@@ -303,6 +303,30 @@ fn screens() {
                 match name {
                     "cagri" => written(&mut app, "Nitelik = 'Arsa' ve yuvarla($alan, "),
                     "oneri" => written(&mut app, "Nitelik = 'Arsa' ve Pa"),
+                    // Biçimle and a comment (docs/adr/0603).
+                    "bicimli" => {
+                        written(
+                            &mut app,
+                            "durum eğer Nitelik = 'Arsa' ve $alan > 500 ve Ada içinde ('101', '102') ise yuvarla($alan / 1000, 2) eğer Nitelik = 'Tarla' ise dizi_topla(dizi_her(dizi(1, 2, 3), @öğe * $alan)) yoksa 0 son",
+                        );
+                        event(&mut app, Event::Format);
+                        snapshot.settle(&mut app, App::view, &mut update);
+                        event(&mut app, Event::Edit(Action::Move(Motion::DocumentStart)));
+                        typed(&mut app, "// Arsanın büyüklüğü, km² olarak");
+                        event(&mut app, Event::Edit(Action::Edit(Edit::Enter)));
+                    }
+                    // Son kullanılanlar: what an earlier Tamam used, and the help's examples to press.
+                    "son" => {
+                        if let Some(b) = app.builder.as_mut() {
+                            b.recent = vec![
+                                "func:dizi_her".into(),
+                                "field:Nitelik".into(),
+                                "func:yuvarla".into(),
+                            ];
+                        }
+                        written(&mut app, "dizi_her(metin_dizi(Etiketler), ");
+                        event(&mut app, Event::Row("func:dizi_her".into()));
+                    }
                     // A line longer than the box: the view follows the cursor to its end.
                     "uzun" => {
                         written(
@@ -641,5 +665,43 @@ fn an_unreadable_text_goes_back_to_metin_at_its_error() {
     assert_eq!(
         c.selection.map(units).unwrap_or(units(c.position)),
         error.start
+    );
+}
+
+/// Tamam remembers the functions and fields used; the next builder lists them first, and a help's example goes in
+/// when pressed; Biçimle puts a long text on lines that read the same (docs/adr/0603).
+#[test]
+fn the_builder_remembers_formats_and_takes_examples() {
+    let mut app = opened();
+    written(&mut app, "yuvarla($alan, 2) || Nitelik");
+    event(&mut app, Event::Ok);
+    assert_eq!(app.builder_recent, ["func:yuvarla", "field:Nitelik"]);
+    let mut app2 = opened();
+    app2.builder_recent = app.builder_recent.clone();
+    if let Some(b) = app2.builder.as_mut() {
+        b.recent = app2.builder_recent.clone();
+    }
+    let recent: Vec<String> = app2
+        .builder
+        .as_ref()
+        .map(|b| b.recent_items().into_iter().map(|i| i.key).collect())
+        .unwrap_or_default();
+    assert_eq!(recent, ["func:yuvarla", "field:Nitelik"]);
+    written(&mut app2, "");
+    event(&mut app2, Event::Row("func:yuvarla".into()));
+    event(&mut app2, Event::Example(0));
+    assert_eq!(source(&app2), "yuvarla(12.345, 2)");
+    let long = "durum eğer Nitelik = 'Arsa' ve $alan > 500 ve Ada içinde ('101', '102') ise yuvarla($alan / 1000, 2) yoksa 0 son";
+    written(&mut app2, long);
+    event(&mut app2, Event::Format);
+    let formatted = source(&app2);
+    assert!(formatted.lines().count() > 2, "{formatted}");
+    assert_eq!(
+        kentos_expression::editor::flow::read(&formatted)
+            .map(|t| t.text())
+            .ok(),
+        kentos_expression::editor::flow::read(long)
+            .map(|t| t.text())
+            .ok()
     );
 }

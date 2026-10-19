@@ -234,6 +234,8 @@ Liste:
   ve `değişkenle`'nin adını çekirdeğin tamamlamasından alır; web'in dil testleri yeniden koşmalı.
 - [ ] `EXPR-0602` toplamanın ekleri (ADR 0602, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İşlemler'i ve ifade
   testleri yeni işlevlerle yeniden koşmalı.
+- [ ] `EXPR-0603` İfade oluşturucu (ADR 0603, 19 Ekim): web'de gerekenler: yorumlar çekirdekten (renk sınıfı `comment`), Biçimle
+  (`editor::format`'ın WASM bağlayıcısı), Son kullanılanlar, tıklanan örnekler; gövdedeki `@öğe` uyarısız.
 - [ ] `EXPR-0604` akışta değerler giriş satırında (ADR 0604, 19 Ekim): web'de gerekenler: akışın çizicisi `inline` düğümleri
   girişin satırında kutu olarak çizer, kenarlarını atlar, kutudan tel çekmez; `flow.json` yeniden yazıldı (web'in akış e2e'si yeniden).
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde

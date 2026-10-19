@@ -177,6 +177,27 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
     })
 }
 
+/// The `@` names the inner expressions around `at` bind, folded (docs/adr/0601): a name read there is the frame's.
+pub(crate) fn bound_names(u: &[u16], pieces: &[Piece], at: usize) -> Vec<String> {
+    frame_items(u, pieces, at)
+        .into_iter()
+        .map(|i| fold_turkish(i.label.trim_start_matches('@')))
+        .chain(
+            // The names' other spellings.
+            frame_items(u, pieces, at)
+                .iter()
+                .filter(|i| i.label == "@öğe" || i.label == "@sayaç")
+                .map(|i| {
+                    if i.label == "@öğe" {
+                        "ELEMENT".to_owned()
+                    } else {
+                        "COUNTER".to_owned()
+                    }
+                }),
+        )
+        .collect()
+}
+
 /// The `@` names the inner expressions around `cursor` bind (docs/adr/0601): `@öğe` and `@sayaç` in the body of
 /// `dizi_her` and `dizi_süz`, the name `değişkenle` gives in its body; innermost first.
 fn frame_items(u: &[u16], pieces: &[Piece], cursor: usize) -> Vec<Item> {
@@ -669,5 +690,14 @@ mod frame_tests {
                 .iter()
                 .any(|l| l == "@alan2")
         );
+    }
+
+    /// A name an inner expression binds is no unknown `@` value there; outside it, it is.
+    #[test]
+    fn a_bound_name_is_not_warned_of() {
+        let warned = |s: &str| crate::editor::check(s, &Schema::default()).warnings.len();
+        assert_eq!(warned("dizi_her(dizi(1), @öğe + @sayaç + @element)"), 0);
+        assert_eq!(warned("değişkenle('k', 2, @k * 2)"), 0);
+        assert_eq!(warned("dizi_her(dizi(1), 1) + @öğe"), 1);
     }
 }

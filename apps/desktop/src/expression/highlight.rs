@@ -78,6 +78,7 @@ impl Syntax {
             Class::Keyword => self.keyword,
             Class::Operator | Class::Paren | Class::Comma => self.operator,
             Class::Unknown => t.danger,
+            Class::Comment => t.muted,
         }
     }
 }

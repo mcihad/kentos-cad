@@ -61,8 +61,14 @@ fn text(u: &[u16]) -> String {
     String::from_utf16_lossy(u)
 }
 
-/// The pieces of a source given as UTF-16 units; white space is between them.
+/// The pieces of a source given as UTF-16 units; white space and comments are between them.
 pub(crate) fn lex(u: &[u16]) -> Vec<Piece> {
+    lex_with_comments(u).0
+}
+
+/// The pieces and the comments' spans (docs/adr/0603).
+pub(crate) fn lex_with_comments(u: &[u16]) -> (Vec<Piece>, Vec<(usize, usize)>) {
+    let mut comments = Vec::new();
     let (quote, apostrophe, open, close, dollar) = (
         u16::from(b'"'),
         u16::from(b'\''),
@@ -76,6 +82,11 @@ pub(crate) fn lex(u: &[u16]) -> Vec<Piece> {
         let c = u[i];
         if char::from_u32(u32::from(c)).is_some_and(is_space) {
             i += 1;
+            continue;
+        }
+        if let Some((end, _)) = crate::lexer::comment_at(u, i) {
+            comments.push((i, end));
+            i = end;
             continue;
         }
         let start = i;
@@ -145,7 +156,7 @@ pub(crate) fn lex(u: &[u16]) -> Vec<Piece> {
         });
     }
     mark(&mut out);
-    out
+    (out, comments)
 }
 
 /// The words that stand after a value, folded, and their operators.
@@ -280,6 +291,8 @@ pub enum Class {
     Comma,
     /// What the language does not know: `$nope`, `nope(…)`, a stray character.
     Unknown,
+    /// `// …` and `/* … */` (docs/adr/0603).
+    Comment,
 }
 
 impl Class {
@@ -297,6 +310,7 @@ impl Class {
             Class::Paren => "paren",
             Class::Comma => "comma",
             Class::Unknown => "unknown",
+            Class::Comment => "comment",
         }
     }
 }
@@ -353,14 +367,21 @@ pub(crate) fn class_of(pieces: &[Piece], i: usize) -> Class {
 /// The source's tokens with their classes, in order.
 pub fn tokens(src: &str) -> Vec<Span> {
     let u: Vec<u16> = src.encode_utf16().collect();
-    let pieces = lex(&u);
-    (0..pieces.len())
+    let (pieces, comments) = lex_with_comments(&u);
+    let mut out: Vec<Span> = (0..pieces.len())
         .map(|i| Span {
             class: class_of(&pieces, i),
             start: pieces[i].start,
             end: pieces[i].end,
         })
-        .collect()
+        .collect();
+    out.extend(comments.into_iter().map(|(start, end)| Span {
+        class: Class::Comment,
+        start,
+        end,
+    }));
+    out.sort_by_key(|s| s.start);
+    out
 }
 
 /// The field a piece names, if it names one: a bracketed name, or a bare

@@ -198,7 +198,7 @@ impl T {
     /// How tightly it binds, loosest first: veya 0, ve 1, comparisons and
     /// the tests 2, + − || 3, * / % 4, değil, the sign and a negative
     /// number 5, ^ 6, the rest 7.
-    fn level(&self) -> u8 {
+    pub(crate) fn level(&self) -> u8 {
         match self {
             T::Bin(BinOp::Or, ..) => 0,
             T::Bin(BinOp::And, ..) => 1,

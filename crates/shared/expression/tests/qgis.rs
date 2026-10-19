@@ -345,3 +345,27 @@ fn inner_expressions_run_by_chunks_as_one_at_a_time() {
         }
     }
 }
+
+/// `// …` and `/* … */` are comments; `--` stays a double minus, and both stay inside text (docs/adr/0603).
+#[test]
+fn comments_are_between_tokens() {
+    let value = |s: &str| {
+        let e = compile(s).unwrap_or_else(|e| panic!("{s}: {}", e.text()));
+        encode(&e.evaluate(&Object {
+            fields: &[],
+            attrs: &Map::new(),
+        }))
+    };
+    assert_eq!(value("1 + 2 // not 3"), json!(["n", 3.0]));
+    assert_eq!(value("1 /* bir */ + /* iki */ 2"), json!(["n", 3.0]));
+    assert_eq!(value("/* baş */\n10 // ilk\n* 2"), json!(["n", 20.0]));
+    assert_eq!(value("--1"), json!(["n", 1.0]));
+    assert_eq!(value("'a//b' || '/*c*/'"), json!(["t", "a//b/*c*/"]));
+    let refused = compile("1 /* kapanmadı").expect_err("an open comment");
+    assert!(refused.message.contains("*/"), "{}", refused.message);
+    let spans = kentos_expression::editor::tokens("1 // not");
+    assert_eq!(
+        spans.last().map(|s| s.class),
+        Some(kentos_expression::editor::Class::Comment)
+    );
+}

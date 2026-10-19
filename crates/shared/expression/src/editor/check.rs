@@ -59,6 +59,8 @@ pub fn check(src: &str, schema: &Schema) -> Check {
         super::lex::Lex::At { name }
             if !name.is_empty()
                 && schema.variable(name).is_none()
+                && !super::complete::bound_names(&u, &pieces, pieces[i].start)
+                    .contains(&fold_turkish(name))
                 && !super::catalog::LAYER_AT
                     .iter()
                     .any(|(n, _)| fold_turkish(n) == fold_turkish(name)) =>
