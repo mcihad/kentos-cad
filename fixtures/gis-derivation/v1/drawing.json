@@ -1,0 +1,608 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "Ada 101 türevi",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000.0,
+  "y": 4420000.0
+ },
+ "layers": [
+  {
+   "id": "parsel",
+   "name": "Parsel",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "ada",
+     "kind": "text"
+    },
+    {
+     "name": "parsel_no",
+     "kind": "integer"
+    }
+   ]
+  },
+  {
+   "id": "bina",
+   "name": "Bina",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "yol",
+   "name": "Yol",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": [],
+   "fields": [
+    {
+     "name": "ad",
+     "kind": "text"
+    }
+   ]
+  },
+  {
+   "id": "yazi",
+   "name": "Yazı",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "cizim",
+   "name": "Çizim",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "ink",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "parsel",
+ "entities": [
+  {
+   "kind": "polygon",
+   "id": 1,
+   "layerId": "parsel",
+   "attrs": {
+    "ada": "101",
+    "parsel_no": "7"
+   },
+   "pts": [
+    {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487040.0,
+     "y": 4420030.0
+    },
+    {
+     "x": 487000.0,
+     "y": 4420030.0
+    }
+   ],
+   "bulges": [
+    0,
+    0.5,
+    0,
+    0
+   ],
+   "zs": [
+    10.0,
+    11.0,
+    12.0,
+    13.0
+   ],
+   "holes": [
+    {
+     "pts": [
+      {
+       "x": 487010.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487016.0,
+       "y": 4420010.0
+      },
+      {
+       "x": 487016.0,
+       "y": 4420016.0
+      },
+      {
+       "x": 487010.0,
+       "y": 4420016.0
+      }
+     ],
+     "bulges": [
+      0,
+      0,
+      0,
+      0.4
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 2,
+   "layerId": "parsel",
+   "attrs": {
+    "ada": "101",
+    "parsel_no": "8"
+   },
+   "pts": [
+    {
+     "x": 487050.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487080.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487080.0,
+     "y": 4420030.0
+    },
+    {
+     "x": 487050.0,
+     "y": 4420030.0
+    }
+   ]
+  },
+  {
+   "kind": "record",
+   "id": 3,
+   "layerId": "parsel",
+   "attrs": {
+    "ada": "102"
+   }
+  },
+  {
+   "kind": "circle",
+   "id": 4,
+   "layerId": "parsel",
+   "attrs": {
+    "ada": "kuyu"
+   },
+   "c": {
+    "x": 487020.0,
+    "y": 4420040.0
+   },
+   "r": 2.5
+  },
+  {
+   "kind": "arc",
+   "id": 5,
+   "layerId": "yol",
+   "attrs": {
+    "ad": "D-100"
+   },
+   "c": {
+    "x": 487000.0,
+    "y": 4419950.0
+   },
+   "r": 60.0,
+   "a0": 0.2,
+   "a1": 1.4
+  },
+  {
+   "kind": "polyline",
+   "id": 6,
+   "layerId": "yol",
+   "attrs": {
+    "ad": "D-200"
+   },
+   "pts": [
+    {
+     "x": 487100.0,
+     "y": 4419950.0
+    },
+    {
+     "x": 487120.0,
+     "y": 4419950.0
+    },
+    {
+     "x": 487140.0,
+     "y": 4419960.0
+    },
+    {
+     "x": 487160.0,
+     "y": 4419960.0
+    }
+   ],
+   "bulges": [
+    0.3,
+    0,
+    -0.4,
+    0
+   ],
+   "zs": [
+    100.0,
+    101.0,
+    102.0,
+    103.0
+   ],
+   "ms": [
+    0.0,
+    100.0,
+    200.0,
+    300.0
+   ]
+  },
+  {
+   "kind": "line",
+   "id": 7,
+   "layerId": "yol",
+   "attrs": {
+    "ad": "D-300"
+   },
+   "a": {
+    "x": 487100.0,
+    "y": 4419930.0
+   },
+   "b": {
+    "x": 487120.0,
+    "y": 4419940.0
+   },
+   "za": 5.0,
+   "zb": 6.0
+  },
+  {
+   "kind": "polyline",
+   "id": 8,
+   "layerId": "yol",
+   "attrs": {
+    "ad": "D-400"
+   },
+   "pts": [
+    {
+     "x": 487200.0,
+     "y": 4419940.0
+    },
+    {
+     "x": 487220.0,
+     "y": 4419940.0
+    },
+    {
+     "x": 487220.0,
+     "y": 4419960.0
+    }
+   ],
+   "bulges": [
+    0.2,
+    0,
+    0
+   ],
+   "closed": true
+  },
+  {
+   "kind": "ellipse",
+   "id": 9,
+   "layerId": "cizim",
+   "attrs": {
+    "ad": "gölet"
+   },
+   "c": {
+    "x": 487200.0,
+    "y": 4420000.0
+   },
+   "major": {
+    "x": 12.0,
+    "y": 0.0
+   },
+   "ratio": 0.5,
+   "t0": 0,
+   "t1": 6.283185307179586
+  },
+  {
+   "kind": "ellipse",
+   "id": 10,
+   "layerId": "cizim",
+   "attrs": {
+    "ad": "yay"
+   },
+   "c": {
+    "x": 487240.0,
+    "y": 4420000.0
+   },
+   "major": {
+    "x": 10.0,
+    "y": 5.0
+   },
+   "ratio": 0.4,
+   "t0": 0.5,
+   "t1": 2.5
+  },
+  {
+   "kind": "spline",
+   "id": 11,
+   "layerId": "cizim",
+   "attrs": {
+    "ad": "dere"
+   },
+   "pts": [
+    {
+     "x": 487260.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487265.0,
+     "y": 4420004.0
+    },
+    {
+     "x": 487270.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487275.0,
+     "y": 4420004.0
+    },
+    {
+     "x": 487280.0,
+     "y": 4420000.0
+    }
+   ],
+   "closed": false
+  },
+  {
+   "kind": "nurbs",
+   "id": 12,
+   "layerId": "cizim",
+   "attrs": {
+    "ad": "kıvrım"
+   },
+   "degree": 2,
+   "ctrl": [
+    {
+     "x": 487308.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 487308.0,
+     "y": 4420008.0
+    },
+    {
+     "x": 487300.0,
+     "y": 4420008.0
+    }
+   ],
+   "knots": [
+    0,
+    0,
+    0,
+    1,
+    1,
+    1
+   ],
+   "weights": [
+    1.0,
+    0.7071067811865476,
+    1.0
+   ]
+  },
+  {
+   "kind": "point",
+   "id": 13,
+   "layerId": "cizim",
+   "attrs": {
+    "ad": "P-1"
+   },
+   "p": {
+    "x": 487320.0,
+    "y": 4420000.0
+   },
+   "z": 7.5
+  },
+  {
+   "kind": "text",
+   "id": 14,
+   "layerId": "yazi",
+   "attrs": {},
+   "p": {
+    "x": 487005.0,
+    "y": 4420035.0
+   },
+   "text": "Ada 101",
+   "height": 2.0,
+   "rotation": 15.0
+  },
+  {
+   "kind": "insert",
+   "id": 15,
+   "layerId": "bina",
+   "attrs": {
+    "NO": "B-1",
+    "KAT": "3"
+   },
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+   "p": {
+    "x": 487005.0,
+    "y": 4420020.0
+   },
+   "scale": 1,
+   "rotation": 0
+  },
+  {
+   "kind": "insert",
+   "id": 16,
+   "layerId": "bina",
+   "attrs": {
+    "NO": "B-2"
+   },
+   "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+   "p": {
+    "x": 487055.0,
+    "y": 4420005.0
+   },
+   "scale": 1,
+   "rotation": 0.5
+  },
+  {
+   "kind": "polygon",
+   "id": 17,
+   "layerId": "bina",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 487060.0,
+     "y": 4420015.0
+    },
+    {
+     "x": 487070.0,
+     "y": 4420015.0
+    },
+    {
+     "x": 487070.0,
+     "y": 4420025.0
+    },
+    {
+     "x": 487060.0,
+     "y": 4420025.0
+    }
+   ]
+  },
+  {
+   "kind": "xline",
+   "id": 18,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "dir": {
+    "x": 1.0,
+    "y": 0.0
+   }
+  },
+  {
+   "kind": "ray",
+   "id": 19,
+   "layerId": "cizim",
+   "attrs": {},
+   "p": {
+    "x": 487000.0,
+    "y": 4420000.0
+   },
+   "dir": {
+    "x": 0.0,
+    "y": 1.0
+   }
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ },
+ "blocks": [
+  {
+   "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+   "name": "Bina",
+   "base": {
+    "x": 0,
+    "y": 0
+   },
+   "entities": [
+    {
+     "kind": "polygon",
+     "id": 1,
+     "layerId": "0",
+     "attrs": {},
+     "pts": [
+      {
+       "x": 0,
+       "y": 0
+      },
+      {
+       "x": 10,
+       "y": 0
+      },
+      {
+       "x": 10,
+       "y": 8
+      },
+      {
+       "x": 0,
+       "y": 8
+      }
+     ]
+    }
+   ],
+   "attributes": [
+    {
+     "tag": "NO",
+     "prompt": "Bina no",
+     "value": "B-?",
+     "p": {
+      "x": 1,
+      "y": 1
+     },
+     "height": 0.5,
+     "rotation": 0
+    },
+    {
+     "tag": "KAT",
+     "prompt": "Kat",
+     "value": "1",
+     "p": {
+      "x": 1,
+      "y": 2
+     },
+     "height": 0.5,
+     "rotation": 0
+    }
+   ]
+  }
+ ]
+}

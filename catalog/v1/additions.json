@@ -2398,6 +2398,32 @@
       ],
       "status": "implemented",
       "description": "Bir blok ya da dış başvuru yerleştirmesini dikdörtgen ya da çokgen sınırla kırpar: sınırın dışı (Ters ile içi) çizilmez. Sınır yerleştirmeyle taşınır, döner, ölçeklenir. Çerçeve gizli, yalnız ekranda ya da yazdırılan olabilir; Kaldır kırpmayı kaldırır."
+    },
+    {
+      "id": "file.export.gis",
+      "title": "GIS türevi dışa aktar…",
+      "icon": "exportGis",
+      "description": "Katmanları GeoPackage'a izlenebilir bir türev olarak yazar: çizim kaynak kalır, dosyadaki geometri onun türevidir. Her satır kaynak nesnenin kalıcı kimliğini ve türünü, yay ve eğrilerin kirişle ne kadar saptığını (metre) ve kaynağın özetini taşır; Z ve M köşelerde taşınır. Yaylar, daireler, elipsler, eğriler ve NURBS seçilen toleransın içinde düz kirişlerdir; yazılar ve bloklar ayrı tablolara gider ya da atlanır; ölçü, tarama ve benzerleri yazılmaz, nedenleriyle söylenir. Her tablonun türetim kaydı dosyanın metadata uzantısındadır.",
+      "aliases": [
+        "GISVER",
+        "GISTUREVVER"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "gis.derivation",
+      "title": "GIS türevini denetle…",
+      "icon": "gisDerivation",
+      "description": "Daha önce dışa aktarılan bir türev GeoPackage'ın açık çizimle hâlâ eşleşip eşleşmediğini söyler: kaynağı dışa aktarmadan sonra değişen ya da silinen satırlar, GIS'te değiştirilmiş satırlar ve türevde satırı olmayan nesneler. Çizimi ve dosyayı değiştirmez; türev kaynağın yerine geçmez ve GIS'teki değişiklik çizime geri yazılmaz.",
+      "aliases": [
+        "GISDENETLE",
+        "TUREVKONTROL"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -2646,8 +2672,10 @@
     "layerOut": "<path d=\"M3 4.5h6l1.5 2H17v9H3z\" stroke-width=\"1.1\"/><path d=\"M9 11h8.5M15 8.5l2.5 2.5-2.5 2.5\" stroke-width=\"1.3\"/>",
     "layerOrder": "<path d=\"M3 5h9M3 10h9M3 15h9\" stroke-width=\"1.2\"/><path d=\"M15.5 3.5v13M13.5 5.5l2-2 2 2M13.5 14.5l2 2 2-2\" stroke-width=\"1.1\"/>",
     "routeDrift": "<path d=\"M2 15.5C6 15.5 9 7 18 6\" stroke-width=\"1.4\"/><circle cx=\"8.2\" cy=\"10.4\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"15.2\" r=\"1.7\" stroke-width=\"1\" stroke-dasharray=\"1.1 .9\"/><path d=\"m9.7 11.7 2.3 2\" stroke-width=\"1\"/><path d=\"m12.3 12.3-.2 1.6-1.6-.1\" stroke-width=\"1\"/>",
+    "joinViews": "<rect x=\"2.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><rect x=\"11.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8.5h6M11.5 8.5h6M2.5 12h6M11.5 12h6\" stroke-width=\".8\"/><path d=\"M8.5 10h3\" stroke-width=\"1.6\"/>",
     "rasterStac": "<rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" rx=\"1\" stroke-width=\"1.1\"/><path d=\"M6 2v12M10 2v12M2 6h12M2 10h12\" stroke-width=\".7\" stroke-opacity=\".55\"/><circle cx=\"13\" cy=\"13\" r=\"3.6\" stroke-width=\"1.3\"/><path d=\"M15.8 15.8l2.4 2.4\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>",
-    "joinViews": "<rect x=\"2.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><rect x=\"11.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8.5h6M11.5 8.5h6M2.5 12h6M11.5 12h6\" stroke-width=\".8\"/><path d=\"M8.5 10h3\" stroke-width=\"1.6\"/>"
+    "exportGis": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.8 16c0-4.4 2.6-6.9 5.8-6.9\" stroke-width=\".8\" stroke-dasharray=\"1.1 .9\"/><path d=\"M9.8 16l.8-2.8 1.8-2.2 3.2-1.4\" stroke-width=\"1\"/>",
+    "gisDerivation": "<path d=\"M2.5 16c0-6.9 4.4-11.2 10-11.2\" stroke-width=\".8\" stroke-dasharray=\"1.1 .9\"/><path d=\"M2.5 16l1-4 2.6-3.4 3.2-2.2 3.4-1.1\" stroke-width=\"1\"/><path d=\"M10.5 14.5l2.4 2.4 4.6-5.4\" stroke-width=\"1.5\"/>"
   },
   "tabs": [
     {
@@ -3556,6 +3584,10 @@
           "command": "source.read",
           "size": "small"
         }
+      ],
+      "overflow": [
+        "file.export.gis",
+        "gis.derivation"
       ]
     },
     {
@@ -4068,6 +4100,24 @@
       "items": [],
       "overflow": [
         "processing.run.linearRef.eventDrift"
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "manage",
+      "label": "GIS",
+      "icon": "exportGis",
+      "items": [
+        {
+          "command": "file.export.gis",
+          "size": "large"
+        },
+        {
+          "command": "gis.derivation",
+          "size": "large"
+        }
       ]
     }
   ],

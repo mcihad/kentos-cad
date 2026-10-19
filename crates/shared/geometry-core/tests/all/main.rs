@@ -17,6 +17,7 @@ mod crs_ntv2;
 mod crs_text;
 mod data_search;
 mod delaunay;
+mod derive;
 mod dimensions;
 mod display;
 mod drawing_extras;

@@ -63,6 +63,14 @@ fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String>
     }))
 }
 
+/// Why a derivative's table is not bound, read into a layer or written back (docs/adr/0530 §4).
+fn derived_message(table: &str, rec: &kentos_contracts::DerivationRecord) -> String {
+    format!(
+        "“{table}” tablosu çizimden türetilmiş bir GIS verisi ({}, tolerans {} m; kaynak “{}”, {} sürümü): geometrisi kaynak yayların kirişleridir ve kaynağın yerine geçmez. Bağlanmaz, katmana okunmaz, geri yazılmaz; GIS'te yapılan değişiklikleri cad.gis.derivation gösterir, kaynağı çizimde düzenleyin.",
+        rec.algorithm, rec.tolerance, rec.source.name, rec.source.revision
+    )
+}
+
 fn refuse(code: &str, message: impl Into<String>, path: &str) -> Stop {
     Stop::failed(error(code, message.into(), Some(path.into())))
 }
@@ -582,7 +590,7 @@ fn walk(g: &Geometry, sig: &mut Vec<u8>, xs: &mut Vec<f64>) {
     sig.push(0);
 }
 
-fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>, tol: f64) -> bool {
+pub(crate) fn same_geometry(a: Option<&Geometry>, b: Option<&Geometry>, tol: f64) -> bool {
     match (a, b) {
         (None, None) => true,
         (Some(a), Some(b)) => {
@@ -1232,6 +1240,16 @@ fn link_table(
                 "“{table}” tablosu zaten “{}” katmanına bağlı ({}).",
                 s.layer, s.id
             ),
+            "edit.table",
+        ));
+    }
+    // A derivative of a drawing is never bound back (docs/adr/0530 §4): its chords would stand for the drawing's arcs.
+    if let Origin::File(p) = at
+        && let Some(rec) = crate::gis_derive::derived_table(p, table)
+    {
+        return Err(refuse(
+            codes::DERIVED_DATASET,
+            derived_message(table, &rec),
             "edit.table",
         ));
     }
@@ -1907,6 +1925,15 @@ fn sync_run(
                 "{} yerinde yok; dosyanın yeni yerini cad.sources.edit relink ile verin.",
                 link.path
             ),
+            "layer",
+        ));
+    }
+    if let Origin::File(path) = source
+        && let Some(rec) = crate::gis_derive::derived_table(path, &link.table)
+    {
+        return Err(refuse(
+            codes::DERIVED_DATASET,
+            derived_message(&link.table, &rec),
             "layer",
         ));
     }

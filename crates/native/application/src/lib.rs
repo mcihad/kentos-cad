@@ -75,6 +75,8 @@ pub mod processing_run;
 pub mod processing_tools;
 pub mod source_places;
 pub mod csv_table;
+pub mod gis_derivation;
+pub mod gis_derive;
 pub mod file_import_csv;
 pub mod shapefile;
 pub mod sld;
@@ -1025,6 +1027,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_CSV,
         kentos_contracts::FILE_IMPORT_CSV_VERSION,
+    ),
+    // A derived GIS dataset against the drawing ([`gis_derivation`], docs/adr/0530).
+    (
+        kentos_contracts::CAD_GIS_DERIVATION,
+        kentos_contracts::CAD_GIS_DERIVATION_VERSION,
     ),
     // An SLD's look made a layer's ([`sld`], docs/adr/0516).
     (

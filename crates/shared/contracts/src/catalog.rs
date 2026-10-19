@@ -6648,6 +6648,35 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A derived GIS dataset against the drawing it was made from (docs/adr/0530), fixtures/commands/v1/cad.gis.derivation.json.
+        CommandDescriptor {
+            id: crate::CAD_GIS_DERIVATION.into(),
+            version: crate::CAD_GIS_DERIVATION_VERSION,
+            title: "GIS türevini denetle".into(),
+            summary: "path'teki, file.export.gis'in yazdığı GeoPackage'ın her satırını açık çizimde kaynağı olan nesneyle karşılaştırır; hiçbir şey yazmaz. \
+                      Satırın kalıcı kimliği (kentos_uids, yoksa kentos_uid sütunu) çizimdeki nesneyi bulur. Nesnenin türev özeti (kentos_digest: bakışı dışında bütün alanlarının SHA-256'sı, blokta tanımın öznitelikleri de) satırınkinden başkaysa satır stale'dir: kaynak dışa aktarmadan sonra değişti, türev eski. \
+                      Özet aynıysa satırın geometrisi ve öznitelik sütunları tablonun kaydındaki algoritma ve toleransla yeniden türetilen satırla karşılaştırılır (koordinatlar 1e-9 m içinde); farklıysa satır edited'dır: GIS'te değiştirilmiş, kaynak nesne değişmemiş; hangi alanların (geometry, öznitelik adları) farklı olduğu fields'tadır. \
+                      Kimliği çizimde olmayan satır source_gone, tablonun katmanında olup satırı olmayan nesne not_exported'tur. Bir tablonun kaydındaki sapma kaydındaki toleransın üstündeyse over_tolerance sayılır. \
+                      Cevap her tablonun sayılarını, toplamları, dosyanın kaydettiği kaynağı (proje, ad, sürüm) ve eşleşmeyen satırlar önce olmak üzere en çok limit satırı listeler. Türev, kaynağın yerine geçmez: stale ve edited satırlar çizimi değiştirmez ve GIS'teki değişiklik çizime geri yazılmaz."
+                .into(),
+            aliases: vec!["turevdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::GisDerivation>(),
+            output: schema::<crate::GisDerived>(),
+            plan: Some(schema::<crate::GisDerived>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dışa aktarılan türev hâlâ güncel mi".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg" }),
+                output: None,
+            }],
+        },
         // Bound layers (docs/adr/0503), held together by fixtures/commands/v1/cad.sources.*.json.
         CommandDescriptor {
             id: crate::CAD_SOURCES_DESCRIBE.into(),
@@ -7608,6 +7637,36 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // The drawing as a traceable GIS dataset (docs/adr/0530).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GIS.into(),
+            version: crate::FILE_EXPORT_GIS_VERSION,
+            title: "GIS türevi dışa aktar".into(),
+            summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları) GeoPackage'a türev olarak yazar: çizim kaynak kalır, dosyadaki geometri onun bir türevidir. \
+                      Her katman bir özellik tablosudur; her satır kaynak nesnenin kalıcı kimliğini (kentos_uid sütunu ve kentos_uids uzantısı) ve türünü (kentos_kind), türev sapmasını metrede (kentos_deviation) ve kaynağın özetini (kentos_digest) taşır, katmanın alanları ve öteki öznitelikler sütun olur; Z ve M köşelerde taşınır. \
+                      Yaylar, daireler, çoklu çizgilerin yaylı kenarları ve elipsler, eğriler, NURBS düz kirişlerdir (GeoPackage'ın düz geometri türleri; eğri uzantısı yok): kirişler kaynağın eğrisinden en çok tolerance (metre, varsayılan 0,0001) uzakta kalır. Yay, daire ve yaylı kenarlarda algoritma kentos.chords/1'dir (eşit açılı kirişler, uçlar yayın üzerinde, sapma 2·r·sin²(φ/4) ile kesin); elips ve eğride sapma algoritmanın tuttuğu sınırdır, NURBS'ta örnek noktalarında denenen toleranstır. \
+                      Her tablonun türetim kaydı (https://kentos.app/derivation/1: algoritma, tolerans, kaynak proje, ad ve sürüm, en büyük sapma, kaynak türlerine göre sapmanın nasıl bilindiği, zaman) GeoPackage'ın metadata uzantısındadır. \
+                      Yazı ve bloklar tolerance'ın yanında annotations'a bağlıdır: table (varsayılan) onları katman tablolarına katmaz, ayrı tablolara yazar (her blok tanımının yerleştirmeleri blok adıyla nokta olarak, bloğun öznitelikleri sütun; yazılar kentos_annotations'ta nokta olarak, sözleri sütunda), skip onları sayar. Ölçü, tarama, kılavuz, tablo, resim, raster, nokta bulutu, yardımcı çizgi ve mimari nesneler yazılmaz; türlerine göre nedeniyle left'te ve export_losses uyarısındadır. \
+                      Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Türevi çizime bağlamak ya da geri yazmak olmaz (derived_dataset); gerçeği cad.gis.derivation sınar."
+                .into(),
+            aliases: vec!["gisturev".into(), "gisexport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGis>(),
+            output: schema::<crate::GisExported>(),
+            plan: Some(schema::<crate::GisExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller 1 mm toleransla".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg", "layers": ["parsel"], "tolerance": 0.001, "overwrite": true }),
+                output: None,
+            }],
+        },
         // A layer's look as OGC SLD 1.1 / SE 1.1, out and in (docs/adr/0516).
         CommandDescriptor {
             id: crate::FILE_EXPORT_SLD.into(),
@@ -8465,6 +8524,12 @@ mod tests {
                     }
                     crate::FILE_IMPORT_GPKG => {
                         serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_GIS_DERIVATION => {
+                        serde_json::from_value::<crate::GisDerivation>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_GIS => {
+                        serde_json::from_value::<crate::ExportGis>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SOURCES_DESCRIBE => {
                         serde_json::from_value::<crate::SourcesDescribe>(e.input.clone()).map(|_| ())

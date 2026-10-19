@@ -992013,6 +992013,720 @@
       ]
     },
     {
+      "id": "cad.gis.derivation",
+      "version": 1,
+      "title": "GIS türevini denetle",
+      "summary": "path'teki, file.export.gis'in yazdığı GeoPackage'ın her satırını açık çizimde kaynağı olan nesneyle karşılaştırır; hiçbir şey yazmaz. Satırın kalıcı kimliği (kentos_uids, yoksa kentos_uid sütunu) çizimdeki nesneyi bulur. Nesnenin türev özeti (kentos_digest: bakışı dışında bütün alanlarının SHA-256'sı, blokta tanımın öznitelikleri de) satırınkinden başkaysa satır stale'dir: kaynak dışa aktarmadan sonra değişti, türev eski. Özet aynıysa satırın geometrisi ve öznitelik sütunları tablonun kaydındaki algoritma ve toleransla yeniden türetilen satırla karşılaştırılır (koordinatlar 1e-9 m içinde); farklıysa satır edited'dır: GIS'te değiştirilmiş, kaynak nesne değişmemiş; hangi alanların (geometry, öznitelik adları) farklı olduğu fields'tadır. Kimliği çizimde olmayan satır source_gone, tablonun katmanında olup satırı olmayan nesne not_exported'tur. Bir tablonun kaydındaki sapma kaydındaki toleransın üstündeyse over_tolerance sayılır. Cevap her tablonun sayılarını, toplamları, dosyanın kaydettiği kaynağı (proje, ad, sürüm) ve eşleşmeyen satırlar önce olmak üzere en çok limit satırı listeler. Türev, kaynağın yerine geçmez: stale ve edited satırlar çizimi değiştirmez ve GIS'teki değişiklik çizime geri yazılmaz.",
+      "aliases": [
+        "turevdenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.gis.derivation` v1, read only: the GeoPackage `path` made by `file.export.gis`, each of its rows\ncompared with the object it came from in the open drawing. Refusals, in order: `invalid_file_path`,\n`file_not_found`, `import_unreadable`, `not_a_derivation`. Warnings: `derivation_stale`, `derivation_edited`.",
+        "properties": {
+          "limit": {
+            "description": "How many rows to list (the ones that do not match come first); 100, at most 1000.",
+            "format": "uint32",
+            "maximum": 1000,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "path": {
+            "description": "The file, an absolute path.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "GisDerivation",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DerivationEntry": {
+            "description": "One row (or missing row) that is listed.",
+            "properties": {
+              "fid": {
+                "description": "The row's fid; none for an object the dataset has no row for.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "fields": {
+                "description": "What differs in an edited row: `geometry` and the attributes' names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The source object's kind as the row records it, or as the drawing has it now.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/DerivationStatus"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid",
+              "status",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "DerivationSource": {
+            "description": "Where a derived dataset came from, as its tables record.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "project": {
+                "description": "The project's lasting id, when it has one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The drawing's revision when the dataset was made.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The project's EPSG code (0 for a local project).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "revision",
+              "srid"
+            ],
+            "type": "object"
+          },
+          "DerivationStatus": {
+            "description": "How a derived row stands against its source.",
+            "oneOf": [
+              {
+                "const": "current",
+                "description": "The source is as it was and the row is what the derivation gives.",
+                "type": "string"
+              },
+              {
+                "const": "stale",
+                "description": "The source changed after the dataset was made: the row is old.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "The source is as it was and the row was changed in the GIS (its geometry or an attribute).",
+                "type": "string"
+              },
+              {
+                "const": "source_gone",
+                "description": "The source object is no longer in the drawing.",
+                "type": "string"
+              },
+              {
+                "const": "not_exported",
+                "description": "A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).",
+                "type": "string"
+              }
+            ]
+          },
+          "DerivationTable": {
+            "description": "A table's counts against the drawing.",
+            "properties": {
+              "current": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "edited": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer of a `layer` table, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "notExported": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "overTolerance": {
+                "description": "Rows whose recorded deviation is over the table's tolerance.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sourceGone": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stale": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "tolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "current",
+              "stale",
+              "edited",
+              "sourceGone",
+              "notExported",
+              "overTolerance",
+              "tolerance",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.gis.derivation` found.",
+        "properties": {
+          "algorithm": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "current": {
+            "description": "Totals over the tables.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edited": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "entries": {
+            "description": "The rows that do not match first, then the matching ones, at most `limit`.",
+            "items": {
+              "$ref": "#/$defs/DerivationEntry"
+            },
+            "type": "array"
+          },
+          "file": {
+            "type": "string"
+          },
+          "notExported": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision now.",
+            "type": "string"
+          },
+          "sameProject": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/$defs/DerivationSource",
+            "description": "Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,\nelse its name)."
+          },
+          "sourceGone": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DerivationTable"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unlisted": {
+            "description": "How many rows were not listed because of `limit`.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "source",
+          "sameProject",
+          "tables",
+          "current",
+          "stale",
+          "edited",
+          "sourceGone",
+          "notExported",
+          "entries",
+          "unlisted",
+          "revision"
+        ],
+        "title": "GisDerived",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DerivationEntry": {
+            "description": "One row (or missing row) that is listed.",
+            "properties": {
+              "fid": {
+                "description": "The row's fid; none for an object the dataset has no row for.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "fields": {
+                "description": "What differs in an edited row: `geometry` and the attributes' names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The source object's kind as the row records it, or as the drawing has it now.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/DerivationStatus"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid",
+              "status",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "DerivationSource": {
+            "description": "Where a derived dataset came from, as its tables record.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "project": {
+                "description": "The project's lasting id, when it has one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The drawing's revision when the dataset was made.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The project's EPSG code (0 for a local project).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "revision",
+              "srid"
+            ],
+            "type": "object"
+          },
+          "DerivationStatus": {
+            "description": "How a derived row stands against its source.",
+            "oneOf": [
+              {
+                "const": "current",
+                "description": "The source is as it was and the row is what the derivation gives.",
+                "type": "string"
+              },
+              {
+                "const": "stale",
+                "description": "The source changed after the dataset was made: the row is old.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "The source is as it was and the row was changed in the GIS (its geometry or an attribute).",
+                "type": "string"
+              },
+              {
+                "const": "source_gone",
+                "description": "The source object is no longer in the drawing.",
+                "type": "string"
+              },
+              {
+                "const": "not_exported",
+                "description": "A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).",
+                "type": "string"
+              }
+            ]
+          },
+          "DerivationTable": {
+            "description": "A table's counts against the drawing.",
+            "properties": {
+              "current": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "edited": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer of a `layer` table, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "notExported": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "overTolerance": {
+                "description": "Rows whose recorded deviation is over the table's tolerance.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sourceGone": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stale": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "tolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "current",
+              "stale",
+              "edited",
+              "sourceGone",
+              "notExported",
+              "overTolerance",
+              "tolerance",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.gis.derivation` found.",
+        "properties": {
+          "algorithm": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "current": {
+            "description": "Totals over the tables.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edited": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "entries": {
+            "description": "The rows that do not match first, then the matching ones, at most `limit`.",
+            "items": {
+              "$ref": "#/$defs/DerivationEntry"
+            },
+            "type": "array"
+          },
+          "file": {
+            "type": "string"
+          },
+          "notExported": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision now.",
+            "type": "string"
+          },
+          "sameProject": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/$defs/DerivationSource",
+            "description": "Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,\nelse its name)."
+          },
+          "sourceGone": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DerivationTable"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unlisted": {
+            "description": "How many rows were not listed because of `limit`.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "source",
+          "sameProject",
+          "tables",
+          "current",
+          "stale",
+          "edited",
+          "sourceGone",
+          "notExported",
+          "entries",
+          "unlisted",
+          "revision"
+        ],
+        "title": "GisDerived",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "not_a_derivation"
+        ],
+        "warnings": [
+          "derivation_stale",
+          "derivation_edited"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dışa aktarılan türev hâlâ güncel mi",
+          "input": {
+            "path": "/veri/parsel-turev.gpkg"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sources.describe",
       "version": 1,
       "title": "Kaynakları tanı",
@@ -993437,6 +994151,7 @@
           "too_many_sources",
           "invalid_extent",
           "invalid_key",
+          "derived_dataset",
           "pending_changes"
         ],
         "warnings": [
@@ -996781,6 +997496,7 @@
           "file_unwritable",
           "pending_changes",
           "invalid_extent",
+          "derived_dataset",
           "topology_on_read",
           "outside_neighbour_invalid"
         ],
@@ -997841,7 +998557,8 @@
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "derived_import"
         ]
       },
       "examples": [
@@ -1038120,6 +1038837,445 @@
       ]
     },
     {
+      "id": "file.export.gis",
+      "version": 1,
+      "title": "GIS türevi dışa aktar",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları) GeoPackage'a türev olarak yazar: çizim kaynak kalır, dosyadaki geometri onun bir türevidir. Her katman bir özellik tablosudur; her satır kaynak nesnenin kalıcı kimliğini (kentos_uid sütunu ve kentos_uids uzantısı) ve türünü (kentos_kind), türev sapmasını metrede (kentos_deviation) ve kaynağın özetini (kentos_digest) taşır, katmanın alanları ve öteki öznitelikler sütun olur; Z ve M köşelerde taşınır. Yaylar, daireler, çoklu çizgilerin yaylı kenarları ve elipsler, eğriler, NURBS düz kirişlerdir (GeoPackage'ın düz geometri türleri; eğri uzantısı yok): kirişler kaynağın eğrisinden en çok tolerance (metre, varsayılan 0,0001) uzakta kalır. Yay, daire ve yaylı kenarlarda algoritma kentos.chords/1'dir (eşit açılı kirişler, uçlar yayın üzerinde, sapma 2·r·sin²(φ/4) ile kesin); elips ve eğride sapma algoritmanın tuttuğu sınırdır, NURBS'ta örnek noktalarında denenen toleranstır. Her tablonun türetim kaydı (https://kentos.app/derivation/1: algoritma, tolerans, kaynak proje, ad ve sürüm, en büyük sapma, kaynak türlerine göre sapmanın nasıl bilindiği, zaman) GeoPackage'ın metadata uzantısındadır. Yazı ve bloklar tolerance'ın yanında annotations'a bağlıdır: table (varsayılan) onları katman tablolarına katmaz, ayrı tablolara yazar (her blok tanımının yerleştirmeleri blok adıyla nokta olarak, bloğun öznitelikleri sütun; yazılar kentos_annotations'ta nokta olarak, sözleri sütunda), skip onları sayar. Ölçü, tarama, kılavuz, tablo, resim, raster, nokta bulutu, yardımcı çizgi ve mimari nesneler yazılmaz; türlerine göre nedeniyle left'te ve export_losses uyarısındadır. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Türevi çizime bağlamak ya da geri yazmak olmaz (derived_dataset); gerçeği cad.gis.derivation sınar.",
+      "aliases": [
+        "gisturev",
+        "gisexport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "GisAnnotations": {
+            "description": "What to do with texts and blocks, which a GIS has no geometry of the same meaning for.",
+            "oneOf": [
+              {
+                "const": "table",
+                "description": "Written to their own tables, never into the layers' feature tables: each block definition's insertions as\npoints with the block's attributes as columns, texts as points with their words.",
+                "type": "string"
+              },
+              {
+                "const": "skip",
+                "description": "Left out and counted.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of\nderived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the\nreason each kind is).",
+        "properties": {
+          "annotations": {
+            "$ref": "#/$defs/GisAnnotations",
+            "default": "table",
+            "description": "Texts and blocks: their own tables (the default) or left out."
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "The file to write, an absolute path (`.gpkg`).",
+            "type": "string"
+          },
+          "tolerance": {
+            "description": "The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGis",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GisLeft": {
+            "description": "Objects of one kind left out of the dataset, and why.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "count",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "GisTableExported": {
+            "description": "A table of the derived dataset.",
+            "properties": {
+              "chorded": {
+                "description": "Rows whose geometry is chords of a curve rather than the source's own points.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "description": "The farthest any of the table's chords comes from its curve (m).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "chorded",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gis` wrote, or with `plan` would write.",
+        "properties": {
+          "algorithm": {
+            "description": "The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).",
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "chorded": {
+            "description": "Rows written as chords of a curve, in all.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Objects not written, by kind, each with its reason.",
+            "items": {
+              "$ref": "#/$defs/GisLeft"
+            },
+            "type": "array"
+          },
+          "maxDeviation": {
+            "description": "The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The drawing's revision the dataset was made from.",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GisTableExported"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "tables",
+          "chorded",
+          "maxDeviation",
+          "revision"
+        ],
+        "title": "GisExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GisLeft": {
+            "description": "Objects of one kind left out of the dataset, and why.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "count",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "GisTableExported": {
+            "description": "A table of the derived dataset.",
+            "properties": {
+              "chorded": {
+                "description": "Rows whose geometry is chords of a curve rather than the source's own points.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "description": "The farthest any of the table's chords comes from its curve (m).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "chorded",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gis` wrote, or with `plan` would write.",
+        "properties": {
+          "algorithm": {
+            "description": "The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).",
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "chorded": {
+            "description": "Rows written as chords of a curve, in all.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Objects not written, by kind, each with its reason.",
+            "items": {
+              "$ref": "#/$defs/GisLeft"
+            },
+            "type": "array"
+          },
+          "maxDeviation": {
+            "description": "The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The drawing's revision the dataset was made from.",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GisTableExported"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "tables",
+          "chorded",
+          "maxDeviation",
+          "revision"
+        ],
+        "title": "GisExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_tolerance",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parseller 1 mm toleransla",
+          "input": {
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel-turev.gpkg",
+            "tolerance": 0.001
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.sld",
       "version": 1,
       "title": "Görünüşü SLD olarak dışa aktar",
@@ -1042113,6 +1043269,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dışa aktarma birden çok Shapefile yapıyor (birden çok katman ya da geometri türü); .shp yerine bir klasör ya da .zip verin."
+    },
+    {
+      "code": "derived_dataset",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablo çizimden türetilmiş bir GIS verisi: kaynak çizimdedir, türev geometrisi (kirişler) kaynağın yerine geçmez. Bağlanmaz, katmana okunmaz, geri yazılmaz; GIS'te yapılanı cad.gis.derivation gösterir."
+    },
+    {
+      "code": "derived_import",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alınan tablo çizimden türetilmiş bir GIS verisi: geometrisi kaynak yayların kirişleridir, yay olarak değil çoklu çizgi ve alan olarak alındı."
+    },
+    {
+      "code": "not_a_derivation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyada KentOS'un türetim kaydı yok; file.export.gis'in yazdığı bir dosya değil."
+    },
+    {
+      "code": "derivation_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Türevin bazı satırlarının kaynağı dışa aktarmadan sonra değişti ya da silindi; türev eski. Yeniden dışa aktarın."
+    },
+    {
+      "code": "derivation_edited",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz."
     },
     {
       "code": "invalid_sld",
