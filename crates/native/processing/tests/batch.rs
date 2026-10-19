@@ -398,3 +398,59 @@ fn batch_timing() {
         digest.len()
     );
 }
+
+// docs/adr/0535: a raster tool's record names its grids: the source read, its band and the cells worked out (an
+// area's), and the result written on the source's grid from the window's first cell.
+#[test]
+fn a_raster_run_records_its_grids() {
+    setup();
+    let dir = std::env::temp_dir().join(format!("kentos-grids-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let tif = dir.join("tepe.tif");
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    std::fs::copy(root.join("terrain/v1/tepe.tif"), &tif).expect("copied");
+    let text = std::fs::read_to_string(root.join("processing/v1/surface.kcad"))
+        .expect("the drawing")
+        .replace(
+            "\"tepe.tif\"",
+            &serde_json::to_string(&tif.display().to_string()).unwrap(),
+        );
+    let mut doc = Document::from_snapshot(DocumentSnapshotV1::from_json(&text).expect("reads"))
+        .expect("opens");
+    let run = ProcessingRun {
+        tool: "surface.slope".into(),
+        parameters: values(&[
+            ("input", json!({ "scope": "uids", "uids": [uid(&doc, 1)] })),
+            ("area", json!("objects")),
+            (
+                "areaObjects",
+                json!({ "scope": "layer", "layerId": "alan" }),
+            ),
+            ("add", json!(false)),
+        ]),
+        selection: Vec::new(),
+        view: None,
+        sink: None,
+    };
+    let (ran, _) = tools()
+        .expect("registered")
+        .run(&mut doc, &run, true)
+        .expect("runs");
+    let grids = &ran.record.grids;
+    assert_eq!(grids.len(), 2, "{grids:?}");
+    assert_eq!(grids[0].role, "input");
+    assert_eq!(grids[0].window, Some([8, 10, 11, 11]));
+    assert_eq!(
+        (grids[0].width, grids[0].height, grids[0].band),
+        (41, 33, Some(1))
+    );
+    assert_eq!(grids[1].role, "output");
+    assert_eq!((grids[1].width, grids[1].height), (11, 11));
+    assert_eq!(
+        grids[1].affine,
+        [500180.0, 10.0, 0.0, 4420230.0, 0.0, -10.0]
+    );
+    let out = grids[1].file.clone().expect("the result's file");
+    assert!(std::path::Path::new(&out).exists(), "{out}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -5,8 +5,8 @@ use kentos_raster::insolation::MONTH_NAMES;
 use serde_json::{Value, json};
 
 use super::{
-    CATEGORY, band_param, choice, method_param, number, raster_param, result_layer, run_lines,
-    run_raster, whole, z_param,
+    CATEGORY, area_params, band_param, choice, method_param, number, raster_param, result_layer,
+    run_lines, run_raster, whole, z_param,
 };
 use crate::builtin::pointcloud::{add_param, output_param};
 use crate::types::{OutputDef, OutputKind, ParamDef, ParamKind, RunResult, Target, Tool, Values};
@@ -58,15 +58,17 @@ fn tool(
 }
 
 /// The parameters every raster tool ends with: Çıktı dosyası, Çizime ekle, Çıktı katmanı.
-fn ends(suffix: &str, layer: &str) -> [ParamDef; 3] {
-    [
+fn ends(suffix: &str, layer: &str) -> Vec<ParamDef> {
+    let mut p = area_params().to_vec();
+    p.extend([
         output_param(suffix, &[".tif"]),
         add_param(),
         result_layer(layer, RASTER_LAYER),
-    ]
+    ]);
+    p
 }
 
-const HELP_SOURCE: &str = "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir.";
+const HELP_SOURCE: &str = "Raster tek bir yükseklik rasteridir (DEM); bandın nodata'sı ve NaN boş sayılır. Pencerenin dışında kalan komşu kenar hücresinin, boş komşu merkezin değerini alır; boş hücrenin sonucu boştur. Coğrafi (derece) rasterde türevler satırın enleminde metreye çevrilir. Kapsam nesnelerin kutusuysa yalnız kutunun değdiği hücreler, kaynağın ızgarasında yazılır; kenardaki hücrelerin komşuları kaynaktan okunur, değerler bütün rasterinkiyle aynıdır.";
 const HELP_OUTPUT: &str = "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa kaynağın yanına adının sonuna ek konarak yazılır. Çizime ekle açıksa raster yeni katmana eklenir; görünüşü Raster stili ile değişir.";
 
 pub fn slope() -> Tool {
@@ -506,8 +508,10 @@ pub fn contours() -> Tool {
             .describe("Bu kadar eğride bir ana eğri (kalın çizilir)."),
         number("simplify", "Sadeleştir", 0.0, 0.0, 1e4, "m")
             .describe("Douglas-Peucker toleransı; 0 sadeleştirmez."),
-        result_layer("Eş yükselti eğrileri", CONTOUR_LAYER),
     ];
+    let mut p = p;
+    p.extend(area_params());
+    p.push(result_layer("Eş yükselti eğrileri", CONTOUR_LAYER));
     tool(
         ("surface.contours", "Eş yükselti eğrileri", "contours"),
         "Yükseklik rasterinden kotlu eş yükselti eğrileri (ana ve ara) çıkarır.",

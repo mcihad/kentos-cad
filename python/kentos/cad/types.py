@@ -30402,6 +30402,8 @@ class ProcessingRecord(_Model):
         steps: The tool as one step, a model's steps in order, a batch's rows in order.
         total: What flowed through the whole, counted when it ended.
         definition: A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
+        grids: The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same
+            grids gives the same cells.
         inputs: The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
         seed: The seed a tool with one took (its `seed` parameter). Unit: 1.
         selection: The input's own `selection` and `view`.
@@ -30423,6 +30425,7 @@ class ProcessingRecord(_Model):
     steps: list[RecordStep]
     total: RecordTotal
     definition: str | None | Unset = UNSET
+    grids: list[RecordGrid] | Unset = UNSET
     inputs: list[RunInput] | Unset = UNSET
     seed: int | None | Unset = UNSET
     selection: list[str] | Unset = UNSET
@@ -30447,6 +30450,8 @@ class ProcessingRecord(_Model):
         out["total"] = self.total.to_json()
         if self.definition is not UNSET:
             out["definition"] = self.definition
+        if self.grids is not UNSET:
+            out["grids"] = [e0.to_json() for e0 in self.grids]
         if self.inputs is not UNSET:
             out["inputs"] = [e0.to_json() for e0 in self.inputs]
         if self.seed is not UNSET:
@@ -30477,6 +30482,7 @@ class ProcessingRecord(_Model):
             steps=[RecordStep.from_json(e0) for e0 in data["steps"]],
             total=RecordTotal.from_json(data["total"]),
             definition=data.get("definition", UNSET),
+            grids=[RecordGrid.from_json(e0) for e0 in data["grids"]] if "grids" in data else UNSET,
             inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
             seed=data.get("seed", UNSET),
             selection=list(data["selection"]) if "selection" in data else UNSET,
@@ -33017,6 +33023,64 @@ class RecordEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordGrid(_Model):
+    """A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the
+    band read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).
+    Attributes:
+        role: `input` or `output`.
+        affine: `[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j. Unit: system.
+        width: Unit: count.
+        height: Unit: count.
+        band: The band read (1 and up); none for a result. Unit: index.
+        file: The raster's file (its path as the object names it), or none for one embedded.
+        nodata: The value taken as empty; none: NaN only (or the file's own for a source read with its own). Unit: value.
+        srid: The raster's EPSG/SRID; none when it has none. Unit: epsg.
+        window: A source's cells worked out: first column, first row, columns, rows. Unit: index.
+    """
+    role: str
+    affine: list[float]
+    width: int
+    height: int
+    band: int | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    window: list[int] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["role"] = self.role
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["width"] = self.width
+        out["height"] = self.height
+        if self.band is not UNSET:
+            out["band"] = self.band
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.window is not UNSET:
+            out["window"] = None if self.window is None else list(self.window)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordGrid:
+        return cls(
+            role=data["role"],
+            affine=[float(e0) for e0 in data["affine"]],
+            width=data["width"],
+            height=data["height"],
+            band=data.get("band", UNSET),
+            file=data.get("file", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            srid=data.get("srid", UNSET),
+            window=UNSET if "window" not in data else None if data["window"] is None else list(data["window"]),
         )
 
 
@@ -54568,6 +54632,7 @@ __all__ = [
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
+    "RecordGrid",
     "RecordRow",
     "RecordStep",
     "RecordTotal",

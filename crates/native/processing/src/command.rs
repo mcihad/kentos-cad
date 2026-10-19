@@ -759,6 +759,7 @@ fn record_of(
     tool: &Tool,
     model: Option<&Model>,
     ran: &RunRecord,
+    grids: Vec<kentos_contracts::RecordGrid>,
 ) -> ProcessingRecord {
     let steps = if model.is_some() {
         ran.steps
@@ -803,6 +804,7 @@ fn record_of(
         host: host_name().into(),
         started_at: utc_at(ran.started),
         ms: ran.ms,
+        grids,
         steps,
         total: RecordTotal {
             records_in: ran.records_in,
@@ -862,6 +864,10 @@ fn batch_record(
         host: host_name().into(),
         started_at: utc_at(clock.0),
         ms: clock.1.elapsed().as_millis() as u64,
+        grids: rows
+            .iter()
+            .flat_map(|r| r.ran.record.grids.iter().cloned())
+            .collect(),
         steps: rows
             .iter()
             .map(|r| RecordStep {
@@ -983,7 +989,7 @@ fn run_on(
                 inputs,
                 sink: None,
                 step: edited.then(|| tool.label.clone()),
-                record: record_of(begun, &tool, model.as_ref(), &record),
+                record: record_of(begun, &tool, model.as_ref(), &record, result.grids.clone()),
                 revision: doc.revision().to_string(),
             };
             Ok((ran, added))

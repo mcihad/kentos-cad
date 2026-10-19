@@ -11,7 +11,9 @@ stili, raster nesnesinin alanları (kaynağın yeri ve boyu, sonucun bantları v
 Yazılan dosyanın değerleri yüzey analizinin bağımsız başvurusuna bağlanır (`rasterOf`: dosyanın 0. katı
 fixtures/terrain/v1/cases.json'daki adı verilen durumun değerleri), eğriler eğrilerinkine (`contoursOf`:
 eklenen çoklu çizgiler fixtures/contours/v1/cases.json'daki durumun eğrileri; köşeleri, kotları, Kot ve
-Tür'ü, ana eğrinin kalınlığı). Sonucun yeni katmanı kaynağın katmanının hemen üstündedir (`layerAbove`). İki oynatıcı (apps/web/src/processing/surface.test.ts,
+Tür'ü, ana eğrinin kalınlığı). Kapsam nesnelerin kutusuysa (docs/adr/0535) sonuç kaynağın ızgarasında, kutunun
+değdiği hücrelerdir: hücreler burada afinin tersiyle bulunur (kutunun köşeleri pikselde, tam hücrelere genişletilip
+rastere kırpılarak) ve `rasterOf` bütün rasterin başvurusunun o hücrelerini ister (`window`). Sonucun yeni katmanı kaynağın katmanının hemen üstündedir (`layerAbove`). İki oynatıcı (apps/web/src/processing/surface.test.ts,
 crates/native/processing/tests/surface.rs) çizimi açar, aracı ev sahibinin dosyalarıyla çalıştırır
 (rasterler `rasters`'ın dosyalarından okunur, sonuçlar bellekte toplanır) ve sonucu bunlarla karşılaştırır.
 """
@@ -55,7 +57,8 @@ def drawing():
         "name": "İşlem durumları: yüzey analizi",
         "settings": {"srid": 5254, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
         "origin": {"x": 500000, "y": 4420000},
-        "layers": [layer("dem", "DEM", "#8D6E63"), layer("cizim", "Çizim", "fg")],
+        "layers": [layer("dem", "DEM", "#8D6E63"), layer("cizim", "Çizim", "fg"), layer("alan", "Alan", "fg"),
+                   layer("kenar", "Kenar", "fg"), layer("disarida", "Dışarıda", "fg"), layer("bos", "Boş", "fg")],
         "activeLayer": "dem",
         "entities": [
             raster(1, tepe),
@@ -63,9 +66,43 @@ def drawing():
             {"kind": "polyline", "id": 3, "layerId": "cizim", "attrs": {}, "pts": [{"x": 500150, "y": 4420150}, {"x": 500300, "y": 4420250}]},
             # tepe placed on a sheared grid (its axes not at right angles), as a raster may be placed by hand.
             {**raster(4, tepe), "affine": [500100.0, 10.0, 3.0, 4420330.0, 0.0, -10.0]},
+            # The analysis areas (docs/adr/0535): one inside tepe, one past its top and right sides, one beside it.
+            polygon(5, "alan", AREA_INSIDE),
+            polygon(6, "kenar", AREA_EDGE),
+            polygon(7, "disarida", AREA_BESIDE),
         ],
         "styles": {"items": [], "categories": []},
     }
+
+
+# The areas' boxes (minimum east, north, maximum east, north).
+AREA_INSIDE = (500183.0, 4420121.0, 500287.5, 4420226.0)
+AREA_EDGE = (500350.0, 4420250.0, 500600.0, 4420400.0)
+AREA_BESIDE = (400000.0, 4420000.0, 400100.0, 4420100.0)
+
+
+def polygon(id, layer, box):
+    x0, y0, x1, y1 = box
+    pts = [{"x": x0, "y": y0}, {"x": x1, "y": y0}, {"x": x1, "y": y1}, {"x": x0, "y": y1}]
+    return {"kind": "polygon", "id": id, "layerId": layer, "attrs": {}, "pts": pts}
+
+
+def window_of(d, box):
+    """The source's cells a box touches (docs/adr/0535): its corners in pixel coordinates by the inverse of an
+    axis-aligned affine, widened to whole cells (a side within 1e-9 of a cell's edge takes no cell beyond it),
+    clipped to the raster. None when it is beside the raster."""
+    import math
+    e, a, b, n, c, dd = d["affine"]
+    assert b == 0 and c == 0, "an axis-aligned DEM"
+    xs = [(box[0] - e) / a, (box[2] - e) / a]
+    ys = [(box[1] - n) / dd, (box[3] - n) / dd]
+    i0 = min(max(math.floor(min(xs) + 1e-9), 0), d["width"])
+    j0 = min(max(math.floor(min(ys) + 1e-9), 0), d["height"])
+    i1 = min(max(math.ceil(max(xs) - 1e-9), 0), d["width"])
+    j1 = min(max(math.ceil(max(ys) - 1e-9), 0), d["height"])
+    if i1 <= i0 or j1 <= j0:
+        return None
+    return [i0, j0, i1 - i0, j1 - j0]
 
 
 # ── The tools' rules ─────────────────────────────────────────────────────
@@ -94,23 +131,29 @@ STYLES = {
 }
 
 
-def raster_case(id, title, tool, values, *, suffix, layer, terrain, style, bands=1, sample="f32", name=None, add=True, source="tepe", selection=(1,)):
+def raster_case(id, title, tool, values, *, suffix, layer, terrain, style, bands=1, sample="f32", name=None, add=True, source="tepe", selection=(1,), area=None):
     d = dem(source)
     stem = Path(d["file"]).stem
     out = name or f"{stem}{suffix}.tif"
+    affine, width, height, of = d["affine"], d["width"], d["height"], terrain
+    if area is not None:
+        x0, y0, width, height = win = window_of(d, area)
+        e, a, b, n, c, dd = affine
+        affine = [e + a * x0 + b * y0, a, b, n + c * x0 + dd * y0, c, dd]
+        of = {"case": terrain, "window": win}
     expect = {
         "status": "ok",
-        "summary": f"{words(d['width'])} × {words(d['height'])} hücrelik raster; “{out}” yazıldı.",
+        "summary": f"{words(width)} × {words(height)} hücrelik raster; “{out}” yazıldı.",
         "undo": tool_label(tool) if add else None,
         "layers": [new_layer(layer, RASTER_LAYER)] if add else [],
         "added": [
             {
-                "kind": "raster", "layerId": layer_id(layer), "attrs": {}, "affine": d["affine"], "width": d["width"], "height": d["height"],
+                "kind": "raster", "layerId": layer_id(layer), "attrs": {}, "affine": affine, "width": width, "height": height,
                 "bands": bands, "sample": sample, "file": out, "srid": 5254, "style": style,
             }
         ] if add else [],
         "outputs": {"file": out},
-        "rasterOf": {out: terrain},
+        "rasterOf": {out: of},
     }
     if add:
         # The result's new layer right above its source's (a raster under it would hide it).
@@ -148,7 +191,8 @@ def contour_case(k):
 
 
 def defaults():
-    raster_values = lambda layer, suffix_extra: {"input": {"scope": "selection"}, "band": 1, **suffix_extra, "output": "", "add": True, "layer": {"newName": layer}}
+    area = {"area": "raster", "areaObjects": {"scope": "selection"}}
+    raster_values = lambda layer, suffix_extra: {"input": {"scope": "selection"}, "band": 1, **suffix_extra, **area, "output": "", "add": True, "layer": {"newName": layer}}
     return {
         "surface.slope": raster_values("Eğim", {"method": "horn", "unit": "degrees", "zFactor": 1}),
         "surface.aspect": raster_values("Bakı", {"method": "horn", "zFactor": 1}),
@@ -162,7 +206,7 @@ def defaults():
             "Güneşlenme",
             {"period": "year", "startDay": 21, "startMonth": "6", "endDay": 21, "endMonth": "9", "dayStep": 14, "hourStep": "0.5", "transmissivity": 0.5, "latitude": None, "zFactor": 1},
         ),
-        "surface.contours": {"input": {"scope": "selection"}, "band": 1, "interval": 5, "base": 0, "indexEvery": 5, "simplify": 0, "layer": {"newName": "Eş yükselti eğrileri"}},
+        "surface.contours": {"input": {"scope": "selection"}, "band": 1, "interval": 5, "base": 0, "indexEvery": 5, "simplify": 0, **area, "layer": {"newName": "Eş yükselti eğrileri"}},
     }
 
 
@@ -191,6 +235,24 @@ def cases():
                     {"period": "range", "startDay": 1, "startMonth": "6", "endDay": 31, "endMonth": "8", "dayStep": 7, "hourStep": "1", "transmissivity": 0.6},
                     suffix="-gunes", layer="Güneşlenme", terrain=terrain_case("Güneşlenme (1 Haziran–31 Ağustos, 7 gün, 1 saat, 0,6)"), style=STYLES["ramp"]("Sıcaklık")),
     ]
+    on = lambda layer: {"area": "objects", "areaObjects": {"scope": "layer", "layerId": layer}}
+    out += [
+        raster_case("slope-area", "Eğim, Kapsam nesnelerin kutusu: yalnız kutunun hücreleri, bütün rasterin değerleriyle", "surface.slope",
+                    on("alan"), suffix="-egim", layer="Eğim", terrain=terrain_case("Eğim (derece, Horn)"), style=STYLES["ramp"]("Spektral"),
+                    area=AREA_INSIDE),
+        raster_case("hillshade-area-edge", "Gölgeli kabartma, kutu rasterin üst ve sağ kenarını aşar: rastere kırpılır", "surface.hillshade",
+                    {"azimuth": 135, "altitude": 30, "zFactor": 2, **on("kenar")}, suffix="-golge", layer="Gölgeli kabartma",
+                    terrain=terrain_case("Gölgeli kabartma (135, 30, 2)"), style=STYLES["gray"], sample="u8", area=AREA_EDGE),
+        raster_case("curvature-area", "Eğrilik, toplam, z 2, Kapsam nesnelerin kutusu", "surface.curvature",
+                    {"curvature": "total", "zFactor": 2, **on("alan")}, suffix="-egrilik", layer="Eğrilik",
+                    terrain=terrain_case("Eğrilik (toplam, z 2)"), style=STYLES["ramp"]("Mavi-kırmızı", "percent"), area=AREA_INSIDE),
+        raster_case("insolation-area", "Güneşlenme, Kapsam nesnelerin kutusu: satırın enlemi kaynağın satırınınki", "surface.insolation",
+                    {"period": "range", "startDay": 1, "startMonth": "6", "endDay": 31, "endMonth": "8", "dayStep": 7, "hourStep": "1",
+                     "transmissivity": 0.6, **on("kenar")},
+                    suffix="-gunes", layer="Güneşlenme", terrain=terrain_case("Güneşlenme (1 Haziran–31 Ağustos, 7 gün, 1 saat, 0,6)"),
+                    style=STYLES["ramp"]("Sıcaklık"), area=AREA_EDGE),
+    ]
+    assert window_of(dem("tepe"), AREA_BESIDE) is None
     c = contour_case(2)
     out.append({
         "id": "contours", "title": "Eş yükselti eğrileri, tepe, 5 m, her beşincisi ana: kotlu çoklu çizgiler", "document": "surface.kcad", "selection": [1],
@@ -213,6 +275,9 @@ def cases():
             "expect": {"status": "invalid", "issues": [{"param": "input", "message": "“Raster”: seçili nesneler arasında uygun nesne yok. Önce nesneleri seçin ya da kapsamı değiştirin."}]},
         },
         refused("band", "2. bant: rasterin bir bandı var", "surface.hillshade", {"band": 2}, "Rasterin 1 bandı var; 2. bant yok."),
+        refused("area-beside", "Kapsam nesnelerin kutusu rasterin dışında: reddedilir", "surface.slope",
+                {"area": "objects", "areaObjects": {"scope": "layer", "layerId": "disarida"}},
+                "Analiz alanı rasterle kesişmiyor; rasterin üstünde bir alan verin."),
         refused("sheared-curvature", "Eğrilik eğik pikselli rasterde (eksenleri dik değil): dik piksel ister", "surface.curvature", {},
                 "Eğrilik dik pikselli raster ister; bu rasterin pikselleri eğik (afinin eksenleri dik değil).", selection=(4,)),
         {

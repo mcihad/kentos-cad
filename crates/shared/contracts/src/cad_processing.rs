@@ -305,10 +305,58 @@ pub struct ProcessingRecord {
     /// How long the whole took, milliseconds.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
     pub ms: u64,
+    /// The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same
+    /// grids gives the same cells.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RecordGrid>>", optional))]
+    pub grids: Vec<RecordGrid>,
     /// The tool as one step, a model's steps in order, a batch's rows in order.
     pub steps: Vec<RecordStep>,
     /// What flowed through the whole, counted when it ended.
     pub total: RecordTotal,
+}
+
+/// A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the
+/// band read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordGrid {
+    /// `input` or `output`.
+    pub role: String,
+    /// The raster's file (its path as the object names it), or none for one embedded.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub file: Option<String>,
+    /// `[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub affine: [f64; 6],
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub width: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub height: u32,
+    /// The band read (1 and up); none for a result.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub band: Option<u32>,
+    /// The value taken as empty; none: NaN only (or the file's own for a source read with its own).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "value")))]
+    pub nodata: Option<f64>,
+    /// The raster's EPSG/SRID; none when it has none.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    /// A source's cells worked out: first column, first row, columns, rows.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub window: Option<[u32; 4]>,
 }
 
 /// A step of a run (docs/adr/0529 §2).

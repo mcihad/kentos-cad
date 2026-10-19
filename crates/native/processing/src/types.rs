@@ -730,6 +730,8 @@ pub struct RunResult {
     /// A layer whose look and fields a new layer of the run's layer
     /// parameters takes (docs/adr/0217 §7).
     pub like: Option<String>,
+    /// The rasters a raster tool read and wrote with their grids, for the run's record (docs/adr/0535).
+    pub grids: Vec<kentos_contracts::RecordGrid>,
 }
 
 /// A layer or group a run makes (docs/adr/0217 §7): its key (what the run's

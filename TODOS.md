@@ -218,6 +218,10 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-30` raster analizinde alan ve ızgaralar (ADR 0535, 20 Ekim): web'de gerekenler: çözümleme işçisinin raster işine
+  `window` (WASM bağlayıcısı `Spec`'i olduğu gibi alır), yüzey araçlarının Kapsam ve Alan nesneleri parametreleri, sonucun nesnesi
+  pencerenin ızgarasıyla; `fixtures/processing/v1/surface.json`'un yeni varsayılanları ve beş alan durumu (`rasterOf`'un `window`'u)
+  web'in oynatıcısında (`apps/web/src/processing/surface.test.ts`); çalışma kaydının `grids`'i.
 - [ ] `CBS-15` bağlı katmanda form ve ilişki işlemi (ADR 0532, 19 Ekim): web'de gerekenler: bağlı katman web'e gelince
   `cad.sources.sync`'in `with`'i ve `cad.forms.submit`'in `commit`'i, `cad.sources.relate` ve `cad.records.page`'in işleyicileri,
   İlişkiler penceresinin Dosyada bölümü, Formla düzenle'nin Kaynağa da yaz'ı; ortak durumlar `fixtures/commands/v1/cad.sources.relate.json`,
@@ -2010,6 +2014,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-30` raster analizinde alan ve ızgaralar (dilim): yüzey analizinin sekiz aracında Kapsam (Bütün raster, Nesnelerin
+  kutusu): sonuç kaynağın ızgarasında kutunun değdiği hücreler, kenar hücrelerinin komşuları kaynaktan okunur, değerler bütün
+  rasterin aynı hücreleriyle bit bit aynı (`Spec.window`, `window_of`, `window_affine`); çalışma kaydında `grids` (girdinin dosyası,
+  afini, boyu, bandı, nodata'sı, sistemi ve penceresi; sonucun ızgarası). Kalan: öbür raster aileleri, ortak analiz ortamı (hücre boyu,
+  hizalama rasteri, NoData), tam geçişli araçlara disk ara dosyası, sağlayıcı karolarının bağımsız karşılaştırması, belirsizlik
+  raporu. — **20 Ekim, [ADR 0535](docs/adr/0535-raster-analysis-area-and-grids.md).**
 - [ ] `CBS-15` bağlı katmanda form ve ilişki işlemi (dilim): `cad.sources.sync`'in `with`'i ve `cad.forms.submit`'in `commit`'i üst
   ve alt kayıtları bağlı GeoPackage'a tek SQLite işleminde yazar (biri reddedilirse ne dosyaya ne çizime bir şey; ayrı dosya ya da
   PostGIS `transaction_split`); `cad.sources.relate` (check, map, unmap) çoktan çoğa başvuruyu OGC 18-000 ilişki profiline

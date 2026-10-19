@@ -49,6 +49,80 @@ pub struct Spec {
     /// (`crs::System`'s JSON); none for a local project.
     #[serde(default)]
     pub system: Option<serde_json::Value>,
+    /// The analysis area (docs/adr/0535): minimum east, north, maximum east, north in the drawing. The result is
+    /// the source's cells the area touches, on the source's own grid, each worked out from its neighbours in the
+    /// source as the whole raster's would be (the cells round the area are read, not repeated); none: the whole.
+    #[serde(default)]
+    pub window: Option<[f64; 4]>,
+}
+
+/// The cells of the source a run works out: the first column and row, the columns and rows.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct Window {
+    pub x0: u32,
+    pub y0: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+/// How far within a cell a side of the area may lie and still be taken as on the cell's edge.
+const EDGE: f64 = 1e-9;
+
+/// The source's cells an area touches (docs/adr/0535): its corners taken into pixel coordinates by the inverse of
+/// the frame's affine, widened to whole cells, clipped to the raster. An area beside the raster is refused.
+pub fn window_of(frame: &Frame, area: [f64; 4]) -> Result<Window, String> {
+    let [xmin, ymin, xmax, ymax] = area;
+    if !area.iter().all(|v| v.is_finite()) || xmin > xmax || ymin > ymax {
+        return Err(
+            "Analiz alanı en küçük doğu, kuzey, en büyük doğu, kuzey sırasıyla dört sayı olmalı."
+                .into(),
+        );
+    }
+    let [e, a, b, n, c, d] = frame.affine;
+    let det = a * d - b * c;
+    let pixel = |x: f64, y: f64| {
+        let (dx, dy) = (x - e, y - n);
+        ((d * dx - b * dy) / det, (a * dy - c * dx) / det)
+    };
+    let corners = [
+        pixel(xmin, ymin),
+        pixel(xmax, ymin),
+        pixel(xmin, ymax),
+        pixel(xmax, ymax),
+    ];
+    let (mut i0, mut j0, mut i1, mut j1) = (
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    );
+    for (i, j) in corners {
+        i0 = i0.min(i);
+        j0 = j0.min(j);
+        i1 = i1.max(i);
+        j1 = j1.max(j);
+    }
+    let (w, h) = (f64::from(frame.width), f64::from(frame.height));
+    let x0 = (i0 + EDGE).floor().clamp(0.0, w);
+    let y0 = (j0 + EDGE).floor().clamp(0.0, h);
+    let x1 = (i1 - EDGE).ceil().clamp(0.0, w);
+    let y1 = (j1 - EDGE).ceil().clamp(0.0, h);
+    if x1 <= x0 || y1 <= y0 {
+        return Err("Analiz alanı rasterle kesişmiyor; rasterin üstünde bir alan verin.".into());
+    }
+    Ok(Window {
+        x0: x0 as u32,
+        y0: y0 as u32,
+        width: (x1 - x0) as u32,
+        height: (y1 - y0) as u32,
+    })
+}
+
+/// The affine of a window's grid: the source's, its origin at the window's first cell (the whole raster's exactly).
+pub fn window_affine(affine: [f64; 6], w: Window) -> [f64; 6] {
+    let [e, a, b, n, c, d] = affine;
+    let (i, j) = (f64::from(w.x0), f64::from(w.y0));
+    [e + a * i + b * j, a, b, n + c * i + d * j, c, d]
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
@@ -209,7 +283,10 @@ pub struct Job {
     reader: Reader,
     band: u32,
     nodata: Option<f64>,
+    /// The whole source's frame: a row's axes and latitude are the source row's.
     frame: Frame,
+    /// The cells worked out (the whole raster without an area).
+    win: Window,
     work: Work,
     /// The first pass works out the band's least and largest (Renkli kabartma's ramp).
     stats_pass: bool,
@@ -266,6 +343,16 @@ impl Job {
         };
         let geographic = system.as_ref().is_some_and(System::is_geographic);
         let frame = Frame::new(spec.affine, info.width, info.height, geographic)?;
+        let win = match spec.window {
+            Some(area) => window_of(&frame, area)?,
+            None => Window {
+                x0: 0,
+                y0: 0,
+                width: info.width,
+                height: info.height,
+            },
+        };
+        let out_affine = window_affine(spec.affine, win);
         let nodata = spec.nodata.or(info.nodata);
         let mut stats_pass = false;
         let (work, sample, bands, alpha, out_nodata) = match &spec.tool {
@@ -462,12 +549,15 @@ impl Job {
                 if let Some(p) = s.problem() {
                     return Err(p);
                 }
+                // The lines are worked out in the window's own grid (its rows from 0).
+                let lines_frame = Frame::new(out_affine, win.width, win.height, geographic)?;
                 let job = Job {
                     reader,
                     band: spec.band,
                     nodata,
                     frame: frame.clone(),
-                    work: Work::Contours(Box::new(Contourer::new(s, frame))),
+                    win,
+                    work: Work::Contours(Box::new(Contourer::new(s, lines_frame))),
                     stats_pass: false,
                     lo: f64::INFINITY,
                     hi: f64::NEG_INFINITY,
@@ -482,14 +572,14 @@ impl Job {
         };
         let (out, header) = Out::new(
             OutSpec {
-                width: info.width,
-                height: info.height,
+                width: win.width,
+                height: win.height,
                 bands,
                 sample,
                 alpha,
                 nodata: out_nodata,
                 geo: Geo {
-                    affine: spec.affine,
+                    affine: out_affine,
                     epsg: spec.epsg,
                     geographic,
                 },
@@ -502,6 +592,7 @@ impl Job {
                 band: spec.band,
                 nodata,
                 frame,
+                win,
                 work,
                 stats_pass,
                 lo: f64::INFINITY,
@@ -527,23 +618,38 @@ impl Job {
         }
     }
 
-    /// The next strip's rows: first and count.
+    /// The next strip's rows: first (the window's) and count.
     fn strip(&self) -> (u32, u32) {
-        let h = self.frame.height;
+        let h = self.win.height;
         (self.next, TILE.min(h - self.next.min(h)))
     }
 
-    /// The region the next strip reads: x, y, width, height (level 0; the
-    /// reader repeats the raster's edge past its sides).
+    /// The region the next strip reads: x, y, width, height (level 0, the
+    /// source's pixels; the reader repeats the raster's edge past its sides,
+    /// a window's halo inside the raster is read).
     fn region(&self) -> (i64, i64, u32, u32) {
         let (y0, n) = self.strip();
         let (side, above, below) = self.halo();
         (
-            -i64::from(side),
-            i64::from(y0) - i64::from(above),
-            self.frame.width + 2 * side,
+            i64::from(self.win.x0) - i64::from(side),
+            i64::from(self.win.y0) + i64::from(y0) - i64::from(above),
+            self.win.width + 2 * side,
             n + above + below,
         )
+    }
+
+    /// The result's grid: its affine, columns and rows (the window's; the source's without an area).
+    pub fn grid(&self) -> ([f64; 6], u32, u32) {
+        (
+            window_affine(self.frame.affine, self.win),
+            self.win.width,
+            self.win.height,
+        )
+    }
+
+    /// The cells worked out.
+    pub fn window(&self) -> Window {
+        self.win
     }
 
     /// The blocks the next step reads that the reader does not hold.
@@ -644,13 +750,13 @@ impl Job {
 
     /// Whether every strip is done.
     pub fn done(&self) -> bool {
-        !self.stats_pass && self.next >= self.frame.height
+        !self.stats_pass && self.next >= self.win.height
     }
 
     /// The share done, 0..1 (the first pass of two counts as a fifth).
     pub fn share(&self) -> f64 {
-        let h = f64::from(self.frame.height.max(1));
-        let f = f64::from(self.next.min(self.frame.height)) / h;
+        let h = f64::from(self.win.height.max(1));
+        let f = f64::from(self.next.min(self.win.height)) / h;
         match (&self.work, self.stats_pass) {
             (Work::Relief(..), true) => 0.2 * f,
             (Work::Relief(..), false) => 0.2 + 0.8 * f,
@@ -703,7 +809,9 @@ impl Job {
         }
         let (w, _) = self.read_strip()?;
         let (y0, n) = self.strip();
-        let width = self.frame.width as usize;
+        let width = self.win.width as usize;
+        // The source row of the strip's first: a row's axes and latitude are the source's.
+        let row0 = self.win.y0 + y0;
         if self.stats_pass {
             for &v in &self.heights {
                 if !v.is_nan() {
@@ -716,7 +824,7 @@ impl Job {
                 }
             }
             self.next += n;
-            if self.next >= self.frame.height {
+            if self.next >= self.win.height {
                 // The ramp's bounds are the band's: the second pass colours.
                 self.stats_pass = false;
                 self.next = 0;
@@ -735,7 +843,7 @@ impl Job {
                 let kernel = *kernel;
                 let z = kernel.z();
                 let frames: Vec<RowFrame> = (0..n)
-                    .map(|r| RowFrame::new(self.frame.axes(y0 + r), z))
+                    .map(|r| RowFrame::new(self.frame.axes(row0 + r), z))
                     .collect();
                 let heights = &self.heights;
                 let out = self.out.as_mut().ok_or("Sonuç rasteri yok.")?;
@@ -806,7 +914,7 @@ impl Job {
                     .map(|r| match latitude {
                         Latitude::Fixed(phi) => Ok(*phi),
                         Latitude::System(s) => {
-                            let (x, y) = frame.point(f64::from(frame.width) / 2.0, f64::from(y0 + r) + 0.5);
+                            let (x, y) = frame.point(f64::from(frame.width) / 2.0, f64::from(row0 + r) + 0.5);
                             s.geographic_of(Vec2::new(x, y))
                                 .map(|(lat, _)| lat)
                                 .ok_or_else(|| "Rasterin bir satırı koordinat sisteminin dışında: enlemi bulunamadı.".to_owned())
@@ -814,7 +922,7 @@ impl Job {
                     })
                     .collect::<Result<_, String>>()?;
                 let frames: Vec<RowFrame> = (0..n)
-                    .map(|r| RowFrame::new(frame.axes(y0 + r), *z))
+                    .map(|r| RowFrame::new(frame.axes(row0 + r), *z))
                     .collect();
                 let (days, hour_step, tau) = (&*days, *hour_step, *tau);
                 let out = self.out.as_mut().ok_or("Sonuç rasteri yok.")?;
@@ -847,7 +955,7 @@ impl Job {
                 let rows = (self.heights.len() / sw) as u32;
                 for r in 0..rows {
                     let j = y0 + r;
-                    if j >= self.frame.height {
+                    if j >= self.win.height {
                         break;
                     }
                     c.push(j, &self.heights[r as usize * sw..(r as usize + 1) * sw])?;

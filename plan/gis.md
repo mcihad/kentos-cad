@@ -404,6 +404,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-30 — Mevcut raster analizlerini ortak provider/grid ortamına bağla — P1**
 
+  *Kısmen (20 Ekim 2026; [ADR 0535](../docs/adr/0535-raster-analysis-area-and-grids.md)): yüzey analizinin sekiz aracında ortak AOI: Kapsam nesnelerin kutusu kaynağın ızgarasına oturur (aynı başlangıç, hücre boyu ve yön), kenar hücrelerinin komşuları kaynaktan okunur ve pencerenin değerleri bütün rasterinkiyle bit bit aynıdır (39 yüzey durumunda iki alanla, bağımsız başvurunun hücreleriyle); çalışma kaydı girdinin ve sonucun ızgarasını (afin, boy, bant, NoData, sistem, pencere) yazar. Kalan: öbür raster aileleri, ortak hücre boyu, hizalama ve NoData ortamı, büyük harici raster için disk ara dosyası, sağlayıcı karolarının halo karşılaştırması, belirsizlik raporu.*
+
   **Mevcut:** Eğim/aspect/hillshade, kontur, enterpolasyon, raster hesap, focal/reclass, uzaklık, uygunluk ve hidroloji aileleri mevcut [K09/K11]. İş paketinin değeri bunları aynı grid/NoData/birim sözleşmesinde güvenilir hale getirmektir.
 
   **Yapılacak kalan iş:** Mevcut DEM/raster cebiri, terrain, kontur, enterpolasyon, uygunluk ve hidroloji çekirdeklerini yeniden geliştirme. Yeni provider çalışmasının ortak AOI/grid origin/extent/hücre boyutu/band-time/NoData/birim bağlamını bu araçların mevcut parametrelerine eşle; ortak işlem kaydına yaz. Büyük harici rasterı mevcut blok/satır motoruna kontrollü ver; global geçiş isteyen araçlar için disk staging ekle. Yeni adapter'ın tile halo/grid birimini bozmadığı bağımsız karşılaştırmayla doğrulansın. Mühendislik TIN ve kazı/dolgu `road.md`'de kalır.

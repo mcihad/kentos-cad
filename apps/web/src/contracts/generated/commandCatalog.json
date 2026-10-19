@@ -995735,6 +995735,13 @@
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
               },
+              "grids": {
+                "description": "The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same\ngrids gives the same cells.",
+                "items": {
+                  "$ref": "#/$defs/RecordGrid"
+                },
+                "type": "array"
+              },
               "host": {
                 "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
                 "type": "string"
@@ -995853,6 +995860,96 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordGrid": {
+            "description": "A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the\nband read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "band": {
+                "description": "The band read (1 and up); none for a result.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "file": {
+                "description": "The raster's file (its path as the object names it), or none for one embedded.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "The value taken as empty; none: NaN only (or the file's own for a source read with its own).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "role": {
+                "description": "`input` or `output`.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The raster's EPSG/SRID; none when it has none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "window": {
+                "description": "A source's cells worked out: first column, first row, columns, rows.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "role",
+              "affine",
+              "width",
+              "height"
             ],
             "type": "object"
           },
@@ -996169,6 +996266,13 @@
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
               },
+              "grids": {
+                "description": "The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same\ngrids gives the same cells.",
+                "items": {
+                  "$ref": "#/$defs/RecordGrid"
+                },
+                "type": "array"
+              },
               "host": {
                 "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
                 "type": "string"
@@ -996287,6 +996391,96 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordGrid": {
+            "description": "A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the\nband read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "band": {
+                "description": "The band read (1 and up); none for a result.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "file": {
+                "description": "The raster's file (its path as the object names it), or none for one embedded.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "The value taken as empty; none: NaN only (or the file's own for a source read with its own).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "role": {
+                "description": "`input` or `output`.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The raster's EPSG/SRID; none when it has none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "window": {
+                "description": "A source's cells worked out: first column, first row, columns, rows.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "role",
+              "affine",
+              "width",
+              "height"
             ],
             "type": "object"
           },
@@ -996873,6 +997067,13 @@
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
               },
+              "grids": {
+                "description": "The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same\ngrids gives the same cells.",
+                "items": {
+                  "$ref": "#/$defs/RecordGrid"
+                },
+                "type": "array"
+              },
               "host": {
                 "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
                 "type": "string"
@@ -996991,6 +997192,96 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordGrid": {
+            "description": "A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the\nband read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "band": {
+                "description": "The band read (1 and up); none for a result.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "file": {
+                "description": "The raster's file (its path as the object names it), or none for one embedded.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "The value taken as empty; none: NaN only (or the file's own for a source read with its own).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "role": {
+                "description": "`input` or `output`.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The raster's EPSG/SRID; none when it has none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "window": {
+                "description": "A source's cells worked out: first column, first row, columns, rows.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "role",
+              "affine",
+              "width",
+              "height"
             ],
             "type": "object"
           },
@@ -997371,6 +997662,13 @@
                 "description": "Always `kentos.run-record`.",
                 "type": "string"
               },
+              "grids": {
+                "description": "The rasters a raster tool read and wrote, each with its grid (docs/adr/0535): the run again on the same\ngrids gives the same cells.",
+                "items": {
+                  "$ref": "#/$defs/RecordGrid"
+                },
+                "type": "array"
+              },
               "host": {
                 "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
                 "type": "string"
@@ -997489,6 +997787,96 @@
               "ms",
               "steps",
               "total"
+            ],
+            "type": "object"
+          },
+          "RecordGrid": {
+            "description": "A raster a run read or wrote and its grid (docs/adr/0535): where its cells lie, their size and how many, the\nband read, what counts as empty, the system; a source's `window` the cells the run worked out (an area's).",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]`, GDAL's geotransform order: the cell (i, j)'s corner at x₀ + a·i + b·j, y₀ + c·i + d·j.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "band": {
+                "description": "The band read (1 and up); none for a result.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "file": {
+                "description": "The raster's file (its path as the object names it), or none for one embedded.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "The value taken as empty; none: NaN only (or the file's own for a source read with its own).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "role": {
+                "description": "`input` or `output`.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The raster's EPSG/SRID; none when it has none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "window": {
+                "description": "A source's cells worked out: first column, first row, columns, rows.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "role",
+              "affine",
+              "width",
+              "height"
             ],
             "type": "object"
           },

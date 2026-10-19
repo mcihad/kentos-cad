@@ -8,6 +8,7 @@
 //!
 //! ```text
 //! KENTOS_SHOTS_ONLY=yuzey-serit,yuzey-egim,yuzey-egim-cizim,yuzey-esyukselti-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=yuzey-alan cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # Kapsam: the area's window and result (docs/adr/0535)
 //! ```
 //!
 //! Each result is written into a scratch folder. Test code only.
@@ -67,6 +68,34 @@ fn ran(app: &mut App, tool: &'static str, values: &[(&str, serde_json::Value)]) 
     let _ = app.update(Message::Processing(Event::Close));
 }
 
+/// A parcel over the valley's middle drawn and chosen: Kapsam's Alan nesneleri (docs/adr/0535).
+pub(crate) fn area_chosen(app: &mut App) {
+    let doc = app.document.as_mut().expect("open");
+    let layer = doc.model.layers().active().to_owned();
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+        "cad.polygon.create",
+        kentos_contracts::CallOp::Execute,
+        json!({ "layerId": layer, "pts": [
+            { "x": 487_450.0, "y": 4_420_250.0 }, { "x": 487_750.0, "y": 4_420_250.0 },
+            { "x": 487_750.0, "y": 4_420_450.0 }, { "x": 487_450.0, "y": 4_420_450.0 }
+        ] }),
+    )
+    .expect("runs");
+    let uid: kentos_domain::Uuid = answer["output"]["uid"]
+        .as_str()
+        .and_then(|u| u.parse().ok())
+        .expect("the parcel");
+    let slot = doc.model.slot_of(uid).expect("its slot");
+    app.selection.set(vec![slot]);
+}
+
+/// Eğim's window with Kapsam nesnelerin kutusu over the chosen parcel.
+fn on_area(app: &mut App) {
+    value(app, "area", json!("objects"));
+    value(app, "areaObjects", json!({ "scope": "selection" }));
+}
+
 pub(crate) fn pointed() -> Vec<Pointed> {
     vec![
         // The CBS ribbon's Raster: the rasters' panel and Yüzey analizi's eight tools.
@@ -87,6 +116,38 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         (
             "yuzey-egim-cizim",
             |app| ran(app, "processing.run.surface.slope", &[]),
+            framed,
+        ),
+        // Kapsam (docs/adr/0535): Eğim's window on the parcel's box, then its result, only the box's cells.
+        (
+            "yuzey-alan",
+            |app| {
+                opened(app);
+                area_chosen(app);
+                open_on_dem(
+                    app,
+                    "processing.run.surface.slope",
+                    std::path::Path::new(""),
+                );
+                on_area(app);
+            },
+            framed,
+        ),
+        (
+            "yuzey-alan-cizim",
+            |app| {
+                opened(app);
+                area_chosen(app);
+                let dir = crate::files_testing::scratch("yuzey-alan-resim");
+                open_on_dem(app, "processing.run.surface.slope", &dir.join("alan.tif"));
+                on_area(app);
+                let status = run(app);
+                assert!(
+                    matches!(status, crate::processing::RunStatus::Ok { .. }),
+                    "{status:?}"
+                );
+                let _ = app.update(Message::Processing(Event::Close));
+            },
             framed,
         ),
         (

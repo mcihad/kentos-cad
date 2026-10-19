@@ -1318,6 +1318,7 @@ __all__ = [
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
+    "RecordGrid",
     "RecordRow",
     "RecordStep",
     "RecordTotal",

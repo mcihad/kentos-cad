@@ -220,3 +220,53 @@ fn a_raster_whose_file_is_gone_is_said() {
             .is_none()
     );
 }
+
+// docs/adr/0535: Kapsam nesnelerin kutusu: the result is the chosen parcel's box's cells of the source's grid.
+#[test]
+fn slope_on_an_area_is_written_on_the_source_s_grid() {
+    let dir = crate::files_testing::scratch("yuzey-alan");
+    let out = dir.join("alan.tif");
+    let mut app = app();
+    crate::surface_scenes::area_chosen(&mut app);
+    open_on_dem(&mut app, "processing.run.surface.slope", &out);
+    value(&mut app, "area", json!("objects"));
+    value(&mut app, "areaObjects", json!({ "scope": "selection" }));
+    let s = run(&mut app);
+    let RunStatus::Ok { text, .. } = &s else {
+        panic!("{s:?}");
+    };
+    assert!(out.exists(), "{text}");
+    let doc = app.document.as_ref().expect("open");
+    let made = doc
+        .model
+        .entities()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Raster(r)
+                if r.raster.file.as_deref() == Some(&*out.to_string_lossy()) =>
+            {
+                Some(r.raster.clone())
+            }
+            _ => None,
+        })
+        .expect("the result on the drawing");
+    let dem = doc
+        .model
+        .entities()
+        .find_map(|e| match e {
+            kentos_contracts::Entity::Raster(r) if r.base.layer_id == "dem" => {
+                Some(r.raster.clone())
+            }
+            _ => None,
+        })
+        .expect("the source");
+    assert!(made.width < dem.width && made.height < dem.height, "{text}");
+    // The same cell size and direction; the origin a whole number of the source's cells away.
+    assert_eq!(made.affine[1..3], dem.affine[1..3]);
+    assert_eq!(made.affine[4..6], dem.affine[4..6]);
+    let i = (made.affine[0] - dem.affine[0]) / dem.affine[1];
+    let j = (made.affine[3] - dem.affine[3]) / dem.affine[5];
+    assert!(
+        (i - i.round()).abs() < 1e-9 && (j - j.round()).abs() < 1e-9,
+        "{i}, {j}"
+    );
+}

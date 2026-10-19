@@ -20,7 +20,7 @@ use super::pointcloud::{STOPPED, broke, count_words};
 use crate::files::{Beside, Files, NO_RASTER_FILES};
 use crate::types::{
     ChangeSet, EnumOption, Feedback, ParamDef, ParamKind, Resolved, RunContext, RunResult,
-    ScopeKind,
+    ScopeKind, Values,
 };
 
 pub use tools::{
@@ -114,6 +114,63 @@ pub fn whole(name: &str, label: &str, default: u32, min: u32, max: u32) -> Param
     .default_value(json!(default))
 }
 
+/// Kapsam and Alan nesneleri (docs/adr/0535): the whole raster, or the source's cells the chosen objects' box
+/// touches, on the source's own grid, each cell worked out from its neighbours in the source as the whole raster's.
+pub fn area_params() -> [ParamDef; 2] {
+    [
+        choice(
+            "area",
+            "Kapsam",
+            &[("raster", "Bütün raster"), ("objects", "Nesnelerin kutusu")],
+        )
+        .describe(
+            "Nesnelerin kutusu: yalnız seçilen nesnelerin kutusunun değdiği hücreler, kaynağın ızgarasında; kenardaki hücrelerin komşuları kaynaktan okunur, sonuç bütün rasterin aynı hücreleriyle birdir.",
+        ),
+        ParamDef::new(
+            "areaObjects",
+            "Alan nesneleri",
+            ParamKind::Features {
+                kinds: None,
+                scopes: Some(vec![ScopeKind::Selection, ScopeKind::Layer]),
+                writes: false,
+            },
+        )
+        .optional()
+        .describe("Kutusu analizin alanı olan nesneler (bir parsel, bir proje sınırı).")
+        .shown_when(|v: &Values| v.get("area").and_then(Value::as_str) == Some("objects")),
+    ]
+}
+
+/// The analysis area: the box of Alan nesneleri when Kapsam asks for it, or none for the whole raster.
+fn area_of(r: &Resolved<'_>) -> Result<Option<[f64; 4]>, String> {
+    if r.text("area") != "objects" {
+        return Ok(None);
+    }
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
+    for e in &r.features("areaObjects").entities {
+        let k = kentos_geometry_core::entity::entity_bounds(
+            &kentos_native_application::geometry::shape(e),
+        );
+        if k.min_x.is_finite() && k.max_x.is_finite() {
+            b = [
+                b[0].min(k.min_x),
+                b[1].min(k.min_y),
+                b[2].max(k.max_x),
+                b[3].max(k.max_y),
+            ];
+        }
+    }
+    if !b.iter().all(|v| v.is_finite()) {
+        return Err("Kapsam nesnelerin kutusu: Alan nesneleri'nden en az bir nesne seçin.".into());
+    }
+    Ok(Some(b))
+}
+
 /// The result's layer (Çıktı katmanı): a new one goes right above the raster's (under it the
 /// raster would hide it, docs/adr/0231 §2).
 pub fn result_layer(name: &str, color: &str) -> ParamDef {
@@ -167,11 +224,12 @@ fn spec_of(
         "nodata": raster.style.nodata,
         "epsg": (raster.srid > 0).then_some(raster.srid),
         "system": system_of(ctx),
+        "window": area_of(r)?,
     }))
     .map_err(|e| format!("Çözümlemenin ayarları okunamadı: {e}"))
 }
 
-/// What a job gave: a raster result's bands, samples and look, or the lines and their Kot texts.
+/// What a job gave: a raster result's bands, samples and look, or the lines and their Kot texts; and its grid.
 enum Ran {
     Raster {
         bands: u32,
@@ -179,6 +237,49 @@ enum Ran {
         style: RasterStyle,
     },
     Lines(Vec<Line>, Vec<String>),
+}
+
+/// A run's grids: the source's and the cells worked out, the result's.
+struct Grids {
+    source: kentos_raster::job::Window,
+    result: ([f64; 6], u32, u32),
+}
+
+/// The run's record of its grids (docs/adr/0535): the source read and its window, the result written.
+fn record_grids(
+    f: &RasterFields,
+    spec: &Spec,
+    g: &Grids,
+    path: Option<&str>,
+) -> Vec<kentos_contracts::RecordGrid> {
+    let srid = (f.srid > 0).then_some(f.srid);
+    let w = g.source;
+    let mut out = vec![kentos_contracts::RecordGrid {
+        role: "input".into(),
+        file: f.file.clone().or_else(|| f.url.clone()),
+        affine: f.affine,
+        width: f.width,
+        height: f.height,
+        band: Some(spec.band),
+        nodata: spec.nodata,
+        srid,
+        window: Some([w.x0, w.y0, w.width, w.height]),
+    }];
+    if let Some(p) = path {
+        let (affine, width, height) = g.result;
+        out.push(kentos_contracts::RecordGrid {
+            role: "output".into(),
+            file: Some(p.to_owned()),
+            affine,
+            width,
+            height,
+            band: None,
+            nodata: None,
+            srid,
+            window: None,
+        });
+    }
+    out
 }
 
 /// Runs `spec` over the raster, a raster result written at `path`.
@@ -189,9 +290,13 @@ fn drive(
     path: Option<&str>,
     feedback: &mut dyn Feedback,
     label: &str,
-) -> Result<Ran, String> {
+) -> Result<(Ran, Grids), String> {
     let open = files.open_raster(raster)?;
     let (mut job, header) = Job::new(open.reader, spec, kentos_raster::par::threads())?;
+    let grids = Grids {
+        source: job.window(),
+        result: job.grid(),
+    };
     let result = job.result().zip(job.style());
     let levels = job.contours().copied();
     let mut sink = match path {
@@ -224,33 +329,37 @@ fn drive(
             s.write(&tail)?;
             s.patch(0, &header)?;
             s.finish_cog()?;
-            Ok(Ran::Raster {
-                bands,
-                sample,
-                style,
-            })
+            Ok((
+                Ran::Raster {
+                    bands,
+                    sample,
+                    style,
+                },
+                grids,
+            ))
         }
         (Finished::Lines(lines), None, None, Some(levels)) => {
             let texts = lines.iter().map(|l| levels.level_text(l.value)).collect();
-            Ok(Ran::Lines(lines, texts))
+            Ok((Ran::Lines(lines, texts), grids))
         }
         _ => Err("Çözümlemenin sonucu beklenen türde değil.".into()),
     }
 }
 
-/// The result raster's object: the source's place and size, the result's kind and look.
+/// The result raster's object: its grid (the source's, or an area's part of it), the result's kind and look.
 fn raster_object(
     f: &RasterFields,
     path: &str,
     (bands, sample, style): (u32, RasterSample, RasterStyle),
+    (affine, width, height): ([f64; 6], u32, u32),
     layer: &str,
 ) -> Entity {
     Entity::Raster(RasterEntity {
         base: base(layer, BTreeMap::new(), None),
         raster: RasterFields {
-            affine: f.affine,
-            width: f.width,
-            height: f.height,
+            affine,
+            width,
+            height,
             bands,
             sample,
             asset: None,
@@ -281,18 +390,30 @@ pub fn run_raster(
         let f = &raster.raster;
         let spec = spec_of(r, ctx, f, tool)?;
         let path = files.output_path(r.text("output"), Some(Beside::from(f)), suffix, ".tif")?;
-        let Ran::Raster {
-            bands,
-            sample,
-            style,
-        } = drive(&*files, f, &spec, Some(&path), feedback, label)?
+        let (
+            Ran::Raster {
+                bands,
+                sample,
+                style,
+            },
+            grids,
+        ) = drive(&*files, f, &spec, Some(&path), feedback, label)?
         else {
             return Err("Çözümleme raster vermedi.".into());
         };
         feedback.progress(1.0, label);
+        let (_, gw, gh) = grids.result;
         let add: Vec<Entity> = r
             .flag("add")
-            .then(|| raster_object(f, &path, (bands, sample, style), &r.layer("layer").id))
+            .then(|| {
+                raster_object(
+                    f,
+                    &path,
+                    (bands, sample, style),
+                    grids.result,
+                    &r.layer("layer").id,
+                )
+            })
             .into_iter()
             .collect();
         let mut result = RunResult {
@@ -302,9 +423,10 @@ pub fn run_raster(
             }),
             summary: Some(format!(
                 "{} × {} hücrelik raster; “{path}” yazıldı.",
-                count_words(u64::from(f.width)),
-                count_words(u64::from(f.height)),
+                count_words(u64::from(gw)),
+                count_words(u64::from(gh)),
             )),
+            grids: record_grids(f, &spec, &grids, Some(&path)),
             ..RunResult::default()
         };
         result.outputs.insert("file".to_owned(), json!(path));
@@ -384,7 +506,8 @@ pub fn run_lines(
         let f = &raster.raster;
         let spec = spec_of(r, ctx, f, tool)?;
         let label = "Eğriler çıkarılıyor";
-        let Ran::Lines(lines, texts) = drive(&*files, f, &spec, None, feedback, label)? else {
+        let (Ran::Lines(lines, texts), grids) = drive(&*files, f, &spec, None, feedback, label)?
+        else {
             return Err("Çözümleme eğri vermedi.".into());
         };
         feedback.progress(1.0, label);
@@ -407,6 +530,7 @@ pub fn run_lines(
                 ..ChangeSet::default()
             }),
             summary: Some(summary),
+            grids: record_grids(f, &spec, &grids, None),
             ..RunResult::default()
         };
         result

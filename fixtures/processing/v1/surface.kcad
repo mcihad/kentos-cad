@@ -44,6 +44,62 @@
     "lineWeight": 0.25
    },
    "children": []
+  },
+  {
+   "id": "alan",
+   "name": "Alan",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "kenar",
+   "name": "Kenar",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "disarida",
+   "name": "Dışarıda",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "bos",
+   "name": "Boş",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "fg",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
   }
  ],
  "activeLayer": "dem",
@@ -147,6 +203,78 @@
     "stretch": "minMax",
     "ramp": "Arazi"
    }
+  },
+  {
+   "kind": "polygon",
+   "id": 5,
+   "layerId": "alan",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 500183.0,
+     "y": 4420121.0
+    },
+    {
+     "x": 500287.5,
+     "y": 4420121.0
+    },
+    {
+     "x": 500287.5,
+     "y": 4420226.0
+    },
+    {
+     "x": 500183.0,
+     "y": 4420226.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 6,
+   "layerId": "kenar",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 500350.0,
+     "y": 4420250.0
+    },
+    {
+     "x": 500600.0,
+     "y": 4420250.0
+    },
+    {
+     "x": 500600.0,
+     "y": 4420400.0
+    },
+    {
+     "x": 500350.0,
+     "y": 4420400.0
+    }
+   ]
+  },
+  {
+   "kind": "polygon",
+   "id": 7,
+   "layerId": "disarida",
+   "attrs": {},
+   "pts": [
+    {
+     "x": 400000.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 400100.0,
+     "y": 4420000.0
+    },
+    {
+     "x": 400100.0,
+     "y": 4420100.0
+    },
+    {
+     "x": 400000.0,
+     "y": 4420100.0
+    }
+   ]
   }
  ],
  "styles": {

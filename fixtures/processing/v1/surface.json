@@ -22,6 +22,10 @@
      "method": "horn",
      "unit": "degrees",
      "zFactor": 1,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -35,6 +39,10 @@
      "band": 1,
      "method": "horn",
      "zFactor": 1,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -49,6 +57,10 @@
      "azimuth": 315,
      "altitude": 45,
      "zFactor": 1,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -68,6 +80,10 @@
      "max": 1000,
      "table": "",
      "interp": "linear",
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -81,6 +97,10 @@
      "band": 1,
      "curvature": "total",
      "zFactor": 1,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -93,6 +113,10 @@
      },
      "band": 1,
      "index": "triRiley",
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -114,6 +138,10 @@
      "transmissivity": 0.5,
      "latitude": null,
      "zFactor": 1,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "output": "",
      "add": true,
      "layer": {
@@ -129,6 +157,10 @@
      "base": 0,
      "indexEvery": 5,
      "simplify": 0,
+     "area": "raster",
+     "areaObjects": {
+      "scope": "selection"
+     },
      "layer": {
       "newName": "Eş yükselti eğrileri"
      }
@@ -731,6 +763,337 @@
    }
   },
   {
+   "id": "slope-area",
+   "title": "Eğim, Kapsam nesnelerin kutusu: yalnız kutunun hücreleri, bütün rasterin değerleriyle",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.slope"
+   },
+   "values": {
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 × 11 hücrelik raster; “tepe-egim.tif” yazıldı.",
+    "undo": "Eğim",
+    "layers": [
+     {
+      "id": "islem-egim",
+      "name": "Eğim",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-egim",
+      "attrs": {},
+      "affine": [
+       500180.0,
+       10.0,
+       0.0,
+       4420230.0,
+       0.0,
+       -10.0
+      ],
+      "width": 11,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-egim.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Spektral"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-egim.tif"
+    },
+    "rasterOf": {
+     "tepe-egim.tif": {
+      "case": "Eğim (derece, Horn)",
+      "window": [
+       8,
+       10,
+       11,
+       11
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-egim": "dem"
+    }
+   }
+  },
+  {
+   "id": "hillshade-area-edge",
+   "title": "Gölgeli kabartma, kutu rasterin üst ve sağ kenarını aşar: rastere kırpılır",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.hillshade"
+   },
+   "values": {
+    "azimuth": 135,
+    "altitude": 30,
+    "zFactor": 2,
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "kenar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "16 × 8 hücrelik raster; “tepe-golge.tif” yazıldı.",
+    "undo": "Gölgeli kabartma",
+    "layers": [
+     {
+      "id": "islem-golgeli-kabartma",
+      "name": "Gölgeli kabartma",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-golgeli-kabartma",
+      "attrs": {},
+      "affine": [
+       500350.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 16,
+      "height": 8,
+      "bands": 1,
+      "sample": "u8",
+      "file": "tepe-golge.tif",
+      "srid": 5254,
+      "style": {
+       "render": "gray",
+       "bands": [
+        1
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-golge.tif"
+    },
+    "rasterOf": {
+     "tepe-golge.tif": {
+      "case": "Gölgeli kabartma (135, 30, 2)",
+      "window": [
+       25,
+       0,
+       16,
+       8
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-golgeli-kabartma": "dem"
+    }
+   }
+  },
+  {
+   "id": "curvature-area",
+   "title": "Eğrilik, toplam, z 2, Kapsam nesnelerin kutusu",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.curvature"
+   },
+   "values": {
+    "curvature": "total",
+    "zFactor": 2,
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "alan"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "11 × 11 hücrelik raster; “tepe-egrilik.tif” yazıldı.",
+    "undo": "Eğrilik",
+    "layers": [
+     {
+      "id": "islem-egrilik",
+      "name": "Eğrilik",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-egrilik",
+      "attrs": {},
+      "affine": [
+       500180.0,
+       10.0,
+       0.0,
+       4420230.0,
+       0.0,
+       -10.0
+      ],
+      "width": 11,
+      "height": 11,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-egrilik.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "percent",
+       "ramp": "Mavi-kırmızı"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-egrilik.tif"
+    },
+    "rasterOf": {
+     "tepe-egrilik.tif": {
+      "case": "Eğrilik (toplam, z 2)",
+      "window": [
+       8,
+       10,
+       11,
+       11
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-egrilik": "dem"
+    }
+   }
+  },
+  {
+   "id": "insolation-area",
+   "title": "Güneşlenme, Kapsam nesnelerin kutusu: satırın enlemi kaynağın satırınınki",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.insolation"
+   },
+   "values": {
+    "period": "range",
+    "startDay": 1,
+    "startMonth": "6",
+    "endDay": 31,
+    "endMonth": "8",
+    "dayStep": 7,
+    "hourStep": "1",
+    "transmissivity": 0.6,
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "kenar"
+    }
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "16 × 8 hücrelik raster; “tepe-gunes.tif” yazıldı.",
+    "undo": "Güneşlenme",
+    "layers": [
+     {
+      "id": "islem-guneslenme",
+      "name": "Güneşlenme",
+      "style": {
+       "color": "#7A6B5B",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      }
+     }
+    ],
+    "added": [
+     {
+      "kind": "raster",
+      "layerId": "islem-guneslenme",
+      "attrs": {},
+      "affine": [
+       500350.0,
+       10.0,
+       0.0,
+       4420330.0,
+       0.0,
+       -10.0
+      ],
+      "width": 16,
+      "height": 8,
+      "bands": 1,
+      "sample": "f32",
+      "file": "tepe-gunes.tif",
+      "srid": 5254,
+      "style": {
+       "render": "ramp",
+       "bands": [
+        1
+       ],
+       "stretch": "minMax",
+       "ramp": "Sıcaklık"
+      }
+     }
+    ],
+    "outputs": {
+     "file": "tepe-gunes.tif"
+    },
+    "rasterOf": {
+     "tepe-gunes.tif": {
+      "case": "Güneşlenme (1 Haziran–31 Ağustos, 7 gün, 1 saat, 0,6)",
+      "window": [
+       25,
+       0,
+       16,
+       8
+      ]
+     }
+    },
+    "layerAbove": {
+     "islem-guneslenme": "dem"
+    }
+   }
+  },
+  {
    "id": "contours",
    "title": "Eş yükselti eğrileri, tepe, 5 m, her beşincisi ana: kotlu çoklu çizgiler",
    "document": "surface.kcad",
@@ -819,6 +1182,28 @@
    "expect": {
     "status": "error",
     "message": "Rasterin 1 bandı var; 2. bant yok."
+   }
+  },
+  {
+   "id": "area-beside",
+   "title": "Kapsam nesnelerin kutusu rasterin dışında: reddedilir",
+   "document": "surface.kcad",
+   "selection": [
+    1
+   ],
+   "run": {
+    "tool": "surface.slope"
+   },
+   "values": {
+    "area": "objects",
+    "areaObjects": {
+     "scope": "layer",
+     "layerId": "disarida"
+    }
+   },
+   "expect": {
+    "status": "error",
+    "message": "Analiz alanı rasterle kesişmiyor; rasterin üstünde bir alan verin."
    }
   },
   {

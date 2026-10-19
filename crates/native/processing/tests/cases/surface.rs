@@ -431,20 +431,40 @@ fn raster_cases(name: &str, least: usize) {
                 continue;
             }
             let (bands, byte, want): (usize, bool, Vec<Value>) = if *kind == "terrain" {
+                // A name, or an area's part of it: `{ case, window: [x0, y0, width, height] }` (docs/adr/0535).
+                let (name, window) = match of {
+                    Value::Object(m) => (m["case"].clone(), m.get("window").cloned()),
+                    _ => (of.clone(), None),
+                };
                 let reference = terrain["cases"]
                     .as_array()
                     .unwrap()
                     .iter()
-                    .find(|t| t["dem"] == "tepe" && t["name"] == *of)
-                    .unwrap_or_else(|| panic!("{id}: no surface case {of}"));
-                (
-                    1,
-                    reference["sample"] == "u8",
-                    reference["values"]
-                        .as_array()
-                        .expect("the values whole")
-                        .clone(),
-                )
+                    .find(|t| t["dem"] == "tepe" && t["name"] == name)
+                    .unwrap_or_else(|| panic!("{id}: no surface case {name}"));
+                let values = reference["values"]
+                    .as_array()
+                    .expect("the values whole")
+                    .clone();
+                let values = match window.as_ref().and_then(Value::as_array) {
+                    Some(w) => {
+                        let dem_width = terrain["dems"]
+                            .as_array()
+                            .unwrap()
+                            .iter()
+                            .find(|d| d["name"] == "tepe")
+                            .and_then(|d| d["width"].as_u64())
+                            .expect("tepe's width")
+                            as usize;
+                        let [x0, y0, w, h] = [0, 1, 2, 3].map(|k| w[k].as_u64().unwrap() as usize);
+                        (y0..y0 + h)
+                            .flat_map(|j| (x0..x0 + w).map(move |i| j * dem_width + i))
+                            .map(|k| values[k].clone())
+                            .collect()
+                    }
+                    None => values,
+                };
+                (1, reference["sample"] == "u8", values)
             } else {
                 let reference = interpolation["cases"]
                     .as_array()
@@ -508,7 +528,7 @@ fn raster_cases(name: &str, least: usize) {
 
 #[test]
 fn the_surface_cases_do_what_they_say() {
-    raster_cases("surface.json", 15);
+    raster_cases("surface.json", 20);
 }
 
 #[test]
