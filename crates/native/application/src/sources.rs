@@ -15,7 +15,7 @@ use kentos_contracts::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LayerNodeType, MAX_SOURCES,
     SourceCapabilities, SourceColumn, SourceKind, SourceLink, SourceState, SourceTable,
     SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync,
-    SourcesSynced, SyncDirection,
+    SourcesSynced, SyncDirection, SyncTopology,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geopackage::{self as gpkg, DataType, Edits, GeoPackage, Geometry, Query, Value};
@@ -1344,6 +1344,153 @@ pub fn read_step(table: &str) -> String {
     format!("Kaynaktan oku: {table}")
 }
 
+/// The rows outside a part's area that follow a write (docs/adr/0531): their edits, and how many kept their shape.
+#[derive(Default)]
+struct Followed {
+    rows: Vec<(i64, gpkg::NewRow)>,
+    left: u32,
+}
+
+/// The table's rows outside the part's area (none in the drawing) sharing the corners and edges the layer's written
+/// objects changed: read again by the changes' box from the same file state, put right by the topology core
+/// (`topology_edit::changes`, `apply`: the same rule as the drawing's Topoloji), back in the table's system as rows.
+/// A strict write refuses when one would be left invalid; a loose one keeps that one as it is.
+#[allow(clippy::too_many_arguments)]
+fn follow_outside(
+    doc: &Document,
+    link: &SourceLink,
+    source: Origin<'_>,
+    area: Option<[f64; 4]>,
+    stored: &Stored,
+    columns: &[gpkg::Column],
+    mover: Option<&Mover>,
+    profile: SyncTopology,
+) -> Result<Followed, Stop> {
+    use kentos_geometry_core::entity::Shape;
+    use kentos_geometry_core::ops::topology_edit::{self, Neighbour, SAME};
+    // A whole table is all in the drawing: nothing lies outside it.
+    let (Origin::File(path), Some(_)) = (source, area) else {
+        return Ok(Followed::default());
+    };
+    if stored.outside.is_empty() {
+        return Ok(Followed::default());
+    }
+    let shares = |s: &Shape| {
+        matches!(
+            s,
+            Shape::Line { .. } | Shape::Polyline { .. } | Shape::Polygon { .. }
+        )
+    };
+    let before: HashMap<Uuid, kentos_contracts::Entity> =
+        stored.in_project(mover).into_iter().collect();
+    let mut changes = Vec::new();
+    for (uid, e) in doc.by_layer_with_uids(&link.layer) {
+        let Some(old) = before.get(&uid) else {
+            continue;
+        };
+        let (was, now) = (crate::geometry::shape(old), crate::geometry::shape(e));
+        if shares(&was) && shares(&now) {
+            changes.extend(topology_edit::changes(&was, &now));
+        }
+    }
+    if changes.is_empty() {
+        return Ok(Followed::default());
+    }
+    let anchors: Vec<_> = changes.iter().map(crate::topology_follow::anchor).collect();
+    let mut b = [
+        f64::INFINITY,
+        f64::INFINITY,
+        f64::NEG_INFINITY,
+        f64::NEG_INFINITY,
+    ];
+    for p in &anchors {
+        b = [
+            b[0].min(p.x - SAME),
+            b[1].min(p.y - SAME),
+            b[2].max(p.x + SAME),
+            b[3].max(p.y + SAME),
+        ];
+    }
+    let near_box = table_area(Some(b), mover).ok().flatten().ok_or_else(|| {
+        refuse(
+            codes::INVALID_EXTENT,
+            format!(
+                "“{}” katmanının değişen köşeleri tablonun sistemine çevrilemiyor.",
+                link.layer
+            ),
+            "layer",
+        )
+    })?;
+    let near = load_or_refuse(path, &link.table, "layer", Some(near_box))?;
+    if near.sha256 != stored.sha256 {
+        return Err(conflict(
+            codes::SOURCE_CHANGED,
+            format!(
+                "{} okunurken değişti; üzerine yazılmadı. Yeniden deneyin.",
+                link.path
+            ),
+            "layer",
+        ));
+    }
+    let in_drawing: HashSet<Uuid> = doc
+        .by_layer_with_uids(&link.layer)
+        .map(|(u, _)| u)
+        .collect();
+    let candidates: Vec<(Uuid, kentos_contracts::Entity)> = near
+        .in_project(mover)
+        .into_iter()
+        .filter(|(u, e)| {
+            stored.outside.contains_key(u)
+                && !in_drawing.contains(u)
+                && shares(&crate::geometry::shape(e))
+        })
+        .collect();
+    let list: Vec<Neighbour> = candidates
+        .iter()
+        .map(|(_, e)| Neighbour {
+            shape: crate::geometry::shape(e),
+            locked: false,
+        })
+        .collect();
+    let answer = topology_edit::apply(&list, &changes, false);
+    if answer.invalid > 0 && profile == SyncTopology::Strict {
+        return Err(refuse(
+            codes::OUTSIDE_NEIGHBOUR_INVALID,
+            format!(
+                "Alanın dışındaki {} komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı. Alanı genişletip komşuları da çalışma kopyasına alın ya da gevşek kipte (loose) yazın.",
+                answer.invalid
+            ),
+            "topology",
+        ));
+    }
+    let geometry = stored.layer.geometry.as_ref().map(|g| g.type_name.as_str());
+    let mut rows = Vec::new();
+    for (i, shape) in answer.edited {
+        let Some((uid, e)) = candidates.get(i) else {
+            continue;
+        };
+        let Some(mut next) =
+            crate::geometry::with_shape(e, crate::topology_follow::straight(shape))
+        else {
+            continue;
+        };
+        if let Some(m) = mover
+            && kentos_formats::reproject::move_entity(&mut next, &m.project, &m.source, &m.choices)
+                .is_err()
+        {
+            continue;
+        }
+        if let Ok(Some(row)) = gp::row_for(&next, columns, geometry) {
+            rows.push((stored.outside[uid], row));
+        }
+    }
+    rows.sort_by_key(|(fid, _)| *fid);
+    Ok(Followed {
+        rows,
+        left: answer.invalid as u32,
+    })
+}
+
 fn sync_run(
     doc: &mut Document,
     input: &SourcesSync,
@@ -1459,6 +1606,33 @@ fn sync_run(
                     path: Some("layer".into()),
                 });
             }
+            let followed = match input.topology {
+                None => Followed::default(),
+                Some(profile) => {
+                    let mut columns = stored.layer.columns.clone();
+                    columns.extend(d.added_columns.iter().cloned());
+                    follow_outside(
+                        doc,
+                        &link,
+                        source,
+                        area,
+                        &stored,
+                        &columns,
+                        mover.as_ref(),
+                        profile,
+                    )?
+                }
+            };
+            if followed.left > 0 {
+                warnings.push(CommandWarning {
+                    code: codes::NEIGHBOURS_LEFT.into(),
+                    message: format!(
+                        "Alanın dışındaki {} komşu kayıt ortak köşeyi izleyince geçersiz kalacağı için olduğu gibi kaldı.",
+                        followed.left
+                    ),
+                    path: Some("topology".into()),
+                });
+            }
             let mut out = SourcesSynced {
                 added: d.insert.len() as u32,
                 modified: d.update.len() as u32,
@@ -1466,14 +1640,19 @@ fn sync_run(
                 columns: d.added_columns.iter().map(|c| c.name.clone()).collect(),
                 source: stored.sha256.clone(),
                 revision: doc.revision().to_string(),
+                followed: followed.rows.len() as u32,
+                left: followed.left,
             };
             if !write {
                 return Ok((out, warnings));
             }
-            if !d.is_empty() || !d.added_columns.is_empty() {
+            if !d.is_empty() || !d.added_columns.is_empty() || !followed.rows.is_empty() {
+                let mut update = d.update;
+                update.extend(followed.rows);
+                update.sort_by_key(|(fid, _)| *fid);
                 let edits = Edits {
                     add_columns: d.added_columns,
-                    update: d.update,
+                    update,
                     insert: d.insert,
                     delete: d.delete,
                 };
@@ -1522,6 +1701,14 @@ fn sync_run(
             Ok((out, warnings))
         }
         SyncDirection::Read => {
+            if input.topology.is_some() {
+                return Err(refuse(
+                    codes::TOPOLOGY_ON_READ,
+                    "Komşuların izlenmesi (topology) yalnız yazarken olur; okumada tablonun satırları olduğu gibi gelir."
+                        .to_owned(),
+                    "topology",
+                ));
+            }
             if doc.layers().is_locked(&link.layer) {
                 return Err(refuse(
                     codes::LAYER_LOCKED,
@@ -1572,6 +1759,8 @@ fn sync_run(
                 .filter_map(|(u, _)| doc.slot_of(u))
                 .collect();
             let out = SourcesSynced {
+                followed: 0,
+                left: 0,
                 added: adds.len() as u32,
                 modified: updates.len() as u32,
                 removed: gone.len() as u32,

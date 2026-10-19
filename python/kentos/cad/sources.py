@@ -20,6 +20,8 @@ from .types import (  # noqa: F401
     SourcesSynced,
     SyncDirection,
     SyncDirectionName,
+    SyncTopology,
+    SyncTopologyName,
 )
 
 if TYPE_CHECKING:
@@ -310,6 +312,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         layer: str,
         direction: SyncDirection | SyncDirectionName,
         discard: bool | Unset = UNSET,
+        topology: SyncTopology | SyncTopologyName | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SourcesSynced:
@@ -335,6 +338,8 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer: The bound layer, by id.
             direction:
             discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+            topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
+                and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -351,6 +356,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer=layer,
             direction=direction,
             discard=discard,
+            topology=topology,
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -361,6 +367,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         layer: str,
         direction: SyncDirection | SyncDirectionName,
         discard: bool | Unset = UNSET,
+        topology: SyncTopology | SyncTopologyName | None | Unset = UNSET,
     ) -> SourcesSynced:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -369,6 +376,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer=layer,
             direction=direction,
             discard=discard,
+            topology=topology,
         ))
 
     def validate(
@@ -379,6 +387,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         layer: str,
         direction: SyncDirection | SyncDirectionName,
         discard: bool | Unset = UNSET,
+        topology: SyncTopology | SyncTopologyName | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -387,6 +396,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer=layer,
             direction=direction,
             discard=discard,
+            topology=topology,
         ))
 
     def answer(
@@ -397,6 +407,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
         layer: str,
         direction: SyncDirection | SyncDirectionName,
         discard: bool | Unset = UNSET,
+        topology: SyncTopology | SyncTopologyName | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -410,6 +421,7 @@ class _SourcesSync(LocalCommand[SourcesSync, SourcesSynced, SourcesSynced]):
             layer=layer,
             direction=direction,
             discard=discard,
+            topology=topology,
         ), op=op, request_id=request_id, expected=expected)
 
 

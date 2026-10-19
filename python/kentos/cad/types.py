@@ -3531,6 +3531,21 @@ SyncDirectionName = Literal["write", "read"]
 """The names of :class:`SyncDirection`, for a plain string."""
 
 
+class SyncTopology(_StrEnum):
+    """How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
+    written objects changed follow them, in the same transaction.
+
+    - ``strict``: All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    - ``loose``: The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
+    """
+    STRICT = "strict"
+    LOOSE = "loose"
+
+
+SyncTopologyName = Literal["strict", "loose"]
+"""The names of :class:`SyncTopology`, for a plain string."""
+
+
 class TableAlign(_StrEnum):
     """A column's alignment; its cells sit in the middle of their rows."""
     LEFT = "left"
@@ -34191,10 +34206,13 @@ class SourcesSync(_Model):
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+        topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
+            and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
     """
     layer: str
     direction: SyncDirection | SyncDirectionName
     discard: bool | Unset = UNSET
+    topology: SyncTopology | SyncTopologyName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -34202,6 +34220,8 @@ class SourcesSync(_Model):
         out["direction"] = _enum_out(self.direction)
         if self.discard is not UNSET:
             out["discard"] = self.discard
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else _enum_out(self.topology)
         return out
 
     @classmethod
@@ -34210,6 +34230,7 @@ class SourcesSync(_Model):
             layer=data["layer"],
             direction=_enum_in(SyncDirection, data["direction"]),
             discard=data.get("discard", UNSET),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else _enum_in(SyncTopology, data["topology"]),
         )
 
 
@@ -34222,6 +34243,8 @@ class SourcesSynced(_Model):
         modified: Unit: count.
         removed: Unit: count.
         source: The file's SHA-256 after (plan: before).
+        followed: The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531). Unit: count.
+        left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
     """
     added: int
     modified: int
@@ -34229,6 +34252,8 @@ class SourcesSynced(_Model):
     source: str
     revision: str
     columns: list[str] | Unset = UNSET
+    followed: int | Unset = UNSET
+    left: int | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -34239,6 +34264,10 @@ class SourcesSynced(_Model):
         out["revision"] = self.revision
         if self.columns is not UNSET:
             out["columns"] = list(self.columns)
+        if self.followed is not UNSET:
+            out["followed"] = self.followed
+        if self.left is not UNSET:
+            out["left"] = self.left
         return out
 
     @classmethod
@@ -34250,6 +34279,8 @@ class SourcesSynced(_Model):
             source=data["source"],
             revision=data["revision"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
+            followed=data.get("followed", UNSET),
+            left=data.get("left", UNSET),
         )
 
 
@@ -51996,6 +52027,8 @@ __all__ = [
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",
+    "SyncTopology",
+    "SyncTopologyName",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",

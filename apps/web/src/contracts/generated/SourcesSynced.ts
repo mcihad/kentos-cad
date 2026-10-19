@@ -8,4 +8,12 @@ export type SourcesSynced = { added: number, modified: number, removed: number, 
 /**
  * The file's SHA-256 after (plan: before).
  */
-source: string, revision: string, };
+source: string, revision: string, 
+/**
+ * The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).
+ */
+followed?: number, 
+/**
+ * Those that would have been left invalid and kept their shape (`loose`).
+ */
+left?: number, };

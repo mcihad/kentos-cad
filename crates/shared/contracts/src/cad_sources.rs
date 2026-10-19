@@ -211,6 +211,20 @@ pub enum SyncDirection {
     Read,
 }
 
+/// How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
+/// written objects changed follow them, in the same transaction.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SyncTopology {
+    /// All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    Strict,
+    /// The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
+    Loose,
+}
+
 /// Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
 /// `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
@@ -229,6 +243,11 @@ pub struct SourcesSync {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub discard: bool,
+    /// Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
+    /// and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub topology: Option<SyncTopology>,
 }
 
 /// Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,
@@ -251,4 +270,18 @@ pub struct SourcesSynced {
     /// The file's SHA-256 after (plan: before).
     pub source: String,
     pub revision: String,
+    /// The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub followed: u32,
+    /// Those that would have been left invalid and kept their shape (`loose`).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<u32>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub left: u32,
+}
+
+fn is_zero(n: &u32) -> bool {
+    *n == 0
 }

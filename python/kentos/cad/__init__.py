@@ -1537,6 +1537,8 @@ __all__ = [
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",
+    "SyncTopology",
+    "SyncTopologyName",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",

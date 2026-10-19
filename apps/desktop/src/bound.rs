@@ -8,7 +8,7 @@
 use iced::{Element, Task};
 use kentos_contracts::{
     CommandResult, SourceLink, SourcesDescribe, SourcesEdit, SourcesEditOp, SourcesSync,
-    SyncDirection,
+    SyncDirection, SyncTopology,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -18,8 +18,12 @@ use crate::app::{App, Dialog, Message, Picker};
 
 #[derive(Debug, Clone)]
 pub enum Event {
-    /// Kaynağa yaz on a layer (none: the one at hand).
+    /// Kaynağa yaz on a layer (none: the one at hand). A part of a table (its area) writes its neighbours outside
+    /// the area with it while Topoloji is on (docs/adr/0531, strict).
     Write(Option<String>),
+    /// Kaynağa yaz, komşular gevşek: a part's neighbours outside the area follow, the ones that would be left invalid
+    /// stay as they are (docs/adr/0531, loose).
+    WriteLoose(Option<String>),
     /// Kaynaktan oku.
     Read(Option<String>),
     /// Kaynak durumu: every binding's state.
@@ -98,11 +102,26 @@ impl App {
             Event::Relinked(id, Some(path)) => self.bound_relink(&id, &path),
             Event::Relinked(_, None) => {}
             Event::Write(layer) => match self.bound_at_hand(layer) {
-                Some(link) => self.bound_sync(&link, SyncDirection::Write, false),
+                Some(link) => {
+                    // A whole table has no neighbours outside it; a part's follow the drawing's Topoloji.
+                    let topology = (link.extent.is_some()
+                        && self.settings.bool("drafting.topology"))
+                    .then_some(SyncTopology::Strict);
+                    self.bound_sync(&link, SyncDirection::Write, false, topology)
+                }
+                None => self.warn(NO_BOUND),
+            },
+            Event::WriteLoose(layer) => match self.bound_at_hand(layer) {
+                Some(link) => self.bound_sync(
+                    &link,
+                    SyncDirection::Write,
+                    false,
+                    Some(SyncTopology::Loose),
+                ),
                 None => self.warn(NO_BOUND),
             },
             Event::Read(layer) => match self.bound_at_hand(layer) {
-                Some(link) => self.bound_sync(&link, SyncDirection::Read, false),
+                Some(link) => self.bound_sync(&link, SyncDirection::Read, false, None),
                 None => self.warn(NO_BOUND),
             },
             Event::Unlink(layer) => match self.bound_at_hand(layer) {
@@ -151,7 +170,13 @@ impl App {
         }
     }
 
-    fn bound_sync(&mut self, link: &SourceLink, direction: SyncDirection, discard: bool) {
+    fn bound_sync(
+        &mut self,
+        link: &SourceLink,
+        direction: SyncDirection,
+        discard: bool,
+        topology: Option<SyncTopology>,
+    ) {
         let name = self.bound_name(&link.layer);
         let Some(doc) = self.document.as_mut() else {
             return;
@@ -160,6 +185,7 @@ impl App {
             layer: link.layer.clone(),
             direction,
             discard,
+            topology,
         };
         match sync::execute(&mut ExecutionContext::new(&mut doc.model), input) {
             CommandResult::Completed { output, warnings } => {
@@ -168,6 +194,7 @@ impl App {
                     what(output.added, "eklendi"),
                     what(output.modified, "değişti"),
                     what(output.removed, "silindi"),
+                    what(output.followed, "alanın dışındaki komşu izledi"),
                 ]
                 .into_iter()
                 .flatten()
@@ -232,7 +259,7 @@ impl App {
         if let Some(layer) = self.bound_pending.take()
             && let Some(link) = self.bound_link(&layer)
         {
-            self.bound_sync(&link, SyncDirection::Read, true);
+            self.bound_sync(&link, SyncDirection::Read, true, None);
         }
     }
 

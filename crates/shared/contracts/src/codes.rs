@@ -1127,6 +1127,12 @@ codes! {
     GEOMETRY_MISMATCH = "geometry_mismatch", Failed, false, "Nesnenin geometrisi tablonun geometri sütununa uymuyor.";
     /// The layer differs from its table; reading would replace it (docs/adr/0503).
     PENDING_CHANGES = "pending_changes", Conflict, true, "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür.";
+    /// A strict write whose neighbour outside the part's area would be left invalid (docs/adr/0531).
+    OUTSIDE_NEIGHBOUR_INVALID = "outside_neighbour_invalid", Failed, false, "Alanın dışındaki komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı.";
+    /// Topology asked of a read (docs/adr/0531).
+    TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
+    /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
+    NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).

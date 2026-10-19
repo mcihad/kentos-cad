@@ -991678,6 +991678,21 @@
                 "type": "string"
               }
             ]
+          },
+          "SyncTopology": {
+            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the\nwritten objects changed follow them, in the same transaction.",
+            "oneOf": [
+              {
+                "const": "strict",
+                "description": "All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).",
+                "type": "string"
+              },
+              {
+                "const": "loose",
+                "description": "The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -991693,6 +991708,17 @@
           "layer": {
             "description": "The bound layer, by id.",
             "type": "string"
+          },
+          "topology": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncTopology"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners\nand edges follow in the same transaction. Reading refuses it (`topology_on_read`)."
           }
         },
         "required": [
@@ -991717,6 +991743,20 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "followed": {
+            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Those that would have been left invalid and kept their shape (`loose`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "modified": {
             "format": "uint32",
@@ -991764,6 +991804,20 @@
             },
             "type": "array"
           },
+          "followed": {
+            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Those that would have been left invalid and kept their shape (`loose`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "modified": {
             "format": "uint32",
             "minimum": 0,
@@ -991808,10 +991862,13 @@
           "geometry_mismatch",
           "file_unwritable",
           "pending_changes",
-          "invalid_extent"
+          "invalid_extent",
+          "topology_on_read",
+          "outside_neighbour_invalid"
         ],
         "warnings": [
-          "export_losses"
+          "export_losses",
+          "neighbours_left"
         ]
       },
       "examples": [
@@ -1036997,6 +1037054,24 @@
       "kind": "conflict",
       "retryable": true,
       "meaning": "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür."
+    },
+    {
+      "code": "outside_neighbour_invalid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alanın dışındaki komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "topology_on_read",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Komşuların izlemesi yalnız yazarken olur."
+    },
+    {
+      "code": "neighbours_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
     },
     {
       "code": "invalid_address",

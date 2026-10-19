@@ -2871,8 +2871,10 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
             &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+            // docs/adr/0531: the neighbours outside a part's area.
+            &["topology_on_read", "outside_neighbour_invalid"],
         ],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "neighbours_left"],
         targets: none,
     },
     Entry {
