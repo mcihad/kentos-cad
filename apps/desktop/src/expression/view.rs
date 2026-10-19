@@ -448,7 +448,7 @@ fn help(b: &Builder, mode: Mode) -> Element<'_, Message> {
             return column![
                 label::strong("Akış"),
                 label::body("İfadenin düğümleri: değer bir düğümün çıkışından (sağ) ötekinin girişine (sol) gider; sonuç sağdadır."),
-                label::caption("Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur. Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır. Düğüme tıklayın: burada düzenlenir; Delete siler, Ctrl+Z geri alır. Tekerlek yakınlaştırır.")
+                label::caption("Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur. Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır. Sabitler, alanlar ve değerler girişin satırında kutu olarak durur. Düğüme ya da kutuya tıklayın: burada düzenlenir; Delete siler, Ctrl+Z geri alır. Tekerlek yakınlaştırır.")
                     .style(style::text::muted),
             ]
             .spacing(8)

@@ -234,6 +234,8 @@ Liste:
   ve `değişkenle`'nin adını çekirdeğin tamamlamasından alır; web'in dil testleri yeniden koşmalı.
 - [ ] `EXPR-0602` toplamanın ekleri (ADR 0602, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İşlemler'i ve ifade
   testleri yeni işlevlerle yeniden koşmalı.
+- [ ] `EXPR-0604` akışta değerler giriş satırında (ADR 0604, 19 Ekim): web'de gerekenler: akışın çizicisi `inline` düğümleri
+  girişin satırında kutu olarak çizer, kenarlarını atlar, kutudan tel çekmez; `flow.json` yeniden yazıldı (web'in akış e2e'si yeniden).
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede

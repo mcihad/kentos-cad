@@ -23,7 +23,7 @@ mod tree;
 mod types;
 
 pub use edit::{Edit, edit};
-pub use layout::{COLUMN, GAP, HEAD, NODE_W, ROW, VALUE};
+pub use layout::{CHIP_H, CHIP_X, COLUMN, GAP, HEAD, NODE_W, ROW, VALUE};
 pub use tree::{T, read};
 pub use types::Type;
 
@@ -124,6 +124,10 @@ pub struct FlowNode {
     /// The language's error at this node, and its warnings (a field the objects do not have).
     pub error: Option<String>,
     pub warnings: Vec<String>,
+    /// A value written into its parent's input row (docs/adr/0604): a constant, a field, a `$` or `@` value; the
+    /// parent's id. It stands as a chip in that row (its place and size), draws no edge, and is selected and edited
+    /// like any node.
+    pub inline: Option<String>,
     pub x: f64,
     pub y: f64,
     pub w: f64,

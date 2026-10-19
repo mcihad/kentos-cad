@@ -476,12 +476,13 @@ struct NodeJson {
     whole: bool,
     error: Option<String>,
     warnings: Vec<String>,
+    inline: Option<String>,
     x: f64,
     y: f64,
     w: f64,
     h: f64,
 }
-json_struct!(out NodeJson { id, kind, title, key, ty => "type", ports, grows, negated, text, whole, error, warnings, x, y, w, h });
+json_struct!(out NodeJson { id, kind, title, key, ty => "type", ports, grows, negated, text, whole, error, warnings, inline, x, y, w, h });
 
 impl From<FlowNode> for NodeJson {
     fn from(n: FlowNode) -> NodeJson {
@@ -498,6 +499,7 @@ impl From<FlowNode> for NodeJson {
             whole: n.whole,
             error: n.error,
             warnings: n.warnings,
+            inline: n.inline,
             x: n.x,
             y: n.y,
             w: n.w,

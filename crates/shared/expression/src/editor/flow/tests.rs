@@ -71,13 +71,22 @@ fn a_call_is_nodes_right_to_left_with_its_inputs() {
     );
     assert_eq!(call.ty, Type::Number);
     assert_eq!(node(&f, "0.0").x, -2.0 * COLUMN);
-    assert_eq!(node(&f, "0.0.0").x, -3.0 * COLUMN);
+    assert_eq!(node(&f, "0.0.0").x, -2.0 * COLUMN + CHIP_X);
     assert_eq!(node(&f, "0.0").text, "$alan * 2");
     // The root's output is level with the result's input.
     assert_eq!(call.y + HEAD / 2.0, r.y + r.ports[0].y);
-    // Children stack in port order, the node centred on them.
-    let (a, b) = (node(&f, "0.0"), node(&f, "0.1"));
-    assert!(a.y + a.h <= b.y);
+    // A constant is a chip in its input's row (docs/adr/0604): no column of its own, no edge.
+    let (one_, two) = (node(&f, "0.1"), node(&f, "0.0.1"));
+    assert_eq!(one_.inline.as_deref(), Some("0"));
+    assert_eq!(two.inline.as_deref(), Some("0.0"));
+    assert_eq!(one_.x, call.x + CHIP_X);
+    assert_eq!(one_.y + CHIP_H / 2.0, call.y + call.ports[1].y);
+    assert!(node(&f, "0.0").inline.is_none());
+    assert_eq!(node(&f, "0.0.0").inline.as_deref(), Some("0.0"));
+    // Its one drawn child is centred on the node.
+    let a = node(&f, "0.0");
+    assert_eq!(a.y + a.h / 2.0, call.y + call.h / 2.0);
+    assert_eq!(a.x, -2.0 * COLUMN);
     assert!(f.error.is_none() && call.error.is_none());
 }
 

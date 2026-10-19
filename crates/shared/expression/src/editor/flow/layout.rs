@@ -15,7 +15,11 @@ use crate::editor::check::check;
 use crate::parser::BinOp;
 
 /// A node's width.
-pub const NODE_W: f64 = 140.0;
+pub const NODE_W: f64 = 168.0;
+/// Where an inline constant's chip starts in its input's row, from the node's left edge (docs/adr/0604).
+pub const CHIP_X: f64 = 78.0;
+/// An inline constant's chip's height.
+pub const CHIP_H: f64 = 18.0;
 /// The title's row.
 pub const HEAD: f64 = 26.0;
 /// An input's row.
@@ -225,6 +229,22 @@ fn whole(t: &T) -> bool {
     !matches!(t, T::Hole) && t.inputs().into_iter().all(whole)
 }
 
+/// Whether an input is drawn as a node of its own: not an empty one, nor a value written into its row (a constant, a
+/// field, a `$` or `@` value; docs/adr/0604).
+fn drawn(c: &T) -> bool {
+    !matches!(
+        c,
+        T::Hole
+            | T::Num(_)
+            | T::Text(_)
+            | T::Bool(_)
+            | T::Null
+            | T::Field(_)
+            | T::Var(_)
+            | T::At(_)
+    )
+}
+
 /// The height of a subtree's block: its node, or its connected inputs'
 /// blocks stacked, whichever is taller.
 fn block(t: &T) -> f64 {
@@ -232,7 +252,7 @@ fn block(t: &T) -> f64 {
     let kids: Vec<f64> = t
         .inputs()
         .into_iter()
-        .filter(|c| !matches!(c, T::Hole))
+        .filter(|c| drawn(c))
         .map(block)
         .collect();
     if kids.is_empty() {
@@ -242,15 +262,18 @@ fn block(t: &T) -> f64 {
     js_max(own, stacked)
 }
 
+/// Where a node stands: its path, its top-left corner, and whether it is an inline constant.
+type Placed = (Vec<usize>, f64, f64, bool);
+
 /// Places a subtree with its root's left edge at `x` and its block's top at `top`.
-fn place(t: &T, path: &mut Vec<usize>, x: f64, top: f64, out: &mut Vec<(Vec<usize>, f64, f64)>) {
+fn place(t: &T, path: &mut Vec<usize>, x: f64, top: f64, out: &mut Vec<Placed>) {
     let b = block(t);
     let own = node_height(t);
     let kids: Vec<(usize, &T)> = t
         .inputs()
         .into_iter()
         .enumerate()
-        .filter(|(_, c)| !matches!(c, T::Hole))
+        .filter(|(_, c)| drawn(c))
         .collect();
     let stacked = kids.iter().map(|(_, k)| block(k)).sum::<f64>()
         + STACK * kids.len().saturating_sub(1) as f64;
@@ -261,7 +284,21 @@ fn place(t: &T, path: &mut Vec<usize>, x: f64, top: f64, out: &mut Vec<(Vec<usiz
         path.pop();
         y += block(k) + STACK;
     }
-    out.push((path.clone(), x, top + (b - own) / 2.0));
+    let y = top + (b - own) / 2.0;
+    out.push((path.clone(), x, y, false));
+    // The constants in its rows.
+    for (k, c) in t.inputs().into_iter().enumerate() {
+        if !drawn(c) && !matches!(c, T::Hole) {
+            path.push(k);
+            out.push((
+                path.clone(),
+                x + CHIP_X,
+                y + HEAD + ROW * k as f64 + (ROW - CHIP_H) / 2.0,
+                true,
+            ));
+            path.pop();
+        }
+    }
 }
 
 /// Where the root of a subtree placed with its block's top at 0 stands.
@@ -294,6 +331,7 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
         whole: main.is_some_and(whole),
         error: None,
         warnings: Vec::new(),
+        inline: None,
         x: 0.0,
         y: 0.0,
         w: NODE_W,
@@ -332,10 +370,10 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
         place(t, &mut Vec::new(), x, top, &mut at);
         let (text, spans) = t.write();
         let diagnostics = check(&text, schema);
-        for (path, nx, ny) in at {
+        for (path, nx, ny, inline) in at {
             let Some(n) = t.at(&path) else { continue };
             let span = spans.iter().find(|(p, ..)| *p == path);
-            nodes.push(node(
+            let mut made = node(
                 n,
                 tree,
                 &path,
@@ -345,7 +383,13 @@ pub(crate) fn lay_out(read: &[Option<T>], trees: &[Tree], schema: &Schema) -> Fl
                 &spans,
                 &diagnostics,
                 schema,
-            ));
+            );
+            if inline {
+                made.inline = Some(Ref::id(tree, &path[..path.len() - 1]));
+                made.w = NODE_W - CHIP_X - 8.0;
+                made.h = CHIP_H;
+            }
+            nodes.push(made);
         }
     }
     // Draw order: the result first, then each tree root to leaves (a deterministic order).
@@ -458,6 +502,7 @@ fn node(
         whole: whole(t),
         error,
         warnings,
+        inline: None,
         x,
         y,
         w: NODE_W,

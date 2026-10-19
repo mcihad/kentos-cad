@@ -481,7 +481,7 @@ fn flow_screens() {
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["akis", "dugum"] {
+            for name in ["akis", "dugum", "sabit"] {
                 let mut app = opened();
                 let _ = app
                     .settings
@@ -493,7 +493,7 @@ fn flow_screens() {
                 };
                 snapshot.settle(&mut app, App::view, &mut update);
                 match name {
-                    "akis" => written(
+                    "akis" | "sabit" => written(
                         &mut app,
                         "durum eğer Nitelik = 'Arsa' ve $alan > 500 ise yuvarla($alan / 1000, 2) yoksa 0 son",
                     ),
@@ -503,6 +503,10 @@ fn flow_screens() {
                 snapshot.settle(&mut app, App::view, &mut update);
                 if name == "dugum" {
                     event(&mut app, Event::Flow(F::Select(Some("0".into()))));
+                }
+                // A constant in its input's row is selected and edited like a node (docs/adr/0604).
+                if name == "sabit" {
+                    event(&mut app, Event::Flow(F::Select(Some("0.0.0.1".into()))));
                 }
                 snapshot.settle(&mut app, App::view, &mut update);
                 let file = out.join(format!("ifade-akisi-{name}-{width}x{height}{suffix}.png"));
