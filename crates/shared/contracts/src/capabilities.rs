@@ -2729,6 +2729,30 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.joins.edit",
+        refusals: &[
+            &["invalid_join_view"],
+            REVISION,
+            &[
+                "unknown_join_view",
+                "join_view_exists",
+                "too_many_join_views",
+                "unknown_relation",
+                "layer_not_found",
+                "not_a_layer",
+                "field_not_found",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.joins.query",
+        refusals: &[&["invalid_join_view", "unknown_join_view", "invalid_count", "invalid_cursor"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],
@@ -2878,12 +2902,24 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.processing.batch",
+        refusals: &[
+            &["tools_unavailable", "empty_batch", "too_many_rows"],
+            &["unknown_tool", "invalid_uid", "entity_not_found", "invalid_parameters"],
+            &["batch_row_failed"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
             &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+            // docs/adr/0531: the neighbours outside a part's area.
+            &["topology_on_read", "outside_neighbour_invalid"],
         ],
-        warnings: &["export_losses", "label_pins_lost", "label_pins_moved", "key_not_unique"],
+        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "key_not_unique"],
         targets: none,
     },
     Entry {

@@ -280,6 +280,14 @@ codes! {
     RELATION_EXISTS = "relation_exists", Failed, false, "Bu kimlikle başka bir ilişki var.";
     /// A 101st relation.
     TOO_MANY_RELATIONS = "too_many_relations", Failed, false, "Projede en çok 100 ilişki olur.";
+    /// A join view by its shape (docs/adr/0527), or a query naming neither or both of a kept one and a definition.
+    INVALID_JOIN_VIEW = "invalid_join_view", Failed, false, "Birleşik görünümün kimliği, adı, katmanları, anahtarları ya da alanları kurallarına uymuyor.";
+    /// A join view the project has not.
+    UNKNOWN_JOIN_VIEW = "unknown_join_view", Failed, false, "Bu kimlikle bir birleşik görünüm yok.";
+    /// A new join view with the id of another.
+    JOIN_VIEW_EXISTS = "join_view_exists", Failed, false, "Bu kimlikle başka bir birleşik görünüm var.";
+    /// A 51st join view.
+    TOO_MANY_JOIN_VIEWS = "too_many_join_views", Failed, false, "Projede en çok 50 birleşik görünüm olur.";
     /// A relation's child field the child layer has not.
     RELATION_FIELD_UNKNOWN = "relation_field_unknown", Failed, false, "İlişkinin alanı alt katmanda yok.";
     /// A parent a `restrict` relation keeps from being deleted while it has children.
@@ -1119,6 +1127,12 @@ codes! {
     GEOMETRY_MISMATCH = "geometry_mismatch", Failed, false, "Nesnenin geometrisi tablonun geometri sütununa uymuyor.";
     /// The layer differs from its table; reading would replace it (docs/adr/0503).
     PENDING_CHANGES = "pending_changes", Conflict, true, "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür.";
+    /// A strict write whose neighbour outside the part's area would be left invalid (docs/adr/0531).
+    OUTSIDE_NEIGHBOUR_INVALID = "outside_neighbour_invalid", Failed, false, "Alanın dışındaki komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı.";
+    /// Topology asked of a read (docs/adr/0531).
+    TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
+    /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
+    NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).
@@ -1149,6 +1163,12 @@ codes! {
     TOOL_FAILED = "tool_failed", Failed, false, "Araç çalıştı ama bitiremedi; çizim değişmedi. İleti nedenini söyler.";
     /// The host has not registered İşlemler's tools (docs/adr/0508).
     TOOLS_UNAVAILABLE = "tools_unavailable", Failed, false, "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır.";
+    /// A batch with no rows (docs/adr/0529).
+    EMPTY_BATCH = "empty_batch", Failed, false, "Toplu çalıştırmanın satırı yok; en az bir satır verin.";
+    /// A batch of more rows than one command takes (docs/adr/0529).
+    TOO_MANY_ROWS = "too_many_rows", Failed, false, "Toplu çalıştırma en çok 500 satır alır; satırları bölüp ayrı çağırın.";
+    /// A row of a batch ran and stopped: nothing of the batch is written (docs/adr/0529).
+    BATCH_ROW_FAILED = "batch_row_failed", Failed, false, "Toplu çalıştırmanın bir satırı çalışıp durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; önceki satırların sonuçları geri alındı, hiçbir şey yazılmadı. İleti satırı ve nedenini söyler.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
     /// A `.shp` path for an export of more than one Shapefile (docs/adr/0514).

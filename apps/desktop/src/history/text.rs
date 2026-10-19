@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 172] = [
+pub(crate) const TITLES: [(&str, &str); 179] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -60,6 +60,7 @@ pub(crate) const TITLES: [(&str, &str); 172] = [
     ("cad.sheets.set", "Pafta seti"),
     ("cad.xrefs.edit", "Dış başvuru"),
     ("cad.xrefs.list", "Dış başvurular"),
+    ("cad.rasters.georef", "Raster oturt"),
     ("cad.rasters.mosaic", "Sanal mozaik"),
     ("cad.stac.search", "STAC'ta ara"),
     ("cad.stac.prepare", "STAC verisini hazırla"),
@@ -118,6 +119,7 @@ pub(crate) const TITLES: [(&str, &str); 172] = [
     ("cad.layers.info", "Bilgi kartı ve eylemler"),
     ("cad.layers.labels", "Etiketler"),
     ("cad.labels.pin", "Etiketi sabitle"),
+    ("cad.labels.report", "Etiketleri denetle"),
     ("cad.layers.renderer", "Katman stili"),
     ("cad.layers.edit", "Katman düzenle"),
     ("cad.layers.set", "Katman ağacı"),
@@ -153,6 +155,8 @@ pub(crate) const TITLES: [(&str, &str); 172] = [
     ("cad.records.create", "Kayıt ekle"),
     ("cad.records.duplicate", "Kaydı çoğalt"),
     ("cad.relations.edit", "İlişkiler"),
+    ("cad.joins.edit", "Birleşik görünümler"),
+    ("cad.joins.query", "Birleşik görünümü oku"),
     ("cad.forms.fill", "Formla toplu yaz"),
     ("cad.units.change", "Birimi değiştir"),
     ("cad.sources.describe", "Kaynakları tanı"),
@@ -160,6 +164,7 @@ pub(crate) const TITLES: [(&str, &str); 172] = [
     ("cad.fields.write", "Alanlara toplu yaz"),
     ("cad.processing.tools", "İşlem araçları"),
     ("cad.processing.run", "İşlem aracını çalıştır"),
+    ("cad.processing.batch", "İşlem aracını toplu çalıştır"),
     ("cad.sources.sync", "Kaynakla eşitle"),
     ("file.import.pdf", "PDF içe aktar"),
     ("file.import.gpkg", "GeoPackage içe aktar"),
@@ -179,11 +184,13 @@ pub(crate) const TITLES: [(&str, &str); 172] = [
     ("file.package", "Paketle"),
     ("file.export.gpkg", "GeoPackage dışa aktar"),
     ("file.export.shp", "Shapefile dışa aktar"),
+    ("file.export.csv", "CSV dışa aktar"),
+    ("file.import.csv", "CSV içe aktar"),
+    ("file.export.sld", "Görünüşü SLD olarak dışa aktar"),
+    ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),
-    ("file.export.sld", "Görünüşü SLD olarak dışa aktar"),
-    ("file.import.sld", "SLD'den görünüş al"),
 ];
 
 /// A command's title, or its id when the table has none.

@@ -6525,6 +6525,62 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The project's join views kept and read (docs/adr/0527), held together by
+        // fixtures/commands/v1/cad.joins.edit.json and cad.joins.query.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_JOINS_EDIT.into(),
+            version: crate::CAD_JOINS_EDIT_VERSION,
+            title: "Birleşik görünümler".into(),
+            summary: "Projenin birleşik görünümlerini oluşturur (create), bir ilişkiden kurar (fromRelation: üst katman $uid ile, alt katman ilişkinin alanıyla), değiştirir (update) ve siler (remove). Görünüm bir katmanın kayıtlarını key alanıyla, with katmanının kayıtlarını withKey alanıyla eşler; anahtar bir alanın anahtarı ya da nesnenin kalıcı kimliği için $uid'dir. keep: all (varsayılan, eşleşmeyenler de) ya da matched; fields birleşen katmanın gösterilecek alanları. \
+                      Satırlar kaydedilmez, cad.joins.query her okuyuşta çizimden kurar. Proje ayarıdır, geri alma adımı değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JoinsEdit>(),
+            output: schema::<crate::JoinsEdited>(),
+            plan: Some(schema::<crate::JoinsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parselleri maliklerine parsel numarasıyla bağla".into(),
+                input: json!({ "edit": { "kind": "create", "view": { "id": "parsel-malik", "name": "Parseller ve malikleri", "layer": "parsel", "key": "no", "with": "malik", "withKey": "parsel" } } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_JOINS_QUERY.into(),
+            version: crate::CAD_JOINS_QUERY_VERSION,
+            title: "Birleşik görünümü oku".into(),
+            summary: "Birleşik görünümün satırlarını çizimin şimdiki hâlinden sayfa sayfa verir, hiçbir şey yazmaz: kayıtlı görünüm (view) ya da tanım (definition, önizleme). \
+                      Ana katmanın kaydı birden çok kayıtla eşleşirse birden çok satırdır; satırın kimliği iki kaydın kalıcı kimliğidir (left/right, eşleşmeyende left/), her okuyuşta aynı. \
+                      Sütunlar kaydın tarafını (left, right) ve alanını söyler; bir hücre cad.entities.set ile o kayda yazılır, yazılamayanın (anahtar, kilitli katman) nedeni sütundadır. \
+                      report kayıtların nasıl eşleştiğini (eşleşen, eşleşmeyen, anahtarsız, kardinalite 1:1, 1:N, N:1, N:N), totals sayı sütunlarının toplamını (her kayıt bir kez) verir. \
+                      Katmanı ya da anahtarı kalkan görünüm broken ile söylenir, satır verilmez. Sayfa en çok 1000 (varsayılan 100); next sonraki sayfanın imleci."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JoinsQuery>(),
+            output: schema::<crate::JoinsAnswer>(),
+            plan: Some(schema::<crate::JoinsAnswer>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsellerin maliklerini oku".into(),
+                input: json!({ "view": "parsel-malik", "limit": 50 }),
+                output: None,
+            }],
+        },
         // Many records through a form at once (docs/adr/0403 §5), held together by
         // fixtures/commands/v1/cad.forms.fill.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -6705,7 +6761,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_PROCESSING_TOOLS_VERSION,
             title: "İşlem araçları".into(),
             summary: "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. \
-                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez."
+                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. models: true modelleri de listeler (kimliği model: ile başlar, parametreleri girdileridir). Çizimi değiştirmez."
                 .into(),
             aliases: vec!["islemler".into(), "araclar".into()],
             effect: CommandEffect::Query,
@@ -6733,7 +6789,9 @@ pub fn catalog() -> CommandCatalog {
                       Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
                       Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
                       Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. \
-                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman)."
+                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). \
+                      tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. \
+                      Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz."
                 .into(),
             aliases: vec!["islem".into(), "process".into()],
             effect: CommandEffect::Document,
@@ -6761,6 +6819,48 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir katmanın nesnelerine tampon".into(),
                     input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "distance": 5 } }),
+                    output: None,
+                },
+            ],
+        },
+        // Toplu çalıştırma (docs/adr/0529).
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_BATCH.into(),
+            version: crate::CAD_PROCESSING_BATCH_VERSION,
+            title: "İşlem aracını toplu çalıştır".into(),
+            summary: "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. \
+                      Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. \
+                      Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler). \
+                      Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur."
+                .into(),
+            aliases: vec!["topluislem".into(), "batch".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingBatch>(),
+            output: schema::<crate::ProcessingBatched>(),
+            plan: Some(schema::<crate::ProcessingBatched>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Aynı aracı üç tampon uzaklığıyla çalıştır".into(),
+                    input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" } }, "rows": [
+                        { "label": "5 m", "parameters": { "distance": 5 } },
+                        { "label": "10 m", "parameters": { "distance": 10 } },
+                        { "label": "20 m", "parameters": { "distance": 20 } }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel ölçü yazıları modelini iki ön ekle çalıştır".into(),
+                    input: json!({ "tool": "model:builtin.parcelSheet", "selection": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"], "rows": [
+                        { "parameters": { "prefix": "A" } },
+                        { "parameters": { "prefix": "B" } }
+                    ] }),
                     output: None,
                 },
             ],
@@ -8300,6 +8400,12 @@ mod tests {
                     crate::CAD_FORMS_FILL => {
                         serde_json::from_value::<crate::FormsFill>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_JOINS_EDIT => {
+                        serde_json::from_value::<crate::JoinsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_JOINS_QUERY => {
+                        serde_json::from_value::<crate::JoinsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_RELATIONS_EDIT => {
                         serde_json::from_value::<crate::RelationsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -8377,6 +8483,9 @@ mod tests {
                     }
                     crate::CAD_PROCESSING_RUN => {
                         serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_BATCH => {
+                        serde_json::from_value::<crate::ProcessingBatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())
@@ -8759,6 +8868,14 @@ mod tests {
                         }
                         crate::CAD_FORMS_FILL => {
                             serde_json::from_value::<crate::FormsFilled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_JOINS_EDIT => {
+                            serde_json::from_value::<crate::JoinsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_JOINS_QUERY => {
+                            serde_json::from_value::<crate::JoinsAnswer>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_RELATIONS_EDIT => {

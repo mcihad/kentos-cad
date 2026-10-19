@@ -80,21 +80,48 @@ fn choices_of(
 }
 
 impl App {
+    /// Katman ▾: the layers, then the project's join views (docs/adr/0527).
+    pub(crate) fn layer_select<'a>(&self, rows: &Rows) -> Element<'a, Message> {
+        let views: Vec<(String, String)> = self
+            .document
+            .as_ref()
+            .map(|d| {
+                d.model
+                    .settings()
+                    .join_views
+                    .iter()
+                    .map(|v| (v.id.clone(), v.name.clone()))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let ids: Vec<String> = rows.layers.iter().map(|(id, _, _)| id.clone()).collect();
+        let n = ids.len();
+        let chosen = match self.features.join.view.as_deref() {
+            Some(v) => views.iter().position(|(id, _)| id == v).map(|k| n + k),
+            None => rows.layer.as_ref().and_then(|l| ids.iter().position(|id| id == l)),
+        };
+        let choices = rows
+            .layers
+            .iter()
+            .map(|(_, path, c)| Choice::new(format!("{path} ({c})")))
+            .chain(views.iter().map(|(_, name)| {
+                Choice::new(format!("{} {name}", super::joins::words::MARK))
+            }))
+            .collect::<Vec<_>>();
+        Select::new(choices, chosen, move |i| {
+            if i < n {
+                msg(Event::Layer(ids[i].clone()))
+            } else {
+                msg(Event::View(views[i - n].0.clone()))
+            }
+        })
+        .placeholder(texts::NO_LAYERS)
+        .into()
+    }
+
     fn features_bar<'a>(&self, rows: &Rows, width: f32) -> Element<'a, Message> {
         let panel = &self.features;
-        let ids: Vec<String> = rows.layers.iter().map(|(id, _, _)| id.clone()).collect();
-        let chosen = rows
-            .layer
-            .as_ref()
-            .and_then(|l| ids.iter().position(|id| id == l));
-        let layer = Select::new(
-            rows.layers
-                .iter()
-                .map(|(_, path, n)| Choice::new(format!("{path} ({n})"))),
-            chosen,
-            move |i| msg(Event::Layer(ids[i].clone())),
-        )
-        .placeholder(texts::NO_LAYERS);
+        let layer = self.layer_select(rows);
         let search = SearchBox::new(panel.search.clone(), texts::SEARCH, |t| {
             msg(Event::Search(t))
         })
@@ -242,6 +269,16 @@ impl App {
         };
         let rows = self.feature_rows(doc);
         let panel = &self.features;
+        if let Some(v) = self.join_view(doc) {
+            let picker = row![
+                container(label::muted(texts::LAYER)).padding([0, 2]),
+                container(self.layer_select(&rows)).width(Length::Fixed(260.0)),
+            ]
+            .spacing(8)
+            .align_y(Center)
+            .into();
+            return self.joins_tab(doc, v, picker);
+        }
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
         if panel.pane == super::Pane::Form {
             return iced::widget::column![

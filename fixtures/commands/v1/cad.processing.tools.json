@@ -2277,6 +2277,81 @@
    ]
   },
   {
+   "name": "Modeller: models ile model da listelenir (girdileri parametreleri)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "model:builtin.parcelSheet",
+      "models": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": [
+        {
+         "id": "model:builtin.parcelSheet",
+         "label": "Parsel ölçü yazıları",
+         "category": "$any",
+         "description": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; hepsi tek adımda geri alınır.",
+         "aliases": [],
+         "parameters": [
+          {
+           "name": "parcels",
+           "label": "Parseller",
+           "kind": "features",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          },
+          {
+           "name": "prefix",
+           "label": "Nokta öneki",
+           "kind": "text",
+           "description": "$any",
+           "optional": false,
+           "advanced": "$any",
+           "default": "$any",
+           "options": "$any"
+          }
+         ]
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Modeller: models olmadan listede model yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "query": "model:builtin.parcelSheet"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tools": []
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "plan da listeler, çizimi değiştirmez",
    "steps": [
     {

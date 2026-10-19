@@ -220,6 +220,8 @@ pub enum Dialog {
     FormEntry,
     /// İlişkiler (forms/relations.rs, docs/adr/0405); the window is `App::relations_window`.
     Relations,
+    /// Birleşik görünümler (joins_window.rs, docs/adr/0527); the window is `App::joins_window`.
+    Joins,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406); the window is `App::form_audit`.
     FormAudit,
     /// Koşullu biçim (forms/table_styles.rs, docs/adr/0413); the window is `App::table_styles`.
@@ -513,6 +515,8 @@ pub enum Message {
     Forms(crate::forms::designer::Event),
     /// An event of İlişkiler (forms/relations.rs, docs/adr/0405).
     Relations(crate::forms::relations::Event),
+    /// An event of Birleşik görünümler (joins_window.rs, docs/adr/0527).
+    Joins(crate::joins_window::Event),
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
     Contingents(crate::forms::contingents::Event),
@@ -991,6 +995,8 @@ pub struct App {
     pub(crate) form_stack: Vec<crate::forms::entry::Entry>,
     /// İlişkiler (forms/relations.rs, docs/adr/0405).
     pub(crate) relations_window: Option<crate::forms::relations::Window>,
+    /// Birleşik görünümler (joins_window.rs, docs/adr/0527).
+    pub(crate) joins_window: Option<crate::joins_window::Window>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
     pub(crate) contingents: Option<crate::forms::contingents::Window>,
@@ -1332,6 +1338,7 @@ impl App {
             form_entry: None,
             form_stack: Vec::new(),
             relations_window: None,
+            joins_window: None,
             table_styles: None,
             subtypes: None,
             contingents: None,
@@ -1479,6 +1486,12 @@ impl App {
             window::close_requests().map(Message::CloseRequested),
             if unsaved {
                 Subscription::run(recovery::ticks)
+            } else {
+                Subscription::none()
+            },
+            // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
+            if self.processing.batch_running() {
+                Subscription::run(crate::processing::batch::ticks)
             } else {
                 Subscription::none()
             },
@@ -1888,6 +1901,7 @@ impl App {
             Message::Views(event) => return self.views_event(event),
             Message::Forms(event) => return self.forms_event(event),
             Message::Relations(event) => return self.relations_event(event),
+            Message::Joins(event) => return self.joins_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
             Message::Contingents(event) => return self.contingents_event(event),

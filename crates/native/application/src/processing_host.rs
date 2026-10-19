@@ -6,10 +6,26 @@
 use std::sync::OnceLock;
 
 use kentos_contracts::{
-    CommandError, CommandWarning, ProcessingRan, ProcessingRun, ProcessingTools,
-    ProcessingToolsListed, codes,
+    CommandError, CommandWarning, ProcessingBatch, ProcessingBatched, ProcessingRan, ProcessingRun,
+    ProcessingTools, ProcessingToolsListed, codes,
 };
 use kentos_domain::Document;
+
+/// What a batch asks of the command running it (docs/adr/0529 §1): whether it was asked to stop, asked between the
+/// rows, and where it has come to.
+pub trait BatchFlow {
+    fn stopped(&self) -> bool;
+    fn progress(&self, done: u64, total: u64);
+}
+
+/// How a batch ended without being refused.
+#[allow(clippy::large_enum_variant)]
+pub enum BatchEnd {
+    /// Every row ran.
+    Ran(ProcessingBatched),
+    /// It was stopped between rows: what the earlier rows did is taken back, nothing is written.
+    Cancelled,
+}
 
 /// İşlemler's tools as the commands reach them.
 pub trait ToolHost: Send + Sync {
@@ -29,6 +45,16 @@ pub trait ToolHost: Send + Sync {
         input: &ProcessingRun,
         write: bool,
     ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>>;
+    /// The refusals a batch would meet before it runs: its size, then each row's, as `check` gives them.
+    fn check_batch(&self, doc: &Document, input: &ProcessingBatch)
+    -> Result<(), Box<CommandError>>;
+    /// The batch on `doc`: its rows one after another, one undo step, all or nothing; `flow` is asked between rows.
+    fn batch(
+        &self,
+        doc: &mut Document,
+        input: &ProcessingBatch,
+        flow: &dyn BatchFlow,
+    ) -> Result<BatchEnd, Box<CommandError>>;
 }
 
 static TOOLS: OnceLock<Box<dyn ToolHost>> = OnceLock::new();

@@ -36,7 +36,7 @@ use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
-use kentos_native_application::{processing_run, processing_tools};
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
@@ -68,6 +68,8 @@ use kentos_domain::contracts::{
 use kentos_native_application::{
     forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, schema_describe, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
+use kentos_domain::contracts::{JoinsEdit, JoinsQuery};
+use kentos_native_application::{joins_edit, joins_query};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -536,6 +538,18 @@ impl Input for RecordsCreate {
 }
 
 impl Input for RelationsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for JoinsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for JoinsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2180,6 +2194,12 @@ impl Input for kentos_domain::contracts::ProcessingRun {
     }
 }
 
+impl Input for kentos_domain::contracts::ProcessingBatch {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::FieldsWrite {
     /// No number: a layer, fields and values as text.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3145,6 +3165,8 @@ fn run_op(
         kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
         kentos_domain::contracts::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
+        kentos_domain::contracts::CAD_JOINS_EDIT => run!(joins_edit, JoinsEdit),
+        kentos_domain::contracts::CAD_JOINS_QUERY => run!(joins_query, JoinsQuery),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
@@ -3161,6 +3183,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
         kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
         kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),
+        kentos_domain::contracts::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_domain::contracts::ProcessingBatch),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),

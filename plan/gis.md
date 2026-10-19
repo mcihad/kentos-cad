@@ -184,6 +184,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-09 — Dış kaynaklar arasında canlı join ve salt okunur query layer ekle — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0527](../docs/adr/0527-join-views.md)): G1'in yerel tipli birleşimi: projenin birleşik görünümleri (`.kcad` şema 89), satırları her okuyuşta çizimden; çoğalan satır iki kaydın kalıcı kimliğiyle, eşleşme raporu ve kardinalite, toplamlar her kaydı bir kez sayar, hücre sahibi olan kayda yazılır, anahtar ve kilitli katman nedeniyle salt okunur, kopuk görünüm satır vermez; `cad.joins.edit` ve `.query`, Öznitelik tablosunda görünüm, Birleşik görünümler penceresi, Python ve MCP. Kalan: dış kaynaklar (bağlı GeoPackage ve PostGIS tablosu) arasında sağlayıcı sorgusunda birleşim, PG görünümü ve izinli salt okunur SQL sonucunun katman olması (G2), görünümün çizimde katman olması.*
+
   **Mevcut:** Anahtarla veri aktarma, ifadeler, PR'de kalıcı ilişkiler/lookup var. Bunlar bütün dış kaynaklar için canlı joined view veya SQL query layer değildir [K06/P25-B].
 
   **Yapılacak kalan iş:** Yerel anahtar aktarımı, PR ilişkileri ve lookup'ı yeniden yazma. Eksik olan canlı joined view/query layer için provider'lar arasında kaynak bağı ve yazma yönlendirmesi tanımla. Anahtar türü, null/yinelenen anahtar, cardinality ve çoğalan satır kimliği sağlayıcı sorgusunda korunsun; PG view/izinli salt okunur SQL sonucu yeniden açılabilen katman/tablo olsun. Geçici `row_number()` sonucu kalıcı kimlik sayılmasın. Mevcut katman/field/ilişki kimliklerini adapter ile kullan; raw SQL metni birleştirme. [Q04], [D01]
@@ -213,6 +215,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/03/12/15/37. Parsel bölünürken yeni kimlikler, eski–yeni bağlantısı, alanların bölme politikası, ilişkiler ve form hesabı aynı işlemde sonuçlansın. Kilitli/yetkisiz komşu veya constraint hatası yarım veri bırakmasın. Tek undo yerel adımı eksiksiz geri alsın; sunucuda onaylanmış değişikliği geri alma yeni sürüm denetimli işlem olarak ele alınsın.
 
 - [ ] **CBS-12 — Dış sağlayıcıda görünüm dışı komşularla topolojik commit'i tamamla — P1**
+
+  *Kısmen (19 Ekim 2026; [ADR 0531](../docs/adr/0531-neighbours-outside-the-area.md)): dosya kaynağında (GeoPackage) alan sınırlı parçanın yazması; ortak köşeleri değişen, haritaya yüklenmemiş komşular bbox sorgusuyla aynı dosya sürümünden okunur, mevcut `topology_edit` motoruyla izler, kaynağın sisteminde aynı SQLite işleminde yazılır; `strict` profilde geçersiz kalacak komşu hiçbir şeyin yazılmamasıdır, `loose`'da söylenerek bırakılır; dosya değiştiyse çakışma. Kalan: dış PostGIS kaynağı (sağlayıcının alan sınırı, CBS-02/04), yetki ve başka kullanıcının sürüm engeli, komşunun tam geçerlilik denetimi.*
 
   **Mevcut:** Ortak köşe/kenar düzenleme **zaten yapılmış**; MEVCUT-01 tamamlanmış kapsamdır. Native `topology_follow::around` ve `interaction::neighbours` görünen geometri deposundan komşuları bulur; köşe/kenar değişimleri aynı adımda yazılır. Kilitli komşu atlanıp bildirilir; bu mevcut davranış bir eksiklik diye yeniden açılmıyor. Açık iş, henüz olmayan dış GIS sağlayıcısında aynı işlemin kaynak sorgusu/transaction ile yürütülmesidir. [K07]
 

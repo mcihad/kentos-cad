@@ -68,6 +68,7 @@ pub fn default_settings(srid: u32) -> ProjectSettings {
         named_views: Vec::new(),
         forms: Vec::new(),
         relations: Vec::new(),
+        join_views: Vec::new(),
         ucs: None,
         srid,
         length_decimals: 3,

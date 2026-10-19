@@ -303,13 +303,33 @@ impl App {
             actions
         ]
         .align_y(Center);
+        // What flowed through it (docs/adr/0529 §2): the objects it read and the ones it made, changed or chose, and for
+        // a model each step's share and time.
+        let mut body = column![head, label::caption(r.summary.clone())].spacing(4);
+        if r.status == Status::Ok && (r.records_in > 0 || r.records_out > 0) {
+            body = body.push(
+                label::mono_caption(format!("{} → {} kayıt", r.records_in, r.records_out))
+                    .style(style::text::muted),
+            );
+        }
+        for (i, s) in r.steps.iter().enumerate() {
+            body = body.push(
+                row![
+                    label::caption(format!("{}. {}", i + 1, s.label)).width(Fill),
+                    label::mono_caption(format!(
+                        "{} → {} kayıt · {} ms",
+                        s.records_in, s.records_out, s.ms
+                    ))
+                    .style(style::text::muted),
+                ]
+                .spacing(8),
+            );
+        }
+        body = body.push(foot);
         container(
-            row![
-                icon(glyph).size(16.0).tone(tone),
-                column![head, label::caption(r.summary.clone()), foot].spacing(4)
-            ]
-            .spacing(8)
-            .align_y(Alignment::Start),
+            row![icon(glyph).size(16.0).tone(tone), body]
+                .spacing(8)
+                .align_y(Alignment::Start),
         )
         .padding([10, 12])
         .width(Fill)

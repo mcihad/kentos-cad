@@ -501,6 +501,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut forms = Vec::new();
     let mut domains = Vec::new();
     let mut relations = Vec::new();
+    let mut join_views = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
     let mut xref_paths = Vec::new();
@@ -663,6 +664,39 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 relations = list;
+            }
+            // Schema 89 (docs/adr/0527): the project's join views, read whole and checked.
+            "joinViews" if has.join_views => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::JoinView> =
+                    serde_json::from_value(value.clone()).map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("birleşik görünümler okunamadı: {words}"))
+                    })?;
+                if serde_json::to_value(&list).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "birleşik görünümler yazıcının biçiminde değil (varsayılan değerinde bir alan yazılmış)",
+                    ));
+                }
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; görünüm yoksa alan hiç yazılmaz",
+                    ));
+                }
+                if let Some(problem) = kentos_contracts::join_views_problem(&list) {
+                    return Err(r.fail_at(Code::BadValue, at, &problem));
+                }
+                join_views = list;
             }
             // Schema 56 (docs/adr/0313 §1): the project's line types and line type scale.
             "lineTypes" if has.patterns => {
@@ -986,6 +1020,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         named_views,
         forms,
         relations,
+        join_views,
         sources,
         length_style,
         domains,

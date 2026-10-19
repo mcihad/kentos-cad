@@ -33,6 +33,9 @@ use crate::app::{App, Message};
 use crate::document::Document;
 use crate::points::{click_pick, focus_field};
 
+pub(crate) mod joins;
+#[cfg(test)]
+mod joins_tests;
 mod records;
 #[cfg(test)]
 mod tests;
@@ -159,6 +162,16 @@ pub enum Event {
     Cancel,
     /// Alan hesapla and Yapıştır (write.rs, docs/adr/0507).
     Write(write::WriteEvent),
+    /// Katman ▾: a join view by id (joins.rs, docs/adr/0527).
+    View(String),
+    /// A join view's row pressed: its records selected.
+    JoinPress(usize),
+    /// A join view's cell double-clicked: the row and the column.
+    JoinEdit(usize, usize),
+    JoinInput(String),
+    /// Enter: written to the cell's record.
+    JoinEnter,
+    JoinCancel,
 }
 
 /// The rows as worked out for a drawing, a selection, the view and a query.
@@ -242,6 +255,8 @@ pub(crate) struct FeaturesPanel {
     cache: RefCell<Option<(Key, Rows)>>,
     /// Alan hesapla or Yapıştır while open (write.rs).
     pub(crate) write: Option<write::WriteWindow>,
+    /// The join view shown instead of a layer (joins.rs, docs/adr/0527).
+    pub(crate) join: joins::JoinPane,
 }
 
 impl FeaturesPanel {
@@ -484,6 +499,7 @@ impl App {
                     self.form_entry = None;
                 }
                 self.features.layer = Some(id);
+                self.features.join.view = None;
                 self.features.sort = None;
                 self.features.editing = None;
                 self.features.changed();
@@ -502,6 +518,16 @@ impl App {
             }
             Event::Builder => return self.open_builder_for_features(),
             Event::Write(e) => return self.features_write_event(e),
+            Event::View(id) => {
+                self.features.join.view = Some(id);
+                self.features.editing = None;
+                self.features.changed();
+            }
+            Event::JoinPress(_)
+            | Event::JoinEdit(..)
+            | Event::JoinInput(_)
+            | Event::JoinEnter
+            | Event::JoinCancel => return self.join_event(event),
             Event::Sort(column) => {
                 let Some(doc) = &self.document else {
                     return Task::none();

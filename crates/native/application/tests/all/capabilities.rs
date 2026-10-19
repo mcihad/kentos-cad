@@ -348,6 +348,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
     ),
     (
+        "cad.processing.batch",
+        "tools_unavailable",
+        "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
+    ),
+    (
         "cad.sources.sync",
         "invalid_extent",
         "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510)",

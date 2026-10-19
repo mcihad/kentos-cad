@@ -177,6 +177,7 @@ mod font_report;
 mod text_tools;
 mod leader_tools;
 mod layer_merge;
+mod joins_window;
 mod layer_order;
 mod layer_purge;
 mod layer_sld;
@@ -426,7 +427,7 @@ fn main() -> iced::Result {
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
     kentos_postgis::register();
-    kentos_processing::command::register();
+    kentos_processing::command::register_as("desktop");
     // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
     kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
 

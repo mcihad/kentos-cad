@@ -11,6 +11,7 @@
 //! are applied on the drawing as they were on the copy, in one undo step
 //! ([`replay_model`]).
 
+use std::cell::RefCell;
 use std::collections::{BTreeMap, BTreeSet};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
@@ -20,7 +21,7 @@ use serde_json::{Value, json};
 use crate::features::Host;
 use crate::model::{Model, ModelStep, ValueSource, check_model, order_steps, step_name};
 use crate::parameters::default_values;
-use crate::runner::{Job, LogLine, Outcome, Prepared, RunRecord, Runner, Status};
+use crate::runner::{Job, LogLine, Outcome, Prepared, RunRecord, Runner, Status, StepRecord};
 use crate::types::{Defaults, Feedback, OutputKind, RunResult, Target, Tool, Values};
 
 /// The prefix of model ids in history and commands ("model:builtin.parcelSheet").
@@ -274,6 +275,9 @@ pub fn end_model(
         added: Vec::new(),
         touched: Vec::new(),
         target: None,
+        records_in: 0,
+        records_out: 0,
+        steps: Vec::new(),
     });
     Outcome::Stopped {
         status,
@@ -342,11 +346,20 @@ pub fn run_model_with(
         .duration_since(UNIX_EPOCH)
         .map_or(0, |d| d.as_millis() as u64);
     let clock = Instant::now();
+    // The steps that ran, for the model's record (docs/adr/0529 §2): what flowed through each and how long it took.
+    let ran: RefCell<Vec<StepRecord>> = RefCell::new(Vec::new());
     let record = |runner: &mut Runner,
                   status: Status,
                   summary: String,
                   added: Vec<Slot>,
                   touched: Vec<Slot>| {
+        let steps = ran.borrow().clone();
+        let records_in = steps.iter().map(|s| s.records_in).sum();
+        let records_out = added
+            .iter()
+            .chain(touched.iter())
+            .collect::<BTreeSet<_>>()
+            .len() as u64;
         runner.add_record(RunRecord {
             seq: 0,
             tool_id: as_tool.id.clone(),
@@ -359,6 +372,9 @@ pub fn run_model_with(
             added,
             touched,
             target: None,
+            records_in,
+            records_out,
+            steps,
         })
     };
     let problems = check_model(model, lookup);
@@ -457,6 +473,15 @@ pub fn run_model_with(
                 if result.select.is_some() {
                     select = result.select;
                 }
+                ran.borrow_mut().push(StepRecord {
+                    id: step.id.clone(),
+                    tool_id: tool.id.clone(),
+                    label: step_name(step, lookup),
+                    records_in: record.records_in,
+                    records_out: record.records_out,
+                    ms: record.ms,
+                    summary: record.summary.clone(),
+                });
                 summaries.push(record.summary);
             }
             failed => {

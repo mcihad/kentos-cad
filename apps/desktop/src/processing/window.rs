@@ -43,6 +43,10 @@ const PROGRESS: f32 = 140.0;
 impl App {
     /// The open processing window, over the drawing.
     pub(crate) fn processing_view(&self) -> Element<'_, Message> {
+        // Toplu çalıştır: the same window with the table in the form's place (batch.rs).
+        if self.processing.batch.is_some() {
+            return self.batch_view();
+        }
         let (Some(window), Some(doc)) = (&self.processing.dialog, &self.document) else {
             return space().into();
         };
@@ -541,6 +545,18 @@ fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
             .style(style::button::ghost)
             .on_press(ev(e))
     };
+    // Toplu çalıştır (docs/adr/0529 §4): the same tool over a table of rows of values.
+    let batch = button(
+        row![
+            icon(crate::icons::from_web(Some("table"))).size(14.0),
+            label::body("Toplu çalıştır…")
+        ]
+        .spacing(6)
+        .align_y(Center),
+    )
+    .padding([5, 10])
+    .style(style::button::ghost)
+    .on_press_maybe((!window.running()).then(|| ev(Event::Batch(super::batch::Event::Open))));
     let mut status = Row::new().spacing(8).align_y(Center).width(Fill);
     if line.kind == LineKind::Running {
         let share = line.progress.map(|p| f32::from(p) / 100.0);
@@ -582,7 +598,7 @@ fn footer<'a>(window: &'a ToolDialog) -> Element<'a, Message> {
     .padding([5, 14])
     .style(style::button::primary)
     .on_press_maybe((!buttons.run_disabled).then(|| ev(Event::Run)));
-    row![reset, status, close, run]
+    row![reset, batch, status, close, run]
         .spacing(10)
         .align_y(Center)
         .into()

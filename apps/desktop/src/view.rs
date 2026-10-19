@@ -1832,6 +1832,7 @@ impl App {
             Asking::Forms => self.forms_view(),
             Asking::FormEntry => self.form_entry_view(),
             Asking::Relations => self.relations_view(),
+            Asking::Joins => self.joins_view(),
             Asking::TableStyles => self.table_styles_view(),
             Asking::Subtypes => self.subtypes_view(),
             Asking::Contingents => self.contingents_view(),

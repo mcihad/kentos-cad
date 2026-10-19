@@ -75,6 +75,7 @@ UNITS: dict[str, str] = {
     "year": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
     "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
+    "ms": "Milisaniye: bir işin süresi.",
 }
 
 
@@ -1743,6 +1744,34 @@ class IslandStyle(_StrEnum):
 
 IslandStyleName = Literal["outer", "normal", "ignore"]
 """The names of :class:`IslandStyle`, for a plain string."""
+
+
+class JoinKeep(_StrEnum):
+    """Which records of the layer a view shows.
+
+    - ``all``: Every record, the ones without a match with empty cells (a left join).
+    - ``matched``: Only the records with a match (an inner join).
+    """
+    ALL = "all"
+    MATCHED = "matched"
+
+
+JoinKeepName = Literal["all", "matched"]
+"""The names of :class:`JoinKeep`, for a plain string."""
+
+
+class JoinSide(_StrEnum):
+    """Which records a column's cells are.
+
+    - ``left``: The main layer's record (the row's `left`).
+    - ``right``: The joined layer's record (the row's `right`).
+    """
+    LEFT = "left"
+    RIGHT = "right"
+
+
+JoinSideName = Literal["left", "right"]
+"""The names of :class:`JoinSide`, for a plain string."""
 
 
 class JunctionRole(_StrEnum):
@@ -3531,6 +3560,21 @@ SyncDirectionName = Literal["write", "read"]
 """The names of :class:`SyncDirection`, for a plain string."""
 
 
+class SyncTopology(_StrEnum):
+    """How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
+    written objects changed follow them, in the same transaction.
+
+    - ``strict``: All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    - ``loose``: The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
+    """
+    STRICT = "strict"
+    LOOSE = "loose"
+
+
+SyncTopologyName = Literal["strict", "loose"]
+"""The names of :class:`SyncTopology`, for a plain string."""
+
+
 class TableAlign(_StrEnum):
     """A column's alignment; its cells sit in the middle of their rows."""
     LEFT = "left"
@@ -5083,6 +5127,29 @@ class InsertsClipOperation(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> InsertsClipOperation:
         return _variant(_INSERTS_CLIP_OPERATION, "InsertsClipOperation", "kind", data).from_json(data)
+
+
+class JoinsOp(_Union):
+    """What `cad.joins.edit` does.
+
+    One of:
+
+    - :class:`CreateJoinsOp` (``kind: create``)
+    - :class:`FromRelationJoinsOp` (``kind: fromRelation``)
+    - :class:`UpdateJoinsOp` (``kind: update``)
+    - :class:`RemoveJoinsOp` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsOp:
+        return _variant(_JOINS_OP, "JoinsOp", "kind", data).from_json(data)
 
 
 class LeaderEdit(_Union):
@@ -7503,6 +7570,59 @@ class AuditedRecord(_Model):
         return cls(
             uid=data["uid"],
             issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BatchRow(_Model):
+    """The values one row of a batch takes over the batch's (docs/adr/0529 §1).
+    Attributes:
+        label: Its name in the answer (“Satır 3” when not given).
+        parameters: The parameters it gives its own value to; every other parameter takes the batch's, then the default.
+    """
+    label: str | None | Unset = UNSET
+    parameters: dict[str, Any] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BatchRow:
+        return cls(
+            label=data.get("label", UNSET),
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BatchRowRan(_Model):
+    """A row of a batch as it ran.
+    Attributes:
+        index: Unit: index.
+        ran: What the row did, as `cad.processing.run` answers it (its own record included).
+    """
+    index: int
+    label: str
+    ran: ProcessingRan
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["label"] = self.label
+        out["ran"] = self.ran.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BatchRowRan:
+        return cls(
+            index=data["index"],
+            label=data["label"],
+            ran=ProcessingRan.from_json(data["ran"]),
         )
 
 
@@ -20773,6 +20893,344 @@ class ItemWords(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JoinColumn(_Model):
+    """A column of a view.
+    Attributes:
+        name: The heading: the field's name; a joined one the main layer has too with “ (layer)”.
+        field: The attribute the cell is (the field's name in the record's attributes).
+        editable: Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).
+        reason: Why not, when not.
+    """
+    name: str
+    side: JoinSide | JoinSideName
+    field: str
+    editable: bool
+    reason: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["side"] = _enum_out(self.side)
+        out["field"] = self.field
+        out["editable"] = self.editable
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinColumn:
+        return cls(
+            name=data["name"],
+            side=_enum_in(JoinSide, data["side"]),
+            field=data["field"],
+            editable=data["editable"],
+            reason=data.get("reason", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinReport(_Model):
+    """How the records met.
+    Attributes:
+        records: The main layer's records, those with a match, without one, and without a key. Unit: count.
+        matched: Unit: count.
+        unmatched: Unit: count.
+        null_keys: Unit: count.
+        with_records: The joined layer's records and those some record met. Unit: count.
+        with_used: Unit: count.
+        rows: Every row of the view (all pages). Unit: count.
+        cardinality: `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
+    """
+    records: int
+    matched: int
+    unmatched: int
+    null_keys: int
+    with_records: int
+    with_used: int
+    rows: int
+    cardinality: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["records"] = self.records
+        out["matched"] = self.matched
+        out["unmatched"] = self.unmatched
+        out["nullKeys"] = self.null_keys
+        out["withRecords"] = self.with_records
+        out["withUsed"] = self.with_used
+        out["rows"] = self.rows
+        out["cardinality"] = self.cardinality
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinReport:
+        return cls(
+            records=data["records"],
+            matched=data["matched"],
+            unmatched=data["unmatched"],
+            null_keys=data["nullKeys"],
+            with_records=data["withRecords"],
+            with_used=data["withUsed"],
+            rows=data["rows"],
+            cardinality=data["cardinality"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinRow(_Model):
+    """A row: a record of the main layer and one of its matches (none when it has none).
+    Attributes:
+        id: `left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.
+        cells: The columns' values in order; none: no value (an attribute not written, or no match).
+    """
+    id: str
+    left: str
+    cells: list[str | None]
+    right: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["left"] = self.left
+        out["cells"] = list(self.cells)
+        if self.right is not UNSET:
+            out["right"] = self.right
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinRow:
+        return cls(
+            id=data["id"],
+            left=data["left"],
+            cells=list(data["cells"]),
+            right=data.get("right", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinTotal(_Model):
+    """A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).
+    Attributes:
+        column: The column's place. Unit: count.
+        count: The records whose value was a number, and those whose value was not. Unit: count.
+        skipped: Unit: count.
+        sum: The exact sum as text; none when too large to hold exactly.
+    """
+    column: int
+    count: int
+    skipped: int | Unset = UNSET
+    sum: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["count"] = self.count
+        if self.skipped is not UNSET:
+            out["skipped"] = self.skipped
+        if self.sum is not UNSET:
+            out["sum"] = self.sum
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinTotal:
+        return cls(
+            column=data["column"],
+            count=data["count"],
+            skipped=data.get("skipped", UNSET),
+            sum=data.get("sum", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinView(_Model):
+    """A join view: the layer's records by `key` with the `with` layer's by `withKey`.
+    Attributes:
+        id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+        name: What the table's layer list shows; trimmed, 1–64 characters.
+        layer: The main layer's id: one row (or more) a record of it.
+        key: The main layer's key: a field's key, or `$uid`.
+        with_: The joined layer's id (the main one itself for a tree).
+        with_key: The joined layer's key: a field's key, or `$uid`.
+        fields: The joined layer's fields the view shows, in order (keys); none: all of them.
+        keep: Written only when not `all`.
+    """
+    id: str
+    name: str
+    layer: str
+    key: str
+    with_: str
+    with_key: str
+    fields: list[str] | Unset = UNSET
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["key"] = self.key
+        out["with"] = self.with_
+        out["withKey"] = self.with_key
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinView:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            layer=data["layer"],
+            key=data["key"],
+            with_=data["with"],
+            with_key=data["withKey"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsAnswer(_Model):
+    """Output of `cad.joins.query` v1, and its plan.
+    Attributes:
+        revision: The document's revision the rows are of.
+        broken: Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.
+        next: The next page's cursor; none: the last page.
+        totals: The sums of the columns with a number among their records' values, in column order.
+    """
+    name: str
+    columns: list[JoinColumn]
+    rows: list[JoinRow]
+    report: JoinReport
+    revision: str
+    broken: str | None | Unset = UNSET
+    next: str | None | Unset = UNSET
+    totals: list[JoinTotal] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        if self.next is not UNSET:
+            out["next"] = self.next
+        if self.totals is not UNSET:
+            out["totals"] = [e0.to_json() for e0 in self.totals]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsAnswer:
+        return cls(
+            name=data["name"],
+            columns=[JoinColumn.from_json(e0) for e0 in data["columns"]],
+            rows=[JoinRow.from_json(e0) for e0 in data["rows"]],
+            report=JoinReport.from_json(data["report"]),
+            revision=data["revision"],
+            broken=data.get("broken", UNSET),
+            next=data.get("next", UNSET),
+            totals=[JoinTotal.from_json(e0) for e0 in data["totals"]] if "totals" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdit(_Model):
+    """Input of `cad.joins.edit` v1.
+
+    Refusals, in this order: `invalid_join_view`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_join_view`, `join_view_exists`, `too_many_join_views`, `unknown_relation`, `layer_not_found`,
+    `not_a_layer`, `field_not_found`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: JoinsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdit:
+        return cls(
+            edit=JoinsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdited(_Model):
+    """Output of `cad.joins.edit` v1, and what plan says it would do.
+    Attributes:
+        views: The project's views afterwards, in order.
+        revision: The document's revision afterwards (plan: the one it was made against).
+    """
+    views: list[JoinView]
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdited:
+        return cls(
+            views=[JoinView.from_json(e0) for e0 in data["views"]],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsQuery(_Model):
+    """Input of `cad.joins.query` v1: a kept view by its id, or a definition read as it is (a preview).
+
+    Refusals: `invalid_join_view` (neither or both, or a definition that does not hold), `unknown_join_view`,
+    `invalid_count` (a limit not 1–1000), `invalid_cursor`.
+    Attributes:
+        cursor: The page after the one whose `next` this is.
+        limit: Rows a page gives, 1–1000; none: 100. Unit: count.
+    """
+    cursor: str | None | Unset = UNSET
+    definition: JoinView | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.definition is not UNSET:
+            out["definition"] = None if self.definition is None else self.definition.to_json()
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsQuery:
+        return cls(
+            cursor=data.get("cursor", UNSET),
+            definition=UNSET if "definition" not in data else None if data["definition"] is None else JoinView.from_json(data["definition"]),
+            limit=data.get("limit", UNSET),
+            view=data.get("view", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionLayer(_Model):
     """A junction layer: its points' role and, optionally, which of them it takes and which are closed.
     Attributes:
@@ -28838,10 +29296,94 @@ class PolylinePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProcessingBatch(_Model):
+    """Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
+    through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
+    and the row's own values over them, with the input's `selection` and `view`. The rows run in order, each seeing
+    what the rows before it wrote; the whole batch is one undo step named “Toplu: <tool>”, written all or not at all:
+    a row that stops (or a stop asked between rows) takes back what the earlier rows did. At most 500 rows. Refusals,
+    in order: `tools_unavailable`, `empty_batch`, `too_many_rows`, then each row's as `cad.processing.run` refuses
+    them (`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters`), the path prefixed `rows[i].`; at run
+    time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
+    nothing written).
+    Attributes:
+        parameters: The values every row takes unless it gives its own.
+        selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
+        view: Unit: length.
+    """
+    tool: str
+    rows: list[BatchRow]
+    parameters: dict[str, Any] | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingBatch:
+        return cls(
+            tool=data["tool"],
+            rows=[BatchRow.from_json(e0) for e0 in data["rows"]],
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingBatched(_Model):
+    """What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
+    Attributes:
+        rows: Every row, in order, as it ran.
+        record: The batch's own record: its rows as steps.
+        step: The undo step's name; none when the drawing did not change.
+    """
+    tool: str
+    summary: str
+    rows: list[BatchRowRan]
+    record: ProcessingRecord
+    revision: str
+    step: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["summary"] = self.summary
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["record"] = self.record.to_json()
+        out["revision"] = self.revision
+        if self.step is not UNSET:
+            out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingBatched:
+        return cls(
+            tool=data["tool"],
+            summary=data["summary"],
+            rows=[BatchRowRan.from_json(e0) for e0 in data["rows"]],
+            record=ProcessingRecord.from_json(data["record"]),
+            revision=data["revision"],
+            step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProcessingRan(_Model):
     """What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).
     Attributes:
         summary: The tool's sentence of what it did.
+        record: What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again.
         added: The objects it made and changed (persistent ids).
         inputs: The layers the features inputs read, in the inputs' order.
         layers: The layers it made (ids).
@@ -28853,6 +29395,7 @@ class ProcessingRan(_Model):
     """
     tool: str
     summary: str
+    record: ProcessingRecord
     revision: str
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
@@ -28868,6 +29411,7 @@ class ProcessingRan(_Model):
         out: dict[str, Any] = {}
         out["tool"] = self.tool
         out["summary"] = self.summary
+        out["record"] = self.record.to_json()
         out["revision"] = self.revision
         if self.added is not UNSET:
             out["added"] = list(self.added)
@@ -28894,6 +29438,7 @@ class ProcessingRan(_Model):
         return cls(
             tool=data["tool"],
             summary=data["summary"],
+            record=ProcessingRecord.from_json(data["record"]),
             revision=data["revision"],
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
@@ -28904,6 +29449,114 @@ class ProcessingRan(_Model):
             selected=list(data["selected"]) if "selected" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
             step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingRecord(_Model):
+    """The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model
+    and its version), with which explicit values and objects, on which state of the data (the revision, each input
+    layer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what
+    flowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON
+    (`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same
+    revision, the same data under another revision, or changed data.
+    Attributes:
+        format: Always `kentos.run-record`.
+        version: Unit: version.
+        kind: `tool`, `model` or `batch`.
+        tool: The tool's id, the model's (`model:…`), or a batch's tool.
+        tool_version: The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a
+            model's, the version of the tool-and-model contract. Unit: version.
+        parameters: The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its
+            name and path, not its rows: giving them to `cad.processing.run` runs it again.
+        document_revision: The drawing's revision when the run began.
+        engine: `KentOS <version>`.
+        host: Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).
+        started_at: When it began, UTC (`2026-10-19T09:30:00.000Z`).
+        ms: How long the whole took, milliseconds. Unit: ms.
+        steps: The tool as one step, a model's steps in order, a batch's rows in order.
+        total: What flowed through the whole, counted when it ended.
+        definition: A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
+        inputs: The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
+        seed: The seed a tool with one took (its `seed` parameter). Unit: 1.
+        selection: The input's own `selection` and `view`.
+        srid: The project's coordinate system (EPSG/SRID); none for a local project. Unit: epsg.
+        view: Unit: length.
+    """
+    format: str
+    version: int
+    kind: str
+    tool: str
+    label: str
+    tool_version: int
+    parameters: dict[str, Any]
+    document_revision: str
+    engine: str
+    host: str
+    started_at: str
+    ms: int
+    steps: list[RecordStep]
+    total: RecordTotal
+    definition: str | None | Unset = UNSET
+    inputs: list[RunInput] | Unset = UNSET
+    seed: int | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["kind"] = self.kind
+        out["tool"] = self.tool
+        out["label"] = self.label
+        out["toolVersion"] = self.tool_version
+        out["parameters"] = dict(self.parameters)
+        out["documentRevision"] = self.document_revision
+        out["engine"] = self.engine
+        out["host"] = self.host
+        out["startedAt"] = self.started_at
+        out["ms"] = self.ms
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["total"] = self.total.to_json()
+        if self.definition is not UNSET:
+            out["definition"] = self.definition
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
+        if self.seed is not UNSET:
+            out["seed"] = self.seed
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRecord:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            kind=data["kind"],
+            tool=data["tool"],
+            label=data["label"],
+            tool_version=data["toolVersion"],
+            parameters=dict(data["parameters"]),
+            document_revision=data["documentRevision"],
+            engine=data["engine"],
+            host=data["host"],
+            started_at=data["startedAt"],
+            ms=data["ms"],
+            steps=[RecordStep.from_json(e0) for e0 in data["steps"]],
+            total=RecordTotal.from_json(data["total"]),
+            definition=data.get("definition", UNSET),
+            inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
+            seed=data.get("seed", UNSET),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            srid=data.get("srid", UNSET),
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
         )
 
 
@@ -28992,15 +29645,19 @@ class ProcessingTool(_Model):
 @dataclass(kw_only=True, slots=True)
 class ProcessingTools(_Model):
     """Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
-    (case and Turkish marks aside), or one category's (`category`, its id).
+    (case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too
+    (docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.
     """
     category: str | None | Unset = UNSET
+    models: bool | Unset = UNSET
     query: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.category is not UNSET:
             out["category"] = self.category
+        if self.models is not UNSET:
+            out["models"] = self.models
         if self.query is not UNSET:
             out["query"] = self.query
         return out
@@ -29009,6 +29666,7 @@ class ProcessingTools(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ProcessingTools:
         return cls(
             category=data.get("category", UNSET),
+            models=data.get("models", UNSET),
             query=data.get("query", UNSET),
         )
 
@@ -29965,6 +30623,7 @@ class ProjectSettings(_Model):
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
             and the geoid model; absent: not said, and no command takes them for either.
+        join_views: The project's join views (docs/adr/0527), in the table's order.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
@@ -30015,6 +30674,7 @@ class ProjectSettings(_Model):
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
+    join_views: list[JoinView] | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
@@ -30072,6 +30732,8 @@ class ProjectSettings(_Model):
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.heights is not UNSET:
             out["heights"] = None if self.heights is None else self.heights.to_json()
+        if self.join_views is not UNSET:
+            out["joinViews"] = [e0.to_json() for e0 in self.join_views]
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.leader_styles is not UNSET:
@@ -30137,6 +30799,7 @@ class ProjectSettings(_Model):
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
+            join_views=[JoinView.from_json(e0) for e0 in data["joinViews"]] if "joinViews" in data else UNSET,
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
@@ -31455,6 +32118,76 @@ class RecordRow(_Model):
         return cls(
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordStep(_Model):
+    """A step of a run (docs/adr/0529 §2).
+    Attributes:
+        id: A model step's id, a batch row's `rows[i]`, a tool's own id.
+        label: A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.
+        records_in: The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when
+            the step ended, so exact. Unit: count.
+        records_out: Unit: count.
+        ms: Unit: ms.
+    """
+    id: str
+    tool: str
+    label: str
+    records_in: int
+    records_out: int
+    ms: int
+    summary: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["tool"] = self.tool
+        out["label"] = self.label
+        out["recordsIn"] = self.records_in
+        out["recordsOut"] = self.records_out
+        out["ms"] = self.ms
+        out["summary"] = self.summary
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordStep:
+        return cls(
+            id=data["id"],
+            tool=data["tool"],
+            label=data["label"],
+            records_in=data["recordsIn"],
+            records_out=data["recordsOut"],
+            ms=data["ms"],
+            summary=data["summary"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordTotal(_Model):
+    """What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object
+    several steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.
+    The steps' own counts are exact too; a tool that reports only approximate progress while it runs
+    (`Feedback::progress`) has this last, exact total.
+    Attributes:
+        records_in: Unit: count.
+        records_out: Unit: count.
+    """
+    records_in: int
+    records_out: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["recordsIn"] = self.records_in
+        out["recordsOut"] = self.records_out
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordTotal:
+        return cls(
+            records_in=data["recordsIn"],
+            records_out=data["recordsOut"],
         )
 
 
@@ -34078,10 +34811,13 @@ class SourcesSync(_Model):
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+        topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
+            and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
     """
     layer: str
     direction: SyncDirection | SyncDirectionName
     discard: bool | Unset = UNSET
+    topology: SyncTopology | SyncTopologyName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -34089,6 +34825,8 @@ class SourcesSync(_Model):
         out["direction"] = _enum_out(self.direction)
         if self.discard is not UNSET:
             out["discard"] = self.discard
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else _enum_out(self.topology)
         return out
 
     @classmethod
@@ -34097,6 +34835,7 @@ class SourcesSync(_Model):
             layer=data["layer"],
             direction=_enum_in(SyncDirection, data["direction"]),
             discard=data.get("discard", UNSET),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else _enum_in(SyncTopology, data["topology"]),
         )
 
 
@@ -34109,6 +34848,8 @@ class SourcesSynced(_Model):
         modified: Unit: count.
         removed: Unit: count.
         source: The file's SHA-256 after (plan: before).
+        followed: The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531). Unit: count.
+        left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
         pins: What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
     """
     added: int
@@ -34117,6 +34858,8 @@ class SourcesSynced(_Model):
     source: str
     revision: str
     columns: list[str] | Unset = UNSET
+    followed: int | Unset = UNSET
+    left: int | Unset = UNSET
     pins: SyncedPins | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34128,6 +34871,10 @@ class SourcesSynced(_Model):
         out["revision"] = self.revision
         if self.columns is not UNSET:
             out["columns"] = list(self.columns)
+        if self.followed is not UNSET:
+            out["followed"] = self.followed
+        if self.left is not UNSET:
+            out["left"] = self.left
         if self.pins is not UNSET:
             out["pins"] = None if self.pins is None else self.pins.to_json()
         return out
@@ -34141,6 +34888,8 @@ class SourcesSynced(_Model):
             source=data["source"],
             revision=data["revision"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
+            followed=data.get("followed", UNSET),
+            left=data.get("left", UNSET),
             pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
         )
 
@@ -46869,6 +47618,88 @@ class InvertInsertsClipOperation(InsertsClipOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateJoinsOp(JoinsOp):
+    """A new view."""
+    TAG_VALUE: ClassVar[str] = "create"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FromRelationJoinsOp(JoinsOp):
+    """A new view of a relation: its parent layer by `$uid`, its child layer by the relation's field."""
+    TAG_VALUE: ClassVar[str] = "fromRelation"
+    relation: str
+    id: str
+    name: str
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fromRelation"}
+        out["relation"] = self.relation
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FromRelationJoinsOp:
+        return cls(
+            relation=data["relation"],
+            id=data["id"],
+            name=data["name"],
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateJoinsOp(JoinsOp):
+    """The view of the same id replaced."""
+    TAG_VALUE: ClassVar[str] = "update"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveJoinsOp(JoinsOp):
+    """The view removed; the records stay as they are."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveJoinsOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -51139,6 +51970,9 @@ _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOpera
 _INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInsertsClipOperation, "remove": RemoveInsertsClipOperation, "frame": FrameInsertsClipOperation, "invert": InvertInsertsClipOperation}
 
 
+_JOINS_OP: dict[str, type[JoinsOp]] = {"create": CreateJoinsOp, "fromRelation": FromRelationJoinsOp, "update": UpdateJoinsOp, "remove": RemoveJoinsOp}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -51369,6 +52203,8 @@ __all__ = [
     "AutoCsvGeometryIn",
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
+    "BatchRow",
+    "BatchRowRan",
     "BindLeaderEdit",
     "BindXrefsOperation",
     "BitsStacMask",
@@ -51534,6 +52370,7 @@ __all__ = [
     "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
+    "CreateJoinsOp",
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
@@ -51849,6 +52686,7 @@ __all__ = [
     "FrameTableEdit",
     "FrameUcsTo",
     "FromFieldDomainsOp",
+    "FromRelationJoinsOp",
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -51961,7 +52799,21 @@ __all__ = [
     "IslandStyleName",
     "ItemWords",
     "JoggedDimensionMeasure",
+    "JoinColumn",
+    "JoinKeep",
+    "JoinKeepName",
+    "JoinReport",
+    "JoinRow",
+    "JoinSide",
+    "JoinSideName",
+    "JoinTotal",
+    "JoinView",
     "JoinWallsOperation",
+    "JoinsAnswer",
+    "JoinsEdit",
+    "JoinsEdited",
+    "JoinsOp",
+    "JoinsQuery",
     "JoinsWallsOperation",
     "JunctionLayer",
     "JunctionRole",
@@ -52342,7 +53194,10 @@ __all__ = [
     "PolylineEntity",
     "PolylineEntityGeometry",
     "PolylinePlan",
+    "ProcessingBatch",
+    "ProcessingBatched",
     "ProcessingRan",
+    "ProcessingRecord",
     "ProcessingRun",
     "ProcessingTool",
     "ProcessingTools",
@@ -52426,6 +53281,8 @@ __all__ = [
     "RecordCopy",
     "RecordEntity",
     "RecordRow",
+    "RecordStep",
+    "RecordTotal",
     "RecordsCreate",
     "RecordsCreated",
     "RecordsDuplicate",
@@ -52469,6 +53326,7 @@ __all__ = [
     "RemoveFormsOp",
     "RemoveInsertsClipOperation",
     "RemoveIslandsHatchEdit",
+    "RemoveJoinsOp",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
     "RenameFormsOp",
@@ -52695,6 +53553,8 @@ __all__ = [
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",
+    "SyncTopology",
+    "SyncTopologyName",
     "SyncedPins",
     "TabFormItem",
     "TableAlign",
@@ -52818,6 +53678,7 @@ __all__ = [
     "UpdateFeatureChange",
     "UpdateFieldEdit",
     "UpdateFormsOp",
+    "UpdateJoinsOp",
     "UpdateRelationsOp",
     "ValueProblem",
     "ValuesFieldsWriteOp",

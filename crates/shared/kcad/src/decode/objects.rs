@@ -235,6 +235,7 @@ pub(super) struct Features {
     pub(super) phases: bool,
     pub(super) xrefs: bool,
     pub(super) xref_paths: bool,
+    pub(super) join_views: bool,
     /// Schema 85: an insert's clipping and a PDF underlay's page and look (docs/adr/0351).
     pub(super) clipping: bool,
     /// Schema 86: the settings' heights and coordinate epoch (docs/adr/0519).
@@ -390,6 +391,7 @@ impl Features {
             phases: schema >= crate::SCHEMA_WITH_PHASES,
             xrefs: schema >= crate::SCHEMA_WITH_XREFS,
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
+            join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
             clipping: schema >= crate::SCHEMA_WITH_CLIPPING,
             heights: schema >= crate::SCHEMA_WITH_HEIGHTS,
             network_turns: schema >= crate::SCHEMA_WITH_NETWORK_TURNS,

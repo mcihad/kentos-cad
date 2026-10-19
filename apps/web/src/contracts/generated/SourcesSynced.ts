@@ -13,4 +13,12 @@ source: string,
 /**
  * What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
  */
-pins?: SyncedPins, revision: string, };
+pins?: SyncedPins, revision: string, 
+/**
+ * The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).
+ */
+followed?: number, 
+/**
+ * Those that would have been left invalid and kept their shape (`loose`).
+ */
+left?: number, };

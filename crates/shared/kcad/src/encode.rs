@@ -391,6 +391,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.forms.is_empty())
             + usize::from(!s.domains.is_empty())
             + usize::from(!s.relations.is_empty())
+            + usize::from(!s.join_views.is_empty())
             + usize::from(!s.sources.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(!s.hatch_patterns.is_empty())
@@ -485,6 +486,17 @@ impl<'d> Encoder<'d> {
                     ));
                 }
                 e.crs_definition(d)
+            })?;
+        }
+        if !s.join_views.is_empty() {
+            self.key("joinViews");
+            self.at(Seg::Name("joinViews"), |e| {
+                if let Some(problem) = kentos_contracts::join_views_problem(&s.join_views) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.join_views)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         if !s.line_types.is_empty() {
@@ -1765,6 +1777,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 89 (docs/adr/0527): the project's join views.
+    if !doc.settings.join_views.is_empty() {
+        return crate::SCHEMA_WITH_JOIN_VIEWS;
     }
     // Schema 88 (docs/adr/0518 §1): a raster's georeference record.
     if doc.entities.iter().any(|e| matches!(e, Entity::Raster(r) if r.raster.georef.is_some())) {
