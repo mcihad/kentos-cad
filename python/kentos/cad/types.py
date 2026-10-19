@@ -875,6 +875,33 @@ CreateOperationName = Literal["parallel", "perpendicularIn", "perpendicularOut",
 """The names of :class:`CreateOperation`, for a plain string."""
 
 
+class CsvGeometry(_StrEnum):
+    """Where a CSV's geometry is.
+
+    - ``wkt``: ISO WKT in a column named `WKT`, first (GDAL's `GEOMETRY=AS_WKT`).
+    - ``xy``: Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (GDAL's `GEOMETRY=AS_XY`);
+    - ``none``: No geometry: the attributes alone.
+    """
+    WKT = "wkt"
+    XY = "xy"
+    NONE = "none"
+
+
+CsvGeometryName = Literal["wkt", "xy", "none"]
+"""The names of :class:`CsvGeometry`, for a plain string."""
+
+
+class CsvSeparator(_StrEnum):
+    """The CSV's field separator."""
+    COMMA = "comma"
+    SEMICOLON = "semicolon"
+    TAB = "tab"
+
+
+CsvSeparatorName = Literal["comma", "semicolon", "tab"]
+"""The names of :class:`CsvSeparator`, for a plain string."""
+
+
 class DimensionArrow(_StrEnum):
     """A dimension's arrowheads other than the oblique tick, which is no value but
     the field's absence (docs/adr/0183 §3).
@@ -4282,6 +4309,29 @@ class CrsSystem(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> CrsSystem:
         return _variant(_CRS_SYSTEM, "CrsSystem", "kind", data).from_json(data)
+
+
+class CsvGeometryIn(_Union):
+    """Where an imported CSV's geometry is.
+
+    One of:
+
+    - :class:`AutoCsvGeometryIn` (``kind: auto``)
+    - :class:`WktCsvGeometryIn` (``kind: wkt``)
+    - :class:`XyCsvGeometryIn` (``kind: xy``)
+    - :class:`NoneCsvGeometryIn` (``kind: none``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CsvGeometryIn:
+        return _variant(_CSV_GEOMETRY_IN, "CsvGeometryIn", "kind", data).from_json(data)
 
 
 class CurveConstruction(_Union):
@@ -10470,6 +10520,76 @@ class CrsTransformed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CsvExported(_Model):
+    """What `file.export.csv` wrote (or with `plan` would write).
+    Attributes:
+        rows: Rows written (the header aside). Unit: count.
+        columns: The columns, in order, and their GDAL types as the `.csvt` names them.
+        files: The CSV, its `.csvt` and, when the project has a system, its `.prj`.
+        left: Objects not written, by kind (a text, a dimension …; with X/Y every object that is no point). Unit: count.
+        lost: What the CSV could not hold, a sentence each.
+    """
+    path: str
+    rows: int
+    columns: list[str]
+    types: list[str]
+    files: list[CsvFileWritten]
+    left: dict[str, int] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["rows"] = self.rows
+        out["columns"] = list(self.columns)
+        out["types"] = list(self.types)
+        out["files"] = [e0.to_json() for e0 in self.files]
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CsvExported:
+        return cls(
+            path=data["path"],
+            rows=data["rows"],
+            columns=list(data["columns"]),
+            types=list(data["types"]),
+            files=[CsvFileWritten.from_json(e0) for e0 in data["files"]],
+            left=dict(data["left"]) if "left" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CsvFileWritten(_Model):
+    """A file written.
+    Attributes:
+        bytes: Unit: bytes.
+    """
+    name: str
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CsvFileWritten:
+        return cls(
+            name=data["name"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CurvesConstruct(_Model):
     """Input of `cad.curves.construct` v1: the curves the constructions give, in their order. It reads no
     selection, view or snap setting (TODOS.md CMD-07) and writes nothing.
@@ -15154,6 +15274,44 @@ class ExportBlock(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportCsv(_Model):
+    """Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),
+    a `.csvt` beside it naming each column's GDAL type and a `.prj` naming the project's system. With more than one
+    layer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,
+    `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.csv`.
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the CSV and its `.csvt` and `.prj` when they are there.
+    """
+    path: str
+    geometry: CsvGeometry | CsvGeometryName = CsvGeometry.WKT
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+    separator: CsvSeparator | CsvSeparatorName = CsvSeparator.COMMA
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["geometry"] = _enum_out(self.geometry)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        out["separator"] = _enum_out(self.separator)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportCsv:
+        return cls(
+            path=data["path"],
+            geometry=_enum_in(CsvGeometry, data["geometry"]) if "geometry" in data else CsvGeometry.WKT,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            separator=_enum_in(CsvSeparator, data["separator"]) if "separator" in data else CsvSeparator.COMMA,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportDxf(_Model):
     """Input of `file.export.dxf` v1. Refusals (`CommandError.code`), in order:
     `invalid_file_path` (empty, relative, a directory, no directory to go
@@ -19471,6 +19629,52 @@ class ImportBlock(_Model):
             name=data.get("name", UNSET),
             names=UNSET if "names" not in data else None if data["names"] is None else list(data["names"]),
             replace=data.get("replace", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportCsv(_Model):
+    """Input of `file.import.csv` v1: the CSV at `path` taken into the drawing as one undo step “CSV: ad.csv”, each row
+    an object (or a record without a geometry), its other columns its attributes; a `.csvt` beside it gives the columns'
+    types (else they are worked out: integer, decimal, date, text), a `.prj` its system (else `srid`, else none). The
+    rows go onto `layer` when given, else onto the drawing's layer named as the file, else onto a new layer with the
+    columns as its fields. Refusals as `file.import.gpkg`'s: `invalid_file_path`, `file_not_found`, `import_unreadable`
+    (also a column the geometry names that is not there), `layer_not_found`, `not_a_layer`, `locked_layer`,
+    `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses` (rows whose
+    geometry is not read, with their line numbers).
+    Attributes:
+        path: An absolute path to a `.csv` (or `.txt`).
+        geometry: Where the geometry is; none: `auto`.
+        layer: The layer the rows go onto, by id.
+        reproject: Move coordinates in another system into the project's.
+        srid: The system the coordinates are in when no `.prj` says (EPSG). Unit: epsg.
+    """
+    path: str
+    geometry: CsvGeometryIn | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    reproject: bool = False
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else self.geometry.to_json()
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        out["reproject"] = self.reproject
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportCsv:
+        return cls(
+            path=data["path"],
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else CsvGeometryIn.from_json(data["geometry"]),
+            layer=data.get("layer", UNSET),
+            reproject=data["reproject"] if "reproject" in data else False,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -40116,6 +40320,80 @@ class LocalCrsSystem(LocalDefinition, CrsSystem):
 
 
 @dataclass(kw_only=True, slots=True)
+class AutoCsvGeometryIn(CsvGeometryIn):
+    """A column named `WKT`, `geom`, `geometry`, `the_geom` or `wkt_geom` (any case) holds WKT; else `X` and `Y`
+    (`x`/`y`, `lon`/`lat`, `longitude`/`latitude`, `easting`/`northing`) hold a point, `Z` its elevation; else
+    none.
+    """
+    TAG_VALUE: ClassVar[str] = "auto"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "auto"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AutoCsvGeometryIn:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class WktCsvGeometryIn(CsvGeometryIn):
+    """The column holding WKT."""
+    TAG_VALUE: ClassVar[str] = "wkt"
+    column: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "wkt"}
+        out["column"] = self.column
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> WktCsvGeometryIn:
+        return cls(
+            column=data["column"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XyCsvGeometryIn(CsvGeometryIn):
+    """The columns holding east, north and, when given, the elevation."""
+    TAG_VALUE: ClassVar[str] = "xy"
+    x: str
+    y: str
+    z: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "xy"}
+        out["x"] = self.x
+        out["y"] = self.y
+        if self.z is not UNSET:
+            out["z"] = self.z
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XyCsvGeometryIn:
+        return cls(
+            x=data["x"],
+            y=data["y"],
+            z=data.get("z", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NoneCsvGeometryIn(CsvGeometryIn):
+    """No geometry: every row a record."""
+    TAG_VALUE: ClassVar[str] = "none"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "none"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NoneCsvGeometryIn:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class CircleTwoPointsCurveConstruction(CurveConstruction):
     """Daire, 2 nokta: the circle on the diameter from `a` to `b`."""
     TAG_VALUE: ClassVar[str] = "circleTwoPoints"
@@ -48379,6 +48657,9 @@ _CRS_PLANE: dict[str, type[CrsPlane]] = {"similarity": SimilarityCrsPlane, "affi
 _CRS_SYSTEM: dict[str, type[CrsSystem]] = {"tm": TmCrsSystem, "geographic": GeographicCrsSystem, "local": LocalCrsSystem}
 
 
+_CSV_GEOMETRY_IN: dict[str, type[CsvGeometryIn]] = {"auto": AutoCsvGeometryIn, "wkt": WktCsvGeometryIn, "xy": XyCsvGeometryIn, "none": NoneCsvGeometryIn}
+
+
 _CURVE_CONSTRUCTION: dict[str, type[CurveConstruction]] = {"circleTwoPoints": CircleTwoPointsCurveConstruction, "circleThreePoints": CircleThreePointsCurveConstruction, "circleTangentTangentRadius": CircleTangentTangentRadiusCurveConstruction, "circleTangents": CircleTangentsCurveConstruction, "arcThreePoints": ArcThreePointsCurveConstruction, "arcStartCentreEnd": ArcStartCentreEndCurveConstruction, "arcStartCentreAngle": ArcStartCentreAngleCurveConstruction, "arcStartCentreChord": ArcStartCentreChordCurveConstruction, "arcStartEndAngle": ArcStartEndAngleCurveConstruction, "arcStartEndDirection": ArcStartEndDirectionCurveConstruction, "arcStartEndRadius": ArcStartEndRadiusCurveConstruction, "arcContinue": ArcContinueCurveConstruction, "ellipseAxis": EllipseAxisCurveConstruction, "ellipseCentre": EllipseCentreCurveConstruction}
 
 
@@ -48666,6 +48947,7 @@ __all__ = [
     "AuditedRecord",
     "AuthKind",
     "AuthKindName",
+    "AutoCsvGeometryIn",
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
     "BindLeaderEdit",
@@ -48842,6 +49124,13 @@ __all__ = [
     "CrsSystem",
     "CrsTransform",
     "CrsTransformed",
+    "CsvExported",
+    "CsvFileWritten",
+    "CsvGeometry",
+    "CsvGeometryIn",
+    "CsvGeometryName",
+    "CsvSeparator",
+    "CsvSeparatorName",
     "CurveConstruction",
     "CurveEdit",
     "CurvesConstruct",
@@ -49017,6 +49306,7 @@ __all__ = [
     "EqualConstraintRule",
     "ExplodeDensity",
     "ExportBlock",
+    "ExportCsv",
     "ExportDxf",
     "ExportGpkg",
     "ExportPdf",
@@ -49206,6 +49496,7 @@ __all__ = [
     "ImpactTarget",
     "ImpactTargetName",
     "ImportBlock",
+    "ImportCsv",
     "ImportDomainsOp",
     "ImportDxf",
     "ImportGpkg",
@@ -49447,6 +49738,7 @@ __all__ = [
     "NewViewMark",
     "NewWall",
     "NodeSubPlace",
+    "NoneCsvGeometryIn",
     "NoteFormItem",
     "NumberPlace",
     "NumberPlaceName",
@@ -50107,6 +50399,7 @@ __all__ = [
     "WindowSelectRegion",
     "Wipeout",
     "WithdrawFormsOp",
+    "WktCsvGeometryIn",
     "WorkflowStep",
     "Workspace",
     "WorkspaceName",
@@ -50129,4 +50422,5 @@ __all__ = [
     "XrefsList",
     "XrefsListed",
     "XrefsOperation",
+    "XyCsvGeometryIn",
 ]

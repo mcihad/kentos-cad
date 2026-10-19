@@ -9,6 +9,7 @@
 //! are not touched. SQLite is compiled in (rusqlite's `bundled`).
 
 pub mod geom;
+pub mod wkt;
 
 use std::collections::HashMap;
 use std::fmt;

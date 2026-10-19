@@ -46,21 +46,58 @@ pub enum PrjKind {
     Definition,
 }
 
+/// The EPSG code a `.prj` (a Shapefile's, a CSV's) names: one of the registry's ESRI texts word for word, or an
+/// `AUTHORITY["EPSG", n]` of the whole system (its last); none when it names none (docs/adr/0522).
+pub fn srid_of_prj(text: &str) -> Option<u32> {
+    let t = text.trim();
+    if let Some(found) = esri_table().iter().find(|(_, v)| v.trim() == t) {
+        return found.0.parse().ok();
+    }
+    let at = t.rfind("AUTHORITY[")?;
+    let rest = &t[at + "AUTHORITY[".len()..];
+    let (org, code) = rest.split_once(',')?;
+    if org.trim().trim_matches('"') != "EPSG" {
+        return None;
+    }
+    code.split(']').next()?.trim().trim_matches('"').parse().ok()
+}
+
+#[derive(serde::Deserialize)]
+struct PrjFile {
+    prj: std::collections::BTreeMap<String, String>,
+    #[serde(default)]
+    wkt1: std::collections::BTreeMap<String, String>,
+}
+
+fn prj_file() -> &'static PrjFile {
+    use std::sync::OnceLock;
+    static FILE: OnceLock<PrjFile> = OnceLock::new();
+    FILE.get_or_init(|| {
+        serde_json::from_str::<PrjFile>(include_str!("../../../../fixtures/crs/v1/esri-prj.json"))
+            .unwrap_or(PrjFile {
+                prj: Default::default(),
+                wkt1: Default::default(),
+            })
+    })
+}
+
+fn esri_table() -> &'static std::collections::BTreeMap<String, String> {
+    &prj_file().prj
+}
+
+/// The project's system as GDAL's CSV driver writes a `.prj`, OGC WKT 1 with its EPSG authority (docs/adr/0522); the
+/// project's own definition as OGC WKT 1.
+pub fn wkt1_prj(doc: &Document) -> Option<String> {
+    let settings = doc.settings();
+    if let Some(text) = prj_file().wkt1.get(&settings.srid.to_string()) {
+        return Some(text.clone());
+    }
+    prj(doc).map(|(t, _)| t)
+}
+
 /// The registry systems' ESRI WKT 1, by EPSG code.
 fn esri(srid: u32) -> Option<String> {
-    use std::collections::BTreeMap;
-    use std::sync::OnceLock;
-    static TABLE: OnceLock<BTreeMap<String, String>> = OnceLock::new();
-    let table = TABLE.get_or_init(|| {
-        #[derive(serde::Deserialize)]
-        struct File {
-            prj: BTreeMap<String, String>,
-        }
-        serde_json::from_str::<File>(include_str!("../../../../fixtures/crs/v1/esri-prj.json"))
-            .map(|f| f.prj)
-            .unwrap_or_default()
-    });
-    table.get(&srid.to_string()).cloned()
+    esri_table().get(&srid.to_string()).cloned()
 }
 
 /// The project's system as a .prj's WKT 1, and how it names it.

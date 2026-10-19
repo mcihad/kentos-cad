@@ -1,0 +1,1462 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.csv",
+ "commandVersion": 1,
+ "title": "CSV içe aktar: WKT ya da X/Y, .csvt ve .prj",
+ "note": "ADR 0522. CSV'leri GDAL QGIS 4.2.3'ün GeoPackage'ından yazar; beklenenler OGR'ın CSV sürücüsünün okuduğundan GeoPackage alma durumlarının kuralıyla (gpkg_import_cases.py) kurulur. Bağımsız başvuru: scripts/fixtures/csv_exchange_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "GeoPackage alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "QGIS GeoPackage'ının parselleri GDAL'ın WKT'li CSV'sinden: delikli ve çok parçalı alanlar, alanlar türleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/parsel.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.csv",
+       "bytes": 539,
+       "sha256": "3195726a7e38239259b85c42552ebd3dac9ecbb150d4553605a40b9b64a3ad86",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı ve kotlu yol: CIRCULARSTRING ve COMPOUNDCURVE kesin bulge'lara, Z ve M",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.csv",
+       "bytes": 163,
+       "sha256": "facd2831261c372961dadb7f051cf710a6f4a2b0c1d2972f9ce82a671f4bd21d",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "import-yol",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğri alan (CURVEPOLYGON)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/egri.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "egri.csv",
+       "bytes": 151,
+       "sha256": "1c71ea5f15f4666fd6380224cab5d5ba4d8fa5c06727e7dc52531c76db1f97f1",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "egri",
+         "layer": "import-egri",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-egri",
+         "name": "egri"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-egri-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-egri",
+        "attrs": {
+         "ad": "yay ve kiriş"
+        },
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420000.0
+         }
+        ],
+        "bulges": [
+         -0.9999999999999999,
+         0.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometrisiz tablo: her satır kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/malik.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "malik.csv",
+       "bytes": 52,
+       "sha256": "cf9aca858ae2e5cd3d692bee17525423ef40b83609c32e29c4757ac72552b6f4",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "malik",
+         "layer": "import-malik",
+         "read": 2,
+         "objects": 2,
+         "records": 2,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-malik",
+         "name": "malik"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-malik-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "malik.csv koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ayşe Öz",
+         "pay": "1/2",
+         "parsel": "1"
+        }
+       },
+       "3": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ömer Çelik",
+         "pay": "1/2",
+         "parsel": "1"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "X, Y ve Z sütunlarından noktalar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/nokta.csv",
+      "geometry": {
+       "kind": "xy",
+       "x": "X",
+       "y": "Y",
+       "z": "Z"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.csv",
+       "bytes": 52,
+       "sha256": "51815012638e8986758da7ef4df23551211a1cd36f68d09be104a716d818aaef",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta",
+         "layer": "import-nokta",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-nokta-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-nokta",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan dosyayı okur, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:csv/v1/parsel.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.csv",
+       "bytes": 539,
+       "sha256": "3195726a7e38239259b85c42552ebd3dac9ecbb150d4553605a40b9b64a3ad86",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Satırlar var olan katmana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv",
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.csv",
+       "bytes": 163,
+       "sha256": "facd2831261c372961dadb7f051cf710a6f4a2b0c1d2972f9ce82a671f4bd21d",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "cizim",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometri sütunu adıyla verilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/parsel.csv",
+      "geometry": {
+       "kind": "wkt",
+       "column": "geom"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.csv",
+       "bytes": 539,
+       "sha256": "3195726a7e38239259b85c42552ebd3dac9ecbb150d4553605a40b9b64a3ad86",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel.csv dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:csv/v1/parsel.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı CSV ikinci kez alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.csv",
+       "bytes": 163,
+       "sha256": "facd2831261c372961dadb7f051cf710a6f4a2b0c1d2972f9ce82a671f4bd21d",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "import-yol",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_exists",
+       "message": "Dosyadaki bir kaydın kalıcı kimliği (73939e82-c4f8-5baa-934a-4250428845bd) çizimde zaten bir nesnenin: yol.csv daha önce alınmış. Önceki alımı geri alın ya da başka bir çizimde açın.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistem bildirmeyen CSV olduğu gibi alınır (crs_undeclared)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/sistemsiz.csv"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "sistemsiz.csv",
+       "bytes": 163,
+       "sha256": "facd2831261c372961dadb7f051cf710a6f4a2b0c1d2972f9ce82a671f4bd21d",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "sistemsiz",
+         "layer": "import-sistemsiz",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-sistemsiz",
+         "name": "sistemsiz"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-sistemsiz-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "sistemsiz.csv koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-sistemsiz",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-sistemsiz",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki CSV çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/wgs84.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "wgs84.csv EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki CSV reproject ile çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/wgs84.csv",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "wgs84.csv",
+       "bytes": 46,
+       "sha256": "23cc36bc96d4d31afbb967062c3d78bb82afa8116d6ba4dfa5a60e7f6eda7637",
+       "srid": 4326,
+       "moved": true,
+       "objects": 1,
+       "tables": [
+        {
+         "table": "wgs84",
+         "layer": "import-wgs84",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-wgs84",
+         "name": "wgs84"
+        }
+       ],
+       "group": "import-wgs84-2",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-wgs84",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Başlıktan başka satırı olmayan CSV",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/bos.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "bos.csv dosyasının seçilen tablolarında alınacak kayıt yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef katman kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yok.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:csv/v1/yok.csv okunamadı: No such file or directory (os error 2). Dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "parsel.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“parsel.csv” bir dosyanın mutlak yolu değil; okunacak CSV'nin tam yolunu verin (/klasör/ad.csv).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "CSV olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/bozuk.csv"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:csv/v1/bozuk.csv CSV olarak okunamadı: Zip arşivi bozuk: sonundaki dizin kaydı bulunamadı. Arşivi yeniden oluşturup deneyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan geometri sütunu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/parsel.csv",
+      "geometry": {
+       "kind": "wkt",
+       "column": "sekil"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:csv/v1/parsel.csv CSV olarak okunamadı: “sekil” sütunu dosyada yok (sütunlar: geom, ada, parsel_no, alan, kimlik, tescil, guncelleme, tapulu, not)",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “yol” tablosunun kayıtlarını var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:csv/v1/yol.csv",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; kayıtlar yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

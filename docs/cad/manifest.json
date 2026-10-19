@@ -2932,6 +2932,22 @@
    "tests": 1
   },
   {
+   "id": "file.export.csv",
+   "kind": "command",
+   "title": "CSV dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.csv"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.csv",
+   "mcp": "file.export.csv",
+   "note": "Pencerede satırlar, sütunlar ve türleri ile yazılmayanlar önizlenir, Dışa aktar… komutla CSV'yi, .csvt'yi ve .prj'yi bütün yazar (ADR 0522).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.dxf",
    "kind": "command",
    "title": "DXF…",
@@ -3043,6 +3059,22 @@
    "python": "Connection: file.export.shp",
    "mcp": "file.export.shp",
    "note": "Pencerede yazılacak Shapefile'lar ve kayıplar önizlenir, Dışa aktar… komutla bütün yazar (ADR 0514).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "file.import.csv",
+   "kind": "command",
+   "title": "CSV içe aktar…",
+   "level": "semantic",
+   "via": [
+    "file.import.csv"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.csv",
+   "mcp": "file.import.csv",
+   "note": "Pencere sütunları ve komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0522).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0

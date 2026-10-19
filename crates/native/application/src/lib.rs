@@ -72,6 +72,8 @@ pub mod processing_host;
 pub mod processing_run;
 pub mod processing_tools;
 pub mod source_places;
+pub mod csv_table;
+pub mod file_import_csv;
 pub mod shapefile;
 pub mod sld;
 pub mod sources;
@@ -968,6 +970,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_GPKG,
         kentos_contracts::FILE_IMPORT_GPKG_VERSION,
+    ),
+    // A CSV's rows into the drawing ([`file_import_csv`], docs/adr/0522).
+    (
+        kentos_contracts::FILE_IMPORT_CSV,
+        kentos_contracts::FILE_IMPORT_CSV_VERSION,
     ),
     // An SLD's look made a layer's ([`sld`], docs/adr/0516).
     (

@@ -3095,6 +3095,28 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.export.csv",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.csv",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable"],
+            LAYER,
+            &["crs_mismatch", "entity_exists", "nothing_to_import"],
+        ],
+        warnings: &["crs_undeclared", "import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.export.sld",
         refusals: &[&[
             "invalid_file_path",

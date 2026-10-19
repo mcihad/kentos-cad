@@ -7213,6 +7213,61 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // A CSV table of objects, out and in (docs/adr/0522).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_CSV.into(),
+            version: crate::FILE_EXPORT_CSV_VERSION,
+            title: "CSV dışa aktar".into(),
+            summary: "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir CSV'ye yazar: UTF-8, CRLF satırlar, RFC 4180 tırnaklama; virgül, noktalı virgül ya da sekme. \
+                      geometry wkt (varsayılan) geometriyi ilk sütunda ISO WKT olarak yazar (yaylar CIRCULARSTRING ve COMPOUNDCURVE, kesin; Z ve M; elips, eğri ve NURBS kirişlerle, söylenir); xy noktaları X (doğu), Y (kuzey) ve kotu olanda Z sütunlarıyla yazar, nokta olmayanları sayar; none yalnız öznitelikleri. \
+                      Birden çok katmanda katman sütunu satırın katmanını adlandırır. Alanlar katmanların alanlarından (sırasıyla), alan olmayan öznitelikler adlarıyla metin sütunu; yanına GDAL'ın .csvt'si sütunların türlerini (WKT, CoordX, CoordY, String, Integer64, Real, Date, DateTime, Time, Integer(Boolean)), .prj projenin sistemini (Shapefile'ınki gibi ESRI WKT) yazar. \
+                      Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["csvout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportCsv>(),
+            output: schema::<crate::CsvExported>(),
+            plan: Some(schema::<crate::CsvExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller WKT'li CSV olarak".into(),
+                input: json!({ "path": "/veri/parsel.csv", "layers": ["parsel"], "geometry": "wkt", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_CSV.into(),
+            version: crate::FILE_IMPORT_CSV_VERSION,
+            title: "CSV içe aktar".into(),
+            summary: "path'teki CSV'nin satırlarını açık çizime alır, tek geri alma adımı (“CSV: ad.csv”): her satır bir nesne ya da geometrisiz kayıt, öbür sütunları öznitelikleri. \
+                      Geometri (geometry): auto WKT adlı sütunu (WKT, geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla verir; none her satırı kayıt yapar. \
+                      Ayırıcı ve kodlama dosyadan bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
+                      Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["csvin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportCsv>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "QGIS'in yazdığı WKT'li CSV".into(),
+                input: json!({ "path": "/veri/parsel.csv", "geometry": { "kind": "auto" } }),
+                output: None,
+            }],
+        },
         // A layer's look as OGC SLD 1.1 / SE 1.1, out and in (docs/adr/0516).
         CommandDescriptor {
             id: crate::FILE_EXPORT_SLD.into(),
@@ -8076,6 +8131,12 @@ mod tests {
                     }
                     crate::FILE_EXPORT_SHP => {
                         serde_json::from_value::<crate::ExportShp>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_CSV => {
+                        serde_json::from_value::<crate::ExportCsv>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_CSV => {
+                        serde_json::from_value::<crate::ImportCsv>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_SLD => {
                         serde_json::from_value::<crate::ExportSld>(e.input.clone()).map(|_| ())

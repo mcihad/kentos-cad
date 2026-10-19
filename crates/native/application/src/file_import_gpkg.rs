@@ -259,7 +259,19 @@ pub(crate) fn run_with(
     fresh: bool,
     area: Option<[f64; 4]>,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
-    let mut read = read_file(input, area)?;
+    let read = read_file(input, area)?;
+    run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))
+}
+
+/// A file's tables, read already (a GeoPackage, a CSV: docs/adr/0522), taken into the drawing: `name` the undo step's
+/// word and the file's extension its group's name drops.
+pub(crate) fn run_read(
+    doc: &mut Document,
+    input: &ImportGpkg,
+    mut read: Read,
+    fresh: bool,
+    (word, ext): (&str, &str),
+) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let mut warnings = Vec::new();
     let mut losses: BTreeSet<String> = read
         .tables
@@ -345,9 +357,9 @@ pub(crate) fn run_with(
         ));
     }
     let plan = ImportPlan {
-        label: step_name(&read.file),
+        label: format!("{word}: {}", read.file),
         layers,
-        group: Some(read.file.trim_end_matches(".gpkg").to_owned()),
+        group: Some(read.file.trim_end_matches(ext).to_owned()),
     };
     let applied = apply_import_with_uids(doc, objects, &plan)
         .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "path"))?;

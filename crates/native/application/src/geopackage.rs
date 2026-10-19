@@ -813,6 +813,16 @@ fn row_of(e: &Entity) -> Row {
     }
 }
 
+/// An object's geometry as a table's row holds it (a GeoPackage's, a CSV's WKT: docs/adr/0522): none for a record;
+/// `Err` the kind's word for an object a table has no geometry for. The flag: curves written as chords.
+pub fn geometry_of(e: &Entity) -> Result<Option<(Geometry, bool)>, &'static str> {
+    match row_of(e) {
+        Row::Geometry(g, chords) => Ok(Some((g, chords))),
+        Row::Record => Ok(None),
+        Row::Left(word) => Err(word),
+    }
+}
+
 /// The family a geometry belongs to, for the column's type.
 fn family(g: &Geometry) -> (u8, bool, bool) {
     // (0 point, 1 line, 2 surface, 3 other; multi; curved)
@@ -885,7 +895,7 @@ pub(crate) fn column_of(f: &LayerField) -> gpkg::Column {
     }
 }
 
-fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
+pub(crate) fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
     let Some(t) = text else {
         return Value::Null;
     };

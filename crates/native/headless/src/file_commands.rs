@@ -15,7 +15,8 @@ use kentos_contracts::{
     CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, ExportShp,
     FILE_COMMANDS, FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF,
     FILE_EXPORT_DXF_VERSION, FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF,
-    FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION, FILE_EXPORT_SLD,
+    FILE_EXPORT_CSV, FILE_EXPORT_CSV_VERSION, FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION,
+    FILE_EXPORT_SLD,
     FILE_EXPORT_SLD_VERSION, FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported,
     GpkgTableExported, LayerNodeType, PackageProject, PdfExported, ReplayOutcome, ReplayStep,
     codes,
@@ -529,6 +530,68 @@ fn sld(
     Ok((path, bytes, output, warnings))
 }
 
+/// The CSV of the layers and its `.csvt` and `.prj`: the files to write (path, bytes), the answer, the warnings
+/// (docs/adr/0522).
+type CsvMade = (
+    Vec<(PathBuf, Vec<u8>)>,
+    kentos_contracts::CsvExported,
+    Vec<CommandWarning>,
+);
+
+fn csv(doc: &Document, input: &kentos_contracts::ExportCsv) -> Result<CsvMade, Refused> {
+    let (path, _) = target(&input.path, input.overwrite)?;
+    let made = kentos_native_application::csv_table::export(doc, input)
+        .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let mut files = vec![(path.clone(), made.csv), (path.with_extension("csvt"), made.csvt)];
+    if let Some(prj) = made.prj {
+        files.push((path.with_extension("prj"), prj));
+    }
+    for (p, _) in files.iter().skip(1) {
+        if p.exists() && !input.overwrite {
+            return Err(refuse(
+                codes::FILE_EXISTS,
+                format!("{} var; üzerine yazmak için overwrite: true verin.", p.display()),
+                "path",
+            ));
+        }
+    }
+    let mut output = made.output;
+    output.path = path.display().to_string();
+    output.files = files
+        .iter()
+        .map(|(p, b)| kentos_contracts::CsvFileWritten {
+            name: p
+                .file_name()
+                .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
+            bytes: b.len() as u64,
+            sha256: sha256_hex(b),
+        })
+        .collect();
+    let warnings = if output.lost.is_empty() {
+        Vec::new()
+    } else {
+        vec![CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!("CSV'nin tutamadığı: {}.", output.lost.join("; ")),
+            path: Some("layers".into()),
+        }]
+    };
+    Ok((files, output, warnings))
+}
+
+/// The CSV and its `.csvt` and `.prj` written, as `file.export.csv` writes them (docs/adr/0522): the sidecars first,
+/// the CSV last, each whole.
+pub fn export_csv(
+    doc: &Document,
+    input: &kentos_contracts::ExportCsv,
+) -> Result<(kentos_contracts::CsvExported, Vec<CommandWarning>), Refused> {
+    let (files, output, warnings) = csv(doc, input)?;
+    for (p, b) in files.iter().rev() {
+        write(p, b)?;
+    }
+    Ok((output, warnings))
+}
+
 /// The layer's look written as an SLD, as `file.export.sld` writes it (docs/adr/0516).
 pub fn export_sld(
     doc: &Document,
@@ -650,6 +713,42 @@ fn run_typed(
                         warnings: planned.warnings,
                     },
                     Some(effect),
+                )
+            }
+        });
+    }
+    if command == FILE_EXPORT_CSV {
+        let typed: kentos_contracts::ExportCsv = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (files, output, warnings) = match csv(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                for (p, b) in files.iter().rev() {
+                    if let Err(refused) = write(p, b) {
+                        return Ok((CommandResult::Failed { error: *refused }, None));
+                    }
+                }
+                let csv = &output.files[0];
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: csv.bytes,
+                        sha256: csv.sha256.clone(),
+                    }),
                 )
             }
         });
@@ -796,6 +895,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
         FILE_EXPORT_SHP => FILE_EXPORT_SHP_VERSION,
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
+        FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
@@ -817,6 +917,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_SHP => serde_json::from_value::<ExportShp>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_CSV => serde_json::from_value::<kentos_contracts::ExportCsv>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_SLD => serde_json::from_value::<kentos_contracts::ExportSld>(input.clone())

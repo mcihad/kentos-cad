@@ -19,6 +19,9 @@
 
 pub mod apply;
 pub(crate) mod coord_export;
+mod csv_exchange;
+#[cfg(test)]
+mod csv_tests;
 pub(crate) mod coord_import;
 #[cfg(test)]
 mod dimension_tests;
@@ -118,6 +121,9 @@ pub enum Window {
     Postgis(postgis::State),
     /// Shapefile dışa aktar (docs/adr/0514).
     ShpExport(shp_export::State),
+    /// CSV dışa aktar and içe aktar (docs/adr/0522).
+    CsvExport(csv_exchange::ExportState),
+    CsvImport(csv_exchange::ImportState),
 }
 
 #[derive(Debug, Clone)]
@@ -141,6 +147,7 @@ pub enum Event {
     Postgis(postgis::Event),
     Package(package::Event),
     ShpExport(shp_export::Event),
+    Csv(csv_exchange::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -148,7 +155,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 21] = [
+pub const COMMANDS: [&str; 23] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -167,6 +174,8 @@ pub const COMMANDS: [&str; 21] = [
     "file.import.gpkg",
     "file.export.gpkg",
     "file.export.shp",
+    "file.export.csv",
+    "file.import.csv",
     "source.link",
     "source.postgis",
     "file.package",
@@ -208,6 +217,8 @@ impl App {
             "file.package" => self.package_pick(),
             "file.export.gpkg" => self.gpkg_save(),
             "file.export.shp" => self.shp_export_open(),
+            "file.export.csv" => self.csv_export_open(),
+            "file.import.csv" => self.csv_import_pick(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -391,6 +402,7 @@ impl App {
             Event::Postgis(e) => self.postgis_event(e),
             Event::Package(e) => self.package_event(e),
             Event::ShpExport(e) => self.shp_export_event(e),
+            Event::Csv(e) => self.csv_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -430,6 +442,8 @@ impl App {
             Some(Window::Gpkg(s)) => self.gpkg_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
+            Some(Window::CsvExport(s)) => self.csv_export_view(s),
+            Some(Window::CsvImport(s)) => self.csv_import_view(s),
             None => iced::widget::text("").into(),
         }
     }

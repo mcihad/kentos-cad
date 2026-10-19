@@ -1875,3 +1875,88 @@ fn layer_looks_go_out_as_sld_and_come_back() {
     assert_eq!(missing["error"]["code"], "layer_not_found", "{missing}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn csv_tables_go_out_and_come_back() {
+    // docs/adr/0522: the GeoPackage's layers written as CSVs (WKT, its .csvt and .prj) and read back into a new
+    // drawing: the same objects, arcs exact; X/Y writes the points and counts the rest. With KENTOS_WRITE_CSV=1 the
+    // files go to fixtures/csv/v1/out for scripts/fixtures/csv_exchange_cases.py, which reads them with OGR.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let dir = std::env::temp_dir().join(format!("kentos-csv-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    for name in ["parsel", "yol", "egri"] {
+        let path = dir.join(format!("kentos-{name}.csv"));
+        let planned = s
+            .call(json!({ "command": "file.export.csv", "op": "plan",
+                "input": { "path": path.display().to_string(), "layers": [id(name)] } }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.csv",
+                "input": { "path": path.display().to_string(), "layers": [id(name)] } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"]["columns"][0], "WKT", "{out}");
+        assert!(path.with_extension("csvt").exists() && path.with_extension("prj").exists());
+        // Back into a new drawing: the same number of objects, onto a new layer.
+        let mut back = new_drawing();
+        let got = back
+            .call(json!({ "command": "file.import.csv", "input": { "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(got["status"], "completed", "{got}");
+        assert_eq!(
+            got["output"]["objects"],
+            took["output"]["tables"]
+                .as_array()
+                .and_then(|ts| ts.iter().find(|t| t["table"] == name))
+                .map(|t| t["objects"].clone())
+                .unwrap_or_default(),
+            "{name}: {got}"
+        );
+        if std::env::var_os("KENTOS_WRITE_CSV").is_some() {
+            let out_dir = format!("{}/../../../fixtures/csv/v1/out", env!("CARGO_MANIFEST_DIR"));
+            std::fs::create_dir_all(&out_dir).expect("a folder");
+            for ext in ["csv", "csvt", "prj"] {
+                std::fs::copy(
+                    path.with_extension(ext),
+                    format!("{out_dir}/kentos-{name}.{ext}"),
+                )
+                .expect("kept");
+            }
+        }
+    }
+    // X/Y: the points only, the rest counted.
+    let path = dir.join("noktalar.csv");
+    let out = s
+        .call(json!({ "command": "file.export.csv",
+            "input": { "path": path.display().to_string(), "geometry": "xy", "separator": "semicolon" } }))
+        .expect("answers");
+    assert_eq!(out["status"], "completed", "{out}");
+    assert_eq!(out["output"]["columns"][0], "X");
+    assert!(out["output"]["left"]["alan"].as_u64().unwrap_or(0) > 0, "{out}");
+    assert_eq!(out["warnings"][0]["code"], "export_losses", "{out}");
+    let again = s
+        .call(json!({ "command": "file.export.csv",
+            "input": { "path": path.display().to_string(), "geometry": "xy" } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

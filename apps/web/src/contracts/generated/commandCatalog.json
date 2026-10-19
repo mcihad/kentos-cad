@@ -1000530,6 +1000530,738 @@
       ]
     },
     {
+      "id": "file.export.csv",
+      "version": 1,
+      "title": "CSV dışa aktar",
+      "summary": "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir CSV'ye yazar: UTF-8, CRLF satırlar, RFC 4180 tırnaklama; virgül, noktalı virgül ya da sekme. geometry wkt (varsayılan) geometriyi ilk sütunda ISO WKT olarak yazar (yaylar CIRCULARSTRING ve COMPOUNDCURVE, kesin; Z ve M; elips, eğri ve NURBS kirişlerle, söylenir); xy noktaları X (doğu), Y (kuzey) ve kotu olanda Z sütunlarıyla yazar, nokta olmayanları sayar; none yalnız öznitelikleri. Birden çok katmanda katman sütunu satırın katmanını adlandırır. Alanlar katmanların alanlarından (sırasıyla), alan olmayan öznitelikler adlarıyla metin sütunu; yanına GDAL'ın .csvt'si sütunların türlerini (WKT, CoordX, CoordY, String, Integer64, Real, Date, DateTime, Time, Integer(Boolean)), .prj projenin sistemini (Shapefile'ınki gibi ESRI WKT) yazar. Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "csvout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "CsvGeometry": {
+            "description": "Where a CSV's geometry is.",
+            "oneOf": [
+              {
+                "const": "wkt",
+                "description": "ISO WKT in a column named `WKT`, first (GDAL's `GEOMETRY=AS_WKT`).",
+                "type": "string"
+              },
+              {
+                "const": "xy",
+                "description": "Points as `X` (east) and `Y` (north) columns, and `Z` when a point has one (GDAL's `GEOMETRY=AS_XY`);\nobjects that are no points are not written, and counted.",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "No geometry: the attributes alone.",
+                "type": "string"
+              }
+            ]
+          },
+          "CsvSeparator": {
+            "description": "The CSV's field separator.",
+            "enum": [
+              "comma",
+              "semicolon",
+              "tab"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.csv` v1: the layers' objects as one CSV at `path` (UTF-8, CRLF lines, RFC 4180 quoting),\na `.csvt` beside it naming each column's GDAL type and a `.prj` naming the project's system. With more than one\nlayer a `katman` column names each row's. Written whole or not at all. Refusals, in order: `invalid_file_path`,\n`file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "geometry": {
+            "$ref": "#/$defs/CsvGeometry",
+            "default": "wkt"
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the CSV and its `.csvt` and `.prj` when they are there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.csv`.",
+            "type": "string"
+          },
+          "separator": {
+            "$ref": "#/$defs/CsvSeparator",
+            "default": "comma"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportCsv",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CsvFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.csv` wrote (or with `plan` would write).",
+        "properties": {
+          "columns": {
+            "description": "The columns, in order, and their GDAL types as the `.csvt` names them.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The CSV, its `.csvt` and, when the project has a system, its `.prj`.",
+            "items": {
+              "$ref": "#/$defs/CsvFileWritten"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (a text, a dimension …; with X/Y every object that is no point).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the CSV could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Rows written (the header aside).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "columns",
+          "types",
+          "files"
+        ],
+        "title": "CsvExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CsvFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.csv` wrote (or with `plan` would write).",
+        "properties": {
+          "columns": {
+            "description": "The columns, in order, and their GDAL types as the `.csvt` names them.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "files": {
+            "description": "The CSV, its `.csvt` and, when the project has a system, its `.prj`.",
+            "items": {
+              "$ref": "#/$defs/CsvFileWritten"
+            },
+            "type": "array"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind (a text, a dimension …; with X/Y every object that is no point).",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "lost": {
+            "description": "What the CSV could not hold, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Rows written (the header aside).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "rows",
+          "columns",
+          "types",
+          "files"
+        ],
+        "title": "CsvExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parseller WKT'li CSV olarak",
+          "input": {
+            "geometry": "wkt",
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel.csv"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.csv",
+      "version": 1,
+      "title": "CSV içe aktar",
+      "summary": "path'teki CSV'nin satırlarını açık çizime alır, tek geri alma adımı (“CSV: ad.csv”): her satır bir nesne ya da geometrisiz kayıt, öbür sütunları öznitelikleri. Geometri (geometry): auto WKT adlı sütunu (WKT, geom, geometry, the_geom, wkt_geom), yoksa X ve Y çiftini (x/y, lon/lat, longitude/latitude, easting/northing, doğu/kuzey; Z ya da kot kotu) bulur; wkt ve xy sütunları adıyla verir; none her satırı kayıt yapar. Ayırıcı ve kodlama dosyadan bulunur. Sütunların türleri yanındaki .csvt'den (GDAL'ın), yoksa değerlerden: hepsi tam sayıysa tam sayı, sayıysa ondalık, tarihse tarih (başı sıfırlı kodlar metin kalır). Sistem .prj'den (ESRI ya da EPSG yetkisi), yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. Satırlar layer'a, yoksa dosyanın adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve satırından. Okunamayan geometrili satır alınmaz, satır numarasıyla söylenir (import_losses). plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "csvin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "CsvGeometryIn": {
+            "description": "Where an imported CSV's geometry is.",
+            "oneOf": [
+              {
+                "description": "A column named `WKT`, `geom`, `geometry`, `the_geom` or `wkt_geom` (any case) holds WKT; else `X` and `Y`\n(`x`/`y`, `lon`/`lat`, `longitude`/`latitude`, `easting`/`northing`) hold a point, `Z` its elevation; else\nnone.",
+                "properties": {
+                  "kind": {
+                    "const": "auto",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The column holding WKT.",
+                "properties": {
+                  "column": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "wkt",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "column"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The columns holding east, north and, when given, the elevation.",
+                "properties": {
+                  "kind": {
+                    "const": "xy",
+                    "type": "string"
+                  },
+                  "x": {
+                    "type": "string"
+                  },
+                  "y": {
+                    "type": "string"
+                  },
+                  "z": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind",
+                  "x",
+                  "y"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "No geometry: every row a record.",
+                "properties": {
+                  "kind": {
+                    "const": "none",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.csv` v1: the CSV at `path` taken into the drawing as one undo step “CSV: ad.csv”, each row\nan object (or a record without a geometry), its other columns its attributes; a `.csvt` beside it gives the columns'\ntypes (else they are worked out: integer, decimal, date, text), a `.prj` its system (else `srid`, else none). The\nrows go onto `layer` when given, else onto the drawing's layer named as the file, else onto a new layer with the\ncolumns as its fields. Refusals as `file.import.gpkg`'s: `invalid_file_path`, `file_not_found`, `import_unreadable`\n(also a column the geometry names that is not there), `layer_not_found`, `not_a_layer`, `locked_layer`,\n`crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses` (rows whose\ngeometry is not read, with their line numbers).",
+        "properties": {
+          "geometry": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CsvGeometryIn"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the geometry is; none: `auto`."
+          },
+          "layer": {
+            "description": "The layer the rows go onto, by id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "An absolute path to a `.csv` (or `.txt`).",
+            "type": "string"
+          },
+          "reproject": {
+            "default": false,
+            "description": "Move coordinates in another system into the project's.",
+            "type": "boolean"
+          },
+          "srid": {
+            "description": "The system the coordinates are in when no `.prj` says (EPSG).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportCsv",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GpkgTableImported": {
+            "description": "A table taken.",
+            "properties": {
+              "layer": {
+                "description": "The drawing's layer its rows went onto.",
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "read": {
+                "description": "Rows read, objects taken (records among them), rows left out.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "read",
+              "objects",
+              "records",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.gpkg` took in, or with `plan` would take.",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256.",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "moved": {
+            "description": "Whether the coordinates were moved into the project's system.",
+            "type": "boolean"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (plan: before it).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "srid": {
+            "description": "The EPSG code the tables declare, none for an undefined system.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GpkgTableImported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "objects",
+          "tables",
+          "layers",
+          "revision"
+        ],
+        "title": "GpkgImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "crs_mismatch",
+          "entity_exists",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "crs_undeclared",
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "QGIS'in yazdığı WKT'li CSV",
+          "input": {
+            "geometry": {
+              "kind": "auto"
+            },
+            "path": "/veri/parsel.csv"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.sld",
       "version": 1,
       "title": "Görünüşü SLD olarak dışa aktar",
