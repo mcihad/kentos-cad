@@ -347,6 +347,17 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub xref_paths: Vec<String>,
+    /// What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
+    /// and the geoid model; absent: not said, and no command takes them for either.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub heights: Option<crate::HeightReference>,
+    /// The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
+    /// said. Only a project with a coordinate system has one.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "year")))]
+    pub coordinate_epoch: Option<f64>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -783,6 +794,20 @@ impl ProjectSettings {
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
         self.xref_paths = crate::sanitized_xref_paths(std::mem::take(&mut self.xref_paths));
+        // Heights and an epoch that hold; ellipsoidal heights and an epoch only with a system (docs/adr/0519 §1).
+        if self.heights.as_ref().is_some_and(|h| {
+            h.problem().is_some()
+                || h.kind == crate::HeightKind::Unknown
+                || (h.kind == crate::HeightKind::Ellipsoidal && !self.has_system())
+        }) {
+            self.heights = None;
+        }
+        if self
+            .coordinate_epoch
+            .is_some_and(|e| crate::epoch_problem(e).is_some() || !self.has_system())
+        {
+            self.coordinate_epoch = None;
+        }
         self.forms = crate::sanitized_forms(std::mem::take(&mut self.forms));
         // A feet-and-inches style is an inch or foot drawing's; decimal is no setting (docs/adr/0262 §2).
         if self.length_style == Some(LengthStyle::Decimal) || !self.unit().imperial() {

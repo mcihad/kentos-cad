@@ -1,0 +1,1928 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.crs.transform",
+ "commandVersion": 1,
+ "title": "Koordinat dönüştür: kotlar, epoklar, işlemin kaydı ve doğruluk raporu",
+ "note": "ADR 0519. Noktalar PROJ'dan (pyproj): 2B'de ADR 0167'nin EPSG işlemleri, elipsoit yüksekliğiyle aynı işlem 3B sistemler arasında; kaydın pipeline'ı EPSG parametreleriyle kurulur ve PROJ'da aynı cevabı verir. Geoit, düşey datum ve epok dönüşümü reddedilir. Proje: TUREF / TM30, Antalya kotu (TG-20), ED50–WGS 84 için cihazda olmayan bir ızgara. Bağımsız başvuru: scripts/fixtures/crs_vertical_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Kotlar ve dönüşümler",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow",
+   "heights": {
+    "kind": "orthometric",
+    "verticalSrid": 5775,
+    "geoid": {
+     "name": "TG-20",
+     "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+    }
+   },
+   "datumTransforms": [
+    {
+     "from": "ED50",
+     "to": "WGS84",
+     "name": "ED50 → WGS 84: ızgara",
+     "grid": {
+      "id": "a3f5c2e1d4b6978012ab34cd56ef7890a1b2c3d4e5f60718293a4b5c6d7e8f90",
+      "file": "tr_ed50_wgs84.gsb",
+      "size": 4096,
+      "accuracy": 0.3
+     }
+    }
+   ]
+  },
+  "origin": {
+   "x": 500000,
+   "y": 4400000
+  },
+  "layers": [
+   {
+    "id": "0",
+    "name": "0",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "0",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Projenin sisteminden ED50 / TM30'a, kotsuz: iki Helmert, resmî olmayan işlem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 544600.6244147683,
+        "y": 4404865.116370585
+       }
+      ],
+      "to": {
+       "srid": 2320
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420531.2140016982,
+         "y": 4450407.827412584
+        },
+        {
+         "x": 544635.4764746984,
+         "y": 4405050.324078966
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": false,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": true,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=cart +a=6378137 +rf=298.257222101 +step +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=cart +a=6378388 +rf=297 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "ED50 / TM30 (EPSG:2320)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "ED50 / TM30'dan TUREF / TM30'a elipsoit yüksekliğiyle: kot Helmert'le değişir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420531.2140016982,
+        "y": 4450407.827412584,
+        "z": 812.4
+       }
+      ],
+      "from": {
+       "srid": 2320,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420496.98416621017,
+         "y": 4450222.194686568,
+         "z": 854.4819061812013
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": false,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": true,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği",
+        "to": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 2.1
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1,
+        "transformationVertical": 2.1
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynısının planı: aynı cevap, çizim değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "points": [
+       {
+        "x": 420531.2140016982,
+        "y": 4450407.827412584,
+        "z": 812.4
+       }
+      ],
+      "from": {
+       "srid": 2320,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420496.98416621017,
+         "y": 4450222.194686568,
+         "z": 854.4819061812013
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": false,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": true,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği",
+        "to": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 2.1
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1,
+        "transformationVertical": 2.1
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "TUREF / TM30'dan WGS 84'e elipsoit yüksekliğiyle: boş dönüşüm, kot aynen kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 1043.25
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 29.0665,
+         "y": 40.182599999999994,
+         "z": 1043.25
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği",
+        "to": "WGS 84 (EPSG:4326) + elipsoit yüksekliği",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 1.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0,
+        "transformationVertical": 1.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'ten UTM 35N'e: yalnız izdüşüm, doğruluk 0, kullanım alanı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 29.0665,
+        "y": 40.1826,
+        "z": 95.5
+       }
+      ],
+      "from": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 32635,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 675931.5278566639,
+         "y": 4450071.933269966,
+         "z": 95.5
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 27°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=tmerc +lat_0=0 +lon_0=27 +k=0.9996 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257223563",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "WGS 84 (EPSG:4326) + elipsoit yüksekliği",
+        "to": "WGS 84 / UTM 35N (EPSG:32635) + elipsoit yüksekliği",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 0.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0,
+        "transformationVertical": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Ortometrik kot datum değişirken kalır: Antalya kotu ED50 / TM30'a (push ve pop)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 120.75
+       }
+      ],
+      "to": {
+       "srid": 2320,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5775
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420531.2140016982,
+         "y": 4450407.827412584,
+         "z": 120.75
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": false,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": true,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=cart +a=6378137 +rf=298.257222101 +step +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=cart +a=6378388 +rf=297 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "to": "ED50 / TM30 (EPSG:2320) + ortometrik, Antalya height (EPSG:5775)",
+        "heights": "same",
+        "heightAccuracy": 0.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1,
+        "transformationVertical": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Aynı düşey datumun başka birimi: MSL metre → MSL ayak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 100.0
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5714
+       }
+      },
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 8050
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420496.9775717948,
+         "y": 4450222.180035507,
+         "z": 328.0839895013123
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "unit",
+          "name": "EPSG:5714 → EPSG:8050",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=unitconvert +z_in=m +z_out=ft",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM30 (EPSG:5254) + ortometrik, MSL height (EPSG:5714)",
+        "to": "TUREF / TM30 (EPSG:5254) + ortometrik, MSL height (ft) (EPSG:8050)",
+        "heights": "unit",
+        "heightAccuracy": 0.0
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0,
+        "transformationVertical": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Antalya kotundan EGM2008'e: iki düşey datum, PROJ'un ballpark'ı yerine ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 120.75
+       }
+      ],
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 3855
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "vertical_unsupported",
+       "message": "Kotlar “ortometrik, Antalya height (EPSG:5775), geoit TG-20” ile “ortometrik, EGM2008 height (EPSG:3855)” arasında çevrilmeli: iki ayrı düşey datum. KentOS'ta düşey datum dönüşümü yok; PROJ'un yaptığı gibi kotları olduğu gibi bırakan “kaba” bir yol da kullanılmaz. Kotları başka bir yazılımla çevirip verin ya da aynı düşey sistemi seçin.",
+       "path": "to.heights.verticalSrid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elipsoit yüksekliğinden projenin ortometrik kotuna: geoit gerekir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 1043.25
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geoid_required",
+       "message": "Kotlar elipsoit yüksekliği ile ortometrik, Antalya height (EPSG:5775), geoit TG-20 arasında çevrilmeli: bunun için geoit modeli gerekir (projede adı geçen geoit: TG-20). KentOS'ta geoit ızgarası okuyan motor yok; kotlar sıfır geoit ayrımıyla çevrilmez. Kotları geoit modeliyle başka bir yazılımda çevirip verin.",
+       "path": "to.heights.kind"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bir yanın yüksekliği söylenmemiş: kotlar varsayımla çevrilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 120.75
+       }
+      ],
+      "to": {
+       "srid": 5256
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "heights_unknown",
+       "message": "Kotlar verildi; to tarafının yüksekliği bilinmiyor, öbürününki biliniyor. Kotlar bir varsayımla çevrilmez: iki tarafın da yüksekliğini (heights) söyleyin ya da kotları vermeyin.",
+       "path": "to.heights"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İki yanın yüksekliği de bilinmiyor: kotlar kalır, uyarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 120.75
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "unknown"
+       }
+      },
+      "to": {
+       "srid": 5256
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": -90740.03197017137,
+         "y": 4472928.484085701,
+         "z": 120.75
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM30 (EPSG:5254)",
+        "to": "TUREF / TM36 (EPSG:5256)",
+        "heights": "unchanged"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "heights_unchanged",
+        "message": "Kotların ne olduğu iki tarafta da söylenmedi; kotlar değişmeden kaldı. Elipsoit yüksekliğiyse datum değişince değişirdi: yüksekliği söyleyin (heights).",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kotsuz noktada yüksekliklerin farkı reddedilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5256
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": -90740.03197017137,
+         "y": 4472928.484085701
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği",
+        "to": "TUREF / TM36 (EPSG:5256)",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "İki ayrı epok: zamana bağlı dönüşüm yok, ret",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "epoch": 2005.0
+      },
+      "to": {
+       "srid": 4326,
+       "epoch": 2024.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "epoch_unsupported",
+       "message": "Koordinatlar 2005 epokundan 2024 epokuna taşınmalı: bunun için levha hareketi (hız modeli) gerekir. KentOS'ta zamana bağlı dönüşüm yok; koordinatlar epok farkı yok sayılarak çevrilmez.",
+       "path": "to.epoch"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı epok iki yanda: kayıtta, uygulanmadı uyarısıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507,
+        "z": 1043.25
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 2023.5
+      },
+      "to": {
+       "srid": 4326,
+       "heights": {
+        "kind": "ellipsoidal"
+       },
+       "epoch": 2023.5
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 29.0665,
+         "y": 40.182599999999994,
+         "z": 1043.25
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=unitconvert +xy_in=rad +xy_out=deg",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği @ 2023.5",
+        "to": "WGS 84 (EPSG:4326) + elipsoit yüksekliği @ 2023.5",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 1.0,
+        "fromEpoch": 2023.5,
+        "toEpoch": 2023.5
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0,
+        "transformationVertical": 1.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "epoch_not_applied",
+        "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
+        "path": "from.epoch"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "Yalnız kaynağın epoku: hedefin epoku da odur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "epoch": 2023.5
+      },
+      "to": {
+       "srid": 5256
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": -90740.03197017137,
+         "y": 4472928.484085701
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 36°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=36 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 0.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "from": "TUREF / TM30 (EPSG:5254) @ 2023.5",
+        "to": "TUREF / TM36 (EPSG:5256)",
+        "heights": "none",
+        "fromEpoch": 2023.5,
+        "toEpoch": 2023.5
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 0.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "epoch_not_applied",
+        "message": "Epok kayıtta; seçilen işlem zamana bağlı değil, koordinatlara uygulanmadı.",
+        "path": "from.epoch"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Kaynağın belirsizliği raporda ayrı; toplamı karelerin kökü",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420531.2140016982,
+        "y": 4450407.827412584,
+        "z": 812.4
+       }
+      ],
+      "from": {
+       "srid": 2320,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal"
+       }
+      },
+      "uncertainty": {
+       "horizontal": 0.05,
+       "vertical": 0.02
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420496.98416621017,
+         "y": 4450222.194686568,
+         "z": 854.4819061812013
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:1783 + EPSG:5260",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:1783",
+          "reverse": false,
+          "accuracy": 2.0
+         },
+         {
+          "kind": "helmert",
+          "name": "EPSG:5260",
+          "reverse": true,
+          "accuracy": 0.1
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378388 +rf=297 +step +proj=cart +a=6378388 +rf=297 +step +proj=helmert +x=-84.1 +y=-101.8 +z=-129.7 +rx=0 +ry=0 +rz=0.468 +s=1.05 +convention=position_vector +step +inv +proj=helmert +x=0.023 +y=0.036 +z=-0.068 +rx=0.00176 +ry=0.00912 +rz=-0.01136 +s=0.00439 +convention=position_vector +step +inv +proj=cart +a=6378137 +rf=298.257222101 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 2.1,
+        "epochApplied": false,
+        "unofficial": true,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "ED50 / TM30 (EPSG:2320) + elipsoit yüksekliği",
+        "to": "TUREF / TM30 (EPSG:5254) + elipsoit yüksekliği",
+        "heights": "ellipsoidal",
+        "heightAccuracy": 2.1
+       },
+       "report": {
+        "source": {
+         "horizontal": 0.05,
+         "vertical": 0.02
+        },
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 2.1,
+        "transformationVertical": 2.1,
+        "combined": 2.101,
+        "combinedVertical": 2.1
+       }
+      },
+      "warnings": [
+       {
+        "code": "unofficial_operation",
+        "message": "EPSG:1783 + EPSG:5260 EPSG'nin ED50 işlemi: değerleri resmî dönüşümün değil (Tapu ve Kadastro'nun bölge parametreleri için Proje ayarları › Datum dönüşümleri).",
+        "path": "to"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Pseudo-Mercator'dan projenin sistemine, kotsuz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 3235667.9791426864,
+        "y": 4892512.8019970795
+       }
+      ],
+      "from": {
+       "srid": 3857
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        {
+         "x": 420496.9775717948,
+         "y": 4450222.180035507
+        }
+       ],
+       "unreached": [],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "conversion",
+          "name": "Pseudo-Mercator",
+          "reverse": true,
+          "accuracy": 0.0
+         },
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +inv +proj=webmerc +a=6378137 +rf=298.257223563 +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "WGS 84 / Pseudo-Mercator (EPSG:3857)",
+        "to": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Enlemi 90°'yi aşan nokta: değeri yok, öbürü dönüşür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 29.0,
+        "y": 95.0
+       },
+       {
+        "x": 29.0665,
+        "y": 40.1826
+       }
+      ],
+      "from": {
+       "srid": 4326
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "points": [
+        null,
+        {
+         "x": 420496.9775717948,
+         "y": 4450222.180035507
+        }
+       ],
+       "unreached": [
+        {
+         "index": 0,
+         "reason": "outside"
+        }
+       ],
+       "operation": {
+        "id": "EPSG:5261",
+        "steps": [
+         {
+          "kind": "null",
+          "name": "EPSG:5261",
+          "reverse": false,
+          "accuracy": 1.0
+         },
+         {
+          "kind": "conversion",
+          "name": "TM 30°",
+          "reverse": false,
+          "accuracy": 0.0
+         }
+        ],
+        "pipeline": "+proj=pipeline +step +proj=unitconvert +xy_in=deg +xy_out=rad +step +proj=push +v_3 +step +proj=set +v_3=0 +step +proj=pop +v_3 +step +proj=tmerc +lat_0=0 +lon_0=30 +k=1 +x_0=500000 +y_0=0 +a=6378137 +rf=298.257222101",
+        "engine": "KentOS geometry-core (kentos.crs/1)",
+        "grids": [],
+        "accuracy": 1.0,
+        "epochApplied": false,
+        "unofficial": false,
+        "area": {
+         "name": "Türkiye (Turkey) - onshore and offshore.",
+         "west": 25.62,
+         "south": 34.2,
+         "east": 44.83,
+         "north": 43.45
+        },
+        "from": "WGS 84 (EPSG:4326)",
+        "to": "TUREF / TM30 (EPSG:5254) + ortometrik, Antalya height (EPSG:5775), geoit TG-20",
+        "heights": "none"
+       },
+       "report": {
+        "source": {},
+        "topologyTolerance": 0.001,
+        "displayDecimals": 3,
+        "displayStep": 0.001,
+        "transformation": 1.0
+       }
+      },
+      "warnings": [
+       {
+        "code": "points_outside",
+        "message": "1 noktanın hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında); yerleri boş.",
+        "path": "points"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Projenin ED50 ızgarası bu cihazda yok: daha düşük doğruluklu yola geçilmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420531.2140016982,
+        "y": 4450407.827412584
+       }
+      ],
+      "from": {
+       "srid": 2320
+      },
+      "to": {
+       "srid": 4326
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "grid_missing",
+       "message": "Projenin bu iki datum için seçtiği ızgara bu cihazda yok. Izgarayı Proje ayarları › Izgaralar'a ekleyin; EPSG'nin daha düşük doğruluklu yoluna kendiliğinden geçilmez.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nokta yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": []
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_transform",
+       "message": "0 nokta verildi; en az 1, en çok 100 000 nokta dönüştürülür.",
+       "path": "points"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonlu olmayan doğu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "1. noktanın doğu (Y) değeri sonlu bir sayı değil (NaN ya da sonsuz). Koordinatı sonlu bir sayıyla verin.",
+       "path": "points[0].x"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "points[0].x": "Infinity"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonlu olmayan kot",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       },
+       {
+        "x": 544600.6244147683,
+        "y": 4404865.116370585,
+        "z": 10.0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_finite",
+       "message": "2. noktanın kotu sonlu bir sayı değil (NaN ya da sonsuz). Kotu sonlu bir sayıyla verin ya da bırakın.",
+       "path": "points[1].z"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     },
+     "nonFinite": {
+      "points[1].z": "NaN"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kayıtta olmayan sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "to": {
+       "srid": 9999
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "EPSG:9999 koordinat sistemleri kaydında yok ya da bir yere bağlı değil. Kayıttaki bir sistemin kodunu verin ya da kodu bırakın (projenin sistemi).",
+       "path": "to.srid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerel sistem (0) bir yere bağlı değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "srid": 0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_srid",
+       "message": "EPSG:0 koordinat sistemleri kaydında yok ya da bir yere bağlı değil. Kayıttaki bir sistemin kodunu verin ya da kodu bırakın (projenin sistemi).",
+       "path": "from.srid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Elipsoit yüksekliği düşey sistem anmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "srid": 5254,
+       "heights": {
+        "kind": "ellipsoidal",
+        "verticalSrid": 3855
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_heights",
+       "message": "from yüksekliği: düşey sistem ve geoit modeli yalnız ortometrik yüksekliğin olur; elipsoit yüksekliğinin elipsoidi yatay sistemindir.",
+       "path": "from.heights.kind"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen düşey sistem",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "to": {
+       "srid": 5254,
+       "heights": {
+        "kind": "orthometric",
+        "verticalSrid": 5703
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_heights",
+       "message": "to yüksekliği: EPSG:5703 KentOS'un bildiği düşey sistemlerden değil (Antalya, EGM2008, EGM96, MSL, Karadeniz).",
+       "path": "to.heights.verticalSrid"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Epok yılların dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "from": {
+       "epoch": 1850.0
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_epoch",
+       "message": "from epoku: koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2023.5 gibi).",
+       "path": "from.epoch"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eksi belirsizlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "points": [
+       {
+        "x": 420496.9775717948,
+        "y": 4450222.180035507
+       }
+      ],
+      "uncertainty": {
+       "horizontal": -0.01
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uncertainty",
+       "message": "Kaynağın belirsizliği 0 ya da büyük sonlu bir sayı olmalı (metre).",
+       "path": "uncertainty.horizontal"
+      }
+     },
+     "expect": {
+      "ids": [],
+      "canUndo": false,
+      "canRedo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

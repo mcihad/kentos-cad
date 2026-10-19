@@ -346,10 +346,23 @@ def settings(s):
                 "hatchPatterns": (opaque, False),
                 # Schema 84 (docs/adr/0349 §1): the external references' search paths, in order.
                 "xrefPaths": (lambda ps: array([text(p) for p in ps]), False),
+                # Schema 85 (docs/adr/0519 §1): what the elevations are and the coordinates' epoch.
+                "heights": (heights, False),
+                "coordinateEpoch": (finite, False),
             },
             "settings",
         )
     )
+
+
+def heights(h):
+    """What the elevations are (schema 85, docs/adr/0519 §1): the kind, and for orthometric heights the vertical
+    system and the geoid model (its name and its file's SHA-256)."""
+    assert h["kind"] in ("ellipsoidal", "orthometric"), h
+    assert h["kind"] == "orthometric" or ("verticalSrid" not in h and "geoid" not in h), h
+    return cmap(fields(h, {"kind": (text, True), "verticalSrid": (uint, False),
+                           "geoid": (lambda g: cmap(fields(g, {"name": (text, True), "sha256": (text, False)}, "geoid")),
+                                     False)}, "heights"))
 
 
 def annotation(h):
@@ -2089,6 +2102,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 85 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
+    if "heights" in (settings or {}) or "coordinateEpoch" in (settings or {}):
+        return 85
     # Schema 84 (docs/adr/0349 §1): the external references' search paths.
     if (settings or {}).get("xrefPaths"):
         return 84
@@ -2615,7 +2631,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-85.kcad"] = container(root(cmap(parts), version=uint(85)))
+    files["schema-version-86.kcad"] = container(root(cmap(parts), version=uint(86)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4279,6 +4295,34 @@ def build():
     out["broken/xref-paths-twice.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(d["settings"]["xrefPaths"][0]))
     out["broken/xref-paths-untrimmed.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(" mimari"))
     out["broken/xref-paths-blank.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(""))
+    # Heights and the epoch (docs/adr/0519 §1): schema 85's; in schema 84 unknown fields; a kind a project does not keep,
+    # a vertical system KentOS does not know, a geoid of an ellipsoidal height, a bad SHA-256, an epoch out of its
+    # years and an ellipsoidal height of a local project refused.
+    out["heights.kcad"] = container(document(load("heights.json")))
+    heights_payload = document(load("heights.json"))
+    assert heights_payload.count(b"\x67version\x18\x55") == 1, "the heights are schema 85"
+    out["broken/heights-in-schema-84.kcad"] = container(heights_payload.replace(b"\x67version\x18\x55", b"\x67version\x18\x54"))
+
+    def heights_broken(change, writer_check=False):
+        d = copy.deepcopy(load("heights.json"))
+        change(d)
+        global heights
+        keep = heights
+        heights = lambda h: cmap(fields(h, {"kind": (text, True), "verticalSrid": (uint, False),  # noqa: E731
+                                            "geoid": (lambda g: cmap(fields(g, {"name": (text, True), "sha256": (text, False)}, "geoid")), False)},
+                                       "heights"))
+        try:
+            return container(document(d))
+        finally:
+            heights = keep
+
+    out["broken/heights-unknown-kind.kcad"] = heights_broken(lambda d: d["settings"]["heights"].update(kind="unknown"))
+    out["broken/heights-vertical-unknown.kcad"] = heights_broken(lambda d: d["settings"]["heights"].update(verticalSrid=5703))
+    out["broken/heights-ellipsoidal-geoid.kcad"] = heights_broken(lambda d: d["settings"]["heights"].update(kind="ellipsoidal"))
+    out["broken/heights-geoid-sha.kcad"] = heights_broken(lambda d: d["settings"]["heights"]["geoid"].update(sha256="ABC"))
+    out["broken/heights-epoch-years.kcad"] = heights_broken(lambda d: d["settings"].update(coordinateEpoch=1850.0))
+    out["broken/heights-local-ellipsoidal.kcad"] = heights_broken(
+        lambda d: (d["settings"].update(srid=0, heights={"kind": "ellipsoidal"}), d["settings"].pop("coordinateEpoch")))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

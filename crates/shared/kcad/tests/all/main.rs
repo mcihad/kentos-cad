@@ -17,6 +17,7 @@ mod filters;
 mod fixtures;
 mod frozen;
 mod hatches;
+mod heights;
 mod images;
 mod imperial;
 mod layer_states;

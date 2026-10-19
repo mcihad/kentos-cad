@@ -5628,7 +5628,7 @@ pub fn catalog() -> CommandCatalog {
             title: "Proje ayarları".into(),
             summary: "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), \
                       secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), \
-                      plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır) ve drawingFont. \
+                      plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). \
                       Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
@@ -6884,6 +6884,43 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // Points between coordinate systems with heights and the operation's record (docs/adr/0519), held together by
+        // fixtures/commands/v1/cad.crs.transform.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_CRS_TRANSFORM.into(),
+            version: crate::CAD_CRS_TRANSFORM_VERSION,
+            title: "Koordinat dönüştür".into(),
+            summary: "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  \
+                      Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  \
+                      Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası geoid_required, iki düşey datum arası vertical_unsupported, iki ayrı epok epoch_unsupported ile reddedilir: KentOS bunlar için motoru olmadığından yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  \
+                      Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  \
+                      Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir."
+                .into(),
+            aliases: vec!["koordinat-donustur".into(), "cs2cs".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::CrsTransform>(),
+            output: schema::<crate::CrsTransformed>(),
+            plan: Some(schema::<crate::CrsTransformed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "ED50 / TM30'dan TUREF / TM30'a, elipsoit yüksekliğiyle".into(),
+                    input: json!({ "points": [{ "x": 412345.0, "y": 4512345.0, "z": 812.4 }], "from": { "srid": 2320, "heights": { "kind": "ellipsoidal" } }, "to": { "srid": 5254, "heights": { "kind": "ellipsoidal" } } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Antalya kotu EGM2008'e: reddedilir".into(),
+                    input: json!({ "points": [{ "x": 412345.0, "y": 4512345.0, "z": 812.4 }], "from": { "srid": 5254, "heights": { "kind": "orthometric", "verticalSrid": 5775 } }, "to": { "srid": 5254, "heights": { "kind": "orthometric", "verticalSrid": 3855 } } }),
+                    output: None,
+                },
+            ],
+        },
         CommandDescriptor {
             id: crate::CAD_ENTITIES_RELATE.into(),
             version: crate::CAD_ENTITIES_RELATE_VERSION,
@@ -7925,6 +7962,9 @@ mod tests {
                     }
                     crate::CAD_ENTITIES_PICK => {
                         serde_json::from_value::<crate::EntitiesPick>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_CRS_TRANSFORM => {
+                        serde_json::from_value::<crate::CrsTransform>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ENTITIES_RELATE => {
                         serde_json::from_value::<crate::EntitiesRelate>(e.input.clone()).map(|_| ())

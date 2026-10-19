@@ -12,8 +12,8 @@
 use std::sync::OnceLock;
 
 use kentos_contracts::{
-    CommandResult, DrawingUnit, Entity, LengthStyle, MAX_PLOT_SCALE, MAX_SHOWN_DECIMALS,
-    ProjectSettings, ScaleChange, SettingsChanged, SettingsSet, Workspace,
+    CommandResult, DrawingUnit, Entity, HeightKind, LengthStyle, MAX_PLOT_SCALE,
+    MAX_SHOWN_DECIMALS, ProjectSettings, ScaleChange, SettingsChanged, SettingsSet, Workspace,
 };
 use kentos_domain::Document;
 
@@ -65,7 +65,9 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
         || input.angle_unit.is_some()
         || input.plot_scale.is_some()
         || input.drawing_font.is_some()
-        || input.arch.is_some();
+        || input.arch.is_some()
+        || input.heights.is_some()
+        || input.coordinate_epoch.is_some();
     if !given {
         return Err(Stop::failed(error(
             codes::NOTHING_TO_SET,
@@ -127,6 +129,24 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
     }
     if let Some((path, why)) = input.arch.as_ref().and_then(|a| a.problem()) {
         return Err(fail(codes::INVALID_ARCH, why, &format!("arch.{path}")));
+    }
+    if let Some((path, why)) = input.heights.as_ref().and_then(|h| h.problem()) {
+        return Err(fail(
+            codes::INVALID_HEIGHTS,
+            format!("Yükseklik tanımı: {why}."),
+            &format!("heights.{path}"),
+        ));
+    }
+    if let Some(why) = input
+        .coordinate_epoch
+        .filter(|e| *e != 0.0)
+        .and_then(kentos_contracts::epoch_problem)
+    {
+        return Err(fail(
+            codes::INVALID_EPOCH,
+            format!("Epok: {why}; 0 epoku kaldırır."),
+            "coordinateEpoch",
+        ));
     }
     Ok(())
 }
@@ -233,6 +253,37 @@ fn next_settings(doc: &Document, input: &SettingsSet) -> Result<ProjectSettings,
         }
         s.arch = (!arch.is_empty()).then(|| arch.clone());
     }
+    // What the elevations are and the epoch (docs/adr/0519 §1): assigned, no coordinate moves.
+    if let Some(h) = &input.heights {
+        s.heights = (h.kind != HeightKind::Unknown).then(|| h.clone());
+    }
+    if let Some(e) = input.coordinate_epoch {
+        s.coordinate_epoch = (e != 0.0).then_some(e);
+    }
+    if !s.has_system() {
+        let ellipsoidal = s
+            .heights
+            .as_ref()
+            .is_some_and(|h| h.kind == HeightKind::Ellipsoidal);
+        let (given, path) = if input.coordinate_epoch.is_some_and(|e| e != 0.0) {
+            (true, "coordinateEpoch")
+        } else {
+            (ellipsoidal && input.heights.is_some(), "heights.kind")
+        };
+        if given {
+            return Err(fail(
+                codes::HEIGHTS_NEED_SYSTEM,
+                "Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin."
+                    .into(),
+                path,
+            ));
+        }
+        // A system taken away takes what rests on it.
+        if ellipsoidal {
+            s.heights = None;
+        }
+        s.coordinate_epoch = None;
+    }
     Ok(s)
 }
 
@@ -335,6 +386,11 @@ fn write(doc: &mut Document, input: &SettingsSet, next: ProjectSettings) -> Sett
     key(before.plot_scale != after.plot_scale, "plotScale");
     key(before.drawing_font != after.drawing_font, "drawingFont");
     key(before.arch != after.arch, "arch");
+    key(before.heights != after.heights, "heights");
+    key(
+        before.coordinate_epoch != after.coordinate_epoch,
+        "coordinateEpoch",
+    );
     let heights = after.annotation.clone().unwrap_or_default();
     let followed = follow_annotation_change(
         doc,

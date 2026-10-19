@@ -331,13 +331,13 @@ pub enum Gap {
 
 /// One step of a shift.
 #[derive(Clone, Debug)]
-enum Step {
+pub(crate) enum Step {
     /// A Helmert transformation on Earth-centred coordinates, forward or reversed.
     Helmert(Helmert, bool),
     /// TUREF to WGS 84 (1), EPSG:5261: latitude and longitude stay.
     Null,
-    /// An NTv2 grid on latitude and longitude, forward or reversed.
-    Grid(Arc<Grid>, bool),
+    /// An NTv2 grid on latitude and longitude, forward or reversed; its id (the SHA-256 the device keeps it by).
+    Grid(Arc<Grid>, bool, String),
 }
 
 /// The way from one datum to another: each step with the ellipsoid of the
@@ -345,7 +345,9 @@ enum Step {
 /// what the values rest on, and whether an EPSG operation of ED50 was used.
 #[derive(Clone, Debug)]
 pub(crate) struct Path {
-    steps: Vec<(Step, (f64, f64))>,
+    pub(crate) steps: Vec<(Step, (f64, f64))>,
+    /// Each step's name (an EPSG code or the project's name) and stated accuracy, in the steps' order.
+    pub(crate) names: Vec<(String, Option<f64>)>,
     pub accuracy: Option<f64>,
     pub via: Vec<String>,
     pub unofficial: bool,
@@ -355,6 +357,7 @@ impl Path {
     fn same() -> Path {
         Path {
             steps: Vec::new(),
+            names: Vec::new(),
             accuracy: Some(0.0),
             via: Vec::new(),
             unofficial: false,
@@ -364,6 +367,7 @@ impl Path {
     /// `other` after this.
     fn then(mut self, other: Path) -> Path {
         self.steps.extend(other.steps);
+        self.names.extend(other.names);
         self.accuracy = self.accuracy.zip(other.accuracy).map(|(a, b)| a + b);
         self.via.extend(other.via);
         self.unofficial |= other.unofficial;
@@ -373,12 +377,25 @@ impl Path {
     /// A latitude and longitude (degrees) of the datum whose ellipsoid is
     /// `from`, on the last step's datum; none where a grid does not reach.
     pub fn run(&self, from: (f64, f64), lat: f64, lon: f64) -> Option<(f64, f64)> {
+        self.run_height(from, lat, lon, 0.0)
+            .map(|(lat, lon, _)| (lat, lon))
+    }
+
+    /// [`Path::run`] with an ellipsoidal height (m) that rides through the Earth-centred steps and stays through the
+    /// null and grid steps, as PROJ's 3D pipelines carry it (docs/adr/0519 §2).
+    pub fn run_height(
+        &self,
+        from: (f64, f64),
+        lat: f64,
+        lon: f64,
+        height: f64,
+    ) -> Option<(f64, f64, f64)> {
         enum State {
             Geographic(f64, f64, f64),
             Centred([f64; 3]),
         }
         let mut ellipsoid = from;
-        let mut state = State::Geographic(lat, lon, 0.0);
+        let mut state = State::Geographic(lat, lon, height);
         for (step, lands) in &self.steps {
             state = match (step, state) {
                 (Step::Helmert(h, reverse), s) => {
@@ -395,7 +412,7 @@ impl Path {
                     State::Geographic(lat, lon, height)
                 }
                 (Step::Null, s) => s,
-                (Step::Grid(grid, reverse), s) => {
+                (Step::Grid(grid, reverse, _), s) => {
                     let (lat, lon, height) = match s {
                         State::Geographic(lat, lon, height) => (lat, lon, height),
                         State::Centred(x) => from_geocentric(ellipsoid, x),
@@ -409,21 +426,19 @@ impl Path {
             ellipsoid = *lands;
         }
         Some(match state {
-            State::Geographic(lat, lon, _) => (lat, lon),
-            State::Centred(x) => {
-                let (lat, lon, _) = from_geocentric(ellipsoid, x);
-                (lat, lon)
-            }
+            State::Geographic(lat, lon, h) => (lat, lon, h),
+            State::Centred(x) => from_geocentric(ellipsoid, x),
         })
     }
 }
 
-const WGS84: (f64, f64) = (6_378_137.0, 298.257_223_563);
+pub(crate) const WGS84: (f64, f64) = (6_378_137.0, 298.257_223_563);
 const GRS80: (f64, f64) = (6_378_137.0, 298.257_222_101);
 
 fn helmert_path(h: Helmert, reverse: bool, lands: (f64, f64), via: &str, unofficial: bool) -> Path {
     Path {
         steps: vec![(Step::Helmert(h, reverse), lands)],
+        names: vec![(via.to_owned(), h.accuracy)],
         accuracy: h.accuracy,
         via: vec![via.to_owned()],
         unofficial,
@@ -446,9 +461,10 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> 
             Method::Helmert(h) => helmert_path(*h, reverse, lands, &c.name, false),
             Method::Grid { id, accuracy } => Path {
                 steps: vec![(
-                    Step::Grid(ntv2::get(id).ok_or(Gap::NoGrid)?, reverse),
+                    Step::Grid(ntv2::get(id).ok_or(Gap::NoGrid)?, reverse, id.clone()),
                     lands,
                 )],
+                names: vec![(c.name.clone(), *accuracy)],
                 accuracy: *accuracy,
                 via: vec![c.name.clone()],
                 unofficial: false,
@@ -458,6 +474,7 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> 
     Ok(match (a, b) {
         (Datum::Turef, Datum::Wgs84) | (Datum::Wgs84, Datum::Turef) => Path {
             steps: vec![(Step::Null, lands)],
+            names: vec![("EPSG:5261".into(), Some(1.0))],
             accuracy: Some(1.0),
             via: vec!["EPSG:5261".into()],
             unofficial: false,
@@ -470,6 +487,10 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> 
                 (Step::Helmert(ED50, false), GRS80),
                 (Step::Helmert(TUREF_ETRS89, true), lands),
             ],
+            names: vec![
+                ("EPSG:1783".into(), Some(2.0)),
+                ("EPSG:5260".into(), Some(0.1)),
+            ],
             accuracy: Some(2.1),
             via: vec!["EPSG:1783 + EPSG:5260".into()],
             unofficial: true,
@@ -478,6 +499,10 @@ fn registry_path(a: &Datum, b: &Datum, choices: &[Choice]) -> Result<Path, Gap> 
             steps: vec![
                 (Step::Helmert(TUREF_ETRS89, false), GRS80),
                 (Step::Helmert(ED50, true), lands),
+            ],
+            names: vec![
+                ("EPSG:5260".into(), Some(0.1)),
+                ("EPSG:1783".into(), Some(2.0)),
             ],
             accuracy: Some(2.1),
             via: vec!["EPSG:1783 + EPSG:5260".into()],
@@ -537,7 +562,7 @@ fn rounded(mut p: Path) -> Path {
 
 /// Earth-centred coordinates of a latitude and longitude (degrees) at a
 /// height, on an ellipsoid (semi-major axis, inverse flattening).
-fn to_geocentric((a, inv_f): (f64, f64), lat: f64, lon: f64, height: f64) -> [f64; 3] {
+pub(crate) fn to_geocentric((a, inv_f): (f64, f64), lat: f64, lon: f64, height: f64) -> [f64; 3] {
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
     let rad = PI / 180.0;
@@ -554,7 +579,7 @@ fn to_geocentric((a, inv_f): (f64, f64), lat: f64, lon: f64, height: f64) -> [f6
 /// The latitude, longitude (degrees) and height of Earth-centred
 /// coordinates. Iterated on the latitude from the spheroid's first guess: a
 /// handful of steps reach the double's last bit near the surface.
-fn from_geocentric((a, inv_f): (f64, f64), x: [f64; 3]) -> (f64, f64, f64) {
+pub(crate) fn from_geocentric((a, inv_f): (f64, f64), x: [f64; 3]) -> (f64, f64, f64) {
     let f = 1.0 / inv_f;
     let e2 = f * (2.0 - f);
     let p = libm::hypot(x[0], x[1]);

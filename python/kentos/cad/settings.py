@@ -20,6 +20,7 @@ from .types import (  # noqa: F401
     DrawingFontName,
     DrawingUnit,
     DrawingUnitName,
+    HeightReference,
     LengthStyle,
     LengthStyleName,
     SettingsChanged,
@@ -41,11 +42,15 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
     (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals
     (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000
     arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve
-    tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır) ve
-    drawingFont. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının
-    ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar
-    reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey
-    yazılmaz, sonuç conflict olur.
+    tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır),
+    drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da
+    orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown}
+    kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0
+    kaldırır; elipsoit yüksekliği ve epok sistem ister). Ayarlar projenin
+    düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema,
+    grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
+    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
+    conflict olur.
     """
     __slots__ = ()
     id = "cad.settings.set"
@@ -65,9 +70,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -86,11 +93,14 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit
         (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel
         yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma
-        adımında, “Yazı yüksekliklerini uydur”, alır) ve drawingFont. Ayarlar projenin
-        düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema,
-        grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir.
-        expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne
+        olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve
+        geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve
+        coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok
+        sistem ister). Ayarlar projenin düzenlemesidir, geri alma adımı değildir.
+        Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir;
+        bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde
+        değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.
@@ -98,9 +108,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch:
             area_decimals: Unit: count.
             area_unit:
+            coordinate_epoch: Unit: year.
             drawing_font:
             drawing_unit:
             expected_revision: The document revision the input was prepared against, as decimal text.
+            heights:
             length_decimals: Unit: count.
             length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
                 engineering and fractional feet and inches in an inch or foot drawing.
@@ -126,9 +138,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
+            heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
             name=name,
@@ -147,9 +161,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -166,9 +182,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
+            heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
             name=name,
@@ -187,9 +205,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -206,9 +226,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
+            heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
             name=name,
@@ -227,9 +249,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
         arch: ArchSettings | None | Unset = UNSET,
         area_decimals: int | None | Unset = UNSET,
         area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET,
+        coordinate_epoch: float | None | Unset = UNSET,
         drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET,
         drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
+        heights: HeightReference | None | Unset = UNSET,
         length_decimals: int | None | Unset = UNSET,
         length_style: LengthStyle | LengthStyleName | None | Unset = UNSET,
         name: str | None | Unset = UNSET,
@@ -251,9 +275,11 @@ class _SettingsSet(LocalCommand[SettingsSet, SettingsChanged, SettingsChanged]):
             arch=arch,
             area_decimals=area_decimals,
             area_unit=area_unit,
+            coordinate_epoch=coordinate_epoch,
             drawing_font=drawing_font,
             drawing_unit=drawing_unit,
             expected_revision=expected_revision,
+            heights=heights,
             length_decimals=length_decimals,
             length_style=length_style,
             name=name,

@@ -4,6 +4,7 @@ import type { ArchSettings } from "./ArchSettings";
 import type { AreaUnit } from "./AreaUnit";
 import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
+import type { HeightReference } from "./HeightReference";
 import type { LengthStyle } from "./LengthStyle";
 import type { Workspace } from "./Workspace";
 
@@ -35,7 +36,11 @@ import type { Workspace } from "./Workspace";
  * - `drawingFont`: the drawing's typeface;
  * - `arch`: the project's levels and the detail its walls are drawn at
  *   (docs/adr/0339 §3), whole: the given settings take the place of the
- *   old ones, an empty object takes them away.
+ *   old ones, an empty object takes them away;
+ * - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
+ *   the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
+ *   file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
+ * - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
  *
  * Settings are an edit of the project, no undo step (docs/adr/0049).
  *
@@ -43,20 +48,21 @@ import type { Workspace } from "./Workspace";
  * (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
  * (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
  * (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
- * (two levels of one id or name, a level's elevation or height); then
+ * (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
  * `invalid_revision`, `revision_conflict` (status `conflict`);
  * `second_needs_system` (a second system for a project without one),
  * `second_is_own` (the second system the project's own), `unit_needs_local`
  * (a unit other than metres for a project with a system),
  * `style_needs_imperial` (a feet-and-inches style for a metric unit),
- * `level_in_use` (a level a wall names taken away).
+ * `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
+ * project without a system).
  */
 export type SettingsSet = { name?: string, projectType?: Workspace, srid?: number, secondSrid?: number, drawingUnit?: DrawingUnit, 
 /**
  * How lengths are written (docs/adr/0262 §2): decimal, or architectural,
  * engineering and fractional feet and inches in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, 
+lengthStyle?: LengthStyle, lengthDecimals?: number, areaDecimals?: number, areaUnit?: AreaUnit, angleUnit?: AngleUnit, plotScale?: number, drawingFont?: DrawingFont, arch?: ArchSettings, heights?: HeightReference, coordinateEpoch?: number, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */
