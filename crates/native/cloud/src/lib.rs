@@ -36,6 +36,8 @@ pub mod range;
 pub mod replica;
 mod runtime;
 pub mod saving;
+// STAC requests over HTTP (docs/adr/0528 §2): the fetcher the hosts register for cad.stac.search.
+pub mod stac;
 // The sheet template library (docs/sheet/design.md §13): the device's sync with it, its endpoints.
 pub mod sheet_library;
 pub mod sheet_templates;

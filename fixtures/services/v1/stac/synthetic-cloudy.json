@@ -1,0 +1,77 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: a server that ignored the cloud filter; items at 25 and 5 percent and one without a cloud cover.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberReturned": 3,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "CLOUDY_25",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-07-01T10:00:00Z",
+    "eo:cloud_cover": 25
+   },
+   "assets": {},
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/CLOUDY_25"
+    }
+   ]
+  },
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "CLEAR_5",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-07-02T10:00:00Z",
+    "eo:cloud_cover": 5
+   },
+   "assets": {},
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/CLEAR_5"
+    }
+   ]
+  },
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "UNKNOWN",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-07-03T10:00:00Z"
+   },
+   "assets": {},
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/UNKNOWN"
+    }
+   ]
+  }
+ ],
+ "links": []
+}

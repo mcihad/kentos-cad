@@ -211,6 +211,9 @@ pub mod links;
 pub mod assets_check;
 pub mod images_edit;
 pub mod rasters_mosaic;
+pub mod stac_host;
+pub mod stac_prepare;
+pub mod stac_search;
 pub mod inserts_clip;
 pub mod raster_files;
 pub mod rasters_georef;
@@ -569,6 +572,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_IMAGES_EDIT,
         kentos_contracts::CAD_IMAGES_EDIT_VERSION,
+    ),
+    // STAC keşfi ve veri hazırlama ([`stac_search`], [`stac_prepare`], docs/adr/0528).
+    (
+        kentos_contracts::CAD_STAC_SEARCH,
+        kentos_contracts::CAD_STAC_SEARCH_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STAC_PREPARE,
+        kentos_contracts::CAD_STAC_PREPARE_VERSION,
     ),
     // Sanal mozaik ([`rasters_mosaic`], docs/adr/0517).
     (

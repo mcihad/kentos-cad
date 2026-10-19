@@ -2942,6 +2942,83 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_STAC_SEARCH.into(),
+            version: crate::CAD_STAC_SEARCH_VERSION,
+            title: "STAC'ta ara".into(),
+            summary: "Bir STAC API'sinde (endpoint: kökü, örneğin https://earth-search.aws.element84.com/v1) alanı ve zamanı kaplayan görüntü öğelerini arar; çizimi değiştirmez. bbox [batı, güney, doğu, kuzey] derece (WGS 84), datetime RFC 3339 an ya da aralık (başlangıç/bitiş, açık uç ..; 2024-07-01 gibi bir gün kendi günüdür), collections koleksiyonlar, ids öğe kimlikleri, maxCloudCover en çok bulut yüzdesi (eo:cloud_cover; sunucudan istenir ve gelende yeniden denetlenir, bulut oranı olmayan öğe kalır), limit sayfa boyu (1–100, varsayılan 10). \
+                      Cevap: gönderilen istek (request: POST /search, gövde anahtarları alfabetik), öğeler (kataloğun adresi, koleksiyon, kimlik, çekim zamanı, kutu, bulut oranı, platform, gsd, EPSG, lisans ve varlıkları: anahtar, imzasız adres, roller, bantlar, rasterın veri türü, nodata, ölçek ve öteleme, proj:shape ve proj:transform), sunucunun gönderdiği sayı (returned), süzülenler (dropped), toplam (matched) ve sonraki sayfa (next: sunucunun next bağlantısı; verilirse o sayfa alınır, adresi uç noktanın sunucusunda olmalı). \
+                      Bir varlığın kalıcı kimliği kataloğun adresi + koleksiyon + öğe + varlık anahtarıdır; imzalı (geçici) adresin sorgusu hiçbir yerde gösterilmez ya da yazılmaz (signed: true). Ağ ev sahibinindir: masaüstü ve MCP ağa gider; ağı olmayan ev sahibi stac_unavailable der."
+                .into(),
+            aliases: vec!["stac".into(), "stacara".into(), "uydugoruntusu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StacSearch>(),
+            output: schema::<crate::StacSearched>(),
+            plan: Some(schema::<crate::StacSearched>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Sentinel-2 L2A'da bir alan için temmuzdaki en çok %20 bulutlu görüntüler".into(),
+                    input: json!({
+                        "endpoint": "https://earth-search.aws.element84.com/v1",
+                        "bbox": [36.9, 39.7, 37.1, 39.8],
+                        "datetime": "2024-07-01/2024-07-20",
+                        "collections": ["sentinel-2-l2a"],
+                        "maxCloudCover": 20,
+                        "limit": 2
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Aynı aramanın sonraki sayfası".into(),
+                    input: json!({
+                        "endpoint": "https://earth-search.aws.element84.com/v1",
+                        "collections": ["sentinel-2-l2a"],
+                        "maxCloudCover": 20,
+                        "next": { "method": "POST", "href": "https://earth-search.aws.element84.com/v1/search", "body": { "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a" }, "merge": true }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_STAC_PREPARE.into(),
+            version: crate::CAD_STAC_PREPARE_VERSION,
+            title: "STAC verisini hazırla".into(),
+            summary: "Aramanın döndürdüğü bir öğenin (item) seçilen varlıklarını (assets: red, nir, swir16 …; her biri tek bantlı COG) çizime adresleriyle bağlı raster olarak ekler: tek yeni grup (group; yoksa “STAC: öğenin kimliği”) ve her varlık için anahtarının adını taşıyan bir katman; tek geri alma adımı “STAC verisini hazırla”. Raster ızgarasını katalogdan alır (proj:shape, proj:transform, proj:epsg; varlıkta ya da öğede) ve dosya açılmaz; sistemi projeninkinden başkaysa crs_mismatch (dönüşüm yok). nodata ve veri türü kataloğundur. \
+                      qa kalite bandıdır (asset + isteğe bağlı mask: values ya da bits; verilmezse platformun kuralı: Sentinel-2 scl sınıfları 0, 1, 3, 8, 9, 10; Landsat qa_pixel bitleri 0–4): ayrıca eklenir ve veri bantlarından değildir; maske bu komutta uygulanmaz, kaydedilir. search aramanın kaydıdır (endpoint, bbox, datetime, collections, maxCloudCover). \
+                      Cevaptaki hazırlama kaydı (kentos.stac-preparation 1) aramayı, öğeyi, çekim zamanını, bulut oranını, her bandın adını, adresini (imzasız), veri türünü, nodata'sını, ölçeğini ve ötelemesini, ızgarasını, kalite bandını ve maske kuralını, katman ve nesne kimliklerini taşır; reflectance bantların ortak ölçek ve ötelemesidir (Spektral indis'in Ölçek ve Öteleme'si). Aynı kayıt her rasterin özniteliklerinde de durur (stac.catalog, stac.collection, stac.item, stac.asset, stac.href, stac.scale, stac.offset …). \
+                      Adresi s3:// olan varlık stac_href_not_http ile reddedilir; imzalı adresin imzası yazılmaz (stac_signed_href_stripped): imza gerektiren dosya açılmaz. plan yazmadan kaydı söyler."
+                .into(),
+            aliases: vec!["stachazirla".into(), "uydugoruntusuhazirla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StacPrepare>(),
+            output: schema::<crate::StacPrepared>(),
+            plan: Some(schema::<crate::StacPrepared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir Sentinel-2 öğesinin kırmızı ve yakın kızılötesi bantlarını, SCL kalite bandıyla ekle".into(),
+                input: json!({
+                    "item": { "catalog": "https://earth-search.aws.element84.com/v1", "collection": "sentinel-2-l2a", "id": "S2A_37SCD_20240713_0_L2A", "assets": [] },
+                    "assets": ["red", "nir"],
+                    "qa": { "asset": "scl" },
+                    "group": "STAC: S2A_37SCD_20240713"
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_IMAGES_EDIT.into(),
             version: crate::CAD_IMAGES_EDIT_VERSION,
             title: "Resmin kaynağı".into(),
@@ -8035,6 +8112,12 @@ mod tests {
                     }
                     crate::CAD_ASSETS_CHECK => {
                         serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STAC_SEARCH => {
+                        serde_json::from_value::<crate::StacSearch>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STAC_PREPARE => {
+                        serde_json::from_value::<crate::StacPrepare>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

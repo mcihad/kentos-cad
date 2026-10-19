@@ -357,6 +357,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",
     ),
+    (
+        "cad.stac.search",
+        "stac_unavailable",
+        "ortak durumların koşucusu kayıtlı cevaplı bir ağ kaydeder; ağsız ev sahibi stac_search.rs'in birim testinde (ADR 0528 §2)",
+    ),
 ];
 
 fn why_unreached(command: &str, code: &str) -> Option<&'static str> {

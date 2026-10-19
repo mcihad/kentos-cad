@@ -71,6 +71,8 @@ impl Server {
     pub fn new() -> Self {
         // Bound layers on PostGIS (docs/adr/0505): the provider, once per process.
         kentos_postgis::register();
+        // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
+        kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
         let catalog = kentos_headless::catalog();
         let tools = tools::list(&catalog);
         Self {

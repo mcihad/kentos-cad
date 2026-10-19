@@ -2316,6 +2316,22 @@
       "status": "implemented"
     },
     {
+      "id": "raster.stac",
+      "title": "STAC'ta ara",
+      "icon": "rasterStac",
+      "description": "Bir STAC API'sinde (Sentinel-2, Landsat …) görünümün alanını ve seçilen zamanı kaplayan uydu görüntülerini arar; bulut oranı sunucudan istenir ve gelende yeniden denetlenir. Seçilen öğenin bantlarını (kırmızı, yakın kızılötesi …) ve kalite bandını adresleriyle bağlı raster olarak, kendi grubunda ve tek adımda ekler; ızgara, ölçek, öteleme, nodata ve maske kuralı hazırlama kaydında durur. İmzalı adresin imzası projeye yazılmaz.",
+      "aliases": [
+        "STAC",
+        "STACARA",
+        "SENTINEL",
+        "LANDSAT",
+        "UYDU"
+      ],
+      "shortcuts": [],
+      "category": "Raster",
+      "status": "implemented"
+    },
+    {
       "id": "file.import.pdf",
       "title": "PDF…",
       "icon": "importPdf",
@@ -2630,7 +2646,8 @@
     "layerOut": "<path d=\"M3 4.5h6l1.5 2H17v9H3z\" stroke-width=\"1.1\"/><path d=\"M9 11h8.5M15 8.5l2.5 2.5-2.5 2.5\" stroke-width=\"1.3\"/>",
     "layerOrder": "<path d=\"M3 5h9M3 10h9M3 15h9\" stroke-width=\"1.2\"/><path d=\"M15.5 3.5v13M13.5 5.5l2-2 2 2M13.5 14.5l2 2 2-2\" stroke-width=\"1.1\"/>",
     "routeDrift": "<path d=\"M2 15.5C6 15.5 9 7 18 6\" stroke-width=\"1.4\"/><circle cx=\"8.2\" cy=\"10.4\" r=\"1.7\" fill=\"currentColor\" stroke=\"none\"/><circle cx=\"13.6\" cy=\"15.2\" r=\"1.7\" stroke-width=\"1\" stroke-dasharray=\"1.1 .9\"/><path d=\"m9.7 11.7 2.3 2\" stroke-width=\"1\"/><path d=\"m12.3 12.3-.2 1.6-1.6-.1\" stroke-width=\"1\"/>",
-    "joinViews": "<rect x=\"2.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><rect x=\"11.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8.5h6M11.5 8.5h6M2.5 12h6M11.5 12h6\" stroke-width=\".8\"/><path d=\"M8.5 10h3\" stroke-width=\"1.6\"/>"
+    "joinViews": "<rect x=\"2.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><rect x=\"11.5\" y=\"4.5\" width=\"6\" height=\"11\" rx=\"1\"/><path d=\"M2.5 8.5h6M11.5 8.5h6M2.5 12h6M11.5 12h6\" stroke-width=\".8\"/><path d=\"M8.5 10h3\" stroke-width=\"1.6\"/>",
+    "rasterStac": "<rect x=\"2\" y=\"2\" width=\"12\" height=\"12\" rx=\"1\" stroke-width=\"1.1\"/><path d=\"M6 2v12M10 2v12M2 6h12M2 10h12\" stroke-width=\".7\" stroke-opacity=\".55\"/><circle cx=\"13\" cy=\"13\" r=\"3.6\" stroke-width=\"1.3\"/><path d=\"M15.8 15.8l2.4 2.4\" stroke-width=\"1.5\" stroke-linecap=\"round\"/>"
   },
   "tabs": [
     {
@@ -3881,6 +3898,10 @@
         {
           "command": "raster.mosaic",
           "size": "small"
+        },
+        {
+          "command": "raster.stac",
+          "size": "small"
         }
       ]
     },
@@ -3894,6 +3915,10 @@
         {
           "command": "raster.mosaic",
           "size": "small"
+        },
+        {
+          "command": "raster.stac",
+          "size": "small"
         }
       ]
     },
@@ -3906,6 +3931,10 @@
       "items": [
         {
           "command": "raster.mosaic",
+          "size": "small"
+        },
+        {
+          "command": "raster.stac",
           "size": "small"
         }
       ]

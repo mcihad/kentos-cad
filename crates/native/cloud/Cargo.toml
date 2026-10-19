@@ -19,6 +19,8 @@ kentos-kcad = { path = "../../shared/kcad" }
 kentos-domain = { path = "../domain" }
 # The sheet template library's types (docs/sheet/design.md §13): the same the web and the server use.
 kentos-sheet = { path = "../../shared/sheet", default-features = false }
+# STAC requests (docs/adr/0528 §2): the services core's request and fetcher types.
+kentos-services = { path = "../../shared/services" }
 reqwest = { workspace = true }
 bytes = { workspace = true }
 tokio = { workspace = true }

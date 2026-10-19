@@ -34,6 +34,8 @@ use crate::{joins_edit, joins_query};
 use kentos_contracts::{JoinsEdit, JoinsQuery};
 use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
+use crate::{stac_prepare, stac_search};
+use kentos_contracts::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
@@ -157,6 +159,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_contracts::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
             kentos_contracts::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
+            kentos_contracts::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),
+            kentos_contracts::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_contracts::CAD_INSERTS_CLIP => $then!(inserts_clip, InsertsClip),
             kentos_contracts::CAD_RASTERS_GEOREF => $then!(rasters_georef, RastersGeoref),
             kentos_contracts::CAD_SCHEDULES_CREATE => $then!(schedules_create, SchedulesCreate),

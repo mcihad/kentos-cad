@@ -1860,6 +1860,7 @@ impl App {
             Asking::DataCompare => self.data_compare_view(),
             Asking::RasterAdd => self.raster_add_view(),
             Asking::RasterMosaic => self.raster_mosaic_view(),
+            Asking::RasterStac => self.raster_stac_view(),
             Asking::RasterStyle => self.raster_look_view(),
             Asking::Multidim => self.multidim_view(),
             Asking::PointCloudAdd => self.cloud_add_view(),

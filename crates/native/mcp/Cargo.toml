@@ -18,6 +18,8 @@ kentos-postgis = { path = "../postgis" }
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-headless = { path = "../headless" }
+# STAC searches (docs/adr/0528 §2): the host registers the cloud client's HTTP fetcher with the commands.
+kentos-native-application = { path = "../application" }
 # The server's commands (docs/adr/0134): the desktop's cloud client, on its own runtime.
 kentos-cloud = { path = "../cloud" }
 serde_json = { workspace = true }

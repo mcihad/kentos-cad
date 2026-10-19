@@ -22,7 +22,11 @@ import unittest
 from pathlib import Path
 from typing import Any
 
-import kentos.cad as cad
+# STAC searches are answered from the recorded folder (docs/adr/0528 §2): no network in a shared case. The native
+# module reads the variable when it loads, so it is set before the import.
+os.environ.setdefault("KENTOS_STAC_RECORDED", str(Path(__file__).resolve().parents[2] / "fixtures/services/v1/stac"))
+
+import kentos.cad as cad  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 # `KENTOS_CASES_ONLY=cad.rasters,cad.walls` runs only the files whose names hold one of the words (the desktop's rule).

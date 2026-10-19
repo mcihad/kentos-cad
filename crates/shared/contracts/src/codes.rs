@@ -1399,6 +1399,60 @@ codes! {
     MOSAIC_RESAMPLED = "mosaic_resampled", Warning, false, "Bazı dosyaların pikseli mozaiğinkinden başka; en yakın pikselden okunur.";
     /// Order by date with files that have no date: they lie at the bottom.
     MOSAIC_UNDATED = "mosaic_undated", Warning, false, "Bazı dosyaların tarihi (TIFF DateTime) yok; tarih sırasında en alta kondular.";
+    // ── STAC discovery and preparation (docs/adr/0528) ──────────────────
+    /// A STAC endpoint that is not an http(s) address of a host, or carries a login or a query.
+    INVALID_STAC_ENDPOINT = "invalid_stac_endpoint", Failed, false, "STAC adresi bir http ya da https adresi olmalı; kullanıcı adı, parola, sorgu ya da parça içeremez.";
+    /// A bounding box that is not west, south, east, north in degrees.
+    INVALID_STAC_BBOX = "invalid_stac_bbox", Failed, false, "Kutu [batı, güney, doğu, kuzey] derece olmalı: sonlu sayılar, enlem −90 ile 90, boylam −180 ile 180, batı doğudan küçük (180° meridyenini aşan kutu iki aramaya bölünür).";
+    /// A datetime that is not an RFC 3339 instant or interval.
+    INVALID_STAC_DATETIME = "invalid_stac_datetime", Failed, false, "Tarih bir RFC 3339 anı ya da aralığı olmalı (2024-07-01, 2024-07-01T00:00:00Z, başlangıç/bitiş, açık uç ..); başlangıç bitişten sonra olamaz.";
+    /// A cloud cover outside 0 to 100.
+    INVALID_STAC_CLOUD_COVER = "invalid_stac_cloud_cover", Failed, false, "En çok bulut oranı 0 ile 100 arasında sonlu bir sayı olmalı.";
+    /// A page size outside 1 to 100.
+    INVALID_STAC_LIMIT = "invalid_stac_limit", Failed, false, "Sayfa boyu 1 ile 100 arasında olmalı.";
+    /// A collection or an item id that is empty or holds a control character.
+    INVALID_STAC_COLLECTION = "invalid_stac_collection", Failed, false, "Koleksiyon ve öğe kimlikleri boş olmamalı ve denetim karakteri içermemeli.";
+    /// A `next` link that leads to another host than the endpoint's.
+    STAC_NEXT_FOREIGN = "stac_next_foreign", Failed, false, "Sonraki sayfanın adresi uç noktanın kendi sunucusunda değil; başka bir sunucuya istek gönderilmez.";
+    /// A host that cannot reach a network.
+    STAC_UNAVAILABLE = "stac_unavailable", Host, false, "Bu ev sahibi ağa erişmiyor: STAC araması masaüstünde (ya da ağ erişimi veren bir ev sahibinde) yapılır.";
+    /// The server did not answer, or answered with an error.
+    STAC_REQUEST_FAILED = "stac_request_failed", Failed, false, "STAC sunucusundan cevap alınamadı ya da sunucu hata verdi.";
+    /// An answer that is not a STAC item collection.
+    STAC_RESPONSE_UNREADABLE = "stac_response_unreadable", Failed, false, "STAC sunucusunun cevabı okunamadı: JSON değil ya da bir öğe koleksiyonu (FeatureCollection) değil.";
+    /// An item that is not one a preparation can read.
+    INVALID_STAC_ITEM = "invalid_stac_item", Failed, false, "STAC öğesi geçersiz: kimliği boş ya da adresi bir http(s) adresi olmayan ya da anahtarı boş bir varlığı var.";
+    /// No asset asked for.
+    STAC_ASSETS_EMPTY = "stac_assets_empty", Failed, false, "Eklenecek varlık verilmedi.";
+    /// More assets than a preparation adds.
+    STAC_TOO_MANY_ASSETS = "stac_too_many_assets", Failed, false, "Bir hazırlama en çok 32 varlık ekler.";
+    /// An asset key the item does not have.
+    STAC_ASSET_NOT_FOUND = "stac_asset_not_found", Failed, false, "Öğede böyle bir varlık yok.";
+    /// An asset whose address is not http or https (s3://, gs://).
+    STAC_HREF_NOT_HTTP = "stac_href_not_http", Failed, false, "Varlığın adresi http ya da https değil (s3:// ya da gs://); raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin.";
+    /// An asset without the shape, transform or system a raster needs.
+    STAC_NO_GRID = "stac_no_grid", Failed, false, "Varlığın ızgarası bilinmiyor: proj:shape, proj:transform ve proj:epsg (varlıkta ya da öğede) birlikte gerekir.";
+    /// An asset whose data type a raster does not hold.
+    STAC_UNSUPPORTED_SAMPLE = "stac_unsupported_sample", Failed, false, "Varlığın veri türü rasterde desteklenmiyor (uint8, int8, uint16, int16, uint32, int32, float32, float64 desteklenir).";
+    /// An asset of more than one band.
+    STAC_MULTIBAND = "stac_multiband", Failed, false, "Varlığın birden çok bandı var (görsel ya da çok bantlı dosya); her biri tek bantlı varlıklar eklenir.";
+    /// The quality asset asked for as a data band too.
+    STAC_QA_IS_DATA = "stac_qa_is_data", Failed, false, "Kalite varlığı veri bantları arasında da verilmiş; bir varlık ya veri bandıdır ya kalite bandı.";
+    /// A quality asset whose mask rule is not known.
+    STAC_QA_UNKNOWN = "stac_qa_unknown", Failed, false, "Kalite varlığının maske kuralı bilinmiyor: Sentinel-2'nin scl'si ve Landsat'ın qa_pixel'i dışında bir varlık için maske verin.";
+    /// A group name that is empty or too long.
+    INVALID_GROUP_NAME = "invalid_group_name", Failed, false, "Grup adı boş olmamalı, en çok 120 harf olmalı ve denetim karakteri içermemeli.";
+    /// An address whose query carried a signature: the signature was not kept.
+    STAC_SIGNED_HREF_STRIPPED = "stac_signed_href_stripped", Warning, false, "Bir adresin imzası (geçici erişim anahtarı) projeye yazılmadı; dosyayı okumak için imza gerekiyorsa raster açılmaz.";
+    /// Data bands that do not share one grid.
+    STAC_GRID_DIFFERS = "stac_grid_differs", Warning, false, "Bantların ızgarası (piksel boyu ya da yeri) aynı değil; birlikte işlemeden önce ortak ızgaraya örneklenmeli.";
+    /// Data bands whose scale or offset differ.
+    STAC_SCALE_DIFFERS = "stac_scale_differs", Warning, false, "Bantların ölçeği ya da ötelemesi aynı değil; Spektral indis tek ölçek ve öteleme alır, bantlar ayrı ayrı yansımaya çevrilmeli.";
+    /// An item without an acquisition time or a cloud cover.
+    STAC_ITEM_INCOMPLETE = "stac_item_incomplete", Warning, false, "Öğenin çekim zamanı ya da bulut oranı yok; kayıt bunları boş taşır.";
+    /// The quality band's grid is not the data bands'.
+    STAC_QA_GRID_DIFFERS = "stac_qa_grid_differs", Warning, false, "Kalite bandının ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli.";
+
     // ── Clipping, PDF underlays and documents (docs/adr/0351) ───────────
     /// An insert's clipping boundary that is not one.
     INVALID_CLIPPING = "invalid_clipping", Failed, false, "Kırpma sınırı geçersiz: üçten az köşe, alanı yok, sonlu olmayan köşe ya da kesişen kenarlar.";

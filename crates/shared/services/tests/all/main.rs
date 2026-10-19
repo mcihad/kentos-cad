@@ -8,3 +8,5 @@ mod geocode;
 mod paging;
 // A vector tile written and read by GDAL (scripts/fixtures/service_mvt_cases.py).
 mod mvt;
+// STAC discovery's core against its independent reference and recorded answers (scripts/fixtures/stac_cases.py, ADR 0528).
+mod stac;

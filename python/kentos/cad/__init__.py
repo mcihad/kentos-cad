@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -178,6 +178,7 @@ __all__ = [
     "BatchRowRan",
     "BindLeaderEdit",
     "BindXrefsOperation",
+    "BitsStacMask",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -1499,6 +1500,25 @@ __all__ = [
     "SplitSpacesOperation",
     "SplitTextEdit",
     "SplitWallsOperation",
+    "StacAssetInfo",
+    "StacBand",
+    "StacItemInfo",
+    "StacMask",
+    "StacMethod",
+    "StacMethodName",
+    "StacNext",
+    "StacPreparation",
+    "StacPrepare",
+    "StacPrepared",
+    "StacPreparedBand",
+    "StacPreparedQa",
+    "StacQa",
+    "StacRasterBand",
+    "StacReflectance",
+    "StacRequestInfo",
+    "StacSearch",
+    "StacSearchRecord",
+    "StacSearched",
     "StackMode",
     "StackModeName",
     "StairEntity",
@@ -1680,6 +1700,7 @@ __all__ = [
     "UpdateRelationsOp",
     "ValueProblem",
     "ValuesFieldsWriteOp",
+    "ValuesStacMask",
     "VariableKind",
     "VariableKindName",
     "VariableValue",
@@ -1837,6 +1858,7 @@ __all__ = [
     "snap",
     "sources",
     "spaces",
+    "stac",
     "stairs",
     "standards",
     "styles",

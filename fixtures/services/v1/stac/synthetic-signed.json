@@ -1,0 +1,198 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: a Planetary-Computer-like answer whose asset addresses carry a SAS signature; item-level proj:code; an item without id, one without cloud cover and a datetime interval.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberReturned": 3,
+ "numberMatched": 3,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "S2B_MSIL2A_20260713_R121_T36SUD",
+   "collection": "sentinel-2-l2a",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-07-13T08:29:11.025000Z",
+    "eo:cloud_cover": 1.2,
+    "platform": "Sentinel-2B",
+    "proj:code": "EPSG:32636",
+    "license": "proprietary"
+   },
+   "assets": {
+    "B04": {
+     "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif?st=2026-10-19T08%3A00%3A00Z&se=2026-10-20T08%3A00%3A00Z&sp=r&sv=2021-06-08&sr=c&sig=AbCdEf%2Bgh%3D",
+     "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+     "roles": [
+      "data",
+      "reflectance"
+     ],
+     "proj:shape": [
+      10980,
+      10980
+     ],
+     "proj:transform": [
+      10,
+      0,
+      399960,
+      0,
+      -10,
+      4400040
+     ],
+     "eo:bands": [
+      {
+       "name": "red",
+       "common_name": "red"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10,
+       "scale": 0.0001,
+       "offset": -0.1
+      }
+     ]
+    },
+    "B08": {
+     "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif?st=2026-10-19T08%3A00%3A00Z&se=2026-10-20T08%3A00%3A00Z&sp=r&sv=2021-06-08&sr=c&sig=AbCdEf%2Bgh%3D",
+     "roles": [
+      "data",
+      "reflectance"
+     ],
+     "proj:shape": [
+      10980,
+      10980
+     ],
+     "proj:transform": [
+      10,
+      0,
+      399960,
+      0,
+      -10,
+      4400040
+     ],
+     "eo:bands": [
+      {
+       "name": "nir",
+       "common_name": "nir"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10,
+       "scale": 0.0001,
+       "offset": -0.1
+      }
+     ]
+    },
+    "SCL": {
+     "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif?st=2026-10-19T08%3A00%3A00Z&se=2026-10-20T08%3A00%3A00Z&sp=r&sv=2021-06-08&sr=c&sig=AbCdEf%2Bgh%3D",
+     "roles": [
+      "data"
+     ],
+     "proj:shape": [
+      5490,
+      5490
+     ],
+     "proj:transform": [
+      20,
+      0,
+      399960,
+      0,
+      -20,
+      4400040
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint8",
+       "spatial_resolution": 20
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260713_R121_T36SUD"
+    },
+    {
+     "rel": "license",
+     "href": "https://scihub.copernicus.eu/twiki/pub/SciHubWebPortal/TermsConditions/Sentinel_Data_Terms_and_Conditions.pdf?sig=x&se=1"
+    }
+   ]
+  },
+  {
+   "type": "Feature",
+   "properties": {
+    "datetime": "2026-07-14T00:00:00Z"
+   },
+   "assets": {},
+   "links": []
+  },
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "NOCLOUD_1",
+   "collection": "sentinel-2-l2a",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "start_datetime": "2026-07-01T00:00:00Z",
+    "end_datetime": "2026-07-31T23:59:59Z",
+    "proj:epsg": 32636
+   },
+   "assets": {
+    "B04": {
+     "href": "https://h.example/b04.tif?versionId=7",
+     "proj:shape": [
+      10980,
+      10980
+     ],
+     "proj:transform": [
+      10,
+      0,
+      399960,
+      0,
+      -10,
+      4400040
+     ],
+     "eo:bands": [
+      {
+       "name": "red",
+       "common_name": "red"
+      }
+     ],
+     "raster:bands": [
+      {
+       "nodata": 0,
+       "data_type": "uint16",
+       "spatial_resolution": 10,
+       "scale": 0.0001,
+       "offset": -0.1
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/NOCLOUD_1"
+    }
+   ]
+  }
+ ],
+ "links": []
+}
