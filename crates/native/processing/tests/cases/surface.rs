@@ -54,6 +54,15 @@ impl Sink for Kept {
             .insert(self.name, self.bytes);
         Ok(())
     }
+
+    fn finish_cog(self: Box<Self>) -> Result<(), String> {
+        let cog = kentos_formats::raster::cog::of_bytes(&self.bytes)?;
+        self.written
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .insert(self.name, cog);
+        Ok(())
+    }
 }
 
 impl Files for FixtureFiles {
@@ -326,6 +335,12 @@ fn raster_cases(name: &str, least: usize) {
                 found.push(format!("{id}: “{name}” was not written"));
                 continue;
             };
+            // A result is a cloud-optimized GeoTIFF: laid out again, it is itself (docs/adr/0515).
+            if !kentos_formats::raster::cog::declared(&bytes[..bytes.len().min(256)])
+                || kentos_formats::raster::cog::of_bytes(bytes).as_ref() != Ok(bytes)
+            {
+                found.push(format!("{id}: “{name}” is not a COG"));
+            }
             let got = level0(bytes);
             if *kind == "vector" {
                 // Rasterleştir's reference: every sample exact.

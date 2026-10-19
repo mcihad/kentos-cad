@@ -221,6 +221,8 @@ pub enum OpsTool {
         cell: f64,
         method: MethodName,
     },
+    /// COG olarak kaydet (docs/adr/0515): the raster on its own grid, every band and value as it is.
+    Copy {},
     ZonalStatistics {
         band: u32,
         stat: Stat,
@@ -1065,6 +1067,8 @@ struct Hist {
 }
 
 enum Work {
+    /// COG olarak kaydet (docs/adr/0515): the file's samples as they are, every band and alpha, on its own grid.
+    Copy,
     Calc {
         calc: Calc,
         maps: Vec<Mapping>,
@@ -1577,6 +1581,20 @@ impl OpsJob {
                     Some(kept_style(first_style, &kind)),
                 )
             }
+            OpsTool::Copy {} => {
+                let kind = Kind {
+                    sample: first.sample,
+                    values: first.values(),
+                    alpha: first.alpha,
+                    nodata: first.nodata,
+                };
+                (
+                    first.grid(),
+                    Work::Copy,
+                    Some(kind),
+                    Some(kept_style(first_style, &kind)),
+                )
+            }
             OpsTool::ZonalStatistics { band, stat } => {
                 let b = band_index(first, *band)?;
                 let grid = first.grid();
@@ -2069,7 +2087,7 @@ impl OpsJob {
             Work::Cells { .. } | Work::Suit { .. } => {
                 (0..self.inputs.len()).for_each(|k| add(k, 0))
             }
-            Work::Roc(_) => add(0, 0),
+            Work::Roc(_) | Work::Copy => add(0, 0),
             Work::Weights => {}
             Work::Remote(r) => {
                 for (k, margin) in r.reads((c0, c1, y0, y1), planning) {
@@ -2350,6 +2368,19 @@ impl OpsJob {
             if let Work::Remote(r) = &mut self.work {
                 r.read(&views, rect, self.threads);
             }
+        } else if matches!(self.work, Work::Copy) {
+            // The file's samples copied as they are: no value masked, alpha a band like the others.
+            let kind = self.kind.ok_or("Sonuç rasteri yok.")?;
+            let raw = match regions.first() {
+                Some(&(k, r)) => self.inputs[k].raw(r)?,
+                None => Raw::empty(),
+            };
+            let b = kind.bands() as usize;
+            let w = self.grid.width as usize;
+            let strip = self.strip.get_or_insert_with(|| {
+                Samples::filled(kind.sample, n as usize * w * b, kind.fill())
+            });
+            raw.copy_into(strip, (c0, c1, y0, n), w, b);
         } else if let Some(kind) = self.kind {
             let mut views: Vec<Option<View>> = vec![None; self.inputs.len()];
             for (k, r) in regions {
@@ -2479,6 +2510,8 @@ impl OpsJob {
             return Ok(());
         }
         match &self.work {
+            // Its strips are made from the file's samples in `step`.
+            Work::Copy => {}
             Work::Calc { calc, maps } => {
                 let area = {
                     let [_, a, bb, _, c, d] = grid.affine;

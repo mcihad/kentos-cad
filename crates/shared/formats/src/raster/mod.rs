@@ -11,6 +11,7 @@
 //! reader: every fault is a [`RasterError`] that says what is wrong.
 
 pub mod codec;
+pub mod cog;
 pub mod geotiff;
 pub mod layout;
 pub mod place;

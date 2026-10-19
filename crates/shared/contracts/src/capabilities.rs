@@ -3023,6 +3023,46 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.export.shp",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "nothing_to_export",
+            "several_shapefiles",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.sld",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "layer_not_found",
+            "not_a_layer",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.sld",
+        refusals: &[&[
+            "invalid_input",
+            "file_unreadable",
+            "invalid_sld",
+            "layer_not_found",
+            "not_a_layer",
+            "service_layer",
+            "revision_conflict",
+        ]],
+        warnings: &["import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.export.dxf",
         refusals: &[&[
             "invalid_file_path",

@@ -140,7 +140,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-05 — Eksik açık biçim aktarımlarını ve kayıp raporlu ETL'yi tamamla — P0/P1**
 
-  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage iki yönde, kayıplar türlerine göre (`import_losses`, `export_losses`), başka sistemdeki dosya açık onayla çevrilir. Kalan: CSV/XYZ ve Shapefile dışa aktarımı, GML, FlatGeobuf, GeoParquet, staging ve upsert.*
+  *Kısmen (17 Ekim 2026; ADR 0502): GeoPackage iki yönde, kayıplar türlerine göre (`import_losses`, `export_losses`), başka sistemdeki dosya açık onayla çevrilir. 19 Ekim (ADR 0514): Shapefile dışa aktarımı kod sayfası, alan adı, tür ve boyut kayıplarıyla, ESRI `.prj`'siyle; QGIS 4.2 ve OGR'la denetlenir. Kalan: CSV/XYZ'nin iki yönü, GML, FlatGeobuf, GeoParquet, staging ve upsert.*
 
   **Mevcut:** Ortak okuyucular, GeoJSON, Shapefile okuma, KML/GPX, DXF ve tablo dosyaları var [K03/K11]. “Desteklenen uzantı” listesi yerine okuma/yazma ve semantik kayıp matrisi gerekir.
 
@@ -256,6 +256,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-17 — Mevcut stilleri provider alan kimliklerine bağla ve stil alışverişini genişlet — P0/P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0516](../docs/adr/0516-sld-style-exchange.md)): görünüş SLD 1.1 / SE 1.1 olarak iki yönde (tek simge, kategorili, aralıklı, kurallı; süzgeçler ve ölçek aralıkları); taşınamayan her parça adıyla söylenir; QGIS 4.2'nin SLD'leri alınır, KentOS'unkiler QGIS'te aynı kurallarla açılır. Kalan: alan kimliklerine bağ, QML ve MapLibre profili, etiketler, tematik işleyiciler.*
+
   **Mevcut:** Native sınıflandırma, kurallı stiller, sembol tasarımcısı, `.kstil` ve ortak GPU batch motoru mevcut [K10]. Öncelik bunları dış GIS kaynağında aynı davranışla çalıştırmaktır.
 
   **Yapılacak kalan iş:** Mevcut renderer türlerini, renk rampalarını, veriyle belirlenen görünüşü, ölçek/birim ve legend hesabını yeni provider field/feature kimliklerine bağla. Alan rename ve kaynak sayfalama stil bağını bozmamalı; aynı veri için ikinci stil motoru kurulmasın. Kalan genişleme; dış stile ait desteklenen SLD/SE/MapLibre/QML alt kümesinin açık import/export profili ve çevrilemeyen kuralların raporudur. Hızlı stil yükle/kaydet erişimi mevcut komutların üzerinden sunulsun; mevcut `.kstil` yolu korunur. [Q02]
@@ -353,6 +355,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 ## F — Raster, uzaktan algılama ve büyük coğrafi veri
 
 - [ ] **CBS-28 — Raster kaynağına sanal mozaik ve doğrulanan COG export ekle — P0 provider; P1 genişleme**
+
+  *Kısmen (19 Ekim 2026; [ADR 0515](../docs/adr/0515-cloud-optimized-geotiff.md)): KentOS'un yazdığı her raster COG'dur (dizinler başta, küçük katlar önce; GDAL'ın COG denetleyicisi hatasız ve uyarısız geçirir), Raster işlemleri'nde COG olarak kaydet; başsız sunucu bağlı ve gömülü GeoTIFF ve PNG'yi okur, raster araçları Python ve MCP'den çalışır. Kalan: sanal mozaik, ortak raster sağlayıcısı (Range, ETag, disk ve RAM bütçesi), codec profili.*
 
   **Mevcut:** GeoTIFF/BigTIFF, parçalı okuma, LZW/Deflate/PackBits, piramit/cache ve native raster katmanı var [K11]. COG yazma uygunluğu, mozaik kaynak yönetimi ve geniş codec desteği ayrıca kabul edilmelidir.
 

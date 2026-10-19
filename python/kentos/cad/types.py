@@ -3028,6 +3028,20 @@ ServiceKindName = Literal["wms", "wmts", "xyz", "ogcTiles", "arcgis", "google", 
 """The names of :class:`ServiceKind`, for a plain string."""
 
 
+class ShpEncoding(_StrEnum):
+    """The .dbf's text code page.
+
+    - ``utf-8``: UTF-8, named in the .cpg (QGIS and GDAL write it so today).
+    - ``windows-1254``: Windows-1254 (Turkish Windows), named in the .cpg and the language driver byte, for programs that read only
+    """
+    UTF_8 = "utf-8"
+    WINDOWS_1254 = "windows-1254"
+
+
+ShpEncodingName = Literal["utf-8", "windows-1254"]
+"""The names of :class:`ShpEncoding`, for a plain string."""
+
+
 class SnapKindName(_StrEnum):
     """A snap kind a command can ask for: the drawing's own points (Uzantı, Paralel and Karelaj belong to a running
     command's session and are not asked here).
@@ -14602,6 +14616,100 @@ class ExportPdf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportReport(_Model):
+    """What a writer did besides writing: counts, and anything it could not write as it was.
+    Attributes:
+        counts: Unit: count.
+    """
+    counts: dict[str, int]
+    notes: list[ReportItem]
+    skipped: list[ReportItem]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["counts"] = dict(self.counts)
+        out["notes"] = [e0.to_json() for e0 in self.notes]
+        out["skipped"] = [e0.to_json() for e0 in self.skipped]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportReport:
+        return cls(
+            counts=dict(data["counts"]),
+            notes=[ReportItem.from_json(e0) for e0 in data["notes"]],
+            skipped=[ReportItem.from_json(e0) for e0 in data["skipped"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportShp(_Model):
+    """Input of `file.export.shp` v1. `path` is where: a `.zip` (one archive with every Shapefile), a `.shp` (the one
+    Shapefile the export makes, its parts beside it) or a folder, new or empty (every Shapefile in it, named after its
+    layer). Refusals, in order: `invalid_file_path`, `file_exists` (the archive, a part of the `.shp`, or a folder that
+    is not empty), `layer_not_found`, `nothing_to_export`, `several_shapefiles` (a `.shp` path for an export of more than
+    one Shapefile), `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path: `.zip`, `.shp`, or a folder.
+        encoding: The .dbf's code page; UTF-8 when not given.
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the archive, or the `.shp`'s parts, that are there (a folder is never written over).
+    """
+    path: str
+    encoding: ShpEncoding | ShpEncodingName = ShpEncoding.UTF_8
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["encoding"] = _enum_out(self.encoding)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportShp:
+        return cls(
+            path=data["path"],
+            encoding=_enum_in(ShpEncoding, data["encoding"]) if "encoding" in data else ShpEncoding.UTF_8,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportSld(_Model):
+    """Input of `file.export.sld` v1: the layer's look (its renderer, or its simple look) at `path`, an `.sld`. The
+    symbolizers are written for the geometry its objects have (all three when it has none). Refusals, in order:
+    `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no rule SE can say),
+    `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.sld`.
+        layer: The layer's id.
+        overwrite: Write over a file that is there.
+    """
+    path: str
+    layer: str
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layer"] = self.layer
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportSld:
+        return cls(
+            path=data["path"],
+            layer=data["layer"],
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class FeatureFeed(_Model):
     """Where a layer's objects came from, to take them again (docs/adr/0208 §10).
     Attributes:
@@ -18662,6 +18770,45 @@ class ImportGpkg(_Model):
             layers=dict(data["layers"]) if "layers" in data else UNSET,
             reproject=data.get("reproject", UNSET),
             tables=list(data["tables"]) if "tables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportSld(_Model):
+    """Input of `file.import.sld` v1: the look of the SLD at `path` (or its `text`) made the layer's renderer, one undo
+    step “Katman stili”. Rules of one field's values become a categorized renderer, of one field's ranges a graduated
+    one, one rule with no filter a single symbol, others rules with KentOS's expressions. Refusals, in order:
+    `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_sld`, `layer_not_found`,
+    `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        path: An absolute path to an `.sld`.
+        text: The SLD itself, instead of a path.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportSld:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            path=data.get("path", UNSET),
+            text=data.get("text", UNSET),
         )
 
 
@@ -29208,6 +29355,38 @@ class RenamedBlock(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReportItem(_Model):
+    """One line of an import or export report: what, how many, and what happened to it.
+    Attributes:
+        what: The source's name for it ("IMAGE", "Genişlikli çoklu çizgi").
+        count: Unit: count.
+        reason: What happened and, where it helps, what to do (Turkish, for the user).
+        lines: The first source lines where it occurs. Unit: index.
+    """
+    what: str
+    count: int
+    reason: str
+    lines: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["what"] = self.what
+        out["count"] = self.count
+        out["reason"] = self.reason
+        out["lines"] = list(self.lines)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReportItem:
+        return cls(
+            what=data["what"],
+            count=data["count"],
+            reason=data["reason"],
+            lines=list(data["lines"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RingGeometry(_Model):
     """A closed ring in vertex + bulge form (a polygon hole).
     Attributes:
@@ -30605,6 +30784,181 @@ class SheetsSetResult(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ShpColumnAsText(_Model):
+    """A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses)."""
+    set: str
+    column: str
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["column"] = self.column
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShpColumnAsText:
+        return cls(
+            set=data["set"],
+            column=data["column"],
+            reason=data["reason"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShpColumnRenamed(_Model):
+    """A column whose name is not its attribute's (dBASE: ten bytes, one whatever the case)."""
+    set: str
+    attribute: str
+    column: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["set"] = self.set
+        out["attribute"] = self.attribute
+        out["column"] = self.column
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShpColumnRenamed:
+        return cls(
+            set=data["set"],
+            attribute=data["attribute"],
+            column=data["column"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShpExported(_Model):
+    """What `file.export.shp` wrote, or with `plan` would write.
+    Attributes:
+        into: `zip`, `shp` or `folder`.
+        files: The files, in the order written (an archive: the archive itself).
+        prj: Whether a .prj names the coordinate system (none for a local project, or a system the writer cannot name).
+        approximated: Objects with curves written as chords within 0.1 mm. Unit: count.
+        cut: Text values cut to the column's 254 bytes; characters the code page lacks, written `?`; empty texts (read
+            back as no value). Unit: count.
+        replaced: Unit: count.
+        blank_text: Unit: count.
+        report: Everything the writer said, by kind and reason.
+        left: Objects not written, by kind. Unit: count.
+    """
+    path: str
+    into: str
+    sets: list[ShpSetExported]
+    files: list[ShpFileWritten]
+    prj: bool
+    approximated: int
+    cut: int
+    replaced: int
+    blank_text: int
+    report: ExportReport
+    as_text: list[ShpColumnAsText] | Unset = UNSET
+    left: dict[str, int] | Unset = UNSET
+    renamed: list[ShpColumnRenamed] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["into"] = self.into
+        out["sets"] = [e0.to_json() for e0 in self.sets]
+        out["files"] = [e0.to_json() for e0 in self.files]
+        out["prj"] = self.prj
+        out["approximated"] = self.approximated
+        out["cut"] = self.cut
+        out["replaced"] = self.replaced
+        out["blankText"] = self.blank_text
+        out["report"] = self.report.to_json()
+        if self.as_text is not UNSET:
+            out["asText"] = [e0.to_json() for e0 in self.as_text]
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.renamed is not UNSET:
+            out["renamed"] = [e0.to_json() for e0 in self.renamed]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShpExported:
+        return cls(
+            path=data["path"],
+            into=data["into"],
+            sets=[ShpSetExported.from_json(e0) for e0 in data["sets"]],
+            files=[ShpFileWritten.from_json(e0) for e0 in data["files"]],
+            prj=data["prj"],
+            approximated=data["approximated"],
+            cut=data["cut"],
+            replaced=data["replaced"],
+            blank_text=data["blankText"],
+            report=ExportReport.from_json(data["report"]),
+            as_text=[ShpColumnAsText.from_json(e0) for e0 in data["asText"]] if "asText" in data else UNSET,
+            left=dict(data["left"]) if "left" in data else UNSET,
+            renamed=[ShpColumnRenamed.from_json(e0) for e0 in data["renamed"]] if "renamed" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShpFileWritten(_Model):
+    """A file written.
+    Attributes:
+        name: Its name (in the archive, or in the folder).
+        bytes: Unit: bytes.
+    """
+    name: str
+    bytes: int
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShpFileWritten:
+        return cls(
+            name=data["name"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ShpSetExported(_Model):
+    """A Shapefile written.
+    Attributes:
+        name: Its name without extension: the layer's, with `_nokta`, `_cizgi` or `_alan` when the layer has several
+            geometry families.
+        layer: The layer it came from, by id.
+        rows: Unit: count.
+        shape: Its shape type (`POLYGONZ` …); none for a table alone (a layer of records without a geometry).
+    """
+    name: str
+    layer: str
+    rows: int
+    shape: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["rows"] = self.rows
+        if self.shape is not UNSET:
+            out["shape"] = self.shape
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ShpSetExported:
+        return cls(
+            name=data["name"],
+            layer=data["layer"],
+            rows=data["rows"],
+            shape=data.get("shape", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SimilarCriteria(_Model):
     """What Benzerini seç compares (docs/adr/0187 §4): an object is like an example when it equals it in every
     criterion that is on; none on: every object.
@@ -30634,6 +30988,88 @@ class SimilarCriteria(_Model):
             layer=data["layer"],
             color=data["color"],
             symbol=data["symbol"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SldExported(_Model):
+    """What `file.export.sld` wrote (or with `plan` would write).
+    Attributes:
+        rules: SE's rules written. Unit: count.
+        bytes: Unit: bytes.
+        lost: What SE could not say, a sentence each.
+    """
+    path: str
+    layer: str
+    rules: int
+    bytes: int
+    sha256: str
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layer"] = self.layer
+        out["rules"] = self.rules
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SldExported:
+        return cls(
+            path=data["path"],
+            layer=data["layer"],
+            rules=data["rules"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SldImported(_Model):
+    """What `file.import.sld` made the layer's look.
+    Attributes:
+        kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
+        rules: SE's rules taken. Unit: count.
+        renderer: The renderer as the layer now has it.
+        changed: Whether the layer's look changed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+        lost: What KentOS could not take, a sentence each.
+    """
+    layer: str
+    kind: str
+    rules: int
+    renderer: Any
+    changed: bool
+    revision: str
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["kind"] = self.kind
+        out["rules"] = self.rules
+        out["renderer"] = self.renderer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SldImported:
+        return cls(
+            layer=data["layer"],
+            kind=data["kind"],
+            rules=data["rules"],
+            renderer=data["renderer"],
+            changed=data["changed"],
+            revision=data["revision"],
+            lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
 
@@ -47349,6 +47785,9 @@ __all__ = [
     "ExportDxf",
     "ExportGpkg",
     "ExportPdf",
+    "ExportReport",
+    "ExportShp",
+    "ExportSld",
     "ExtendWallsOperation",
     "ExtensionPointConstruction",
     "FeatureChange",
@@ -47524,6 +47963,7 @@ __all__ = [
     "ImportDomainsOp",
     "ImportDxf",
     "ImportGpkg",
+    "ImportSld",
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",
@@ -48027,6 +48467,7 @@ __all__ = [
     "ReplaceStyleWallsOperation",
     "ReplaceTextEdit",
     "ReplaceTypeOpeningsOperation",
+    "ReportItem",
     "ReselectHatchEdit",
     "ResetArrayEdit",
     "ResetJoinsWallsOperation",
@@ -48109,11 +48550,20 @@ __all__ = [
     "SheetsEdited",
     "SheetsSet",
     "SheetsSetResult",
+    "ShpColumnAsText",
+    "ShpColumnRenamed",
+    "ShpEncoding",
+    "ShpEncodingName",
+    "ShpExported",
+    "ShpFileWritten",
+    "ShpSetExported",
     "SimilarCriteria",
     "SimilarSelectRegion",
     "SimilarityCrsPlane",
     "SimilarityTransform",
     "SizeRectangleFrame",
+    "SldExported",
+    "SldImported",
     "SlopeDimensionMeasure",
     "SnapFind",
     "SnapFound",

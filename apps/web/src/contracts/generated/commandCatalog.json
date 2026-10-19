@@ -958664,7 +958664,7 @@
       "id": "cad.processing.run",
       "version": 1,
       "title": "İşlem aracını çalıştır",
-      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).",
       "aliases": [
         "islem",
         "process"
@@ -996623,6 +996623,960 @@
       ]
     },
     {
+      "id": "file.export.shp",
+      "version": 1,
+      "title": "Shapefile dışa aktar",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) ESRI Shapefile olarak yazar: path .zip ise hepsi tek arşivde, .shp ise dışa aktarmanın yaptığı tek Shapefile o adla, başka bir yol ise yeni ya da boş bir klasöre katmanların adlarıyla. Bir Shapefile tek geometri türü taşır: noktası, çizgisi ve alanı olan katman _nokta, _cizgi, _alan ekli ayrı Shapefile'lar olur; geometrisiz kayıt boş şekilli satırdır (yalnız kayıtlı katman yalnız .dbf). Alan halkaları Shapefile'ın yönüyle, delikleri ve parçalarıyla; Z ve çizginin M'si taşınır, kotsuz köşe 0 kotlu yazılır. Daire, yay, elips ve yaylı yollar eğriden en çok 0,1 mm sapan kirişlerle yazılır ve sayılır; blok açılır; yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır. .dbf'te sütun adları en çok 10 bayttır ve büyük küçük harf ayırmaz: kısaltılan ya da numaralanan adlar söylenir. Alan türleri dBASE'inkine çevrilir (metin C en çok 254 bayt, tam sayı N en çok 18 hane, ondalık N en çok 15 anlamlı basamak, tarih D, evet/hayır L); sığmayan ya da kuralına uymayan alan metin sütunu olur ve söylenir; boş metin ile değerin yokluğu ayrılamaz. Kod sayfası .cpg'de (UTF-8 ya da Windows-1254); .prj projenin sistemini WKT olarak adlandırır. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "shp",
+        "shpout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ShpEncoding": {
+            "description": "The .dbf's text code page.",
+            "oneOf": [
+              {
+                "const": "utf-8",
+                "description": "UTF-8, named in the .cpg (QGIS and GDAL write it so today).",
+                "type": "string"
+              },
+              {
+                "const": "windows-1254",
+                "description": "Windows-1254 (Turkish Windows), named in the .cpg and the language driver byte, for programs that read only\nthe old code pages; a character it lacks is written `?` and counted.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.shp` v1. `path` is where: a `.zip` (one archive with every Shapefile), a `.shp` (the one\nShapefile the export makes, its parts beside it) or a folder, new or empty (every Shapefile in it, named after its\nlayer). Refusals, in order: `invalid_file_path`, `file_exists` (the archive, a part of the `.shp`, or a folder that\nis not empty), `layer_not_found`, `nothing_to_export`, `several_shapefiles` (a `.shp` path for an export of more than\none Shapefile), `file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "encoding": {
+            "$ref": "#/$defs/ShpEncoding",
+            "default": "utf-8",
+            "description": "The .dbf's code page; UTF-8 when not given."
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over the archive, or the `.shp`'s parts, that are there (a folder is never written over).",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path: `.zip`, `.shp`, or a folder.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportShp",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ExportReport": {
+            "description": "What a writer did besides writing: counts, and anything it could not write as it was.",
+            "properties": {
+              "counts": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "object",
+                "x-unit": "count"
+              },
+              "notes": {
+                "items": {
+                  "$ref": "#/$defs/ReportItem"
+                },
+                "type": "array"
+              },
+              "skipped": {
+                "items": {
+                  "$ref": "#/$defs/ReportItem"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "counts",
+              "notes",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ReportItem": {
+            "description": "One line of an import or export report: what, how many, and what happened to it.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lines": {
+                "description": "The first source lines where it occurs.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "reason": {
+                "description": "What happened and, where it helps, what to do (Turkish, for the user).",
+                "type": "string"
+              },
+              "what": {
+                "description": "The source's name for it (\"IMAGE\", \"Genişlikli çoklu çizgi\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "what",
+              "count",
+              "reason",
+              "lines"
+            ],
+            "type": "object"
+          },
+          "ShpColumnAsText": {
+            "description": "A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "set": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "set",
+              "column",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "ShpColumnRenamed": {
+            "description": "A column whose name is not its attribute's (dBASE: ten bytes, one whatever the case).",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "type": "string"
+              },
+              "set": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "set",
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "ShpFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "description": "Its name (in the archive, or in the folder).",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "ShpSetExported": {
+            "description": "A Shapefile written.",
+            "properties": {
+              "layer": {
+                "description": "The layer it came from, by id.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name without extension: the layer's, with `_nokta`, `_cizgi` or `_alan` when the layer has several\ngeometry families.",
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "shape": {
+                "description": "Its shape type (`POLYGONZ` …); none for a table alone (a layer of records without a geometry).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.shp` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Objects with curves written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "asText": {
+            "items": {
+              "$ref": "#/$defs/ShpColumnAsText"
+            },
+            "type": "array"
+          },
+          "blankText": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "description": "Text values cut to the column's 254 bytes; characters the code page lacks, written `?`; empty texts (read\nback as no value).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "files": {
+            "description": "The files, in the order written (an archive: the archive itself).",
+            "items": {
+              "$ref": "#/$defs/ShpFileWritten"
+            },
+            "type": "array"
+          },
+          "into": {
+            "description": "`zip`, `shp` or `folder`.",
+            "type": "string"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "prj": {
+            "description": "Whether a .prj names the coordinate system (none for a local project, or a system the writer cannot name).",
+            "type": "boolean"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/ShpColumnRenamed"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "$ref": "#/$defs/ExportReport",
+            "description": "Everything the writer said, by kind and reason."
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/ShpSetExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "into",
+          "sets",
+          "files",
+          "prj",
+          "approximated",
+          "cut",
+          "replaced",
+          "blankText",
+          "report"
+        ],
+        "title": "ShpExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ExportReport": {
+            "description": "What a writer did besides writing: counts, and anything it could not write as it was.",
+            "properties": {
+              "counts": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "object",
+                "x-unit": "count"
+              },
+              "notes": {
+                "items": {
+                  "$ref": "#/$defs/ReportItem"
+                },
+                "type": "array"
+              },
+              "skipped": {
+                "items": {
+                  "$ref": "#/$defs/ReportItem"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "counts",
+              "notes",
+              "skipped"
+            ],
+            "type": "object"
+          },
+          "ReportItem": {
+            "description": "One line of an import or export report: what, how many, and what happened to it.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lines": {
+                "description": "The first source lines where it occurs.",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "reason": {
+                "description": "What happened and, where it helps, what to do (Turkish, for the user).",
+                "type": "string"
+              },
+              "what": {
+                "description": "The source's name for it (\"IMAGE\", \"Genişlikli çoklu çizgi\").",
+                "type": "string"
+              }
+            },
+            "required": [
+              "what",
+              "count",
+              "reason",
+              "lines"
+            ],
+            "type": "object"
+          },
+          "ShpColumnAsText": {
+            "description": "A field written as text, and why (a date-time, a number past dBASE's digits, values its rule refuses).",
+            "properties": {
+              "column": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              },
+              "set": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "set",
+              "column",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "ShpColumnRenamed": {
+            "description": "A column whose name is not its attribute's (dBASE: ten bytes, one whatever the case).",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "type": "string"
+              },
+              "set": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "set",
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "ShpFileWritten": {
+            "description": "A file written.",
+            "properties": {
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "name": {
+                "description": "Its name (in the archive, or in the folder).",
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "bytes",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "ShpSetExported": {
+            "description": "A Shapefile written.",
+            "properties": {
+              "layer": {
+                "description": "The layer it came from, by id.",
+                "type": "string"
+              },
+              "name": {
+                "description": "Its name without extension: the layer's, with `_nokta`, `_cizgi` or `_alan` when the layer has several\ngeometry families.",
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "shape": {
+                "description": "Its shape type (`POLYGONZ` …); none for a table alone (a layer of records without a geometry).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.shp` wrote, or with `plan` would write.",
+        "properties": {
+          "approximated": {
+            "description": "Objects with curves written as chords within 0.1 mm.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "asText": {
+            "items": {
+              "$ref": "#/$defs/ShpColumnAsText"
+            },
+            "type": "array"
+          },
+          "blankText": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "cut": {
+            "description": "Text values cut to the column's 254 bytes; characters the code page lacks, written `?`; empty texts (read\nback as no value).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "files": {
+            "description": "The files, in the order written (an archive: the archive itself).",
+            "items": {
+              "$ref": "#/$defs/ShpFileWritten"
+            },
+            "type": "array"
+          },
+          "into": {
+            "description": "`zip`, `shp` or `folder`.",
+            "type": "string"
+          },
+          "left": {
+            "additionalProperties": {
+              "format": "uint32",
+              "minimum": 0,
+              "type": "integer"
+            },
+            "description": "Objects not written, by kind.",
+            "type": "object",
+            "x-unit": "count"
+          },
+          "path": {
+            "type": "string"
+          },
+          "prj": {
+            "description": "Whether a .prj names the coordinate system (none for a local project, or a system the writer cannot name).",
+            "type": "boolean"
+          },
+          "renamed": {
+            "items": {
+              "$ref": "#/$defs/ShpColumnRenamed"
+            },
+            "type": "array"
+          },
+          "replaced": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "report": {
+            "$ref": "#/$defs/ExportReport",
+            "description": "Everything the writer said, by kind and reason."
+          },
+          "sets": {
+            "items": {
+              "$ref": "#/$defs/ShpSetExported"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "into",
+          "sets",
+          "files",
+          "prj",
+          "approximated",
+          "cut",
+          "replaced",
+          "blankText",
+          "report"
+        ],
+        "title": "ShpExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "nothing_to_export",
+          "several_shapefiles",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanı tek arşivde, Windows-1254",
+          "input": {
+            "encoding": "windows-1254",
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel.zip"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.export.sld",
+      "version": 1,
+      "title": "Görünüşü SLD olarak dışa aktar",
+      "summary": "Katmanın görünüşünü (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) OGC SLD 1.1 ve SE 1.1 olarak path'e (.sld) yazar; QGIS 4.2, GeoServer ve MapServer okur. Tek simge tek kural, kategorili görünüşün her sınıfı alanın değerine eşit süzgeçli kural, aralıklı görünüşün sınıfları alt ≤ değer < üst (sonuncusu ≤ üst), kurallı görünüş süzgeçleriyle ve ölçek aralıklarıyla (iç içe kurallar üstlerinin süzgeciyle birleşir, Diğerleri ElseFilter). Süzgeç alanın sayı ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil ile söylenebilen ifadedir; başkası yazılmaz ve söylenir. Simgeler: basit dolgu, basit çizgi (renk, saydamlık, kalınlık, kesikler, uç ve köşe), şekil işaretleri (daire, kare, üçgen, yıldız, artı, çarpı); kâğıt mm SE'nin 0,28 mm'lik pikseliyle, metre SE'nin metre birimiyle. Tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer, efektler ve tematik işleyiciler yazılmaz, export_losses ile söylenir. Simgeleyiciler katmanın nesnelerinin geometrisi için yazılır. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "sldout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.sld` v1: the layer's look (its renderer, or its simple look) at `path`, an `.sld`. The\nsymbolizers are written for the geometry its objects have (all three when it has none). Refusals, in order:\n`invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no rule SE can say),\n`file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.sld`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer"
+        ],
+        "title": "ExportSld",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.sld` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What SE could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "SE's rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "SldExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.sld` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What SE could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "SE's rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "SldExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "not_a_layer",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının görünüşü",
+          "input": {
+            "layer": "parsel",
+            "overwrite": true,
+            "path": "/veri/parsel.sld"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.sld",
+      "version": 1,
+      "title": "SLD'den görünüş al",
+      "summary": "path'teki (ya da text'teki) SLD'nin görünüşünü katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): bir alanın değerlerine eşit kurallar kategorili görünüş, bir alanın aralıkları aralıklı görünüş, süzgeçsiz tek kural tek simge, ötekiler KentOS'un ifadesine çevrilen süzgeçleriyle kurallı görünüş olur; ölçek aralıkları ve ElseFilter korunur. SE'nin dolgusu, çizgisi (kesikler, uç, köşe, kaydırma), iyi bilinen işaretleri, saydamlıkları ve birimleri (piksel 0,28 mm kâğıt, metre) alınır; dış resim, işaretli çizgi ve desenli dolgu, etiket ve raster simgeleyicisi, çevrilemeyen süzgeç alınmaz, import_losses ile söylenir. QGIS'in, GeoServer'ın ve KentOS'un yazdığı SLD 1.0 ve 1.1 okunur; birden çok görünüşten ilki alınır. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "sldin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.sld` v1: the look of the SLD at `path` (or its `text`) made the layer's renderer, one undo\nstep “Katman stili”. Rules of one field's values become a categorized renderer, of one field's ranges a graduated\none, one rule with no filter a single symbol, others rules with KentOS's expressions. Refusals, in order:\n`invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_sld`, `layer_not_found`,\n`not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "path": {
+            "description": "An absolute path to an `.sld`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "description": "The SLD itself, instead of a path.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "ImportSld",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.sld` made the layer's look.",
+        "properties": {
+          "changed": {
+            "description": "Whether the layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "renderer": {
+            "description": "The renderer as the layer now has it."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "description": "SE's rules taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "kind",
+          "rules",
+          "renderer",
+          "changed",
+          "revision"
+        ],
+        "title": "SldImported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.sld` made the layer's look.",
+        "properties": {
+          "changed": {
+            "description": "Whether the layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "renderer": {
+            "description": "The renderer as the layer now has it."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "description": "SE's rules taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "kind",
+          "rules",
+          "renderer",
+          "changed",
+          "revision"
+        ],
+        "title": "SldImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "file_unreadable",
+          "invalid_sld",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "QGIS'in yazdığı parsel görünüşü",
+          "input": {
+            "layer": "parsel",
+            "path": "/veri/parsel.sld"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -1000090,6 +1001044,18 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı."
+    },
+    {
+      "code": "several_shapefiles",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dışa aktarma birden çok Shapefile yapıyor (birden çok katman ya da geometri türü); .shp yerine bir klasör ya da .zip verin."
+    },
+    {
+      "code": "invalid_sld",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok."
     },
     {
       "code": "export_losses",

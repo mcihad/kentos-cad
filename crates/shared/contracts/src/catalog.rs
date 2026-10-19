@@ -6411,7 +6411,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. \
                       Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
                       Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
-                      Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed. \
+                      Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. \
                       sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman)."
                 .into(),
             aliases: vec!["islem".into(), "process".into()],
@@ -7027,6 +7027,89 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
             examples: vec![CommandExample {
                 title: "Parsel ve yol katmanları".into(),
                 input: json!({ "path": "/veri/teslim.gpkg", "layers": ["parsel", "yol"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        // The drawing's layers as Shapefiles (docs/adr/0514).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_SHP.into(),
+            version: crate::FILE_EXPORT_SHP_VERSION,
+            title: "Shapefile dışa aktar".into(),
+            summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları; grup katmanlarını verir) ESRI Shapefile olarak yazar: path .zip ise hepsi tek arşivde, .shp ise dışa aktarmanın yaptığı tek Shapefile o adla, başka bir yol ise yeni ya da boş bir klasöre katmanların adlarıyla. \
+                      Bir Shapefile tek geometri türü taşır: noktası, çizgisi ve alanı olan katman _nokta, _cizgi, _alan ekli ayrı Shapefile'lar olur; geometrisiz kayıt boş şekilli satırdır (yalnız kayıtlı katman yalnız .dbf). Alan halkaları Shapefile'ın yönüyle, delikleri ve parçalarıyla; Z ve çizginin M'si taşınır, kotsuz köşe 0 kotlu yazılır. \
+                      Daire, yay, elips ve yaylı yollar eğriden en çok 0,1 mm sapan kirişlerle yazılır ve sayılır; blok açılır; yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır. \
+                      .dbf'te sütun adları en çok 10 bayttır ve büyük küçük harf ayırmaz: kısaltılan ya da numaralanan adlar söylenir. Alan türleri dBASE'inkine çevrilir (metin C en çok 254 bayt, tam sayı N en çok 18 hane, ondalık N en çok 15 anlamlı basamak, tarih D, evet/hayır L); sığmayan ya da kuralına uymayan alan metin sütunu olur ve söylenir; boş metin ile değerin yokluğu ayrılamaz. Kod sayfası .cpg'de (UTF-8 ya da Windows-1254); .prj projenin sistemini WKT olarak adlandırır. \
+                      Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["shp".into(), "shpout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportShp>(),
+            output: schema::<crate::ShpExported>(),
+            plan: Some(schema::<crate::ShpExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanı tek arşivde, Windows-1254".into(),
+                input: json!({ "path": "/veri/parsel.zip", "layers": ["parsel"], "encoding": "windows-1254", "overwrite": true }),
+                output: None,
+            }],
+        },
+        // A layer's look as OGC SLD 1.1 / SE 1.1, out and in (docs/adr/0516).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_SLD.into(),
+            version: crate::FILE_EXPORT_SLD_VERSION,
+            title: "Görünüşü SLD olarak dışa aktar".into(),
+            summary: "Katmanın görünüşünü (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) OGC SLD 1.1 ve SE 1.1 olarak path'e (.sld) yazar; QGIS 4.2, GeoServer ve MapServer okur. \
+                      Tek simge tek kural, kategorili görünüşün her sınıfı alanın değerine eşit süzgeçli kural, aralıklı görünüşün sınıfları alt ≤ değer < üst (sonuncusu ≤ üst), kurallı görünüş süzgeçleriyle ve ölçek aralıklarıyla (iç içe kurallar üstlerinin süzgeciyle birleşir, Diğerleri ElseFilter). \
+                      Süzgeç alanın sayı ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil ile söylenebilen ifadedir; başkası yazılmaz ve söylenir. Simgeler: basit dolgu, basit çizgi (renk, saydamlık, kalınlık, kesikler, uç ve köşe), şekil işaretleri (daire, kare, üçgen, yıldız, artı, çarpı); kâğıt mm SE'nin 0,28 mm'lik pikseliyle, metre SE'nin metre birimiyle. \
+                      Tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer, efektler ve tematik işleyiciler yazılmaz, export_losses ile söylenir. Simgeleyiciler katmanın nesnelerinin geometrisi için yazılır. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["sldout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportSld>(),
+            output: schema::<crate::SldExported>(),
+            plan: Some(schema::<crate::SldExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanının görünüşü".into(),
+                input: json!({ "path": "/veri/parsel.sld", "layer": "parsel", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_SLD.into(),
+            version: crate::FILE_IMPORT_SLD_VERSION,
+            title: "SLD'den görünüş al".into(),
+            summary: "path'teki (ya da text'teki) SLD'nin görünüşünü katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): bir alanın değerlerine eşit kurallar kategorili görünüş, bir alanın aralıkları aralıklı görünüş, süzgeçsiz tek kural tek simge, ötekiler KentOS'un ifadesine çevrilen süzgeçleriyle kurallı görünüş olur; ölçek aralıkları ve ElseFilter korunur. \
+                      SE'nin dolgusu, çizgisi (kesikler, uç, köşe, kaydırma), iyi bilinen işaretleri, saydamlıkları ve birimleri (piksel 0,28 mm kâğıt, metre) alınır; dış resim, işaretli çizgi ve desenli dolgu, etiket ve raster simgeleyicisi, çevrilemeyen süzgeç alınmaz, import_losses ile söylenir. \
+                      QGIS'in, GeoServer'ın ve KentOS'un yazdığı SLD 1.0 ve 1.1 okunur; birden çok görünüşten ilki alınır. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["sldin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportSld>(),
+            output: schema::<crate::SldImported>(),
+            plan: Some(schema::<crate::SldImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "QGIS'in yazdığı parsel görünüşü".into(),
+                input: json!({ "layer": "parsel", "path": "/veri/parsel.sld" }),
                 output: None,
             }],
         },
@@ -7827,6 +7910,15 @@ mod tests {
                     }
                     crate::FILE_EXPORT_GPKG => {
                         serde_json::from_value::<crate::ExportGpkg>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_SHP => {
+                        serde_json::from_value::<crate::ExportShp>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_SLD => {
+                        serde_json::from_value::<crate::ExportSld>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_SLD => {
+                        serde_json::from_value::<crate::ImportSld>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_PACKAGE => {
                         serde_json::from_value::<crate::PackageProject>(e.input.clone()).map(|_| ())

@@ -243,6 +243,29 @@ fn screens() {
             picture(&mut app, &format!("gpkg-{mode}-1-ice-aktar"));
             send(&mut app, Event::Gpkg(G::Run));
             picture(&mut app, &format!("gpkg-{mode}-3-alindi"));
+            // Shapefile dışa aktar (docs/adr/0514): what each layer makes and what the format cannot hold, before
+            // anything is written; Windows-1254; written to an archive and said.
+            run(&mut app, "file.export.shp");
+            picture(&mut app, &format!("shp-{mode}-1-pencere"));
+            send(
+                &mut app,
+                Event::ShpExport(super::shp_export::Event::Encoding(super::shp_export::Code(
+                    kentos_contracts::ShpEncoding::Windows1254,
+                ))),
+            );
+            picture(&mut app, &format!("shp-{mode}-2-1254"));
+            let zip = scratch(&format!("shp-{mode}-{width}")).join("teslim.zip");
+            send(
+                &mut app,
+                Event::ShpExport(super::shp_export::Event::Picked(Some(zip.clone()))),
+            );
+            for _ in 0..200 {
+                if zip.exists() {
+                    break;
+                }
+                std::thread::sleep(std::time::Duration::from_millis(20));
+            }
+            picture(&mut app, &format!("shp-{mode}-3-yazildi"));
             let mut app = fresh();
             app.picker = Picker::File(gpkg("wgs84.gpkg"));
             run(&mut app, "file.import.gpkg");

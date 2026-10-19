@@ -175,6 +175,7 @@ mod text_tools;
 mod leader_tools;
 mod layer_merge;
 mod layer_purge;
+mod layer_sld;
 mod layer_snap;
 mod layer_states;
 mod layer_translate;

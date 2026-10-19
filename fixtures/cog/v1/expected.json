@@ -1,0 +1,66 @@
+{
+ "kot-cog.tif": {
+  "size": [
+   520,
+   300
+  ],
+  "bands": 1,
+  "overviews": [
+   [
+    260,
+    150
+   ],
+   [
+    130,
+    75
+   ]
+  ],
+  "bytes": 601856
+ },
+ "sinif-cog.tif": {
+  "size": [
+   600,
+   400
+  ],
+  "bands": 1,
+  "overviews": [
+   [
+    300,
+    200
+   ],
+   [
+    150,
+    100
+   ]
+  ],
+  "bytes": 480370
+ },
+ "orto-cog.tif": {
+  "size": [
+   400,
+   300
+  ],
+  "bands": 3,
+  "overviews": [
+   [
+    200,
+    150
+   ]
+  ],
+  "bytes": 435624
+ },
+ "saydam-cog.tif": {
+  "size": [
+   300,
+   260
+  ],
+  "bands": 4,
+  "overviews": [
+   [
+    150,
+    130
+   ]
+  ],
+  "bytes": 324358
+ }
+}

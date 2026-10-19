@@ -145,7 +145,7 @@ fn ignore_param() -> ParamDef {
         .describe("Açıkken değeri olan hücrelerin istatistiği; kapalıyken değeri olmayan hücre varsa sonuç değersiz.")
 }
 
-const HELP_OUTPUT: &str = "Sonuç karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin yanına adının sonuna ek konarak yazılır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir.";
+const HELP_OUTPUT: &str = "Sonuç bulut için düzenlenmiş (COG), karolu, Deflate'li ve önizleme katlı GeoTIFF'tir; çıktı dosyası boşsa ilk rasterin yanına adının sonuna ek konarak yazılır. Çizime ekle açıksa raster ilk rasterin katmanının hemen üstündeki yeni katmana eklenir.";
 const HELP_EMPTY: &str = "Rasterin nodata'sı, NaN ve alfası 0 olan pikseller değersizdir.";
 
 pub fn calculator() -> Tool {
@@ -410,6 +410,46 @@ pub fn resample() -> Tool {
                 fb,
                 json!({"kind": "resample", "cell": r.number("cell"), "method": r.text("method")}),
                 ("-ornek", "Yeniden örnekleniyor"),
+                (true, None),
+            )
+        },
+    )
+}
+
+/// COG olarak kaydet (docs/adr/0515): the raster on its own grid as a cloud-optimized GeoTIFF.
+pub fn save_cog() -> Tool {
+    let mut p = vec![one_raster(
+        "COG olarak yazılacak raster (bütün bantları, değerleri olduğu gibi).",
+    )];
+    p.extend(ends("-cog", "COG"));
+    tool(
+        ("raster.cog", "COG olarak kaydet", "saveCog", OPS),
+        "Rasteri bulut için düzenlenmiş GeoTIFF (COG) olarak yazar: karolu, Deflate, önizleme katlarıyla; dizinler başta, en küçük katın karoları önce.",
+        &[
+            "Hücreler, bantlar, değerler, değeri olmayan hücre ve konum olduğu gibi kalır; önizleme katları her katta 2 × 2 hücrenin ortalamasıdır (değersizler dışarıda).",
+            "Dosya bir adresten parça parça okunacak biçimdedir: ilk okumada bütün dizinler, her kat kendi karolarıyla bir arada. GDAL'ın COG denetleyicisi (validate_cloud_optimized_geotiff.py) dosyayı geçerli bulur.",
+            "PNG, JPEG, şeritli ya da önizlemesiz TIFF ve NetCDF dilimi de COG'a çevrilir.",
+            HELP_OUTPUT,
+        ],
+        &[
+            "cog",
+            "cloud optimized",
+            "bulut",
+            "geotiff",
+            "dışa aktar",
+            "translate",
+            "karola",
+        ],
+        &["COG", "COGKAYDET"],
+        p,
+        file_output(),
+        |r, cx, fb| {
+            run_raster_op(
+                r,
+                cx,
+                fb,
+                json!({"kind": "copy"}),
+                ("-cog", "COG yazılıyor"),
                 (true, None),
             )
         },

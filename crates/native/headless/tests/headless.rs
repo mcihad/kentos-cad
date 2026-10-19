@@ -1455,3 +1455,324 @@ fn arch_dxf_goes_round() {
         s.save(Some(&root.join("mimari.kcad"))).expect("saved");
     }
 }
+
+/// The drawing the Shapefile tests write: QGIS's GeoPackage taken in, a polygon on the point layer (it splits into two
+/// Shapefiles), a circle on the road layer, two long Turkish attributes that cut to one name, a text (left out).
+fn shapefile_drawing() -> Session {
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let layer = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name} katmanı yok: {took}"))
+            .to_owned()
+    };
+    let (nokta, yol, parsel) = (layer("nokta"), layer("yol"), layer("parsel"));
+    let poly = s
+        .call(json!({ "command": "cad.polygon.create", "input": { "layerId": nokta,
+            "pts": [{ "x": 487400.0, "y": 4420000.0 }, { "x": 487410.0, "y": 4420000.0 }, { "x": 487410.0, "y": 4420010.0 }],
+            "attrs": { "ad": "üçgen", "Mülkiyet Durumu": "hisseli", "mülkiyet durumu tarihi": "2026-10-19" } } }))
+        .expect("answers");
+    assert_eq!(poly["status"], "completed", "{poly}");
+    let circle = s
+        .call(
+            json!({ "command": "cad.circle.create", "input": { "layerId": yol,
+            "c": { "x": 487500.0, "y": 4420000.0 }, "r": 25.0 } }),
+        )
+        .expect("answers");
+    assert_eq!(circle["status"], "completed", "{circle}");
+    let text = s
+        .call(json!({ "command": "cad.entities.create", "input": { "layerId": parsel, "objects": [
+            { "geometry": { "kind": "text", "p": { "x": 487005.0, "y": 4420005.0 }, "text": "101/5", "height": 2.0, "rotation": 0 } } ] } }))
+        .expect("answers");
+    assert_eq!(text["status"], "completed", "{text}");
+    s
+}
+
+#[test]
+fn shapefiles_go_out_whole_with_what_they_cannot_hold_said() {
+    // docs/adr/0514: the drawing as a folder, an archive and one .shp; plan writes nothing; the losses said; the
+    // files read back through KentOS's own reader; the refusals. KENTOS_WRITE_SHP=1 keeps the folder in
+    // fixtures/shapefile/v1/out for scripts/fixtures/shp_export_cases.py, which reads it with OGR.
+    let dir = scratch("shp");
+    let mut s = shapefile_drawing();
+    let folder = dir.join("teslim");
+    let p = folder.display().to_string();
+    let planned = s
+        .call(json!({ "command": "file.export.shp", "op": "plan", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(planned["status"], "completed", "{planned}");
+    assert!(!folder.exists(), "plan wrote nothing");
+    let written = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(written["status"], "completed", "{written}");
+    assert_eq!(
+        written["output"], planned["output"],
+        "the plan says what is written"
+    );
+    let sets: Vec<(String, String, u64)> = written["output"]["sets"]
+        .as_array()
+        .expect("sets")
+        .iter()
+        .map(|t| {
+            (
+                t["name"].as_str().unwrap_or_default().to_owned(),
+                t["shape"].as_str().unwrap_or("").to_owned(),
+                t["rows"].as_u64().unwrap_or(0),
+            )
+        })
+        .collect();
+    let want = |name: &str, shape: &str, rows: u64| {
+        assert!(
+            sets.iter()
+                .any(|(n, s, r)| n == name && s == shape && *r == rows),
+            "{name} {shape} {rows}: {sets:?}"
+        );
+    };
+    want("parsel", "POLYGON", 3);
+    want("yol", "POLYLINEZ", 3);
+    want("nokta_nokta", "POINTZ", 1);
+    want("nokta_alan", "POLYGON", 1);
+    want("egri", "POLYGON", 1);
+    want("egri_yol", "POLYLINE", 1);
+    want("malik", "", 2);
+    assert_eq!(written["output"]["left"]["yazı"], 1, "{written}");
+    assert_eq!(written["output"]["approximated"], 3, "{written}");
+    assert!(written["output"]["prj"].as_bool().unwrap_or(false));
+    let renamed = written["output"]["renamed"].to_string();
+    assert!(renamed.contains("Mülkiyet"), "{renamed}");
+    let warnings = written["warnings"].to_string();
+    assert!(warnings.contains("export_losses"), "{warnings}");
+    for f in [
+        "parsel.shp",
+        "parsel.shx",
+        "parsel.dbf",
+        "parsel.prj",
+        "parsel.cpg",
+        "malik.dbf",
+    ] {
+        assert!(folder.join(f).exists(), "{f}");
+    }
+    assert!(
+        !folder.join("malik.shp").exists(),
+        "a table alone is a .dbf"
+    );
+    // Read back by KentOS's reader: the parcel's values and its hole.
+    let read = |stem: &str| {
+        let b = |x: &str| std::fs::read(folder.join(format!("{stem}.{x}"))).ok();
+        let (shp, shx, dbf, prj, cpg) = (b("shp"), b("shx"), b("dbf"), b("prj"), b("cpg"));
+        kentos_formats::shp::read(
+            &kentos_formats::shp::Files {
+                shp: shp.as_deref().expect("shp"),
+                shx: shx.as_deref(),
+                dbf: dbf.as_deref(),
+                prj: prj.as_deref(),
+                cpg: cpg.as_deref(),
+            },
+            &Default::default(),
+        )
+        .expect("reads")
+    };
+    let parsel = read("parsel");
+    assert_eq!(
+        parsel.declared_crs.as_ref().and_then(|c| c.srid),
+        Some(5256),
+        "{:?}",
+        parsel.declared_crs
+    );
+    let first = serde_json::to_value(&parsel.entities[0]).expect("JSON");
+    assert_eq!(first["attrs"]["ada"], "Çağlayan", "{first}");
+    assert_eq!(first["attrs"]["kimlik"], "9007199254740993", "{first}");
+    assert_eq!(first["attrs"]["tescil"], "2024-02-29", "{first}");
+    assert_eq!(first["attrs"]["tapulu"], "true", "{first}");
+    let yol = read("yol");
+    let road = serde_json::to_value(&yol.entities[0]).expect("JSON");
+    assert_eq!(
+        road["ms"],
+        json!([0.0, 50.0, 101.0]),
+        "the measures go: {road}"
+    );
+    // The archive: the same files in one.
+    let zip = dir.join("teslim.zip");
+    let z = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": zip.display().to_string(), "encoding": "windows-1254" } }))
+        .expect("answers");
+    assert_eq!(z["status"], "completed", "{z}");
+    let listed = kentos_formats::zip::list(&std::fs::read(&zip).expect("zip"), &Default::default())
+        .expect("a zip");
+    assert!(listed.iter().any(|l| l.file_name() == "parsel.cpg"));
+    // One .shp: one layer of one family; the export of several refused.
+    let one = dir.join("yollar.shp");
+    let yol_id = written["output"]["sets"]
+        .as_array()
+        .and_then(|a| a.iter().find(|t| t["name"] == "yol"))
+        .and_then(|t| t["layer"].as_str())
+        .expect("yol")
+        .to_owned();
+    let single = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": one.display().to_string(), "layers": [yol_id] } }))
+        .expect("answers");
+    assert_eq!(single["status"], "completed", "{single}");
+    assert!(dir.join("yollar.dbf").exists());
+    let several = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": dir.join("hepsi.shp").display().to_string() } }))
+        .expect("answers");
+    assert_eq!(several["error"]["code"], "several_shapefiles", "{several}");
+    let again = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": p } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let unknown = s
+        .call(json!({ "command": "file.export.shp", "input": { "path": dir.join("yeni").display().to_string(), "layers": ["yok"] } }))
+        .expect("answers");
+    assert_eq!(unknown["error"]["code"], "layer_not_found", "{unknown}");
+    if std::env::var_os("KENTOS_WRITE_SHP").is_some() {
+        let kept = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../fixtures/shapefile/v1/out");
+        let _ = std::fs::remove_dir_all(&kept);
+        std::fs::create_dir_all(&kept).expect("the folder");
+        for e in std::fs::read_dir(&folder).expect("the folder") {
+            let e = e.expect("a file");
+            std::fs::copy(e.path(), kept.join(e.file_name())).expect("kept");
+        }
+        std::fs::copy(&zip, kept.join("teslim-1254.zip")).expect("kept");
+    }
+}
+
+#[test]
+fn layer_looks_go_out_as_sld_and_come_back() {
+    // docs/adr/0516: a categorized, a graduated and a single look written as SLD 1.1; what SE cannot say is said;
+    // each read back by file.import.sld into another layer gives the same classes. With KENTOS_WRITE_SLD=1 the
+    // files go to fixtures/sld/v1/out for scripts/fixtures/sld_cases.py, which opens them in QGIS 4.2.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let (parsel, yol, egri) = (id("parsel"), id("yol"), id("egri"));
+    let fill = |c: &str| {
+        json!({ "fill": { "type": "fill", "layers": [
+            { "id": "f", "type": "simpleFill", "color": c },
+            { "id": "o", "type": "simpleLine", "color": "#222222", "width": 0.28, "unit": "mm" } ] } })
+    };
+    let looks = [
+        (
+            "kentos-kategorili.sld",
+            parsel.clone(),
+            json!({ "type": "categorized", "expr": "[ada]", "categories": [
+                { "value": "A", "label": "Ada A", "symbols": fill("#e41a1c") },
+                { "value": "B", "label": "Ada B", "symbols": fill("#377eb8") } ] }),
+            "categorized",
+        ),
+        (
+            "kentos-aralikli.sld",
+            egri.clone(),
+            json!({ "type": "graduated", "expr": "alan", "classes": [
+                { "min": 0.0, "max": 500.0, "label": "küçük", "symbols": fill("#fee5d9") },
+                { "min": 500.0, "max": 1000.0, "label": "orta", "symbols": fill("#fcae91") },
+                { "min": 1000.0, "max": 5000.0, "label": "büyük", "symbols": fill("#de2d26") } ] }),
+            "graduated",
+        ),
+        (
+            "kentos-sade.sld",
+            yol.clone(),
+            json!({ "type": "single", "symbols": {
+                "line": { "type": "line", "layers": [
+                    { "id": "l", "type": "simpleLine", "color": "#3366cc", "width": 0.8, "unit": "mm",
+                      "dash": [3.0, 1.5], "cap": "round", "join": "round" },
+                    { "id": "w", "type": "simpleLine", "color": { "expr": "[renk]", "fallback": "#ffffff" }, "width": 0.2 } ] },
+                "fill": { "type": "fill", "layers": [ { "id": "h", "type": "hatchFill", "angle": 45, "spacing": 2,
+                    "width": 0.2, "color": "#000000" } ] } } }),
+            "single",
+        ),
+    ];
+    let dir = std::env::temp_dir().join(format!("kentos-sld-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    for (name, layer, renderer, kind) in &looks {
+        let set = s
+            .call(json!({ "command": "cad.layers.renderer", "input": { "layer": layer, "renderer": renderer } }))
+            .expect("answers");
+        assert_eq!(set["status"], "completed", "{set}");
+        let path = dir.join(name);
+        let planned = s
+            .call(json!({ "command": "file.export.sld", "op": "plan",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.sld",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"]["bytes"], planned["output"]["bytes"]);
+        let text = std::fs::read_to_string(&path).expect("written");
+        assert!(text.contains("<StyledLayerDescriptor"), "{text}");
+        if *kind == "single" {
+            // The data-defined colour said; the hatch is the area's, not written for a line layer.
+            let lost = out["output"]["lost"].to_string();
+            assert!(lost.contains("yedek değeri yazıldı"), "{out}");
+            assert!(!text.contains("PolygonSymbolizer"), "{text}");
+            assert_eq!(out["warnings"][0]["code"], "export_losses", "{out}");
+        } else {
+            assert!(out["output"].get("lost").is_none(), "{out}");
+        }
+        // Read back into the curve layer: the same kind and classes.
+        let back = s
+            .call(json!({ "command": "file.import.sld",
+                "input": { "layer": egri, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(back["status"], "completed", "{back}");
+        assert_eq!(back["output"]["kind"], *kind, "{back}");
+        if *kind == "categorized" {
+            assert_eq!(back["output"]["renderer"]["expr"], "[ada]");
+            assert_eq!(back["output"]["renderer"]["categories"][1]["value"], "B");
+        }
+        if *kind == "graduated" {
+            assert_eq!(back["output"]["renderer"]["classes"][2]["max"], 5000.0);
+        }
+        // Written over only when asked.
+        let again = s
+            .call(json!({ "command": "file.export.sld",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(again["error"]["code"], "file_exists", "{again}");
+        if std::env::var_os("KENTOS_WRITE_SLD").is_some() {
+            let out_dir = format!(
+                "{}/../../../fixtures/sld/v1/out",
+                env!("CARGO_MANIFEST_DIR")
+            );
+            std::fs::create_dir_all(&out_dir).expect("a folder");
+            std::fs::copy(&path, format!("{out_dir}/{name}")).expect("kept");
+        }
+    }
+    let missing = s
+        .call(json!({ "command": "file.export.sld",
+            "input": { "layer": "yok", "path": dir.join("x.sld").display().to_string() } }))
+        .expect("answers");
+    assert_eq!(missing["error"]["code"], "layer_not_found", "{missing}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

@@ -3030,6 +3030,22 @@
    "tests": 0
   },
   {
+   "id": "file.export.shp",
+   "kind": "command",
+   "title": "Shapefile dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.shp"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.shp",
+   "mcp": "file.export.shp",
+   "note": "Pencerede yazılacak Shapefile'lar ve kayıplar önizlenir, Dışa aktar… komutla bütün yazar (ADR 0514).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.import.dxf",
    "kind": "command",
    "title": "DXF…",
@@ -5321,6 +5337,22 @@
    "python": null,
    "mcp": null,
    "note": "İşlemler aracı; Python ve MCP'den çalıştırılamaz.",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "processing.run.raster.cog",
+   "kind": "command",
+   "title": "COG olarak kaydet…",
+   "level": "semantic",
+   "via": [
+    "cad.processing.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "raster.cog aracı; başsız sunucunun dosyalarıyla Python ve MCP'den de (ADR 0515).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 0

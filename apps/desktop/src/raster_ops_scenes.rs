@@ -10,7 +10,7 @@
 //! 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ops-serit,ops-hesap,ops-hesap-cizim,ops-bolge cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ops-serit,ops-hesap,ops-hesap-cizim,ops-bolge,ops-cog,ops-cog-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Each result is written into a scratch folder. Test code only.
@@ -233,6 +233,33 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                     &[on_dem(), ("cell", json!(16)), ("method", json!("mean"))],
                     false,
                     &["dem"],
+                )
+            },
+            framed,
+        ),
+        // COG olarak kaydet's window on the photograph (docs/adr/0515).
+        (
+            "ops-cog",
+            |app| {
+                window(
+                    app,
+                    "processing.run.raster.cog",
+                    true,
+                    &[("input", json!({ "scope": "layer", "layerId": "orto" }))],
+                )
+            },
+            framed,
+        ),
+        // The photograph written as a COG and drawn from it; the source hidden.
+        (
+            "ops-cog-cizim",
+            |app| {
+                ran(
+                    app,
+                    ("processing.run.raster.cog", true),
+                    &[("input", json!({ "scope": "layer", "layerId": "orto" }))],
+                    false,
+                    &["orto", "dem"],
                 )
             },
             framed,

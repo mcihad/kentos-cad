@@ -1,0 +1,200 @@
+{
+ "format": "kentos.document",
+ "version": 1,
+ "name": "COG olarak kaydet",
+ "settings": {
+  "srid": 5256,
+  "lengthDecimals": 3,
+  "areaDecimals": 2,
+  "areaUnit": "m2",
+  "angleUnit": "grad",
+  "plotScale": 1000,
+  "workspace": "gis",
+  "drawingFont": "barlow"
+ },
+ "origin": {
+  "x": 487000,
+  "y": 4421000
+ },
+ "layers": [
+  {
+   "id": "kot",
+   "name": "Kot",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "sinif",
+   "name": "Sınıf",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "orto",
+   "name": "Orto",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  },
+  {
+   "id": "renkli",
+   "name": "Saydam",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8D6E63",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
+  }
+ ],
+ "activeLayer": "kot",
+ "entities": [
+  {
+   "kind": "raster",
+   "affine": [
+    487000.0,
+    0.5,
+    0.0,
+    4421000.0,
+    0.0,
+    -0.5
+   ],
+   "width": 520,
+   "height": 300,
+   "bands": 1,
+   "sample": "f32",
+   "file": "kot.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi",
+    "nodata": -9999.0
+   },
+   "id": 1,
+   "layerId": "kot",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487100.0,
+    0.8,
+    0.3,
+    4421000.0,
+    0.3,
+    -0.8
+   ],
+   "width": 600,
+   "height": 400,
+   "bands": 1,
+   "sample": "u16",
+   "file": "sinif.tif",
+   "srid": 5256,
+   "style": {
+    "render": "ramp",
+    "bands": [
+     1
+    ],
+    "stretch": "minMax",
+    "ramp": "Arazi",
+    "nodata": 0.0
+   },
+   "id": 2,
+   "layerId": "sinif",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487300.0,
+    0.25,
+    0.0,
+    4421000.0,
+    0.0,
+    -0.25
+   ],
+   "width": 400,
+   "height": 300,
+   "bands": 3,
+   "sample": "u8",
+   "file": "orto.png",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ],
+    "stretch": "none"
+   },
+   "id": 3,
+   "layerId": "orto",
+   "attrs": {}
+  },
+  {
+   "kind": "raster",
+   "affine": [
+    487400.0,
+    1.0,
+    0.0,
+    4421000.0,
+    0.0,
+    -1.0
+   ],
+   "width": 300,
+   "height": 260,
+   "bands": 4,
+   "sample": "u8",
+   "file": "saydam.tif",
+   "srid": 5256,
+   "style": {
+    "render": "rgb",
+    "bands": [
+     1,
+     2,
+     3
+    ],
+    "stretch": "none"
+   },
+   "id": 4,
+   "layerId": "renkli",
+   "attrs": {}
+  }
+ ],
+ "styles": {
+  "items": [],
+  "categories": []
+ }
+}

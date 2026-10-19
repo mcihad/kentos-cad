@@ -44,6 +44,7 @@ pub(crate) mod photo_import;
 mod postgis;
 #[cfg(test)]
 mod postgis_tests;
+pub(crate) mod shp_export;
 #[cfg(test)]
 mod tests;
 mod wgs84_export;
@@ -115,6 +116,8 @@ pub enum Window {
     Gpkg(gpkg::State),
     /// PostGIS'e bağlan (docs/adr/0505).
     Postgis(postgis::State),
+    /// Shapefile dışa aktar (docs/adr/0514).
+    ShpExport(shp_export::State),
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +140,7 @@ pub enum Event {
     Gpkg(gpkg::Event),
     Postgis(postgis::Event),
     Package(package::Event),
+    ShpExport(shp_export::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -144,7 +148,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 20] = [
+pub const COMMANDS: [&str; 21] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -162,6 +166,7 @@ pub const COMMANDS: [&str; 20] = [
     "file.import.photos",
     "file.import.gpkg",
     "file.export.gpkg",
+    "file.export.shp",
     "source.link",
     "source.postgis",
     "file.package",
@@ -202,6 +207,7 @@ impl App {
             "source.postgis" => self.postgis_open(),
             "file.package" => self.package_pick(),
             "file.export.gpkg" => self.gpkg_save(),
+            "file.export.shp" => self.shp_export_open(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -384,6 +390,7 @@ impl App {
             Event::Gpkg(e) => self.gpkg_event(e),
             Event::Postgis(e) => self.postgis_event(e),
             Event::Package(e) => self.package_event(e),
+            Event::ShpExport(e) => self.shp_export_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -422,6 +429,7 @@ impl App {
             Some(Window::PhotoImport(s)) => self.photo_import_view(s),
             Some(Window::Gpkg(s)) => self.gpkg_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),
+            Some(Window::ShpExport(s)) => self.shp_export_view(s),
             None => iced::widget::text("").into(),
         }
     }

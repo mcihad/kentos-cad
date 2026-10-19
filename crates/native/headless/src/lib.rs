@@ -37,6 +37,7 @@ pub mod package;
 mod query;
 pub mod rpc;
 mod session;
+pub mod shp_export;
 
 pub use dispatch::{Op, call_envelope, commands};
 pub use error::HeadlessError;

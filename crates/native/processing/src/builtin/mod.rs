@@ -151,6 +151,7 @@ pub fn tools() -> Vec<Tool> {
         raster_ops::clip_by_mask(),
         raster_ops::mosaic(),
         raster_ops::resample(),
+        raster_ops::save_cog(),
         raster_ops::zonal_statistics(),
         raster_ops::histogram(),
         raster_ops::focal_statistics(),

@@ -30,7 +30,7 @@ use crate::types::{ChangeSet, Feedback, Patch, Resolved, RunContext, RunResult};
 
 pub use tools::{
     calculator, cell_statistics, clip_by_mask, focal_statistics, histogram, mosaic, reclassify,
-    resample, zonal_statistics,
+    resample, save_cog, zonal_statistics,
 };
 
 pub const OPS: &str = "rasterOps";
@@ -171,7 +171,7 @@ pub fn drive(
         (OpsFinished::Raster { tail, header }, Some(mut s)) => {
             s.write(&tail)?;
             s.patch(0, &header)?;
-            s.finish()?;
+            s.finish_cog()?;
         }
         (OpsFinished::Zones(z), _) => ran.zones = z,
         (OpsFinished::Histogram(h), _) => ran.histogram = Some(h),
@@ -313,6 +313,7 @@ fn spec_kind(spec: &OpsSpec) -> &'static str {
         OpsTool::ClipByMask { .. } => "clipByMask",
         OpsTool::Mosaic { .. } => "mosaic",
         OpsTool::Resample { .. } => "resample",
+        OpsTool::Copy {} => "copy",
         OpsTool::ZonalStatistics { .. } => "zonalStatistics",
         OpsTool::Histogram { .. } => "histogram",
         OpsTool::FocalStatistics { .. } => "focalStatistics",

@@ -190,7 +190,13 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                 return;
             };
             let z = if t == 11 { f64_le(c, 20) } else { None };
-            if t == 21 || (t == 11 && c.len() >= 36) {
+            // An M that is “no data” is no measure: nothing is dropped.
+            let m = match t {
+                21 => f64_le(c, 20),
+                11 if c.len() >= 36 => f64_le(c, 28),
+                _ => None,
+            };
+            if m.is_some_and(|m| m.is_finite() && m >= NO_DATA) {
                 found.m += 1;
             }
             if !x.is_finite() || !y.is_finite() || z.is_some_and(|z| !z.is_finite()) {
@@ -218,7 +224,19 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                 found.short += 1;
                 return;
             };
-            if n > 0 && (m_type || (z_type && block(end, n).is_some_and(|e| e <= c.len()))) {
+            let m_at = if m_type {
+                Some(pts_end)
+            } else if z_type && block(end, n).is_some_and(|e| e <= c.len()) {
+                Some(end)
+            } else {
+                None
+            };
+            let measured = |at: usize| {
+                (0..n).any(|i| {
+                    f64_le(c, at + 16 + 8 * i).is_some_and(|m| m.is_finite() && m >= NO_DATA)
+                })
+            };
+            if m_at.is_some_and(measured) {
                 found.m += 1;
             }
             let mut points = Vec::with_capacity(n.min(1 << 16));
@@ -270,7 +288,12 @@ pub fn shapes(c: &[u8], out: &mut Vec<Shape>, found: &mut Found) {
                 None
             };
             let line = matches!(t, 3 | 13 | 23);
-            if n > 0 && m_at.is_some() && !line {
+            let measured = |at: usize| {
+                (0..n).any(|i| {
+                    f64_le(c, at + 16 + 8 * i).is_some_and(|m| m.is_finite() && m >= NO_DATA)
+                })
+            };
+            if !line && m_at.is_some_and(measured) {
                 found.m += 1;
             }
             // Parts: starting indices, from 0, in order, within the points.

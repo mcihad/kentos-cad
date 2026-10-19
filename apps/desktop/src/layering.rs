@@ -86,6 +86,12 @@ pub enum Event {
     FilterClear(String),
     /// Bilgi kartı ve eylemler… on this layer (layer_info.rs, docs/adr/0225 §5).
     Info(String),
+    /// Görünüşü SLD olarak kaydet… and SLD'den görünüş al… (layer_sld.rs, docs/adr/0516): the path asked, then the
+    /// path given (none: the dialog was cancelled).
+    SldExport(String),
+    SldImport(String),
+    SldExportTo(String, Option<std::path::PathBuf>),
+    SldImportFrom(String, Option<std::path::PathBuf>),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -215,6 +221,16 @@ impl App {
                 return Task::none();
             }
             Event::Info(id) => return self.open_layer_info(Some(id)),
+            Event::SldExport(id) => return self.sld_export_ask(id),
+            Event::SldImport(id) => return self.sld_import_ask(id),
+            Event::SldExportTo(id, path) => {
+                self.sld_export_to(id, path);
+                return Task::none();
+            }
+            Event::SldImportFrom(id, path) => {
+                self.sld_import_from(id, path);
+                return Task::none();
+            }
             _ => {}
         }
         if let Event::ZoomTo(id) = &event {
@@ -327,7 +343,11 @@ impl App {
             | Event::Filter(_)
             | Event::FilterFromSelection(_)
             | Event::FilterClear(_)
-            | Event::Info(_) => {}
+            | Event::Info(_)
+            | Event::SldExport(_)
+            | Event::SldImport(_)
+            | Event::SldExportTo(..)
+            | Event::SldImportFrom(..) => {}
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
@@ -673,6 +693,14 @@ impl App {
                     Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
                 )
                 .icon(crate::icons::from_web(Some("layerStyle")))
+                // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
+                .item(
+                    "Görünüşü SLD olarak kaydet…",
+                    event(Event::SldExport(id.clone())),
+                )
+                .icon(crate::icons::from_web(Some("sldExport")))
+                .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
+                .icon(crate::icons::from_web(Some("sldImport")))
                 // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
                 .item(
                     "Değişikliğin etkisi…",
@@ -1396,6 +1424,15 @@ mod tests {
 /// dashed, locked and renamed, a group added; and Katman durumları with a
 /// state saved and one applied.
 /// `cargo test -p kentos-desktop layering::screens -- --ignored --nocapture`
+/// The SLD the screens' Parsel takes: QGIS's fill and dashed outline.
+#[cfg(test)]
+const SLD_SCENE: &str = r##"<?xml version="1.0" encoding="UTF-8"?>
+<StyledLayerDescriptor xmlns="http://www.opengis.net/sld" version="1.1.0" xmlns:se="http://www.opengis.net/se">
+ <NamedLayer><se:Name>parsel</se:Name><UserStyle><se:FeatureTypeStyle><se:Rule><se:Name>Parsel</se:Name>
+  <se:PolygonSymbolizer><se:Fill><se:SvgParameter name="fill">#7570b3</se:SvgParameter><se:SvgParameter name="fill-opacity">0.6</se:SvgParameter></se:Fill>
+   <se:Stroke><se:SvgParameter name="stroke">#d95f02</se:SvgParameter><se:SvgParameter name="stroke-width">3</se:SvgParameter><se:SvgParameter name="stroke-dasharray">12 6</se:SvgParameter></se:Stroke>
+  </se:PolygonSymbolizer></se:Rule></se:FeatureTypeStyle></UserStyle></NamedLayer></StyledLayerDescriptor>"##;
+
 #[cfg(test)]
 #[test]
 #[ignore = "pictures for the owner, run by hand"]
@@ -1408,8 +1445,13 @@ fn screens() {
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
-                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar",
-            ] {
+                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar", "sld",
+            ]
+            .into_iter()
+            .filter(|n| {
+                std::env::var("KENTOS_SHOTS_ONLY")
+                    .map_or(true, |o| o.split(',').any(|w| n.contains(w)))
+            }) {
                 let mut app = crate::files_testing::app_with_drawing();
                 let _ = app
                     .settings
@@ -1460,6 +1502,27 @@ fn screens() {
                     }
                     "sil" => {
                         let _ = app.update(Message::Layer(Event::Remove("cizim".into())));
+                    }
+                    // SLD'den görünüş al (docs/adr/0516): QGIS 4.2's rule-based look on Parsel, its Diğer purple.
+                    "sld" => {
+                        let sld = std::env::temp_dir().join("kentos-katman-sld.sld");
+                        std::fs::write(&sld, SLD_SCENE).expect("written");
+                        let _ = app.update(Message::Layer(Event::SldImportFrom(
+                            "parsel".into(),
+                            Some(sld),
+                        )));
+                        let model = &app.document.as_ref().expect("open").model;
+                        let renderer = model
+                            .layers()
+                            .get("parsel")
+                            .and_then(|n| n.style.renderer.clone());
+                        assert_eq!(
+                            renderer.as_ref().map(|r| r["type"].clone()),
+                            Some("single".into())
+                        );
+                        app.selection.set(Vec::new());
+                        // Katman stili shows the look taken.
+                        app.open_layer_style(Some("parsel".into()));
                     }
                     "komutlar" => {
                         let _ = app.update(Message::Layer(Event::AddBeside("bina".into())));

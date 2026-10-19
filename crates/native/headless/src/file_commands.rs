@@ -12,11 +12,13 @@ use std::path::{Path, PathBuf};
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
     BlockFileExported, CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult,
-    CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, FILE_COMMANDS,
-    FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF, FILE_EXPORT_DXF_VERSION,
-    FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF, FILE_EXPORT_PDF_VERSION,
-    FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported, GpkgTableExported, LayerNodeType,
-    PackageProject, PdfExported, ReplayOutcome, ReplayStep, codes,
+    CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, ExportShp,
+    FILE_COMMANDS, FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF,
+    FILE_EXPORT_DXF_VERSION, FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF,
+    FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION, FILE_EXPORT_SLD,
+    FILE_EXPORT_SLD_VERSION, FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported,
+    GpkgTableExported, LayerNodeType, PackageProject, PdfExported, ReplayOutcome, ReplayStep,
+    codes,
 };
 use kentos_domain::Document;
 use kentos_native_application::call::{self, CallState};
@@ -481,6 +483,62 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
     Ok((path, exists, bytes, output, warnings))
 }
 
+/// The Shapefiles written whole, as `file.export.shp` writes them (docs/adr/0514).
+pub fn export_shp(
+    doc: &Document,
+    input: &ExportShp,
+) -> Result<(kentos_contracts::ShpExported, Vec<CommandWarning>), Refused> {
+    let made = crate::shp_export::make(doc, input)?;
+    crate::shp_export::write(&made)?;
+    Ok((made.output, made.warnings))
+}
+
+/// The SLD of a layer's look: where it goes, its bytes, what it holds and what it could not say (docs/adr/0516).
+fn sld(
+    doc: &Document,
+    input: &kentos_contracts::ExportSld,
+) -> Result<
+    (
+        PathBuf,
+        Vec<u8>,
+        kentos_contracts::SldExported,
+        Vec<CommandWarning>,
+    ),
+    Refused,
+> {
+    let (path, _) = target(&input.path, input.overwrite)?;
+    let (_, written) = kentos_native_application::sld::export(doc, &input.layer)?;
+    let bytes = written.xml.into_bytes();
+    let warnings = if written.lost.is_empty() {
+        Vec::new()
+    } else {
+        vec![CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!("SLD'nin söyleyemediği: {}.", written.lost.join("; ")),
+            path: Some("layer".into()),
+        }]
+    };
+    let output = kentos_contracts::SldExported {
+        path: path.display().to_string(),
+        layer: input.layer.clone(),
+        rules: written.rules as u32,
+        bytes: bytes.len() as u64,
+        sha256: sha256_hex(&bytes),
+        lost: written.lost,
+    };
+    Ok((path, bytes, output, warnings))
+}
+
+/// The layer's look written as an SLD, as `file.export.sld` writes it (docs/adr/0516).
+pub fn export_sld(
+    doc: &Document,
+    input: &kentos_contracts::ExportSld,
+) -> Result<(kentos_contracts::SldExported, Vec<CommandWarning>), Refused> {
+    let (path, bytes, output, warnings) = sld(doc, input)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
+
 /// The GeoPackage written whole, as `file.export.gpkg` writes it (docs/adr/0502).
 pub fn export_gpkg(
     doc: &Document,
@@ -596,6 +654,91 @@ fn run_typed(
             }
         });
     }
+    if command == FILE_EXPORT_SLD {
+        let typed: kentos_contracts::ExportSld = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, bytes, output, warnings) = match sld(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings,
+                },
+                None,
+            ),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed {
+                        output: value,
+                        warnings,
+                    },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
+    if command == FILE_EXPORT_SHP {
+        let typed: ExportShp = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let made = match crate::shp_export::make(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&made.output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (
+                CommandResult::Completed {
+                    output: value,
+                    warnings: made.warnings,
+                },
+                None,
+            ),
+            CallOp::Execute => {
+                if let Err(refused) = crate::shp_export::write(&made) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                let (path, bytes, sha256) = crate::shp_export::effect(&made);
+                (
+                    CommandResult::Completed {
+                        output: value,
+                        warnings: made.warnings,
+                    },
+                    Some(FileEffect {
+                        path,
+                        bytes,
+                        sha256,
+                    }),
+                )
+            }
+        });
+    }
     if command == FILE_EXPORT_GPKG {
         let typed: ExportGpkg = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -651,6 +794,8 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_PDF => FILE_EXPORT_PDF_VERSION,
         FILE_EXPORT_BLOCK => FILE_EXPORT_BLOCK_VERSION,
         FILE_EXPORT_GPKG => FILE_EXPORT_GPKG_VERSION,
+        FILE_EXPORT_SHP => FILE_EXPORT_SHP_VERSION,
+        FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
@@ -669,6 +814,12 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_GPKG => serde_json::from_value::<ExportGpkg>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_SHP => serde_json::from_value::<ExportShp>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_SLD => serde_json::from_value::<kentos_contracts::ExportSld>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())

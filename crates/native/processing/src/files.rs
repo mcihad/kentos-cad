@@ -29,6 +29,56 @@ pub trait Sink {
     fn patch(&mut self, at: u64, bytes: &[u8]) -> Result<(), String>;
     /// The file whole (written beside its place, then renamed: a broken run leaves nothing).
     fn finish(self: Box<Self>) -> Result<(), String>;
+    /// The file whole as a cloud-optimized GeoTIFF (docs/adr/0515): the tiled GeoTIFF written so far laid out
+    /// again, its directories first and the smallest overview's tiles before the full image's. A sink that keeps
+    /// no file lays out its bytes; by default the file stays as it was written.
+    fn finish_cog(self: Box<Self>) -> Result<(), String> {
+        self.finish()
+    }
+}
+
+/// The COG of the tiled GeoTIFF at `part` written at `path` (docs/adr/0515): beside it first, then renamed; `part`
+/// removed. A file that is no tiled little-endian TIFF is refused, `path` untouched.
+pub fn cog_file(part: &std::path::Path, path: &std::path::Path) -> Result<(), String> {
+    use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
+    let fail = |e: std::io::Error| format!("“{}” yazılamadı: {e}.", path.display());
+    let mut src = std::fs::File::open(part).map_err(fail)?;
+    let size = src.metadata().map_err(fail)?.len();
+    let mut read = |offset: u64, len: u64| -> Result<Vec<u8>, String> {
+        let len = len.min(size.saturating_sub(offset));
+        let mut b = vec![0u8; len as usize];
+        src.seek(SeekFrom::Start(offset)).map_err(fail)?;
+        src.read_exact(&mut b).map_err(fail)?;
+        Ok(b)
+    };
+    let plan = kentos_formats::raster::cog::plan(&mut read, size)?;
+    let name = path
+        .file_name()
+        .map_or_else(|| "cikti".to_owned(), |n| n.to_string_lossy().into_owned());
+    let staged = path.with_file_name(format!("{name}.cog-yaziliyor"));
+    let mut write = || -> Result<(), String> {
+        let out = std::fs::File::create(&staged).map_err(fail)?;
+        let mut out = BufWriter::with_capacity(1 << 20, out);
+        out.write_all(&plan.front).map_err(fail)?;
+        let mut buf = Vec::new();
+        for c in &plan.copies {
+            buf.resize(c.len as usize, 0);
+            src.seek(SeekFrom::Start(c.from)).map_err(fail)?;
+            src.read_exact(&mut buf).map_err(fail)?;
+            out.write_all(&kentos_formats::raster::cog::framed(&buf))
+                .map_err(fail)?;
+        }
+        let out = out.into_inner().map_err(|e| fail(e.into_error()))?;
+        out.sync_all().map_err(fail)?;
+        Ok(())
+    };
+    if let Err(e) = write() {
+        let _ = std::fs::remove_file(&staged);
+        return Err(e);
+    }
+    std::fs::rename(&staged, path).map_err(fail)?;
+    let _ = std::fs::remove_file(part);
+    Ok(())
 }
 
 /// Where a source's file is (a cloud's or a raster's): the results go beside it.

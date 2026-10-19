@@ -1,0 +1,259 @@
+{
+ "format": "kentos.shp-export-cases/1",
+ "note": "ADR 0514. OGR'ın okuduğu; betik KentOS kodu kullanmaz.",
+ "qgis": {
+  "egri": [
+   true,
+   1,
+   "EPSG:5256",
+   [
+    "ad"
+   ]
+  ],
+  "egri_yol": [
+   true,
+   1,
+   "EPSG:5256",
+   [
+    "ad"
+   ]
+  ],
+  "malik": [
+   true,
+   2,
+   "",
+   [
+    "ad",
+    "pay",
+    "parsel"
+   ]
+  ],
+  "nokta_alan": [
+   true,
+   1,
+   "EPSG:5256",
+   [
+    "ad",
+    "kot",
+    "Mülkiyet",
+    "mülkiye_1"
+   ]
+  ],
+  "nokta_nokta": [
+   true,
+   1,
+   "EPSG:5256",
+   [
+    "ad",
+    "kot"
+   ]
+  ],
+  "parsel": [
+   true,
+   3,
+   "EPSG:5256",
+   [
+    "ada",
+    "parsel_no",
+    "alan",
+    "kimlik",
+    "tescil",
+    "guncelleme",
+    "tapulu",
+    "not"
+   ]
+  ],
+  "yol": [
+   true,
+   3,
+   "EPSG:5256",
+   [
+    "ad"
+   ]
+  ]
+ },
+ "sets": {
+  "egri": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    }
+   ],
+   "rows": 1,
+   "type": "Polygon"
+  },
+  "egri_yol": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    }
+   ],
+   "rows": 1,
+   "type": "Line String"
+  },
+  "malik": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    },
+    {
+     "name": "pay",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    },
+    {
+     "name": "parsel",
+     "precision": 0,
+     "subtype": "None",
+     "type": "Integer",
+     "width": 1
+    }
+   ],
+   "rows": 2,
+   "type": "None"
+  },
+  "nokta_alan": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    },
+    {
+     "name": "kot",
+     "precision": 1,
+     "subtype": "None",
+     "type": "Real",
+     "width": 3
+    },
+    {
+     "name": "Mülkiyet",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 7
+    },
+    {
+     "name": "mülkiye_1",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 10
+    }
+   ],
+   "rows": 1,
+   "type": "Polygon"
+  },
+  "nokta_nokta": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    },
+    {
+     "name": "kot",
+     "precision": 2,
+     "subtype": "None",
+     "type": "Real",
+     "width": 6
+    }
+   ],
+   "rows": 1,
+   "type": "3D Point"
+  },
+  "parsel": {
+   "fields": [
+    {
+     "name": "ada",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 40
+    },
+    {
+     "name": "parsel_no",
+     "precision": 0,
+     "subtype": "None",
+     "type": "Integer",
+     "width": 1
+    },
+    {
+     "name": "alan",
+     "precision": 2,
+     "subtype": "None",
+     "type": "Real",
+     "width": 7
+    },
+    {
+     "name": "kimlik",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 16
+    },
+    {
+     "name": "tescil",
+     "precision": 0,
+     "subtype": "None",
+     "type": "Date",
+     "width": 10
+    },
+    {
+     "name": "guncelleme",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 19
+    },
+    {
+     "name": "tapulu",
+     "precision": 0,
+     "subtype": "Boolean",
+     "type": "Integer",
+     "width": 1
+    },
+    {
+     "name": "not",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    }
+   ],
+   "rows": 3,
+   "type": "Polygon"
+  },
+  "yol": {
+   "fields": [
+    {
+     "name": "ad",
+     "precision": 0,
+     "subtype": "None",
+     "type": "String",
+     "width": 254
+    }
+   ],
+   "rows": 3,
+   "type": "3D Measured Line String"
+  }
+ }
+}

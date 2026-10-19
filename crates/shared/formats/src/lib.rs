@@ -23,6 +23,7 @@
 // `!(r > 0.0)` refuses NaN as well as r ≤ 0; that is the point of writing it so.
 #![allow(clippy::neg_cmp_op_on_partial_ord)]
 
+pub mod arch_elements;
 pub mod blocks;
 pub mod coords;
 pub mod dxf;
@@ -38,26 +39,26 @@ pub mod import;
 pub mod json;
 pub mod kml;
 pub mod lin;
-pub mod pat;
 pub mod math;
 pub mod multidim;
 pub mod num;
 pub mod nurbs;
+pub mod openings;
+pub mod pat;
 pub mod raster;
 pub mod report;
 pub mod reproject;
 pub mod shp;
+pub mod sld;
+pub mod spaces;
 pub mod table_file;
 pub mod text;
 pub mod units;
+pub mod walls;
 pub mod watch;
 pub mod workbook;
 pub mod xml;
 pub mod xml_scan;
 pub mod zip;
-pub mod walls;
-pub mod openings;
-pub mod spaces;
-pub mod arch_elements;
 
 pub use kentos_contracts as contracts;

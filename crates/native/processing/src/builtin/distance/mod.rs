@@ -312,7 +312,7 @@ pub fn run_from_objects(
         let done = job.finish()?;
         sink.write(&done.tail)?;
         sink.patch(0, &done.header)?;
-        sink.finish()?;
+        sink.finish_cog()?;
         feedback.progress(1.0, label);
         let notes = &done.notes;
         warn_outside(notes.outside as u64, "kaynak", feedback);

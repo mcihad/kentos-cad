@@ -1,4 +1,4 @@
-//! ESRI Shapefile in (docs/adr/0046): one layer from its files, chosen
+//! ESRI Shapefile in (docs/adr/0046) and out ([`write`], docs/adr/0514): one layer from its files, chosen
 //! together: the shapes (.shp), their index (.shx, only checked: the
 //! records are read in order), the attribute table (.dbf), the coordinate
 //! system (.prj) and the table's code page (.cpg). Points and the vertices
@@ -12,6 +12,7 @@
 pub mod dbf;
 pub mod prj;
 pub mod shape;
+pub mod write;
 
 use std::collections::BTreeMap;
 

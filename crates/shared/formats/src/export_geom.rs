@@ -43,6 +43,12 @@ pub(crate) struct Words {
     pub measure: &'static str,
     /// A vertex without an elevation beside ones with: none when the format writes heights its own way.
     pub mixed_z: Option<&'static str>,
+    /// Curves as chords within this distance of the curve (metres), for a format whose readers take the line as the
+    /// geometry itself (a Shapefile, docs/adr/0514 §3); none: the app's own sampling (72 steps a turn).
+    pub chord: Option<f64>,
+    /// The format holds a path's measures (M, docs/adr/0224): a straight path's are carried in [`Ring::ms`], a bulged
+    /// one's are not (said in [`Words::measure`]).
+    pub measures: bool,
 }
 
 /// GeoJSON's words (docs/adr/0046).
@@ -67,6 +73,8 @@ pub(crate) const GEOJSON: Words = Words {
     mixed_z: Some(
         "kotu olmayan köşeler iki sayıyla yazıldı (RFC 7946 iki ve üç sayılı konumların bir dizide karışmasına izin verir; bazı programlar onları 0 kotlu okur)",
     ),
+    chord: None,
+    measures: false,
 };
 
 impl Geometry {
@@ -186,6 +194,40 @@ fn curve(rep: &mut Report, what: &str, ring: Ring, w: &Words) -> Option<Geometry
     (ring.pts.len() >= 2).then_some(Geometry::Line(ring))
 }
 
+/// The widest angle a chord may span to stay within the format's distance of a circle of radius `r`: the app's own
+/// step when the format sets none, or when that step is already within it.
+fn arc_step(w: &Words, r: f64) -> f64 {
+    match w.chord {
+        Some(t) if r.is_finite() && r > t => (2.0 * libm::acos(1.0 - t / r)).min(DEFAULT_STEP),
+        _ => DEFAULT_STEP,
+    }
+}
+
+/// The step for a bulged path: its widest arc's (a narrower arc's chords stay closer still).
+fn path_step(w: &Words, pts: &[Vec2], bulges: Option<&[f64]>, closed: bool) -> f64 {
+    let Some(b) = bulges else {
+        return DEFAULT_STEP;
+    };
+    let mut r: f64 = 0.0;
+    for (i, &bulge) in b.iter().enumerate() {
+        let next = if i + 1 < pts.len() {
+            i + 1
+        } else if closed {
+            0
+        } else {
+            break;
+        };
+        let (Some(a), Some(c)) = (pts.get(i), pts.get(next)) else {
+            break;
+        };
+        if bulge.abs() > 1e-12 {
+            let chord = crate::math::hypot(c.x - a.x, c.y - a.y);
+            r = r.max(chord * (1.0 + bulge * bulge) / (4.0 * bulge.abs()));
+        }
+    }
+    arc_step(w, r)
+}
+
 /// A path's elevations when it has as many as vertices (else it has none).
 fn heights(zs: &Zs, vertices: usize) -> Option<&[Option<f64>]> {
     zs.as_deref().filter(|z| z.len() == vertices)
@@ -211,8 +253,8 @@ pub(crate) fn geometry(
     rep: &mut Report,
     w: &Words,
 ) -> Option<Geometry> {
-    // A route's measures (docs/adr/0224): the line is written, its measures are not.
-    if crate::import::has_measure(e) {
+    // A route's measures (docs/adr/0224): the line is written, its measures are not, unless the format holds them.
+    if !w.measures && crate::import::has_measure(e) {
         rep.note("Ölçü (M)", w.measure, 0);
     }
     let g = match e {
@@ -224,7 +266,13 @@ pub(crate) fn geometry(
             ),
             _ => Geometry::Point(p.p, p.z),
         }),
-        Entity::Line(l) => Some(Geometry::Line(Ring::new(vec![l.a, l.b], [l.za, l.zb]))),
+        Entity::Line(l) => {
+            let mut ring = Ring::new(vec![l.a, l.b], [l.za, l.zb]);
+            if w.measures && (l.ma.is_some() || l.mb.is_some()) {
+                ring.ms = Some(vec![l.ma, l.mb]);
+            }
+            Some(Geometry::Line(ring))
+        }
         Entity::Polyline(p) => {
             if p.holes.as_ref().is_some_and(|h| !h.is_empty()) {
                 rep.note("Çoklu çizginin delikleri", w.path_holes, 0);
@@ -237,44 +285,65 @@ pub(crate) fn geometry(
                     0,
                 );
             }
-            let one =
-                |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs, closed: bool, rep: &mut Report| {
-                    let zs = heights(zs, pts.len());
-                    // A closed line runs back to its first vertex: a line string whose last point is its first.
-                    let back = |mut out: Vec<Vec2>, mut zs: Option<Vec<Option<f64>>>| {
-                        if closed && let Some(&first) = out.first() {
-                            out.push(first);
-                            if let Some(z) = zs.as_mut() {
-                                let z0 = z.first().copied().flatten();
-                                z.push(z0);
-                            }
+            let one = |pts: &[Vec2],
+                       bulges: Option<&[f64]>,
+                       zs: &Zs,
+                       ms: &Zs,
+                       closed: bool,
+                       rep: &mut Report| {
+                let zs = heights(zs, pts.len());
+                let ms =
+                    heights(ms, pts.len()).filter(|m| w.measures && m.iter().any(Option::is_some));
+                // A closed line runs back to its first vertex: a line string whose last point is its first.
+                let back = |mut out: Vec<Vec2>, mut zs: Option<Vec<Option<f64>>>| {
+                    if closed && let Some(&first) = out.first() {
+                        out.push(first);
+                        if let Some(z) = zs.as_mut() {
+                            let z0 = z.first().copied().flatten();
+                            z.push(z0);
                         }
-                        (out, zs)
-                    };
-                    match bulges {
-                        Some(b) if has_arcs(b) => {
-                            let out = from_core(bulge_path_outline(
-                                &to_core(pts),
-                                Some(b),
-                                closed,
-                                DEFAULT_STEP,
-                            ));
-                            let zs = zs.map(|z| bulge_path_zs(pts, b, z, closed));
-                            let (out, zs) = back(out, zs);
-                            curve(
-                                rep,
-                                "Yaylı çoklu çizgi",
-                                Ring::new(out, zs.into_iter().flatten()),
-                                w,
-                            )
-                        }
-                        _ => (pts.len() >= 2).then(|| {
-                            let (out, zs) = back(pts.to_vec(), zs.map(<[Option<f64>]>::to_vec));
-                            Geometry::Line(Ring::new(out, zs.into_iter().flatten()))
-                        }),
                     }
+                    (out, zs)
                 };
-            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, p.closed, rep);
+                match bulges {
+                    Some(b) if has_arcs(b) => {
+                        if ms.is_some() {
+                            rep.note(
+                                    "Ölçü (M)",
+                                    "yaylı çizginin ölçüleri kirişlerine taşınmadı; çizgi ölçüsüz yazıldı",
+                                    0,
+                                );
+                        }
+                        let out = from_core(bulge_path_outline(
+                            &to_core(pts),
+                            Some(b),
+                            closed,
+                            path_step(w, pts, Some(b), closed),
+                        ));
+                        let zs = zs.map(|z| bulge_path_zs(pts, b, z, closed));
+                        let (out, zs) = back(out, zs);
+                        curve(
+                            rep,
+                            "Yaylı çoklu çizgi",
+                            Ring::new(out, zs.into_iter().flatten()),
+                            w,
+                        )
+                    }
+                    _ => (pts.len() >= 2).then(|| {
+                        let (out, zs) = back(pts.to_vec(), zs.map(<[Option<f64>]>::to_vec));
+                        let mut ring = Ring::new(out, zs.into_iter().flatten());
+                        if let Some(ms) = ms {
+                            let mut ms = ms.to_vec();
+                            if closed && let Some(&m0) = ms.first() {
+                                ms.push(m0);
+                            }
+                            ring.ms = Some(ms);
+                        }
+                        Geometry::Line(ring)
+                    }),
+                }
+            };
+            let first = one(&p.pts, p.bulges.as_deref(), &p.zs, &p.ms, p.closed, rep);
             match p.parts.as_deref() {
                 // A multi-part polyline is a MultiLineString, its own path the first member (docs/adr/0174).
                 Some(parts) if !parts.is_empty() => {
@@ -282,7 +351,7 @@ pub(crate) fn geometry(
                     let members = std::iter::once(first).chain(
                         parts
                             .iter()
-                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, false, rep)),
+                            .map(|q| one(&q.pts, q.bulges.as_deref(), &q.zs, &q.ms, false, rep)),
                     );
                     for member in members.collect::<Vec<_>>() {
                         match member {
@@ -303,7 +372,16 @@ pub(crate) fn geometry(
             let mut arcs = false;
             let mut ring = |pts: &[Vec2], bulges: Option<&[f64]>, zs: &Zs| {
                 arcs |= bulges.is_some_and(has_arcs);
-                let outline = from_core(polygon_ring(&to_core(pts), bulges));
+                let outline = if w.chord.is_some() && bulges.is_some_and(has_arcs) {
+                    from_core(bulge_path_outline(
+                        &to_core(pts),
+                        bulges,
+                        true,
+                        path_step(w, pts, bulges, true),
+                    ))
+                } else {
+                    from_core(polygon_ring(&to_core(pts), bulges))
+                };
                 let zs = heights(zs, pts.len())
                     .map(|z| bulge_path_zs(pts, bulges.unwrap_or(&[]), z, true));
                 Ring::new(outline, zs.into_iter().flatten())
@@ -342,7 +420,8 @@ pub(crate) fn geometry(
             }
         }
         Entity::Circle(c) => {
-            let pts = from_core(tessellate_circle(core(c.c), c.r, SEGMENTS));
+            let segments = (crate::math::TAU / arc_step(w, c.r)).ceil().max(SEGMENTS);
+            let pts = from_core(tessellate_circle(core(c.c), c.r, segments));
             curve(rep, "Daire", closed(Ring::flat(pts)), w)
         }
         Entity::Arc(a) => curve(
@@ -355,13 +434,18 @@ pub(crate) fn geometry(
                     a0: a.a0,
                     a1: a.a1,
                 },
-                DEFAULT_STEP,
+                arc_step(w, a.r),
             ))),
             w,
         ),
         Entity::Ellipse(el) => {
             let g = ellipse_geom(core(el.c), core(el.major), el.ratio, el.t0, el.t1);
-            let pts = from_core(tessellate_ellipse(&g, ELLIPSE_PER_TURN.max(64.0)));
+            // The major radius bounds the curvature's radius from above: its step keeps every chord within.
+            let major = crate::math::hypot(el.major.x, el.major.y);
+            let per_turn = (crate::math::TAU / arc_step(w, major))
+                .ceil()
+                .max(ELLIPSE_PER_TURN.max(64.0));
+            let pts = from_core(tessellate_ellipse(&g, per_turn));
             let ring = Ring::flat(pts);
             curve(
                 rep,

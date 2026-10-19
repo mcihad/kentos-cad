@@ -39,17 +39,19 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne
     çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı.
     plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını
-    söyler, yeni nesnelerin kimlikleri kopyanındır. Rasterin ya da nokta bulutunun
-    dosyasını okuyan araçlar ev sahibinin dosyalarını ister; başsız ortamda tool_failed.
-    sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç
-    kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı,
-    alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp
-    tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler
-    invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın
-    tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve
-    tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların
-    kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır
-    (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).
+    söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda
+    rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar;
+    adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız
+    ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir
+    GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo
+    (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya
+    geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile
+    değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export,
+    GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu,
+    SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı
+    katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında
+    taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor,
+    zaman).
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -89,17 +91,18 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı
         kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin
         bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin
-        kimlikleri kopyanındır. Rasterin ya da nokta bulutunun dosyasını okuyan araçlar ev
-        sahibinin dosyalarını ister; başsız ortamda tool_failed. sink { path, overwrite }
-        sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı
-        nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler
-        kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur,
-        var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists,
-        file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses;
-        cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar,
-        içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu
-        GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek,
-        girdiler ve özetleri, motor, zaman).
+        kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü
+        GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG,
+        NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed.
+        sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç
+        kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı,
+        alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp
+        tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler
+        invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın
+        tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve
+        tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların
+        kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır
+        (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).
 
         Args:
             doc: The drawing it works on.

@@ -334,6 +334,39 @@ impl Raw {
     }
 }
 
+impl Raw {
+    /// The region's samples as the file holds them, every band (alpha too), into `strip`: `w` cells wide, `b`
+    /// bands, its first row grid row `y0`; cells `c0..c1` of rows `y0..y0 + n`. Cells outside the region are left.
+    pub fn copy_into(
+        &self,
+        strip: &mut Samples,
+        (c0, c1, y0, n): (u32, u32, u32, u32),
+        w: usize,
+        b: usize,
+    ) {
+        if self.all != b {
+            return;
+        }
+        for r in 0..n as i64 {
+            let dj = i64::from(y0) + r - self.y;
+            if dj < 0 || dj >= i64::from(self.h) {
+                continue;
+            }
+            for i in i64::from(c0)..i64::from(c1) {
+                let di = i - self.x;
+                if di < 0 || di >= i64::from(self.w) {
+                    continue;
+                }
+                let from = (dj as usize * self.w as usize + di as usize) * b;
+                let to = (r as usize * w + i as usize) * b;
+                for k in 0..b {
+                    strip.set(to + k, self.samples.get(from + k));
+                }
+            }
+        }
+    }
+}
+
 impl Input {
     /// The region's samples as the file holds them (its blocks given).
     pub fn raw(&mut self, r: (i64, i64, u32, u32)) -> Result<Raw, String> {

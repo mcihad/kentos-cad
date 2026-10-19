@@ -214,6 +214,7 @@ fn distinct(ids: impl IntoIterator<Item = Slot>) -> Vec<Slot> {
 struct Collect<'a> {
     log: &'a mut Vec<LogLine>,
     canceled: bool,
+    files: Option<std::sync::Arc<dyn crate::files::Files>>,
 }
 
 impl Feedback for Collect<'_> {
@@ -232,6 +233,10 @@ impl Feedback for Collect<'_> {
 
     fn canceled(&self) -> bool {
         self.canceled
+    }
+
+    fn files(&self) -> Option<std::sync::Arc<dyn crate::files::Files>> {
+        self.files.clone()
     }
 }
 
@@ -335,16 +340,37 @@ pub fn resolve_layer(doc: &Document, v: &LayerValue) -> TargetLayer {
 }
 
 /// The processing runner: history, and the run itself.
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct Runner {
     history: Vec<RunRecord>,
     seq: u64,
     canceled: bool,
+    /// The host's files for the runs that read and write them (the headless server's, docs/adr/0515).
+    files: Option<std::sync::Arc<dyn crate::files::Files>>,
+}
+
+impl std::fmt::Debug for Runner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Runner")
+            .field("history", &self.history)
+            .field("seq", &self.seq)
+            .field("canceled", &self.canceled)
+            .field("files", &self.files.is_some())
+            .finish()
+    }
 }
 
 impl Runner {
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// A runner whose runs read and write through `files`.
+    pub fn with_files(files: std::sync::Arc<dyn crate::files::Files>) -> Self {
+        Runner {
+            files: Some(files),
+            ..Self::default()
+        }
     }
 
     /// Runs so far, newest first.
@@ -547,6 +573,7 @@ impl Runner {
             let mut feedback = Collect {
                 log: &mut *log,
                 canceled: self.canceled,
+                files: self.files.clone(),
             };
             let result = Self::compute(&job, host.doc(), &mut feedback);
             (result, feedback.canceled || self.canceled)

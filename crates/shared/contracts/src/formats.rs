@@ -274,10 +274,12 @@ pub struct ImportLayer {
 pub struct ReportItem {
     /// The source's name for it ("IMAGE", "Genişlikli çoklu çizgi").
     pub what: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u32,
     /// What happened and, where it helps, what to do (Turkish, for the user).
     pub reason: String,
     /// The first source lines where it occurs.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
     pub lines: Vec<u32>,
 }
 
@@ -1290,6 +1292,7 @@ impl DxfAnnotations {
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ExportReport {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub counts: BTreeMap<String, u32>,
     pub notes: Vec<ReportItem>,
     pub skipped: Vec<ReportItem>,

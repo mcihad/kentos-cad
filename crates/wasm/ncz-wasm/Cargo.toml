@@ -5,8 +5,6 @@ version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
-# It links kentos-ncz, a port of GPL-2.0-or-later code (crates/shared/ncz/README.md).
-license = "GPL-2.0-or-later"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

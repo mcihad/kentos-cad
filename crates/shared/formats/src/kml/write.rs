@@ -48,6 +48,8 @@ pub(crate) const KML: Words = Words {
     infinite: "uçsuz doğru ve ışın KML'de gösterilemez; yazılmadı",
     measure: "KML köşenin ölçüsünü (M) taşımaz; çizgi yazıldı, ölçüleri yazılmadı",
     mixed_z: None,
+    chord: None,
+    measures: false,
 };
 
 /// What a text becomes.

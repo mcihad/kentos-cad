@@ -47,6 +47,8 @@ pub(crate) const GPX: Words = Words {
     infinite: "uçsuz doğru ve ışın GPX'te gösterilemez; yazılmadı",
     measure: "GPX köşenin ölçüsünü (M) taşımaz; iz yazıldı, ölçüleri yazılmadı",
     mixed_z: None,
+    chord: None,
+    measures: false,
 };
 
 /// What a text becomes.

@@ -296,7 +296,7 @@ fn write_tiff(
     let (tail, header) = writer.finish().map_err(|e| e.0)?;
     sink.write(&tail)?;
     sink.patch(0, &header)?;
-    sink.finish()
+    sink.finish_cog()
 }
 
 /// The raster object of the grid: its ramp lit by its relief over its values' range.

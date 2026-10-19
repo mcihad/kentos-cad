@@ -203,6 +203,13 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
+  (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
+- [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
+  (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
+- [ ] `CBS-05` Shapefile dışa aktarma (ADR 0514, 19 Ekim): web'de gerekenler: `file.export.shp`'nin işleyicisi biçim işçisinde
+  (`shp::write`'ın WASM bağlayıcısı; `.prj` tablosu `esri-prj.json`'dan), Shapefile dışa aktar penceresi (Kod sayfası, Hedef,
+  kayıplar), indirme olarak zip (web'de klasör ve tek `.shp` yok); TS türleri üretildi.
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede
@@ -1914,6 +1921,25 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
+- [ ] `CBS-05` Shapefile dışa aktarma (dilim): `file.export.shp` (tek arşiv, yeni klasör ya da tek `.shp`; bütün ya da hiç), katman
+  ve geometri türü başına Shapefile, Z ve M, halka yönü, eğriler 0,1 mm kirişle, `.dbf`'in adları, türleri ve kod sayfası
+  (UTF-8, Windows-1254), ESRI biçimli `.prj` (QGIS ve ArcGIS EPSG'yi tanır); kayıplar yazmadan önce `export_losses`'la;
+  çekirdek `shp::write`, `kentos_native_application::shapefile`, `kentos_headless::shp_export`; masaüstünde Veri › Dosya
+  alışverişi › Shapefile dışa aktar…; Python ve MCP; bağımsız denetim `shp_export_cases.py` (OGR ve QGIS 4.2),
+  `esri_prj.py`. Kalan: GML, FlatGeobuf, GeoParquet, CSV/XYZ'nin iki yönü, staging, reddedilen satırlar, upsert. — **19 Ekim,
+  [ADR 0514](docs/adr/0514-shapefile-export.md).**
+- [ ] `CBS-28` COG (ilk dilim): `kentos_formats::raster::cog` (dizinler başta, GDAL'ın yapı bilgisi, en küçük katın karoları önce;
+  karolar bayt bayt kopyalanır), bütün raster çözümleme sonuçları COG (`Sink::finish_cog`), Raster işlemleri'nde COG olarak
+  kaydet (`raster.cog`, çekirdeğin `copy` işi); başsız sunucunun raster dosyaları (`local_files::LocalFiles`: bağlı ve gömülü
+  GeoTIFF ve PNG) ile raster araçları Python ve MCP'den; GDAL'ın `validate_cloud_optimized_geotiff.py`'si ve numpy'la
+  `cog_cases.py`. Kalan: sanal mozaik, ortak raster sağlayıcısı (Range, ETag, bütçe), codec profili, başsız adres, JPEG ve
+  NetCDF. — **19 Ekim, [ADR 0515](docs/adr/0515-cloud-optimized-geotiff.md).**
+- [ ] `CBS-17` SLD alışverişi (ilk dilim): `kentos_formats::sld` (SLD 1.1 / SE 1.1: tek simge, kategorili, aralıklı ve kurallı
+  görünüş; süzgeçler KentOS'un ifadesinden ve ifadesine, ölçek aralıkları, dolgu, çizgi, iyi bilinen işaretler; kâğıt mm 0,28 mm'lik
+  piksel, metre), `file.export.sld` (`export_losses`) ve `file.import.sld` (`import_losses`, `invalid_sld`; tek adım Katman stili);
+  Katmanlar'ın sağ tıkında; Python ve MCP; 24 ortak durum `sld_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin SLD'leri ve
+  KentOS'unkiler QGIS'te. Kalan: QML, MapLibre, etiketler, tematik işleyiciler, alan kimliklerine bağ. — **19 Ekim,
+  [ADR 0516](docs/adr/0516-sld-style-exchange.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

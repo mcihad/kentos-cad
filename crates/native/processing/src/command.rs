@@ -464,7 +464,9 @@ fn run_on(
         chosen: None,
     };
     let mut log = Vec::new();
-    let mut runner = Runner::new();
+    // The raster tools read and write files where there is no window too (docs/adr/0515).
+    let files = crate::local_files::LocalFiles::of(host.doc, None);
+    let mut runner = Runner::with_files(std::sync::Arc::new(files));
     let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
     let Headless { doc, chosen, .. } = host;
     let notes: Vec<ToolNote> = log

@@ -254,6 +254,18 @@ impl Sink for FileSink {
         drop(f);
         std::fs::rename(&self.part, &self.path).map_err(fail)
     }
+
+    fn finish_cog(mut self: Box<Self>) -> Result<(), String> {
+        let Some(f) = self.file.take() else {
+            return Err("Dosya kapalı.".into());
+        };
+        let fail = |e: std::io::Error| format!("“{}” yazılamadı: {e}.", self.path.display());
+        let f = f.into_inner().map_err(|e| fail(e.into_error()))?;
+        drop(f);
+        let done = kentos_processing::files::cog_file(&self.part, &self.path);
+        let _ = std::fs::remove_file(&self.part);
+        done
+    }
 }
 
 impl Drop for FileSink {

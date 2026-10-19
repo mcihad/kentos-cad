@@ -37,6 +37,7 @@ pub mod features;
 pub mod field_map;
 pub mod files;
 pub mod geometry;
+pub mod local_files;
 pub mod model;
 pub mod model_edit;
 pub mod model_runner;

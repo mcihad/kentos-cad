@@ -223,7 +223,7 @@ fn drive(
         (Finished::Raster { tail, header }, Some(mut s), Some(((bands, sample), style)), _) => {
             s.write(&tail)?;
             s.patch(0, &header)?;
-            s.finish()?;
+            s.finish_cog()?;
             Ok(Ran::Raster {
                 bands,
                 sample,

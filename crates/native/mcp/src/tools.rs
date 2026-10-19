@@ -637,6 +637,9 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.pdf"
             | "file.export.block"
             | "file.export.gpkg"
+            | "file.export.shp"
+            | "file.export.sld"
+            | "file.import.sld"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).

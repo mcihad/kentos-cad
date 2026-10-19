@@ -72,6 +72,8 @@ pub mod processing_host;
 pub mod processing_run;
 pub mod processing_tools;
 pub mod source_places;
+pub mod shapefile;
+pub mod sld;
 pub mod sources;
 pub mod geopackage;
 pub mod blocks_library;
@@ -941,6 +943,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_GPKG,
         kentos_contracts::FILE_IMPORT_GPKG_VERSION,
+    ),
+    // An SLD's look made a layer's ([`sld`], docs/adr/0516).
+    (
+        kentos_contracts::FILE_IMPORT_SLD,
+        kentos_contracts::FILE_IMPORT_SLD_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (
