@@ -227,6 +227,9 @@ Liste:
 - [ ] `CBS-05` Shapefile dışa aktarma (ADR 0514, 19 Ekim): web'de gerekenler: `file.export.shp`'nin işleyicisi biçim işçisinde
   (`shp::write`'ın WASM bağlayıcısı; `.prj` tablosu `esri-prj.json`'dan), Shapefile dışa aktar penceresi (Kod sayfası, Hedef,
   kayıplar), indirme olarak zip (web'de klasör ve tek `.shp` yok); TS türleri üretildi.
+- [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
+  gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
+  (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede

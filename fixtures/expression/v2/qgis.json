@@ -1,0 +1,1282 @@
+{
+ "format": "kentos.expression-qgis",
+ "version": 1,
+ "object": {
+  "Ada": "1245",
+  "Parsel": "12",
+  "Ad": "Kızılay Meydanı",
+  "Nitelik": "Arsa",
+  "Bos": ""
+ },
+ "cases": [
+  {
+   "source": "to_bool('yes')",
+   "qgis": "to_bool('yes')",
+   "value": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "to_bool(0)",
+   "qgis": "to_bool(0)",
+   "value": [
+    "b",
+    false
+   ]
+  },
+  {
+   "source": "to_bool(2.5)",
+   "qgis": "to_bool(2.5)",
+   "value": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "to_bool('')",
+   "qgis": "to_bool('')",
+   "value": [
+    "b",
+    false
+   ]
+  },
+  {
+   "source": "to_bool('abc')",
+   "qgis": "to_bool('abc')",
+   "value": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "mantıksal('evet')",
+   "value": [
+    "b",
+    true
+   ],
+   "rule": "Türkçe evet doğrudur"
+  },
+  {
+   "source": "mantıksal('Hayır')",
+   "value": [
+    "b",
+    false
+   ],
+   "rule": "Türkçe hayır yanlıştır"
+  },
+  {
+   "source": "to_bool('false')",
+   "qgis": "to_bool('false')",
+   "value": [
+    "b",
+    false
+   ],
+   "rule": "QGIS boş olmayan her metni doğru sayar; KentOS false, no, off, 0 sözcüklerini yanlış okur",
+   "qgisSays": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "to_bool('0')",
+   "qgis": "to_bool('0')",
+   "value": [
+    "b",
+    false
+   ],
+   "rule": "QGIS'te '0' doğrudur; KentOS'ta yanlış",
+   "qgisSays": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "to_decimal('6°21''16.445\"')",
+   "qgis": "to_decimal('6°21''16.445\"')",
+   "value": [
+    "n",
+    6.354568055555555
+   ]
+  },
+  {
+   "source": "to_decimal('39°55′12.5″')",
+   "qgis": "to_decimal('39°55′12.5″')",
+   "value": [
+    "n",
+    39.920138888888886
+   ]
+  },
+  {
+   "source": "to_decimal('-32°30''')",
+   "qgis": "to_decimal('-32°30''')",
+   "value": [
+    "n",
+    -32.5
+   ]
+  },
+  {
+   "source": "ondalık_derece('32 30 00 B')",
+   "value": [
+    "n",
+    -32.5
+   ],
+   "rule": "B (batı) eksidir"
+  },
+  {
+   "source": "ondalık_derece('39 55 12,5 K')",
+   "value": [
+    "n",
+    39.920138888888886
+   ],
+   "rule": "virgüllü ondalık, K (kuzey)"
+  },
+  {
+   "source": "ondalık_derece('abc')",
+   "value": null,
+   "rule": "sayısı olmayan metin boş"
+  },
+  {
+   "source": "to_dms(6.3545681, 'x', 3)",
+   "qgis": "to_dms(6.3545681, 'x', 3)",
+   "value": [
+    "t",
+    "6°21′16.445″"
+   ]
+  },
+  {
+   "source": "to_dms(-6.3545681, 'x', 3)",
+   "qgis": "to_dms(-6.3545681, 'x', 3)",
+   "value": [
+    "t",
+    "-6°21′16.445″"
+   ]
+  },
+  {
+   "source": "to_dms(-39.92, 'y', 1, 'suffix')",
+   "qgis": "to_dms(-39.92, 'y', 1, 'suffix')",
+   "value": [
+    "t",
+    "39°55′12.0″S"
+   ]
+  },
+  {
+   "source": "to_dms(32.85, 'x', 2, 'aligned')",
+   "qgis": "to_dms(32.85, 'x', 2, 'aligned')",
+   "value": [
+    "t",
+    "32°51′00.00″E"
+   ]
+  },
+  {
+   "source": "to_dms(10.99999999, 'y', 2)",
+   "qgis": "to_dms(10.99999999, 'y', 2)",
+   "value": [
+    "t",
+    "11°0′0.00″"
+   ]
+  },
+  {
+   "source": "to_dms(190, 'x', 0, 'suffix')",
+   "qgis": "to_dms(190, 'x', 0, 'suffix')",
+   "value": [
+    "t",
+    "170°0′0″W"
+   ]
+  },
+  {
+   "source": "to_dms(0.0000001, 'x', 2)",
+   "qgis": "to_dms(0.0000001, 'x', 2)",
+   "value": [
+    "t",
+    "0°0′0.00″"
+   ]
+  },
+  {
+   "source": "derece_dakika_saniye(-39.92, 'y', 1, 'sonek')",
+   "value": [
+    "t",
+    "39°55′12.0″G"
+   ],
+   "rule": "Türkçe yarıküre harfi G (güney)"
+  },
+  {
+   "source": "to_dm(6.1545681, 'y', 4)",
+   "qgis": "to_dm(6.1545681, 'y', 4)",
+   "value": [
+    "t",
+    "6°9.2741′"
+   ]
+  },
+  {
+   "source": "to_dm(-3.5, 'x', 1, 'suffix')",
+   "qgis": "to_dm(-3.5, 'x', 1, 'suffix')",
+   "value": [
+    "t",
+    "3°30.0′W"
+   ]
+  },
+  {
+   "source": "to_dm(1.999999, 'x', 2, 'aligned')",
+   "qgis": "to_dm(1.999999, 'x', 2, 'aligned')",
+   "value": [
+    "t",
+    "2°00.00′E"
+   ]
+  },
+  {
+   "source": "to_base64('KentOS')",
+   "qgis": "to_base64('KentOS')",
+   "value": [
+    "t",
+    "S2VudE9T"
+   ]
+  },
+  {
+   "source": "to_base64('Çorum')",
+   "qgis": "to_base64('Çorum')",
+   "value": [
+    "t",
+    "w4dvcnVt"
+   ]
+  },
+  {
+   "source": "base64_çöz('w4dvcnVt')",
+   "value": [
+    "t",
+    "Çorum"
+   ],
+   "rule": "QGIS bayt dizisi verir; KentOS UTF-8 metni"
+  },
+  {
+   "source": "base64_çöz('!!')",
+   "value": null,
+   "rule": "Base64 olmayan metin boş"
+  },
+  {
+   "source": "md5('a')",
+   "qgis": "md5('a')",
+   "value": [
+    "t",
+    "0cc175b9c0f1b6a831c399e269772661"
+   ]
+  },
+  {
+   "source": "md5('Çorum')",
+   "qgis": "md5('Çorum')",
+   "value": [
+    "t",
+    "c15f0769833c6f77337a207f8ac3c739"
+   ]
+  },
+  {
+   "source": "sha256('a')",
+   "qgis": "sha256('a')",
+   "value": [
+    "t",
+    "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb"
+   ]
+  },
+  {
+   "source": "hash('Çorum', 'sha1')",
+   "qgis": "hash('Çorum', 'sha1')",
+   "value": [
+    "t",
+    "0fec2a9bc03b1a611e215eac4582a02935d59eaf"
+   ]
+  },
+  {
+   "source": "hash('a', 'sha224')",
+   "qgis": "hash('a', 'sha224')",
+   "value": [
+    "t",
+    "abd37534c7d9a2efb9465de931cd7055ffdb8879563ae98078d6d6d5"
+   ]
+  },
+  {
+   "source": "hash('a', 'sha384')",
+   "qgis": "hash('a', 'sha384')",
+   "value": [
+    "t",
+    "54a59b9f22b0b80880d8427e548b7c23abd873486e1f035dce9cd697e85175033caa88e6d57bc35efae0b5afd3145f31"
+   ]
+  },
+  {
+   "source": "hash('a', 'sha512')",
+   "qgis": "hash('a', 'sha512')",
+   "value": [
+    "t",
+    "1f40fc92da241694750979ee6cf582f2d5d7d28e18335de05abc54d0560e0f5302860c652bf08d560252aa5e74210546f369fbbbce8c12cfc7957b2652fe9a75"
+   ]
+  },
+  {
+   "source": "hash('a', 'md5')",
+   "qgis": "hash('a', 'md5')",
+   "value": [
+    "t",
+    "0cc175b9c0f1b6a831c399e269772661"
+   ]
+  },
+  {
+   "source": "özet('a', 'yok')",
+   "value": null,
+   "rule": "bilinmeyen yöntem boş"
+  },
+  {
+   "source": "clamp(1, 5, 3)",
+   "qgis": "clamp(1, 5, 3)",
+   "value": [
+    "n",
+    3.0
+   ]
+  },
+  {
+   "source": "clamp(1, -1, 3)",
+   "qgis": "clamp(1, -1, 3)",
+   "value": [
+    "n",
+    1.0
+   ]
+  },
+  {
+   "source": "clamp(1, 9, 3)",
+   "qgis": "clamp(1, 9, 3)",
+   "value": [
+    "n",
+    3.0
+   ]
+  },
+  {
+   "source": "scale_linear(5, 0, 10, 0, 100)",
+   "qgis": "scale_linear(5, 0, 10, 0, 100)",
+   "value": [
+    "n",
+    50.0
+   ]
+  },
+  {
+   "source": "scale_linear(15, 0, 10, 0, 100)",
+   "qgis": "scale_linear(15, 0, 10, 0, 100)",
+   "value": [
+    "n",
+    100.0
+   ]
+  },
+  {
+   "source": "scale_linear(2.5, 0, 10, 100, 0)",
+   "qgis": "scale_linear(2.5, 0, 10, 100, 0)",
+   "value": [
+    "n",
+    75.0
+   ]
+  },
+  {
+   "source": "scale_linear(5, 10, 0, 0, 100)",
+   "qgis": "scale_linear(5, 10, 0, 0, 100)",
+   "value": null
+  },
+  {
+   "source": "scale_exponential(5, 0, 10, 0, 100, 2)",
+   "qgis": "scale_exponential(5, 0, 10, 0, 100, 2)",
+   "value": [
+    "n",
+    3.0303030303030303
+   ]
+  },
+  {
+   "source": "scale_exponential(7, 0, 10, 0, 100, 0.5)",
+   "qgis": "scale_exponential(7, 0, 10, 0, 100, 0.5)",
+   "value": [
+    "n",
+    99.31573802541544
+   ]
+  },
+  {
+   "source": "scale_polynomial(5, 0, 10, 0, 100, 2)",
+   "qgis": "scale_polynomial(5, 0, 10, 0, 100, 2)",
+   "value": [
+    "n",
+    25.0
+   ]
+  },
+  {
+   "source": "scale_polynomial(-1, 0, 10, 0, 100, 2)",
+   "qgis": "scale_polynomial(-1, 0, 10, 0, 100, 2)",
+   "value": [
+    "n",
+    0.0
+   ]
+  },
+  {
+   "source": "ltrim('  a ')",
+   "qgis": "ltrim('  a ')",
+   "value": [
+    "t",
+    "a "
+   ]
+  },
+  {
+   "source": "rtrim('  a ')",
+   "qgis": "rtrim('  a ')",
+   "value": [
+    "t",
+    "  a"
+   ]
+  },
+  {
+   "source": "ltrim('xxaxx', 'x')",
+   "qgis": "ltrim('xxaxx', 'x')",
+   "value": [
+    "t",
+    "axx"
+   ]
+  },
+  {
+   "source": "rtrim('12.500', '0')",
+   "qgis": "rtrim('12.500', '0')",
+   "value": [
+    "t",
+    "12.5"
+   ]
+  },
+  {
+   "source": "repeat('ab', 3)",
+   "qgis": "repeat('ab', 3)",
+   "value": [
+    "t",
+    "ababab"
+   ]
+  },
+  {
+   "source": "repeat('ab', 0)",
+   "qgis": "repeat('ab', 0)",
+   "value": null
+  },
+  {
+   "source": "repeat('ab', -2)",
+   "qgis": "repeat('ab', -2)",
+   "value": null
+  },
+  {
+   "source": "reverse('Çağrı')",
+   "qgis": "reverse('Çağrı')",
+   "value": [
+    "t",
+    "ırğaÇ"
+   ]
+  },
+  {
+   "source": "title('kadastro parseli')",
+   "qgis": "title('kadastro parseli')",
+   "value": [
+    "t",
+    "Kadastro Parseli"
+   ]
+  },
+  {
+   "source": "title('a b')",
+   "qgis": "title('a b')",
+   "value": [
+    "t",
+    "a b"
+   ]
+  },
+  {
+   "source": "title('KIZILAY meydanı')",
+   "qgis": "title('KIZILAY meydanı')",
+   "value": [
+    "t",
+    "Kızılay Meydanı"
+   ],
+   "rule": "Türkçe küçük harf: I ı olur (QGIS i yazar)",
+   "qgisSays": [
+    "t",
+    "Kizilay Meydanı"
+   ]
+  },
+  {
+   "source": "başlık('istanbul caddesi')",
+   "value": [
+    "t",
+    "İstanbul Caddesi"
+   ],
+   "rule": "Türkçe büyük harf: i İ olur"
+  },
+  {
+   "source": "substr_count('1/2/3', '/')",
+   "qgis": "substr_count('1/2/3', '/')",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "substr_count('aaa', 'aa')",
+   "qgis": "substr_count('aaa', 'aa')",
+   "value": [
+    "n",
+    1.0
+   ]
+  },
+  {
+   "source": "substr_count('aaa', 'aa', true)",
+   "qgis": "substr_count('aaa', 'aa', true)",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "substr_count('aaa', '')",
+   "qgis": "substr_count('aaa', '')",
+   "value": [
+    "n",
+    0.0
+   ]
+  },
+  {
+   "source": "concat_ws('-', 'a', NULL, 'b')",
+   "qgis": "concat_ws('-', 'a', NULL, 'b')",
+   "value": [
+    "t",
+    "a-b"
+   ]
+  },
+  {
+   "source": "concat_ws('-', 'a', '', 'b')",
+   "qgis": "concat_ws('-', 'a', '', 'b')",
+   "value": [
+    "t",
+    "a--b"
+   ]
+  },
+  {
+   "source": "concat_ws('/', Ada, Parsel)",
+   "qgis": "concat_ws('/', \"Ada\", \"Parsel\")",
+   "value": [
+    "t",
+    "1245/12"
+   ]
+  },
+  {
+   "source": "format('%1 ada %2 parsel', Ada, Parsel)",
+   "qgis": "format('%1 ada %2 parsel', \"Ada\", \"Parsel\")",
+   "value": [
+    "t",
+    "1245 ada 12 parsel"
+   ]
+  },
+  {
+   "source": "format('%2 %1', 'a', 'b')",
+   "qgis": "format('%2 %1', 'a', 'b')",
+   "value": [
+    "t",
+    "b a"
+   ]
+  },
+  {
+   "source": "format('%2', 'a')",
+   "qgis": "format('%2', 'a')",
+   "value": [
+    "t",
+    "a"
+   ]
+  },
+  {
+   "source": "format('%1%1', 'x')",
+   "qgis": "format('%1%1', 'x')",
+   "value": [
+    "t",
+    "xx"
+   ]
+  },
+  {
+   "source": "char(176)",
+   "qgis": "char(176)",
+   "value": [
+    "t",
+    "°"
+   ]
+  },
+  {
+   "source": "char(305)",
+   "qgis": "char(305)",
+   "value": [
+    "t",
+    "ı"
+   ]
+  },
+  {
+   "source": "ascii('Ş')",
+   "qgis": "ascii('Ş')",
+   "value": [
+    "n",
+    350.0
+   ]
+  },
+  {
+   "source": "ascii('')",
+   "qgis": "ascii('')",
+   "value": null
+  },
+  {
+   "source": "unaccent('Şişlİ çğü')",
+   "qgis": "unaccent('Şişlİ çğü')",
+   "value": [
+    "t",
+    "SislI cgu"
+   ]
+  },
+  {
+   "source": "unaccent('Ankara é à ñ')",
+   "qgis": "unaccent('Ankara é à ñ')",
+   "value": [
+    "t",
+    "Ankara e a n"
+   ]
+  },
+  {
+   "source": "aksansız('Iğdır Kızılay')",
+   "value": [
+    "t",
+    "Igdir Kizilay"
+   ],
+   "rule": "ı da i olur (QGIS ı'yı bırakır)"
+  },
+  {
+   "source": "wordwrap('Atatürk Bulvarı No 12', 12)",
+   "qgis": "wordwrap('Atatürk Bulvarı No 12', 12)",
+   "value": [
+    "t",
+    "Atatürk\nBulvarı No\n12"
+   ]
+  },
+  {
+   "source": "wordwrap('Atatürk Bulvarı No 12', -12)",
+   "qgis": "wordwrap('Atatürk Bulvarı No 12', -12)",
+   "value": [
+    "t",
+    "Atatürk Bulvarı\nNo 12"
+   ]
+  },
+  {
+   "source": "wordwrap('aaa bbb ccc ddd', 5)",
+   "qgis": "wordwrap('aaa bbb ccc ddd', 5)",
+   "value": [
+    "t",
+    "aaa\nbbb\nccc\nddd"
+   ]
+  },
+  {
+   "source": "wordwrap('UNIVERSITY OF QGIS', -3)",
+   "qgis": "wordwrap('UNIVERSITY OF QGIS', -3)",
+   "value": [
+    "t",
+    "UNIVERSITY\nOF QGIS"
+   ]
+  },
+  {
+   "source": "wordwrap('UNIVERSITY OF QGIS', 13)",
+   "qgis": "wordwrap('UNIVERSITY OF QGIS', 13)",
+   "value": [
+    "t",
+    "UNIVERSITY OF\nQGIS"
+   ]
+  },
+  {
+   "source": "wordwrap('a,b,c,d', 3, ',')",
+   "qgis": "wordwrap('a,b,c,d', 3, ',')",
+   "value": [
+    "t",
+    "a,b\nc,d"
+   ]
+  },
+  {
+   "source": "wordwrap('kısa', 20)",
+   "qgis": "wordwrap('kısa', 20)",
+   "value": [
+    "t",
+    "kısa"
+   ]
+  },
+  {
+   "source": "levenshtein('kittens', 'mitten')",
+   "qgis": "levenshtein('kittens', 'mitten')",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "levenshtein('A', 'a')",
+   "qgis": "levenshtein('A', 'a')",
+   "value": [
+    "n",
+    1.0
+   ]
+  },
+  {
+   "source": "levenshtein('Kızılay', 'Kizilay')",
+   "qgis": "levenshtein('Kızılay', 'Kizilay')",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "hamming_distance('abc', 'abd')",
+   "qgis": "hamming_distance('abc', 'abd')",
+   "value": [
+    "n",
+    1.0
+   ]
+  },
+  {
+   "source": "hamming_distance('abc', 'ab')",
+   "qgis": "hamming_distance('abc', 'ab')",
+   "value": null
+  },
+  {
+   "source": "longest_common_substring('ABABC', 'BABCA')",
+   "qgis": "longest_common_substring('ABABC', 'BABCA')",
+   "value": [
+    "t",
+    "BABC"
+   ]
+  },
+  {
+   "source": "longest_common_substring('Abc', 'aBC')",
+   "qgis": "longest_common_substring('Abc', 'aBC')",
+   "value": [
+    "t",
+    ""
+   ]
+  },
+  {
+   "source": "longest_common_substring('Kızılay', 'Kızılırmak')",
+   "qgis": "longest_common_substring('Kızılay', 'Kızılırmak')",
+   "value": [
+    "t",
+    "Kızıl"
+   ]
+  },
+  {
+   "source": "nullif(5, 5)",
+   "qgis": "nullif(5, 5)",
+   "value": null
+  },
+  {
+   "source": "nullif(Nitelik, 'Arsa')",
+   "qgis": "nullif(\"Nitelik\", 'Arsa')",
+   "value": null
+  },
+  {
+   "source": "nullif(Nitelik, 'Yol')",
+   "qgis": "nullif(\"Nitelik\", 'Yol')",
+   "value": [
+    "t",
+    "Arsa"
+   ]
+  },
+  {
+   "source": "array_all(array(1, 2, 3), array(2, 3))",
+   "qgis": "array_all(array(1, 2, 3), array(2, 3))",
+   "value": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "array_all(array(1, 2, 3), array(2, 4))",
+   "qgis": "array_all(array(1, 2, 3), array(2, 4))",
+   "value": [
+    "b",
+    false
+   ]
+  },
+  {
+   "source": "array_count(array('a', 'b', 'a'), 'a')",
+   "qgis": "array_count(array('a', 'b', 'a'), 'a')",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "array_insert(array(1, 2), 1, 9)",
+   "qgis": "array_insert(array(1, 2), 1, 9)",
+   "value": [
+    "j",
+    [
+     1,
+     9,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_insert(array(1, 2), 2, 9)",
+   "qgis": "array_insert(array(1, 2), 2, 9)",
+   "value": [
+    "j",
+    [
+     1,
+     2,
+     9
+    ]
+   ]
+  },
+  {
+   "source": "dizi_araya(dizi(1, 2), -1, 9)",
+   "value": [
+    "j",
+    [
+     9,
+     1,
+     2
+    ]
+   ],
+   "rule": "eksi yer başa ekler (QGIS'te çöker)"
+  },
+  {
+   "source": "dizi_araya(dizi(1, 2), 5, 9)",
+   "value": [
+    "j",
+    [
+     1,
+     2,
+     9
+    ]
+   ],
+   "rule": "uzunluğu aşan yer sona ekler (QGIS'te çöker)"
+  },
+  {
+   "source": "array_prepend(array(1, 2), 0)",
+   "qgis": "array_prepend(array(1, 2), 0)",
+   "value": [
+    "j",
+    [
+     0,
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_remove_at(array(1, 2, 3), -1)",
+   "qgis": "array_remove_at(array(1, 2, 3), -1)",
+   "value": [
+    "j",
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_remove_at(array(1, 2, 3), 0)",
+   "qgis": "array_remove_at(array(1, 2, 3), 0)",
+   "value": [
+    "j",
+    [
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "source": "array_remove_at(array(1, 2, 3), 7)",
+   "qgis": "array_remove_at(array(1, 2, 3), 7)",
+   "value": [
+    "j",
+    [
+     1,
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "source": "array_remove_all(array('a', 'b', 'a'), 'a')",
+   "qgis": "array_remove_all(array('a', 'b', 'a'), 'a')",
+   "value": [
+    "j",
+    [
+     "b"
+    ]
+   ]
+  },
+  {
+   "source": "array_replace(array('a', 'b', 'c'), 'b', 'x')",
+   "qgis": "array_replace(array('a', 'b', 'c'), 'b', 'x')",
+   "value": [
+    "j",
+    [
+     "a",
+     "x",
+     "c"
+    ]
+   ]
+  },
+  {
+   "source": "array_replace(array('a', 'b', 'c'), array('a', 'c'), array('x', 'y'))",
+   "qgis": "array_replace(array('a', 'b', 'c'), array('a', 'c'), array('x', 'y'))",
+   "value": [
+    "j",
+    [
+     "x",
+     "b",
+     "y"
+    ]
+   ]
+  },
+  {
+   "source": "array_replace(array('a', 'b', 'c'), array('a', 'c'), 'z')",
+   "qgis": "array_replace(array('a', 'b', 'c'), array('a', 'c'), 'z')",
+   "value": [
+    "j",
+    [
+     "z",
+     "b",
+     "z"
+    ]
+   ]
+  },
+  {
+   "source": "array_replace(array('a', 'b'), map('a', 1, 'b', 2))",
+   "qgis": "array_replace(array('a', 'b'), map('a', 1, 'b', 2))",
+   "value": [
+    "j",
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_intersect(array(1, 2), array(2, 3))",
+   "qgis": "array_intersect(array(1, 2), array(2, 3))",
+   "value": [
+    "b",
+    true
+   ]
+  },
+  {
+   "source": "array_intersect(array(1, 2), array(4, 3))",
+   "qgis": "array_intersect(array(1, 2), array(4, 3))",
+   "value": [
+    "b",
+    false
+   ]
+  },
+  {
+   "source": "array_majority(array(1, 1, 2))",
+   "qgis": "array_majority(array(1, 1, 2))",
+   "value": [
+    "j",
+    [
+     1
+    ]
+   ]
+  },
+  {
+   "source": "array_majority(array(1, 1, 2, 2, 3))",
+   "qgis": "array_majority(array(1, 1, 2, 2, 3))",
+   "value": [
+    "j",
+    [
+     1,
+     2
+    ]
+   ],
+   "rule": "öğeler ilk geçtikleri sırayla (QGIS'te karma tablonun sırası)",
+   "qgisSays": [
+    "j",
+    [
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_majority(array(1, 1, 2, 2, 3), 'median')",
+   "qgis": "array_majority(array(1, 1, 2, 2, 3), 'median')",
+   "value": [
+    "n",
+    1.5
+   ]
+  },
+  {
+   "source": "array_majority(array(1, 2, 2), 'real_majority')",
+   "qgis": "array_majority(array(1, 2, 2), 'real_majority')",
+   "value": [
+    "n",
+    2.0
+   ]
+  },
+  {
+   "source": "array_majority(array(1, 2, 3), 'real_majority')",
+   "qgis": "array_majority(array(1, 2, 3), 'real_majority')",
+   "value": null
+  },
+  {
+   "source": "array_minority(array(1, 1, 2))",
+   "qgis": "array_minority(array(1, 1, 2))",
+   "value": [
+    "j",
+    [
+     2
+    ]
+   ]
+  },
+  {
+   "source": "array_minority(array(1, 1, 2, 2, 3), 'real_minority')",
+   "qgis": "array_minority(array(1, 1, 2, 2, 3), 'real_minority')",
+   "value": [
+    "j",
+    [
+     1,
+     2,
+     3
+    ]
+   ],
+   "rule": "öğeler ilk geçtikleri sırayla (QGIS'te karma tablonun sırası)",
+   "qgisSays": [
+    "j",
+    [
+     1,
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "source": "array_median(array(1, 3, 2, 4))",
+   "qgis": "array_median(array(1, 3, 2, 4))",
+   "value": [
+    "n",
+    2.5
+   ]
+  },
+  {
+   "source": "array_median(array(5, 'a', 1))",
+   "qgis": "array_median(array(5, 'a', 1))",
+   "value": [
+    "n",
+    3.0
+   ]
+  },
+  {
+   "source": "generate_series(1, 5, 2)",
+   "qgis": "generate_series(1, 5, 2)",
+   "value": [
+    "j",
+    [
+     1.0,
+     3.0,
+     5.0
+    ]
+   ]
+  },
+  {
+   "source": "generate_series(5, 1, -2)",
+   "qgis": "generate_series(5, 1, -2)",
+   "value": [
+    "j",
+    [
+     5.0,
+     3.0,
+     1.0
+    ]
+   ]
+  },
+  {
+   "source": "generate_series(1, 3)",
+   "qgis": "generate_series(1, 3)",
+   "value": [
+    "j",
+    [
+     1.0,
+     2.0,
+     3.0
+    ]
+   ]
+  },
+  {
+   "source": "generate_series(5, 1)",
+   "qgis": "generate_series(5, 1)",
+   "value": null
+  },
+  {
+   "source": "map_concat(map('a', 1), map('b', 2))",
+   "qgis": "map_concat(map('a', 1), map('b', 2))",
+   "value": [
+    "j",
+    {
+     "a": 1,
+     "b": 2
+    }
+   ]
+  },
+  {
+   "source": "map_concat(map('a', 1, 'b', 2), map('b', 3))",
+   "qgis": "map_concat(map('a', 1, 'b', 2), map('b', 3))",
+   "value": [
+    "j",
+    {
+     "a": 1,
+     "b": 3
+    }
+   ]
+  },
+  {
+   "source": "map_prefix_keys(map('a', 1, 'b', 'x'), 'k_')",
+   "qgis": "map_prefix_keys(map('a', 1, 'b', 'x'), 'k_')",
+   "value": [
+    "j",
+    {
+     "k_a": 1,
+     "k_b": "x"
+    }
+   ]
+  },
+  {
+   "source": "url_encode(map('a', 'x y', 'b', 1))",
+   "qgis": "url_encode(map('a', 'x y', 'b', 1))",
+   "value": [
+    "t",
+    "a=x%20y&b=1"
+   ]
+  },
+  {
+   "source": "url_encode(map('il', 'Çorum'))",
+   "qgis": "url_encode(map('il', 'Çorum'))",
+   "value": [
+    "t",
+    "il=%C3%87orum"
+   ]
+  },
+  {
+   "source": "epoch(to_datetime('2020-01-01T00:00:00'))",
+   "qgis": "epoch(to_datetime('2020-01-01T00:00:00'))",
+   "value": [
+    "n",
+    1577836800000.0
+   ]
+  },
+  {
+   "source": "epoch(to_date('2026-10-19'))",
+   "qgis": "epoch(to_datetime('2026-10-19T00:00:00'))",
+   "value": [
+    "n",
+    1792368000000.0
+   ]
+  },
+  {
+   "source": "datetime_from_epoch(1577836800000)",
+   "qgis": "datetime_from_epoch(1577836800000)",
+   "value": [
+    "t",
+    "2020-01-01"
+   ]
+  },
+  {
+   "source": "datetime_from_epoch(86400500)",
+   "qgis": "datetime_from_epoch(86400500)",
+   "value": [
+    "t",
+    "1970-01-02T00:00:00.500"
+   ]
+  },
+  {
+   "source": "make_time(12, 30, 15.5)",
+   "qgis": "make_time(12, 30, 15.5)",
+   "value": [
+    "t",
+    "12:30:15.500"
+   ]
+  },
+  {
+   "source": "make_time(9, 5, 0)",
+   "qgis": "make_time(9, 5, 0)",
+   "value": [
+    "t",
+    "09:05:00"
+   ]
+  },
+  {
+   "source": "to_time('12:30:15')",
+   "qgis": "to_time('12:30:15')",
+   "value": [
+    "t",
+    "12:30:15"
+   ]
+  },
+  {
+   "source": "saat_yap('9:05')",
+   "value": [
+    "t",
+    "09:05:00"
+   ],
+   "rule": "saniyesiz saat metni"
+  },
+  {
+   "source": "saat_yap(25, 0, 0)",
+   "value": null,
+   "rule": "24 ve üstü saat boş"
+  },
+  {
+   "source": "rastgele(1, 100, 7)",
+   "value": [
+    "n",
+    99.0
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "rand(1, 6, 42)",
+   "value": [
+    "n",
+    5.0
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "rand(-5, 5, 2.5)",
+   "value": [
+    "n",
+    -1.0
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "rand(10, 1, 3)",
+   "value": null,
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "randf(0, 1, 42)",
+   "value": [
+    "n",
+    0.6776231762504039
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "rastgele_ondalık(10, 20, 7)",
+   "value": [
+    "n",
+    19.842891349762333
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  },
+  {
+   "source": "rand(1, 100, Ada)",
+   "value": [
+    "n",
+    46.0
+   ],
+   "rule": "SplitMix64 tohumla (docs/adr/0600 §3); QGIS'in üretecinden ayrı"
+  }
+ ]
+}

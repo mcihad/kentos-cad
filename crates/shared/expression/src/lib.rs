@@ -44,6 +44,7 @@ pub mod js;
 mod kernels;
 pub mod lexer;
 pub mod library;
+pub mod more;
 pub mod parser;
 pub mod patterns;
 pub mod program;

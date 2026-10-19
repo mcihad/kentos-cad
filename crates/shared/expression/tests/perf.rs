@@ -748,3 +748,51 @@ fn measures_the_additions() {
     println!("\n{} · {}", machine(), output("rustc", &["--version"]));
     assert!(over.is_empty(), "bütçeyi aşanlar: {over:?}");
 }
+
+/// docs/adr/0600's functions on 10⁵ objects, every value read back: p50 and p95 of 10 runs after 3.
+#[test]
+#[ignore = "a measurement: cargo test --release -p kentos-expression --test perf measures_docs_adr_0600 -- --ignored --nocapture"]
+fn measures_docs_adr_0600() {
+    let n = env_list("EXPRESSION_N", &[100_000])[0];
+    let o = objects(n);
+    let cases: [(&str, As); 10] = [
+        ("başlık(Nitelik || ' parseli')", As::Text),
+        ("biçimle('%1 ada %2 parsel', 104, Parsel)", As::Text),
+        ("ayraçla_birleştir('/', 104, Parsel)", As::Text),
+        ("aksansız('Şişli ' || Nitelik)", As::Text),
+        ("sınırla(0, $alan / 10, 50)", As::Number),
+        ("ölçekle_doğrusal($alan, 0, 1000, 1, 10)", As::Number),
+        ("derece_dakika_saniye($alan / 25, 'y', 2)", As::Text),
+        ("rastgele(1, 100)", As::Number),
+        ("levenshtein(Nitelik, 'Arsa')", As::Number),
+        (
+            "dizi_say(dizi(Nitelik, 'Arsa', 'Tarla'), 'Arsa')",
+            As::Number,
+        ),
+    ];
+    println!("\n{n} nesne, docs/adr/0600'ün işlevleri");
+    for (source, want) in cases {
+        let e = compile(source).unwrap_or_else(|e| panic!("{source}: {}", e.text()));
+        let (texts, lens) = table(&o, &e.fields);
+        let input = || RowsInput {
+            n,
+            texts: &texts,
+            text_lens: &lens,
+            numbers: &[],
+            measures: if e.needs.measured { &o.measures } else { &[] },
+            scale: f64::NAN,
+        };
+        let mut ms = Vec::new();
+        for run in 0..13 {
+            let t = Instant::now();
+            let c = evaluate_rows(&e, &input(), want).unwrap_or_else(|m| panic!("{m}"));
+            let elapsed = t.elapsed().as_secs_f64() * 1000.0;
+            assert_eq!(c.kinds.len(), n, "{source}");
+            if run >= 3 {
+                ms.push(elapsed);
+            }
+        }
+        let (p50, p95) = quantiles(&mut ms);
+        println!("{source:<52} p50 {p50:7.2} ms, p95 {p95:7.2} ms");
+    }
+}

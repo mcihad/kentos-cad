@@ -8,6 +8,7 @@
 use crate::js::text;
 
 mod extras;
+mod more;
 
 /// The expression builder's groups (docs/adr/0100 §5), in the tree's order.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -681,6 +682,62 @@ pub enum Func {
     Nearest,
     OverlapArea,
     OverlapLength,
+    // docs/adr/0600: conversions.
+    ToBool,
+    ToDecimal,
+    ToDms,
+    ToDm,
+    ToBase64,
+    FromBase64,
+    Hash,
+    Md5,
+    Sha256,
+    // Random (a call without a seed is fed one when compiled, docs/adr/0600 §3).
+    Rand,
+    RandF,
+    Uuid,
+    // Math.
+    Clamp,
+    ScaleLinear,
+    ScaleExponential,
+    ScalePolynomial,
+    // Text.
+    Ltrim,
+    Rtrim,
+    Repeat,
+    Reverse,
+    Title,
+    SubstrCount,
+    ConcatWs,
+    Format,
+    Char,
+    Ascii,
+    Unaccent,
+    WordWrap,
+    Levenshtein,
+    Hamming,
+    CommonPart,
+    NullIf,
+    // Arrays and maps.
+    ArrayAll,
+    ArrayCount,
+    ArrayInsert,
+    ArrayPrepend,
+    ArrayRemoveAt,
+    ArrayRemoveAll,
+    ArrayReplace,
+    ArrayIntersect,
+    ArrayMajority,
+    ArrayMinority,
+    ArrayMedian,
+    Series,
+    MapConcat,
+    MapPrefixKeys,
+    UrlEncode,
+    // Dates.
+    Epoch,
+    FromEpoch,
+    MakeTime,
 }
 
 /// Where a function's work is done.
@@ -698,6 +755,8 @@ pub enum Family {
     Clock,
     /// They look at other objects: aggregates, spatial relations, `katmandan` (`world`).
     World,
+    /// docs/adr/0600's (`more`).
+    More,
 }
 
 impl Func {
@@ -718,6 +777,14 @@ impl Func {
             | ConcatValues | ArrayAgg | Aggregate | FromLayer | Intersects | Encloses | Inside
             | CenterIn | IntersectCount | Intersecting | Distance | Nearest | OverlapArea
             | OverlapLength => Family::World,
+            ToBool | ToDecimal | ToDms | ToDm | ToBase64 | FromBase64 | Hash | Md5 | Sha256
+            | Rand | RandF | Uuid | Clamp | ScaleLinear | ScaleExponential | ScalePolynomial
+            | Ltrim | Rtrim | Repeat | Reverse | Title | SubstrCount | ConcatWs | Format | Char
+            | Ascii | Unaccent | WordWrap | Levenshtein | Hamming | CommonPart | NullIf
+            | ArrayAll | ArrayCount | ArrayInsert | ArrayPrepend | ArrayRemoveAt
+            | ArrayRemoveAll | ArrayReplace | ArrayIntersect | ArrayMajority | ArrayMinority
+            | ArrayMedian | Series | MapConcat | MapPrefixKeys | UrlEncode | Epoch | FromEpoch
+            | MakeTime => Family::More,
             _ => Family::Base,
         }
     }
@@ -741,24 +808,27 @@ pub struct FuncDef {
     pub examples: &'static [(&'static str, &'static str)],
 }
 
-/// Every function: the language's first ones, then docs/adr/0214's.
+/// Every function: the language's first ones, then docs/adr/0214's, then docs/adr/0600's.
 pub static FUNCTIONS: &[FuncDef] = &ALL_FUNCTIONS;
 
-const ALL_FUNCTIONS: [FuncDef; BASE.len() + extras::ALL.len()] = join(BASE, extras::ALL);
+static ALL_FUNCTIONS: [FuncDef; BASE.len() + extras::ALL.len() + more::ALL.len()] =
+    join([BASE, extras::ALL, more::ALL]);
 
-/// Two tables as one, at compile time.
-const fn join<const N: usize>(a: &[FuncDef], b: &[FuncDef]) -> [FuncDef; N] {
-    assert!(a.len() + b.len() == N);
-    let mut out = [a[0]; N];
-    let mut i = 0;
-    while i < a.len() {
-        out[i] = a[i];
-        i += 1;
+/// The tables as one, at compile time.
+const fn join<const N: usize>(tables: [&[FuncDef]; 3]) -> [FuncDef; N] {
+    let mut out = [tables[0][0]; N];
+    let mut at = 0;
+    let mut t = 0;
+    while t < tables.len() {
+        let mut i = 0;
+        while i < tables[t].len() {
+            out[at] = tables[t][i];
+            at += 1;
+            i += 1;
+        }
+        t += 1;
     }
-    while i < N {
-        out[i] = b[i - a.len()];
-        i += 1;
-    }
+    assert!(at == N);
     out
 }
 

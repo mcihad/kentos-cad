@@ -33,6 +33,7 @@ pub(crate) fn resolve(root: Node, fields: &[String], schema: &Schema) -> Resolve
         schema,
         world: Vec::new(),
         unknown: Vec::new(),
+        random: 0,
     };
     let root = r.node(root);
     let (root, fields) = own_fields(root, fields);
@@ -49,6 +50,8 @@ struct Resolver<'s> {
     schema: &'s Schema,
     world: Vec<WorldCall>,
     unknown: Vec<String>,
+    /// The unseeded random calls met so far (docs/adr/0600 §3).
+    random: u32,
 }
 
 impl Resolver<'_> {
@@ -67,6 +70,41 @@ impl Resolver<'_> {
         Node::Lit(Value::Null)
     }
 
+    /// A random call: with a seed as it is; without, given the call's own number (the run's moment and its place)
+    /// and the object's position, so it is neither folded nor shared and draws anew per object and per run
+    /// (docs/adr/0600 §3).
+    fn random(&mut self, f: Func, args: Vec<Node>) -> Node {
+        let mut args: Vec<Node> = args.into_iter().map(|a| self.node(a)).collect();
+        let seeded = match f {
+            Func::Uuid => false,
+            _ => args.len() >= 3,
+        };
+        if seeded {
+            return Node::Call(f, args);
+        }
+        let moment = self
+            .schema
+            .variable("simdi")
+            .map(|v| crate::value::to_text(&v.value).into_owned());
+        self.random += 1;
+        let site = crate::more::site_seed(moment.as_deref(), self.random);
+        if f == Func::RandF {
+            while args.len() < 2 {
+                args.push(Node::Lit(Value::Num(if args.is_empty() {
+                    0.0
+                } else {
+                    1.0
+                })));
+            }
+        }
+        if f != Func::Uuid {
+            args.push(Node::Lit(Value::Null));
+        }
+        args.push(Node::Lit(Value::Num(site)));
+        args.push(Node::Var(Var::Index));
+        Node::Call(f, args)
+    }
+
     fn node(&mut self, n: Node) -> Node {
         let mut b = |n: Box<Node>| Box::new(self.node(*n));
         match n {
@@ -74,6 +112,7 @@ impl Resolver<'_> {
             Node::Call(Func::Now, _) => self.at("simdi"),
             Node::Call(Func::Today, _) => self.at("tarih"),
             Node::Call(f, args) if f.family() == Family::World => self.world(f, args),
+            Node::Call(f @ (Func::Rand | Func::RandF | Func::Uuid), args) => self.random(f, args),
             Node::Call(f, args) => Node::Call(f, args.into_iter().map(|a| self.node(a)).collect()),
             Node::Not(a) => Node::Not(b(a)),
             Node::Neg(a) => Node::Neg(b(a)),
