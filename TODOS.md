@@ -218,6 +218,13 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-21` atlas PDF'i (ADR 0534, 19 Ekim): web'de gerekenler: `file.export.atlas`'ın işleyicisi (PDF çekirdeği `PdfInputs.atlas` ve
+  `keywords` WASM'da hazır; sayfa başına harita içeriği, tablo ve lejant web'in çizicisiyle), Atlas penceresi (tanım, tema, zaman,
+  önizleme, pin), pin'in WASM'da hesabı; kâğıt çıktısının süzgeç kuralı (`vector_content`'in `view_shown`'ı) web'in harita içeriğinde;
+  `fixtures/atlas/v1/cases.json`'un durumları.
+- [ ] `CBS-18` etiket iğneleri ve yerleşimin kararlılığı (ADR 0533, 19 Ekim): web'de gerekenler: etiket motorunun `Prior`'u web'in
+  görünümünde (WASM'da önceki yerleşim), `cad.labels.report`'un işleyicisi ve Etiketler penceresinde Denetle; bağlı katman web'e gelince
+  `SourceLink.key`, `Key` ve `Extent` işlemleri.
 - [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (ADR 0529, 19 Ekim): web'de gerekenler: `cad.processing.batch` işleyicisi
   (product/, ortak durumlar `fixtures/commands/v1/cad.processing.batch.json`), `cad.processing.run`'ın `model:` kimliği ve `record`'u,
   `cad.processing.tools`'un `models` alanı, İşlemler penceresinde Toplu çalıştır tablosu ve kayıt paneli, Geçmiş kartlarında kayıt
@@ -1999,6 +2006,19 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-21` atlas PDF'i (dilim): `file.export.atlas` (sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu
+  ve lejantıyla; GeoPDF), çıktı çizimin parçalarının damgalarına, katmanların özetine ve bağlı kaynağın SHA-256'sına sabitlenir
+  (`pin_mismatch`, `source_changed`, `source_stale`, `source_unsaved`), tema, zaman ve sistem açık, süzgeç dışı nesne ve formda `redact`
+  alan çıktıda yok (kâğıdın harita içeriğindeki süzgeç sızıntısı da kapandı), çıktının kaydı `Keywords`'te; masaüstünde Atlası PDF yap
+  penceresi ve Pafta kipinin Atlas düğmesi, Python, MCP. Kalan: sağlayıcıdan sayfa sayfa okuma ve büyük katman ölçeği (CBS-02, CBS-42),
+  haritaların yazıları, nesneye kırp, başka sistemde basma, kalıcı alan izni (CBS-20), yan kayıt dosyası ve küçük resimler. — **19 Ekim,
+  [ADR 0534](docs/adr/0534-atlas-pdf-pinned-revision.md).**
+- [ ] `CBS-18` etiket iğneleri bağlı katmanda ve yerleşimin kararlılığı (dilim): bağın anahtarı (`SourceLink.key`) iğneleri yeniden
+  yazılan tabloda izler, taşınan ve kaybolan iğneler nedeniyle söylenir (`label_pins_moved`, `label_pins_lost`, `key_not_unique`;
+  `Extent` ve `Key` işlemleri), motor önceki yerleşimi tercih eder (`Prior`; 24 kaydırmada 73 → 0 kayma), önbellek kaynağın sürümünü
+  sayar, ekran ve PDF aynı `label_layout`, salt okunur `cad.labels.report` ve Etiketler'de Denetle; yüklü parçanın sınırı söylenir. Kalan:
+  bağ ayarının geri alınması, alanın dışındaki iğnenin parkı, anahtarsız yeniden yazım, anahtar alanının arayüzü, Denetle'nin pafta ölçeği
+  arayüzü. — **19 Ekim, [ADR 0533](docs/adr/0533-label-pins-bound-layers-and-stability.md).**
 - [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (dilim): `cad.processing.batch` (araç ya da model, parametre tablosunun satırları,
   `cad.processing.run`'ın aynı çalıştırıcısı, tek geri alma adımı, ya hep ya hiç; satır retleri satır yoluyla; iş olarak, satırlar
   arasında durdurma), modeller `cad.processing.run` ve `.batch`'te `model:` kimliğiyle (orta adım durunca ilk adım geri alınır;

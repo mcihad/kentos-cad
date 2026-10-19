@@ -276,6 +276,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-18 — Etiket pin'lerini dış kaynak kimliğiyle koru; sayfa sınırı yerleşimini doğrula — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0533](../docs/adr/0533-label-pins-bound-layers-and-stability.md)): bağlı katmanda iğneler bağın anahtarıyla (`SourceLink.key`) kararlı kayda bağlı kalır, taşınan ve kaybolan iğneler nedeniyle söylenir; motor önceki yerleşimi tercih eder (küçük kaydırmada sıçrama ölçüldü ve giderildi), önbellek kaynağın sürümünü ve çıktı ölçeğini sayar, ekran ile PDF aynı yerleşim; `cad.labels.report` çakışan, yerleşmeyen ve yinelenen etiketleri sayar; etiket ve engel sorgusunun yüklü parçayla sınırı söylenir. Kalan: sağlayıcı sayfalanırken parçanın dışındaki engeller, anahtarsız yeniden yazım, alanın dışındaki iğnenin parkı.*
+
   **Mevcut:** Kurallı etiket, engel, öncelik, eğri boyunca yazı, sabit pin ve yerleşmeyen etiket görünümü mevcut [K10]. PAL/Maplex benzeri bir motor daha kurmak yerine mevcut motor gerçek veriyle zorlanmalı.
 
   **Yapılacak kalan iş:** Mevcut etiket türü, line merge/repeat, callout, engel/öncelik ve pin araçlarını yeniden geliştirme. Provider sayfalanırken elle yerleştirme kayıtları kararlı feature ID'ye bağlı kalsın; etiket/engel sorgusu yalnız yüklü sayfayla sınırlanmasın. Sayfa/karolar arası yinelenme ve küçük kaydırmada toplu yerleşim sıçraması yeni provider senaryosunda ölçülüp giderilsin. Cache'e kaynak revision'ı ve hedef çıktı ölçeği dahil edilsin. Doğrulama, yeni provider'ın aynı etiket motoruna aynı anlamdaki girdileri vermesine odaklansın.
@@ -303,6 +305,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/06/09/15/38/42. Milyon satırlı tabloda sıralama değişince tamamı istemciye inmeyebilmeli; kararlı cursor ve snapshot sayfa tekrarı/atlamasını önlemeli. Gizlenen kolonun değerleri kopyalama/export/AI üzerinden sızmamalı. Bin hücrelik yapıştırmada tek yanlış değer belirlenen atomiklik politikasına göre tüm işlemi durdurmalı veya açık satır raporu üretmeli; sessiz kısmi başarı olmamalı.
 
 - [ ] **CBS-21 — Mevcut atlas/GeoPDF'yi provider revision'ı ve export yetkisine bağla — P1**
+
+  *Kısmen (19 Ekim 2026; [ADR 0534](../docs/adr/0534-atlas-pdf-pinned-revision.md)): `file.export.atlas`: sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu ve lejantıyla tek PDF'te (GeoPDF); çıktı çizimin parçalarının damgalarına, katmanların özetine ve bağlı kaynağın SHA-256'sına sabitlenir (`pin_mismatch`, `source_changed`, `source_stale`); tema, zaman ve sistem açık ve `Keywords`'te kayıtlı; süzgeçten ve zamandan geçmeyen nesne ve `redact` alan çıktıda yok; yüz parsellik atlas poppler ve GDAL'la gerçek dosyada doğrulandı; masaüstünde Atlası PDF yap, Python ve MCP. Kalan: kapsam katmanını sağlayıcıdan sayfa sayfa okumak ve büyük katman ölçeği, haritaların yazıları, nesneye kırp, başka sistemde basma, kalıcı alan izni (CBS-20).*
 
   **Mevcut:** Ortak pafta/PDF/GeoPDF altyapısı ve `crates/shared/sheet/src/atlas.rs` içinde filtre/sıralama/adlandırma/ölçek seçen atlas planlayıcısı zaten var [K10]. Kalan kapsam yeni provider revision/tema bağları, izinli export ve açık kalan native orkestrasyondur; atlas hesapları sıfırdan yazılmayacak.
 
