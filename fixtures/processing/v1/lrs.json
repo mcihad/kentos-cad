@@ -7,7 +7,8 @@
   "ms",
   "ma",
   "mb",
-  "parts"
+  "parts",
+  "geometry"
  ],
  "documents": {},
  "files": {
@@ -137,11 +138,11 @@
        }
       ],
       "bulges": [
-       0.41421356237309503
+       0.4142135623730951
       ],
       "ms": [
        0.0,
-       15.707963267948966
+       15.707963267948967
       ]
      }
     ],
@@ -289,7 +290,7 @@
        }
       ],
       "bulges": [
-       0.41421356237309503
+       0.4142135623730951
       ],
       "ms": [
        1000.0,
@@ -1585,6 +1586,318 @@
     ],
     "outputs": {
      "count": 5
+    }
+   }
+  },
+  {
+   "id": "drift-points",
+   "title": "Olay kaymasını denetle, nokta: yerindeki ve toleransın içindeki olay söylenmez, kayan söylenir; olmayan rota, dışarıdaki ölçü ve sayı olmayan ölçü gösterilemez; çizgiler sayılır",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.eventDrift"
+   },
+   "values": {
+    "events": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "routes": {
+     "scope": "layer",
+     "layerId": "rota"
+    },
+    "routeField": "Rota",
+    "eventRoute": "Rota",
+    "eventKind": "point",
+    "measure": "Km",
+    "offset": "Ofset",
+    "side": "right",
+    "tolerance": 0.001,
+    "fix": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 olaydan 1 olay kaymış, 3 olay rotasında gösterilemiyor.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 rota kimliği birden çok kez var; ilki kullanıldı."
+     },
+     {
+      "level": "info",
+      "text": "5 nesne olay türünde değil; denetlenmedi."
+     },
+     {
+      "level": "warn",
+      "text": "1 olay rotanın verdiği yerden kaymış; Yerine taşı ile düzeltilir."
+     }
+    ],
+    "outputs": {
+     "count": 1,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Rota",
+       "Kayma",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "#71",
+        "D-100",
+        "5.000",
+        "Kaydı"
+       ],
+       [
+        "#72",
+        "D-999",
+        "",
+        "“D-999” rotası yok"
+       ],
+       [
+        "#73",
+        "D-100",
+        "",
+        "Ölçü rotanın dışında (0.000 – 150.000)"
+       ],
+       [
+        "#74",
+        "D-100",
+        "",
+        "“Km” sayı değil: x"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "drift-tolerance",
+   "title": "Olay kaymasını denetle: toleranstan az kayan olay yerinde sayılır",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.eventDrift"
+   },
+   "values": {
+    "events": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "routes": {
+     "scope": "layer",
+     "layerId": "rota"
+    },
+    "routeField": "Rota",
+    "eventRoute": "Rota",
+    "eventKind": "point",
+    "measure": "Km",
+    "offset": "Ofset",
+    "side": "right",
+    "tolerance": 6,
+    "fix": false
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "6 olaydan 0 olay kaymış, 3 olay rotasında gösterilemiyor.",
+    "undo": null,
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 rota kimliği birden çok kez var; ilki kullanıldı."
+     },
+     {
+      "level": "info",
+      "text": "5 nesne olay türünde değil; denetlenmedi."
+     }
+    ],
+    "outputs": {
+     "count": 0,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Rota",
+       "Kayma",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "#72",
+        "D-999",
+        "",
+        "“D-999” rotası yok"
+       ],
+       [
+        "#73",
+        "D-100",
+        "",
+        "Ölçü rotanın dışında (0.000 – 150.000)"
+       ],
+       [
+        "#74",
+        "D-100",
+        "",
+        "“Km” sayı değil: x"
+       ]
+      ]
+     }
+    }
+   }
+  },
+  {
+   "id": "drift-lines-fix",
+   "title": "Olay kaymasını denetle, çizgi, Yerine taşı: köşesi kayan çoklu çizgi ve kayan çizgi taşınır, kırıklı yola düşen çizgi nesnesi taşınamaz; yaylı rotadaki olay yerinde",
+   "document": "lrs.kcad",
+   "run": {
+    "tool": "linearRef.eventDrift"
+   },
+   "values": {
+    "events": {
+     "scope": "layer",
+     "layerId": "olay"
+    },
+    "routes": {
+     "scope": "layer",
+     "layerId": "rota"
+    },
+    "routeField": "Rota",
+    "eventRoute": "Rota",
+    "eventKind": "line",
+    "measure": "Km",
+    "offset": "",
+    "side": "right",
+    "tolerance": 0.001,
+    "fix": true,
+    "from": "Bas",
+    "to": "Son"
+   },
+   "expect": {
+    "status": "ok",
+    "summary": "5 olaydan 4 olay kaymış; 3 olay yerine taşındı.",
+    "undo": "Olay kaymasını denetle",
+    "log": [
+     {
+      "level": "warn",
+      "text": "1 rota kimliği birden çok kez var; ilki kullanıldı."
+     },
+     {
+      "level": "info",
+      "text": "6 nesne olay türünde değil; denetlenmedi."
+     }
+    ],
+    "updated": [
+     {
+      "id": 77,
+      "attrs": {
+       "Rota": "D-100",
+       "Bas": "20",
+       "Son": "120"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 488020.0,
+         "y": 4421000.0
+        },
+        {
+         "x": 488100.0,
+         "y": 4421000.0
+        },
+        {
+         "x": 488100.0,
+         "y": 4421020.0
+        }
+       ],
+       "ms": [
+        20.0,
+        100.0,
+        120.0
+       ]
+      }
+     },
+     {
+      "id": 78,
+      "attrs": {
+       "Rota": "D-300",
+       "Bas": "990",
+       "Son": "920"
+      },
+      "geometry": {
+       "a": {
+        "x": 488300.0,
+        "y": 4421010.0
+       },
+       "b": {
+        "x": 488300.0,
+        "y": 4421080.0
+       },
+       "ma": 990.0,
+       "mb": 920.0
+      }
+     },
+     {
+      "id": 80,
+      "attrs": {
+       "Rota": "D-200",
+       "Bas": "0",
+       "Son": "100"
+      },
+      "geometry": {
+       "pts": [
+        {
+         "x": 488000.0,
+         "y": 4421200.0
+        },
+        {
+         "x": 488100.0,
+         "y": 4421200.0
+        }
+       ],
+       "bulges": [
+        1.0
+       ],
+       "ms": [
+        0.0,
+        100.0
+       ]
+      }
+     }
+    ],
+    "outputs": {
+     "count": 4,
+     "table": {
+      "columns": [
+       "Nesne",
+       "Rota",
+       "Kayma",
+       "Durum"
+      ],
+      "rows": [
+       [
+        "#77",
+        "D-100",
+        "10.000",
+        "Yerine taşındı"
+       ],
+       [
+        "#78",
+        "D-300",
+        "1.000",
+        "Yerine taşındı"
+       ],
+       [
+        "#79",
+        "D-100",
+        "18.570",
+        "Kaydı; çizgi nesnesi kırıklı yola taşınamaz"
+       ],
+       [
+        "#80",
+        "D-200",
+        "50.000",
+        "Yerine taşındı"
+       ]
+      ]
+     }
     }
    }
   }

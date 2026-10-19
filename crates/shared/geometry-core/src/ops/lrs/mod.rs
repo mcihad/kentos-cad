@@ -571,6 +571,7 @@ mod area;
 mod calibrate;
 mod calls;
 mod create;
+mod drift;
 mod index;
 mod overlay;
 
@@ -581,5 +582,6 @@ pub use calls::{CalibrateOut, EventIn, EventOut, Located, calibrate_run, events_
 pub use create::{
     CreateRules, Created, LeftOut, Made, Method, Piece, PieceFault, Priority, create,
 };
+pub use drift::{line_drift, point_drift};
 pub use index::{Near, RouteIndex};
 pub use overlay::{Event, Overlaid, overlay};

@@ -118,6 +118,7 @@ pub fn tools() -> Vec<Tool> {
         lrs::locate::locate_along(),
         lrs::events::overlay_events(),
         lrs::routes::extract_measures(),
+        lrs::drift::event_drift(),
         // Nokta bulutu (docs/adr/0207 §7): the desktop's; the web's side waits.
         pointcloud::area_stats::tool(),
         pointcloud::thin::tool(),

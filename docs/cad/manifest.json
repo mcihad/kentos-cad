@@ -5042,6 +5042,22 @@
    "tests": 0
   },
   {
+   "id": "processing.run.linearRef.eventDrift",
+   "kind": "command",
+   "title": "Olay kaymasını denetle…",
+   "level": "semantic",
+   "via": [
+    "cad.processing.run"
+   ],
+   "operation": null,
+   "python": "kentos.cad.processing.run",
+   "mcp": "cad.processing.run",
+   "note": "linearRef.eventDrift aracı; Python ve MCP'den cad.processing.run ile (ADR 0526).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "processing.run.linearRef.extractMeasures",
    "kind": "command",
    "title": "M değerlerini çıkar…",

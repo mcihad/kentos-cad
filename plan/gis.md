@@ -356,7 +356,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-27 — Şebekeyi terminal/varlık ilişkisi ve artımlı graph sürümüyle genişlet — P1/P2**
 
-  *Kısmen (19 Ekim 2026; [ADR 0525](../docs/adr/0525-network-related-records-and-unverified-traces.md)): Şebeke izleme projenin ilişkileriyle etkilenen kayıtları bulur (borunun aboneleri, vananın haznesi; Yalıtım'da beslemesiz kalanlarınki de), istemde adlarıyla sayar ve seçer; Denetle'nin bağlantı sorunlarından geçen izleme doğrulanmamış diye işaretlenir ve söylenir; Python'da `junctions`, `related`, `unverified`. Kalan: terminaller ve alt ağlar, etkilenen bölgenin artımlı kurulması, LRS olaylarının kaynağa kalıcı bağı ve kayma raporu.*
+  *Kısmen (19 Ekim 2026; [ADR 0525](../docs/adr/0525-network-related-records-and-unverified-traces.md)): Şebeke izleme projenin ilişkileriyle etkilenen kayıtları bulur (borunun aboneleri, vananın haznesi; Yalıtım'da beslemesiz kalanlarınki de), istemde adlarıyla sayar ve seçer; Denetle'nin bağlantı sorunlarından geçen izleme doğrulanmamış diye işaretlenir ve söylenir; Python'da `junctions`, `related`, `unverified`. [ADR 0526](../docs/adr/0526-event-drift.md): Olay kaymasını denetle, olay nesneleri rota kimliğiyle rotalarına bağlı; rotanın geometrisi ya da M'si değişince kayan ve gösterilemeyen olaylar raporlanır, istenirse yerlerine tek adımda taşınır. Kalan: terminaller ve alt ağlar, etkilenen bölgenin artımlı kurulması, rota değişince olayların kendiliğinden izlemesi.*
 
   **Mevcut:** Utility trace, kaynak/vana, ağ denetimi ve LRS route/calibration/event işlemleri mevcut [K12]. ArcGIS Utility Network'ten alınacak fikir, ağın bağlantı kuralları ve denetlenmiş türev graph yaşam döngüsüdür; Esri veri şeması zorunlu değildir. [A05]
 

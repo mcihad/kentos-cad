@@ -663,12 +663,14 @@ fn check_full(c: &Value, mut s: Seen, tol: f64, measure_tol: f64, more: &[String
             }
         }
     }
-    expect(
-        same(&got_updates, &wanted_updates),
-        "değişen",
-        &got_updates,
-        &want["updated"],
-    );
+    // A changed geometry's numbers within the tolerance when the file names `geometry` among its fields.
+    let alike = match (got_updates.as_array(), wanted_updates.as_array()) {
+        (Some(h), Some(w)) => {
+            h.len() == w.len() && h.iter().zip(w).all(|(h, w)| same_object(h, w, tol, more))
+        }
+        _ => same(&got_updates, &wanted_updates),
+    };
+    expect(alike, "değişen", &got_updates, &want["updated"]);
     // The vertices' elevations of the objects a run changed (Eğrilere kot ver), each path's in `elevation::paths`' order.
     for (key, zs) in want["elevations"].as_object().cloned().unwrap_or_default() {
         let got_zs = key

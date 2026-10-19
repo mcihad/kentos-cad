@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-27` olay kaymasını denetle (ADR 0526, 19 Ekim): web'de gerekenler: `processing/builtin/lrs/`'e `linearRef.eventDrift`
+  (kayma çekirdekten: `line_drift`, `point_drift`; WASM'da toplu işlem), `fixtures/processing/v1/lrs.json`'un üç `drift-` durumu,
+  `routeDrift` ikonu ve Ağ analizi ▾'deki yeri.
 - [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
   `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
   açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
@@ -1967,6 +1970,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-27` olay kaymasını denetle (dilim): olay nesneleri rota kimliğiyle rotalarına bağlı, rotanın bugünkü hâliyle yeniden
+  yerleştirilip kayma (nokta uzaklığı; çizgide köşelerin ve yay ortalarının öbür yola en büyük uzaklığı) ve gösterilemeyenler
+  raporlanır, Yerine taşı tek adımda; İşlemler aracı `linearRef.eventDrift`, `cad.processing.run` ile Python ve MCP. Kalan:
+  terminaller, alt ağlar, artımlı graf, olayların kendiliğinden izlemesi. — **19 Ekim, [ADR 0526](docs/adr/0526-event-drift.md).**
 - [ ] `CBS-29` raster oturtmanın kaydı (dilim): rasterin `georef`'i (yöntem, kontrol ve denetim noktaları, hedeflerin sistemi,
   kaynak ve özeti, m0, denetim hataları, çıktı ızgarası; `.kcad` şema 88, `FORMATS_VERSION` 94), `cad.rasters.georef` (Raster oturt
   aracı onunla yazar; masaüstü uzun yeniden örneklemeyi kendi yapıp `made` ile verir), `.points` okuma ve yazma, Python ve MCP. Kalan:

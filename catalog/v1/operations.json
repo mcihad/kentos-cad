@@ -1854,6 +1854,13 @@
       ],
       "note": "Projenin arch.phaseView'u (ADR 0346 §2)."
     },
+    "processing.run.linearRef.eventDrift": {
+      "level": "semantic",
+      "via": [
+        "cad.processing.run"
+      ],
+      "note": "linearRef.eventDrift aracı; Python ve MCP'den cad.processing.run ile (ADR 0526)."
+    },
     "processing.run.raster.cog": {
       "level": "semantic",
       "via": [

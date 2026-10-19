@@ -27,7 +27,7 @@ icon?: string,
  */
 after?: string, 
 /**
- * The panel the items are added to, by its name.
+ * The panel the items (or only the overflow's commands) are added to, by its name.
  */
 into?: string, items: Array<AddedItem>, 
 /**

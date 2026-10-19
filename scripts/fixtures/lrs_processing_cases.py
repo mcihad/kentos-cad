@@ -94,6 +94,7 @@ LAYERS = [
         ("kaza", "Kazalar", "#AB4ABA"),
         ("hat", "Hatlar", "#0090FF"),
         ("parsel", "Parseller", "#30A46C"),
+        ("olay", "Olay nesneleri", "#8E4EC6"),
     ]
 ]
 
@@ -135,6 +136,21 @@ ENTITIES = [
     {"id": 50, "kind": "polyline", "layerId": "hat", "attrs": {"Tur": "kaplama"}, "pts": [P(488010, 4421001), P(488090, 4420999)]},
     {"id": 51, "kind": "line", "layerId": "hat", "attrs": {"Tur": "uzak"}, "a": P(488010, 4421030), "b": P(488090, 4421030)},
     {"id": 60, "kind": "polygon", "layerId": "parsel", "attrs": {"Ada": "1"}, "pts": [P(488040, 4420990), P(488060, 4420990), P(488060, 4421010), P(488040, 4421010)]},
+    # Event objects written by Olayları rotada göster before their routes changed: some still in place, some drifted.
+    {"id": 70, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-100", "Km": "40", "Ofset": "5"}, "p": P(488040, 4420995)},
+    {"id": 71, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-100", "Km": "125"}, "p": P(488100, 4421020)},
+    {"id": 72, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-999", "Km": "10"}, "p": P(488500, 4421500)},
+    {"id": 73, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-100", "Km": "500"}, "p": P(488100, 4421400)},
+    {"id": 74, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-100", "Km": "x"}, "p": P(488010, 4421000)},
+    {"id": 75, "kind": "point", "layerId": "olay", "attrs": {"Rota": "D-200", "Km": "50"}, "p": P(488050, 4421150.0004)},
+    {"id": 76, "kind": "polyline", "layerId": "olay", "attrs": {"Rota": "D-100", "Bas": "20", "Son": "130"},
+     "pts": [P(488020, 4421000), P(488100, 4421000), P(488100, 4421030)], "ms": [20, 100, 130]},
+    {"id": 77, "kind": "polyline", "layerId": "olay", "attrs": {"Rota": "D-100", "Bas": "20", "Son": "120"},
+     "pts": [P(488020, 4421000), P(488090, 4421000), P(488090, 4421020)], "ms": [20, 90, 110]},
+    {"id": 78, "kind": "line", "layerId": "olay", "attrs": {"Rota": "D-300", "Bas": "990", "Son": "920"}, "a": P(488301, 4421010), "b": P(488301, 4421080), "ma": 990, "mb": 920},
+    {"id": 79, "kind": "line", "layerId": "olay", "attrs": {"Rota": "D-100", "Bas": "50", "Son": "120"}, "a": P(488050, 4421000), "b": P(488100, 4421020)},
+    {"id": 80, "kind": "polyline", "layerId": "olay", "attrs": {"Rota": "D-200", "Bas": "0", "Son": "100"},
+     "pts": [P(488000, 4421200), P(488100, 4421200)], "ms": [0, 100]},
 ]
 
 DOCUMENT = {
@@ -591,6 +607,116 @@ def extract_run(values):
     return expect
 
 
+def probes(parts):
+    """A path's vertices, then each arc edge's midpoint."""
+    out = []
+    for q in parts:
+        pts, bulges, ms = q
+        out.extend(pts)
+        for e in L.edges(q):
+            if e.arc():
+                out.append(e.at(mp.mpf("0.5"))[0])
+    return out
+
+
+def farthest(a, b):
+    route = [(pts, bulges, [None] * len(pts)) for pts, bulges, _ in b]
+    return max(abs(L.locate(route, p)["distance"]) for p in probes(a))
+
+
+def line_drift(now, placed):
+    return max(farthest(now, placed), farthest(placed, now))
+
+
+def drift_run(values):
+    routes, again = routes_of("rota", values["routeField"])
+    line = values["eventKind"] == "line"
+    fields = [values["eventRoute"]] + ([values["from"], values["to"]] if line else [values["measure"]])
+    turn = -1 if values.get("side") == "left" else 1
+    tol = mp.mpf(values["tolerance"])
+    objs = [e for e in ENTITIES if e["layerId"] == "olay" and e["kind"] in ("point", "line", "polyline")]
+    rows, updated, other, unplaced, drifted, total = [], [], 0, 0, 0, 0
+    for e in objs:
+        if (e["kind"] == "point") == line:
+            other += 1
+            continue
+        total += 1
+        cell = lambda f: e["attrs"].get(f, "")  # noqa: E731
+        rid = js_trim(cell(fields[0]))
+        nums, why = [], None
+        for f in fields[1:]:
+            v = read_number(cell(f))
+            if v is None:
+                why = cell_reason(f, cell(f))
+                break
+            nums.append(v)
+        off = 0.0
+        if why is None and values.get("offset") and js_trim(cell(values["offset"])):
+            off = read_number(cell(values["offset"]))
+            if off is None:
+                why = cell_reason(values["offset"], cell(values["offset"]))
+        if why is None and rid not in routes:
+            why = f"“{rid}” rotası yok"
+        if why is None:
+            route = L.route_of(route_parts(routes[rid]))
+            got = L.stretch(route, nums[0], nums[1], off * turn) if line else L.point_at(route, nums[0], off * turn)
+            if "fault" in got:
+                why = fault_text(got)
+        if why is not None:
+            unplaced += 1
+            rows.append([f"#{e['id']}", rid, "", why])
+            continue
+        if line:
+            placed = [(q["pts"], q["bulges"], q["ms"]) for q in got["parts"]]
+            now = L.route_of(route_parts(e))
+            d = line_drift(now, placed)
+        else:
+            d = L.dist(L.P(e["p"]["x"], e["p"]["y"]), got["p"])
+        if d <= tol:
+            continue
+        drifted += 1
+        said = "Kaydı"
+        if values["fix"]:
+            if e["kind"] == "point":
+                geometry = {"p": P(float(got["p"][0]), float(got["p"][1]))}
+            elif e["kind"] == "polyline":
+                first, *rest = [part_out({"pts": q[0], "bulges": q[1], "ms": q[2]}) for q in placed]
+                geometry = dict(first)
+                if rest:
+                    geometry["parts"] = rest
+            elif len(placed) == 1 and len(placed[0][0]) == 2 and all(b == 0 for b in placed[0][1]):
+                (a, b), ms = placed[0][0], placed[0][2]
+                geometry = {"a": P(float(a[0]), float(a[1])), "b": P(float(b[0]), float(b[1])), "ma": num(ms[0]), "mb": num(ms[1])}
+            else:
+                geometry = None
+            if geometry is None:
+                said = "Kaydı; çizgi nesnesi kırıklı yola taşınamaz"
+            else:
+                said = "Yerine taşındı"
+                updated.append({"id": e["id"], "attrs": e["attrs"], "geometry": geometry})
+        rows.append([f"#{e['id']}", rid, text(d), said])
+    summary = f"{total} olaydan {drifted} olay kaymış"
+    if unplaced:
+        summary += f", {unplaced} olay rotasında gösterilemiyor"
+    if values["fix"] and updated:
+        summary += f"; {len(updated)} olay yerine taşındı"
+    expect = {"status": "ok", "summary": summary + ".", "undo": "Olay kaymasını denetle" if updated else None}
+    log = again_log(again)
+    if other:
+        log.append({"level": "info", "text": f"{other} nesne olay türünde değil; denetlenmedi."})
+    if drifted and not values["fix"]:
+        log.append({"level": "warn", "text": f"{drifted} olay rotanın verdiği yerden kaymış; Yerine taşı ile düzeltilir."})
+    if log:
+        expect["log"] = log
+    if updated:
+        expect["updated"] = updated
+    outputs = {"count": drifted}
+    if rows:
+        outputs["table"] = {"columns": ["Nesne", "Rota", "Kayma", "Durum"], "rows": rows}
+    expect["outputs"] = outputs
+    return expect
+
+
 # ── The cases ────────────────────────────────────────────────────────────
 
 
@@ -618,6 +744,10 @@ def cases():
     shapes = {**locate, "input": {"scope": "ids", "ids": [50, 51, 60]}, "radius": 2, "all": True}
     overlay = {"aSourceKind": "file", "aFile": "lrs-cizgiler.csv", "aRoute": "Rota", "aFrom": "Bas", "aTo": "Son",
                "bSourceKind": "file", "bFile": "lrs-hizlar.csv", "bRoute": "Rota", "bFrom": "Bas", "bTo": "Son", "how": "intersect"}
+    olay = {"scope": "layer", "layerId": "olay"}
+    drift = {"events": olay, "routes": rota, "routeField": "Rota", "eventRoute": "Rota", "eventKind": "point", "measure": "Km",
+             "offset": "Ofset", "side": "right", "tolerance": 0.001, "fix": False}
+    lines_drift = {**drift, "eventKind": "line", "from": "Bas", "to": "Son", "offset": "", "fix": True}
     return [
         case("create-length", "Rota oluştur, Uzunluk: parçalar sol alttan uç uca, ters çizilen çevrilir, boşluk sayılmaz; yaylı ve yay nesnesi; kimliksiz parça atlanır",
              "linearRef.createRoutes", create, create_run(create)),
@@ -647,6 +777,12 @@ def cases():
              "linearRef.overlayEvents", {**overlay, "how": "union"}, overlay_run({**overlay, "how": "union"})),
         case("extract", "M değerlerini çıkar: ilk, son, en küçük ve en büyük ölçü; ölçüsüz rota yazılmaz",
              "linearRef.extractMeasures", {"input": rota, "prefix": "M_"}, extract_run({"input": rota, "prefix": "M_"})),
+        case("drift-points", "Olay kaymasını denetle, nokta: yerindeki ve toleransın içindeki olay söylenmez, kayan söylenir; olmayan rota, dışarıdaki ölçü ve sayı olmayan ölçü gösterilemez; çizgiler sayılır",
+             "linearRef.eventDrift", drift, drift_run(drift)),
+        case("drift-tolerance", "Olay kaymasını denetle: toleranstan az kayan olay yerinde sayılır",
+             "linearRef.eventDrift", {**drift, "tolerance": 6}, drift_run({**drift, "tolerance": 6})),
+        case("drift-lines-fix", "Olay kaymasını denetle, çizgi, Yerine taşı: köşesi kayan çoklu çizgi ve kayan çizgi taşınır, kırıklı yola düşen çizgi nesnesi taşınamaz; yaylı rotadaki olay yerinde",
+             "linearRef.eventDrift", lines_drift, drift_run(lines_drift)),
     ]
 
 
@@ -655,7 +791,7 @@ def text_of(v):
 
 
 def outputs():
-    doc = {"format": "kentos.processing-cases", "version": 1, "tolerance": TOL, "toleranceFields": ["bulges", "ms", "ma", "mb", "parts"],
+    doc = {"format": "kentos.processing-cases", "version": 1, "tolerance": TOL, "toleranceFields": ["bulges", "ms", "ma", "mb", "parts", "geometry"],
            "documents": {}, "files": {name: name for name in FILES}, "cases": cases()}
     return [(PROC / "lrs.json", text_of(doc).encode("utf-8")), (PROC / "lrs.kcad", text_of(DOCUMENT).encode("utf-8"))] + [
         (PROC / name, data.encode("utf-8")) for name, data in FILES.items()

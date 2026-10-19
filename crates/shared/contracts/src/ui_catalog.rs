@@ -156,7 +156,7 @@ pub struct RibbonAddition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub after: Option<String>,
-    /// The panel the items are added to, by its name.
+    /// The panel the items (or only the overflow's commands) are added to, by its name.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub into: Option<String>,
@@ -283,7 +283,8 @@ impl CatalogAdditions {
             if r.modes.is_empty() {
                 return Some(format!("{at}: proje türü yok"));
             }
-            if r.items.is_empty() {
+            // Into a panel its ▾ alone may take a seldom used command; a new panel needs a button.
+            if r.items.is_empty() && (r.into.is_none() || r.overflow.is_empty()) {
                 return Some(format!("{at}: düğme yok"));
             }
             for item in &r.items {
@@ -554,5 +555,15 @@ mod tests {
         f.ribbon[0].after = None;
         f.ribbon[0].into = Some("Parsel".into());
         assert_eq!(check(&f), None);
+        // Into a panel, its ▾ alone; a new panel without a button is refused.
+        f.ribbon[0].overflow = vec!["file.open".into()];
+        f.ribbon[0].items.clear();
+        assert_eq!(check(&f), None);
+        f.ribbon[0].overflow.clear();
+        assert!(check(&f).unwrap().contains("düğme yok"));
+        let mut f = file();
+        f.ribbon[0].items.clear();
+        f.ribbon[0].overflow = vec!["file.open".into()];
+        assert!(check(&f).unwrap().contains("düğme yok"));
     }
 }

@@ -241,11 +241,65 @@ fn picture(name: &str) -> (&'static str, Value) {
                 "bFrom": "Bas", "bTo": "Son", "how": "union"
             }),
         ),
+        "drift" | "drift-fix" => (
+            "linearRef.eventDrift",
+            json!({
+                "events": layer("islem-olaylar"), "routes": layer("rota"), "routeField": "Rota",
+                "eventRoute": "Rota", "eventKind": "point", "measure": "Km", "offset": "Ofset",
+                "side": "right", "tolerance": 0.01, "fix": name == "drift-fix"
+            }),
+        ),
         _ => (
             "linearRef.extractMeasures",
             json!({ "input": layer("rota"), "prefix": "M_" }),
         ),
     }
+}
+
+/// D-100 corrected after its events were written: its last vertex 40 m north, its measures as they were.
+fn corrected(app: &mut App) {
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let mut e = doc.get(D100).expect("D-100").clone();
+    if let kentos_contracts::Entity::Polyline(path) = &mut e
+        && let Some(last) = path.pts.last_mut()
+    {
+        last.y += 40.0;
+    }
+    doc.update_many(vec![(D100, e)], "Köşeyi taşı");
+}
+
+/// Olay kaymasını denetle (docs/adr/0526) on the shared case's drawing: the drifted sign reported, a fixed line
+/// event moved onto its route and a line that cannot take a bent path left where it is.
+#[test]
+fn drifted_events_are_found_and_moved() {
+    let c = cases()
+        .into_iter()
+        .find(|c| c["id"] == "drift-lines-fix")
+        .expect("the case");
+    let mut app = app_with_drawing();
+    fill(&mut app, &c);
+    event(&mut app, Event::Run);
+    let RunStatus::Ok { text, table, .. } = status(&app) else {
+        panic!("{:?}", status(&app));
+    };
+    assert_eq!(text, c["expect"]["summary"]);
+    let rows = table.expect("the table").rows;
+    assert_eq!(rows.len(), 4);
+    let doc = &app.document.as_ref().expect("open").model;
+    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(78)) else {
+        panic!("the line");
+    };
+    assert_eq!((l.a.x, l.b.x), (488_300.0, 488_300.0));
+    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(79)) else {
+        panic!("the bent one");
+    };
+    assert_eq!((l.b.x, l.b.y), (488_100.0, 4_421_020.0), "left where it is");
+    let _ = app.update(Message::Run("edit.undo"));
+    let doc = &app.document.as_ref().expect("open").model;
+    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(78)) else {
+        panic!("the line");
+    };
+    assert_eq!(l.a.x, 488_301.0, "one undo step");
 }
 
 /// Doğrusal referans for the owner, on the pictures' road: CBS's Analiz tab
@@ -278,6 +332,8 @@ fn screens() {
         "oznitelik",
         "koordinat",
         "kart",
+        "kayma",
+        "kayma-tasindi",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -400,6 +456,18 @@ fn screens() {
                     "m-degerleri" => {
                         on_road(&mut app);
                         ran(&mut snapshot, &mut app, "extract");
+                    }
+                    // The signs written, then D-100's last vertex moved 40 m north (a corrected axis): Olay
+                    // kaymasını denetle finds the signs that no longer sit where their Km puts them.
+                    "kayma" | "kayma-tasindi" => {
+                        drawn(&mut app, &["signs"]);
+                        corrected(&mut app);
+                        on_road(&mut app);
+                        if name == "kayma" {
+                            ran(&mut snapshot, &mut app, "drift");
+                        } else {
+                            drawn(&mut app, &["drift-fix"]);
+                        }
                     }
                     // D-100 selected: M (başlangıç) and M (bitiş) among its geometry's rows.
                     "oznitelik" => {

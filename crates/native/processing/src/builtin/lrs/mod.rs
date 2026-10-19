@@ -7,6 +7,7 @@
 //! number is said, how numbers are written (the project's length decimals,
 //! the display rule) and an event table's source.
 
+pub mod drift;
 pub mod events;
 pub mod locate;
 pub mod routes;

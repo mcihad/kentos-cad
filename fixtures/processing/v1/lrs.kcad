@@ -114,6 +114,20 @@
     "lineWeight": 0.25
    },
    "children": []
+  },
+  {
+   "id": "olay",
+   "name": "Olay nesneleri",
+   "type": "layer",
+   "visible": true,
+   "locked": false,
+   "expanded": true,
+   "style": {
+    "color": "#8E4EC6",
+    "lineType": "continuous",
+    "lineWeight": 0.25
+   },
+   "children": []
   }
  ],
  "activeLayer": "yol",
@@ -649,6 +663,205 @@
      "x": 488040,
      "y": 4421010
     }
+   ]
+  },
+  {
+   "id": 70,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "40",
+    "Ofset": "5"
+   },
+   "p": {
+    "x": 488040,
+    "y": 4420995
+   }
+  },
+  {
+   "id": 71,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "125"
+   },
+   "p": {
+    "x": 488100,
+    "y": 4421020
+   }
+  },
+  {
+   "id": 72,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-999",
+    "Km": "10"
+   },
+   "p": {
+    "x": 488500,
+    "y": 4421500
+   }
+  },
+  {
+   "id": 73,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "500"
+   },
+   "p": {
+    "x": 488100,
+    "y": 4421400
+   }
+  },
+  {
+   "id": 74,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Km": "x"
+   },
+   "p": {
+    "x": 488010,
+    "y": 4421000
+   }
+  },
+  {
+   "id": 75,
+   "kind": "point",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-200",
+    "Km": "50"
+   },
+   "p": {
+    "x": 488050,
+    "y": 4421150.0004
+   }
+  },
+  {
+   "id": 76,
+   "kind": "polyline",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Bas": "20",
+    "Son": "130"
+   },
+   "pts": [
+    {
+     "x": 488020,
+     "y": 4421000
+    },
+    {
+     "x": 488100,
+     "y": 4421000
+    },
+    {
+     "x": 488100,
+     "y": 4421030
+    }
+   ],
+   "ms": [
+    20,
+    100,
+    130
+   ]
+  },
+  {
+   "id": 77,
+   "kind": "polyline",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Bas": "20",
+    "Son": "120"
+   },
+   "pts": [
+    {
+     "x": 488020,
+     "y": 4421000
+    },
+    {
+     "x": 488090,
+     "y": 4421000
+    },
+    {
+     "x": 488090,
+     "y": 4421020
+    }
+   ],
+   "ms": [
+    20,
+    90,
+    110
+   ]
+  },
+  {
+   "id": 78,
+   "kind": "line",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-300",
+    "Bas": "990",
+    "Son": "920"
+   },
+   "a": {
+    "x": 488301,
+    "y": 4421010
+   },
+   "b": {
+    "x": 488301,
+    "y": 4421080
+   },
+   "ma": 990,
+   "mb": 920
+  },
+  {
+   "id": 79,
+   "kind": "line",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-100",
+    "Bas": "50",
+    "Son": "120"
+   },
+   "a": {
+    "x": 488050,
+    "y": 4421000
+   },
+   "b": {
+    "x": 488100,
+    "y": 4421020
+   }
+  },
+  {
+   "id": 80,
+   "kind": "polyline",
+   "layerId": "olay",
+   "attrs": {
+    "Rota": "D-200",
+    "Bas": "0",
+    "Son": "100"
+   },
+   "pts": [
+    {
+     "x": 488000,
+     "y": 4421200
+    },
+    {
+     "x": 488100,
+     "y": 4421200
+    }
+   ],
+   "ms": [
+    0,
+    100
    ]
   }
  ],
