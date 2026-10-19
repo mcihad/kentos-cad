@@ -7525,6 +7525,22 @@
    "tests": 0
   },
   {
+   "id": "source.writeTogether",
+   "kind": "command",
+   "title": "Kaynağa birlikte yaz",
+   "level": "semantic",
+   "via": [
+    "cad.sources.sync"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.sync",
+   "mcp": "cad.sources.sync",
+   "note": "Katmanı ve ilişkiyle bağlı katmanları cad.sources.sync write'ın with'iyle tek işlemde yazar (ADR 0532).",
+   "scope": "none",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "standards.apply",
    "kind": "command",
    "title": "Standardı uygula",

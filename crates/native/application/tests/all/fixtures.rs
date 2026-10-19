@@ -40,7 +40,8 @@ use kentos_native_application::{processing_batch, processing_run, processing_too
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
-use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
+use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, relate as sources_relate, sync as sources_sync};
+use kentos_native_application::records_page;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
@@ -2221,6 +2222,20 @@ impl Input for kentos_domain::contracts::SourcesSync {
     }
 }
 
+impl Input for kentos_domain::contracts::SourcesRelate {
+    /// No number: a relation, an operation and a table's name.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::RecordsPage {
+    /// No number to move: a layer or a relation, words, a cursor.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for NetworkDefine {
     /// `network.tolerance` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -3190,6 +3205,8 @@ fn run_op(
         kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
         kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
         kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
+        kentos_domain::contracts::CAD_SOURCES_RELATE => run!(sources_relate, kentos_domain::contracts::SourcesRelate),
+        kentos_domain::contracts::CAD_RECORDS_PAGE => run!(records_page, kentos_domain::contracts::RecordsPage),
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
         kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
         kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),

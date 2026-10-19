@@ -1506,6 +1506,18 @@
       "status": "implemented"
     },
     {
+      "id": "source.writeTogether",
+      "title": "Kaynağa birlikte yaz",
+      "icon": "sourceWrite",
+      "description": "Seçili ya da etkin katmanı ve projenin ilişkilerinin ona bağladığı, aynı GeoPackage dosyasındaki bağlı katmanları tek SQLite işleminde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç. Biri reddedilirse (salt okunur tablo, dosyadaki değişiklik, tabloda olmayan kayda başvuru) hiçbiri yazılmaz. Eşlenmiş çoktan çoğa ilişkilerin eşleme satırları katmanlarla birlikte yazılır.",
+      "aliases": [
+        "KAYNAKBIRLIKTE"
+      ],
+      "shortcuts": [],
+      "category": "Veri",
+      "status": "implemented"
+    },
+    {
       "id": "source.read",
       "title": "Kaynaktan oku",
       "icon": "sourceRead",

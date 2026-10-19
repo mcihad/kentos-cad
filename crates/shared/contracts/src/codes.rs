@@ -1137,6 +1137,24 @@ codes! {
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).
     SOURCE_UNREACHABLE = "source_unreachable", Failed, false, "Veritabanına ulaşılamadı ya da bu ortamda onun sağlayıcısı yok.";
+    /// Layers written together are not in one GeoPackage file, or the source writes one table a transaction (docs/adr/0532).
+    TRANSACTION_SPLIT = "transaction_split", Failed, false, "Birlikte yazılacak katmanlar tek işlemde yazılamıyor: ayrı dosyalarda ya da kaynak birden çok tabloyu tek işlemde yazamıyor.";
+    /// A layer of a relation is not bound to a source (docs/adr/0532).
+    RELATION_UNBOUND = "relation_unbound", Failed, false, "İlişkinin katmanlarından biri bir kaynağa bağlı değil.";
+    /// The relation's field holds one id, so there is no many-to-many reference to map (docs/adr/0532).
+    RELATION_NOT_MULTIPLE = "relation_not_multiple", Failed, false, "İlişkinin alanı çok değerli değil; eşlenecek bir çoktan çoğa başvuru yok.";
+    /// The relation is mapped already (docs/adr/0532).
+    RELATION_MAPPED = "relation_mapped", Failed, false, "İlişki dosyada zaten eşli.";
+    /// The relation is not mapped (docs/adr/0532).
+    RELATION_NOT_MAPPED = "relation_not_mapped", Failed, false, "İlişki dosyada eşli değil; kaldırılacak bir eşleme yok.";
+    /// The file relates the two tables in a representation KentOS does not write (docs/adr/0532).
+    RELATION_UNSUPPORTED = "relation_unsupported", Failed, false, "Dosya iki tabloyu KentOS'un yazmadığı bir temsille ilişkilendiriyor; üzerine yazılmaz, metne de çevrilmez.";
+    /// The mapping table's name is not a name, or the file has a table of it (docs/adr/0532).
+    INVALID_MAPPING = "invalid_mapping", Failed, false, "Eşleme tablosunun adı geçersiz ya da dosyada bu adda bir tablo var.";
+    /// A reference goes to an object the table does not hold (docs/adr/0532).
+    RELATION_DANGLING = "relation_dangling", Failed, false, "Bir başvuru tabloda olmayan bir nesneye gidiyor; üst ya da alt katmanı birlikte yazın.";
+    /// A many-to-many reference that stays a text column of ids, or a relation of another representation (docs/adr/0532).
+    RELATION_UNMAPPED = "relation_unmapped", Warning, false, "Çok değerli başvuru dosyada “; ” ile birleşmiş metin olarak kaldı; cad.sources.relate map ile ilişki profiline taşıyın.";
     /// More bound layers than a project keeps (docs/adr/0503).
     TOO_MANY_SOURCES = "too_many_sources", Failed, false, "Bir projede en çok 1000 bağlı katman olur.";
     /// Values a whole-or-nothing write would not take (docs/adr/0507).

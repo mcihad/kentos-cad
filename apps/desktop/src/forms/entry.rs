@@ -69,6 +69,8 @@ const OVERWRITE: &str = "Üzerine yaz";
 const NEW_RELEASE: &str = "Yeni sürümle aç";
 /// Each field takes a note for the next workflow step (docs/adr/0442 §4).
 const FIELD_NOTES: &str = "Alanlara not";
+/// Kaydet carries the step to the layers' sources (docs/adr/0532 §1).
+const COMMIT: &str = "Kaynağa da yaz";
 const CANCEL: &str = "Vazgeç";
 const FIRST_ISSUE: &str = "İlk soruna git";
 const NEXT_ISSUE: &str = "Sonraki sorun";
@@ -178,6 +180,8 @@ pub struct Entry {
     release_changed: bool,
     /// Alanlara not (docs/adr/0442 §4): each field takes a note, sent with the next workflow step.
     reviewing: bool,
+    /// Kaynağa da yaz: the record and its children go to their layers' bound file in the same step.
+    commit: bool,
     field_notes: BTreeMap<String, String>,
     /// Bilgi: the record's attachments as `cad.attachments.inspect` read them (docs/adr/0442 §7).
     facts: Option<Vec<kentos_contracts::AttachmentFacts>>,
@@ -241,6 +245,8 @@ pub enum Event {
     RunAction(String),
     /// Alanlara not on or off, and a field's note typed (docs/adr/0442 §4).
     Reviewing(bool),
+    /// Kaynağa da yaz on or off (docs/adr/0532 §1).
+    Commit(bool),
     FieldNote(String, String),
     /// Bilgi on the attachments: what each is, read from its bytes (docs/adr/0442 §7); again off.
     InspectAttachments,
@@ -952,6 +958,7 @@ impl App {
             overwrite: false,
             release_changed: false,
             reviewing: false,
+            commit: false,
             field_notes: BTreeMap::new(),
             facts: None,
             language: None,
@@ -1644,6 +1651,12 @@ impl App {
                 }
                 return Task::none();
             }
+            Event::Commit(on) => {
+                if let Some(e) = self.form_entry.as_mut() {
+                    e.commit = on;
+                }
+                return Task::none();
+            }
             Event::Reviewing(on) => {
                 if let Some(e) = self.form_entry.as_mut() {
                     e.reviewing = on;
@@ -2001,6 +2014,7 @@ impl App {
             expected_revision: None,
             opened: (!e.overwrite).then(|| e.before.clone()),
             children: e.links.iter().map(|(_, c)| c.clone()).collect(),
+            commit: e.commit,
             release: if e.draft || e.overwrite {
                 None
             } else {
@@ -2059,11 +2073,29 @@ impl App {
                         .or_default()
                         .extend(reused);
                 }
-                let said = match (done.changes.len(), done.children.len()) {
+                let mut said = match (done.changes.len(), done.children.len()) {
                     (0, _) => "Kayıtta değişiklik yok.".to_owned(),
                     (_, 0) => format!("Kayıt “{name}” formuyla yazıldı."),
                     (_, n) => format!("Kayıt “{name}” formuyla, {n} alt kaydıyla birlikte yazıldı."),
                 };
+                // With Kaynağa da yaz, the file's side of the same step (docs/adr/0532 §1).
+                if let Some(committed) = &done.committed {
+                    let path = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| {
+                            d.model
+                                .settings()
+                                .sources
+                                .iter()
+                                .find(|s| committed.layers.first().is_some_and(|l| l.layer == s.layer))
+                                .or_else(|| d.model.settings().sources.first())
+                                .map(|s| s.path.clone())
+                        })
+                        .unwrap_or_default();
+                    said.push(' ');
+                    said.push_str(&self.together_words(committed, &path));
+                }
                 self.say(Level::Success, said);
                 back
             }
@@ -2441,6 +2473,16 @@ impl App {
                     .size(16.0)
                     .text_size(typography::body())
                     .on_toggle(|on| e.msg(Event::Reviewing(on))),
+            );
+        }
+        // Kaynağa da yaz (docs/adr/0532 §1): only where the record's layer is bound to a source.
+        if live && !locked && self.bound_link(&e.screen.layer).is_some() {
+            footer = footer.push(
+                iced::widget::toggler(e.commit)
+                    .label(COMMIT)
+                    .size(16.0)
+                    .text_size(typography::body())
+                    .on_toggle(|on| e.msg(Event::Commit(on))),
             );
         }
         // The form's languages (docs/adr/0443 §5): only what is shown changes.

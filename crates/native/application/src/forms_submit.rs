@@ -504,59 +504,33 @@ fn answer(doc: &Document, c: &Checked, written: bool, uid: &str) -> FormsSubmitt
         undo: (written && !changes.is_empty()).then(|| c.label.clone()),
         changes,
         snapshot,
+        committed: None,
         revision: doc.revision().to_string(),
     }
 }
 
-/// Checks `input` against the document, writing nothing.
-pub fn validate(cx: &ExecutionContext<'_>, input: &FormsSubmit) -> CommandResult<()> {
-    match check(cx.doc, input) {
-        Ok(_) => CommandResult::Completed {
-            output: (),
-            warnings: Vec::new(),
-        },
-        Err(stop) => stop.into(),
+/// The layers a submission writes: the record's and its children's, the record's first, each once.
+fn written_layers(c: &Checked) -> Vec<String> {
+    let mut out = vec![c.entity.base().layer_id.clone()];
+    for ch in &c.children {
+        let l = ch.entity.base().layer_id.clone();
+        if !out.contains(&l) {
+            out.push(l);
+        }
     }
+    out
 }
 
-/// What execute would do; nothing is written.
-pub fn plan(cx: &ExecutionContext<'_>, input: &FormsSubmit) -> CommandResult<FormsSubmitted> {
-    match check(cx.doc, input) {
-        Ok(c) => CommandResult::Completed {
-            output: answer(cx.doc, &c, false, &input.uid),
-            warnings: c.warnings.clone(),
-        },
-        Err(stop) => stop.into(),
-    }
-}
-
-/// Checks `input` again and writes the record.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsSubmit) -> CommandResult<FormsSubmitted> {
-    crate::call::recorded(
-        cx,
-        kentos_contracts::CAD_FORMS_SUBMIT,
-        kentos_contracts::CAD_FORMS_SUBMIT_VERSION,
-        input,
-        write_execute,
-    )
-}
-
-fn write_execute(
-    cx: &mut ExecutionContext<'_>,
-    input: FormsSubmit,
-) -> CommandResult<FormsSubmitted> {
-    let c = match check(cx.doc, &input) {
-        Ok(c) => c,
-        Err(stop) => return stop.into(),
-    };
+/// The record and its children written into `doc`: one undo step, all or nothing.
+fn apply(doc: &mut Document, c: &Checked) -> Result<bool, Stop> {
     let mut updates: Vec<(Slot, Entity)> = Vec::new();
-    if cx.doc.get(c.slot) != Some(&c.entity) {
+    if doc.get(c.slot) != Some(&c.entity) {
         updates.push((c.slot, c.entity.clone()));
     }
     let mut made: Vec<(Uuid, Entity)> = Vec::new();
     for ch in &c.children {
         match ch.slot {
-            Some(slot) if cx.doc.get(slot) != Some(&ch.entity) => {
+            Some(slot) if doc.get(slot) != Some(&ch.entity) => {
                 updates.push((slot, ch.entity.clone()));
             }
             Some(_) => {}
@@ -567,24 +541,115 @@ fn write_execute(
             }
         }
     }
-    if !updates.is_empty() || !made.is_empty() {
-        let label = c.label.clone();
-        let written = cx.doc.transact(&label, |doc| {
-            doc.update_many(updates.clone(), &label);
-            if !made.is_empty() {
-                doc.add_many_with_uids(made.clone(), &label)?;
+    if updates.is_empty() && made.is_empty() {
+        return Ok(false);
+    }
+    let label = c.label.clone();
+    doc.transact(&label, |doc| {
+        doc.update_many(updates.clone(), &label);
+        if !made.is_empty() {
+            doc.add_many_with_uids(made.clone(), &label)?;
+        }
+        Ok::<(), kentos_domain::Refusal>(())
+    })
+    .map(|()| true)
+    .map_err(|why| fail(codes::FORM_INVALID, why.0, "children"))
+}
+
+/// With `commit`: what writing the submission to the sources would do, found on a copy of the drawing the
+/// submission is already written in (docs/adr/0532 §1). Any refusal of it is the submission's.
+fn commit_plan(
+    doc: &Document,
+    input: &FormsSubmit,
+    c: &Checked,
+) -> Result<Option<(kentos_contracts::SourcesSynced, Vec<kentos_contracts::CommandWarning>)>, Stop> {
+    if !input.commit {
+        return Ok(None);
+    }
+    let mut copy = doc.clone();
+    apply(&mut copy, c)?;
+    crate::sources::commit(&mut copy, &written_layers(c), false).map(Some)
+}
+
+/// Checks `input` against the document, writing nothing.
+pub fn validate(cx: &ExecutionContext<'_>, input: &FormsSubmit) -> CommandResult<()> {
+    match check(cx.doc, input).and_then(|c| commit_plan(cx.doc, input, &c).map(|_| c)) {
+        Ok(_) => CommandResult::Completed {
+            output: (),
+            warnings: Vec::new(),
+        },
+        Err(stop) => stop.into(),
+    }
+}
+
+/// What execute would do; nothing is written.
+pub fn plan(cx: &ExecutionContext<'_>, input: &FormsSubmit) -> CommandResult<FormsSubmitted> {
+    match check(cx.doc, input).and_then(|c| commit_plan(cx.doc, input, &c).map(|p| (c, p))) {
+        Ok((c, planned)) => {
+            let mut output = answer(cx.doc, &c, false, &input.uid);
+            let mut warnings = c.warnings.clone();
+            if let Some((mut synced, more)) = planned {
+                // The plan was made on a copy the submission is written in: it says the revision it is made against.
+                synced.revision = output.revision.clone();
+                output.committed = Some(synced);
+                warnings.extend(more);
             }
-            Ok::<(), kentos_domain::Refusal>(())
-        });
-        if let Err(why) = written {
-            return fail(codes::FORM_INVALID, why.0, "children").into();
+            CommandResult::Completed { output, warnings }
+        }
+        Err(stop) => stop.into(),
+    }
+}
+
+/// Checks `input` again and writes the record.
+pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsSubmit) -> CommandResult<FormsSubmitted> {
+    // A plan through the protocol runs this on a reading copy: it writes no file then (docs/adr/0532 §4).
+    let dry = cx.dry();
+    crate::call::recorded(
+        cx,
+        kentos_contracts::CAD_FORMS_SUBMIT,
+        kentos_contracts::CAD_FORMS_SUBMIT_VERSION,
+        input,
+        move |cx, input| write_execute(cx, input, dry),
+    )
+}
+
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: FormsSubmit,
+    dry: bool,
+) -> CommandResult<FormsSubmitted> {
+    let c = match check(cx.doc, &input) {
+        Ok(c) => c,
+        Err(stop) => return stop.into(),
+    };
+    // The sources first on a copy, so a refusal of theirs is found before anything is written (docs/adr/0532 §1).
+    if let Err(stop) = commit_plan(cx.doc, &input, &c) {
+        return stop.into();
+    }
+    let wrote = match apply(cx.doc, &c) {
+        Ok(wrote) => wrote,
+        Err(stop) => return stop.into(),
+    };
+    let mut warnings = c.warnings.clone();
+    let mut committed = None;
+    if input.commit {
+        match crate::sources::commit(cx.doc, &written_layers(&c), !dry) {
+            Ok((synced, more)) => {
+                committed = Some(synced);
+                warnings.extend(more);
+            }
+            Err(stop) => {
+                // The sources changed between the copy and now: the drawing goes back to before the step.
+                if wrote {
+                    cx.doc.undo();
+                }
+                return stop.into();
+            }
         }
     }
-    let warnings = c.warnings.clone();
-    CommandResult::Completed {
-        output: answer(cx.doc, &c, true, &input.uid),
-        warnings,
-    }
+    let mut output = answer(cx.doc, &c, true, &input.uid);
+    output.committed = committed;
+    CommandResult::Completed { output, warnings }
 }
 
 /// Whether the object `child` already refers to `parent` through `r`'s field.

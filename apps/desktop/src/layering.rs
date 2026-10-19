@@ -639,6 +639,11 @@ impl App {
             let bound = |e: crate::bound::Event| Message::Bound(e);
             let mut source = Menu::new()
                 .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
+                .icon(icon("sourceWrite"))
+                .item(
+                    "Kaynağa birlikte yaz",
+                    bound(crate::bound::Event::WriteTogether(Some(id.clone()))),
+                )
                 .icon(icon("sourceWrite"));
             if part {
                 source = source

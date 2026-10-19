@@ -2582,8 +2582,10 @@ const ENTRIES: &[Entry] = &[
                 "relation_mismatch",
                 "relation_field_unknown",
             ],
+            // docs/adr/0532 §1: commit carries the step to the sources.
+            &["source_not_found", "source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["form_check_warning", "form_required", "form_layer_rule"],
+        warnings: &["form_check_warning", "form_required", "form_layer_rule", "relation_unmapped"],
         targets: none,
     },
     Entry {
@@ -2918,8 +2920,30 @@ const ENTRIES: &[Entry] = &[
             &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent", "derived_dataset"],
             // docs/adr/0531: the neighbours outside a part's area.
             &["topology_on_read", "outside_neighbour_invalid"],
+            // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
+            &["invalid_input", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "key_not_unique"],
+        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "key_not_unique", "relation_unmapped"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.relate",
+        refusals: &[
+            &["unknown_relation", "relation_unbound", "source_gone", "transaction_split"],
+            &["source_readonly", "source_changed", "file_unwritable"],
+            &["relation_not_multiple", "relation_mapped", "relation_not_mapped", "relation_unsupported", "invalid_mapping", "relation_dangling"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.records.page",
+        refusals: &[
+            &["invalid_count", "invalid_cursor", "invalid_input", "layer_not_found"],
+            &["unknown_relation", "entity_not_found", "form_layer_mismatch", "field_not_found"],
+            &["invalid_revision", "revision_conflict", "source_changed"],
+        ],
+        warnings: &[],
         targets: none,
     },
     Entry {

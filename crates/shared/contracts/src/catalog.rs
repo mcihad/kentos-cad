@@ -6078,7 +6078,8 @@ pub fn catalog() -> CommandCatalog {
             summary: "Bir nesnenin kaydını formla yazar: values alan anahtarlarıyla (boş değer özniteliği kaldırır); formun kuralları ve alanların kuralları geçerse bütün kayıt, geçmezse hiçbir şey (form_invalid: ilk sorun, path onu veren değer). Gizli alanın değeri silinmez (formun clearHidden'ı açıksa silinir); gösterilmeyen, gizli, salt okunur ya da hesaplanan alana başka değer yazılmaz. \
                       Kayıt yazılmadan tamamlanır: defaults (yeni kayıt) verilen değerlerden sonra boş kalan alanlara formun değer ve ifade varsayılanlarını yazar; hesaplanan alanlar formun ifadeleriyle yazılır. moment (2026-10-16T14:30:00) ve user verilirse kuralların @tarih, @simdi ve @kullanici'si onlardır; verilmezse onları okuyan varsayılan ve hesap yapılmaz. Tekil alanın değeri katmanın başka nesnesinde olamaz. Uyarı denetimi bozulursa kayıt yine yazılır, uyarı form_check_warning'dir. \
                       Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). Tek geri alma adımı: “Form: <ad>”. \
-                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur. \
+                      commit: kaydın ve alt kayıtlarının katmanları tek GeoPackage dosyasına bağlıysa (cad.sources.edit) aynı adımın ardından dosyaya tek SQLite işleminde yazılır (cad.sources.sync'in with'i, docs/adr/0532); dosyanın reddi gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey yazılır. Cevabın committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Document,
@@ -6902,6 +6903,8 @@ pub fn catalog() -> CommandCatalog {
                       Dosya katman onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict); geometrisi tablonun sütununa uymayan nesne geometry_mismatch; tablonun tutmadığı nesneler (yazı, ölçü) ve alanı olmayan öznitelikler çizimde kalır (export_losses). Yazma geri alma adımı değildir: dosya yazılır. \
                       read: tablonun satırlarını katmana alır, tek geri alma adımı (“Kaynaktan oku: tablo”): değişen nesnelerin görünüşü kalır, yeni satırlar eklenir, tabloda olmayanlar silinir. Katman son eşleşmeden beri değiştiyse discard olmadan okunmaz (pending_changes, conflict). \
                       PostGIS tablosu da aynı kurallarla, tek veritabanı işleminde yazılır: tablo yazarlara kilitlenir, sürümü yeniden denetlenir, kalıcı kimlikler şemanın kentos_uids tablosunda; ulaşılamayan veritabanı source_unreachable. \
+                      with (yalnız write) başka bağlı katmanları aynı işlemde yazar: üst kayıt ile alt kayıtları ya hep birlikte ya hiç (docs/adr/0532): her katman önce denetlenir, biri reddedilirse (source_readonly, geometry_mismatch, source_changed, relation_dangling) hiçbiri yazılmaz; katmanlar tek GeoPackage dosyasında olmalıdır (transaction_split: ayrı dosya ya da bir tablo bir işlemde yazan veritabanı); cevabın layers'ı her katmanın payı, relations'ı eşli ilişkilerin eşleme satırlarıdır. \
+                      cad.sources.relate ile eşlenen çoktan çoğa ilişki katmanlarıyla birlikte yazılır: eşleme tablosunun satırları alt katmanın çok değerli alanını izler, alan metin sütunu olarak yazılmaz; eşlenmemiş çoktan çoğa başvuru “; ” ile birleşmiş metin olarak kalır ve relation_unmapped ile söylenir, dosyanın tanınmayan temsilli ilişkisi metne çevrilmez. read eşli ilişkinin alanını eşleme satırlarından doldurur. \
                       plan dosyayı okur, hiçbir şey yazmaz ve sayıları söyler."
                 .into(),
             aliases: vec!["kaynakesitle".into()],
@@ -6925,6 +6928,81 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Başkasının değiştirdiği tabloyu yeniden oku".into(),
                     input: json!({ "layer": "import-parsel", "direction": "read" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parseli ve maliklerini aynı işlemde yaz".into(),
+                    input: json!({ "layer": "parsel", "direction": "write", "with": ["malik"] }),
+                    output: None,
+                },
+            ],
+        },
+        // A many-to-many reference in a bound GeoPackage (docs/adr/0532), held together by
+        // fixtures/commands/v1/cad.sources.relate.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_RELATE.into(),
+            version: crate::CAD_SOURCES_RELATE_VERSION,
+            title: "İlişkiyi dosyaya eşle".into(),
+            summary: "Projenin bir ilişkisinin (cad.relations.edit) çok değerli alanı (alt kayıt birden çok üstün kimliğini “; ” ile tutar, docs/adr/0409) bağlı GeoPackage'da nasıl tutuluyor: iki katman da aynı dosyanın tablolarına bağlıysa metin sütunu (text), KentOS'un ilişki temsili (mapped), dosyanın başka bir temsilli ilişkisi (foreign) ya da profile uymayan ilişkisi (broken); bağlı olmayan (unbound), ayrı kaynaklardaki (split) ve tek kimlikli (single) ilişki. \
+                      check hiçbir şey yazmaz, durumu ve nedenini söyler. map GeoPackage ilişki profilinde (OGC 18-000, gpkgext_relations) “kentos_references” ilişkisini ve eşleme tablosunu (base_id: alt kaydın fid'i, related_id: üstün fid'i) tek SQLite işleminde yazar; satırlar katmanların alandaki başvurularından kurulur. Eşlenen alan sütun olarak yazılmaz ve okunmaz, eşleme tablosu tek temsildir; cad.sources.sync eşleme satırlarını katmanlarla birlikte yazar ve okur. Dosyanın başka bir temsilli ilişkisi ya da eşleme tablosu olmayan bir tablo üzerine yazılmaz (relation_unsupported), noktalı virgüllü metne de çevrilmez. \
+                      unmap ilişkiyi ve eşleme tablosunu dosyadan kaldırır; başvurular katmanda kalır ve sonraki yazmada metin sütunu olur (relation_unmapped uyarısıyla). Dosya katmanlar onunla son eşleştiğinden beri değiştiyse yazılmaz (source_changed, conflict). Bağ ve dosya revizyonları güncellenir; geri alma adımı değildir (dosya yazılır). plan yazmadan söyler."
+                .into(),
+            aliases: vec!["iliskiesle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesRelate>(),
+            output: schema::<crate::SourcesRelated>(),
+            plan: Some(schema::<crate::SourcesRelated>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parselin maliklerinin dosyada nasıl tutulduğunu söyle".into(),
+                    input: json!({ "relation": "parsel-malik", "action": "check" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel-malik ilişkisini GeoPackage ilişki profiline eşle".into(),
+                    input: json!({ "relation": "parsel-malik", "action": "map" }),
+                    output: None,
+                },
+            ],
+        },
+        // A layer's records, or a relation's, a page at a time (docs/adr/0532), held together by
+        // fixtures/commands/v1/cad.records.page.json.
+        CommandDescriptor {
+            id: crate::CAD_RECORDS_PAGE.into(),
+            version: crate::CAD_RECORDS_PAGE_VERSION,
+            title: "Kayıtları sayfa sayfa oku".into(),
+            summary: "Bir katmanın kayıtlarını (layer) ya da bir ilişkinin bir kayda bağladığı kayıtları (relation ve of; side children: of üsttür, alt katmanın alanı onu tutan kayıtlar; parents: of alttır, üst katmanın alanın tuttuğu kayıtları alanın sırasıyla) sayfa sayfa okur: kalıcı kimlik sırasıyla (cursor önceki sayfanın next'i), sayfada 1–500 kayıt (varsayılan 50). \
+                      total sayfalardan bağımsız eşleşen kayıtların sayısıdır ve katman süzgeçlerinden (cad.layers.filter) sonra sayılır: süzgecin dışarıda bıraktığı nesne ne kayıt ne toplam olarak görünür. query kaydın öznitelik değerlerinde bütün sözcükleri arar (büyük küçük harf Türkçe kuralıyla denk sayılır: I ı, İ i; harfler sadeleştirilmez, “ayse” Ayşe'yi bulmaz); fields yalnız adı verilen öznitelikleri döndürür. \
+                      Katman bir kaynağa bağlıysa source kaynağın sürümünü söyler: id, tablo, revision (katman kaynakla son eşleştiğinde dosyanın SHA-256'sı) ve edited (katmanda kaynağın bilmediği değişiklik var: sayfa çalışma kopyasının, kaynağın değil). expectedRevision ve expectedSource ilk sayfanın söylediklerini geri verir: çizim ya da kaynak değiştiyse sonraki sayfa okunmaz (revision_conflict, source_changed; conflict), böylece sayfalar aynı verinin sayfalarıdır. Çizimi değiştirmez."
+                .into(),
+            aliases: vec!["kayitlar".into(), "kayitsayfa".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RecordsPage>(),
+            output: schema::<crate::RecordsPaged>(),
+            plan: Some(schema::<crate::RecordsPaged>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Maliklerin ilk sayfası".into(),
+                    input: json!({ "layer": "malik", "limit": 50 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir parselin malikleri".into(),
+                    input: json!({ "relation": "parsel-malik", "of": "0192f5a1-25a0-7000-8000-000000000301", "side": "parents" }),
                     output: None,
                 },
             ],
@@ -8568,6 +8646,12 @@ mod tests {
                     }
                     crate::CAD_SOURCES_SYNC => {
                         serde_json::from_value::<crate::SourcesSync>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_RELATE => {
+                        serde_json::from_value::<crate::SourcesRelate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RECORDS_PAGE => {
+                        serde_json::from_value::<crate::RecordsPage>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_FIELDS_WRITE => {
                         serde_json::from_value::<crate::FieldsWrite>(e.input.clone()).map(|_| ())

@@ -73,6 +73,8 @@ mod catalog;
 #[cfg(test)]
 mod centerline_scenes;
 #[cfg(test)]
+mod source_relation_scenes;
+#[cfg(test)]
 mod chart_scenes;
 mod charts;
 #[cfg(test)]

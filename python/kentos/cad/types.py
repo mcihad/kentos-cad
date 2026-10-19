@@ -3111,6 +3111,22 @@ RegistryDatumName = Literal["TUREF", "ED50", "WGS84"]
 """The names of :class:`RegistryDatum`, for a plain string."""
 
 
+class RelateOp(_StrEnum):
+    """What `cad.sources.relate` does.
+
+    - ``check``: Says how the relation is kept now; writes nothing.
+    - ``map``: Makes the relation's mapping table in the file, filled from the layers' references.
+    - ``unmap``: Takes the relation's mapping table out of the file; the references stay in the layers.
+    """
+    CHECK = "check"
+    MAP = "map"
+    UNMAP = "unmap"
+
+
+RelateOpName = Literal["check", "map", "unmap"]
+"""The names of :class:`RelateOp`, for a plain string."""
+
+
 class RelatePredicate(_StrEnum):
     """A predicate of the standard profile (OGC SFA 1.2.1 §6.1.15.3, as PostGIS reads it); not Konuma göre seç's
     relations, which allow 1 mm.
@@ -3165,6 +3181,44 @@ class RelationDelete(_StrEnum):
 
 RelationDeleteName = Literal["keep", "unlink", "cascade", "restrict"]
 """The names of :class:`RelationDelete`, for a plain string."""
+
+
+class RelationSide(_StrEnum):
+    """Which side of a relation the record asked about is on.
+
+    - ``children``: `of` is a parent: its children (the child layer's records whose field holds it).
+    - ``parents``: `of` is a child: its parents (the parent layer's records its field holds, in the field's order).
+    """
+    CHILDREN = "children"
+    PARENTS = "parents"
+
+
+RelationSideName = Literal["children", "parents"]
+"""The names of :class:`RelationSide`, for a plain string."""
+
+
+class RelationState(_StrEnum):
+    """How a project relation is kept in its sources.
+
+    - ``unbound``: A layer of the relation is not bound to a source.
+    - ``split``: The layers are bound to different files or databases: one transaction cannot hold both.
+    - ``single``: The child's field holds one id (a one-to-many reference): a plain column, nothing to map.
+    - ``text``: A many-to-many reference kept as a text column of ids joined with `; `.
+    - ``mapped``: A many-to-many reference kept as KentOS's related-tables relation.
+    - ``foreign``: The file relates the two tables in another representation: it is not rewritten, and not read as text.
+    - ``broken``: The file's relation between the two tables is not as the profile says.
+    """
+    UNBOUND = "unbound"
+    SPLIT = "split"
+    SINGLE = "single"
+    TEXT = "text"
+    MAPPED = "mapped"
+    FOREIGN = "foreign"
+    BROKEN = "broken"
+
+
+RelationStateName = Literal["unbound", "split", "single", "text", "mapped", "foreign", "broken"]
+"""The names of :class:`RelationState`, for a plain string."""
 
 
 class ResourceKind(_StrEnum):
@@ -3463,6 +3517,22 @@ class SourceOverrides(_StrEnum):
 
 SourceOverridesName = Literal["keep", "replace"]
 """The names of :class:`SourceOverrides`, for a plain string."""
+
+
+class SourceRelationKind(_StrEnum):
+    """How a relation of a file is held (docs/adr/0532 §2).
+
+    - ``kentos``: KentOS's representation (`kentos_references`): a mapping table of base and related rows.
+    - ``foreign``: A well-formed relation of another kind: read and listed, never rewritten.
+    - ``broken``: A relation whose mapping table or tables are not as the profile says; `why` says how.
+    """
+    KENTOS = "kentos"
+    FOREIGN = "foreign"
+    BROKEN = "broken"
+
+
+SourceRelationKindName = Literal["kentos", "foreign", "broken"]
+"""The names of :class:`SourceRelationKind`, for a plain string."""
 
 
 class SpaceBreak(_StrEnum):
@@ -18454,11 +18524,18 @@ class FormsSubmit(_Model):
     `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),
     `form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse
     as every write's (`rule_broken`, `not_unique`).
+
+    `commit` (docs/adr/0532 §1) carries the step to the sources: the layers the record and its children are on, when
+    bound to tables of one GeoPackage file, are written to it in one transaction right after, as
+    `cad.sources.sync` with `with`. Any refusal of that write (`source_readonly`, `geometry_mismatch`,
+    `source_changed`, `relation_dangling`, `transaction_split` …) is the submission's: the plan says it, and nothing is
+    written, neither in the drawing nor in the file. A layer that is not bound is not written.
     Attributes:
         form: The form's id.
         uid: The object (lowercase UUID text with hyphens).
         children: The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
             made, each through its relation; the record and its children go in together or not at all.
+        commit: Write the layers' sources too, in one transaction (docs/adr/0532 §1); written only as `true`.
         defaults: The form's defaults in the record's empty fields first (a new record).
         draft: Through its draft instead of its latest release (a form not yet published).
         expected_revision: The document revision the input was prepared against, as decimal text.
@@ -18477,6 +18554,7 @@ class FormsSubmit(_Model):
     form: str
     uid: str
     children: list[FormChild] | Unset = UNSET
+    commit: bool | Unset = UNSET
     defaults: bool | Unset = UNSET
     draft: bool | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
@@ -18492,6 +18570,8 @@ class FormsSubmit(_Model):
         out["uid"] = self.uid
         if self.children is not UNSET:
             out["children"] = [e0.to_json() for e0 in self.children]
+        if self.commit is not UNSET:
+            out["commit"] = self.commit
         if self.defaults is not UNSET:
             out["defaults"] = self.defaults
         if self.draft is not UNSET:
@@ -18516,6 +18596,7 @@ class FormsSubmit(_Model):
             form=data["form"],
             uid=data["uid"],
             children=[FormChild.from_json(e0) for e0 in data["children"]] if "children" in data else UNSET,
+            commit=data.get("commit", UNSET),
             defaults=data.get("defaults", UNSET),
             draft=data.get("draft", UNSET),
             expected_revision=data.get("expectedRevision", UNSET),
@@ -18539,6 +18620,7 @@ class FormsSubmitted(_Model):
         changes: The records written (docs/adr/0440 §5): the record, then its children, in order; none
             unchanged.
         children: The children as written (docs/adr/0440 §2), in the input's order.
+        committed: With `commit`: what the one transaction wrote to the sources (plan: what it would).
         undo: The undo step the write is (plan and an unchanged record: none).
         version: The release written through; none: the draft. Unit: version.
     """
@@ -18549,6 +18631,7 @@ class FormsSubmitted(_Model):
     revision: str
     changes: list[RecordChange] | Unset = UNSET
     children: list[ChildSubmitted] | Unset = UNSET
+    committed: SourcesSynced | None | Unset = UNSET
     undo: str | None | Unset = UNSET
     version: int | None | Unset = UNSET
 
@@ -18563,6 +18646,8 @@ class FormsSubmitted(_Model):
             out["changes"] = [e0.to_json() for e0 in self.changes]
         if self.children is not UNSET:
             out["children"] = [e0.to_json() for e0 in self.children]
+        if self.committed is not UNSET:
+            out["committed"] = None if self.committed is None else self.committed.to_json()
         if self.undo is not UNSET:
             out["undo"] = self.undo
         if self.version is not UNSET:
@@ -18579,6 +18664,7 @@ class FormsSubmitted(_Model):
             revision=data["revision"],
             changes=[RecordChange.from_json(e0) for e0 in data["changes"]] if "changes" in data else UNSET,
             children=[ChildSubmitted.from_json(e0) for e0 in data["children"]] if "children" in data else UNSET,
+            committed=UNSET if "committed" not in data else None if data["committed"] is None else SourcesSynced.from_json(data["committed"]),
             undo=data.get("undo", UNSET),
             version=data.get("version", UNSET),
         )
@@ -28284,6 +28370,64 @@ class PackagedFile(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PagedRecord(_Model):
+    """A record of a page."""
+    uid: str
+    attrs: dict[str, str]
+    label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["attrs"] = dict(self.attrs)
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PagedRecord:
+        return cls(
+            uid=data["uid"],
+            attrs=dict(data["attrs"]),
+            label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PagedSource(_Model):
+    """The source a page's layer is bound to, and its version.
+    Attributes:
+        id: The bound layer's source id (`kaynak-N`).
+        revision: The source's revision when the layer last matched it (`SourceLink.revision`): the version the records are of.
+        edited: The layer has changes the source lacks: the page is the working copy's, not the source's.
+    """
+    id: str
+    kind: SourceKind | SourceKindName
+    table: str
+    revision: str
+    edited: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["kind"] = _enum_out(self.kind)
+        out["table"] = self.table
+        out["revision"] = self.revision
+        out["edited"] = self.edited
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PagedSource:
+        return cls(
+            id=data["id"],
+            kind=_enum_in(SourceKind, data["kind"]),
+            table=data["table"],
+            revision=data["revision"],
+            edited=data["edited"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ParagraphLayout(_Model):
     """A multi-line text's indents, tab stops and columns (docs/adr/0324 §1), in its height (MTEXT's `\\p` codes):
     every paragraph's first line starts `leftIndent + indent` heights from the box's left, its other lines
@@ -33120,6 +33264,118 @@ class RecordsDuplicated(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class RecordsPage(_Model):
+    """Input of `cad.records.page` v1: the records of `layer`, or those `relation` ties to `of`.
+
+    Refusals, checked in this order: `invalid_count` (a limit not 1–500), `invalid_cursor` (not a cursor of this
+    listing), `invalid_input` (neither `layer` nor `relation`, both, `of` without `relation`, `side` without it),
+    `layer_not_found`, `unknown_relation`, `entity_not_found` (`of`), `form_layer_mismatch` (`of` is not on the
+    relation's side's layer), `field_not_found` (a field to return); then `revision_conflict` (status `conflict`: the
+    document is not at `expectedRevision`) and `source_changed` (status `conflict`: the layer's source is not at
+    `expectedSource`), so a page after the first is of the same data.
+    Attributes:
+        cursor: The page after the one whose `next` this is.
+        expected_revision: The document revision the first page was read at (decimal text).
+        expected_source: The source revision the first page said (`source.revision`).
+        fields: The attributes returned, by the layer's fields' names; none: all of them.
+        layer: The layer to read (a layer's id).
+        limit: How many records a page holds, 1–500; none: 50. Unit: count.
+        of: The record asked about (lowercase UUID text with hyphens).
+        query: Words a record's attribute values hold, all of them (Turkish folded); none: every record.
+        relation: A project relation's id: read the records it ties to `of`.
+    """
+    cursor: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    expected_source: str | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    of: str | None | Unset = UNSET
+    query: str | None | Unset = UNSET
+    relation: str | None | Unset = UNSET
+    side: RelationSide | RelationSideName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.expected_source is not UNSET:
+            out["expectedSource"] = self.expected_source
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.of is not UNSET:
+            out["of"] = self.of
+        if self.query is not UNSET:
+            out["query"] = self.query
+        if self.relation is not UNSET:
+            out["relation"] = self.relation
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordsPage:
+        return cls(
+            cursor=data.get("cursor", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            expected_source=data.get("expectedSource", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            layer=data.get("layer", UNSET),
+            limit=data.get("limit", UNSET),
+            of=data.get("of", UNSET),
+            query=data.get("query", UNSET),
+            relation=data.get("relation", UNSET),
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(RelationSide, data["side"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordsPaged(_Model):
+    """Output of `cad.records.page` v1, and its plan.
+    Attributes:
+        layer: The layer the records are on (a relation's side's layer).
+        total: How many records match, over every page, after the layer filters. Unit: count.
+        next: The cursor of the page after this one; none on the last.
+        source: The layer's source, when it is bound.
+    """
+    layer: str
+    total: int
+    records: list[PagedRecord]
+    revision: str
+    next: str | None | Unset = UNSET
+    source: PagedSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["total"] = self.total
+        out["records"] = [e0.to_json() for e0 in self.records]
+        out["revision"] = self.revision
+        if self.next is not UNSET:
+            out["next"] = self.next
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordsPaged:
+        return cls(
+            layer=data["layer"],
+            total=data["total"],
+            records=[PagedRecord.from_json(e0) for e0 in data["records"]],
+            revision=data["revision"],
+            next=data.get("next", UNSET),
+            source=UNSET if "source" not in data else None if data["source"] is None else PagedSource.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class RecordsPlan(_Model):
     """What `cad.records.create` would write (plan mode); nothing is written.
     Attributes:
@@ -35356,6 +35612,50 @@ class SourceLink(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourceRelation(_Model):
+    """A relation of a file's table (a row of `gpkgext_relations`).
+    Attributes:
+        name: The relation's name as the file writes it (`kentos_references`, `media`, …).
+        base: The base table (for KentOS's: the child, which holds the references).
+        related: The related table (for KentOS's: the parent).
+        mapping: The mapping table.
+        rows: How many rows the mapping table holds. Unit: count.
+        why: Why a broken relation is (none otherwise).
+    """
+    name: str
+    base: str
+    related: str
+    mapping: str
+    rows: int
+    kind: SourceRelationKind | SourceRelationKindName
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["base"] = self.base
+        out["related"] = self.related
+        out["mapping"] = self.mapping
+        out["rows"] = self.rows
+        out["kind"] = _enum_out(self.kind)
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceRelation:
+        return cls(
+            name=data["name"],
+            base=data["base"],
+            related=data["related"],
+            mapping=data["mapping"],
+            rows=data["rows"],
+            kind=_enum_in(SourceRelationKind, data["kind"]),
+            why=data.get("why", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SourceState(_Model):
     """A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
     how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
@@ -35406,6 +35706,8 @@ class SourceTable(_Model):
         data: `features` or `attributes`.
         rows: Unit: count.
         geometry: The geometry column's type, none for an attribute table.
+        relations: The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with
+            whether KentOS reads and writes its representation.
         srid: Unit: epsg.
     """
     name: str
@@ -35414,6 +35716,7 @@ class SourceTable(_Model):
     columns: list[SourceColumn]
     capabilities: SourceCapabilities
     geometry: str | None | Unset = UNSET
+    relations: list[SourceRelation] | Unset = UNSET
     srid: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -35425,6 +35728,8 @@ class SourceTable(_Model):
         out["capabilities"] = self.capabilities.to_json()
         if self.geometry is not UNSET:
             out["geometry"] = self.geometry
+        if self.relations is not UNSET:
+            out["relations"] = [e0.to_json() for e0 in self.relations]
         if self.srid is not UNSET:
             out["srid"] = self.srid
         return out
@@ -35438,6 +35743,7 @@ class SourceTable(_Model):
             columns=[SourceColumn.from_json(e0) for e0 in data["columns"]],
             capabilities=SourceCapabilities.from_json(data["capabilities"]),
             geometry=data.get("geometry", UNSET),
+            relations=[SourceRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             srid=data.get("srid", UNSET),
         )
 
@@ -35581,6 +35887,99 @@ class SourcesEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourcesRelate(_Model):
+    """Input of `cad.sources.relate` v1.
+
+    Refusals, checked in this order: `unknown_relation`; `source_gone` (the file is not there). `check` answers for what it
+    finds (`unbound`, `split`, `single`, `text`, `mapped`, `foreign`, `broken`); `map` and `unmap` refuse them:
+    `relation_unbound` (a layer of the relation is not bound), `transaction_split` (the layers are not in one GeoPackage
+    file: the mapping needs both in one transaction), `relation_not_multiple` (`map`) and `relation_not_mapped` (`unmap`) for a
+    field that holds one id, `source_readonly`, `source_changed` (status `conflict`: the file changed since the layers last
+    matched it); then for `map`: `relation_mapped` (already mapped), `relation_unsupported` (the file relates the two tables
+    another way, or its mapping table is not one), `invalid_mapping` (the table's name is not a name, or the file has a table
+    of it), `relation_dangling` (a reference to an object the table does not hold); for `unmap`: `relation_not_mapped`.
+    `file_unwritable` when the file cannot be written (nothing is).
+    Attributes:
+        relation: The project relation's id.
+        mapping: `map`: the mapping table's name (letters, digits and `_`, 1–64, not starting with a digit or `gpkg`);
+            none: the child's table and the parent's joined with `_`.
+    """
+    relation: str
+    action: RelateOp | RelateOpName
+    mapping: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = self.relation
+        out["action"] = _enum_out(self.action)
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesRelate:
+        return cls(
+            relation=data["relation"],
+            action=_enum_in(RelateOp, data["action"]),
+            mapping=data.get("mapping", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesRelated(_Model):
+    """Output of `cad.sources.relate` v1, and its plan: how the relation is kept (after the op; a plan says what it
+    would be), its mapping table and rows.
+    Attributes:
+        rows: The mapping rows (mapped; `map`: those written). Unit: count.
+        child: The child's table and the parent's, when both are bound.
+        mapping: The mapping table (mapped).
+        source: The file's SHA-256 after (plan, check: now); none for an unbound or split relation.
+        why: Why a foreign or broken relation is not rewritten.
+    """
+    relation: str
+    state: RelationState | RelationStateName
+    rows: int
+    revision: str
+    child: str | None | Unset = UNSET
+    mapping: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = self.relation
+        out["state"] = _enum_out(self.state)
+        out["rows"] = self.rows
+        out["revision"] = self.revision
+        if self.child is not UNSET:
+            out["child"] = self.child
+        if self.mapping is not UNSET:
+            out["mapping"] = self.mapping
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesRelated:
+        return cls(
+            relation=data["relation"],
+            state=_enum_in(RelationState, data["state"]),
+            rows=data["rows"],
+            revision=data["revision"],
+            child=data.get("child", UNSET),
+            mapping=data.get("mapping", UNSET),
+            parent=data.get("parent", UNSET),
+            source=data.get("source", UNSET),
+            why=data.get("why", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SourcesSync(_Model):
     """Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,
     `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
@@ -35589,16 +35988,26 @@ class SourcesSync(_Model):
     for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
     their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
     table repeats the layer's key: the pins of those rows are not followed).
+
+    `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
+    together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,
+    `source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file
+    (`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and
+    `with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with
+    its layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table
+    does not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
         topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
             and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
+        with_: Writing: more bound layers (by id) written in the same transaction.
     """
     layer: str
     direction: SyncDirection | SyncDirectionName
     discard: bool | Unset = UNSET
     topology: SyncTopology | SyncTopologyName | None | Unset = UNSET
+    with_: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -35608,6 +36017,8 @@ class SourcesSync(_Model):
             out["discard"] = self.discard
         if self.topology is not UNSET:
             out["topology"] = None if self.topology is None else _enum_out(self.topology)
+        if self.with_ is not UNSET:
+            out["with"] = list(self.with_)
         return out
 
     @classmethod
@@ -35617,6 +36028,7 @@ class SourcesSync(_Model):
             direction=_enum_in(SyncDirection, data["direction"]),
             discard=data.get("discard", UNSET),
             topology=UNSET if "topology" not in data else None if data["topology"] is None else _enum_in(SyncTopology, data["topology"]),
+            with_=list(data["with"]) if "with" in data else UNSET,
         )
 
 
@@ -35630,8 +36042,10 @@ class SourcesSynced(_Model):
         removed: Unit: count.
         source: The file's SHA-256 after (plan: before).
         followed: The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531). Unit: count.
+        layers: A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.
         left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
         pins: What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
+        relations: The mapped relations' mapping rows written.
     """
     added: int
     modified: int
@@ -35640,8 +36054,10 @@ class SourcesSynced(_Model):
     revision: str
     columns: list[str] | Unset = UNSET
     followed: int | Unset = UNSET
+    layers: list[SyncedLayer] | Unset = UNSET
     left: int | Unset = UNSET
     pins: SyncedPins | None | Unset = UNSET
+    relations: list[SyncedRelation] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -35654,10 +36070,14 @@ class SourcesSynced(_Model):
             out["columns"] = list(self.columns)
         if self.followed is not UNSET:
             out["followed"] = self.followed
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.left is not UNSET:
             out["left"] = self.left
         if self.pins is not UNSET:
             out["pins"] = None if self.pins is None else self.pins.to_json()
+        if self.relations is not UNSET:
+            out["relations"] = [e0.to_json() for e0 in self.relations]
         return out
 
     @classmethod
@@ -35670,8 +36090,10 @@ class SourcesSynced(_Model):
             revision=data["revision"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
             followed=data.get("followed", UNSET),
+            layers=[SyncedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             left=data.get("left", UNSET),
             pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
+            relations=[SyncedRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
         )
 
 
@@ -38249,6 +38671,37 @@ class SurveySettings(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SyncedLayer(_Model):
+    """What a write did to one layer's table.
+    Attributes:
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+    """
+    layer: str
+    added: int
+    modified: int
+    removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SyncedLayer:
+        return cls(
+            layer=data["layer"],
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SyncedPins(_Model):
     """What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many
     objects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins
@@ -38275,6 +38728,34 @@ class SyncedPins(_Model):
             kept=data["kept"],
             lost=[LostPin.from_json(e0) for e0 in data["lost"]] if "lost" in data else UNSET,
             moved=[PinMove.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SyncedRelation(_Model):
+    """What a write did to a mapped relation's mapping table: rows added and removed.
+    Attributes:
+        relation: The project relation's id.
+        added: Unit: count.
+        removed: Unit: count.
+    """
+    relation: str
+    added: int
+    removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["relation"] = self.relation
+        out["added"] = self.added
+        out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SyncedRelation:
+        return cls(
+            relation=data["relation"],
+            added=data["added"],
+            removed=data["removed"],
         )
 
 
@@ -53905,6 +54386,8 @@ __all__ = [
     "PackagedFile",
     "PackagedKind",
     "PackagedKindName",
+    "PagedRecord",
+    "PagedSource",
     "ParagraphLayout",
     "ParallelConstraintRule",
     "ParallelPointConstruction",
@@ -54093,6 +54576,8 @@ __all__ = [
     "RecordsDuplicate",
     "RecordsDuplicatePlan",
     "RecordsDuplicated",
+    "RecordsPage",
+    "RecordsPaged",
     "RecordsPlan",
     "RecreateHatchEdit",
     "RectangleClipBoundary",
@@ -54105,6 +54590,8 @@ __all__ = [
     "RegularFrame",
     "RegularPolygonCreate",
     "RehostOpeningsOperation",
+    "RelateOp",
+    "RelateOpName",
     "RelatePredicate",
     "RelatePredicateName",
     "RelatedFormItem",
@@ -54114,6 +54601,10 @@ __all__ = [
     "RelationDelete",
     "RelationDeleteName",
     "RelationFollowed",
+    "RelationSide",
+    "RelationSideName",
+    "RelationState",
+    "RelationStateName",
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
@@ -54259,6 +54750,9 @@ __all__ = [
     "SourceLink",
     "SourceOverrides",
     "SourceOverridesName",
+    "SourceRelation",
+    "SourceRelationKind",
+    "SourceRelationKindName",
     "SourceState",
     "SourceTable",
     "SourceUncertainty",
@@ -54267,6 +54761,8 @@ __all__ = [
     "SourcesEdit",
     "SourcesEditOp",
     "SourcesEdited",
+    "SourcesRelate",
+    "SourcesRelated",
     "SourcesSync",
     "SourcesSynced",
     "SpaceBreak",
@@ -54360,7 +54856,9 @@ __all__ = [
     "SyncDirectionName",
     "SyncTopology",
     "SyncTopologyName",
+    "SyncedLayer",
     "SyncedPins",
+    "SyncedRelation",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",

@@ -17,9 +17,11 @@
 use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill, Task};
 use kentos_contracts::{
-    LayerNodeType, ProjectRelation, RelationDelete, RelationsEdit, RelationsOp,
+    CommandResult, LayerNodeType, ProjectRelation, RelateOp, RelationDelete, RelationState,
+    RelationsEdit, RelationsOp, SourcesRelate, SourcesRelated,
 };
 use kentos_interaction::Level;
+use kentos_native_application::sources::relate;
 use kentos_native_application::{ExecutionContext, relations_edit};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::select::{Choice, Select};
@@ -36,6 +38,9 @@ const SAVE: &str = "Kaydet";
 const CANCEL: &str = "Vazgeç";
 const NEW: &str = "Yeni ilişki";
 const REMOVE: &str = "İlişkiyi sil";
+/// The sources' side of a many-to-many relation (docs/adr/0532 §2).
+const MAP: &str = "Dosyaya eşle";
+const UNMAP: &str = "Eşlemeyi kaldır";
 
 /// The policies in the order the window offers them, with their words.
 const POLICIES: [(RelationDelete, &str, &str); 4] = [
@@ -68,6 +73,16 @@ pub struct Window {
     rows: Vec<ProjectRelation>,
     kept: Vec<ProjectRelation>,
     chosen: Option<usize>,
+    /// How each saved relation is kept in its bound file (`cad.sources.relate`'s `check`), by the relation's id.
+    filed: std::collections::BTreeMap<String, SourcesRelated>,
+}
+
+impl Window {
+    /// Whether the relation is kept in its file as `state` says (a test's question).
+    #[cfg(test)]
+    pub(crate) fn has_filed(&self, id: &str, state: RelationState) -> bool {
+        self.filed.get(id).is_some_and(|f| f.state == state)
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -80,6 +95,9 @@ pub enum Event {
     Child(String),
     Field(String),
     Policy(RelationDelete),
+    /// Dosyaya eşle and Eşlemeyi kaldır on the chosen relation (docs/adr/0532 §2): written to the file at once.
+    Map,
+    Unmap,
     Save,
     Cancel,
 }
@@ -100,8 +118,88 @@ impl App {
             chosen: (!rows.is_empty()).then_some(0),
             kept: rows.clone(),
             rows,
+            filed: std::collections::BTreeMap::new(),
         });
+        self.refile_relations();
         self.dialog = Some(Dialog::Relations);
+    }
+
+    /// Reads how each saved relation is kept in its file (`cad.sources.relate`'s `check`).
+    fn refile_relations(&mut self) {
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let ids: Vec<String> = doc
+            .model
+            .settings()
+            .relations
+            .iter()
+            .map(|r| r.id.clone())
+            .collect();
+        let mut filed = std::collections::BTreeMap::new();
+        for id in ids {
+            let answer = relate::execute(
+                &mut ExecutionContext::new(&mut doc.model),
+                SourcesRelate {
+                    relation: id.clone(),
+                    action: RelateOp::Check,
+                    mapping: None,
+                },
+            );
+            if let CommandResult::Completed { output, .. } = answer {
+                filed.insert(id, output);
+            }
+        }
+        if let Some(w) = self.relations_window.as_mut() {
+            w.filed = filed;
+        }
+    }
+
+    /// Dosyaya eşle or Eşlemeyi kaldır on the chosen, saved relation.
+    fn relation_filing(&mut self, op: RelateOp) {
+        let Some(w) = self.relations_window.as_ref() else {
+            return;
+        };
+        let Some(r) = w.chosen.and_then(|i| w.rows.get(i)).cloned() else {
+            return;
+        };
+        if w.kept.iter().find(|k| k.id == r.id) != Some(&r) {
+            self.warn("İlişkide kaydedilmemiş değişiklik var; önce Kaydet.");
+            return;
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let answer = relate::execute(
+            &mut ExecutionContext::new(&mut doc.model),
+            SourcesRelate {
+                relation: r.id.clone(),
+                action: op,
+                mapping: None,
+            },
+        );
+        match answer {
+            CommandResult::Completed { output, .. } => {
+                let said = match op {
+                    RelateOp::Map => format!(
+                        "“{}” ilişkisi dosyada GeoPackage ilişkisi olarak eşlendi: “{}” eşleme tablosu, {} satır.",
+                        r.name,
+                        output.mapping.clone().unwrap_or_default(),
+                        output.rows
+                    ),
+                    _ => format!(
+                        "“{}” ilişkisinin eşlemesi dosyadan kaldırıldı; başvurular katmanda kaldı.",
+                        r.name
+                    ),
+                };
+                self.announce(Level::Success, said);
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => self.announce(Level::Error, error.message),
+            _ => {}
+        }
+        self.refile_relations();
     }
 
     pub(crate) fn relations_event(&mut self, event: Event) -> Task<Message> {
@@ -158,6 +256,8 @@ impl App {
                     r.on_delete = p;
                 }
             }
+            Event::Map => self.relation_filing(RelateOp::Map),
+            Event::Unmap => self.relation_filing(RelateOp::Unmap),
             Event::Cancel => {
                 self.relations_window = None;
                 self.dialog = None;
@@ -365,9 +465,67 @@ impl App {
                 "Alt katmanın alanı yok: önce Alanlar penceresinden üst nesnenin kimliğini tutacak bir alan ekleyin.",
             ));
         }
-        col.push(words::field("Üst nesne silinince", policy, None))
-            .push(label::caption(explain).style(muted))
-            .into()
+        col = col
+            .push(words::field("Üst nesne silinince", policy, None))
+            .push(label::caption(explain).style(muted));
+        if let Some(filed) = self
+            .relations_window
+            .as_ref()
+            .and_then(|w| w.filed.get(&r.id))
+        {
+            col = col.push(Self::relation_filed(filed));
+        }
+        col.into()
+    }
+
+    /// How the relation is kept in its bound file, and what can be done about it (docs/adr/0532 §2).
+    fn relation_filed(f: &SourcesRelated) -> Element<'_, Message> {
+        let table = f.child.clone().unwrap_or_default();
+        let (kind, said, action): (Kind, String, Option<(&str, Event)>) = match f.state {
+            RelationState::Text => (
+                Kind::Info,
+                format!(
+                    "Çok değerli başvuru {table} tablosunda “; ” ile birleşmiş metin sütunu olarak tutuluyor."
+                ),
+                Some((MAP, Event::Map)),
+            ),
+            RelationState::Mapped => (
+                Kind::Ok,
+                format!(
+                    "GeoPackage ilişkisi olarak tutuluyor: “{}” eşleme tablosu, {} satır.",
+                    f.mapping.clone().unwrap_or_default(),
+                    f.rows
+                ),
+                Some((UNMAP, Event::Unmap)),
+            ),
+            RelationState::Foreign | RelationState::Broken => (
+                Kind::Warn,
+                format!(
+                    "Dosya iki tabloyu başka bir temsille ilişkilendiriyor: {}. KentOS onun üzerine yazmaz ve metne çevirmez.",
+                    f.why.clone().unwrap_or_default()
+                ),
+                None,
+            ),
+            RelationState::Split => (
+                Kind::Info,
+                "Katmanlar ayrı kaynaklarda; eşleme iki tabloyu tek işlemde ister.".to_owned(),
+                None,
+            ),
+            RelationState::Unbound => (
+                Kind::Info,
+                "Katmanlardan biri bir GeoPackage'a bağlı değil; dosyada tutulmuyor.".to_owned(),
+                None,
+            ),
+            RelationState::Single => return space::vertical().height(0).into(),
+        };
+        let mut col = Column::new()
+            .spacing(6)
+            .push(label::strong("Dosyada"))
+            .push(words::text_line(kind, said));
+        if let Some((name, event)) = action {
+            col = col.push(words::secondary(name, Some(msg(event))));
+        }
+        col.into()
     }
 
     /// The window's controls by their words (a trace's `dialog` step).
@@ -383,6 +541,8 @@ impl App {
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             Control::Press(NEW) => Some(msg(Event::New)),
             Control::Press(REMOVE) => Some(msg(Event::Remove)),
+            Control::Press(MAP) => Some(msg(Event::Map)),
+            Control::Press(UNMAP) => Some(msg(Event::Unmap)),
             Control::Press(words) => match w.rows.iter().position(|r| r.name == words) {
                 Some(i) => Some(msg(Event::Choose(i))),
                 None => return Err(format!("“{TITLE}” penceresinde “{words}” düğmesi yok")),

@@ -10,6 +10,12 @@ import type { FormChild } from "./FormChild";
  * `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),
  * `form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse
  * as every write's (`rule_broken`, `not_unique`).
+ *
+ * `commit` (docs/adr/0532 §1) carries the step to the sources: the layers the record and its children are on, when
+ * bound to tables of one GeoPackage file, are written to it in one transaction right after, as
+ * `cad.sources.sync` with `with`. Any refusal of that write (`source_readonly`, `geometry_mismatch`,
+ * `source_changed`, `relation_dangling`, `transaction_split` …) is the submission's: the plan says it, and nothing is
+ * written, neither in the drawing nor in the file. A layer that is not bound is not written.
  */
 export type FormsSubmit = { 
 /**
@@ -59,6 +65,10 @@ opened?: { [key in string]: string },
  * made, each through its relation; the record and its children go in together or not at all.
  */
 children?: Array<FormChild>, 
+/**
+ * Write the layers' sources too, in one transaction (docs/adr/0532 §1); written only as `true`.
+ */
+commit?: boolean, 
 /**
  * The document revision the input was prepared against, as decimal text.
  */

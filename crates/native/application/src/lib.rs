@@ -255,6 +255,7 @@ pub mod views_edit;
 pub mod forms;
 pub mod forms_audit;
 pub mod records;
+pub mod records_page;
 pub mod records_duplicate;
 pub mod forms_compare;
 pub mod forms_edit;
@@ -1017,6 +1018,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SOURCES_SYNC,
         kentos_contracts::CAD_SOURCES_SYNC_VERSION,
+    ),
+    // A many-to-many reference in a bound GeoPackage ([`sources::relate`], docs/adr/0532).
+    (
+        kentos_contracts::CAD_SOURCES_RELATE,
+        kentos_contracts::CAD_SOURCES_RELATE_VERSION,
+    ),
+    // A layer's records, or a relation's, a page at a time ([`records_page`], docs/adr/0532).
+    (
+        kentos_contracts::CAD_RECORDS_PAGE,
+        kentos_contracts::CAD_RECORDS_PAGE_VERSION,
     ),
     // A GeoPackage into the drawing ([`file_import_gpkg`], docs/adr/0502).
     (

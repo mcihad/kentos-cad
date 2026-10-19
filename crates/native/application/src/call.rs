@@ -48,6 +48,8 @@ pub struct CallState {
     pub(crate) outcome: Option<Outcome>,
     /// The call relaxes the constraints (docs/adr/0337 §1).
     pub(crate) relax: bool,
+    /// The command runs on a reading copy only to say what it would write (a plan): it writes no file.
+    pub(crate) dry: bool,
 }
 
 impl CallState {
@@ -1086,6 +1088,7 @@ fn plan(
         return own;
     }
     state.plan = None;
+    state.dry = true;
     let mut copy = doc.reading_copy();
     let mut cx = ExecutionContext::with_optional_store(&mut copy, store);
     cx.call = Some(state);

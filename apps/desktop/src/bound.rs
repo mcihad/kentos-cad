@@ -21,6 +21,9 @@ pub enum Event {
     /// Kaynağa yaz on a layer (none: the one at hand). A part of a table (its area) writes its neighbours outside
     /// the area with it while Topoloji is on (docs/adr/0531, strict).
     Write(Option<String>),
+    /// Kaynağa birlikte yaz (docs/adr/0532 §1): the layer and the bound layers of its file that the project's relations
+    /// tie to it, in one transaction.
+    WriteTogether(Option<String>),
     /// Kaynağa yaz, komşular gevşek: a part's neighbours outside the area follow, the ones that would be left invalid
     /// stay as they are (docs/adr/0531, loose).
     WriteLoose(Option<String>),
@@ -120,6 +123,10 @@ impl App {
                 ),
                 None => self.warn(NO_BOUND),
             },
+            Event::WriteTogether(layer) => match self.bound_at_hand(layer) {
+                Some(link) => self.bound_write_together(&link),
+                None => self.warn(NO_BOUND),
+            },
             Event::Read(layer) => match self.bound_at_hand(layer) {
                 Some(link) => self.bound_sync(&link, SyncDirection::Read, false, None),
                 None => self.warn(NO_BOUND),
@@ -170,6 +177,129 @@ impl App {
         }
     }
 
+    /// The bound layers of `link`'s file that the project's relations tie to its layer (as parent or child), once each.
+    pub(crate) fn bound_related(&self, link: &SourceLink) -> Vec<SourceLink> {
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let settings = doc.model.settings();
+        let mut out: Vec<SourceLink> = Vec::new();
+        for r in &settings.relations {
+            let other = if r.child == link.layer {
+                &r.parent
+            } else if r.parent == link.layer {
+                &r.child
+            } else {
+                continue;
+            };
+            if let Some(l) = settings.sources.iter().find(|s| {
+                s.layer == *other
+                    && s.kind == link.kind
+                    && s.path == link.path
+                    && s.layer != link.layer
+            }) && !out.iter().any(|o| o.id == l.id)
+            {
+                out.push(l.clone());
+            }
+        }
+        out
+    }
+
+    /// Kaynağa birlikte yaz: the layer and the bound layers its relations tie to it, one SQLite transaction
+    /// (`cad.sources.sync` with `with`): all of them go in or none.
+    fn bound_write_together(&mut self, link: &SourceLink) {
+        let related = self.bound_related(link);
+        let name = self.bound_name(&link.layer);
+        if related.is_empty() {
+            self.warn(format!(
+                "“{name}” katmanına ilişkiyle bağlı, aynı dosyaya bağlı başka katman yok; Kaynağa yaz tek katmanı yazar."
+            ));
+            return;
+        }
+        let Some(doc) = self.document.as_mut() else {
+            return;
+        };
+        let input = SourcesSync {
+            layer: link.layer.clone(),
+            direction: SyncDirection::Write,
+            with: related.iter().map(|l| l.layer.clone()).collect(),
+            discard: false,
+            topology: None,
+        };
+        match sync::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, warnings } => {
+                let said = self.together_words(&output, &link.path);
+                self.announce(
+                    if warnings.is_empty() {
+                        Level::Success
+                    } else {
+                        Level::Warn
+                    },
+                    said,
+                );
+                for w in warnings {
+                    self.say(Level::Warn, w.message);
+                }
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => {
+                self.announce(
+                    Level::Error,
+                    format!("{} Hiçbir katman yazılmadı.", error.message),
+                );
+            }
+            _ => {}
+        }
+    }
+
+    /// What a write of several layers did, said layer by layer, then the mapped relations' rows.
+    pub(crate) fn together_words(
+        &self,
+        output: &kentos_contracts::SourcesSynced,
+        path: &str,
+    ) -> String {
+        let count = |a: u32, m: u32, r: u32| -> String {
+            let parts: Vec<String> = [(a, "eklendi"), (m, "değişti"), (r, "silindi")]
+                .into_iter()
+                .filter(|(n, _)| *n > 0)
+                .map(|(n, w)| format!("{n} {w}"))
+                .collect();
+            if parts.is_empty() {
+                "değişiklik yok".to_owned()
+            } else {
+                parts.join(", ")
+            }
+        };
+        let mut layers: Vec<String> = output
+            .layers
+            .iter()
+            .map(|l| {
+                format!(
+                    "“{}”: {}",
+                    self.bound_name(&l.layer),
+                    count(l.added, l.modified, l.removed)
+                )
+            })
+            .collect();
+        if layers.is_empty() {
+            layers.push(count(output.added, output.modified, output.removed));
+        }
+        let mut said = format!(
+            "{} dosyasına tek işlemde yazıldı: {}",
+            file_name(path),
+            layers.join("; ")
+        );
+        for r in output.relations.iter().filter(|r| r.added + r.removed > 0) {
+            said.push_str(&format!(
+                "; ilişki satırları (“{}”): +{} −{}",
+                r.relation, r.added, r.removed
+            ));
+        }
+        said.push('.');
+        said
+    }
+
     fn bound_sync(
         &mut self,
         link: &SourceLink,
@@ -184,6 +314,7 @@ impl App {
         let input = SourcesSync {
             layer: link.layer.clone(),
             direction,
+            with: Vec::new(),
             discard,
             topology,
         };

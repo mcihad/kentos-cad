@@ -36,9 +36,11 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingRun,
 ) -> CommandResult<ProcessingRan> {
+    // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
+    let dry = cx.dry();
     let ran = host().and_then(|h| {
         h.check(cx.doc, &input)?;
-        h.run(cx.doc, &input, true)
+        h.run(cx.doc, &input, !dry)
     });
     match ran {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },

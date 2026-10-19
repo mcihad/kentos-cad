@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingBatch, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
+use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingBatch, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesRelate, SourcesSync, RecordsPage, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -36,7 +36,8 @@ use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use kentos_contracts::{StacPrepare, StacSearch};
-use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
+use crate::sources::{describe as sources_describe, edit as sources_edit, relate as sources_relate, sync as sources_sync};
+use crate::records_page;
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, parameters_edit, blocks_define,
@@ -125,6 +126,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_SOURCES_DESCRIBE => $then!(sources_describe, SourcesDescribe),
             kentos_contracts::CAD_SOURCES_EDIT => $then!(sources_edit, SourcesEdit),
             kentos_contracts::CAD_SOURCES_SYNC => $then!(sources_sync, SourcesSync),
+            kentos_contracts::CAD_SOURCES_RELATE => $then!(sources_relate, SourcesRelate),
+            kentos_contracts::CAD_RECORDS_PAGE => $then!(records_page, RecordsPage),
             kentos_contracts::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
             kentos_contracts::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
             kentos_contracts::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
