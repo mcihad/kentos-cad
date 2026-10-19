@@ -93,6 +93,98 @@
       ]
     },
     {
+      "name": "PDF altlığı: sayfanın çizgileri, dolguları ve yazıları, katmanları grubun altında; resim ve gölgeleme söylenir",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/katmanlar.pdf", "layerId": "cizim"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar", "insert": "$any", "layers": ["PDF", "Yapılar", "Kotlar"]}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.path"}]}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: cizgiler.pdf 1. sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/cizgiler.pdf", "layerId": "cizim", "page": 1}}, "result": {"status": "completed", "output": {"name": "cizgiler", "objects": 8, "removed": 0, "revision": "$current", "block": "$blockOf:cizgiler", "insert": "$any", "layers": ["PDF"]}, "warnings": []}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"cizgiler": {"path": "$fixture:pdf/v1/cizgiler.pdf", "digest": "ef34f752666242811c3d5574bf112273f8f3f1d5facdc057cebf7c73d721ca1d", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: donuk.pdf 2. sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/donuk.pdf", "layerId": "cizim", "page": 2}}, "result": {"status": "completed", "output": {"name": "donuk", "objects": 1, "removed": 0, "revision": "$current", "block": "$blockOf:donuk", "insert": "$any", "layers": ["PDF"]}, "warnings": []}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"donuk": {"path": "$fixture:pdf/v1/donuk.pdf", "digest": "9155c327c29b4f5e94910141f32ac29682c12e99a1ae4a8fdbb561c769f892f4", "group": "$any", "page": 2}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: turkce.pdf 1. sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/turkce.pdf", "layerId": "cizim", "page": 1}}, "result": {"status": "completed", "output": {"name": "turkce", "objects": 1, "removed": 0, "revision": "$current", "block": "$blockOf:turkce", "insert": "$any", "layers": ["PDF"]}, "warnings": []}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"turkce": {"path": "$fixture:pdf/v1/turkce.pdf", "digest": "cbb956393874d4db735bc576042f5f29eddb2fd36d8bf0f49db9eff4dbd7ee67", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: egri.pdf 1. sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/egri.pdf", "layerId": "cizim", "page": 1}}, "result": {"status": "completed", "output": {"name": "egri", "objects": 1, "removed": 0, "revision": "$current", "block": "$blockOf:egri", "insert": "$any", "layers": ["PDF"]}, "warnings": []}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"egri": {"path": "$fixture:pdf/v1/egri.pdf", "digest": "5d807176131e1ab54dac9e441d382119634edc45c17c3e9078b7f421fb92dce4", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: xref-akisi.pdf 1. sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/xref-akisi.pdf", "layerId": "cizim", "page": 1}}, "result": {"status": "completed", "output": {"name": "xref-akisi", "objects": 8, "removed": 0, "revision": "$current", "block": "$blockOf:xref-akisi", "insert": "$any", "layers": ["PDF"]}, "warnings": []}, "expect": {"canUndo": true, "revision": "changed", "xrefs": {"xref-akisi": {"path": "$fixture:pdf/v1/xref-akisi.pdf", "digest": "c0b8d2a10a9de2d4390f8b5e7c904b9dc60d6f5c3abc1903c2b6c0afc5811467", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: olmayan sayfa",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/donuk.pdf", "layerId": "cizim", "page": 5}}, "result": {"status": "failed", "error": {"code": "pdf_page_not_found", "message": "donuk.pdf dosyasında 5. sayfa yok: 3 sayfası var.", "path": "operation.page"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: çizime sayfa verilmez",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:xref/v1/plan.kcad", "layerId": "cizim", "page": 2}}, "result": {"status": "failed", "error": {"code": "pdf_page_not_found", "message": "plan.kcad bir PDF değil; sayfa yalnız PDF altlığında verilir.", "path": "operation.page"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: şifreli PDF",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/sifreli.pdf", "layerId": "cizim"}}, "result": {"status": "failed", "error": {"code": "import_unreadable", "message": "sifreli.pdf PDF olarak okunamadı: PDF şifreli; şifresi açılmış bir kopyasını verin.", "path": "operation.path"}}, "expect": {"ids": [1], "canUndo": false, "canRedo": false, "dirty": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: görünüşü (soldur, tek renk), tek adımda geri alınır",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/katmanlar.pdf", "layerId": "cizim"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar", "insert": "$any", "layers": ["PDF", "Yapılar", "Kotlar"]}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.path"}]}},
+        {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "fade": 40, "monochrome": true}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 0, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar"}, "warnings": []}, "expect": {"canUndo": true, "xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1, "underlay": {"fade": 40, "monochrome": true}}}}},
+        {"op": "undo", "returns": "PDF altlığının görünüşü: katmanlar", "expect": {"xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: yazdırılmaz; varsayılana dönen görünüş yazılmaz",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/katmanlar.pdf", "layerId": "cizim"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar", "insert": "$any", "layers": ["PDF", "Yapılar", "Kotlar"]}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.path"}]}},
+        {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "plot": false}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 0, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar"}, "warnings": []}, "expect": {"xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1, "underlay": {"plot": false}}}}},
+        {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "plot": true}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 0, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar"}, "warnings": []}, "expect": {"xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: çizimin dış başvurusunun görünüşü yok",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:xref/v1/plan.kcad", "layerId": "cizim", "name": "Plan"}}, "result": {"status": "completed", "output": {"name": "Plan", "objects": 6, "removed": 0, "revision": "$current", "block": "$blockOf:Plan", "insert": "$any", "layers": ["0", "Duvar", "Kapı", "Yazı", "Detay", "Çevre"], "nested": ["Plan|Kolon", "Plan|Detay"]}, "warnings": [{"code": "objects_left_out", "message": "1 resim, raster ya da tablo bloğa konamadığı için alınmadı.", "path": "operation"}]}},
+        {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "Plan", "fade": 20}}, "result": {"status": "failed", "error": {"code": "not_an_underlay", "message": "“Plan” bir PDF altlığı değil; görünüşü yalnız PDF altlığının değişir.", "path": "operation.name"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: en çok %80 soldurulur",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/katmanlar.pdf", "layerId": "cizim"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar", "insert": "$any", "layers": ["PDF", "Yapılar", "Kotlar"]}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.path"}]}},
+        {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "fade": 90}}, "result": {"status": "failed", "error": {"code": "invalid_underlay", "message": "Soldurma en çok %80 olabilir.", "path": "operation.fade"}}, "expect": {"revision": "same"}}
+      ]
+    },
+    {
+      "name": "PDF altlığı: yeniden yükleme sayfasını yeniden okur, nesneler aynı kalır",
+      "note": "Kaynak değişmediyse yükleme bir şey yazmaz (ADR 0348 §2); sayfa kaynağın yanında kalır.",
+      "steps": [
+        {"op": "execute", "input": {"operation": {"kind": "attach", "path": "$fixture:pdf/v1/katmanlar.pdf", "layerId": "cizim"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar", "insert": "$any", "layers": ["PDF", "Yapılar", "Kotlar"]}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.path"}]}},
+        {"op": "execute", "input": {"operation": {"kind": "reload", "name": "katmanlar"}}, "result": {"status": "completed", "output": {"name": "katmanlar", "objects": 9, "removed": 0, "revision": "$current", "block": "$blockOf:katmanlar"}, "warnings": [{"code": "pdf_left_out", "message": "PDF sayfasından altlığa alınmadı: 2 resim, 1 gölgeleme.", "path": "operation.name"}]}, "expect": {"revision": "same", "xrefs": {"katmanlar": {"path": "$fixture:pdf/v1/katmanlar.pdf", "digest": "b2f4af5518af0f5ab16dbee7fc7f174c2c4efcd6d73bf15a8258b6ddfa9a25ad", "group": "$any", "page": 1}}}}
+      ]
+    },
+    {
       "name": "yeniden yükle: dosya değişmediyse hiçbir şey yazılmaz, geri alma adımı olmaz",
       "note": "Ad büyük küçük harfe bakmadan bulunur.",
       "steps": [

@@ -174,7 +174,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-08 — Düşey CRS/epoch ve işlem doğruluğu kaydını genişlet — P0 metadata; P1/P2 hesap**
 
-  *Kısmen (19 Ekim 2026; [ADR 0519](../docs/adr/0519-vertical-crs-and-epoch.md)): projenin kotlarının ne olduğu (elipsoit/ortometrik, düşey sistem, geoit adı ve SHA-256) ve koordinat epoku `.kcad` şema 85'te; `cad.crs.transform` kotlarıyla dönüştürür ve işlemin kaydını verir (EPSG kimlikleri, adımlar, PROJ pipeline'ı, motor, ızgara SHA-256'sı, kullanım alanı, belirtilen doğruluk); rapor belirsizlikleri ayrı tutar; geoit, düşey datum ve epok dönüşümü açıkça reddedilir; PROJ'la 28 bağımsız durum. Kalan: geoit ve hız modeli motoru, dış biçimlerin düşey sistemi, sunucu–masaüstü fark sınaması.*
+  *Kısmen (19 Ekim 2026; [ADR 0519](../docs/adr/0519-vertical-crs-and-epoch.md)): projenin kotlarının ne olduğu (elipsoit/ortometrik, düşey sistem, geoit adı ve SHA-256) ve koordinat epoku `.kcad` şema 86'te; `cad.crs.transform` kotlarıyla dönüştürür ve işlemin kaydını verir (EPSG kimlikleri, adımlar, PROJ pipeline'ı, motor, ızgara SHA-256'sı, kullanım alanı, belirtilen doğruluk); rapor belirsizlikleri ayrı tutar; geoit, düşey datum ve epok dönüşümü açıkça reddedilir; PROJ'la 28 bağımsız durum. Kalan: geoit ve hız modeli motoru, dış biçimlerin düşey sistemi, sunucu–masaüstü fark sınaması.*
 
   **Mevcut:** Helmert/NTv2, elipsoidal ölçü ve GNSS yükseklik farkındalığı var; genel CRS dönüşümü 2D olarak belgeli [K05]. Z'nin bulunması düşey dönüşüm yapıldığı anlamına gelmez.
 

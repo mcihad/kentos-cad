@@ -30,6 +30,7 @@ const RELOAD: &str = "Yeniden yükle";
 const UNLOAD: &str = "Boşalt";
 const REPATH: &str = "Yolu değiştir…";
 const DETACH: &str = "Kaldır";
+const OPEN_SOURCE: &str = "Kaynağı aç";
 const BIND: &str = "Bağla";
 const BIND_INSERT: &str = "Bağla, katmanları birleştir";
 const ADD: &str = "Ekle…";
@@ -86,6 +87,8 @@ pub struct Attach {
     pub scale: f64,
     /// Degrees, counterclockwise.
     pub rotation: f64,
+    /// A PDF's page (docs/adr/0351 §2), from 1; none for a drawing.
+    pub page: Option<u32>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -138,6 +141,14 @@ pub enum Event {
     RemovePath(usize),
     /// Öznitelikler's Yeniden bağla… for a picture.
     RelinkImage(kentos_domain::Slot),
+    /// Dış başvuru ekle's page of a PDF (docs/adr/0351 §2).
+    Page(f64),
+    /// The chosen PDF underlay's look: Soldur, Tek renk, Yazdır.
+    Fade(f64),
+    Monochrome(bool),
+    Plot(bool),
+    /// Kaynağı aç: the chosen reference's drawing in a tab of its own, to edit (docs/adr/0351 §5).
+    OpenSource,
     Close,
 }
 
@@ -224,7 +235,7 @@ impl App {
         };
         let (kind, extensions): (&str, &[&str]) = match purpose {
             Purpose::Image(_) => ("PNG ya da JPEG resmi", &["png", "jpg", "jpeg"]),
-            _ => ("KentOS çizimi (.kcad)", &["kcad"]),
+            _ => ("KentOS çizimi (.kcad) ya da PDF", &["kcad", "pdf"]),
         };
         Task::perform(
             async move {
@@ -311,6 +322,7 @@ impl App {
             scale: Some(a.scale),
             rotation: Some(a.rotation),
             layer_id: layer,
+            page: a.page,
         };
         if let Some(done) = self.xref_run(operation) {
             let mut parts = vec![format!("{} nesne", done.objects)];
@@ -363,6 +375,53 @@ impl App {
         self.open_xrefs();
     }
 
+    /// The chosen PDF underlay's look written, one step.
+    fn underlay_look(&mut self, fade: Option<u8>, monochrome: Option<bool>, plot: Option<bool>) {
+        let Some(name) = self.chosen_name() else { return };
+        if self.xref_run(XrefsOperation::Underlay { name, fade, monochrome, plot }).is_some() {
+            self.xrefs_others();
+        }
+    }
+
+    /// Kaynağı aç (docs/adr/0351 §5): the chosen reference's source drawing in a tab of its own. Its edits are that
+    /// file's, saved there with their own undo; this drawing takes them on Yeniden yükle.
+    fn open_xref_source(&mut self) -> Task<Message> {
+        let listed = self.xrefs.listed.as_deref().unwrap_or_default();
+        let Some(x) = self.xrefs.chosen.and_then(|k| listed.get(k)).cloned() else {
+            return Task::none();
+        };
+        if x.page.is_some() {
+            self.warn("Bir PDF altlığının kaynağı çizim değil, PDF dosyasıdır; KentOS'ta düzenlenmez.");
+            return Task::none();
+        }
+        let search = self.document.as_ref().map(|d| d.model.settings().xref_paths.clone()).unwrap_or_default();
+        let drawing = self.drawing_path();
+        let found = kentos_native_application::links::find(&x.path, x.relative.as_deref(), drawing.as_deref(), &search);
+        let Some(at) = found.at else {
+            self.warn(format!("“{}” kaynağı bulunamadı; önce Yolu değiştir… ile bağlayın.", x.name));
+            return Task::none();
+        };
+        if drawing.as_deref().is_some_and(|d| Path::new(d) == at) {
+            self.warn("Kaynak açık çizimin kendisi.");
+            return Task::none();
+        }
+        if self.document.is_some()
+            && let Some(why) = self.tabs_held()
+        {
+            self.warn(why);
+            return Task::none();
+        }
+        self.dialog = None;
+        self.say(
+            Level::Info,
+            format!(
+                "“{}” kaynağı yeni sekmede açılıyor; değişiklikleri o dosyaya kaydedilir, kendi geri almasıyla. Bu çizim onları Yeniden yükle ile alır.",
+                x.name
+            ),
+        );
+        self.start_opening(at, crate::opening::Purpose::Tab)
+    }
+
     fn chosen_name(&self) -> Option<String> {
         let listed = self.xrefs.listed.as_ref()?;
         listed.get(self.xrefs.chosen?).map(|x| x.name.clone())
@@ -373,7 +432,10 @@ impl App {
             Event::Picked(_, None) => {}
             Event::Picked(Purpose::Attach, Some(path)) => {
                 let name = path.file_stem().map_or_else(String::new, |s| s.to_string_lossy().into_owned());
-                self.xrefs.attach = Some(Attach { path, name, mode: Mode::Attach, scale: 1.0, rotation: 0.0 });
+                // A PDF is an underlay of one of its pages (docs/adr/0351 §2).
+                let pdf = std::fs::read(&path).is_ok_and(|b| kentos_formats::pdf::is_pdf(&b));
+                self.xrefs.attach =
+                    Some(Attach { path, name, mode: Mode::Attach, scale: 1.0, rotation: 0.0, page: pdf.then_some(1) });
                 self.dialog = Some(Dialog::XrefAttach);
             }
             Event::Picked(Purpose::Image(slot), Some(path)) => self.image_relinked(slot, &path),
@@ -406,6 +468,15 @@ impl App {
                     a.rotation = v;
                 }
             }
+            Event::Page(v) => {
+                if let Some(a) = self.xrefs.attach.as_mut().filter(|a| a.page.is_some()) {
+                    a.page = Some(v.round().clamp(1.0, f64::from(u32::MAX)) as u32);
+                }
+            }
+            Event::Fade(v) => self.underlay_look(Some(v.round().clamp(0.0, 80.0) as u8), None, None),
+            Event::Monochrome(on) => self.underlay_look(None, Some(on), None),
+            Event::Plot(on) => self.underlay_look(None, None, Some(on)),
+            Event::OpenSource => return self.open_xref_source(),
             Event::InPlace => {
                 self.dialog = None;
                 self.attach_now(None);
@@ -574,6 +645,7 @@ impl App {
             .push(words::secondary(UNLOAD, on(Event::Unload)))
             .push(words::secondary(REPATH, on(Event::Repath)))
             .push(words::secondary(DETACH, on(Event::Detach)))
+            .push(words::secondary(OPEN_SOURCE, on(Event::OpenSource)))
             .push(words::secondary(if self.xrefs.bind_menu { "Bağla ▴" } else { "Bağla ▾" }, on(Event::BindMenu)));
         if chosen.is_some_and(|x| x.parent.is_some()) {
             actions = actions.push(label::caption("İç içe olanı onu getiren değiştirir."));
@@ -586,6 +658,27 @@ impl App {
                     .push(words::summary(vec![line]))
                     .push(iced::widget::scrollable(list).height(300.0))
                     .push(actions);
+                // A PDF underlay's look (docs/adr/0351 §2).
+                if let Some(x) = chosen.filter(|x| top && x.page.is_some()) {
+                    let look = x.underlay.clone().unwrap_or_default();
+                    body = body.push(
+                        row![
+                            words::field(
+                                "Soldur (%)",
+                                NumberInput::new(f64::from(look.fade), |v| msg(Event::Fade(v)))
+                                    .range(0.0..=80.0)
+                                    .step(10.0)
+                                    .decimals(0)
+                                    .width(90),
+                                None,
+                            ),
+                            kentos_ui::widget::Switch::new(look.monochrome, |on| msg(Event::Monochrome(on))).label("Tek renk"),
+                            kentos_ui::widget::Switch::new(look.plot, |on| msg(Event::Plot(on))).label("Yazdır"),
+                        ]
+                        .spacing(16)
+                        .align_y(Center),
+                    );
+                }
             }
             Section::Paths => body = body.push(self.xref_paths_view()),
             Section::Others => body = body.push(self.xref_others_view()),
@@ -720,6 +813,21 @@ impl App {
             words::field("Dönüş (°)", NumberInput::new(a.rotation, |v| msg(Event::Rotation(v))).step(15.0).decimals(2).point().width(120), None),
         ]
         .spacing(16);
+        let numbers = match a.page {
+            Some(page) => numbers.push(words::field(
+                "Sayfa",
+                NumberInput::new(f64::from(page), |v| msg(Event::Page(v))).range(1.0..=100_000.0).step(1.0).decimals(0).width(90),
+                None,
+            )),
+            None => numbers,
+        };
+        let line = match a.page {
+            Some(_) => words::text_line(
+                Kind::Info,
+                "PDF'in sayfası altlık olur: çizgileri, dolguları ve yazıları kâğıt boyunda (1 mm kâğıt 1 mm çizim), sol alt köşesi eklenen noktada. Resimler alınmaz; altlıktan alınan ölçü kâğıttandır.",
+            ),
+            None => line,
+        };
         let body = Column::new()
             .spacing(12)
             .push(words::summary(vec![line]))
@@ -752,6 +860,7 @@ impl App {
             Control::Press(RELOAD) => Some(msg(Event::Reload)),
             Control::Press(UNLOAD) => Some(msg(Event::Unload)),
             Control::Press(DETACH) => Some(msg(Event::Detach)),
+            Control::Press(OPEN_SOURCE) => Some(msg(Event::OpenSource)),
             Control::Press(BIND) => Some(msg(Event::Bind(XrefBindMode::Bind))),
             Control::Press(BIND_INSERT) => Some(msg(Event::Bind(XrefBindMode::Insert))),
             Control::Press(IN_PLACE) => Some(msg(Event::InPlace)),

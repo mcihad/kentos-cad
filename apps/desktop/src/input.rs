@@ -199,6 +199,7 @@ impl App {
                         && !self.leader_tools_picked(p)
                         && !self.blocks_picked(p)
                         && !self.xrefs_picked(p)
+                        && !self.pdf_import_picked(p)
                         && !self.service_info_picked(p)
                     {
                         self.calc_picked(p);

@@ -305,8 +305,13 @@ SCHEMA_WITH_PHASES = 82
 SCHEMA_WITH_XREFS = 83
 # Schema 84: schema 83 and the settings' `xrefPaths`, the folders external references are looked for in (docs/adr/0349 §1).
 SCHEMA_WITH_XREF_PATHS = 84
-# Schema 85: schema 84 and the settings' `heights` and `coordinateEpoch` (docs/adr/0519 §1).
-SCHEMA_WITH_HEIGHTS = 85
+# Schema 85: schema 84, an insert's `clipping` and an external reference's `page` and `underlay` (a PDF underlay;
+# docs/adr/0351 §1, §2).
+SCHEMA_WITH_CLIPPING = 85
+MAX_CLIPPING_CORNERS = 10_000
+MAX_UNDERLAY_FADE = 80
+# Schema 86: schema 85 and the settings' `heights` and `coordinateEpoch` (docs/adr/0519 §1).
+SCHEMA_WITH_HEIGHTS = 86
 # The vertical systems a project may name (kentos_contracts::VERTICAL_SYSTEMS, EPSG's registry).
 VERTICAL_SRIDS = (5775, 3855, 5773, 5714, 8050, 5735)
 MAX_XREF_PATHS = 64
@@ -503,7 +508,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_HEIGHTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2646,6 +2651,7 @@ class _Schema:
         self.phases = version >= SCHEMA_WITH_PHASES
         self.xrefs = version >= SCHEMA_WITH_XREFS
         self.xref_paths = version >= SCHEMA_WITH_XREF_PATHS
+        self.clipping = version >= SCHEMA_WITH_CLIPPING
         self.heights = version >= SCHEMA_WITH_HEIGHTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
@@ -5110,9 +5116,53 @@ class _Schema:
                 self.fail("bad_value", "boş liste yazılmaz")
             return out
 
-        return self.fields({"path": (filled, True), "relative": (filled, False), "kind": (self.enum(("overlay",)), False),
-                            "digest": (digest, True), "unloaded": (self.only_true, False), "group": (filled, False),
-                            "parent": (uuid_text, False), "objects": (nonempty_uids, False)})(v)
+        def page(x):
+            n = self.uint(32)(x)
+            if n == 0:
+                self.fail("bad_value", "PDF'in sayfası 1'den başlar")
+            return n
+
+        def underlay(x):
+            # A PDF underlay's look (schema 85, docs/adr/0351 §2): a field at its default not written, nor a look that
+            # changes nothing.
+            def fade(f):
+                n = self.uint(8)(f)
+                if not 1 <= n <= MAX_UNDERLAY_FADE:
+                    self.fail("bad_value", f"soldurma 1…{MAX_UNDERLAY_FADE} olmalı (0 yazılmaz)")
+                return n
+
+            def no_plot(p):
+                if self.bool(p) is not False:
+                    self.fail("bad_value", "plot yalnız false yazılır; yazdırılan altlıkta alan yoktur")
+                return False
+
+            out = self.fields({"fade": (fade, False), "monochrome": (self.only_true, False), "plot": (no_plot, False)})(x)
+            if not out:
+                self.fail("bad_value", "değişmeyen altlık görünüşü yazılmaz")
+            return out
+
+        out = self.fields({"path": (filled, True), "relative": (filled, False), "kind": (self.enum(("overlay",)), False),
+                           "digest": (digest, True), "unloaded": (self.only_true, False), "group": (filled, False),
+                           "parent": (uuid_text, False), "objects": (nonempty_uids, False),
+                           **({"page": (page, False), "underlay": (underlay, False)} if self.clipping else {})})(v)
+        if "underlay" in out and "page" not in out:
+            self.fail("bad_value", "sayfası olmayan dış başvurunun altlık görünüşü olmaz")
+        return out
+
+    def insert_clipping(self, v):
+        """An insert's clipping (schema 85, docs/adr/0351 §1): its corners in the definition, three or more, with an
+        area; `inverted` only true, `frame` only show or plot."""
+        out = self.fields({"boundary": (self.array(self.jpoint), True), "inverted": (self.only_true, False),
+                           "frame": (self.enum(("show", "plot")), False)})(v)
+        ring = [(p["x"], p["y"]) for p in out["boundary"]]
+        if len(ring) < 3:
+            self.fail("bad_value", "kırpma sınırı en az üç köşeli olmalı")
+        if len(ring) > MAX_CLIPPING_CORNERS:
+            self.fail("bad_value", f"kırpma sınırı en çok {MAX_CLIPPING_CORNERS} köşeli olabilir")
+        n = len(ring)
+        if sum(ring[i][0] * ring[(i + 1) % n][1] - ring[(i + 1) % n][0] * ring[i][1] for i in range(n)) == 0.0:
+            self.fail("bad_value", "kırpma sınırının alanı yok")
+        return out
 
     # Dynamic blocks (schema 59, docs/adr/0318): the part is the contract's JSON, points as {x, y}, numbers floats,
     # ids whole numbers, a field at its default (an empty list, a free rule) not written.
@@ -7407,7 +7457,8 @@ ENTITY_KINDS = {
     "insert": lambda s: {"block": (s.id16, True), "p": (s.point, True), "scale": (s.scale, True), "rotation": (s.float, True), "mirror": (s.mirror, False),
                          **({"yScale": (s.y_scale, False)} if s.block_extras else {}),
                          **({"attributePlaces": (s.attribute_places, False)} if s.block_cards else {}),
-                         **({"parameters": (s.param_values, False)} if s.dynamic_blocks else {})},
+                         **({"parameters": (s.param_values, False)} if s.dynamic_blocks else {}),
+                         **({"clipping": (s.insert_clipping, False)} if s.clipping else {})},
     # Schema 22 (docs/adr/0184): rows and columns of one-line cells, merged ranges, alignments, a heading row only when
     # true, lines by name (all: no field), a frame's width, a text's face, a source; only in the drawing.
     "table": lambda s: {

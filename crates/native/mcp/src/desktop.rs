@@ -2,6 +2,9 @@
 //! connects to the desktop's agents' link (a Unix socket the user opens in
 //! the Python tab) and gives a handle every drawing tool takes; their
 //! requests go to the desktop, which answers on the drawing on the screen.
+//!
+//! The handle holds the drawing it was given (`document`, docs/adr/0351 §3): every request names it, so the user
+//! bringing another drawing in front does not move the agent to it; a drawing closed is `document_closed`.
 
 use std::io::{BufRead, BufReader, Write};
 use std::path::PathBuf;
@@ -46,6 +49,8 @@ pub struct Desktop {
     writer: std::os::unix::net::UnixStream,
     next: u64,
     pub path: PathBuf,
+    /// The drawing this handle works on, as the desktop's `hello` numbers it.
+    pub document: Option<u64>,
 }
 
 impl Desktop {
@@ -71,6 +76,7 @@ impl Desktop {
             writer,
             next: 0,
             path,
+            document: None,
         })
     }
 
@@ -93,6 +99,10 @@ impl Desktop {
                 format!("Masaüstü bağlantısı kesildi ({e}); desktop.attach ile yeniden bağlanın."),
             )
         };
+        let mut params = params;
+        if let (Some(d), Some(fields)) = (self.document, params.as_object_mut()) {
+            fields.entry("document").or_insert(json!(d));
+        }
         let line = json!({ "id": id, "method": method, "params": params }).to_string();
         self.writer
             .write_all(line.as_bytes())

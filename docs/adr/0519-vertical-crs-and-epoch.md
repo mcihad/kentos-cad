@@ -25,7 +25,9 @@ bilinmez. Bu, planın “sessiz fallback yok” kuralının tam karşılığıd�
 
 ## Karar
 
-### 1. Projenin kotları ve epoku (`.kcad` şema 85)
+### 1. Projenin kotları ve epoku (`.kcad` şema 86)
+
+*Birleştirmede (19 Ekim): şema 85 ve `FORMATS_VERSION` 92 aynı gün main'de ADR 0351'in kırpma ve PDF altlığına verildi; bir şema numarası yeniden kullanılmadığından (ADR 0265 §2) kotlar şema 86 ve `FORMATS_VERSION` 93 oldu, bozuk örnek `heights-in-schema-85.kcad`.*
 
 - `ProjectSettings.heights`: `HeightReference` = `kind` (`ellipsoidal`, `orthometric`; girdide `unknown` “söylenmedi” demektir ve
   saklanmaz), yalnız ortometrikte `verticalSrid` ve `geoid` (`name`, `sha256`). `coordinateEpoch`: 1900–2100 arası ondalık yıl.
@@ -37,7 +39,7 @@ bilinmez. Bu, planın “sessiz fallback yok” kuralının tam karşılığıd�
 - `cad.settings.set`'in `heights` ve `coordinateEpoch`'u (`{kind: unknown}` ve 0 kaldırır); `invalid_heights`, `invalid_epoch`.
   Atamadır: hiçbir kot değişmez.
 - Şema 85 yalnız proje ikisinden birini anarken yazılır (ADR 0265'in altı adımı: örnek `heights.kcad`, şema 84'te bilinmeyen alan,
-  altı `bad_value` örneği, bağımsız Python okuyucu ve yazıcısı; `FORMATS_VERSION` 92).
+  altı `bad_value` örneği, bağımsız Python okuyucu ve yazıcısı; `FORMATS_VERSION` 93).
 
 ### 2. Çekirdek: kotla dönüşüm ve kayıt (`crs::operation`)
 

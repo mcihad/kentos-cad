@@ -35,6 +35,7 @@ impl Then {
                 | Then::Reopen
                 | Then::NewProject
                 | Then::OpenRecent
+                | Then::CloseTab
         )
     }
 }
@@ -119,6 +120,10 @@ impl App {
             Then::Reopen => self.reopen(),
             Then::NewProject => self.new_project_ready(),
             Then::OpenRecent => self.open_recent_ready(),
+            Then::CloseTab => {
+                self.close_tab_now();
+                Task::none()
+            }
         }
     }
 
@@ -146,6 +151,7 @@ impl App {
             Then::SignOut => "oturumu kapatırsanız",
             Then::Upload(_) => "yüklerseniz bu projeye",
             Then::NewProject => "yeni proje açarsanız",
+            Then::CloseTab => "çizimi kapatırsanız",
             _ => "başka bir çizim açarsanız",
         };
         let unsent = self
@@ -183,6 +189,7 @@ impl App {
                     Then::Reopen => "Göndermeden yeniden aç",
                     Then::Open | Then::OpenCloud { .. } | Then::OpenRecent => "Göndermeden aç",
                     Then::NewProject => "Göndermeden yeni proje aç",
+                    Then::CloseTab => "Göndermeden kapat",
                 },
             };
         }
@@ -209,6 +216,7 @@ impl App {
                 Then::Close(_) => "Kaydetmeden çık",
                 Then::Reopen => "Değişiklikleri bırak ve aç",
                 Then::NewProject => "Kaydetmeden yeni proje aç",
+                Then::CloseTab => "Kaydetmeden kapat",
                 _ => "Kaydetmeden aç",
             },
         }

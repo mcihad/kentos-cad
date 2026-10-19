@@ -333,6 +333,16 @@ class Case:
             elif key == "library":
                 # The project's style library, each item's id, kind, name and path (docs/adr/0314 §3).
                 same(json.loads(self.doc._session.summary())["library"], want, f"{at}: library")
+            elif key == "xrefs":
+                # A named definition's external reference without its objects' ids (docs/adr/0351 §2).
+                for name, w in want.items():
+                    block = self.block_named(name)
+                    got = None
+                    if block is not None:
+                        got = block.to_json().get("xref")
+                        if isinstance(got, dict):
+                            got = {k: v for k, v in got.items() if k != "objects"}
+                    same(got, self.block_ids(w, at), f"{at}: {name} dış başvurusu")
             elif key == "addressLocators":
                 # The project's address data (docs/adr/0229 §2).
                 settings = json.loads(self.doc._session.summary())["settings"]

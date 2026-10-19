@@ -2284,6 +2284,74 @@
       "shortcuts": [],
       "category": "Raster",
       "status": "implemented"
+    },
+    {
+      "id": "file.import.pdf",
+      "title": "PDF…",
+      "icon": "importPdf",
+      "description": "Bir PDF sayfasının çizgilerini, dolgularını ve yazılarını çizimin kendi nesneleri olarak alır: sayfanın basıldığı ölçekle büyür, sol alt köşesi verilen yere gelir. Eğriler toleransla çoklu çizgi ya da kesin NURBS eğrisi olur; bölge, katmanlar ve alınacaklar seçilir. Pencere komutun planıyla kutuyu, sayıları ve kayıpları gösterir; PDF yazdırılanı taşır, ölçü ve tablolar çizgi ve yazı olarak gelir.",
+      "aliases": [
+        "PDFAL",
+        "PDFIMPORT",
+        "PDFIN"
+      ],
+      "shortcuts": [],
+      "category": "Dosya",
+      "status": "implemented"
+    },
+    {
+      "id": "file.openTab",
+      "title": "Yeni sekmede aç",
+      "category": "Dosya",
+      "icon": "docTabOpen",
+      "shortcuts": [],
+      "aliases": [
+        "SEKMEDEAC",
+        "YENISEKME"
+      ],
+      "status": "implemented",
+      "description": "Bir KentOS çizimini yeni bir sekmede açar; ekrandaki çizim sekmesinde geri alması, seçimi ve görünümüyle bekler. Çizimin üstündeki sekmelerden biri basılınca o çizim öne gelir."
+    },
+    {
+      "id": "file.nextTab",
+      "title": "Sonraki çizim",
+      "category": "Dosya",
+      "icon": "docTabNext",
+      "shortcuts": [
+        "Ctrl+Tab"
+      ],
+      "aliases": [
+        "SONRAKICIZIM"
+      ],
+      "status": "implemented",
+      "description": "Sekmelerdeki bir sonraki çizimi öne getirir; her çizim kendi geri alması, seçimi ve görünümüyle döner."
+    },
+    {
+      "id": "file.closeTab",
+      "title": "Çizimi kapat",
+      "category": "Dosya",
+      "icon": "docTabClose",
+      "shortcuts": [],
+      "aliases": [
+        "CIZIMIKAPAT",
+        "CLOSE"
+      ],
+      "status": "implemented",
+      "description": "Öndeki çizimi kapatır; kaydedilmemiş değişikliği varsa önce sorar. Sağındaki (yoksa solundaki) sekmenin çizimi öne gelir."
+    },
+    {
+      "id": "tool.xclip",
+      "title": "Kırp",
+      "category": "Değiştir",
+      "icon": "xclip",
+      "shortcuts": [],
+      "aliases": [
+        "XCLIP",
+        "KIRPBLOK",
+        "BLOKKIRP"
+      ],
+      "status": "implemented",
+      "description": "Bir blok ya da dış başvuru yerleştirmesini dikdörtgen ya da çokgen sınırla kırpar: sınırın dışı (Ters ile içi) çizilmez. Sınır yerleştirmeyle taşınır, döner, ölçeklenir. Çerçeve gizli, yalnız ekranda ya da yazdırılan olabilir; Kaldır kırpmayı kaldırır."
     }
   ],
   "icons": {
@@ -2521,7 +2589,12 @@
     "importCsv": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8zM9.8 10.7h5.7M9.8 12.8h5.7M12.6 8.5V15\" stroke-width=\"0.9\"/>",
     "exportCsv": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M7 11.5H1.5M4 9l-2.5 2.5L4 14\"/><path d=\"M9.8 8.5h5.7v6.5H9.8zM9.8 10.7h5.7M9.8 12.8h5.7M12.6 8.5V15\" stroke-width=\"0.9\"/>",
     "viewSplitLink": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4v12\"/><path d=\"M5 10h2.5M12.5 10H15\"/><path d=\"M7.5 8.3h5v3.4h-5z\" stroke-width=\"1.1\"/>",
-    "viewSwipe": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4h7.5v12H10z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M10 2.5v15\" stroke-width=\"1.6\"/><circle cx=\"10\" cy=\"10\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/>"
+    "viewSwipe": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1.5\"/><path d=\"M10 4h7.5v12H10z\" fill=\"currentColor\" fill-opacity=\".3\" stroke=\"none\"/><path d=\"M10 2.5v15\" stroke-width=\"1.6\"/><circle cx=\"10\" cy=\"10\" r=\"1.6\" fill=\"currentColor\" stroke=\"none\"/>",
+    "docTabOpen": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M10 9v5M7.5 11.5h5\" stroke-width=\"1.2\"/>",
+    "docTabNext": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M7 11.5h6M11 9.5l2 2-2 2\" stroke-width=\"1.2\"/>",
+    "docTabClose": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M8 9.5l4 4M12 9.5l-4 4\" stroke-width=\"1.2\"/>",
+    "xclip": "<rect x=\"3.5\" y=\"3.5\" width=\"10\" height=\"10\" rx=\"0.5\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 7h9.5v9.5H7z\"/><path d=\"M3 17l3.2-3.2M6.2 17L3 13.8\" stroke-width=\"1.2\"/>",
+    "importPdf": "<path d=\"M7.5 2.5H14l3.5 3.5v11.5h-10z\" stroke-width=\"1.2\"/><path d=\"M14 2.5V6h3.5\" stroke-width=\"1.1\"/><path d=\"M1.5 11.5h5.5M4.5 9 7 11.5 4.5 14\"/><path d=\"M9.5 15.5c.5-3.5 2.2-6 5.5-6.5\" stroke-width=\"1.1\"/><circle cx=\"9.5\" cy=\"15.5\" r=\".9\" stroke-width=\"1\"/><circle cx=\"15\" cy=\"9\" r=\".9\" stroke-width=\"1\"/>"
   },
   "tabs": [
     {
@@ -3730,25 +3803,6 @@
     },
     {
       "modes": [
-        "cad"
-      ],
-      "tab": "insert",
-      "label": "Dış başvuru",
-      "icon": "xrefAttach",
-      "after": "Blok",
-      "items": [
-        {
-          "command": "xref.attach",
-          "size": "large"
-        },
-        {
-          "command": "xref.manager",
-          "size": "small"
-        }
-      ]
-    },
-    {
-      "modes": [
         "gis"
       ],
       "tab": "raster",
@@ -3808,6 +3862,126 @@
       "items": [
         {
           "command": "raster.mosaic",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "data",
+      "into": "Dosya alışverişi",
+      "items": [
+        {
+          "command": "file.import.gpkg",
+          "size": "small"
+        },
+        {
+          "command": "file.import.pdf",
+          "size": "small"
+        },
+        {
+          "command": "file.export.gpkg",
+          "size": "small"
+        },
+        {
+          "command": "file.package",
+          "size": "small"
+        },
+        {
+          "command": "source.link",
+          "size": "small"
+        },
+        {
+          "command": "source.postgis",
+          "size": "small"
+        },
+        {
+          "command": "source.write",
+          "size": "small"
+        },
+        {
+          "command": "source.read",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "insert",
+      "label": "Dış başvuru",
+      "icon": "xrefAttach",
+      "after": "Blok",
+      "items": [
+        {
+          "command": "xref.attach",
+          "size": "large"
+        },
+        {
+          "command": "xref.manager",
+          "size": "small"
+        },
+        {
+          "command": "tool.xclip",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "view",
+      "label": "Çizimler",
+      "icon": "docTabOpen",
+      "items": [
+        {
+          "command": "file.openTab",
+          "size": "large"
+        },
+        {
+          "command": "file.nextTab",
+          "size": "small"
+        },
+        {
+          "command": "file.closeTab",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "view",
+      "into": "Paneller",
+      "items": [
+        {
+          "command": "file.openTab",
+          "size": "small"
+        },
+        {
+          "command": "file.nextTab",
+          "size": "small"
+        },
+        {
+          "command": "file.closeTab",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "insert",
+      "into": "İçe aktar",
+      "items": [
+        {
+          "command": "file.import.pdf",
           "size": "small"
         }
       ]

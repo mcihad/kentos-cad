@@ -5,6 +5,9 @@
 //!
 //! A source is found at its path, else at its relative path from the open drawing's folder (`drawing`); nothing is
 //! taken in without a command: a changed or missing file is said by the list.
+//!
+//! A source that is a PDF file is a PDF underlay (docs/adr/0351 §2): a page of it read by our reader
+//! (`kentos_formats::pdf`) as the source drawing (`pdf_underlay`), its look set by `underlay`.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -12,7 +15,7 @@ use std::path::{Path, PathBuf};
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
     AssetVia, BlockDefinition, BlockId, CommandResult, CommandWarning, DocumentSnapshotV2, Entity, EntityBase, InsertEntity,
-    Vec2, XrefBindMode, XrefInfo, XrefKind, XrefSource, XrefState, XrefsEdit, XrefsEdited, XrefsList,
+    MAX_UNDERLAY_FADE, UnderlayLook, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefSource, XrefState, XrefsEdit, XrefsEdited, XrefsList,
     XrefsListed, XrefsOperation,
 };
 use kentos_domain::{Document, Slot};
@@ -82,14 +85,16 @@ fn top(def: &BlockDefinition, x: &XrefSource, doc: &Document) -> Result<(), Stop
     }
 }
 
-/// The source file as read: its path, the SHA-256 of its bytes and its drawing.
+/// The source file as read: its path, the SHA-256 of its bytes and its drawing; a PDF's page and what it left out.
 struct Source {
     path: PathBuf,
     digest: String,
     drawing: DocumentSnapshotV2,
+    page: Option<u32>,
+    left: Option<String>,
 }
 
-fn read(path: &str, at: &str) -> Result<Source, Stop> {
+fn read(path: &str, page: Option<u32>, at: &str) -> Result<Source, Stop> {
     let p = Path::new(path);
     if path.trim().is_empty() || !p.is_absolute() {
         return Err(fail(
@@ -100,6 +105,35 @@ fn read(path: &str, at: &str) -> Result<Source, Stop> {
     }
     let bytes = std::fs::read(p)
         .map_err(|_| fail(codes::FILE_NOT_FOUND, format!("{path} okunamadı: dosya yok ya da açılamıyor."), at))?;
+    // A PDF: its page as the source drawing (docs/adr/0351 §2).
+    if kentos_formats::pdf::is_pdf(&bytes) {
+        let number = page.unwrap_or(1);
+        let read = kentos_formats::pdf::read_page(&bytes, number).map_err(|e| match e {
+            kentos_formats::pdf::PdfError::NoPage { count } => fail(
+                codes::PDF_PAGE_NOT_FOUND,
+                format!("{} dosyasında {number}. sayfa yok: {count} sayfası var.", file_name(path)),
+                "operation.page",
+            ),
+            other => fail(codes::IMPORT_UNREADABLE, format!("{} PDF olarak okunamadı: {other}.", file_name(path)), at),
+        })?;
+        let name = Path::new(path).file_stem().map_or_else(|| "PDF".to_owned(), |s| s.to_string_lossy().into_owned());
+        let (drawing, left) = crate::pdf_underlay::drawing(&read, &name)
+            .map_err(|why| fail(codes::IMPORT_UNREADABLE, format!("{} altlığa çevrilemedi: {why}", file_name(path)), at))?;
+        return Ok(Source {
+            path: p.to_path_buf(),
+            digest: sha256_hex(&bytes),
+            drawing,
+            page: Some(number),
+            left: crate::pdf_underlay::left_words(&left),
+        });
+    }
+    if page.is_some() {
+        return Err(fail(
+            codes::PDF_PAGE_NOT_FOUND,
+            format!("{} bir PDF değil; sayfa yalnız PDF altlığında verilir.", file_name(path)),
+            "operation.page",
+        ));
+    }
     let drawing = crate::file_import_block::read_drawing(&bytes).map_err(|why| {
         fail(
             codes::IMPORT_UNREADABLE,
@@ -111,6 +145,8 @@ fn read(path: &str, at: &str) -> Result<Source, Stop> {
         path: p.to_path_buf(),
         digest: sha256_hex(&bytes),
         drawing,
+        page: None,
+        left: None,
     })
 }
 
@@ -209,6 +245,7 @@ enum Plan {
     Detach { id: BlockId, name: String },
     Bind { id: BlockId, name: String, mode: XrefBindMode },
     Paths(Vec<String>),
+    Underlay { id: BlockId, name: String, look: Option<UnderlayLook> },
 }
 
 fn numbers(at: Option<Vec2>, scale: Option<f64>, rotation: Option<f64>) -> Result<(), Stop> {
@@ -238,10 +275,10 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
     let drawing = input.drawing.as_deref();
     let mut warnings = Vec::new();
     let plan = match &input.operation {
-        XrefsOperation::Attach { path, mode, name, at, scale, rotation, layer_id } => {
+        XrefsOperation::Attach { path, mode, name, at, scale, rotation, layer_id, page } => {
             numbers(*at, *scale, *rotation)?;
             warnings = checks::layer_at(doc, layer_id, "operation.layerId")?;
-            let source = read(path, "operation.path")?;
+            let source = read(path, *page, "operation.path")?;
             cycle(drawing, &source, "operation.path")?;
             checks::revision(doc, input.expected_revision.as_deref())?;
             let wanted = name
@@ -256,6 +293,7 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
                 .unwrap_or(wanted);
             let id = BlockId(*kentos_domain::Uuid::now_v7().as_bytes());
             let insert = InsertEntity {
+                clipping: None,
                 parameters: Default::default(),
                 attribute_places: Default::default(),
                 base: EntityBase {
@@ -286,7 +324,12 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
                 group: None,
                 parent: None,
                 objects: Vec::new(),
+                page: source.page,
+                underlay: None,
             };
+            if let Some(w) = &source.left {
+                warnings.push(CommandWarning { code: codes::PDF_LEFT_OUT.into(), message: w.clone(), path: Some("operation.path".into()) });
+            }
             Plan::Load { name, id, source: x, drawing: Box::new(source.drawing), insert: Some(Box::new(insert)), label: "Dış başvuru ekle" }
         }
         XrefsOperation::Reload { name } | XrefsOperation::Repath { name, .. } => {
@@ -300,8 +343,19 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
                 }
             };
             let at = if matches!(input.operation, XrefsOperation::Repath { .. }) { "operation.path" } else { "operation.name" };
-            let source = read(&path, at)?;
+            // Yolu değiştir to a PDF keeps the page (the first for a drawing's); to a drawing, none.
+            let page = match &input.operation {
+                XrefsOperation::Repath { .. } => std::fs::read(&path)
+                    .ok()
+                    .filter(|b| kentos_formats::pdf::is_pdf(b))
+                    .map(|_| x.page.unwrap_or(1)),
+                _ => x.page,
+            };
+            let source = read(&path, page, at)?;
             cycle(drawing, &source, at)?;
+            if let Some(w) = &source.left {
+                warnings.push(CommandWarning { code: codes::PDF_LEFT_OUT.into(), message: w.clone(), path: Some(at.into()) });
+            }
             checks::revision(doc, input.expected_revision.as_deref())?;
             let next = XrefSource {
                 path: source.path.to_string_lossy().into_owned(),
@@ -309,6 +363,8 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
                 digest: source.digest.clone(),
                 unloaded: false,
                 objects: Vec::new(),
+                page: source.page,
+                underlay: x.underlay.clone().filter(|_| source.page.is_some()),
                 ..x.clone()
             };
             Plan::Load { name: def.name.clone(), id: def.id, source: next, drawing: Box::new(source.drawing), insert: None, label }
@@ -334,6 +390,35 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
             top(def, &x, doc)?;
             checks::revision(doc, input.expected_revision.as_deref())?;
             Plan::Bind { id: def.id, name: def.name.clone(), mode: *mode }
+        }
+        XrefsOperation::Underlay { name, fade, monochrome, plot } => {
+            let (def, x) = find(doc, name)?;
+            if x.page.is_none() {
+                return Err(fail(
+                    codes::NOT_AN_UNDERLAY,
+                    format!("“{}” bir PDF altlığı değil; görünüşü yalnız PDF altlığının değişir.", def.name),
+                    "operation.name",
+                ));
+            }
+            if fade.is_some_and(|f| f > MAX_UNDERLAY_FADE) {
+                return Err(fail(
+                    codes::INVALID_UNDERLAY,
+                    format!("Soldurma en çok %{MAX_UNDERLAY_FADE} olabilir."),
+                    "operation.fade",
+                ));
+            }
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            let mut look = x.underlay.clone().unwrap_or_default();
+            if let Some(f) = fade {
+                look.fade = *f;
+            }
+            if let Some(m) = monochrome {
+                look.monochrome = *m;
+            }
+            if let Some(p) = plot {
+                look.plot = *p;
+            }
+            Plan::Underlay { id: def.id, name: def.name.clone(), look: look.kept() }
         }
     };
     Ok((plan, warnings))
@@ -442,6 +527,21 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
             }
             doc.end_group(group);
             Ok((XrefsEdited { name, removed, revision: doc.revision().to_string(), ..Default::default() }, warnings))
+        }
+        Plan::Underlay { id, name, look } => {
+            let Some(mut def) = doc.block(id).cloned() else {
+                return Err(refused("Dış başvuru bulunamadı.".into()));
+            };
+            if let Some(x) = def.xref.as_mut() {
+                x.underlay = look;
+            }
+            let group = doc.begin_group(&format!("PDF altlığının görünüşü: {name}"));
+            if let Err(r) = doc.update_block(def) {
+                doc.cancel_group(group);
+                return Err(refused(r.0));
+            }
+            doc.end_group(group);
+            Ok((XrefsEdited { name, block: Some(id), revision: doc.revision().to_string(), ..Default::default() }, warnings))
         }
         Plan::Paths(paths) => {
             let mut settings = doc.settings().clone();
@@ -631,6 +731,8 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
                 tried: look.tried,
                 sheets,
                 views,
+                page: x.page,
+                underlay: x.underlay.clone(),
             })
         })
         .collect();

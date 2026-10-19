@@ -300,6 +300,8 @@ pub const TOOLS: &[&str] = &[
     // docs/adr/0192: Resim ekle and Resmi kırp.
     crate::image_insert::ID,
     crate::image_clip::ID,
+    // docs/adr/0351 §1: Kırp.
+    crate::insert_clip::ID,
     // docs/adr/0209: En kısa yol, Hizmet alanı and Şebeke izleme.
     crate::network::route::ID,
     crate::network::area::ID,
@@ -654,6 +656,7 @@ impl Session {
             crate::audit::ID => Box::new(crate::audit::Audit::new()),
             crate::image_insert::ID => Box::new(crate::image_insert::ImageInsert::new()),
             crate::image_clip::ID => Box::new(crate::image_clip::ImageClip::new()),
+            crate::insert_clip::ID => Box::new(crate::insert_clip::InsertClip::new()),
             _ => return None,
         };
         Some(tool)

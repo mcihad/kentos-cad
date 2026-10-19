@@ -305,7 +305,6 @@ fn placed_points(
     doc: &Document,
     input: &EntitiesCreate,
 ) -> Result<Vec<Vec<(&'static str, kentos_contracts::Vec2)>>, Stop> {
-    use kentos_geometry_core::ops::subref::point;
     let mut out = Vec::with_capacity(input.objects.len());
     for (i, object) in input.objects.iter().enumerate() {
         let mut own = Vec::new();
@@ -330,13 +329,23 @@ fn placed_points(
                         Some(format!("{at}.uid")),
                     )));
                 };
-                let place = kentos_domain::dimension_ties::core_place(r.place);
-                let Some(p) = point(&crate::blocks::core_entity(e), place) else {
-                    return Err(Stop::failed(error(
-                        codes::NO_SUCH_PLACE,
-                        "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
-                        Some(format!("{at}.place")),
-                    )));
+                // A place on a piece inside an insert is read through its block path (docs/adr/0263 §3).
+                let p = match crate::blocks::place_point(doc.blocks(), e, &r.path, r.place) {
+                    Ok(p) => p,
+                    Err(crate::blocks::PlaceMiss::Piece) => {
+                        return Err(Stop::failed(error(
+                            codes::PIECE_GONE,
+                            crate::blocks::NO_PIECE.into(),
+                            Some(format!("{at}.path")),
+                        )));
+                    }
+                    Err(crate::blocks::PlaceMiss::Place) => {
+                        return Err(Stop::failed(error(
+                            codes::NO_SUCH_PLACE,
+                            "Nesnede böyle bir yer yok: köşe sırası halkanın dışında ya da yer bu nesne türünde bulunmuyor.".into(),
+                            Some(format!("{at}.place")),
+                        )));
+                    }
                 };
                 own.push((name, kentos_contracts::Vec2 { x: p.x, y: p.y }));
             }

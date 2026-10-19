@@ -203,7 +203,7 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
-- [ ] `CBS-08` (ADR 0519, 19 Ekim): web'in KCAD ve sütun okuyucusu şema 85'in `heights` ve `coordinateEpoch`'unu okusun; Proje
+- [ ] `CBS-08` (ADR 0519, 19 Ekim): web'in KCAD ve sütun okuyucusu şema 86'nın `heights` ve `coordinateEpoch`'unu okusun; Proje
   ayarları'nda Kotlar ve epok; `cad.crs.transform`'un web işleyicisi (WASM'a `crs::operation`); web'in GNSS içe aktarması kotu
   projenin `heights`'ine göre yazsın.
 - [ ] `CBS-28` sanal mozaik (ADR 0517, 19 Ekim): web'in raster işçisinde VRT açma (`vrt::open_mosaic`, `BlockNeed.member`'a göre dosya
@@ -462,6 +462,14 @@ Liste:
   `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
   proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
   bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
+- [ ] `CAD-IO-21`–`26` PDF içe aktarma (ADR 0352, 19 Ekim): web'de gerekenler: `file.import.pdf` (`product/`; okuyucu ve içe alma
+  WASM'a: `kentos_formats::pdf`'in eğrileri ve `flatten_cubic`'i), tarayıcıda dosya tutamacıyla PDF içe aktar penceresi (sayfa, ölçek,
+  yer, alınacaklar, eğriler, tolerans, bölge, katmanlar, planın özeti); bilinen bozulma: `PdfPath.curves` alanı.
+- [ ] `CAD-REF-01`–`04`, `12`, `15`, `17`, `18` belge sekmeleri, kırpma ve PDF altlığı (ADR 0351, 19 Ekim): web'de gerekenler:
+  `cad.inserts.clip` (`product/`) ve Kırp aracı, çizim hatlarında kırpılmış içerik (çekirdeğin `block_clip`'i WASM'dan) ve ekranda
+  çerçeve, PDF altlığı (okuyucu WASM'a: `kentos_formats::pdf`; `cad.xrefs.edit`'in `page` ve `underlay`'i, Dış başvurular'da Soldur, Tek
+  renk, Yazdır), Yapıştır'ın `conflicts: rename`'i, `xref_read_only`, kenet ve ölçüde `underlay_measure`; web tek sekmeli kalır
+  (tarayıcının sekmesi); bilinen bozulmalar: şema 85 ve `FORMATS_VERSION` 92.
 - [ ] `CAD-REF-16`, `20` resim altlığı ve taşınabilir paket (ADR 0350, 19 Ekim): web'de gerekenler: `cad.images.edit` (`product/`;
   tarayıcıda dosya tutamacıyla), Öznitelikler'in Kaynak satırında Göm ve Yeniden bağla…, resim ve rasterlerde arama yolları,
   bulunamayan resmin işareti, dosyası değişen resmin yeniden okunması; Paketle web'de yok (masaüstü ve başsız sunucu).
@@ -1985,7 +1993,7 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,
   adresten VRT, başsız sunucuda VRT, ETag ve bütçe. — **19 Ekim, [ADR 0517](docs/adr/0517-virtual-raster-mosaic.md).**
 - [ ] `CBS-08` (G1) düşey sistem, epok ve dönüşümün kaydı: projenin `heights`'i (elipsoit/ortometrik, düşey sistem, geoit adı ve
-  SHA-256) ve `coordinateEpoch`, `.kcad` şema 85, `FORMATS_VERSION` 92; `cad.settings.set`'in iki anahtarı; çekirdek `crs::operation`
+  SHA-256) ve `coordinateEpoch`, `.kcad` şema 86, `FORMATS_VERSION` 93; `cad.settings.set`'in iki anahtarı; çekirdek `crs::operation`
   (3B elipsoit yüksekliği, işlemin kaydı ve PROJ pipeline'ı); `cad.crs.transform` (kotlarıyla dönüşüm, kayıt, ayrı tutulan rapor;
   `geoid_required`, `vertical_unsupported`, `epoch_unsupported`, `heights_unknown`, `grid_missing`); Proje ayarları › Kotlar ve epok;
   GNSS içe aktar kotu projenin söylediğine göre; bağımsız başvuru `crs_vertical_cases.py` (28, PROJ). Kalan: geoit motoru, düşey ve

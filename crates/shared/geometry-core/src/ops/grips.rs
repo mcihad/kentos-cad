@@ -279,6 +279,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             attrs,
             places,
             params,
+            clip,
             ..
         } => Shape::Insert {
             params: params.clone(),
@@ -290,6 +291,7 @@ pub fn move_grip(e: &Entity, index: usize, p: Vec2) -> Option<Entity> {
             mirror: *mirror,
             attrs: attrs.clone(),
             places: places.clone(),
+            clip: clip.clone(),
         },
         Shape::Text {
             text,

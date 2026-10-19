@@ -21,6 +21,7 @@ pub fn core_blocks(blocks: &[Arc<BlockDefinition>]) -> Blocks {
             .iter()
             .map(|b| Definition {
                 dynamic: b.dynamic.as_ref().and_then(kentos_formats::blocks::core_dynamic),
+                underlay: kentos_formats::blocks::core_underlay(b),
                 id: b.id.to_text(),
                 base: kentos_geometry_core::Vec2::new(b.base.x, b.base.y),
                 entities: b.entities.iter().map(core_entity).collect(),

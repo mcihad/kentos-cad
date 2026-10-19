@@ -122,12 +122,48 @@ pub struct EntitiesPaste {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub as_block: Option<String>,
+    /// A copy's block or style of a name this drawing has (docs/adr/0351 §4): `keep` uses this drawing's, `rename`
+    /// brings the copy's under a free name (“Ad (2)” …) and the pasted objects take it; absent: `keep`.
+    #[serde(default, skip_serializing_if = "is_keep")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<PasteConflicts>"))]
+    pub conflicts: PasteConflicts,
     /// The document revision the input was prepared against, as decimal text. When given and the document is no
     /// longer at it, nothing is written and the answer is `conflict`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub expected_revision: Option<String>,
+}
+
+/// What a paste does with a copy's block or style of a name the drawing has (docs/adr/0351 §4).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PasteConflicts {
+    /// This drawing's is used.
+    #[default]
+    Keep,
+    /// The copy's comes in under a free name.
+    Rename,
+}
+
+fn is_keep(c: &PasteConflicts) -> bool {
+    *c == PasteConflicts::Keep
+}
+
+/// A copy's block or style brought under a new name.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PasteRenamed {
+    /// `block`, `textStyle` or `dimensionStyle`.
+    pub kind: String,
+    pub from: String,
+    pub to: String,
 }
 
 /// What a paste brought in besides its objects (docs/adr/0309 §3).
@@ -149,6 +185,10 @@ pub struct PasteReport {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub block: Option<String>,
+    /// The copy's blocks and styles brought under new names (`conflicts: rename`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<PasteRenamed>>"))]
+    pub renamed: Vec<PasteRenamed>,
 }
 
 /// Output of `cad.entities.paste` v1.

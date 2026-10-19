@@ -1,0 +1,1893 @@
+{
+ "format": "kentos.pdf-cases",
+ "version": 1,
+ "note": "Written by scripts/fixtures/pdf_cases.py from docs/adr/0351 §2; do not edit by hand.",
+ "cases": [
+  {
+   "file": "cizgiler.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 595.0,
+     "height": 842.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           20.0,
+           20.0
+          ],
+          [
+           70.0,
+           20.0
+          ],
+          [
+           70.0,
+           50.0
+          ],
+          [
+           20.0,
+           50.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        0,
+        0,
+        255
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           100.0,
+           100.0
+          ],
+          [
+           120.0,
+           100.0
+          ],
+          [
+           120.0,
+           120.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         128,
+         128,
+         128
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": [
+        230,
+        184,
+        138
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           300.0
+          ],
+          [
+           320.0,
+           300.0
+          ]
+         ],
+         "closed": false
+        },
+        {
+         "points": [
+          [
+           300.0,
+           310.0
+          ],
+          [
+           320.0,
+           310.0
+          ],
+          [
+           320.0,
+           330.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        100.0,
+        200.0
+       ],
+       "height": 12.0,
+       "angle": 0.0,
+       "text": "Ada 101",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        199.0,
+        401.73205
+       ],
+       "height": 9.99999650312439,
+       "angle": 0.5235989774905888,
+       "text": "Yol Kenar",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {
+    "2": {
+     "noPage": 1
+    },
+    "0": {
+     "noPage": 1
+    }
+   }
+  },
+  {
+   "file": "sikistirilmis.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 595.0,
+     "height": 842.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           20.0,
+           20.0
+          ],
+          [
+           70.0,
+           20.0
+          ],
+          [
+           70.0,
+           50.0
+          ],
+          [
+           20.0,
+           50.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        0,
+        0,
+        255
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           100.0,
+           100.0
+          ],
+          [
+           120.0,
+           100.0
+          ],
+          [
+           120.0,
+           120.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         128,
+         128,
+         128
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": [
+        230,
+        184,
+        138
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           300.0
+          ],
+          [
+           320.0,
+           300.0
+          ]
+         ],
+         "closed": false
+        },
+        {
+         "points": [
+          [
+           300.0,
+           310.0
+          ],
+          [
+           320.0,
+           310.0
+          ],
+          [
+           320.0,
+           330.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        100.0,
+        200.0
+       ],
+       "height": 12.0,
+       "angle": 0.0,
+       "text": "Ada 101",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        199.0,
+        401.73205
+       ],
+       "height": 9.99999650312439,
+       "angle": 0.5235989774905888,
+       "text": "Yol Kenar",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "ascii.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 595.0,
+     "height": 842.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           20.0,
+           20.0
+          ],
+          [
+           70.0,
+           20.0
+          ],
+          [
+           70.0,
+           50.0
+          ],
+          [
+           20.0,
+           50.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        0,
+        0,
+        255
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           100.0,
+           100.0
+          ],
+          [
+           120.0,
+           100.0
+          ],
+          [
+           120.0,
+           120.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         128,
+         128,
+         128
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": [
+        230,
+        184,
+        138
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           300.0
+          ],
+          [
+           320.0,
+           300.0
+          ]
+         ],
+         "closed": false
+        },
+        {
+         "points": [
+          [
+           300.0,
+           310.0
+          ],
+          [
+           320.0,
+           310.0
+          ],
+          [
+           320.0,
+           330.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        100.0,
+        200.0
+       ],
+       "height": 12.0,
+       "angle": 0.0,
+       "text": "Ada 101",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        199.0,
+        401.73205
+       ],
+       "height": 9.99999650312439,
+       "angle": 0.5235989774905888,
+       "text": "Yol Kenar",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "xref-akisi.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 595.0,
+     "height": 842.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           20.0,
+           20.0
+          ],
+          [
+           70.0,
+           20.0
+          ],
+          [
+           70.0,
+           50.0
+          ],
+          [
+           20.0,
+           50.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        0,
+        0,
+        255
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           100.0,
+           100.0
+          ],
+          [
+           120.0,
+           100.0
+          ],
+          [
+           120.0,
+           120.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         128,
+         128,
+         128
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": [
+        230,
+        184,
+        138
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           300.0
+          ],
+          [
+           320.0,
+           300.0
+          ]
+         ],
+         "closed": false
+        },
+        {
+         "points": [
+          [
+           300.0,
+           310.0
+          ],
+          [
+           320.0,
+           310.0
+          ],
+          [
+           320.0,
+           330.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        100.0,
+        200.0
+       ],
+       "height": 12.0,
+       "angle": 0.0,
+       "text": "Ada 101",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        199.0,
+        401.73205
+       ],
+       "height": 9.99999650312439,
+       "angle": 0.5235989774905888,
+       "text": "Yol Kenar",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "bozuk-xref.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 595.0,
+     "height": 842.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           20.0,
+           20.0
+          ],
+          [
+           70.0,
+           20.0
+          ],
+          [
+           70.0,
+           50.0
+          ],
+          [
+           20.0,
+           50.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        0,
+        0,
+        255
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           100.0,
+           100.0
+          ],
+          [
+           120.0,
+           100.0
+          ],
+          [
+           120.0,
+           120.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         128,
+         128,
+         128
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": [
+        230,
+        184,
+        138
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           300.0
+          ],
+          [
+           320.0,
+           300.0
+          ]
+         ],
+         "closed": false
+        },
+        {
+         "points": [
+          [
+           300.0,
+           310.0
+          ],
+          [
+           320.0,
+           310.0
+          ],
+          [
+           320.0,
+           330.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        100.0,
+        200.0
+       ],
+       "height": 12.0,
+       "angle": 0.0,
+       "text": "Ada 101",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        199.0,
+        401.73205
+       ],
+       "height": 9.99999650312439,
+       "angle": 0.5235989774905888,
+       "text": "Yol Kenar",
+       "color": [
+        0,
+        128,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "donuk.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 3,
+     "width": 200.0,
+     "height": 300.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           0.0,
+           300.0
+          ],
+          [
+           0.0,
+           0.0
+          ],
+          [
+           200.0,
+           0.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    },
+    "2": {
+     "number": 2,
+     "count": 3,
+     "width": 100.0,
+     "height": 200.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           90.0,
+           10.0
+          ],
+          [
+           90.0,
+           40.0
+          ],
+          [
+           70.0,
+           40.0
+          ],
+          [
+           70.0,
+           10.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        255,
+        255,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "texts": [],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    },
+    "3": {
+     "number": 3,
+     "count": 3,
+     "width": 200.0,
+     "height": 100.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           200.0,
+           100.0
+          ],
+          [
+           0.0,
+           0.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {
+    "4": {
+     "noPage": 3
+    }
+   }
+  },
+  {
+   "file": "katmanlar.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 600.0,
+     "height": 400.0,
+     "layers": [
+      "Yapılar",
+      "Kotlar"
+     ],
+     "hidden": [
+      false,
+      true
+     ],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          [
+           110.0,
+           10.0
+          ],
+          [
+           110.0,
+           60.0
+          ],
+          [
+           10.0,
+           60.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         153
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": 0
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           100.0
+          ],
+          [
+           110.0,
+           100.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         153
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": 0
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           205.0,
+           205.0
+          ],
+          [
+           225.0,
+           205.0
+          ],
+          [
+           225.0,
+           225.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         153,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           400.0,
+           50.0
+          ],
+          [
+           410.0,
+           50.0
+          ],
+          [
+           410.0,
+           60.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         153,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": 0
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           500.0,
+           300.0
+          ],
+          [
+           500.0,
+           310.0
+          ],
+          [
+           490.0,
+           310.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         153,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": 1
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        20.0,
+        300.0
+       ],
+       "height": 9.0,
+       "angle": 0.0,
+       "text": "812.40",
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "layer": 1
+      },
+      {
+       "p": [
+        207.0,
+        207.0
+       ],
+       "height": 10.0,
+       "angle": 0.0,
+       "text": "R",
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "p": [
+        401.0,
+        51.0
+       ],
+       "height": 5.0,
+       "angle": 0.0,
+       "text": "R",
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "layer": 0
+      },
+      {
+       "p": [
+        499.0,
+        301.0
+       ],
+       "height": 5.0,
+       "angle": 1.5707963267948966,
+       "text": "R",
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "layer": 1
+      }
+     ],
+     "left": {
+      "images": 2,
+      "shadings": 1,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "turkce.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 300.0,
+     "height": 200.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [],
+     "texts": [
+      {
+       "p": [
+        30.0,
+        100.0
+       ],
+       "height": 14.0,
+       "angle": 0.0,
+       "text": "Şİığ Çüö",
+       "color": [
+        51,
+        51,
+        51
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "egri.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 200.0,
+     "height": 200.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           10.0
+          ],
+          {
+           "curve": [
+            [
+             10.0,
+             10.0
+            ],
+            [
+             10.0,
+             110.0
+            ],
+            [
+             190.0,
+             110.0
+            ],
+            [
+             190.0,
+             10.0
+            ]
+           ]
+          },
+          [
+           100.0,
+           0.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "egriler.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 400.0,
+     "height": 300.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           140.0,
+           100.0
+          ],
+          {
+           "curve": [
+            [
+             140.0,
+             100.0
+            ],
+            [
+             140.0,
+             122.0
+            ],
+            [
+             122.0,
+             140.0
+            ],
+            [
+             100.0,
+             140.0
+            ]
+           ]
+          },
+          {
+           "curve": [
+            [
+             100.0,
+             140.0
+            ],
+            [
+             78.0,
+             140.0
+            ],
+            [
+             60.0,
+             122.0
+            ],
+            [
+             60.0,
+             100.0
+            ]
+           ]
+          },
+          {
+           "curve": [
+            [
+             60.0,
+             100.0
+            ],
+            [
+             60.0,
+             78.0
+            ],
+            [
+             78.0,
+             60.0
+            ],
+            [
+             100.0,
+             60.0
+            ]
+           ]
+          },
+          {
+           "curve": [
+            [
+             100.0,
+             60.0
+            ],
+            [
+             122.0,
+             60.0
+            ],
+            [
+             140.0,
+             78.0
+            ],
+            [
+             140.0,
+             100.0
+            ]
+           ]
+          }
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         255,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           200.0,
+           50.0
+          ],
+          [
+           250.0,
+           50.0
+          ],
+          {
+           "curve": [
+            [
+             250.0,
+             50.0
+            ],
+            [
+             270.0,
+             50.0
+            ],
+            [
+             280.0,
+             70.0
+            ],
+            [
+             280.0,
+             90.0
+            ]
+           ]
+          },
+          [
+           280.0,
+           150.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         255
+        ],
+        "width": 1.0,
+        "dashed": true
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           300.0,
+           200.0
+          ],
+          {
+           "curve": [
+            [
+             300.0,
+             200.0
+            ],
+            [
+             330.0,
+             250.0
+            ],
+            [
+             370.0,
+             250.0
+            ],
+            [
+             390.0,
+             200.0
+            ]
+           ]
+          },
+          {
+           "curve": [
+            [
+             390.0,
+             200.0
+            ],
+            [
+             370.0,
+             170.0
+            ],
+            [
+             330.0,
+             170.0
+            ],
+            [
+             300.0,
+             200.0
+            ]
+           ]
+          }
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 2.0,
+        "dashed": false
+       },
+       "fill": [
+        0,
+        153,
+        0
+       ],
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           10.0,
+           250.0
+          ],
+          [
+           60.0,
+           250.0
+          ],
+          [
+           60.0,
+           280.0
+          ],
+          [
+           10.0,
+           280.0
+          ]
+         ],
+         "closed": true
+        }
+       ],
+       "stroke": null,
+       "fill": [
+        255,
+        255,
+        255
+       ],
+       "layer": null
+      }
+     ],
+     "texts": [
+      {
+       "p": [
+        20.0,
+        20.0
+       ],
+       "height": 10.0,
+       "angle": 0.0,
+       "text": "Egri",
+       "color": [
+        0,
+        0,
+        0
+       ],
+       "layer": null
+      }
+     ],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "guncelleme.pdf",
+   "pages": {
+    "1": {
+     "number": 1,
+     "count": 1,
+     "width": 100.0,
+     "height": 100.0,
+     "layers": [],
+     "hidden": [],
+     "paths": [
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           0.0,
+           10.0
+          ],
+          [
+           50.0,
+           10.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      },
+      {
+       "parts": [
+        {
+         "points": [
+          [
+           0.0,
+           20.0
+          ],
+          [
+           50.0,
+           20.0
+          ]
+         ],
+         "closed": false
+        }
+       ],
+       "stroke": {
+        "color": [
+         0,
+         0,
+         0
+        ],
+        "width": 1.0,
+        "dashed": false
+       },
+       "fill": null,
+       "layer": null
+      }
+     ],
+     "texts": [],
+     "left": {
+      "images": 0,
+      "shadings": 0,
+      "unreadable": 0,
+      "truncated": false
+     }
+    }
+   },
+   "errors": {}
+  },
+  {
+   "file": "sifreli.pdf",
+   "pages": {},
+   "errors": {
+    "1": {
+     "encrypted": true
+    }
+   }
+  },
+  {
+   "file": "pdf-degil.pdf",
+   "pages": {},
+   "errors": {
+    "1": {
+     "notPdf": true
+    }
+   }
+  }
+ ]
+}

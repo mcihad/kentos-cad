@@ -101,6 +101,8 @@ from .types import (  # noqa: F401
     OffsetBy,
     OrderTo,
     OrderToName,
+    PasteConflicts,
+    PasteConflictsName,
     PropertiesOperation,
     PropertiesOperationName,
     RelatePredicate,
@@ -3241,11 +3243,13 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
     gider (adlar büyük küçük harf ve Türkçe harf farkı gözetmeden); olmayan yol kaynağın
     görünüşüyle ve gruplarıyla açılır. Bu çizimde aynı adlı blok varsa bu çizimin tanımı
     kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla,
-    olmayanlar eklenir (proje ayarı). Nesneler yeni kimlik alır; kopyanın dışına bağlar
-    düşer. asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur, tabanı
-    kopyanın taban noktası, etkin katmanda at'a yerleştirilir. Uzunluklar her çizimde
-    metre olduğundan başka birimli çizimden gelen nesneler boylarını korur (units_differ
-    uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name,
+    olmayanlar eklenir (proje ayarı). conflicts: rename ile aynı adlı blok ve stil
+    kopyanınkiyle “Ad (2)” gibi boş bir adla gelir, nesneler onu kullanır
+    (report.renamed, names_renamed uyarısı). Nesneler yeni kimlik alır; kopyanın dışına
+    bağlar düşer. asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur,
+    tabanı kopyanın taban noktası, etkin katmanda at'a yerleştirilir. Uzunluklar her
+    çizimde metre olduğundan başka birimli çizimden gelen nesneler boylarını korur
+    (units_differ uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name,
     invalid_revision, revision_conflict, not_a_layer, layer_locked.
     """
     __slots__ = ()
@@ -3265,6 +3269,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         clip: Clip,
         as_block: str | None | Unset = UNSET,
         at: Vec2Like | None | Unset = UNSET,
+        conflicts: PasteConflicts | PasteConflictsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -3276,18 +3281,22 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         Türkçe harf farkı gözetmeden); olmayan yol kaynağın görünüşüyle ve gruplarıyla
         açılır. Bu çizimde aynı adlı blok varsa bu çizimin tanımı kullanılır (report.kept),
         yoksa eklenir (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı).
-        Nesneler yeni kimlik alır; kopyanın dışına bağlar düşer. asBlock ile nesneler o adla
-        (boş bir ad: “Ad (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin
-        katmanda at'a yerleştirilir. Uzunluklar her çizimde metre olduğundan başka birimli
-        çizimden gelen nesneler boylarını korur (units_differ uyarısı). Retler: no_entities,
-        invalid_clip, not_finite, empty_name, invalid_revision, revision_conflict,
-        not_a_layer, layer_locked.
+        conflicts: rename ile aynı adlı blok ve stil kopyanınkiyle “Ad (2)” gibi boş bir
+        adla gelir, nesneler onu kullanır (report.renamed, names_renamed uyarısı). Nesneler
+        yeni kimlik alır; kopyanın dışına bağlar düşer. asBlock ile nesneler o adla (boş bir
+        ad: “Ad (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin katmanda at'a
+        yerleştirilir. Uzunluklar her çizimde metre olduğundan başka birimli çizimden gelen
+        nesneler boylarını korur (units_differ uyarısı). Retler: no_entities, invalid_clip,
+        not_finite, empty_name, invalid_revision, revision_conflict, not_a_layer,
+        layer_locked.
 
         Args:
             doc: The drawing it works on.
             clip: The copy, as `cad.entities.copy` gave it.
             as_block: Paste as one block of this name (Blok olarak yapıştır).
             at: Where the copy's base point goes; absent: where it was copied (Özgün koordinatlara yapıştır). Unit: length.
+            conflicts: A copy's block or style of a name this drawing has (docs/adr/0351 §4): `keep` uses this drawing's, `rename`
+                brings the copy's under a free name (“Ad (2)” …) and the pasted objects take it; absent: `keep`.
             expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
                 longer at it, nothing is written and the answer is `conflict`.
             request_id: Names this write: sent again with the same call it is answered as
@@ -3306,6 +3315,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
             clip=clip,
             as_block=as_block,
             at=_opt(at, lambda x: Vec2.of(x)),
+            conflicts=conflicts,
             expected_revision=expected_revision,
         ), request_id=request_id, expected=expected)
 
@@ -3317,6 +3327,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         clip: Clip,
         as_block: str | None | Unset = UNSET,
         at: Vec2Like | None | Unset = UNSET,
+        conflicts: PasteConflicts | PasteConflictsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> EntitiesPastePlan:
         """What it would write, with nothing written; the plan's ``revision``, given as
@@ -3326,6 +3337,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
             clip=clip,
             as_block=as_block,
             at=_opt(at, lambda x: Vec2.of(x)),
+            conflicts=conflicts,
             expected_revision=expected_revision,
         ))
 
@@ -3337,6 +3349,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         clip: Clip,
         as_block: str | None | Unset = UNSET,
         at: Vec2Like | None | Unset = UNSET,
+        conflicts: PasteConflicts | PasteConflictsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
@@ -3346,6 +3359,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
             clip=clip,
             as_block=as_block,
             at=_opt(at, lambda x: Vec2.of(x)),
+            conflicts=conflicts,
             expected_revision=expected_revision,
         ))
 
@@ -3357,6 +3371,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
         clip: Clip,
         as_block: str | None | Unset = UNSET,
         at: Vec2Like | None | Unset = UNSET,
+        conflicts: PasteConflicts | PasteConflictsName | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -3371,6 +3386,7 @@ class _EntitiesPaste(LocalCommand[EntitiesPaste, EntitiesPasted, EntitiesPastePl
             clip=clip,
             as_block=as_block,
             at=_opt(at, lambda x: Vec2.of(x)),
+            conflicts=conflicts,
             expected_revision=expected_revision,
         ), op=op, request_id=request_id, expected=expected)
 

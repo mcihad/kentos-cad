@@ -29,7 +29,7 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, MeasuredPoint,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf, MeasuredPoint,
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -38,7 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
-use kentos_native_application::{assets_check, images_edit, rasters_mosaic, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
+use kentos_native_application::{assets_check, images_edit, rasters_mosaic, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -55,7 +55,7 @@ use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_csv, file_import_gpkg, sld, stretch,
+    entities_reverse, file_import, file_import_csv, file_import_gpkg, file_import_pdf, sld, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -865,6 +865,12 @@ impl Input for kentos_domain::contracts::XrefsList {
 }
 
 impl Input for kentos_domain::contracts::AssetsCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::InsertsClip {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2109,6 +2115,13 @@ impl Input for kentos_domain::contracts::ImportSld {
     }
 }
 
+impl Input for ImportPdf {
+    /// The numbers a case may give through a placeholder: none, the file's are literal.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for ImportGpkg {
     /// No number: a path, table names and a choice.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2998,6 +3011,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ASSETS_CHECK => {
             run!(assets_check, kentos_domain::contracts::AssetsCheck)
         }
+        kentos_domain::contracts::CAD_INSERTS_CLIP => {
+            run!(inserts_clip, kentos_domain::contracts::InsertsClip)
+        }
         kentos_domain::contracts::CAD_IMAGES_EDIT => {
             run!(images_edit, kentos_domain::contracts::ImagesEdit)
         }
@@ -3101,6 +3117,7 @@ fn run_op(
         kentos_domain::contracts::FILE_IMPORT_SLD => {
             run!(sld, kentos_domain::contracts::ImportSld)
         }
+        kentos_domain::contracts::FILE_IMPORT_PDF => run!(file_import_pdf, ImportPdf),
         kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
         kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
         kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
@@ -3534,6 +3551,27 @@ fn check(
                     .collect::<Outcome<_>>()?;
                 let wanted = block_ids(want, doc, state, at)?;
                 expect_same(&json!(got), &wanted, "ilişkili diziler", at)?;
+            }
+            // An external reference's source by its name, without its objects' ids (docs/adr/0351 §2: a PDF's
+            // objects are numbered from their content).
+            "xrefs" => {
+                for (name, want) in want.as_object().unwrap_or(&empty) {
+                    let got = doc
+                        .block_named(name)
+                        .and_then(|b| b.xref.as_ref())
+                        .map(serde_json::to_value)
+                        .transpose()
+                        .map_err(|e| format!("{at}: {e}"))?
+                        .map(|mut v| {
+                            if let Some(m) = v.as_object_mut() {
+                                m.remove("objects");
+                            }
+                            v
+                        })
+                        .unwrap_or(Value::Null);
+                    let want = block_ids(want, doc, state, at)?;
+                    expect_same(&got, &want, &format!("“{name}” dış başvurusu"), at)?;
+                }
             }
             // A definition's id by its name: "new" (none the setup had nor
             // `captureBlock` took), "$block:name" or the id itself.

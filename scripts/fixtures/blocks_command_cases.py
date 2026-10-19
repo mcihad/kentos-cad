@@ -1326,6 +1326,29 @@ edit.append({
     ],
 })
 
+# An external reference's definition is its source's (docs/adr/0351 §5): renamed here, edited in its source.
+XREF_PLAN = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d20aa"
+XREF_SETUP = setup(BLOCKS + [{"id": XREF_PLAN, "name": "Plan", "base": P(0, 0),
+                              "entities": [piece("line", 1, a=P(0, 0), b=P(1, 0))],
+                              "xref": {"path": "/proje/plan.kcad", "digest": "ab" * 32,
+                                       "objects": ["0192f5a1-5555-7000-8000-000000000001"]}}])
+XREF_REFUSED = failed("xref_read_only", "“Plan” bir dış başvuru: içeriği kaynak dosyasındadır, burada değişmez. Dış başvurular › "
+                      "Kaynağı aç ile kaynağı açıp düzenleyin, sonra Yeniden yükle.", "block")
+XREF_NOTHING = {"ids": IDS, "canUndo": False, "revision": "same"}
+edit.append({
+    "name": "dış başvuru: içeriği burada değişmez (güncelle, taban noktası, yeniden tanımla, kaldır), adı değişir",
+    "setup": XREF_SETUP,
+    "steps": [
+        {"op": "execute", "input": update_input(XREF_PLAN, [piece("line", 1, a=P(0, 0), b=P(2, 0))]), "result": XREF_REFUSED,
+         "expect": XREF_NOTHING},
+        {"op": "execute", "input": {"operation": "rebase", "block": XREF_PLAN, "base": P(1, 1)}, "result": XREF_REFUSED,
+         "expect": XREF_NOTHING},
+        {"op": "execute", "input": {"operation": "remove", "block": XREF_PLAN}, "result": XREF_REFUSED, "expect": XREF_NOTHING},
+        {"op": "execute", "input": {"operation": "rename", "block": XREF_PLAN, "name": "Mimari plan"}, "result": edited([XREF_PLAN]),
+         "expect": {"blockIds": {"Mimari plan": XREF_PLAN}, "canUndo": True, "revision": "changed"}},
+    ],
+})
+
 # White space other than the plain space, escaped so a reader sees it.
 INVISIBLE = "\u0085                 　﻿"
 

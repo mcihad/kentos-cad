@@ -98,6 +98,8 @@ pub struct Marks {
     pub broken: Vec<Vec2>,
     /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
     pub missing: Vec<[Vec2; 4]>,
+    /// The clipping boundaries shown on the screen only (Kırp's Çerçeve: Ekranda, docs/adr/0351 §1).
+    pub clips: std::sync::Arc<Vec<Vec<Vec2>>>,
     /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
     pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
     /// The constraints' marks (constraint_view.rs, docs/adr/0338 §1).
@@ -208,6 +210,7 @@ impl Marks {
             && self.problem.is_none()
             && self.broken.is_empty()
             && self.missing.is_empty()
+            && self.clips.is_empty()
             && self.bonds.is_empty()
             && self.constraints.is_none()
             && self.tracking.is_none()
@@ -254,6 +257,7 @@ impl<Message> canvas::Program<Message> for Marks {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
         }
         missing(&mut frame, &self.missing, &self.camera, &self.colors, Tokens::of(theme).danger);
+        clip_frames(&mut frame, &self.clips, &self.camera, &self.colors);
         broken(
             &mut frame,
             &self.broken,
@@ -808,6 +812,29 @@ fn broken(
         });
         let tick = Path::circle(Point::new(x, y), 2.5);
         frame.fill(&tick, danger);
+    }
+}
+
+/// The clipping boundaries Kırp shows on the screen (docs/adr/0351 §1): a thin line on a halo, never plotted.
+fn clip_frames(frame: &mut canvas::Frame, rings: &[Vec<Vec2>], camera: &Camera, colors: &MarkColors) {
+    for ring in rings {
+        if ring.len() < 3 {
+            continue;
+        }
+        let path = Path::new(|b| {
+            for (k, p) in ring.iter().enumerate() {
+                let [x, y] = camera.world_to_screen(*p);
+                let q = Point::new(x as f32, y as f32);
+                if k == 0 {
+                    b.move_to(q);
+                } else {
+                    b.line_to(q);
+                }
+            }
+            b.close();
+        });
+        frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.0));
+        frame.stroke(&path, Stroke::default().with_color(colors.window).with_width(1.0));
     }
 }
 

@@ -39,6 +39,7 @@ pub mod import;
 pub mod json;
 pub mod kml;
 pub mod lin;
+pub mod pdf;
 pub mod math;
 pub mod multidim;
 pub mod num;

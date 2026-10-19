@@ -1554,6 +1554,14 @@ fn shape(entity: &Entity) -> Shape {
             attrs: None,
             // Nor where it moved them: the texts are drawn above the scene.
             places: None,
+            // Its clipping (docs/adr/0351 §1): what of it the scene draws.
+            clip: i.clipping.as_ref().map(|c| {
+                std::sync::Arc::new(kentos_geometry_core::entity::Clipping {
+                    ring: c.boundary.iter().map(v).collect(),
+                    inverted: c.inverted,
+                    plot_frame: c.frame == kentos_contracts::ClipFrame::Plot,
+                })
+            }),
         },
     }
 }

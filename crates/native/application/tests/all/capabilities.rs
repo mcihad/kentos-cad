@@ -343,6 +343,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "yazılamayan disk ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp yerine konan dosya kentos-processing'in sink testinde",
     ),
     (
+        "cad.dimensions.create",
+        "underlay_measure",
+        "PDF altlığının çizgisine bağlanan ölçü; altlık PDF dosyasından yüklenir, ortak durumların çizimleri dosyasızdır: xrefs.rs'in a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper'ı (ADR 0351 §6)",
+    ),
+    (
         "cad.sheets.edit",
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",

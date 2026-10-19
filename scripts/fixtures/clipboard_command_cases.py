@@ -17,7 +17,11 @@ them from ADR 0193 and 0199 §7 (that reference is used here, not KentOS):
   base point lands at `at`, written in the copy's order as one step “Yapıştır”;
 - as a block: the copy's objects one block named (a free name), its base the lower left corner of their boxes, the
   nested blocks under free names, placed so the copy's base point lands at `at` on the active layer;
-- a locked layer an object would go to refuses, a hidden one is said; another unit is said, sizes kept.
+- a locked layer an object would go to refuses, a hidden one is said; another unit is said, sizes kept;
+- `conflicts: rename` (docs/adr/0351 §4): a block or a style of the copy whose name this drawing has (blocks by the
+  block key, styles folded) comes under the first free “Ad (2)”, “Ad (3)” … (free of this drawing's and the copy's
+  names), said in `report.renamed` and a `names_renamed` warning before the unit's; a renamed block takes a new id
+  its inserts follow (here `$blockOf:Ad (2)`).
 """
 import copy
 import json
@@ -351,8 +355,59 @@ def units(a, b):
             "message": f"Kaynak çizimin birimi {a}, bu çizimin {b}; nesneler gerçek boylarıyla yapıştırıldı."}
 
 
-def paste(name, target, clip, at=None, as_block=None, warnings=(), op="execute", undo=False):
+def free_name(name, taken, key):
+    n = 2
+    while key(f"{name} ({n})") in taken:
+        n += 1
+    return f"{name} ({n})"
+
+
+def swap(v, old, new):
+    if isinstance(v, str):
+        return new if v == old else v
+    if isinstance(v, list):
+        return [swap(x, old, new) for x in v]
+    if isinstance(v, dict):
+        return {k: swap(x, old, new) for k, x in v.items()}
+    return v
+
+
+def renamed_clip(target, clip):
+    """ADR 0351 §4: the copy with its names this drawing has renamed, and what was renamed."""
+    clip = copy.deepcopy(clip)
+    out = []
+    ours = {ex.block_key(b["name"]) for b in target.get("blocks", [])}
+    taken = ours | {ex.block_key(b["name"]) for b in clip.get("blocks", [])}
+    ids = []
+    for b in clip.get("blocks", []):
+        if ex.block_key(b["name"]) not in ours:
+            continue
+        to = free_name(b["name"], taken, ex.block_key)
+        taken.add(ex.block_key(to))
+        out.append({"kind": "block", "from": b["name"], "to": to})
+        ids.append((b["id"], f"$blockOf:{to}"))
+        b["name"] = to
+    for old, new in ids:
+        clip["objects"] = swap(clip["objects"], old, new)
+        clip["blocks"] = swap(clip["blocks"], old, new)
+    for kind, key in (("textStyle", "textStyles"), ("dimensionStyle", "dimensionStyles")):
+        mine = {ex.fold(s_["name"]) for s_ in target["settings"].get(key, [])}
+        taken = mine | {ex.fold(s_["name"]) for s_ in clip.get(key, [])}
+        for s_ in clip.get(key, []):
+            if ex.fold(s_["name"]) not in mine:
+                continue
+            to = free_name(s_["name"], taken, ex.fold)
+            taken.add(ex.fold(to))
+            out.append({"kind": kind, "from": s_["name"], "to": to})
+            s_["name"] = to
+    return clip, out
+
+
+def paste(name, target, clip, at=None, as_block=None, warnings=(), op="execute", undo=False, rename=False):
     inp = {"clip": clip}
+    if rename:
+        inp["conflicts"] = "rename"
+        clip, renames = renamed_clip(target, clip)
     if at is not None:
         inp["at"] = at
     if as_block is not None:
@@ -361,6 +416,12 @@ def paste(name, target, clip, at=None, as_block=None, warnings=(), op="execute",
         ours, objects, report = paste_as_block(target, clip, as_block.strip(), at)
     else:
         ours, objects, report = paste_of(target, clip, at)
+    if rename:
+        report["renamed"] = renames
+        said = {"code": "names_renamed", "path": "conflicts", "message": "Bu çizimde aynı adlı olduklarından yeni adla geldi: "
+                + ", ".join(f"{r['from']} → {r['to']}" for r in renames) + "."}
+        units_at = next((k for k, w in enumerate(warnings) if w["code"] == "units_differ"), len(warnings))
+        warnings = [*warnings[:units_at], said, *warnings[units_at:]]
     steps = [written(target, ours, objects, report, inp, warnings, op)]
     if undo:
         steps.append({"op": "undo", "returns": LABEL,
@@ -421,6 +482,12 @@ def paste_cases():
               warnings=[{"code": "layer_hidden", "path": "clip",
                          "message": "“Gizli” katmanı gizli; yapıştırılan nesneler görünmeyecek."}, mm]),
         paste("Plan yazmadan gösterir", B, three, at=P(200, 0), warnings=[mm], op="plan"),
+        paste("Adları yenile: aynı adlı blok kopyanınkiyle “Rögar (2)” olarak gelir", B, pit, at=P(0, 60),
+              warnings=[mm], rename=True),
+        paste("Adları yenile: aynı adlı yazı stili “Başlık (2)” olarak gelir, yazı onu kullanır", B, text, at=P(0, 50),
+              warnings=[mm], rename=True),
+        paste("Adları yenile: aynı çizime, iç içe iki blok yeni adlarla, iç yerleştirme yenisini izler", A, pit,
+              at=P(40, 0), rename=True, undo=True),
         paste_refused("Kilitli katmana: layer_locked", B, {"clip": locked, "at": P(0, 0)}, "layer_locked",
                       "“Kilitli” katmanı kilitli; yapıştırılamadı. Kilidi Katmanlar panelinden açın.", "clip"),
         paste_refused("Yolda bu çizimin grubu var: not_a_layer", B, {"clip": house},

@@ -82,13 +82,40 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
             .into_iter()
             .collect()
     };
+    let snaps: Vec<_> = hits.into_iter().map(|h| found(doc, h)).collect();
+    // A point on a PDF underlay's lines is read off paper (docs/adr/0351 §6): said, never passed as CAD geometry.
+    let paper = snaps.iter().filter(|s| !s.path.is_empty() && s.uid.as_deref().is_some_and(|u| on_underlay(doc, u))).count();
+    let warnings = if paper > 0 {
+        vec![kentos_contracts::CommandWarning {
+            code: codes::UNDERLAY_MEASURE.into(),
+            message: format!(
+                "{paper} kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir."
+            ),
+            path: Some("snaps".into()),
+        }]
+    } else {
+        Vec::new()
+    };
     CommandResult::Completed {
         output: SnapFound {
-            snaps: hits.into_iter().map(|h| found(doc, h)).collect(),
+            snaps,
             revision: doc.revision().to_string(),
         },
-        warnings: Vec::new(),
+        warnings,
     }
+}
+
+/// Whether the object `uid` is an insert of a PDF underlay (an external reference with a page).
+pub fn on_underlay(doc: &Document, uid: &str) -> bool {
+    kentos_domain::Uuid::parse_str(uid)
+        .ok()
+        .and_then(|u| doc.slot_of(u))
+        .and_then(|s| doc.get(s))
+        .and_then(|e| match e {
+            kentos_contracts::Entity::Insert(i) => doc.block(i.block),
+            _ => None,
+        })
+        .is_some_and(|b| b.xref.as_ref().is_some_and(|x| x.page.is_some()))
 }
 
 fn check(input: &SnapFind) -> Result<(), Stop> {

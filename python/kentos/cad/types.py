@@ -702,6 +702,22 @@ CleanupIgnoreName = Literal["layer", "color", "lineType", "lineTypeScale", "line
 """The names of :class:`CleanupIgnore`, for a plain string."""
 
 
+class ClipFrame(_StrEnum):
+    """How a clipping boundary's frame shows.
+
+    - ``hide``: Not drawn.
+    - ``show``: Drawn on the screen over the drawing, never plotted.
+    - ``plot``: Drawn with the content, in the insert's look, and plotted.
+    """
+    HIDE = "hide"
+    SHOW = "show"
+    PLOT = "plot"
+
+
+ClipFrameName = Literal["hide", "show", "plot"]
+"""The names of :class:`ClipFrame`, for a plain string."""
+
+
 class ClosedPolylines(_StrEnum):
     """What a file's closed polyline becomes (docs/adr/0258 §1).
 
@@ -2583,6 +2599,20 @@ ParametersOperationName = Literal["get", "set", "reset"]
 """The names of :class:`ParametersOperation`, for a plain string."""
 
 
+class PasteConflicts(_StrEnum):
+    """What a paste does with a copy's block or style of a name the drawing has (docs/adr/0351 §4).
+
+    - ``keep``: This drawing's is used.
+    - ``rename``: The copy's comes in under a free name.
+    """
+    KEEP = "keep"
+    RENAME = "rename"
+
+
+PasteConflictsName = Literal["keep", "rename"]
+"""The names of :class:`PasteConflicts`, for a plain string."""
+
+
 class PatternUnit(_StrEnum):
     """Where a pattern's lengths are measured.
 
@@ -2595,6 +2625,20 @@ class PatternUnit(_StrEnum):
 
 PatternUnitName = Literal["paper", "drawing"]
 """The names of :class:`PatternUnit`, for a plain string."""
+
+
+class PdfCurveOutput(_StrEnum):
+    """What the page's curves become (docs/adr/0352 §3).
+
+    - ``polyline``: Points within the tolerance, as polylines.
+    - ``nurbs``: Each run of curves exactly, as a cubic NURBS curve; the straight runs between them as lines and polylines.
+    """
+    POLYLINE = "polyline"
+    NURBS = "nurbs"
+
+
+PdfCurveOutputName = Literal["polyline", "nurbs"]
+"""The names of :class:`PdfCurveOutput`, for a plain string."""
 
 
 class PhaseView(_StrEnum):
@@ -4155,6 +4199,27 @@ class Cell(_Union):
         return _variant(_CELL, "Cell", "kind", data).from_json(data)
 
 
+class ClipBoundary(_Union):
+    """A boundary as given to `cad.inserts.clip`, in the drawing's coordinates.
+
+    One of:
+
+    - :class:`RectangleClipBoundary` (``kind: rectangle``)
+    - :class:`PolygonClipBoundary` (``kind: polygon``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ClipBoundary:
+        return _variant(_CLIP_BOUNDARY, "ClipBoundary", "kind", data).from_json(data)
+
+
 class ConstraintEdit(_Union):
     """What changes.
 
@@ -4937,6 +5002,29 @@ class ImagesOperation(_Union):
         return _variant(_IMAGES_OPERATION, "ImagesOperation", "kind", data).from_json(data)
 
 
+class InsertsClipOperation(_Union):
+    """What `cad.inserts.clip` does.
+
+    One of:
+
+    - :class:`SetInsertsClipOperation` (``kind: set``)
+    - :class:`RemoveInsertsClipOperation` (``kind: remove``)
+    - :class:`FrameInsertsClipOperation` (``kind: frame``)
+    - :class:`InvertInsertsClipOperation` (``kind: invert``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertsClipOperation:
+        return _variant(_INSERTS_CLIP_OPERATION, "InsertsClipOperation", "kind", data).from_json(data)
+
+
 class LeaderEdit(_Union):
     """One edit of `cad.leaders.edit`.
 
@@ -5637,6 +5725,7 @@ class XrefsOperation(_Union):
     - :class:`RepathXrefsOperation` (``kind: repath``)
     - :class:`DetachXrefsOperation` (``kind: detach``)
     - :class:`PathsXrefsOperation` (``kind: paths``)
+    - :class:`UnderlayXrefsOperation` (``kind: underlay``)
     - :class:`BindXrefsOperation` (``kind: bind``)
     """
     __slots__ = ()
@@ -14126,12 +14215,15 @@ class EntitiesPaste(_Model):
         clip: The copy, as `cad.entities.copy` gave it.
         as_block: Paste as one block of this name (Blok olarak yapıştır).
         at: Where the copy's base point goes; absent: where it was copied (Özgün koordinatlara yapıştır). Unit: length.
+        conflicts: A copy's block or style of a name this drawing has (docs/adr/0351 §4): `keep` uses this drawing's, `rename`
+            brings the copy's under a free name (“Ad (2)” …) and the pasted objects take it; absent: `keep`.
         expected_revision: The document revision the input was prepared against, as decimal text. When given and the document is no
             longer at it, nothing is written and the answer is `conflict`.
     """
     clip: Clip
     as_block: str | None | Unset = UNSET
     at: Vec2 | None | Unset = UNSET
+    conflicts: PasteConflicts | PasteConflictsName | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -14141,6 +14233,8 @@ class EntitiesPaste(_Model):
             out["asBlock"] = self.as_block
         if self.at is not UNSET:
             out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.conflicts is not UNSET:
+            out["conflicts"] = _enum_out(self.conflicts)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
         return out
@@ -14151,6 +14245,7 @@ class EntitiesPaste(_Model):
             clip=Clip.from_json(data["clip"]),
             as_block=data.get("asBlock", UNSET),
             at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            conflicts=_enum_in(PasteConflicts, data["conflicts"]) if "conflicts" in data else UNSET,
             expected_revision=data.get("expectedRevision", UNSET),
         )
 
@@ -19791,6 +19886,97 @@ class ImportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportPdf(_Model):
+    """Input of `file.import.pdf` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `invalid_scale`,
+    `invalid_tolerance`, `invalid_pdf_region`, `file_not_found`, `import_unreadable` (not a PDF, encrypted or broken),
+    `pdf_page_not_found`, `layer_not_found` and `not_a_layer` (a target of `layers`), `layer_locked`,
+    `nothing_to_import`. Warnings: `import_losses` (pictures, shadings, letters that read as no character, white fills
+    taken for the paper, a page cut short).
+    Attributes:
+        path: The file to read, an absolute path.
+        at: Where the page's lower left corner goes in the drawing (metres on the wire). Absent: the origin. Unit: length.
+        curves: What the curves become; absent: polylines.
+        expected_revision: The drawing's revision the input was prepared against.
+        group: The group at the top of the tree the new layers go into, found by its name or made. Absent: one named after
+            the file; empty: the top of the tree.
+        layers: A page's layer → the drawing's layer (its id) its objects go onto. A layer not named here goes onto the
+            drawing's layer of the same name (case and Turkish marks aside), else onto a new layer.
+        page: The page, from 1. Absent: the first. Unit: index.
+        region: Only what lies inside this rectangle of the page: a part of a path whose every point is in it, a text whose
+            start is in it. Absent: the whole page.
+        scale: The drawing's scale denominator the page was printed at: a paper metre is this many of the drawing's metres.
+            Absent: 1 (the page at its paper size). Unit: 1.
+        skip_layers: The page's layers (its optional content groups, by name; “PDF” for what is in none) whose objects are left out.
+        strokes: What is taken: strokes, fills, texts. Absent: each of them.
+        tolerance: How far a polyline made of a curve may pass from it, millimetres on paper. Absent: 0.01. Unit: paper-mm.
+    """
+    path: str
+    at: Vec2 | None | Unset = UNSET
+    curves: PdfCurveOutput | PdfCurveOutputName | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    fills: bool | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    page: int | None | Unset = UNSET
+    region: PdfRegion | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+    strokes: bool | Unset = UNSET
+    texts: bool | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.curves is not UNSET:
+            out["curves"] = _enum_out(self.curves)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fills is not UNSET:
+            out["fills"] = self.fills
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.page is not UNSET:
+            out["page"] = self.page
+        if self.region is not UNSET:
+            out["region"] = None if self.region is None else self.region.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        if self.strokes is not UNSET:
+            out["strokes"] = self.strokes
+        if self.texts is not UNSET:
+            out["texts"] = self.texts
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportPdf:
+        return cls(
+            path=data["path"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            curves=_enum_in(PdfCurveOutput, data["curves"]) if "curves" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            fills=data.get("fills", UNSET),
+            group=data.get("group", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            page=data.get("page", UNSET),
+            region=UNSET if "region" not in data else None if data["region"] is None else PdfRegion.from_json(data["region"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            strokes=data.get("strokes", UNSET),
+            texts=data.get("texts", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportSld(_Model):
     """Input of `file.import.sld` v1: the look of the SLD at `path` (or its `text`) made the layer's renderer, one undo
     step “Katman stili”. Rules of one field's values become a categorized renderer, of one field's ranges a graduated
@@ -19891,6 +20077,60 @@ class InfoCard(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class InsertClip(_Model):
+    """An insert's clipping boundary (docs/adr/0351 §1).
+    Attributes:
+        boundary: Its corners in the definition's coordinates (relative to nothing: the definition's own), at least three, the
+            ring closing by itself; no edge crosses another. Unit: length.
+        inverted: The content outside the boundary is drawn, the inside left out.
+    """
+    boundary: list[Vec2]
+    frame: ClipFrame | ClipFrameName | Unset = UNSET
+    inverted: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["boundary"] = [_vec2_out(e0) for e0 in self.boundary]
+        if self.frame is not UNSET:
+            out["frame"] = _enum_out(self.frame)
+        if self.inverted is not UNSET:
+            out["inverted"] = self.inverted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertClip:
+        return cls(
+            boundary=[Vec2.from_json(e0) for e0 in data["boundary"]],
+            frame=_enum_in(ClipFrame, data["frame"]) if "frame" in data else UNSET,
+            inverted=data.get("inverted", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertClipped(_Model):
+    """An insert's clipping after the command.
+    Attributes:
+        clipping: Its clipping now, absent once removed.
+    """
+    uid: str
+    clipping: InsertClip | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        if self.clipping is not UNSET:
+            out["clipping"] = None if self.clipping is None else self.clipping.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertClipped:
+        return cls(
+            uid=data["uid"],
+            clipping=UNSET if "clipping" not in data else None if data["clipping"] is None else InsertClip.from_json(data["clipping"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class InsertEntity(Entity):
     """A block placed in the drawing (docs/adr/0144): its definition drawn
     moved from the definition's base point to `p`, mirrored in the
@@ -19914,6 +20154,8 @@ class InsertEntity(Entity):
         by_layer: On a block's object, the parts without a value of their own that
             follow the object's layer instead of the insert; in order, once each,
             never one with a value of its own.
+        clipping: Its clipping boundary (docs/adr/0351 §1): only the part of its content inside (or outside) the boundary is
+            drawn, picked and snapped to.
         color: Colour override; absent = the layer's colour ("katmana göre").
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
@@ -19948,6 +20190,7 @@ class InsertEntity(Entity):
     attachments: list[Attachment] | Unset = UNSET
     attribute_places: dict[str, Vec2] | Unset = UNSET
     by_layer: list[LookPart | LookPartName] | Unset = UNSET
+    clipping: InsertClip | None | Unset = UNSET
     color: str | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
@@ -19978,6 +20221,8 @@ class InsertEntity(Entity):
             out["attributePlaces"] = {k0: _vec2_out(e0) for k0, e0 in self.attribute_places.items()}
         if self.by_layer is not UNSET:
             out["byLayer"] = [_enum_out(e0) for e0 in self.by_layer]
+        if self.clipping is not UNSET:
+            out["clipping"] = None if self.clipping is None else self.clipping.to_json()
         if self.color is not UNSET:
             out["color"] = self.color
         if self.label is not UNSET:
@@ -20021,6 +20266,7 @@ class InsertEntity(Entity):
             attachments=[Attachment.from_json(e0) for e0 in data["attachments"]] if "attachments" in data else UNSET,
             attribute_places={k0: Vec2.from_json(e0) for k0, e0 in data["attributePlaces"].items()} if "attributePlaces" in data else UNSET,
             by_layer=[_enum_in(LookPart, e0) for e0 in data["byLayer"]] if "byLayer" in data else UNSET,
+            clipping=UNSET if "clipping" not in data else None if data["clipping"] is None else InsertClip.from_json(data["clipping"]),
             color=data.get("color", UNSET),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
@@ -20097,6 +20343,62 @@ class InsertProxy(_Model):
             default=data["default"],
             values=dict(data["values"]),
             entities=[Entity.from_json(e0) for e0 in data["entities"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertsClip(_Model):
+    """Input of `cad.inserts.clip` v1 (Kırp: blok ve dış başvuru), one undo step “Kırp”. Inserts on a locked layer are
+    left out and counted (docs/adr/0278).
+
+    Refusals, in this order: `no_entities`, `invalid_uid`, `entity_not_found`, `not_an_insert`, `layer_locked`,
+    `invalid_clipping` (the boundary has too few corners, no area, a corner not finite, crossing edges), `not_clipped`
+    (Remove, Frame or Invert on inserts none of which is clipped), `invalid_revision`, `revision_conflict`. Warnings:
+    `layer_locked`, `clip_empty` (the boundary leaves an insert nothing to draw).
+    Attributes:
+        uids: The inserts' persistent ids.
+    """
+    uids: list[str]
+    operation: InsertsClipOperation
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uids"] = list(self.uids)
+        out["operation"] = self.operation.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertsClip:
+        return cls(
+            uids=list(data["uids"]),
+            operation=InsertsClipOperation.from_json(data["operation"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InsertsClipped(_Model):
+    """Output of `cad.inserts.clip` v1 (its plan's too).
+    Attributes:
+        inserts: The inserts changed, in the drawing's order.
+    """
+    inserts: list[InsertClipped]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["inserts"] = [e0.to_json() for e0 in self.inserts]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InsertsClipped:
+        return cls(
+            inserts=[InsertClipped.from_json(e0) for e0 in data["inserts"]],
+            revision=data["revision"],
         )
 
 
@@ -26328,6 +26630,32 @@ class ParametersEdited(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PasteRenamed(_Model):
+    """A copy's block or style brought under a new name.
+    Attributes:
+        kind: `block`, `textStyle` or `dimensionStyle`.
+    """
+    kind: str
+    from_: str
+    to: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["from"] = self.from_
+        out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PasteRenamed:
+        return cls(
+            kind=data["kind"],
+            from_=data["from"],
+            to=data["to"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PasteReport(_Model):
     """What a paste brought in besides its objects (docs/adr/0309 §3).
     Attributes:
@@ -26336,12 +26664,14 @@ class PasteReport(_Model):
         kept: The copy's block names this drawing has: its own definitions are used.
         styles: The text and dimension styles added, by name.
         block: The block the copy became (Blok olarak yapıştır): its name.
+        renamed: The copy's blocks and styles brought under new names (`conflicts: rename`).
     """
     layers: list[str]
     blocks: list[str]
     kept: list[str]
     styles: list[str]
     block: str | None | Unset = UNSET
+    renamed: list[PasteRenamed] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -26351,6 +26681,8 @@ class PasteReport(_Model):
         out["styles"] = list(self.styles)
         if self.block is not UNSET:
             out["block"] = self.block
+        if self.renamed is not UNSET:
+            out["renamed"] = [e0.to_json() for e0 in self.renamed]
         return out
 
     @classmethod
@@ -26361,6 +26693,7 @@ class PasteReport(_Model):
             kept=list(data["kept"]),
             styles=list(data["styles"]),
             block=data.get("block", UNSET),
+            renamed=[PasteRenamed.from_json(e0) for e0 in data["renamed"]] if "renamed" in data else UNSET,
         )
 
 
@@ -26742,6 +27075,180 @@ class PdfExported(_Model):
             replaced=data["replaced"],
             findings=data["findings"],
             notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfImported(_Model):
+    """Output (and plan) of `file.import.pdf` v1.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256 (64 hex digits).
+        bytes: Unit: bytes.
+        page: The page taken and how many the file has. Unit: index.
+        pages: Unit: count.
+        paper: The page's size as it shows, millimetres. Unit: paper-mm.
+        objects: Unit: count.
+        targets: A page's layer → the drawing's layer its objects went onto; the layers left out are not here.
+        layers: The layers made, in the tree's order, and the group they went into.
+        notes: What a PDF cannot carry back (docs/adr/0352 §5), said once per import.
+        revision: The drawing's revision after the step (before it, in a plan).
+        bounds: The box of what was taken in the drawing, `[minX, minY, maxX, maxY]` (metres on the wire); absent when nothing. Unit: length.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    page: int
+    pages: int
+    paper: list[float]
+    objects: int
+    taken: PdfTaken
+    left: PdfLeftOut
+    targets: dict[str, str]
+    layers: list[ImportedLayer]
+    notes: list[str]
+    revision: str
+    bounds: list[float] | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["page"] = self.page
+        out["pages"] = self.pages
+        out["paper"] = [float(e0) for e0 in self.paper]
+        out["objects"] = self.objects
+        out["taken"] = self.taken.to_json()
+        out["left"] = self.left.to_json()
+        out["targets"] = dict(self.targets)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.group is not UNSET:
+            out["group"] = self.group
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            page=data["page"],
+            pages=data["pages"],
+            paper=[float(e0) for e0 in data["paper"]],
+            objects=data["objects"],
+            taken=PdfTaken.from_json(data["taken"]),
+            left=PdfLeftOut.from_json(data["left"]),
+            targets=dict(data["targets"]),
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            group=data.get("group", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfLeftOut(_Model):
+    """What the page held that was not taken, by why.
+    Attributes:
+        images: Pictures and shadings: a PDF import takes vectors and texts, never pixels. Unit: count.
+        shadings: Unit: count.
+        unreadable: Letters of a font without a map to characters. Unit: count.
+        white: White fills, taken for the paper. Unit: count.
+        outside: Parts and texts outside the region. Unit: count.
+        truncated: The page held more than a page is read for; the rest is left out.
+    """
+    images: int
+    shadings: int
+    unreadable: int
+    white: int
+    outside: int
+    truncated: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = self.images
+        out["shadings"] = self.shadings
+        out["unreadable"] = self.unreadable
+        out["white"] = self.white
+        out["outside"] = self.outside
+        out["truncated"] = self.truncated
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfLeftOut:
+        return cls(
+            images=data["images"],
+            shadings=data["shadings"],
+            unreadable=data["unreadable"],
+            white=data["white"],
+            outside=data["outside"],
+            truncated=data["truncated"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfRegion(_Model):
+    """A rectangle on the page, millimetres from its lower left corner as it shows.
+    Attributes:
+        a: Unit: paper-mm.
+        b: Unit: paper-mm.
+    """
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfRegion:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfTaken(_Model):
+    """The objects taken, by kind.
+    Attributes:
+        lines: Unit: count.
+        polylines: Unit: count.
+        curves: Unit: count.
+        areas: Unit: count.
+        texts: Unit: count.
+    """
+    lines: int
+    polylines: int
+    curves: int
+    areas: int
+    texts: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["lines"] = self.lines
+        out["polylines"] = self.polylines
+        out["curves"] = self.curves
+        out["areas"] = self.areas
+        out["texts"] = self.texts
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfTaken:
+        return cls(
+            lines=data["lines"],
+            polylines=data["polylines"],
+            curves=data["curves"],
+            areas=data["areas"],
+            texts=data["texts"],
         )
 
 
@@ -36685,6 +37192,37 @@ class UcsSet(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnderlayLook(_Model):
+    """How a PDF underlay looks (docs/adr/0351 §2).
+    Attributes:
+        fade: Faded toward see-through, 0 to 80 percent. Unit: percent.
+        monochrome: Drawn in the drawing's ink, its colours left aside.
+        plot: Drawn on a sheet (PDF, print); false: on the screen only.
+    """
+    fade: int | Unset = UNSET
+    monochrome: bool | Unset = UNSET
+    plot: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.fade is not UNSET:
+            out["fade"] = self.fade
+        if self.monochrome is not UNSET:
+            out["monochrome"] = self.monochrome
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayLook:
+        return cls(
+            fade=data.get("fade", UNSET),
+            monochrome=data.get("monochrome", UNSET),
+            plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class UnitDecision(_Model):
     """How a file's lengths were read (docs/adr/0257 §1): what the file
     declares, the unit the values were taken in and why, and the blocks
@@ -38356,9 +38894,11 @@ class XrefInfo(_Model):
         objects: Unit: count.
         via: Where its source was found (docs/adr/0349 §1).
         group: Its layer group's name.
+        page: A PDF underlay's page (docs/adr/0351 §2). Unit: index.
         parent: The reference that brought it, by name.
         sheets: The sheets whose map frames show its inserts, by name (`affected`).
         tried: The places looked in, in order, when it was not found.
+        underlay: A PDF underlay's look when it is not the default.
         views: The named views whose window meets its inserts, by name (`affected`).
     """
     name: str
@@ -38370,10 +38910,12 @@ class XrefInfo(_Model):
     objects: int
     via: AssetVia | AssetViaName
     group: str | None | Unset = UNSET
+    page: int | None | Unset = UNSET
     parent: str | None | Unset = UNSET
     relative: str | None | Unset = UNSET
     sheets: list[str] | Unset = UNSET
     tried: list[str] | Unset = UNSET
+    underlay: UnderlayLook | None | Unset = UNSET
     views: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -38388,6 +38930,8 @@ class XrefInfo(_Model):
         out["via"] = _enum_out(self.via)
         if self.group is not UNSET:
             out["group"] = self.group
+        if self.page is not UNSET:
+            out["page"] = self.page
         if self.parent is not UNSET:
             out["parent"] = self.parent
         if self.relative is not UNSET:
@@ -38396,6 +38940,8 @@ class XrefInfo(_Model):
             out["sheets"] = list(self.sheets)
         if self.tried is not UNSET:
             out["tried"] = list(self.tried)
+        if self.underlay is not UNSET:
+            out["underlay"] = None if self.underlay is None else self.underlay.to_json()
         if self.views is not UNSET:
             out["views"] = list(self.views)
         return out
@@ -38412,10 +38958,12 @@ class XrefInfo(_Model):
             objects=data["objects"],
             via=_enum_in(AssetVia, data["via"]),
             group=data.get("group", UNSET),
+            page=data.get("page", UNSET),
             parent=data.get("parent", UNSET),
             relative=data.get("relative", UNSET),
             sheets=list(data["sheets"]) if "sheets" in data else UNSET,
             tried=list(data["tried"]) if "tried" in data else UNSET,
+            underlay=UNSET if "underlay" not in data else None if data["underlay"] is None else UnderlayLook.from_json(data["underlay"]),
             views=list(data["views"]) if "views" in data else UNSET,
         )
 
@@ -38430,8 +38978,10 @@ class XrefSource(_Model):
         objects: The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds
             each object again by it and moves the references to its pieces (a definition's objects are numbered by their
             order in a file).
+        page: A PDF underlay's page, from 1 (docs/adr/0351 §2): the source is a PDF file and this page its content. Unit: index.
         parent: The reference that brought it, for one nested in another.
         relative: Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.
+        underlay: A PDF underlay's look; absent: as its PDF draws, plotted.
         unloaded: Its content let go (Boşalt): its inserts stay and draw nothing.
     """
     path: str
@@ -38439,8 +38989,10 @@ class XrefSource(_Model):
     group: str | None | Unset = UNSET
     kind: XrefKind | XrefKindName | Unset = UNSET
     objects: list[str] | Unset = UNSET
+    page: int | None | Unset = UNSET
     parent: str | None | Unset = UNSET
     relative: str | None | Unset = UNSET
+    underlay: UnderlayLook | None | Unset = UNSET
     unloaded: bool | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -38453,10 +39005,14 @@ class XrefSource(_Model):
             out["kind"] = _enum_out(self.kind)
         if self.objects is not UNSET:
             out["objects"] = list(self.objects)
+        if self.page is not UNSET:
+            out["page"] = self.page
         if self.parent is not UNSET:
             out["parent"] = self.parent
         if self.relative is not UNSET:
             out["relative"] = self.relative
+        if self.underlay is not UNSET:
+            out["underlay"] = None if self.underlay is None else self.underlay.to_json()
         if self.unloaded is not UNSET:
             out["unloaded"] = self.unloaded
         return out
@@ -38469,8 +39025,10 @@ class XrefSource(_Model):
             group=data.get("group", UNSET),
             kind=_enum_in(XrefKind, data["kind"]) if "kind" in data else UNSET,
             objects=list(data["objects"]) if "objects" in data else UNSET,
+            page=data.get("page", UNSET),
             parent=data.get("parent", UNSET),
             relative=data.get("relative", UNSET),
+            underlay=UNSET if "underlay" not in data else None if data["underlay"] is None else UnderlayLook.from_json(data["underlay"]),
             unloaded=data.get("unloaded", UNSET),
         )
 
@@ -38480,8 +39038,9 @@ class XrefsEdit(_Model):
     """Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.
 
     Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
-    `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `xref_cycle`, `xref_empty`,
-    `invalid_revision`, `revision_conflict`. Warnings: `objects_left_out`, `layer_hidden`.
+    `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,
+    `invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:
+    `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).
     Attributes:
         drawing: The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.
     """
@@ -39602,6 +40161,52 @@ class CodeCell(Cell):
     def from_json(cls, data: Mapping[str, Any]) -> CodeCell:
         return cls(
             code=data["code"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RectangleClipBoundary(ClipBoundary):
+    """A rectangle along the drawing's axes, by two opposite corners.
+    Attributes:
+        a: Unit: length.
+        b: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "rectangle"
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "rectangle"}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RectangleClipBoundary:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PolygonClipBoundary(ClipBoundary):
+    """A polygon by its corners, the ring closing by itself.
+    Attributes:
+        points: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "polygon"
+    points: list[Vec2]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "polygon"}
+        out["points"] = [_vec2_out(e0) for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PolygonClipBoundary:
+        return cls(
+            points=[Vec2.from_json(e0) for e0 in data["points"]],
         )
 
 
@@ -44598,6 +45203,76 @@ class RelinkImagesOperation(ImagesOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class SetInsertsClipOperation(InsertsClipOperation):
+    """The inserts clipped by `boundary` (an earlier boundary replaced); `inverted` keeps the outside."""
+    TAG_VALUE: ClassVar[str] = "set"
+    boundary: ClipBoundary
+    frame: ClipFrame | ClipFrameName = ClipFrame.HIDE
+    inverted: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "set"}
+        out["boundary"] = self.boundary.to_json()
+        out["frame"] = _enum_out(self.frame)
+        out["inverted"] = self.inverted
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SetInsertsClipOperation:
+        return cls(
+            boundary=ClipBoundary.from_json(data["boundary"]),
+            frame=_enum_in(ClipFrame, data["frame"]) if "frame" in data else ClipFrame.HIDE,
+            inverted=data["inverted"] if "inverted" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveInsertsClipOperation(InsertsClipOperation):
+    """Their boundaries removed: the whole content drawn again."""
+    TAG_VALUE: ClassVar[str] = "remove"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveInsertsClipOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
+class FrameInsertsClipOperation(InsertsClipOperation):
+    """Their frames shown as `frame`."""
+    TAG_VALUE: ClassVar[str] = "frame"
+    frame: ClipFrame | ClipFrameName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "frame"}
+        out["frame"] = _enum_out(self.frame)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FrameInsertsClipOperation:
+        return cls(
+            frame=_enum_in(ClipFrame, data["frame"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class InvertInsertsClipOperation(InsertsClipOperation):
+    """Inside and outside swapped."""
+    TAG_VALUE: ClassVar[str] = "invert"
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "invert"}
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> InvertInsertsClipOperation:
+        return cls()
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -48458,6 +49133,7 @@ class AttachXrefsOperation(XrefsOperation):
         at: Where its origin goes; absent: the drawing's 0, 0. Unit: length.
         mode: `attach` or `overlay`; absent: `attach`.
         name: Its name; absent: the file's name without its extension (made unique).
+        page: A PDF file's page to underlay, from 1 (docs/adr/0351 §2); absent for a PDF: its first page. Unit: index.
         rotation: Its turn, degrees counter-clockwise; absent: 0. Unit: deg.
         scale: Its scale; absent: 1. Unit: scale.
     """
@@ -48467,6 +49143,7 @@ class AttachXrefsOperation(XrefsOperation):
     at: Vec2 | None | Unset = UNSET
     mode: XrefKind | XrefKindName = XrefKind.ATTACH
     name: str | None | Unset = UNSET
+    page: int | None | Unset = UNSET
     rotation: float | None | Unset = UNSET
     scale: float | None | Unset = UNSET
 
@@ -48479,6 +49156,8 @@ class AttachXrefsOperation(XrefsOperation):
         out["mode"] = _enum_out(self.mode)
         if self.name is not UNSET:
             out["name"] = self.name
+        if self.page is not UNSET:
+            out["page"] = self.page
         if self.rotation is not UNSET:
             out["rotation"] = None if self.rotation is None else float(self.rotation)
         if self.scale is not UNSET:
@@ -48493,6 +49172,7 @@ class AttachXrefsOperation(XrefsOperation):
             at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
             mode=_enum_in(XrefKind, data["mode"]) if "mode" in data else XrefKind.ATTACH,
             name=data.get("name", UNSET),
+            page=data.get("page", UNSET),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
         )
@@ -48592,6 +49272,39 @@ class PathsXrefsOperation(XrefsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class UnderlayXrefsOperation(XrefsOperation):
+    """A PDF underlay's look (docs/adr/0351 §2): each field given changes; a setting of the definition, one undo step.
+    Attributes:
+        fade: Unit: percent.
+    """
+    TAG_VALUE: ClassVar[str] = "underlay"
+    name: str
+    fade: int | None | Unset = UNSET
+    monochrome: bool | None | Unset = UNSET
+    plot: bool | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "underlay"}
+        out["name"] = self.name
+        if self.fade is not UNSET:
+            out["fade"] = self.fade
+        if self.monochrome is not UNSET:
+            out["monochrome"] = self.monochrome
+        if self.plot is not UNSET:
+            out["plot"] = self.plot
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnderlayXrefsOperation:
+        return cls(
+            name=data["name"],
+            fade=data.get("fade", UNSET),
+            monochrome=data.get("monochrome", UNSET),
+            plot=data.get("plot", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BindXrefsOperation(XrefsOperation):
     """Made an ordinary block, with those it brought."""
     TAG_VALUE: ClassVar[str] = "bind"
@@ -48637,6 +49350,9 @@ _CAD_ELEMENT: dict[str, type[CadElement]] = {"point": PointCadElement, "segment"
 
 
 _CELL: dict[str, type[Cell]] = {"any": AnyCell, "empty": EmptyCell, "code": CodeCell}
+
+
+_CLIP_BOUNDARY: dict[str, type[ClipBoundary]] = {"rectangle": RectangleClipBoundary, "polygon": PolygonClipBoundary}
 
 
 _CONSTRAINT_EDIT: dict[str, type[ConstraintEdit]] = {"add": AddConstraintEdit, "remove": RemoveConstraintEdit, "mode": ModeConstraintEdit, "flip": FlipConstraintEdit, "solve": SolveConstraintEdit}
@@ -48723,6 +49439,9 @@ _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objec
 _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOperation, "relink": RelinkImagesOperation}
 
 
+_INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInsertsClipOperation, "remove": RemoveInsertsClipOperation, "frame": FrameInsertsClipOperation, "invert": InvertInsertsClipOperation}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -48807,7 +49526,7 @@ _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameView
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation}
 
 
-_XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "paths": PathsXrefsOperation, "bind": BindXrefsOperation}
+_XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "paths": PathsXrefsOperation, "underlay": UnderlayXrefsOperation, "bind": BindXrefsOperation}
 
 
 __all__ = [
@@ -49051,6 +49770,9 @@ __all__ = [
     "ClearBoundChange",
     "ClearStyleTableEdit",
     "Clip",
+    "ClipBoundary",
+    "ClipFrame",
+    "ClipFrameName",
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
@@ -49421,6 +50143,7 @@ __all__ = [
     "FormsValidate",
     "FormsValidated",
     "FoundSnap",
+    "FrameInsertsClipOperation",
     "FrameTableEdit",
     "FrameUcsTo",
     "FromFieldDomainsOp",
@@ -49500,10 +50223,13 @@ __all__ = [
     "ImportDomainsOp",
     "ImportDxf",
     "ImportGpkg",
+    "ImportPdf",
     "ImportSld",
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",
+    "InsertClip",
+    "InsertClipped",
     "InsertColumnsTableEdit",
     "InsertEntity",
     "InsertEntityGeometry",
@@ -49512,7 +50238,11 @@ __all__ = [
     "InsertParameters",
     "InsertProxy",
     "InsertRowsTableEdit",
+    "InsertsClip",
+    "InsertsClipOperation",
+    "InsertsClipped",
     "InspectedObject",
+    "InvertInsertsClipOperation",
     "InvertSelectRegion",
     "InvitationChange",
     "InvitationRevoke",
@@ -49812,6 +50542,9 @@ __all__ = [
     "ParametersOperation",
     "ParametersOperationName",
     "PartsDivision",
+    "PasteConflicts",
+    "PasteConflictsName",
+    "PasteRenamed",
     "PasteReport",
     "PatLineProblem",
     "PathArrayLayout",
@@ -49824,7 +50557,13 @@ __all__ = [
     "PatternText",
     "PatternUnit",
     "PatternUnitName",
+    "PdfCurveOutput",
+    "PdfCurveOutputName",
     "PdfExported",
+    "PdfImported",
+    "PdfLeftOut",
+    "PdfRegion",
+    "PdfTaken",
     "PercentLengthenChange",
     "PerpendicularConstraintRule",
     "PhaseView",
@@ -49866,6 +50605,7 @@ __all__ = [
     "PolarArrayLayout",
     "PolarBlockParameter",
     "PolarPointConstruction",
+    "PolygonClipBoundary",
     "PolygonCreate",
     "PolygonCreated",
     "PolygonEntity",
@@ -49967,6 +50707,7 @@ __all__ = [
     "RecordsDuplicated",
     "RecordsPlan",
     "RecreateHatchEdit",
+    "RectangleClipBoundary",
     "RectangleCorners",
     "RectangleCreate",
     "RectangleFrame",
@@ -50000,6 +50741,7 @@ __all__ = [
     "RemoveFieldEdit",
     "RemoveFitCurveEdit",
     "RemoveFormsOp",
+    "RemoveInsertsClipOperation",
     "RemoveIslandsHatchEdit",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
@@ -50080,6 +50822,7 @@ __all__ = [
     "SetArchOperation",
     "SetCellTableEdit",
     "SetFrame",
+    "SetInsertsClipOperation",
     "SetOpeningsOperation",
     "SetParameterEdit",
     "SetScheduleOperation",
@@ -50304,6 +51047,8 @@ __all__ = [
     "UcsSet",
     "UcsTo",
     "UnbreakDimensionEdit",
+    "UnderlayLook",
+    "UnderlayXrefsOperation",
     "UnfieldTableEdit",
     "UnitDecision",
     "UnitGeometry",

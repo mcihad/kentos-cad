@@ -151,6 +151,46 @@ pub struct Definition {
     pub attributes: Vec<Attribute>,
     /// Its parameters and actions (docs/adr/0318): an insert with values draws a variant of it.
     pub dynamic: Option<Arc<Dynamic>>,
+    /// A PDF underlay's look (docs/adr/0351 §2): its pieces faded and, monochrome, in their insert's ink.
+    pub underlay: Option<Underlay>,
+}
+
+/// A PDF underlay's look as its pieces draw it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Underlay {
+    /// Its transparency, 0 to 0.8 (its fade).
+    pub fade: f64,
+    pub monochrome: bool,
+}
+
+impl Underlay {
+    /// A piece of the underlay: at least the fade's transparency; monochrome, its colours and layers' colours left
+    /// aside (it draws in its insert's).
+    fn apply(&self, piece: &Piece) -> Piece {
+        let mut p = piece.clone();
+        if self.fade > 0.0 {
+            p.stroke.transparency = Some(crate::jsmath::js_max(p.stroke.transparency.unwrap_or(0.0), self.fade));
+        }
+        if self.monochrome {
+            p.color = None;
+            p.by_layer.clear();
+        }
+        p
+    }
+
+    /// A block definition's `xref` field's underlay look: a PDF page's (`page`) with a look that changes it.
+    fn of(xref: &Json) -> Option<Underlay> {
+        if !matches!(xref.get("page"), Json::Num(_)) {
+            return None;
+        }
+        let look = xref.get("underlay");
+        let fade = match look.get("fade") {
+            Json::Num(f) => (f / 100.0).clamp(0.0, 0.8),
+            _ => 0.0,
+        };
+        let monochrome = matches!(look.get("monochrome"), Json::Bool(true));
+        (fade > 0.0 || monochrome).then_some(Underlay { fade, monochrome })
+    }
 }
 
 /// One drawn piece of a block: a shape (never an insert), with the colour
@@ -230,6 +270,18 @@ impl Blocks {
         let mut stack = Vec::new();
         for d in &defs {
             flatten(&d.id, &sources, &mut done, &mut stack);
+        }
+        // A PDF underlay's look on its own pieces (docs/adr/0351 §2).
+        for d in &defs {
+            if let (Some(u), Some(flat)) = (&d.underlay, done.get(&d.id)) {
+                let looked = Flat {
+                    base: flat.base,
+                    entities: flat.entities.clone(),
+                    attributes: flat.attributes.clone(),
+                    pieces: flat.pieces.iter().map(|p| u.apply(p)).collect(),
+                };
+                done.insert(d.id.clone(), Arc::new(looked));
+            }
         }
         let dynamic = defs
             .iter()
@@ -317,6 +369,7 @@ impl Blocks {
                 entities,
                 attributes,
                 dynamic,
+                underlay: Underlay::of(d.get("xref")),
             });
         }
         Ok(Blocks::new(defs))
@@ -344,7 +397,8 @@ impl Blocks {
             return Vec::new();
         };
         let (values, places) = insert_attrs(insert);
-        flat.pieces
+        let pieces = flat
+            .pieces
             .iter()
             .map(|piece| {
                 let shape = place(&attribute_piece(&flat, piece, values, places), &m, similar);
@@ -358,7 +412,25 @@ impl Blocks {
                     attribute: piece.attribute.clone(),
                 }
             })
-            .collect()
+            .collect();
+        // Its clipping (docs/adr/0351 §1): the boundary placed as the pieces are.
+        match insert {
+            Shape::Insert { clip: Some(c), .. } => {
+                let ring = crate::block_clip::placed_ring(c, flat.base, &m);
+                crate::block_clip::clipped(pieces, &ring, c.inverted, c.plot_frame)
+            }
+            _ => pieces,
+        }
+    }
+
+    /// An insert's clipping boundary in the drawing (docs/adr/0351 §1), for its frame on the screen; none for an
+    /// insert without one.
+    pub fn clip_ring(&self, insert: &Shape) -> Option<Vec<Vec2>> {
+        let Shape::Insert { clip: Some(c), .. } = insert else {
+            return None;
+        };
+        let (flat, m, _) = self.placed(insert)?;
+        Some(crate::block_clip::placed_ring(c, flat.base, &m))
     }
 
     /// The object a block path names inside an insert (docs/adr/0263 §3), placed in the drawing: each number its
@@ -745,6 +817,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
         mirror,
         attrs,
         places,
+        clip,
     } = shape
     else {
         return None;
@@ -778,6 +851,7 @@ pub fn insert_through(shape: &Shape, m: &Affine) -> Option<Shape> {
         mirror: flip.then_some(true),
         attrs: attrs.clone(),
         places: places.clone(),
+        clip: clip.clone(),
     })
 }
 
@@ -929,6 +1003,7 @@ fn flat_of(
             mirror,
             attrs,
             places,
+            clip: _,
         } = &e.shape
         {
             flatten(block, sources, done, stack);
@@ -1152,6 +1227,7 @@ mod tests {
         Blocks::new(vec![
             Definition {
                 dynamic: None,
+                underlay: None,
                 id: DIREK.into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![
@@ -1165,6 +1241,7 @@ mod tests {
             },
             Definition {
                 dynamic: None,
+                underlay: None,
                 id: ROGAR.into(),
                 base: Vec2::new(1.0, 0.0),
                 entities: vec![
@@ -1191,6 +1268,7 @@ mod tests {
             mirror: mirror.then_some(true),
             attrs: None,
             places: None,
+            clip: None,
         }
     }
 
@@ -1230,6 +1308,7 @@ mod tests {
         const DOOR: &str = "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0003";
         let blocks = Blocks::new(vec![Definition {
             dynamic: None,
+            underlay: None,
             id: DOOR.into(),
             base: Vec2::new(0.0, 0.0),
             entities: vec![
@@ -1270,6 +1349,7 @@ mod tests {
             mirror: Some(true),
             attrs: Some(attrs.clone()),
             places: None,
+            clip: None,
         };
         let texts = |pieces: &[Piece]| -> Vec<(f64, f64, f64, Option<TextAlign>, String)> {
             pieces
@@ -1418,6 +1498,7 @@ mod tests {
         let ring = Blocks::new(vec![
             Definition {
                 dynamic: None,
+                underlay: None,
                 id: "a".into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![entity(
@@ -1427,6 +1508,7 @@ mod tests {
             },
             Definition {
                 dynamic: None,
+                underlay: None,
                 id: "b".into(),
                 base: Vec2::new(0.0, 0.0),
                 entities: vec![

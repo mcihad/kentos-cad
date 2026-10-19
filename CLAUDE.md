@@ -393,7 +393,7 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   karşılaştır, çizim değişmez); 0522 CSV tablolar (`file.export.csv` ve `file.import.csv`: GDAL'ın CSV'si, geometri ISO WKT
   ya da X ve Y, yaylar kesin, `.csvt` türleri ve OGC WKT1 `.prj`; okuma GeoPackage içe aktarmasının yolundan, `kentos_geopackage::wkt`; Veri › Dosya alışverişi'nde
   CSV içe ve dışa aktar); 0519 düşey sistem ve epok (projenin `heights`'i ve `coordinateEpoch`'u,
-  `.kcad` şema 85, `cad.crs.transform` kotlarıyla ve işlemin kaydıyla, Proje ayarları › Kotlar ve epok); 0517 sanal raster mozaiği (GDAL VRT'si `kentos_formats::raster::vrt`,
+  `.kcad` şema 86, `FORMATS_VERSION` 93, `cad.crs.transform` kotlarıyla ve işlemin kaydıyla, Proje ayarları › Kotlar ve epok); 0517 sanal raster mozaiği (GDAL VRT'si `kentos_formats::raster::vrt`,
   `Reader::mosaic`, `cad.rasters.mosaic` gdalbuildvrt'nin kuralıyla, Sanal mozaik penceresi); 0520 permütasyon çıkarımı (`kentos.spatial-inference/1`, katlanmış sözde
   p, koşullu permütasyon), Gi*'ın FDR ve Bonferroni'si, Yerel Moran `stats.localMoran`, deney profili; 0516 SLD alışverişi (`kentos_formats::sld`, SLD 1.1 / SE 1.1 iki yönde;
   `file.export.sld` ve `file.import.sld`, kayıplar söylenir; Katmanlar'ın sağ tıkında; QGIS 4.2'yle denetlenir); 0515 COG (`kentos_formats::raster::cog`: dizinler başta, küçük katlar
@@ -738,6 +738,18 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kesikli çerçeve ve uyarı üçgeniyle, dosyası değişen resim izleyiciyle yeniden okunur (çizim hattında resmin dokusu pikselleri
   değişince yeniden yapılır); Paketle dış başvuruların kaynaklarını bayt bayt (özetleri tutar) ve `paket.json`'u (`kentos.package/1`:
   proje, kopyalar, kalanlar, yazı yüzleri; yerine başka yüzle çizilen yazı stili `left`'te) yazar (ADR 0350);
+  belge sekmeleri, kırpma ve PDF altlığı: birden çok çizim açık, arkadaki sekmesinde geri alması, kamerası, seçimi ve görünümleriyle
+  (`doc_tabs.rs`; Yeni sekmede aç, Sonraki çizim Ctrl+Tab, Çizimi kapat; bulut projesi sekmede beklemez), ajan bağlantısının
+  çağrıları çizimini `document` ile adlandırır (MCP'nin `desktop.attach`'ı tutar), Yapıştır'ın `conflicts: rename`'i; `cad.inserts.clip`
+  (Kırp: yerleştirmenin `clipping`'i tanımın koordinatlarında, Ters, Çerçeve gizli/ekranda/yazdır; çekirdeğin `block_clip`'i; `.kcad`
+  şema 85, `FORMATS_VERSION` 92); PDF altlığı: kendi PDF okuyucumuz `kentos_formats::pdf` (xref tablosu ve akışı, nesne akışı, artımlı
+  güncelleme, süzgeçler, formlar, yazılar ve ToUnicode, isteğe bağlı içerik grupları), sayfa `cad.xrefs.edit`'in `page`'iyle dış
+  başvuru olur, görünüşü `underlay` (soldur, tek renk, yazdırma); dış başvuru tanımı `cad.blocks.edit`'te salt okunur
+  (`xref_read_only`), Kaynağı aç onu yeni sekmede açar; altlığın çizgisine kenet ve bağlı ölçü `underlay_measure` der (ADR 0351);
+  PDF içe aktarma: `file.import.pdf` (sayfa, bölge mm, ölçek 1:N, yer; çizgiler, dolgular, yazılar; eğriler toleransla çoklu çizgi ya da
+  kesin üçüncü dereceden NURBS, okuyucu eğrileri `PdfPath.curves`'te saklar; isteğe bağlı içerik grupları katman, `skipLayers`, `layers`,
+  `group`; beyaz dolgu kâğıt; `notes` PDF'in taşımadığını, `left` alınmayanı söyler; tek adım “PDF: ad.pdf”), masaüstünde CAD › Ekle ›
+  İçe aktar ve CBS › Veri'de PDF içe aktar penceresi (planın canlı özeti, yer çizimden); Python ve MCP (ADR 0352);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

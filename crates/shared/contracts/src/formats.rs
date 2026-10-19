@@ -211,9 +211,11 @@ use crate::layer::LineType;
 /// 90 (docs/adr/0348): a block definition's `xref` (an external reference's source): `.kcad` document schema 83; not in
 ///    the typed columns (definitions are not). The web's copy stays 53.
 /// 91 (docs/adr/0349 §1): the settings' `xrefPaths`: `.kcad` document schema 84. The web's copy stays 53.
-/// 92 (docs/adr/0519 §1): the settings' `heights` and `coordinateEpoch`: `.kcad` document schema 85. The web's copy
+/// 92 (docs/adr/0351): an insert's `clipping` and a PDF underlay's `page` and `underlay`: `.kcad` document schema 85; in
+///    the typed columns an insert's optional fourth field, its clipping as one JSON text. The web's copy stays 53.
+/// 93 (docs/adr/0519 §1): the settings' `heights` and `coordinateEpoch`: `.kcad` document schema 86. The web's copy
 ///    stays 53.
-pub const FORMATS_VERSION: u32 = 92;
+pub const FORMATS_VERSION: u32 = 93;
 
 // ── Every import ────────────────────────────────────────────────────────
 

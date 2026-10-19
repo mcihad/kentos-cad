@@ -11,6 +11,7 @@ a hidden layer's objects are not snapped; a crossing's object is the first of it
 place on the object is the independent reference of docs/adr/0263 (`subref_cases.place_at`, beside this file),
 not KentOS code. The drawing is chosen so that every point and every along place's `t` is a double exactly.
 """
+import copy
 import json
 import math
 import sys
@@ -158,6 +159,20 @@ def cases():
     out.append(case("dönük ve aynalı bloğun odasının köşesi: yol 0, köşe 2",
                     step({"at": at(E0 + 86.1, N0 + 8.1), "aperture": 0.5},
                          done(snap_in("endpoint", E0 + 86, N0 + 8, 7)))))
+    # The same room as a PDF underlay's page (docs/adr/0351 §6): a snap on its lines is said to be read off paper; the
+    # insert's own insertion point (no path) is not.
+    underlay = copy.deepcopy(SETUP)
+    underlay["blocks"][1]["xref"] = {"path": "/proje/plan.pdf", "digest": "cd" * 32, "page": 1,
+                                     "objects": ["0192f5a1-5555-7000-8000-000000000011",
+                                                 "0192f5a1-5555-7000-8000-000000000012"]}
+    paper = {"code": "underlay_measure", "path": "snaps",
+             "message": "1 kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), "
+                        "kanıtlanmış CAD geometrisi değildir."}
+    out.append({**case("PDF altlığının çizgisindeki kenet söylenir",
+                       step({"at": at(E0 + 82.1, N0 + 4.1), "aperture": 0.5, "kinds": ["endpoint"]},
+                            {**done(snap_in("endpoint", E0 + 82, N0 + 4, 7)), "warnings": [paper]}),
+                       step({"at": at(E0 + 80.1, N0 - 0.1), "aperture": 0.5, "kinds": ["insertion"]},
+                            done(snap("insertion", E0 + 80, N0, 7)))), "setup": underlay})
     out.append(case("bloğun ekleme noktası: yolsuz düğüm 0",
                     step({"at": at(E0 + 80.1, N0 - 0.1), "aperture": 0.5, "kinds": ["insertion"]},
                          done(snap("insertion", E0 + 80, N0, 7)))))

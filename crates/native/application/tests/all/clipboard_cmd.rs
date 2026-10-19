@@ -64,6 +64,7 @@ fn paste(doc: &mut Document, clip: Clip) -> f64 {
             clip,
             at: Some(Vec2 { x: 5000.0, y: 0.0 }),
             as_block: None,
+            conflicts: Default::default(),
             expected_revision: None,
         },
     ) else {

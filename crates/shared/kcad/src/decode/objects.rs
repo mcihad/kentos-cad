@@ -235,7 +235,9 @@ pub(super) struct Features {
     pub(super) phases: bool,
     pub(super) xrefs: bool,
     pub(super) xref_paths: bool,
-    /// Schema 85: the settings' heights and coordinate epoch (docs/adr/0519).
+    /// Schema 85: an insert's clipping and a PDF underlay's page and look (docs/adr/0351).
+    pub(super) clipping: bool,
+    /// Schema 86: the settings' heights and coordinate epoch (docs/adr/0519).
     pub(super) heights: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
@@ -384,6 +386,7 @@ impl Features {
             phases: schema >= crate::SCHEMA_WITH_PHASES,
             xrefs: schema >= crate::SCHEMA_WITH_XREFS,
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
+            clipping: schema >= crate::SCHEMA_WITH_CLIPPING,
             heights: schema >= crate::SCHEMA_WITH_HEIGHTS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
@@ -521,6 +524,7 @@ fn allowed(kind: Kind, key: &str, has: Features) -> bool {
                     || (has.block_extras && key == "yScale")
                     || (has.block_cards && key == "attributePlaces")
                     || (has.dynamic_blocks && key == "parameters")
+                    || (has.clipping && key == "clipping")
             }
             Kind::Leader => {
                 matches!(
@@ -654,6 +658,7 @@ struct Fields {
     space_parts: Option<Vec<kentos_contracts::SpacePart>>,
     space: Option<crate::space::SpaceRest>,
     grid_line: Option<kentos_contracts::GridFields>,
+    clipping: Option<kentos_contracts::InsertClip>,
     column: Option<kentos_contracts::ColumnFields>,
     stair: Option<kentos_contracts::StairFields>,
     ramp: Option<kentos_contracts::RampFields>,
@@ -1155,6 +1160,14 @@ pub(super) fn object(
             }
             // Schema 79 (docs/adr/0343 §1): a grid's own fields, not a table's grid.
             "grid" if kind == Kind::Grid => f.grid_line = Some(json_part(r, "aksın alanları")?.0),
+            // Schema 85 (docs/adr/0351 §1): its JSON, read back exactly as the writer writes it.
+            "clipping" => {
+                let (read, at): (kentos_contracts::InsertClip, usize) = json_part(r, "kırpma sınırı")?;
+                if let Some(why) = read.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &why));
+                }
+                f.clipping = Some(read);
+            }
             "grid" => {
                 let names: Vec<(&str, TableGrid)> =
                     TableGrid::ALL.iter().map(|g| (g.name(), *g)).collect();
@@ -2275,6 +2288,7 @@ fn build(
                 return Err(r.fail_at(Code::BadValue, at, "y ölçeği x ölçeğine eşitse yazılmaz"));
             }
             Entity::Insert(InsertEntity {
+                clipping: f.clipping.take(),
                 parameters: f.parameters.take().unwrap_or_default(),
                 attribute_places: f.attribute_places.take().unwrap_or_default(),
                 base,

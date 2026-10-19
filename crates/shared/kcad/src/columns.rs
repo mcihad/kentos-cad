@@ -1293,6 +1293,7 @@ impl Packer {
                 mirror,
                 attribute_places,
                 parameters,
+                clipping,
             }) => {
                 self.point(p);
                 self.out.floats.extend([*scale, *rotation]);
@@ -1317,6 +1318,11 @@ impl Packer {
                 if !parameters.is_empty() {
                     flags |= OPT[3];
                     self.text(&serde_json::to_string(parameters).unwrap_or_default());
+                }
+                // Its clipping (docs/adr/0351 §1): its JSON text.
+                if let Some(c) = clipping {
+                    flags |= OPT[4];
+                    self.text(&serde_json::to_string(c).unwrap_or_default());
                 }
             }
             Entity::Image(ImageEntity {
@@ -2192,8 +2198,8 @@ fn allowed(kind: u8) -> u32 {
         // and bounds (docs/adr/0328).
         12 => OPT[..7].iter().fold(0, |m, b| m | b),
         // An insert: mirror, its own y factor (docs/adr/0315 §3), its moved attributes (docs/adr/0317 §1), its
-        // parameter values (docs/adr/0318 §3).
-        13 => OPT[0] | OPT[1] | OPT[2] | OPT[3],
+        // parameter values (docs/adr/0318 §3), its clipping (docs/adr/0351 §1).
+        13 => OPT[0] | OPT[1] | OPT[2] | OPT[3] | OPT[4],
         // A table: merges, aligns, header, grid, its face, source, frame (docs/adr/0184); schema 68's cells
         // (docs/adr/0327).
         15 => OPT[..12].iter().fold(0, |m, b| m | b),
@@ -3561,7 +3567,19 @@ fn geometry(
             } else {
                 Default::default()
             };
+            let clipping = if has(4) {
+                let text = c.text(|| place("clipping"))?;
+                let clip: kentos_contracts::InsertClip =
+                    serde_json::from_str(&text).map_err(|_| broken("kırpma sınırı okunamadı"))?;
+                if clip.problem().is_some() {
+                    return Err(broken("kırpma sınırı geçersiz"));
+                }
+                Some(clip)
+            } else {
+                None
+            };
             Entity::Insert(InsertEntity {
+                clipping,
                 parameters,
                 attribute_places,
                 base,

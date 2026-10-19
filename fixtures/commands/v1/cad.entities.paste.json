@@ -5351,6 +5351,1445 @@
    }
   },
   {
+   "name": "Adları yenile: aynı adlı blok kopyanınkiyle “Rögar (2)” olarak gelir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "insert",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+         "p": {
+          "x": 30,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "uids": [
+        "0192f5a3-0000-7000-8000-000000000004"
+       ],
+       "layers": [
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "blocks": [
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+         "name": "Kapak",
+         "base": {
+          "x": 0,
+          "y": 0
+         },
+         "entities": [
+          {
+           "kind": "line",
+           "id": 1,
+           "layerId": "0",
+           "attrs": {},
+           "a": {
+            "x": -0.5,
+            "y": 0
+           },
+           "b": {
+            "x": 0.5,
+            "y": 0
+           }
+          }
+         ]
+        },
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+         "name": "Rögar",
+         "base": {
+          "x": 0,
+          "y": 0
+         },
+         "entities": [
+          {
+           "kind": "circle",
+           "id": 1,
+           "layerId": "0",
+           "attrs": {},
+           "c": {
+            "x": 0,
+            "y": 0
+           },
+           "r": 0.6
+          },
+          {
+           "kind": "insert",
+           "id": 2,
+           "layerId": "0",
+           "attrs": {},
+           "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+           "p": {
+            "x": 0,
+            "y": 0
+           },
+           "scale": 1,
+           "rotation": 0
+          }
+         ]
+        }
+       ],
+       "base": {
+        "x": 30,
+        "y": 0
+       }
+      },
+      "conflicts": "rename",
+      "at": {
+       "x": 0,
+       "y": 60
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "names_renamed",
+        "path": "conflicts",
+        "message": "Bu çizimde aynı adlı olduklarından yeni adla geldi: Rögar → Rögar (2)."
+       },
+       {
+        "code": "units_differ",
+        "path": "clip.unit",
+        "message": "Kaynak çizimin birimi m, bu çizimin mm; nesneler gerçek boylarıyla yapıştırıldı."
+       }
+      ],
+      "output": {
+       "created": [
+        "$uidOf:2"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [
+         "Kapak",
+         "Rögar (2)"
+        ],
+        "kept": [],
+        "styles": [],
+        "renamed": [
+         {
+          "kind": "block",
+          "from": "Rögar",
+          "to": "Rögar (2)"
+         }
+        ]
+       },
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "entities": {
+       "2": {
+        "kind": "insert",
+        "id": 2,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Rögar (2)",
+        "p": {
+         "x": 0,
+         "y": 60
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "layers": [
+       {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kad",
+        "name": "KADASTRO",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "b2",
+          "name": "bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "duvar",
+          "name": "Duvar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "kl",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gz",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ],
+      "blocks": [
+       {
+        "name": "rögar",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.5
+         }
+        ]
+       },
+       {
+        "name": "Kapak",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.5,
+           "y": 0
+          },
+          "b": {
+           "x": 0.5,
+           "y": 0
+          }
+         }
+        ]
+       },
+       {
+        "name": "Rögar (2)",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.6
+         },
+         {
+          "kind": "insert",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+          "p": {
+           "x": 0,
+           "y": 0
+          },
+          "scale": 1,
+          "rotation": 0
+         }
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Hedef",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100,
+     "workspace": "cad",
+     "drawingUnit": "mm",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+       "name": "başlık",
+       "font": "barlow"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kad",
+      "name": "KADASTRO",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "b2",
+        "name": "bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "kl",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gz",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 100
+      },
+      "b": {
+       "x": 5,
+       "y": 100
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e21",
+      "name": "rögar",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.5
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Adları yenile: aynı adlı yazı stili “Başlık (2)” olarak gelir, yazı onu kullanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "text",
+         "id": 1,
+         "layerId": "bina",
+         "attrs": {},
+         "p": {
+          "x": 2,
+          "y": 22
+         },
+         "text": "Bina A",
+         "height": 1,
+         "rotation": 0,
+         "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+        }
+       ],
+       "uids": [
+        "0192f5a3-0000-7000-8000-000000000003"
+       ],
+       "layers": [
+        {
+         "id": "kadastro",
+         "name": "Kadastro",
+         "type": "group",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": [
+          {
+           "id": "bina",
+           "name": "Bina",
+           "type": "layer",
+           "visible": true,
+           "locked": false,
+           "expanded": true,
+           "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+           },
+           "children": []
+          }
+         ]
+        }
+       ],
+       "textStyles": [
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+         "name": "Başlık",
+         "font": "arimo",
+         "bold": true
+        }
+       ],
+       "base": {
+        "x": 0,
+        "y": 0
+       }
+      },
+      "conflicts": "rename",
+      "at": {
+       "x": 0,
+       "y": 50
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "names_renamed",
+        "path": "conflicts",
+        "message": "Bu çizimde aynı adlı olduklarından yeni adla geldi: Başlık → Başlık (2)."
+       },
+       {
+        "code": "units_differ",
+        "path": "clip.unit",
+        "message": "Kaynak çizimin birimi m, bu çizimin mm; nesneler gerçek boylarıyla yapıştırıldı."
+       }
+      ],
+      "output": {
+       "created": [
+        "$uidOf:2"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [],
+        "kept": [],
+        "styles": [
+         "Başlık (2)"
+        ],
+        "renamed": [
+         {
+          "kind": "textStyle",
+          "from": "Başlık",
+          "to": "Başlık (2)"
+         }
+        ]
+       },
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "entities": {
+       "2": {
+        "kind": "text",
+        "id": 2,
+        "layerId": "b2",
+        "attrs": {},
+        "p": {
+         "x": 2,
+         "y": 72
+        },
+        "text": "Bina A",
+        "height": 1,
+        "rotation": 0,
+        "textStyle": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "layers": [
+       {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kad",
+        "name": "KADASTRO",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "b2",
+          "name": "bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "yapi",
+        "name": "Yapı",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "duvar",
+          "name": "Duvar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "kl",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gz",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ],
+      "settings": {
+       "textStyles": [
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+         "name": "başlık",
+         "font": "barlow"
+        },
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+         "name": "Başlık (2)",
+         "font": "arimo",
+         "bold": true
+        }
+       ]
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Hedef",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 100,
+     "workspace": "cad",
+     "drawingUnit": "mm",
+     "textStyles": [
+      {
+       "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0201",
+       "name": "başlık",
+       "font": "barlow"
+      }
+     ]
+    },
+    "origin": {
+     "x": 0,
+     "y": 0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kad",
+      "name": "KADASTRO",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "b2",
+        "name": "bina",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "yapi",
+      "name": "Yapı",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [
+       {
+        "id": "duvar",
+        "name": "Duvar",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     },
+     {
+      "id": "kl",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gz",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "line",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 0,
+       "y": 100
+      },
+      "b": {
+       "x": 5,
+       "y": 100
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e21",
+      "name": "rögar",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "circle",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "c": {
+         "x": 0,
+         "y": 0
+        },
+        "r": 0.5
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "Adları yenile: aynı çizime, iç içe iki blok yeni adlarla, iç yerleştirme yenisini izler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "clip": {
+       "objects": [
+        {
+         "kind": "insert",
+         "id": 1,
+         "layerId": "cizim",
+         "attrs": {},
+         "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+         "p": {
+          "x": 30,
+          "y": 0
+         },
+         "scale": 1,
+         "rotation": 0
+        }
+       ],
+       "uids": [
+        "0192f5a3-0000-7000-8000-000000000004"
+       ],
+       "layers": [
+        {
+         "id": "cizim",
+         "name": "Çizim",
+         "type": "layer",
+         "visible": true,
+         "locked": false,
+         "expanded": true,
+         "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+         },
+         "children": []
+        }
+       ],
+       "blocks": [
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+         "name": "Kapak",
+         "base": {
+          "x": 0,
+          "y": 0
+         },
+         "entities": [
+          {
+           "kind": "line",
+           "id": 1,
+           "layerId": "0",
+           "attrs": {},
+           "a": {
+            "x": -0.5,
+            "y": 0
+           },
+           "b": {
+            "x": 0.5,
+            "y": 0
+           }
+          }
+         ]
+        },
+        {
+         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e12",
+         "name": "Rögar",
+         "base": {
+          "x": 0,
+          "y": 0
+         },
+         "entities": [
+          {
+           "kind": "circle",
+           "id": 1,
+           "layerId": "0",
+           "attrs": {},
+           "c": {
+            "x": 0,
+            "y": 0
+           },
+           "r": 0.6
+          },
+          {
+           "kind": "insert",
+           "id": 2,
+           "layerId": "0",
+           "attrs": {},
+           "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+           "p": {
+            "x": 0,
+            "y": 0
+           },
+           "scale": 1,
+           "rotation": 0
+          }
+         ]
+        }
+       ],
+       "base": {
+        "x": 30,
+        "y": 0
+       }
+      },
+      "conflicts": "rename",
+      "at": {
+       "x": 40,
+       "y": 0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "warnings": [
+       {
+        "code": "names_renamed",
+        "path": "conflicts",
+        "message": "Bu çizimde aynı adlı olduklarından yeni adla geldi: Kapak → Kapak (2), Rögar → Rögar (2)."
+       }
+      ],
+      "output": {
+       "created": [
+        "$uidOf:8"
+       ],
+       "report": {
+        "layers": [],
+        "blocks": [
+         "Kapak (2)",
+         "Rögar (2)"
+        ],
+        "kept": [],
+        "styles": [],
+        "renamed": [
+         {
+          "kind": "block",
+          "from": "Kapak",
+          "to": "Kapak (2)"
+         },
+         {
+          "kind": "block",
+          "from": "Rögar",
+          "to": "Rögar (2)"
+         }
+        ]
+       },
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8
+      ],
+      "entities": {
+       "8": {
+        "kind": "insert",
+        "id": 8,
+        "layerId": "cizim",
+        "attrs": {},
+        "block": "$blockOf:Rögar (2)",
+        "p": {
+         "x": 40,
+         "y": 0
+        },
+        "scale": 1,
+        "rotation": 0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "layers": [
+       {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kadastro",
+        "name": "Kadastro",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         },
+         {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ],
+      "blocks": [
+       {
+        "name": "Kapak",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "a": {
+           "x": -0.5,
+           "y": 0
+          },
+          "b": {
+           "x": 0.5,
+           "y": 0
+          }
+         }
+        ]
+       },
+       {
+        "name": "Rögar",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "0",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.6
+         },
+         {
+          "kind": "insert",
+          "id": 2,
+          "layerId": "0",
+          "attrs": {},
+          "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3e11",
+          "p": {
+           "x": 0,
+           "y": 0
+          },
+          "scale": 1,
+          "rotation": 0
+         }
+        ]
+       },
+       {
+        "name": "Kapak (2)",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "line",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "a": {
+           "x": -0.5,
+           "y": 0
+          },
+          "b": {
+           "x": 0.5,
+           "y": 0
+          }
+         }
+        ]
+       },
+       {
+        "name": "Rögar (2)",
+        "base": {
+         "x": 0,
+         "y": 0
+        },
+        "entities": [
+         {
+          "kind": "circle",
+          "id": 1,
+          "layerId": "",
+          "attrs": {},
+          "c": {
+           "x": 0,
+           "y": 0
+          },
+          "r": 0.6
+         },
+         {
+          "kind": "insert",
+          "id": 2,
+          "layerId": "",
+          "attrs": {},
+          "block": "$blockOf:Kapak (2)",
+          "p": {
+           "x": 0,
+           "y": 0
+          },
+          "scale": 1,
+          "rotation": 0
+         }
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Yapıştır",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7
+      ],
+      "layers": [
+       {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "kadastro",
+        "name": "Kadastro",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "#E5484D",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         },
+         {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "kilitli",
+        "name": "Kilitli",
+        "type": "layer",
+        "visible": true,
+        "locked": true,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "gizli",
+        "name": "Gizli",
+        "type": "layer",
+        "visible": false,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "name": "Kilitli katmana: layer_locked",
    "steps": [
     {

@@ -250,6 +250,7 @@ pub fn paste(
         clip: clip.clone(),
         at: at.map(wire),
         as_block,
+        conflicts: Default::default(),
         expected_revision: None,
     };
     let result = entities_paste::execute(&mut ExecutionContext::new(cx.doc), input);

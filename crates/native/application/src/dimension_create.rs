@@ -1024,13 +1024,37 @@ pub fn measured_in(
     check(doc, input).map_err(|stop| Box::new(stop.into_error()))
 }
 
+/// The warning a dimension bound to a PDF underlay's lines carries (docs/adr/0351 §6): its value is read off paper.
+fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_contracts::CommandWarning> {
+    let refs = m.refs.as_ref()?;
+    let on = [&refs.a, &refs.b, &refs.c].into_iter().flatten().any(|r| {
+        !r.path.is_empty() && crate::snap_find::on_underlay(doc, &kentos_domain::Uuid::from_bytes(r.uid.0).to_string())
+    });
+    on.then(|| kentos_contracts::CommandWarning {
+        code: codes::UNDERLAY_MEASURE.into(),
+        message: "Ölçü bir PDF altlığının çizgilerine bağlı: değeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir.".into(),
+        path: Some("measure".into()),
+    })
+}
+
+/// `result` with the underlay's warning added, when it was written or planned.
+fn said<T>(result: CommandResult<T>, warning: Option<kentos_contracts::CommandWarning>) -> CommandResult<T> {
+    match (result, warning) {
+        (CommandResult::Completed { output, mut warnings }, Some(w)) => {
+            warnings.push(w);
+            CommandResult::Completed { output, warnings }
+        }
+        (result, _) => result,
+    }
+}
+
 /// `cad.dimensions.create` v1: Ölçülendirme.
 pub mod dimensions_create {
     use super::*;
 
     pub fn validate(cx: &ExecutionContext<'_>, input: &DimensionsCreate) -> CommandResult<()> {
         match check(cx.doc, input) {
-            Ok(m) => creating::validate(cx, &objects(input, &m)),
+            Ok(m) => said(creating::validate(cx, &objects(input, &m)), paper_warning(cx.doc, &m)),
             Err(stop) => stop.into(),
         }
     }
@@ -1045,7 +1069,7 @@ pub mod dimensions_create {
     /// [`plan`] over the document.
     pub fn plan_in(doc: &Document, input: &DimensionsCreate) -> CommandResult<EntitiesCreatePlan> {
         match check(doc, input) {
-            Ok(m) => creating::plan(doc, &objects(input, &m)),
+            Ok(m) => said(creating::plan(doc, &objects(input, &m)), paper_warning(doc, &m)),
             Err(stop) => stop.into(),
         }
     }
@@ -1060,7 +1084,10 @@ pub mod dimensions_create {
             kentos_contracts::CAD_DIMENSIONS_CREATE_VERSION,
             input,
             |cx, input| match check(cx.doc, &input) {
-                Ok(m) => creating::execute(cx, objects(&input, &m)),
+                Ok(m) => {
+                    let paper = paper_warning(cx.doc, &m);
+                    said(creating::execute(cx, objects(&input, &m)), paper)
+                }
                 Err(stop) => stop.into(),
             },
         )

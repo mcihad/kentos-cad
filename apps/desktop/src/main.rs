@@ -113,6 +113,8 @@ mod dimension_option_scenes;
 mod dimension_scenes;
 #[cfg(test)]
 mod divide_scenes;
+mod clip_frames;
+mod doc_tabs;
 mod document;
 mod draw_order;
 mod drawing_exchange;
@@ -413,6 +415,8 @@ mod viewmark_scenes;
 mod arch_project_scenes;
 #[cfg(test)]
 mod xref_scenes;
+#[cfg(test)]
+mod underlay_scenes;
 
 use kentos_ui::theme::typography;
 

@@ -308,6 +308,28 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             Some("block".into()),
         )));
     };
+    // An external reference's content is its source's (docs/adr/0351 §5): edited there, in its own tab, with its own
+    // undo; here it is renamed, its inserts placed, and it is detached or bound from Dış başvurular.
+    if old.xref.is_some()
+        && !matches!(
+            input.operation,
+            BlockEditOperation::Rename
+                | BlockEditOperation::Duplicate
+                | BlockEditOperation::Export
+                | BlockEditOperation::Place
+                | BlockEditOperation::Purge
+                | BlockEditOperation::Import
+        )
+    {
+        return Err(Stop::failed(error(
+            codes::XREF_READ_ONLY,
+            format!(
+                "“{}” bir dış başvuru: içeriği kaynak dosyasındadır, burada değişmez. Dış başvurular › Kaynağı aç ile kaynağı açıp düzenleyin, sonra Yeniden yükle.",
+                old.name
+            ),
+            Some("block".into()),
+        )));
+    }
     let mut checked = Checked::nothing();
     let mut next = old.clone();
     match input.operation {

@@ -1766,9 +1766,18 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
-    // Schema 85 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
+    // Schema 86 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
     if doc.settings.heights.is_some() || doc.settings.coordinate_epoch.is_some() {
         return crate::SCHEMA_WITH_HEIGHTS;
+    }
+    // Schema 85 (docs/adr/0351): an insert's clipping, a PDF underlay.
+    let clipped = |es: &[Entity]| es.iter().any(|e| matches!(e, Entity::Insert(i) if i.clipping.is_some()));
+    if clipped(&doc.entities)
+        || doc.blocks.iter().any(|b| {
+            clipped(&b.entities) || b.xref.as_ref().is_some_and(|x| x.page.is_some() || x.underlay.is_some())
+        })
+    {
+        return crate::SCHEMA_WITH_CLIPPING;
     }
     // Schema 84 (docs/adr/0349 §1): the external references' search paths.
     if !doc.settings.xref_paths.is_empty() {

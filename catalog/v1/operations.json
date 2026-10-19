@@ -1875,6 +1875,32 @@
         "file.import.csv"
       ],
       "note": "Pencere sütunları ve komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0522)."
+    },
+    "file.import.pdf": {
+      "level": "semantic",
+      "via": [
+        "file.import.pdf"
+      ],
+      "note": "Pencere sayfayı, ölçeği, yeri, eğrilerin çıktısını, bölgeyi ve katmanları sorar, komutun planını gösterir ve komutla yazar (ADR 0352)."
+    },
+    "file.openTab": {
+      "level": "host",
+      "note": "Yeni sekmede aç: çizim bu masaüstünün kendi sekmesinde; Python ve MCP çizimi kendi tutamacıyla açar (Document.open, drawing.open), masaüstündeki çizim hello'nun document numarasıyla (ADR 0351 §3)."
+    },
+    "file.closeTab": {
+      "level": "host",
+      "note": "Çizimi kapat: masaüstünün sekmesi (ADR 0351 §3)."
+    },
+    "file.nextTab": {
+      "level": "session",
+      "note": "Sonraki çizim: öndeki sekme değişir; ajanlar kendi çizimlerinde kalır (ADR 0351 §3)."
+    },
+    "tool.xclip": {
+      "level": "semantic",
+      "via": [
+        "cad.inserts.clip"
+      ],
+      "note": "Kırp: yerleştirme ve sınır çizimden, yazma cad.inserts.clip ile tek adımda (ADR 0351 §1)."
     }
   },
   "tools": {

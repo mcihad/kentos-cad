@@ -1,5 +1,5 @@
 //! What the elevations are and the coordinates' epoch in the project file (docs/adr/0519 §1, docs/specs/kcad-v2.md
-//! §6.1): document schema 85 is written only when a project names one, every other drawing keeps its schema and its
+//! §6.1): document schema 86 is written only when a project names one, every other drawing keeps its schema and its
 //! bytes; they come back as written; the writer refuses what the reader would.
 
 use kentos_kcad::Code;
@@ -31,10 +31,10 @@ fn schema(file: &[u8]) -> u8 {
 }
 
 #[test]
-fn a_project_with_heights_is_schema_85_and_one_without_stays_as_it_was() {
+fn a_project_with_heights_is_schema_86_and_one_without_stays_as_it_was() {
     let doc = content("heights.json");
     let written = kentos_kcad::encode(&doc).expect("writes");
-    assert_eq!(schema(&written), 85);
+    assert_eq!(schema(&written), 86);
     assert!(written == read("heights.kcad"), "the reference's bytes");
     let back = kentos_kcad::decode(&written).expect("reads");
     assert_eq!(back.settings.heights, doc.settings.heights);

@@ -66,6 +66,7 @@ pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
 pub mod file_import_gpkg;
+pub mod file_import_pdf;
 pub mod provider;
 pub mod fields_write;
 pub mod processing_host;
@@ -202,12 +203,14 @@ pub use schedules::{create as schedules_create, edit as schedules_edit};
 pub mod viewmarks;
 pub mod spaces_finish;
 pub mod sheets_set;
+pub mod pdf_underlay;
 pub mod xrefs;
 mod xrefs_bind;
 pub mod links;
 pub mod assets_check;
 pub mod images_edit;
 pub mod rasters_mosaic;
+pub mod inserts_clip;
 pub mod templates_apply;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
@@ -537,6 +540,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_XREFS_LIST,
         kentos_contracts::CAD_XREFS_LIST_VERSION,
+    ),
+    // Kırp ([`inserts_clip`], docs/adr/0351 §1).
+    (
+        kentos_contracts::CAD_INSERTS_CLIP,
+        kentos_contracts::CAD_INSERTS_CLIP_VERSION,
     ),
     // Bağlı dosyaların durumu ([`assets_check`], docs/adr/0349 §2).
     (
@@ -980,6 +988,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_SLD,
         kentos_contracts::FILE_IMPORT_SLD_VERSION,
+    ),
+    // A PDF page into the drawing ([`file_import_pdf`], docs/adr/0352).
+    (
+        kentos_contracts::FILE_IMPORT_PDF,
+        kentos_contracts::FILE_IMPORT_PDF_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

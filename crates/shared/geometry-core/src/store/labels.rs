@@ -172,6 +172,10 @@ impl Store {
             // A block's texts and dimension values, where its pieces are placed (docs/adr/0144).
             if let Some(x) = &it.expanded {
                 for (i, s) in x.shapes.iter().enumerate() {
+                    // A piece shown only with a layer that is hidden has no label either (docs/adr/0315 §2).
+                    if !it.piece_shown(i) {
+                        continue;
+                    }
                     match s {
                         // An attribute's text that shows nothing has no label (docs/adr/0144 §7).
                         Shape::Text {

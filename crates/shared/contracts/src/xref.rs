@@ -4,6 +4,10 @@
 //!
 //! The content is the source's as last loaded: a drawing opens and prints without its sources, and a source's change is
 //! said, never taken in silently.
+//!
+//! A PDF underlay (docs/adr/0351 §2; `CAD-REF-17`) is an external reference whose source is a page of a PDF file
+//! (`page`): the page's lines, areas and texts as the definition's objects, in paper metres, with the underlay's look
+//! (`underlay`: faded, monochrome, plotted or not).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -68,6 +72,65 @@ pub struct XrefSource {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
     pub objects: Vec<String>,
+    /// A PDF underlay's page, from 1 (docs/adr/0351 §2): the source is a PDF file and this page its content.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub page: Option<u32>,
+    /// A PDF underlay's look; absent: as its PDF draws, plotted.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub underlay: Option<UnderlayLook>,
+}
+
+/// The most a PDF underlay is faded, in percent (AutoCAD's limit).
+pub const MAX_UNDERLAY_FADE: u8 = 80;
+
+fn is_true(b: &bool) -> bool {
+    *b
+}
+
+fn yes() -> bool {
+    true
+}
+
+/// How a PDF underlay looks (docs/adr/0351 §2).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct UnderlayLook {
+    /// Faded toward see-through, 0 to 80 percent.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<u8>"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+    pub fade: u8,
+    /// Drawn in the drawing's ink, its colours left aside.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub monochrome: bool,
+    /// Drawn on a sheet (PDF, print); false: on the screen only.
+    #[serde(default = "yes", skip_serializing_if = "is_true")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<bool>"))]
+    pub plot: bool,
+}
+
+fn is_zero(v: &u8) -> bool {
+    *v == 0
+}
+
+impl Default for UnderlayLook {
+    fn default() -> Self {
+        Self { fade: 0, monochrome: false, plot: true }
+    }
+}
+
+impl UnderlayLook {
+    /// The look as written: none when it is the default.
+    pub fn kept(self) -> Option<Self> {
+        (self != Self::default()).then_some(self)
+    }
 }
 
 /// Lowercase UUID text with hyphens (`01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f`).
@@ -101,6 +164,20 @@ impl XrefSource {
         }
         if self.objects.iter().any(|u| !is_uid(u)) {
             return Some("dış başvurunun nesne kimlikleri küçük harfli, tireli UUID olmalı".into());
+        }
+        if self.page == Some(0) {
+            return Some("PDF altlığının sayfası 1'den başlar".into());
+        }
+        if let Some(u) = &self.underlay {
+            if self.page.is_none() {
+                return Some("altlık görünüşü yalnız PDF altlığında olur".into());
+            }
+            if u.fade > MAX_UNDERLAY_FADE {
+                return Some(format!("PDF altlığının soldurması en çok %{MAX_UNDERLAY_FADE} olabilir"));
+            }
+            if *u == UnderlayLook::default() {
+                return Some("varsayılan altlık görünüşü yazılmaz".into());
+            }
         }
         None
     }
@@ -156,6 +233,11 @@ pub enum XrefsOperation {
         rotation: Option<f64>,
         /// The insert's layer.
         layer_id: String,
+        /// A PDF file's page to underlay, from 1 (docs/adr/0351 §2); absent for a PDF: its first page.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+        page: Option<u32>,
     },
     /// Its source read again.
     Reload { name: String },
@@ -167,6 +249,20 @@ pub enum XrefsOperation {
     Detach { name: String },
     /// The project's search paths (docs/adr/0349 §1), all of them in order: a setting, not an undo step.
     Paths { paths: Vec<String> },
+    /// A PDF underlay's look (docs/adr/0351 §2): each field given changes; a setting of the definition, one undo step.
+    Underlay {
+        name: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "percent")))]
+        fade: Option<u8>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        monochrome: Option<bool>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        plot: Option<bool>,
+    },
     /// Made an ordinary block, with those it brought.
     Bind {
         name: String,
@@ -179,8 +275,9 @@ pub enum XrefsOperation {
 /// Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.
 ///
 /// Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
-/// `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `xref_cycle`, `xref_empty`,
-/// `invalid_revision`, `revision_conflict`. Warnings: `objects_left_out`, `layer_hidden`.
+/// `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,
+/// `invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:
+/// `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -310,6 +407,15 @@ pub struct XrefInfo {
     /// The named views whose window meets its inserts, by name (`affected`).
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub views: Vec<String>,
+    /// A PDF underlay's page (docs/adr/0351 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub page: Option<u32>,
+    /// A PDF underlay's look when it is not the default.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub underlay: Option<UnderlayLook>,
 }
 
 /// Output of `cad.xrefs.list` v1.

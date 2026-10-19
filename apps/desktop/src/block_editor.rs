@@ -167,6 +167,19 @@ impl App {
             self.warn(OPEN);
             return;
         }
+        // An external reference's content is its source's (docs/adr/0351 §5): opened from Dış başvurular › Kaynağı aç.
+        if let Some(name) = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.block(block))
+            .filter(|b| b.xref.is_some())
+            .map(|b| b.name.clone())
+        {
+            self.warn(format!(
+                "“{name}” bir dış başvuru: içeriği kaynak dosyasındadır, burada düzenlenmez. Dış başvurular › Kaynağı aç ile kaynağı açın."
+            ));
+            return;
+        }
         let Some(original) = self.document.take() else {
             return;
         };
