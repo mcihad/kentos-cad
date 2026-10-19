@@ -12,10 +12,10 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
 use kentos_contracts::{
-    CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LayerNodeType, MAX_SOURCES,
-    SourceCapabilities, SourceColumn, SourceKind, SourceLink, SourceState, SourceTable,
-    SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp, SourcesEdited, SourcesSync,
-    SourcesSynced, SyncDirection, SyncTopology,
+    CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
+    MAX_SOURCES, PinLoss, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
+    SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
+    SourcesEdited, SourcesSync, SourcesSynced, SyncDirection, SyncTopology, SyncedPins,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geopackage::{self as gpkg, DataType, Edits, GeoPackage, Geometry, Query, Value};
@@ -746,6 +746,217 @@ fn link_of<'a>(doc: &'a Document, id: &str) -> Option<&'a SourceLink> {
     doc.settings().sources.iter().find(|s| s.id == id)
 }
 
+/// Why `key` cannot name the rows `objects` are (docs/adr/0533 §1): each holds the attribute with a value, no two
+/// alike. `path` is where the refusal points.
+fn key_check<'a>(
+    key: &str,
+    objects: impl Iterator<Item = (Uuid, &'a kentos_contracts::Entity)>,
+    path: &str,
+) -> Result<(), Stop> {
+    let mut seen: HashMap<&str, Uuid> = HashMap::new();
+    let (mut missing, mut first) = (0, None);
+    for (uid, e) in objects {
+        match e.base().attrs.get(key).map(String::as_str) {
+            None | Some("") => {
+                missing += 1;
+                first.get_or_insert(uid);
+            }
+            Some(v) => {
+                if let Some(other) = seen.insert(v, uid) {
+                    return Err(refuse(
+                        codes::INVALID_KEY,
+                        format!(
+                            "“{key}” alanının “{v}” değeri iki nesnede ({other} ve {uid}); anahtar iki nesnede aynı olamaz."
+                        ),
+                        path,
+                    ));
+                }
+            }
+        }
+    }
+    if let Some(uid) = first {
+        return Err(refuse(
+            codes::INVALID_KEY,
+            format!(
+                "“{key}” alanı {missing} nesnede yok ya da boş (örneğin {uid}); anahtar her nesnede bir değer taşımalı."
+            ),
+            path,
+        ));
+    }
+    Ok(())
+}
+
+/// What a read does to the label pins of a bound layer's objects (docs/adr/0533 §1): the objects holding pins as
+/// they are in the drawing, against the table's rows as read (`objects`). An object whose row is there stays as it
+/// is. With a key, a row id that is another record now (the key's value differs) or whose row is gone leaves its
+/// pins to the row of the old value when the table has exactly one; otherwise they are lost, and said (deleted,
+/// outside the area, another record, or the row of the key has pins of its own).
+struct PinPlan {
+    /// The pins an object holds after the read, where they are not its own: set on a row they followed to, emptied
+    /// on one that is another record now.
+    set: HashMap<Uuid, Vec<LabelPin>>,
+    report: Option<SyncedPins>,
+    warnings: Vec<CommandWarning>,
+}
+
+fn follow_pins(
+    doc: &Document,
+    link: &SourceLink,
+    objects: &[(Uuid, kentos_contracts::Entity)],
+    outside: &HashMap<Uuid, i64>,
+) -> PinPlan {
+    let bearers: Vec<(Uuid, &kentos_contracts::Entity)> = doc
+        .by_layer_with_uids(&link.layer)
+        .filter(|(_, e)| !e.base().label_pins.is_empty())
+        .collect();
+    let mut plan = PinPlan {
+        set: HashMap::new(),
+        report: None,
+        warnings: Vec::new(),
+    };
+    if bearers.is_empty() {
+        return plan;
+    }
+    let key = link.key.as_deref();
+    let new: HashMap<Uuid, &kentos_contracts::Entity> =
+        objects.iter().map(|(u, e)| (*u, e)).collect();
+    let value_of = |e: &kentos_contracts::Entity| -> Option<String> {
+        key.and_then(|k| e.base().attrs.get(k))
+            .filter(|v| !v.is_empty())
+            .cloned()
+    };
+    let mut by_key: HashMap<String, Vec<Uuid>> = HashMap::new();
+    if key.is_some() {
+        for (u, e) in objects {
+            if let Some(v) = value_of(e) {
+                by_key.entry(v).or_default().push(*u);
+            }
+        }
+    }
+    let repeated = by_key.values().any(|l| l.len() > 1);
+    let mut kept = 0u32;
+    let mut moves: Vec<(Uuid, Uuid, String)> = Vec::new();
+    let mut lost: Vec<(Uuid, PinLoss)> = Vec::new();
+    for (uid, old) in &bearers {
+        let old_value = value_of(old);
+        let here = new.get(uid);
+        let stays = match (here, key.is_some(), &old_value) {
+            (Some(n), true, Some(v)) => value_of(n).as_ref() == Some(v),
+            (Some(_), _, _) => true,
+            (None, _, _) => false,
+        };
+        if stays {
+            kept += 1;
+            continue;
+        }
+        let target = old_value
+            .as_ref()
+            .and_then(|v| by_key.get(v).map(|l| (v, l)))
+            .filter(|(_, l)| l.len() == 1)
+            .map(|(v, l)| (l[0], v.clone()))
+            .filter(|(t, _)| t != uid);
+        match target {
+            Some((to, v)) => moves.push((*uid, to, v)),
+            None => lost.push((
+                *uid,
+                if here.is_some() {
+                    PinLoss::Rebound
+                } else if outside.contains_key(uid) {
+                    PinLoss::Outside
+                } else {
+                    PinLoss::Deleted
+                },
+            )),
+        }
+    }
+    let bearer_pins: HashMap<Uuid, &Vec<LabelPin>> = bearers
+        .iter()
+        .map(|(u, e)| (*u, &e.base().label_pins))
+        .collect();
+    let leaving: HashSet<Uuid> = moves.iter().map(|(f, ..)| *f).collect();
+    let mut moved = Vec::new();
+    for (from, to, v) in moves {
+        // The row of the key keeps its own pins when it is not itself leaving.
+        let taken = bearer_pins.contains_key(&to) && !leaving.contains(&to);
+        if taken {
+            lost.push((from, PinLoss::Taken));
+        } else {
+            plan.set.insert(to, bearer_pins[&from].clone());
+            moved.push(PinMove {
+                from: from.to_string(),
+                to: to.to_string(),
+                key: v,
+            });
+        }
+    }
+    // What an object that stays in the layer as another record holds is emptied, where nothing moved onto it.
+    for uid in leaving.iter().chain(lost.iter().map(|(u, _)| u)) {
+        if new.contains_key(uid) {
+            plan.set.entry(*uid).or_default();
+        }
+    }
+    moved.sort_by(|a, b| a.from.cmp(&b.from));
+    let mut lost: Vec<LostPin> = lost
+        .into_iter()
+        .map(|(u, reason)| LostPin {
+            uid: u.to_string(),
+            reason,
+        })
+        .collect();
+    lost.sort_by(|a, b| a.uid.cmp(&b.uid));
+    if !lost.is_empty() {
+        let count = |r: PinLoss| lost.iter().filter(|l| l.reason == r).count();
+        let mut parts = Vec::new();
+        for (r, what) in [
+            (PinLoss::Deleted, "satırı tabloda yok"),
+            (PinLoss::Outside, "satırı katmanın alanının dışında"),
+            (
+                PinLoss::Rebound,
+                "satır kimliği artık başka bir kayıt (anahtar değeri değişmiş)",
+            ),
+            (PinLoss::Taken, "anahtarının satırında zaten iğneler var"),
+        ] {
+            if count(r) > 0 {
+                parts.push(format!("{} nesnenin {what}", count(r)));
+            }
+        }
+        plan.warnings.push(CommandWarning {
+            code: codes::LABEL_PINS_LOST.into(),
+            message: format!(
+                "{}: etiket iğneleri korunamadı ({}); okumayı geri alırsanız dönerler.",
+                link.table,
+                parts.join("; ")
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    if !moved.is_empty() {
+        plan.warnings.push(CommandWarning {
+            code: codes::LABEL_PINS_MOVED.into(),
+            message: format!(
+                "{}: {} nesnenin etiket iğneleri “{}” anahtarının yeni satırına taşındı.",
+                link.table,
+                moved.len(),
+                key.unwrap_or_default()
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    if repeated {
+        plan.warnings.push(CommandWarning {
+            code: codes::KEY_NOT_UNIQUE.into(),
+            message: format!(
+                "{}: “{}” alanı tabloda tekrarlanıyor; o değerlerin satırlarına iğneler anahtarla taşınmaz.",
+                link.table,
+                key.unwrap_or_default()
+            ),
+            path: Some("layer".into()),
+        });
+    }
+    plan.report = Some(SyncedPins { kept, moved, lost });
+    plan
+}
+
 fn set_link(doc: &mut Document, link: Option<SourceLink>, remove: Option<&str>) {
     let mut settings = doc.settings().clone();
     if let Some(id) = remove {
@@ -1027,8 +1238,18 @@ fn link_table(
     layer: Option<&str>,
     reproject: bool,
     extent: Option<[f64; 4]>,
+    key: Option<&str>,
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     let at = origin(path, "edit.path")?;
+    if let Some(k) = key
+        && let Some(why) = kentos_contracts::key_problem(k)
+    {
+        return Err(refuse(
+            codes::INVALID_KEY,
+            format!("Anahtar alanı {why}."),
+            "edit.key",
+        ));
+    }
     if let Some(e) = &extent {
         let why = kentos_contracts::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
         let why = why.or_else(|| {
@@ -1125,6 +1346,21 @@ fn link_table(
         )
     })?;
     stored.reachable(mover.as_ref());
+    // A key names the rows the layer will hold: the table's own, or the layer given's objects.
+    if let Some(k) = key
+        && layer.is_none()
+    {
+        // The import reads a file's rows later; a key is checked against them now, before anything is written.
+        let rows = match at {
+            Origin::File(p) => {
+                let mut all = refused_load(p, table, "edit.table", load(p, table, area))?;
+                all.reachable(mover.as_ref());
+                all.in_project(mover.as_ref())
+            }
+            Origin::Database(_) => stored.in_project(mover.as_ref()),
+        };
+        key_check(k, rows.iter().map(|(u, e)| (*u, e)), "edit.key")?;
+    }
     let mut warnings = Vec::new();
     let (layer, objects, layers) = match layer {
         Some(id) => {
@@ -1151,6 +1387,9 @@ fn link_table(
                     ),
                     "edit.layer",
                 ));
+            }
+            if let Some(k) = key {
+                key_check(k, doc.by_layer_with_uids(id), "edit.key")?;
             }
             (id.to_owned(), 0, Vec::new())
         }
@@ -1201,6 +1440,7 @@ fn link_table(
         revision,
         srid,
         extent,
+        key: key.map(str::to_owned),
         writable,
     };
     set_link(doc, Some(link.clone()), None);
@@ -1209,6 +1449,7 @@ fn link_table(
             link: Some(link),
             objects,
             layers,
+            pins: None,
             revision: doc.revision().to_string(),
         },
         warnings,
@@ -1296,7 +1537,48 @@ fn edit_run(
             layer,
             reproject,
             extent,
-        } => link_table(doc, path, table, layer.as_deref(), *reproject, *extent),
+            key,
+        } => link_table(
+            doc,
+            path,
+            table,
+            layer.as_deref(),
+            *reproject,
+            *extent,
+            key.as_deref(),
+        ),
+        SourcesEditOp::Key { id, key } => {
+            let Some(mut link) = link_of(doc, id).cloned() else {
+                return Err(refuse(
+                    codes::SOURCE_NOT_FOUND,
+                    format!("“{id}” kimlikli bir bağ yok; cad.sources.describe bağları listeler."),
+                    "edit.id",
+                ));
+            };
+            if let Some(k) = key {
+                if let Some(why) = kentos_contracts::key_problem(k) {
+                    return Err(refuse(
+                        codes::INVALID_KEY,
+                        format!("Anahtar alanı {why}."),
+                        "edit.key",
+                    ));
+                }
+                key_check(k, doc.by_layer_with_uids(&link.layer), "edit.key")?;
+            }
+            link.key = key.clone();
+            set_link(doc, Some(link.clone()), None);
+            Ok((
+                SourcesEdited {
+                    link: Some(link),
+                    objects: 0,
+                    layers: Vec::new(),
+                    pins: None,
+                    revision: doc.revision().to_string(),
+                },
+                Vec::new(),
+            ))
+        }
+        SourcesEditOp::Extent { id, extent } => change_extent(doc, id, *extent),
         SourcesEditOp::Unlink { id } => {
             if link_of(doc, id).is_none() {
                 return Err(refuse(
@@ -1311,6 +1593,7 @@ fn edit_run(
                     link: None,
                     objects: 0,
                     layers: Vec::new(),
+                    pins: None,
                     revision: doc.revision().to_string(),
                 },
                 Vec::new(),
@@ -1367,12 +1650,104 @@ fn edit_run(
                     link: Some(link),
                     objects: 0,
                     layers: Vec::new(),
+                    pins: None,
                     revision: doc.revision().to_string(),
                 },
                 Vec::new(),
             ))
         }
     }
+}
+
+/// The area of a part's working copy changed (docs/adr/0533 §2): the table read again in the new area as one undo
+/// step. The layer must match its table, so nothing the layer holds is lost with the rows that leave it; the label
+/// pins of an object that leaves are said.
+fn change_extent(
+    doc: &mut Document,
+    id: &str,
+    extent: Option<[f64; 4]>,
+) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
+    let Some(link) = link_of(doc, id).cloned() else {
+        return Err(refuse(
+            codes::SOURCE_NOT_FOUND,
+            format!("“{id}” kimlikli bir bağ yok; cad.sources.describe bağları listeler."),
+            "edit.id",
+        ));
+    };
+    if let Some(e) = &extent {
+        let why = kentos_contracts::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
+        let why = why.or_else(|| {
+            (link.kind != SourceKind::Geopackage).then(|| {
+                "Veritabanı tablosunda alan sınırı henüz yok; GeoPackage tablosu için verin."
+                    .to_owned()
+            })
+        });
+        if let Some(why) = why {
+            return Err(refuse(codes::INVALID_EXTENT, why, "edit.extent"));
+        }
+        if let Origin::File(p) = origin_of(&link)
+            && p.is_file()
+            && refused_load(p, &link.table, "edit.id", load_meta(p, &link.table))?
+                .layer
+                .geometry
+                .is_none()
+        {
+            return Err(refuse(
+                codes::INVALID_EXTENT,
+                format!(
+                    "“{}” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur.",
+                    link.table
+                ),
+                "edit.extent",
+            ));
+        }
+    }
+    if extent == link.extent {
+        return Ok((
+            SourcesEdited {
+                link: Some(link),
+                objects: 0,
+                layers: Vec::new(),
+                pins: None,
+                revision: doc.revision().to_string(),
+            },
+            Vec::new(),
+        ));
+    }
+    if layer_digest(doc, &link.layer) != link.digest {
+        return Err(conflict(
+            codes::PENDING_CHANGES,
+            format!(
+                "“{}” katmanı dosyayla son eşleştiğinden beri değişti; alanı değiştirmek bu değişiklikleri götürür. Önce yazın (cad.sources.sync write).",
+                link.layer
+            ),
+            "edit.id",
+        ));
+    }
+    let mut next = link.clone();
+    next.extent = extent;
+    let input = SourcesSync {
+        layer: link.layer.clone(),
+        direction: SyncDirection::Read,
+        discard: false,
+        with: Vec::new(),
+        topology: None,
+    };
+    let label = format!("Alan sınırı: {}", link.table);
+    let (synced, warnings) = doc.transact(&label, |doc| {
+        set_link(doc, Some(next), None);
+        sync_run(doc, &input, true)
+    })?;
+    Ok((
+        SourcesEdited {
+            link: link_of(doc, id).cloned(),
+            objects: synced.added,
+            layers: Vec::new(),
+            pins: synced.pins,
+            revision: doc.revision().to_string(),
+        },
+        warnings,
+    ))
 }
 
 pub fn edit_validate(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandResult<()> {
@@ -1738,6 +2113,7 @@ fn sync_run(
                 removed: d.delete.len() as u32,
                 columns: d.added_columns.iter().map(|c| c.name.clone()).collect(),
                 source: stored.sha256.clone(),
+                pins: None,
                 revision: doc.revision().to_string(),
                 layers: Vec::new(),
                 relations: Vec::new(),
@@ -1813,6 +2189,8 @@ fn sync_run(
             together::patch_read(doc, &link, &mut stored)?;
             let objects = stored.in_project(mover.as_ref());
             let wanted: HashSet<Uuid> = objects.iter().map(|(u, _)| *u).collect();
+            // The label pins of the layer's objects, by the key when the layer has one (docs/adr/0533 §1).
+            let pins = follow_pins(doc, &link, &objects, &stored.outside);
             let mut updates: Vec<(Slot, kentos_contracts::Entity)> = Vec::new();
             let mut adds = Vec::new();
             for (uid, mut e) in objects {
@@ -1821,16 +2199,25 @@ fn sync_run(
                     .and_then(|s| doc.get(s).map(|old| (s, old)))
                 {
                     Some((slot, old)) => {
-                        if (gp::essence(old) != gp::essence(&e)
-                            || old.base().layer_id != link.layer)
-                            && let Some(mut next) = gp::with_essence(old, &e)
+                        let changed = gp::essence(old) != gp::essence(&e)
+                            || old.base().layer_id != link.layer;
+                        let pinned = pins.set.get(&uid);
+                        if (changed || pinned.is_some())
+                            && let Some(mut next) =
+                                if changed { gp::with_essence(old, &e) } else { Some(old.clone()) }
                         {
                             next.base_mut().layer_id = link.layer.clone();
+                            if let Some(p) = pinned {
+                                next.base_mut().label_pins = p.clone();
+                            }
                             updates.push((slot, next));
                         }
                     }
                     None => {
                         e.base_mut().layer_id = link.layer.clone();
+                        if let Some(p) = pins.set.get(&uid) {
+                            e.base_mut().label_pins = p.clone();
+                        }
                         adds.push((uid, e));
                     }
                 }
@@ -1848,12 +2235,13 @@ fn sync_run(
                 removed: gone.len() as u32,
                 columns: Vec::new(),
                 source: stored.sha256.clone(),
+                pins: pins.report.clone(),
                 revision: doc.revision().to_string(),
                 layers: Vec::new(),
                 relations: Vec::new(),
             };
             if !write {
-                return Ok((out, Vec::new()));
+                return Ok((out, pins.warnings));
             }
             let label = read_step(&link.table);
             doc.transact(&label, |doc| {
@@ -1877,7 +2265,7 @@ fn sync_run(
                     revision: doc.revision().to_string(),
                     ..out
                 },
-                Vec::new(),
+                pins.warnings,
             ))
         }
     }

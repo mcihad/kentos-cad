@@ -652,6 +652,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.sld"
             | "file.import.sld"
             | "file.export.csv"
+            | "file.export.atlas"
             | "file.import.csv"
             // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
             | "file.export.gis"
@@ -686,7 +687,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report"), destructive),
     })
 }
 

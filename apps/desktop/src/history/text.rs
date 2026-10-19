@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 182] = [
+pub(crate) const TITLES: [(&str, &str); 184] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -119,6 +119,7 @@ pub(crate) const TITLES: [(&str, &str); 182] = [
     ("cad.layers.info", "Bilgi kartı ve eylemler"),
     ("cad.layers.labels", "Etiketler"),
     ("cad.labels.pin", "Etiketi sabitle"),
+    ("cad.labels.report", "Etiketleri denetle"),
     ("cad.layers.renderer", "Katman stili"),
     ("cad.layers.edit", "Katman düzenle"),
     ("cad.layers.set", "Katman ağacı"),
@@ -187,6 +188,7 @@ pub(crate) const TITLES: [(&str, &str); 182] = [
     ("file.export.gpkg", "GeoPackage dışa aktar"),
     ("file.export.shp", "Shapefile dışa aktar"),
     ("file.export.csv", "CSV dışa aktar"),
+    ("file.export.atlas", "Atlası PDF yap"),
     ("file.import.csv", "CSV içe aktar"),
     ("file.export.gis", "GIS türevi dışa aktar"),
     ("file.export.sld", "Görünüşü SLD olarak dışa aktar"),

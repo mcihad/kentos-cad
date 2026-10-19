@@ -17,21 +17,21 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 127 | 146 | 41 | 56 | 370 |
+| semantic | 127 | 147 | 41 | 56 | 371 |
 | geometry | 16 | 58 | 0 | 8 | 82 |
 | processing | 0 | 11 | 2 | 141 | 154 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 7 | 24 | 2 | 4 | 37 |
 | session | 0 | 85 | 57 | 5 | 147 |
 | host | 0 | 17 | 14 | 4 | 35 |
-| **toplam** | 150 | 361 | 116 | 224 | 851 |
+| **toplam** | 150 | 362 | 116 | 224 | 852 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 627 satırdan 136'i: geometry 74, none 20, processing 13, query 29.
+CBS'ye özgü olmayan 628 satırdan 136'i: geometry 74, none 20, processing 13, query 29.
 
 ### Sonucu çağıran hesaplar (geometry) — 74
 
@@ -189,13 +189,12 @@ CBS'ye özgü olmayan 627 satırdan 136'i: geometry 74, none 20, processing 13, 
 | `tool.stationOffset` | Dik ayak ölç | shared | — |  |
 | `topology.check` | Topolojiyi denetle | shared | — |  |
 
-## Masaüstünde olmayan CAD tarafı öğeleri — 8
+## Masaüstünde olmayan CAD tarafı öğeleri — 7
 
 Envanterin masaüstü sütunu web'in donduğu gündeki hâlidir (ADR 0228); ekler masaüstündedir.
 
 - `file.export.pdf` PDF pafta… (pending)
 - `file.print` Yazdır ve pafta çıktısı… (pending)
-- `sheet.atlas` Atlas (pending)
 - `sheet.grid` Karelaj (pending)
 - `sheet.zoomIn` Yakınlaştır (partial)
 - `sheet.zoomOut` Uzaklaştır (partial)

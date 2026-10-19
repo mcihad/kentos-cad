@@ -418,6 +418,7 @@ pub(super) fn write(
             Vec::new()
         },
         relations: synced_relations,
+        pins: None,
         followed: items.iter().map(|it| it.followed.rows.len() as u32).sum(),
         left: items.iter().map(|it| it.followed.left).sum(),
     };

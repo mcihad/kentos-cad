@@ -15,7 +15,7 @@ use kentos_contracts::{
     CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, ExportShp,
     FILE_COMMANDS, FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF,
     FILE_EXPORT_DXF_VERSION, FILE_EXPORT_GPKG, FILE_EXPORT_GPKG_VERSION, FILE_EXPORT_PDF,
-    FILE_EXPORT_CSV, FILE_EXPORT_CSV_VERSION, FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION,
+    FILE_EXPORT_ATLAS, FILE_EXPORT_ATLAS_VERSION, FILE_EXPORT_CSV, FILE_EXPORT_CSV_VERSION, FILE_EXPORT_PDF_VERSION, FILE_EXPORT_SHP, FILE_EXPORT_SHP_VERSION,
     FILE_EXPORT_SLD,
     FILE_EXPORT_SLD_VERSION, FILE_PACKAGE, FILE_PACKAGE_VERSION, FileEffect, GpkgExported,
     GpkgTableExported, LayerNodeType, PackageProject, PdfExported, ReplayOutcome, ReplayStep,
@@ -592,6 +592,17 @@ pub fn export_csv(
     Ok((output, warnings))
 }
 
+/// The atlas written as one PDF, as `file.export.atlas` writes it (docs/adr/0534): the pages and the pin of the
+/// state they are made from; a bound file that changed meanwhile, or a pin that is not the state, refuses it.
+pub fn export_atlas(
+    doc: &Document,
+    input: &kentos_contracts::ExportAtlas,
+) -> Result<(kentos_contracts::AtlasExported, Vec<CommandWarning>), Refused> {
+    let (path, bytes, output, warnings) = atlas(doc, input, true)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
+
 /// The layer's look written as an SLD, as `file.export.sld` writes it (docs/adr/0516).
 pub fn export_sld(
     doc: &Document,
@@ -623,6 +634,80 @@ pub(crate) fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
 struct Done {
     output: Value,
     effect: Option<FileEffect>,
+}
+
+/// The atlas's planned pages, its pin and — unless `bytes` is false — its PDF (docs/adr/0534): the file's path,
+/// whether it replaces one, the bytes, the answer and the warnings; the refusal otherwise.
+fn atlas(
+    doc: &Document,
+    input: &kentos_contracts::ExportAtlas,
+    bytes: bool,
+) -> Result<AtlasMade, Refused> {
+    let (path, exists) = target(&input.path, input.overwrite)?;
+    let user = std::env::var("USER")
+        .or_else(|_| std::env::var("USERNAME"))
+        .unwrap_or_default();
+    let date = kentos_plot::book::today();
+    let asked = kentos_plot::atlas::AtlasInput {
+        sheet: &input.sheet,
+        fields: input.fields.as_deref(),
+        theme: input.theme.as_deref(),
+        time: input.time.as_deref(),
+        crs: input.crs,
+        pin: input.pin.as_ref(),
+        user: &user,
+        date: &date,
+    };
+    let at = |e: kentos_plot::atlas::AtlasError| refuse(&e.code, e.message, &e.path);
+    let planned = kentos_plot::atlas::plan(doc, &asked).map_err(at)?;
+    let (bytes, findings, notes) = if bytes {
+        let made = planned.pdf(doc).map_err(at)?;
+        (made.bytes, made.findings, made.notes)
+    } else {
+        (Vec::new(), Vec::new(), planned.notes.clone())
+    };
+    let output = kentos_contracts::AtlasExported {
+        path: path.display().to_string(),
+        bytes: bytes.len() as u64,
+        sha256: sha256_hex(&bytes),
+        replaced: exists,
+        sheet: planned.sheet().to_owned(),
+        pages: planned.pages.clone(),
+        pin: planned.pin.clone(),
+        bindings: planned.bindings.clone(),
+        fields: planned.fields.clone(),
+        withheld: planned.withheld.clone(),
+        filtered_out: planned.filtered_out,
+        findings: serde_json::to_value(&findings).unwrap_or(Value::Null),
+        notes,
+    };
+    let warnings = planned
+        .warnings
+        .iter()
+        .map(|w| CommandWarning {
+            code: w.code.clone(),
+            message: w.message.clone(),
+            path: Some(w.path.clone()),
+        })
+        .collect();
+    Ok((path, bytes, output, warnings))
+}
+
+type AtlasMade = (
+    PathBuf,
+    Vec<u8>,
+    kentos_contracts::AtlasExported,
+    Vec<CommandWarning>,
+);
+
+/// A refusal as the protocol answers it: a conflict for a code of that kind (`pin_mismatch`, `source_changed`).
+fn refused_result(error: CommandError) -> CommandResult<Value> {
+    let conflict = codes::info(&error.code).is_some_and(|c| c.kind == codes::CodeKind::Conflict);
+    if conflict {
+        CommandResult::Conflict { error }
+    } else {
+        CommandResult::Failed { error }
+    }
 }
 
 /// Runs `op` of the file command `command`; its answer, and the file it
@@ -713,6 +798,41 @@ fn run_typed(
                         warnings: planned.warnings,
                     },
                     Some(effect),
+                )
+            }
+        });
+    }
+    if command == FILE_EXPORT_ATLAS {
+        let typed: kentos_contracts::ExportAtlas = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        // A validate plans the pages and the pin; a PDF is made only for a plan and an execute.
+        let made = match atlas(doc, &typed, !matches!(op, CallOp::Validate)) {
+            Err(refused) => return Ok((refused_result(*refused), None)),
+            Ok(made) => made,
+        };
+        let (path, bytes, output, warnings) = made;
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
                 )
             }
         });
@@ -929,6 +1049,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_SHP => FILE_EXPORT_SHP_VERSION,
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
+        FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
         kentos_contracts::FILE_EXPORT_GIS => kentos_contracts::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
@@ -951,6 +1072,9 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_SHP => serde_json::from_value::<ExportShp>(input.clone())
+            .map_err(text)
+            .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        FILE_EXPORT_ATLAS => serde_json::from_value::<kentos_contracts::ExportAtlas>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_EXPORT_CSV => serde_json::from_value::<kentos_contracts::ExportCsv>(input.clone())

@@ -5309,6 +5309,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Etiket denetimi (docs/adr/0533 §6), held together by fixtures/commands/v1/cad.labels.report.json.
+        CommandDescriptor {
+            id: crate::CAD_LABELS_REPORT.into(),
+            version: crate::CAD_LABELS_REPORT_VERSION,
+            title: "Etiketleri denetle".into(),
+            summary: "Bir pencerenin etiketlerini bir ölçekte etiket motoruyla yerleştirir ve sayar; çizimi değiştirmez. Ölçek pxPerMetre (görünümün ölçeği: ekran pikseli bölü metre) ya da paperScale (1:N: bir pafta haritasının o ölçekte yazdığı gibi, kâğıdın CSS pikseliyle) biridir; pencere window (batı, güney, doğu, kuzey) ya da çizimin kapsamıdır; layers yalnız bu katmanların etiketlerini sayar (öbürleri yine de yer tutar ve engeldir). \
+                      Cevap toplamlar ve katman katman sayılar: placed (yeri olan), unplaced (boş yer bulunamayan; çizilmez), hidden (elle gizlenen), pinned (yeri sabitlenen), forced (üst üste gelebilen sınıfın bindirdiği), collisions (yerleştirilenlerden kutusu başka bir yerleştirilenin kutusunu kesen; çizildiği gibi okunur, eğri yazı kutulanmaz: üst üste gelebilen sınıf yoksa 0), repeats (aynı katmanda ve sınıfta daha önce yerleşmiş bir etiketin metnini yineleyen: bir yolun adı boyunca yinelenir). \
+                      Bir kaynağın parçasını tutan bağlı katmanın (cad.sources.edit extent) etiketi ve engeli yalnız o parçanın satırlarıdır: katmanın source ve part'ı söylenir, pencere parçanın ötesine uzanıyorsa partial true olur. \
+                      Bir etiket motorunun sonucu görünüme göre değişir: bu komut tek bir pencereyi sayar; ardışık küçük kaydırmalarda etiketlerin yerinde kalması masaüstünün işidir (docs/adr/0533 §3), bu komutun değil."
+                .into(),
+            aliases: vec!["etiketdenetle".into(), "labelreport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LabelsReport>(),
+            output: schema::<crate::LabelsReported>(),
+            plan: Some(schema::<crate::LabelsReported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Çizimin tamamını 1:1000 pafta ölçeğinde denetle".into(),
+                    input: json!({ "paperScale": 1000 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel katmanını 2 piksel/metrede bir pencerede denetle".into(),
+                    input: json!({ "pxPerMetre": 2.0, "window": [487000.0, 4420000.0, 487250.0, 4420180.0], "layers": ["parsel"] }),
+                    output: None,
+                },
+            ],
+        },
         // Katman stili (docs/adr/0213 §5), held together by fixtures/commands/v1/cad.layers.renderer.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_RENDERER.into(),
@@ -7653,6 +7688,35 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // The atlas of a sheet as a PDF with a page for each object (docs/adr/0534).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_ATLAS.into(),
+            version: crate::FILE_EXPORT_ATLAS_VERSION,
+            title: "Atlası PDF yap".into(),
+            summary: "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. \
+                      Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. \
+                      Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). \
+                      Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. \
+                      plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["atlaspdf".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportAtlas>(),
+            output: schema::<crate::AtlasExported>(),
+            plan: Some(schema::<crate::AtlasExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel atlası, bugünün durumundan".into(),
+                input: json!({ "path": "/veri/parsel-atlasi.pdf", "sheet": "atlas-paftasi", "overwrite": true }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_IMPORT_CSV.into(),
             version: crate::FILE_IMPORT_CSV_VERSION,
@@ -8435,6 +8499,9 @@ mod tests {
                     crate::CAD_LABELS_PIN => {
                         serde_json::from_value::<crate::LabelsPin>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_LABELS_REPORT => {
+                        serde_json::from_value::<crate::LabelsReport>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_LAYERS_RENDERER => {
                         serde_json::from_value::<crate::LayersRenderer>(e.input.clone()).map(|_| ())
                     }
@@ -8612,6 +8679,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_CSV => {
                         serde_json::from_value::<crate::ExportCsv>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_ATLAS => {
+                        serde_json::from_value::<crate::ExportAtlas>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_CSV => {
                         serde_json::from_value::<crate::ImportCsv>(e.input.clone()).map(|_| ())

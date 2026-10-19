@@ -213,8 +213,27 @@ fn objects(data: &[u8]) -> std::collections::BTreeMap<u32, (Vec<u8>, Option<Vec<
                     .rposition(|w| w == b"endstream")
                     .unwrap_or(raw.len());
                 let mut raw = &raw[..stop];
-                while raw.last().is_some_and(|c| *c == b'\n' || *c == b'\r') {
-                    raw = &raw[..raw.len() - 1];
+                // The stream's own length when the dictionary has it (compressed bytes may end in a newline's
+                // byte: trimming them breaks the stream); else the bytes up to the keyword less its line end.
+                let length = head
+                    .windows(8)
+                    .position(|w| w == b"/Length ")
+                    .and_then(|i| {
+                        let digits: Vec<u8> = head[i + 8..]
+                            .iter()
+                            .copied()
+                            .take_while(u8::is_ascii_digit)
+                            .collect();
+                        std::str::from_utf8(&digits).ok()?.parse::<usize>().ok()
+                    })
+                    .filter(|n| *n <= raw.len());
+                match length {
+                    Some(n) => raw = &raw[..n],
+                    None => {
+                        while raw.last().is_some_and(|c| *c == b'\n' || *c == b'\r') {
+                            raw = &raw[..raw.len() - 1];
+                        }
+                    }
                 }
                 let flate = head.windows(12).any(|w| w == b"/FlateDecode");
                 let bytes = if flate {

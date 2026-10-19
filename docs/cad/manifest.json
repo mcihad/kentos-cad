@@ -2963,6 +2963,22 @@
    "tests": 0
   },
   {
+   "id": "file.export.atlas",
+   "kind": "command",
+   "title": "Atlası PDF yap…",
+   "level": "semantic",
+   "via": [
+    "file.export.atlas"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.atlas",
+   "mcp": "file.export.atlas",
+   "note": "Pencerede sayfalar adları, ölçekleri ve nesneleriyle ile sabitlenen durum önizlenir, Dışa aktar… komutla PDF'i bütün yazar; çizim ya da kaynak değişmişse pin_mismatch ya da source_changed ile yenilenmesi istenir (ADR 0534).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.csv",
    "kind": "command",
    "title": "CSV dışa aktar…",
@@ -6650,7 +6666,7 @@
    "mcp": "cad.sheets.edit",
    "note": "Pafta çekirdeğinin işlemi cad.sheets.edit'le (ADR 0252 §2).",
    "scope": "none",
-   "desktop": "pending",
+   "desktop": "implemented",
    "tests": 0
   },
   {

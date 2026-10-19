@@ -1163,6 +1163,16 @@ codes! {
     VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; diğerleri yazıldı.";
     /// An area a bound layer cannot hold (docs/adr/0510).
     INVALID_EXTENT = "invalid_extent", Failed, false, "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler.";
+    /// A key that is not an attribute of every object, repeats or is empty (docs/adr/0533 §1).
+    INVALID_KEY = "invalid_key", Failed, false, "Anahtar alanı geçerli değil: katmanın nesnelerinde yok, bir nesnede boş ya da iki nesnede aynı; ileti hangisini söyler.";
+    /// A reload took objects with label pins out of the layer, or could not keep their pins (docs/adr/0533 §1).
+    LABEL_PINS_LOST = "label_pins_lost", Warning, false, "Okuma, etiket iğnesi olan nesneleri katmandan çıkardı ya da iğnelerini koruyamadı; nesneleri sonuçta.";
+    /// Label pins followed their key to another row (docs/adr/0533 §1).
+    LABEL_PINS_MOVED = "label_pins_moved", Warning, false, "Etiket iğneleri anahtar değerinin yeni satırına taşındı.";
+    /// The table repeats the layer's key (docs/adr/0533 §1).
+    KEY_NOT_UNIQUE = "key_not_unique", Warning, false, "Tablo katmanın anahtar değerini birden çok satırda tekrarlıyor; o satırların iğneleri anahtarla izlenmedi.";
+    /// A window that is not one (docs/adr/0533 §6).
+    INVALID_WINDOW = "invalid_window", Failed, false, "Pencere geçerli değil: dört sonlu sayı, en küçükler en büyüklerinden küçük; çok büyük pencere de reddedilir.";
     /// A processing tool not among İşlemler's (docs/adr/0508).
     UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
     /// A processing tool's values do not fit its parameters (docs/adr/0508).
@@ -1198,6 +1208,26 @@ codes! {
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
+
+    // ── The atlas (docs/adr/0534) ───────────────────────────────────────
+    /// A sheet that has no atlas.
+    NO_ATLAS = "no_atlas", Failed, false, "Paftanın atlası yok: önce atlasını (kapsam katmanı) tanımlayın.";
+    /// An atlas whose coverage layer is not chosen, or is not a layer of the drawing.
+    ATLAS_NO_LAYER = "atlas_no_layer", Failed, false, "Atlasın kapsam katmanı seçilmemiş ya da çizimde böyle bir katman yok.";
+    /// An atlas with no page: the layer has no object, or the filter, the time and the layer's filter leave none.
+    ATLAS_EMPTY = "atlas_empty", Failed, false, "Atlasın sayfası yok: kapsam katmanında süzgeçlerden geçen nesne kalmadı.";
+    /// An atlas's filter, sort or page name the sheet core refuses.
+    ATLAS_EXPRESSION = "atlas_expression", Failed, false, "Atlasın süzgeci, sıralaması ya da sayfa adı çalışmıyor.";
+    /// A theme the project has no layer state of.
+    UNKNOWN_THEME = "unknown_theme", Failed, false, "Projede bu adda katman durumu (tema) yok.";
+    /// A coordinate system other than the project's, for output made in the project's.
+    CRS_UNSUPPORTED = "crs_unsupported", Failed, false, "Çıktı projenin koordinat sisteminde basılır; başka bir sistem istenemez.";
+    /// A bound layer's file is not the one the layer was read from (docs/adr/0534 §2).
+    SOURCE_STALE = "source_stale", Warning, false, "Bağlı katmanın dosyası, katmanın okunduğu dosya değil; sayfalar katmandan, yani sabitlenen sürümden yapıldı.";
+    /// A bound layer has edits its file does not (docs/adr/0534 §2).
+    SOURCE_UNSAVED = "source_unsaved", Warning, false, "Bağlı katmanda dosyaya yazılmamış değişiklikler var; sayfalar katmandan, yani değişiklikleriyle yapıldı.";
+    /// The drawing or a bound source is not the state a plan pinned.
+    PIN_MISMATCH = "pin_mismatch", Conflict, true, "Çizim ya da bağlı kaynak, planın sabitlediği hâlden değişti; planı yeniden alıp çıktıyı yenileyin.";
 
     // ── Constraints (docs/adr/0334, 0335) ────────────────────────────────
     /// An edit with nothing in it: no constraint to add, no id to take away.

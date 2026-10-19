@@ -147,7 +147,7 @@ pub fn crs_info(srid: u32) -> Option<CrsInfo> {
 
 /// An attribute's text as the core's value: a plain decimal number is a number (a table's decimals
 /// apply to it), as the web's `attrValue` (`/^-?\d+(\.\d+)?$/`).
-fn attr_value(text: &str) -> VarValue {
+pub(crate) fn attr_value(text: &str) -> VarValue {
     let t = text.trim();
     let unsigned = t.strip_prefix('-').unwrap_or(t);
     let digits = |s: &str| !s.is_empty() && s.bytes().all(|b| b.is_ascii_digit());
@@ -162,7 +162,7 @@ fn attr_value(text: &str) -> VarValue {
 }
 
 /// A layer a table or a list names: by its id, else by its name (Turkish letters folded).
-fn layer_of(doc: &Document, name: &str) -> Option<String> {
+pub(crate) fn layer_of(doc: &Document, name: &str) -> Option<String> {
     let layers = doc.layers();
     if layers
         .get(name)
@@ -206,11 +206,16 @@ pub fn extents_of(list: Option<&DisplayList>) -> BTreeMap<String, [f64; 4]> {
 struct Sources<'a> {
     doc: &'a Document,
     library: &'a StyleLibrary,
+    /// The drawing's index: an object the view does not show (its layer's filter, the time) is no row of a legend.
+    spatial: &'a Spatial,
 }
 
 impl LegendSources for Sources<'_> {
     fn entities(&self, layer: &str) -> Vec<&Entity> {
-        self.doc.by_layer(layer).collect()
+        self.doc
+            .by_layer(layer)
+            .filter(|e| self.spatial.view_shown(Slot(e.base().id)))
+            .collect()
     }
 
     fn symbol(&self, id: &str) -> Option<Value> {
@@ -339,9 +344,44 @@ fn inside(
     )
 }
 
-/// A layer table's rows: every object of the layer with its fields and measures.
-fn features(doc: &Document, layer: &str, shown: Option<&HashSet<Slot>>) -> Vec<FeatureInput> {
+/// What a sheet's tables and legends may read of the drawing besides what is shown (docs/adr/0534 §4): the
+/// attribute names no output carries (a form's `redact`), the coverage layer's own carried names, and the
+/// atlas page's object.
+#[derive(Clone, Debug, Default)]
+pub struct Permit {
+    /// Attribute names of every layer that are kept out.
+    pub redacted: HashSet<String>,
+    /// The coverage layer and the only attribute names of it that go out; none: no atlas.
+    pub coverage: Option<(String, HashSet<String>)>,
+    /// The atlas page's object's box, minimum east, north, maximum east, north: what is “of the atlas object”.
+    pub atlas_box: Option<[f64; 4]>,
+}
+
+impl Permit {
+    /// Whether the attribute `name` of an object of `layer` may be read.
+    pub fn allows(&self, layer: &str, name: &str) -> bool {
+        if self.redacted.contains(name) {
+            return false;
+        }
+        match &self.coverage {
+            Some((l, carried)) if l == layer => carried.contains(name),
+            _ => true,
+        }
+    }
+}
+
+/// A layer table's rows: every object of the layer the view shows, with the attributes that may go out, its
+/// measures, whether it is in the table's map and in the atlas object.
+fn features(
+    doc: &Document,
+    spatial: &Spatial,
+    layer: &str,
+    shown: Option<&HashSet<Slot>>,
+    permit: &Permit,
+    atlas: Option<&HashSet<Slot>>,
+) -> Vec<FeatureInput> {
     doc.by_layer(layer)
+        .filter(|e| spatial.view_shown(Slot(e.base().id)))
         .map(|e| {
             let base = e.base();
             let (area, length) = spatial::measures(e);
@@ -350,6 +390,7 @@ fn features(doc: &Document, layer: &str, shown: Option<&HashSet<Slot>>) -> Vec<F
                 attributes: base
                     .attrs
                     .iter()
+                    .filter(|(name, _)| permit.allows(layer, name))
                     .map(|(name, value)| Attribute {
                         name: name.clone(),
                         value: attr_value(value),
@@ -358,7 +399,7 @@ fn features(doc: &Document, layer: &str, shown: Option<&HashSet<Slot>>) -> Vec<F
                 area: area.filter(|a| *a > 0.0),
                 length: length.filter(|l| *l > 0.0),
                 in_map: shown.is_none_or(|s| s.contains(&Slot(base.id))),
-                in_atlas: false,
+                in_atlas: atlas.is_some_and(|s| s.contains(&Slot(base.id))),
             }
         })
         .collect()
@@ -458,8 +499,10 @@ fn coordinates_of(item: &str, list: &[&Entity]) -> CoordinateInput {
 fn legend_entries(
     doc: &Document,
     library: &StyleLibrary,
+    spatial: &Spatial,
     layers: &MapLayers,
     shown: Option<&HashSet<Slot>>,
+    atlas: Option<&HashSet<Slot>>,
 ) -> Vec<LegendEntryInput> {
     let tree = doc.layers();
     let leaves: Vec<(LegendLayer<'_>, bool)> = tree
@@ -480,7 +523,14 @@ fn legend_entries(
             )
         })
         .collect();
-    let groups = legend_of(&legend_layers(&leaves, true), &Sources { doc, library });
+    let groups = legend_of(
+        &legend_layers(&leaves, true),
+        &Sources {
+            doc,
+            library,
+            spatial,
+        },
+    );
     let mut out = Vec::new();
     for g in groups {
         let parent = tree
@@ -488,6 +538,10 @@ fn legend_entries(
             .filter(|p| p.kind == kentos_contracts::LayerNodeType::Group)
             .map(|p| p.name.clone());
         let in_map = shown.is_none_or(|s| {
+            doc.by_layer(&g.layer_id)
+                .any(|e| s.contains(&Slot(e.base().id)))
+        });
+        let in_atlas = atlas.is_some_and(|s| {
             doc.by_layer(&g.layer_id)
                 .any(|e| s.contains(&Slot(e.base().id)))
         });
@@ -507,7 +561,7 @@ fn legend_entries(
                 },
                 symbol: symbol_of(entry.symbol.as_ref()),
                 in_map,
-                in_atlas: false,
+                in_atlas,
             });
         }
     }
@@ -524,7 +578,37 @@ pub fn sheet_data(
     sheet: &Sheet,
     list: Option<&DisplayList>,
 ) -> SheetData {
+    sheet_data_in(
+        doc,
+        spatial,
+        library,
+        selection,
+        book,
+        sheet,
+        list,
+        &Permit::default(),
+    )
+}
+
+/// [`sheet_data`] for an output that keeps attributes out and knows the atlas page's object (docs/adr/0534 §4).
+#[allow(clippy::too_many_arguments)]
+pub fn sheet_data_in(
+    doc: &Document,
+    spatial: &Spatial,
+    library: &StyleLibrary,
+    selection: &[Slot],
+    book: &SheetBook,
+    sheet: &Sheet,
+    list: Option<&DisplayList>,
+    permit: &Permit,
+) -> SheetData {
     let items = items_of(book, sheet);
+    let atlas: Option<HashSet<Slot>> = permit.atlas_box.map(|b| {
+        spatial
+            .in_rect(Vec2::new(b[0], b[1]), Vec2::new(b[2], b[3]), true)
+            .into_iter()
+            .collect()
+    });
     let extents = extents_of(list);
     let mut out = SheetData::default();
     for it in &items {
@@ -536,7 +620,14 @@ pub fn sheet_data(
                     let shown = inside(spatial, &extents, src.only_in_map.as_deref());
                     out.tables.push(TableInput {
                         item: it.id.clone(),
-                        features: features(doc, &layer, shown.as_ref()),
+                        features: features(
+                            doc,
+                            spatial,
+                            &layer,
+                            shown.as_ref(),
+                            permit,
+                            atlas.as_ref(),
+                        ),
                     });
                 }
             }
@@ -561,7 +652,14 @@ pub fn sheet_data(
                 let shown = inside(spatial, &extents, l.map.as_deref());
                 out.legends.push(LegendInput {
                     item: it.id.clone(),
-                    entries: legend_entries(doc, library, &layers, shown.as_ref()),
+                    entries: legend_entries(
+                        doc,
+                        library,
+                        spatial,
+                        &layers,
+                        shown.as_ref(),
+                        atlas.as_ref(),
+                    ),
                 });
             }
             _ => {}
@@ -687,7 +785,7 @@ mod tests {
             .find(|l| doc.by_layer(&l.id).any(|e| matches!(e, Entity::Polygon(_))))
             .map(|l| l.id.clone())
             .expect("a layer of areas");
-        let all = features(doc, &layer, None);
+        let all = features(doc, &spatial, &layer, None, &Permit::default(), None);
         assert!(!all.is_empty());
         assert!(all.iter().any(|f| f.area.is_some_and(|a| a > 0.0)));
         assert!(all.iter().all(|f| f.in_map));
@@ -695,9 +793,16 @@ mod tests {
         let far = BTreeMap::from([("m".to_owned(), [0.0, 0.0, 10.0, 10.0])]);
         let shown = inside(&spatial, &far, Some("m"));
         assert!(
-            features(doc, &layer, shown.as_ref())
-                .iter()
-                .all(|f| !f.in_map)
+            features(
+                doc,
+                &spatial,
+                &layer,
+                shown.as_ref(),
+                &Permit::default(),
+                None
+            )
+            .iter()
+            .all(|f| !f.in_map)
         );
     }
 }

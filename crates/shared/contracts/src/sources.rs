@@ -63,6 +63,13 @@ pub struct SourceLink {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
     pub extent: Option<[f64; 4]>,
+    /// The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique
+    /// among the rows and not empty. A reload follows a label pin to the row of the same value when the table was
+    /// written again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule
+    /// of every bound layer before.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub key: Option<String>,
     /// Whether the table can be written: a feature or attribute table of a file KentOS may write.
     pub writable: bool,
 }
@@ -73,6 +80,15 @@ pub fn extent_problem(e: &[f64; 4]) -> Option<&'static str> {
         Some("sayıları sonlu olmalı")
     } else if e[0] >= e[2] || e[1] >= e[3] {
         Some("en küçüğü en büyüğünden küçük olmalı")
+    } else {
+        None
+    }
+}
+
+/// What is wrong with a key's name, if anything: a column's name, not empty, no control letters, at most 128 letters.
+pub fn key_problem(key: &str) -> Option<&'static str> {
+    if key.trim().is_empty() || key.chars().count() > 128 || key.chars().any(char::is_control) {
+        Some("boş, çok uzun ya da denetim karakteri taşıyor")
     } else {
         None
     }
@@ -94,6 +110,11 @@ pub fn sources_problem(list: &[SourceLink], layer_ids: &[&str]) -> Option<String
                 "{at}: kimliği boş ya da başka bir kaynağın (“{}”)",
                 s.id
             ));
+        }
+        if let Some(k) = &s.key
+            && let Some(why) = key_problem(k)
+        {
+            return Some(format!("{at}: anahtar alanı {why}"));
         }
         match s.kind {
             SourceKind::Geopackage => {

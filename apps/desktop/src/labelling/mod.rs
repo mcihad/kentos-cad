@@ -21,12 +21,12 @@ use std::collections::{HashMap, HashSet};
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
 use iced::{Bottom, Center, Element, Fill, Length, Task};
 use kentos_contracts::{
-    CommandResult, LabelClass, LabelObstacle, LabelPlacement, LabelStyle, LabelsMode, LayerLabels,
+    CommandResult, LabelClass, LabelObstacle, LabelsReport, LabelPlacement, LabelStyle, LabelsMode, LayerLabels,
     LayerNodeType, LayersLabels, ObstacleKind, default_label, layer_labels_problem, style_problem,
 };
 use kentos_interaction::Level;
 use kentos_native_application::label_texts::compile_label_expression;
-use kentos_native_application::{ExecutionContext, layers_labels};
+use kentos_native_application::{ExecutionContext, labels_report, layers_labels};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
@@ -49,6 +49,7 @@ const LABELLING: &str = "Etiketleme";
 const APPLY: &str = "Uygula";
 const CANCEL: &str = "Vazgeç";
 const SAVE: &str = "Kaydet";
+const REPORT: &str = "Denetle";
 /// The most classes a layer's labelling has (`LABEL_CLASSES_MAX`).
 const CLASSES_MAX: usize = 64;
 /// Why a command has no layer to label.
@@ -127,6 +128,8 @@ pub enum Event {
     ObstacleKind(ObstacleKind),
     Apply,
     Save,
+    /// Denetle: the labels the engine places for the layer in the view, counted (docs/adr/0533 §6).
+    Report,
     Cancel,
 }
 
@@ -507,6 +510,11 @@ impl App {
                     return Task::none();
                 }
             }
+            Event::Report => {
+                w.lines = self.labelling_report(&w);
+                self.labelling = Some(w);
+                return Task::none();
+            }
             Event::Cancel => {
                 self.dialog = None;
                 return Task::none();
@@ -515,6 +523,60 @@ impl App {
         self.labelling_check(&mut w);
         self.labelling = Some(w);
         Task::none()
+    }
+
+    /// Denetle: how the engine places this layer's labels in the view at its scale, as `cad.labels.report` counts
+    /// them (docs/adr/0533 §6), with what a bound layer's loaded part means for them.
+    fn labelling_report(&mut self, w: &Window) -> Vec<(Kind, String)> {
+        let camera = self.viewport.camera.upright();
+        let Some(doc) = self.document.as_mut() else {
+            return Vec::new();
+        };
+        let view = camera.visible_bounds();
+        let input = LabelsReport {
+            px_per_metre: Some(camera.scale),
+            paper_scale: None,
+            window: Some([view.min_x, view.min_y, view.max_x, view.max_y]),
+            layers: Some(vec![w.layer.clone()]),
+        };
+        match labels_report::execute(&mut ExecutionContext::new(&mut doc.model), input) {
+            CommandResult::Completed { output, .. } => {
+                let t = &output.totals;
+                let mut lines = vec![(
+                    if t.collisions == 0 && t.unplaced == 0 {
+                        Kind::Ok
+                    } else {
+                        Kind::Warn
+                    },
+                    format!(
+                        "Görünümde {} etiket yerleşti, {} yerleşemedi, {} gizli; {} elle sabit, {} zorla konmuş.",
+                        t.placed, t.unplaced, t.hidden, t.pinned, t.forced
+                    ),
+                )];
+                lines.push((
+                    if t.collisions == 0 && t.repeats == 0 {
+                        Kind::Ok
+                    } else {
+                        Kind::Warn
+                    },
+                    format!(
+                        "{} etiket çifti gerçekten örtüşüyor, {} etiket yineleniyor.",
+                        t.collisions, t.repeats
+                    ),
+                ));
+                if output.layers.iter().any(|l| l.partial) {
+                    lines.push((
+                        Kind::Info,
+                        "Katman bağlı tablonun yalnız yüklenen parçasını tutuyor: etiketleri ve engelleri o parçanınkidir.".to_owned(),
+                    ));
+                }
+                lines
+            }
+            CommandResult::Failed { error }
+            | CommandResult::Conflict { error }
+            | CommandResult::NeedsInput { error } => vec![(Kind::Warn, error.message)],
+            _ => Vec::new(),
+        }
     }
 
     /// Writes the labelling through `cad.layers.labels` and says what it did; whether it went (or
@@ -632,6 +694,7 @@ impl App {
                 .fill(body)
                 .push(labelling_obstacle(w))
                 .push(words::summary(lines))
+                .action(words::secondary(REPORT, Some(msg(Event::Report))))
                 .action(words::secondary(APPLY, w.ready.then(|| msg(Event::Apply))))
                 .action(words::secondary(CANCEL, Some(msg(Event::Cancel))))
                 .action(words::primary(SAVE, w.ready.then(|| msg(Event::Save))))
@@ -756,6 +819,7 @@ impl App {
                 .find(|(_, m, _)| *m == words)
                 .map(|(mode, _, _)| msg(Event::Mode(*mode))),
             Control::Press(APPLY) => w.ready.then(|| msg(Event::Apply)),
+            Control::Press(REPORT) => Some(msg(Event::Report)),
             Control::Press(SAVE) => w.ready.then(|| msg(Event::Save)),
             Control::Press(CANCEL) => Some(msg(Event::Cancel)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),

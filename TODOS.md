@@ -218,6 +218,18 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (ADR 0529, 19 Ekim): web'de gerekenler: `cad.processing.batch` işleyicisi
+  (product/, ortak durumlar `fixtures/commands/v1/cad.processing.batch.json`), `cad.processing.run`'ın `model:` kimliği ve `record`'u,
+  `cad.processing.tools`'un `models` alanı, İşlemler penceresinde Toplu çalıştır tablosu ve kayıt paneli, Geçmiş kartlarında kayıt
+  sayıları; web'in işlemci işçisi toplu işi satır satır koşturmalı ve satırlar arasında durdurmayı duymalı.
+- [ ] `CBS-31` STAC keşfi (ADR 0528, 19 Ekim): web'de gerekenler: `kentos_services::stac` için WASM bağlayıcısı (`services-wasm`'e
+  `stac` okuyucuları) ve TS sarmalayıcısı; `cad.stac.search` (fetch ile; CORS gerektirir, `kentosd`'nin `/v1/proxy`'si) ve
+  `cad.stac.prepare` işleyicileri ve `product/registry.ts` kaydı; “STAC'ta ara” penceresi (`ui/raster/`; durumları
+  `fixtures/commands/v1/cad.stac.*.json`); `raster.stac`'ın şerit yerleri `additions.json`'da hazır; ortak durumlar web koşucusunda ve
+  `fixtures/stac/v1/cases.json` çekirdek testleri WASM'da.
+- [ ] `CBS-16` CAD kaynağının izlenebilir GIS türevi (ADR 0530, 19 Ekim): web'de gerekenler: `file.export.gis` ve `cad.gis.derivation`
+  için arayüz (türev dışa aktar penceresi ve denetim penceresi), TS sarmalayıcıları; WASM bağlayıcısı gerekmez (komutlar başsız
+  sunucuda ve masaüstünde); ortak durumlar `fixtures/commands/v1/cad.gis.derivation.json` ve `fixtures/gis-derivation/v1`.
 - [ ] `CBS-12` alanın dışındaki komşularla yazma (ADR 0531, 19 Ekim): web'de gerekenler: bağlı katman web'de yok; gelince
   `cad.sources.sync`'in `topology`'si (`strict`, `loose`) ve Kaynak ▸'nin Kaynağa yaz, komşular gevşek'i; ortak durumlar
   `fixtures/commands/v1/cad.sources.sync.json`'un komşu durumları.
@@ -1987,6 +1999,30 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-24` toplu çalıştırma ve çalışma kaydı (dilim): `cad.processing.batch` (araç ya da model, parametre tablosunun satırları,
+  `cad.processing.run`'ın aynı çalıştırıcısı, tek geri alma adımı, ya hep ya hiç; satır retleri satır yoluyla; iş olarak, satırlar
+  arasında durdurma), modeller `cad.processing.run` ve `.batch`'te `model:` kimliğiyle (orta adım durunca ilk adım geri alınır;
+  `tools`'ta `models: true`), her cevapta çalışma kaydı (`kentos.run-record` 1: araç ya da model ve sürümü, model tanımının özeti,
+  değerler, girdi içerik özetleri, çizim sürümü, srid, tohum, motor, host, adım başına kayıt sayısı ve süre, kesin toplam; `rerun_kind`),
+  masaüstünde Toplu çalıştır ve Geçmiş'te adım payları; Python ve MCP. Kalan: `onError: continue` (iç içe geri alma noktası), satır
+  içinde iptal, kaydın proje dosyasında saklanması, provider stream girdisi, tablo ve raster sink'i ve batch'te sink, hızlı ya da artımlı
+  katman özeti (nesne başına ~8 µs), `cad.processing.rerun`, Geçmiş'te toplu kartı, kullanıcı modellerinin komutla çalışması. — **19 Ekim,
+  [ADR 0529](docs/adr/0529-processing-batch-and-run-record.md).**
+- [ ] `CBS-31` STAC keşfi ve veri hazırlama kaydı (dilim): `cad.stac.search` (alan, tarih, koleksiyon, bulut oranı, sayfalama; yabancı
+  `next` reddi; imza adresten atılır) ve `cad.stac.prepare` (varlıklar adresli raster olarak kendi grubunda, tek adımda; ızgara, veri
+  türü, nodata, ölçek ve öteleme, kalite bandı ve maske kuralıyla hazırlama kaydı, rasterlerin `stac.*` özniteliklerinde de); çekirdek
+  `kentos_services::stac`, ağ ev sahibinin (masaüstü ve MCP), masaüstünde “STAC'ta ara”, Python; bağımsız başvuru `stac_cases.py`
+  (gerçek Earth Search cevaplarıyla). Kalan: imzalı adresin oturumda tutulması, `s3://` adresleri, yeniden izdüşüm, kalite maskesinin
+  Raster hesaplayıcı ve Spektral indis'e uygulanması, ortak ızgaraya örnekleme, eğitim ve test örneği, model, sınıf, tohum ve mekânsal
+  doğrulama kaydı, kaydın `.kcad`'e yazılması, Python'da ağ. — **19 Ekim, [ADR 0528](docs/adr/0528-stac-discovery.md).**
+- [ ] `CBS-16` CAD kaynağının izlenebilir GIS türevi (dilim): `file.export.gis` katmanları GeoPackage'a izlenebilir türev olarak yazar
+  (düz kirişler `kentos.chords/1`: daire, yay ve bükümlü kenar kesin sagitta'yla, elips ve eğri sınırla, NURBS örneklenmiş; her satırda
+  kaynağın kalıcı kimliği, türü, sapması ve özeti; Z ve M yay boyunca; yazı ve blok yerleştirmeleri ayrı tablolarda, blok öznitelikleri
+  sütun; ölçü, tarama ve benzerleri nedenleriyle söylenerek yazılmaz; tablo başına türetim kaydı metadata uzantısında), `cad.gis.derivation`
+  türevin kaynağıyla eşleşmesini satır satır söyler (güncel, eski, GIS'te değişmiş, kaynağı yok, türevde yok), türev tablo bağlanmaz,
+  okunmaz, geri yazılmaz (`derived_dataset`), başka çizime alınınca `derived_import`. Kalan: GIS değişikliğinin kaynağa geri alınması ya da
+  açık koparılması, PostGIS, Shapefile ve GeoJSON türevi, mimari nesne ve ölçü türevi, spline sapmasının bağımsız doğrulaması, büyük
+  türevde akışla yazma. — **19 Ekim, [ADR 0530](docs/adr/0530-cad-to-gis-derivation.md).**
 - [ ] `CBS-12` alanın dışındaki komşularla yazma (dilim): alan sınırlı GeoPackage parçası yazılırken ortak köşeleri değişen,
   çizimde olmayan komşular aynı dosya sürümünden okunur, ADR 0160'ın kuralıyla izler ve aynı SQLite işleminde yazılır;
   `cad.sources.sync`'in `topology`'si (`strict`: geçersiz kalacak komşu varsa hiçbir şey yazılmaz, `loose`: o komşu kalır,

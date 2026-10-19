@@ -9,6 +9,9 @@ use kentos_contracts::{DrawingFont, Workspace};
 use kentos_headless::{NewDrawing, Op, Session, catalog};
 use serde_json::{Value, json};
 
+#[path = "headless/atlas_cases.rs"]
+mod atlas_cases;
+
 fn scratch(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("kentos-headless-{name}-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);

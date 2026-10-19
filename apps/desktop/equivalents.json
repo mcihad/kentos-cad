@@ -36,7 +36,7 @@
     "sheet.alignTo.margins": { "desktop": "implemented", "where": "Hizala ▾ › Kenar boşluklarının ortasına (crates/sheet-ui/src/ribbon.rs)" },
     "sheet.alignTo.page": { "desktop": "implemented", "where": "Hizala ▾ › Sayfanın ortasına (crates/sheet-ui/src/ribbon.rs)" },
     "sheet.alignTo.selection": { "desktop": "implemented", "where": "Hizala ▾: birden çok öğe seçiliyken seçime göre (crates/sheet-ui/src/update.rs)" },
-    "sheet.atlas": { "desktop": "pending", "where": "Pafta › Ekle › Atlas soluk (crates/sheet-ui/src/ribbon.rs); atlasın düzenleyicisi ve toplu çıktısı yok (ADR 0164)" },
+    "sheet.atlas": { "desktop": "implemented", "where": "Pafta › Ekle › Atlas ve Çıktı › Pafta › Atlası PDF yap…: kapsam katmanı, süzgeç, sıralama ve sayfa adı penceresi, sayfaların önizlemesi ve file.export.atlas ile tek PDF (apps/desktop/src/exchange/atlas_export.rs, ADR 0534)" },
     "sheet.delete": { "desktop": "implemented", "where": "Paftalar listesinin sağ tıkı › Sil (crates/sheet-ui/src/panels.rs)" },
     "sheet.deleteItems": { "desktop": "implemented", "where": "Delete ya da Backspace; Öğeler ağacının sağ tıkı (crates/sheet-ui/src/update.rs, crates/sheet-ui/src/panels.rs)" },
     "sheet.distribute.hCenters": { "desktop": "implemented", "where": "Pafta › Düzen › Dağıt ▾ › Yatayda ortalar eşit (crates/sheet-ui/src/ribbon.rs)" },

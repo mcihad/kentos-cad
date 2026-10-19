@@ -471,6 +471,12 @@ impl MapPainter for SheetPainter<'_> {
             format!("{:?}", self.format),
         )
             .hash(&mut h);
+        // The drawing and the sources its bound layers last matched (docs/adr/0533 §4): the labels of a map are
+        // placed against them, at the map's own scale (the request's).
+        if let Some(d) = self.drawing {
+            (d.session, d.model.generation()).hash(&mut h);
+            crate::labels::sources_key(&d.model).hash(&mut h);
+        }
         h.finish()
     }
 
@@ -731,7 +737,11 @@ impl SheetPainter<'_> {
         let k = (px_per_mm * crate::sheet_pdf::PX_MM).max(1e-6);
         let (w, h) = (f64::from(r.size.width) / k, f64::from(r.size.height) / k);
         let (s, co) = (f64::from(turn).sin().abs(), f64::from(turn).cos().abs());
-        let (bw, bh) = ((w * co + h * s).ceil(), (w * s + h * co).ceil());
+        // Rounded to a thousandth of a pixel before the ceiling: the content's size is a float32 of the screen's
+        // or the file's own zoom, and a 1e-7 of noise must not make the window a pixel larger in one and not the
+        // other (docs/adr/0533 §5: the same map at the same scale is placed the same on both).
+        let up = |v: f64| ((v * 1000.0).round() / 1000.0).ceil();
+        let (bw, bh) = (up(w * co + h * s), up(w * s + h * co));
         let camera = Camera {
             center: Vec2::new(c.x, c.y),
             // CSS pixels per ground metre on the paper.
@@ -1375,6 +1385,10 @@ impl App {
                 // Koordinat sistemi seç: the project's settings at its coordinate system.
                 Effect::HostAction(action) if action == "project.crs" => {
                     task = Task::done(Message::Run("crs.set"));
+                }
+                // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
+                Effect::HostAction(action) if action == "sheet.atlas" => {
+                    task = Task::done(Message::Run("file.export.atlas"));
                 }
                 Effect::HostAction(action) => self.warn(format!(
                     "Bu düzeltme ({action}) masaüstünde bu sürümde yok."
@@ -2124,8 +2138,8 @@ mod tests {
             Some(crate::project::Window::Settings(_))
         ));
         // What the desktop does not have yet is said, not swallowed.
-        let _ = app.sheet_effects(vec![Effect::HostAction("sheet.atlas".into())]);
-        assert!(crate::files_testing::last_said(&app).contains("sheet.atlas"));
+        let _ = app.sheet_effects(vec![Effect::HostAction("sheet.nothing".into())]);
+        assert!(crate::files_testing::last_said(&app).contains("sheet.nothing"));
     }
 
     /// The map's content keeps inside its box, its view turned or not (a turned
@@ -2221,6 +2235,74 @@ mod tests {
                 with_text > scene_only + 30,
                 "turned {rotation}: the drawing's text is written ({scene_only} → {with_text})"
             );
+        }
+    }
+
+    /// A sheet's map at one scale is laid out the same on the screen and in the PDF whatever size the map is
+    /// drawn at (docs/adr/0533 §5): the same window on the ground, the same spots, the same texts; the PDF writes
+    /// what the screen shows.
+    #[test]
+    fn a_map_s_labels_are_placed_the_same_on_the_screen_and_in_the_pdf() {
+        let mut app = app_with_drawing();
+        app.spatial.reload(&app.document.as_ref().unwrap().model);
+        app.sheet_maps.sync(app.document.as_ref());
+        let doc = app.document.as_ref().unwrap();
+        let b = scene::extents(doc).expect("the drawing has objects");
+        let span = (b.max_x - b.min_x).max(b.max_y - b.min_y).max(1.0);
+        let view = kentos_sheet::display::MapViewPrim {
+            center: Some(GroundPoint {
+                x: (b.min_x + b.max_x) / 2.0,
+                y: (b.min_y + b.max_y) / 2.0,
+            }),
+            scale: 250,
+            rotation: 0,
+        };
+        let layers = MapLayers::default();
+        let request = |k: f64| MapRequest {
+            overrides: &[],
+            item: "m",
+            // The same frame, 160 × 120 mm of paper, at k pixels per micrometre (the screen's zoom, the file's).
+            size: Size::new((160_000.0 * k) as f32, (120_000.0 * k) as f32),
+            view: &view,
+            layers: &layers,
+            crs: None,
+            extent: Some([
+                b.min_x - span,
+                b.min_y - span,
+                b.max_x + span,
+                b.max_y + span,
+            ]),
+            pixels_per_metre: k * 1_000_000.0 / 250.0,
+            export: false,
+        };
+        let painter = app.sheet_painter();
+        let lay = |k: f64| {
+            let r = request(k);
+            let mut keep = None;
+            let (drawing, spatial) = painter.source(r.view.scale, &mut keep);
+            let model = &drawing.expect("a drawing").model;
+            let (camera, spots, fence) = painter
+                .label_layout(model, spatial, &r)
+                .expect("the map has a place");
+            let texts = crate::labels::texts_in_map(
+                model,
+                spots.clone(),
+                camera,
+                crate::labels::paper_colors(),
+                painter.font,
+                painter.format,
+                fence,
+            );
+            (camera, spots, texts)
+        };
+        let (screen, pdf, odd) = (lay(0.0007), lay(0.0035), lay(0.00123456789));
+        assert!(!screen.1.is_empty(), "the map has labels");
+        for (what, got) in [("the PDF's size", &pdf), ("an odd zoom", &odd)] {
+            assert_eq!(screen.0.width, got.0.width, "{what}: the window's width");
+            assert_eq!(screen.0.height, got.0.height, "{what}: the window's height");
+            assert_eq!(screen.0.scale, got.0.scale, "{what}: the scale");
+            assert_eq!(screen.1, got.1, "{what}: the labels' places");
+            assert_eq!(screen.2, got.2, "{what}: the texts the PDF writes");
         }
     }
 

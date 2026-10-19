@@ -248,6 +248,8 @@ impl Designer {
             assets,
             maps,
             crs: host.crs,
+            atlas: None,
+            keywords: None,
         };
         let options = PdfOptions {
             sheets,

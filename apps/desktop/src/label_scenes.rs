@@ -105,6 +105,13 @@ fn window_obstacle(app: &mut App) {
     window(app, "bina", 0, Tab::Text);
 }
 
+/// Denetle: the parcels' labels counted in the view the drawing is fitted to (docs/adr/0533 §6).
+fn report(s: &mut Snapshot, app: &mut App) {
+    whole(s, app);
+    let _ = app.update(Message::Labelling(Window::Report));
+    settle(s, app);
+}
+
 /// Where a world point is on the drawing area.
 fn at(app: &App, x: f64, y: f64) -> Point {
     let [sx, sy] = app
@@ -211,6 +218,8 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("etiket-pencere-sigdirma", window_fit, whole),
         ("etiket-pencere-oncelik", window_order, whole),
         ("etiket-pencere-engel", window_obstacle, whole),
+        // Denetle: the engine's counts for the layer in the view (docs/adr/0533 §6).
+        ("etiket-denetle", window_rules, report),
         // The tools.
         ("etiket-tasi", opened, moving),
         ("etiket-dondur", opened, turning),

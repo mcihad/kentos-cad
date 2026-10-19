@@ -30,6 +30,10 @@ const OUTSIDE: f64 = 1.0;
 const SYMBOL: f64 = 0.05;
 /// An obstacle's cost per weight.
 const PER_WEIGHT: f64 = 0.05;
+/// How near, px, a candidate's middle is to the place a label was last put for it to be that place (docs/adr/0533 §3).
+const PREFER_TOL: f64 = 2.0;
+/// How many of a label's candidates, cheapest first, are looked through for its last place once a free one is known.
+const PREFER_TRIES: usize = 48;
 
 /// Where a unit's label may go.
 #[derive(Clone, Debug)]
@@ -84,6 +88,9 @@ pub struct Unit<'a> {
     pub hidden: bool,
     /// A contour's reading direction: true the path's own, false reversed; none by the upright rule.
     pub uphill: Option<bool>,
+    /// Where the label was last placed (its middle, px): the candidate there is taken first when it is free, so a
+    /// small pan does not move a label that has not been displaced (docs/adr/0533 §3).
+    pub prefer: Option<Vec2>,
 }
 
 /// An obstacle on the page.
@@ -855,6 +862,15 @@ fn turned_axis(rings: &[Vec<Vec2>]) -> Option<f64> {
     (a.abs() > 1e-3).then_some(a)
 }
 
+/// An area's candidate where its label was last put: only when it still fits inside (docs/adr/0533 §3). The pole of
+/// an area cut to the window moves with the window, a long strip's anywhere along its ridge; a label that has a
+/// place and room there stays.
+fn area_last(f: &Form, u: &Unit<'_>, rings: &[Vec<Vec2>], at: Vec2) -> Option<Cand> {
+    let c = u.cls;
+    let block = Obb::level(at, f.w / 2.0 + c.halo, f.h / 2.0 + c.halo);
+    box_inside(&block, rings).then(|| straight(f, u, at, 0.0, cell_least(0, 0, 0.0)))
+}
+
 /// An area's candidate at a grid cell, level or turned `angle`: none when it must fit and does not.
 #[allow(clippy::too_many_arguments)]
 fn area_cell(
@@ -1025,7 +1041,19 @@ fn plan(f: &Form, u: &Unit<'_>, out: &mut Vec<Group>) -> (f64, f64) {
         Geo::Corner { tl } => out.push(one(0.0001, 0, Make::Corner(*tl))),
         Geo::Path { s0, s1, .. } => {
             let (len, mid) = (s1 - s0, (s0 + s1) / 2.0);
-            for (k, t) in middles(*s0, *s1, f.w).into_iter().enumerate() {
+            let mut list = middles(*s0, *s1, f.w);
+            // The place the label was last put, along this stretch: the stretch's ends move with the window.
+            if let (Some(p), Geo::Path { walk, .. }) = (u.prefer, &u.geo) {
+                let t = walk.nearest(p);
+                let room = (len - f.w) / 2.0;
+                if len >= f.w
+                    && (t - mid).abs() <= room + 1e-9
+                    && list.iter().all(|m| (m - t).abs() > 0.5)
+                {
+                    list.push(t);
+                }
+            }
+            for (k, t) in list.into_iter().enumerate() {
                 let place = 0.0001 + 0.001 * (t - mid).abs() / len;
                 out.push(one(place - PATH_SLACK, 4 * k, Make::Path(k, t)));
             }
@@ -1508,18 +1536,53 @@ pub fn place(scene: &Scene<'_>) -> Outcome {
                 }
                 continue;
             }
-            // An unplaced label's first form's candidates, all of them by the end: the improvement's.
-            let mut tried = Vec::new();
+            // An area's label where it was, when that still fits and is free.
+            if let (Some(at), Geo::Area { rings, .. }) = (u.prefer, &u.geo)
+                && !f.outside
+                && let Some(c) = area_last(f, u, rings, at)
+                && obstacles
+                    .cost(&c.boxes, u.id, u.cls.priority, &mut seen, &mut hit)
+                    .is_some()
+                && room.free(&c.boxes)
+                && !duplicate(&texts, u, &c, i)
+            {
+                room.insert(&c.boxes, i as u32);
+                texts.add(u.text, || middle(&c), i);
+                placed_cands[i] = Some(c);
+                slots[i].placed = Some((fi, usize::MAX));
+                break;
+            }
+            // An unplaced label's first form's candidates, all of them by the end: the improvement's. A
+            // label with a last place takes the candidate there when it is free (docs/adr/0533 §3), else the
+            // first free one as ever.
+            let mut tried: Vec<Cand> = Vec::new();
+            let (mut first_free, mut pick) = (None, None);
             while let Some(c) = lazy.next(f, u, scene.font, &obstacles, &mut seen, &mut hit) {
-                if room.free(&c.boxes) && !duplicate(&texts, u, &c, i) {
-                    room.insert(&c.boxes, i as u32);
-                    texts.add(u.text, || middle(&c), i);
-                    placed_cands[i] = Some(c);
-                    slots[i].placed = Some((fi, tried.len()));
-                    done = true;
+                let free = room.free(&c.boxes) && !duplicate(&texts, u, &c, i);
+                let near = u.prefer.is_some_and(|p| {
+                    let m = middle(&c);
+                    norm(m.x - p.x, m.y - p.y) <= PREFER_TOL
+                });
+                let k = tried.len();
+                tried.push(c);
+                if free {
+                    first_free.get_or_insert(k);
+                    if u.prefer.is_none() || near {
+                        pick = Some(k);
+                        break;
+                    }
+                }
+                if first_free.is_some() && tried.len() >= PREFER_TRIES {
                     break;
                 }
-                tried.push(c);
+            }
+            if let Some(k) = pick.or(first_free) {
+                let c = tried.swap_remove(k);
+                room.insert(&c.boxes, i as u32);
+                texts.add(u.text, || middle(&c), i);
+                placed_cands[i] = Some(c);
+                slots[i].placed = Some((fi, k));
+                done = true;
             }
             if done {
                 break;

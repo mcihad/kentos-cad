@@ -1944,6 +1944,13 @@
         "cad.gis.derivation"
       ],
       "note": "Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530)."
+    },
+    "file.export.atlas": {
+      "level": "semantic",
+      "via": [
+        "file.export.atlas"
+      ],
+      "note": "Pencerede sayfalar adları, ölçekleri ve nesneleriyle ile sabitlenen durum önizlenir, Dışa aktar… komutla PDF'i bütün yazar; çizim ya da kaynak değişmişse pin_mismatch ya da source_changed ile yenilenmesi istenir (ADR 0534)."
     }
   },
   "tools": {

@@ -153,6 +153,7 @@ impl App {
                     table: table.clone(),
                     layer: None,
                     reproject,
+                    key: None,
                 },
             };
             match kentos_native_application::sources::edit::execute(

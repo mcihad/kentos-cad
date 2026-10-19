@@ -329,6 +329,21 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "cad.sources.edit",
+        "key_not_unique",
+        "anahtarı yinelenen tablonun uyarısı: ortak durumların tabloları sabit; yinelenen anahtarlı yeniden yazılmış tabloyu geçici kopyada sources.rs sınar (ADR 0533 §1)",
+    ),
+    (
+        "cad.sources.sync",
+        "key_not_unique",
+        "anahtarı yinelenen tablonun uyarısı: ortak durumların tabloları sabit; yinelenen anahtarlı yeniden yazılmış tabloyu geçici kopyada sources.rs sınar (ADR 0533 §1)",
+    ),
+    (
+        "cad.sources.edit",
+        "label_pins_moved",
+        "pinin başka satıra anahtarıyla taşınması kaynağın yeniden yazılmasını ister (satır kimlikleri değişir); ortak durumlar dosyaya yazmaz, geçici kopyada sources.rs sınar (ADR 0533 §1)",
+    ),
+    (
+        "cad.sources.edit",
         "too_many_sources",
         "1000 bağlı katmanlık kurulum durum dosyasını büyütür; sınır sources.rs'te ve sözleşmenin sources_problem'inde",
     ),

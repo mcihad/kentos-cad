@@ -27,7 +27,9 @@ use ts_rs::TS;
 
 pub use geo::{TmCrs, tm_wkt};
 
-use crate::display::{Prim, RenderInputs};
+use crate::display::{
+    AtlasPageInput, CoordinateInput, LegendInput, Prim, RenderInputs, TableInput,
+};
 use crate::error::{Result, SheetError};
 use crate::model::{AssetKind, ItemId, SheetBook, SheetId};
 use crate::preflight::{Finding, Severity};
@@ -322,6 +324,37 @@ pub struct PdfCrs {
     pub epsg: Option<u32>,
 }
 
+/// One atlas page of a sheet (docs/adr/0534): what the page's own object changes in the sheet's inputs.
+/// Every atlas map shows the page's ground, so each page has its maps' content, and the tables, coordinate
+/// lists and legends that read “inside the map” or “of the atlas object” are the page's too.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct PdfAtlasPage {
+    /// The page `atlas::atlas_plan` gave: the object, its name, its maps' views.
+    pub atlas: AtlasPageInput,
+    /// The page's maps' content, by item; an item it lacks falls back to `PdfInputs.maps`.
+    #[serde(default)]
+    pub maps: Vec<PdfMap>,
+    #[serde(default)]
+    pub tables: Vec<TableInput>,
+    #[serde(default)]
+    pub coordinates: Vec<CoordinateInput>,
+    #[serde(default)]
+    pub legends: Vec<LegendInput>,
+}
+
+/// A sheet that is written as one page for each of the atlas's objects (docs/adr/0534).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export, export_to = "sheet/"))]
+pub struct PdfAtlas {
+    pub sheet: SheetId,
+    pub pages: Vec<PdfAtlasPage>,
+}
+
 /// What a PDF is made of besides the book.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
@@ -345,6 +378,14 @@ pub struct PdfInputs {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub crs: Option<PdfCrs>,
+    /// A sheet written as one page for each atlas object; the sheet takes its place among the chosen sheets.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub atlas: Option<PdfAtlas>,
+    /// The file's keywords (its information dictionary): where an output says what it was made from.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub keywords: Option<String>,
 }
 
 /// How the PDF is written.

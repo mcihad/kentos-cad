@@ -8,4 +8,9 @@ export type SourcesEditOp = { "kind": "link", path: string, table: string, layer
  * Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
  * north, in the project's system; docs/adr/0510): the working copy of a part of a large table.
  */
-extent?: [number, number, number, number], } | { "kind": "unlink", id: string, } | { "kind": "relink", id: string, path: string, };
+extent?: [number, number, number, number], 
+/**
+ * The attribute that names a row whatever its place in the table (docs/adr/0533 §1): unique and not empty
+ * among the rows taken in.
+ */
+key?: string, } | { "kind": "key", id: string, key?: string, } | { "kind": "extent", id: string, extent?: [number, number, number, number], } | { "kind": "unlink", id: string, } | { "kind": "relink", id: string, path: string, };

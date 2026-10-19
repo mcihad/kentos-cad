@@ -24,6 +24,7 @@ mod inserts;
 mod wall_joins;
 #[cfg(test)]
 mod walls;
+pub mod label_audit;
 pub mod labels;
 pub mod legible;
 pub mod overview;

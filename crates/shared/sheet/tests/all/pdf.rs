@@ -82,6 +82,8 @@ fn inputs_for(book: &SheetBook) -> PdfInputs {
         assets: Vec::new(),
         maps,
         crs: Some(tm33_crs()),
+        atlas: None,
+        keywords: None,
     }
 }
 
@@ -460,6 +462,8 @@ fn pdf_files() {
         assets: Vec::new(),
         maps: Vec::new(),
         crs: None,
+        atlas: None,
+        keywords: None,
     };
     let file = out.join("eksik-karakter.pdf");
     std::fs::write(
@@ -519,5 +523,131 @@ fn the_drawing_s_variables_are_read_after_the_book_s() {
     assert_eq!(
         export_name(&book, "s1", &inputs).unwrap(),
         "2026/41 Ada 1234"
+    );
+}
+
+/// An atlas sheet is a page for each object of the atlas (docs/adr/0534): the planner's pages, each with the maps'
+/// content of its own, one layer group of the file shared by every page, a geographic viewport for each page's map,
+/// and the keywords the host gives; the same bytes every time.
+#[test]
+fn an_atlas_sheet_is_a_page_for_each_object_with_its_own_maps() {
+    use kentos_sheet::atlas::atlas_plan;
+    use kentos_sheet::display::{AtlasFeature, Attribute, CrsInfo};
+    use kentos_sheet::model::{Atlas, VarValue};
+    let t = system_template("sys:gis-atlas").expect("the atlas template");
+    let ids = InstanceIds {
+        sheet: "s1".into(),
+        master: None,
+        items: t.sheet.items.iter().map(|i| i.id.clone()).collect(),
+        master_items: Vec::new(),
+    };
+    let inst = instantiate(t, &ids, &InstanceOptions::default()).expect("instantiate");
+    let mut sheet = inst.sheet;
+    sheet.atlas = Some(Atlas {
+        layer: "parsel".into(),
+        filter: String::new(),
+        sort: Vec::new(),
+        page_name: "ad".into(),
+    });
+    let book = SheetBook {
+        sheets: vec![sheet],
+        assets: inst.assets,
+        ..SheetBook::default()
+    };
+    let features: Vec<AtlasFeature> = (0..3)
+        .map(|i| AtlasFeature {
+            id: format!("p{i}"),
+            bbox: [
+                487_120.0 + f64::from(i) * 40.0,
+                4_417_790.0,
+                487_170.0 + f64::from(i) * 40.0,
+                4_417_850.0,
+            ],
+            attributes: vec![Attribute {
+                name: "ad".into(),
+                value: VarValue::Text(format!("Parsel {i}")),
+            }],
+        })
+        .collect();
+    let plan = atlas_plan(&book, "s1", &features).expect("a plan");
+    assert_eq!(plan.pages.len(), 3);
+    let map_item = plan.pages[0].maps[0].item.clone();
+    let layer = |page: usize| MapLayerContent {
+        id: "parsel".into(),
+        name: "Parseller".into(),
+        paths: vec![MapPath {
+            points: vec![[487_120.0 + page as f64, 4_417_790.0], [487_150.0, 4_417_820.0]],
+            closed: false,
+            holes: Vec::new(),
+            stroke: Some(MapStroke {
+                color: "#000000".into(),
+                width: 0.25,
+                dash: Vec::new(),
+                cap: LineCap::Round,
+                join: LineJoin::Round,
+            }),
+            fill: None,
+        }],
+        texts: Vec::new(),
+    };
+    let pages: Vec<PdfAtlasPage> = plan
+        .pages
+        .iter()
+        .enumerate()
+        .map(|(k, p)| PdfAtlasPage {
+            atlas: p.clone(),
+            maps: vec![PdfMap {
+                item: map_item.clone(),
+                content: MapContent::Vector(VectorMap {
+                    layers: vec![layer(k)],
+                }),
+                corners: None,
+            }],
+            tables: Vec::new(),
+            coordinates: Vec::new(),
+            legends: Vec::new(),
+        })
+        .collect();
+    let inputs = PdfInputs {
+        render: RenderInputs {
+            crs: Some(CrsInfo {
+                name: "TUREF / TM33".into(),
+                tm: Some(tm33()),
+            }),
+            ..RenderInputs::default()
+        },
+        fonts: pdf_fonts(),
+        assets: Vec::new(),
+        maps: Vec::new(),
+        crs: Some(tm33_crs()),
+        atlas: Some(PdfAtlas {
+            sheet: "s1".into(),
+            pages,
+        }),
+        keywords: Some("kentos.atlas/1; durum=abc".into()),
+    };
+    let pdf = to_pdf(&book, &inputs, &PdfOptions::default()).expect("a PDF");
+    let t = text(&pdf);
+    assert_eq!(
+        t.matches("/Type /Page\n").count() + t.matches("/Type /Page ").count(),
+        3,
+        "a page for each object"
+    );
+    assert!(t.contains("/Count 3"));
+    assert_eq!(t.matches("/Type /OCG").count(), 1, "one layer group, shared by the pages");
+    // The atlas map and the overview map beside it, on each page.
+    assert_eq!(t.matches("/Type /Viewport").count(), 6, "a viewport for each placed map of each page");
+    assert!(t.contains("/Keywords (kentos.atlas/1; durum=abc)"));
+    // The same inputs, the same bytes; without the atlas the sheet is one page.
+    assert_eq!(to_pdf(&book, &inputs, &PdfOptions::default()).unwrap(), pdf);
+    let single = PdfInputs {
+        atlas: None,
+        keywords: None,
+        ..inputs.clone()
+    };
+    let one = text(&to_pdf(&book, &single, &PdfOptions::default()).expect("a PDF"));
+    assert_eq!(
+        one.matches("/Type /Page\n").count() + one.matches("/Type /Page ").count(),
+        1
     );
 }
