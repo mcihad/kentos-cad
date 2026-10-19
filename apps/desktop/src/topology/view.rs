@@ -118,6 +118,15 @@ impl App {
         .flatten()
         .collect();
         let banner = (!notes.is_empty()).then(|| {
+            // Değişenleri denetle under the note that the drawing changed (docs/adr/0524).
+            let recheck = stale.then(|| {
+                bar_button(
+                    "topologyCheck",
+                    texts::RECHECK,
+                    texts::RECHECK_HINT,
+                    Some(msg(Event::Recheck)),
+                )
+            });
             container(notes.into_iter().fold(Column::new().spacing(2), |col, n| {
                 col.push(
                     row![
@@ -129,7 +138,7 @@ impl App {
                     .spacing(8)
                     .align_y(Center),
                 )
-            }))
+            }).extend(recheck))
             .padding([4, 10])
             .width(Fill)
             .style(|theme: &iced::Theme| container::Style {
@@ -282,7 +291,12 @@ impl App {
             .filter(|c| !c.findings.is_empty())
             .map(|c| {
                 let open = c.findings.iter().filter(|f| !f.exception).count();
-                plan::count_text(shown.len(), open, c.findings.len() - open)
+                let count = plan::count_text(shown.len(), open, c.findings.len() - open);
+                // A recheck says it went over what changed alone (docs/adr/0524).
+                match c.incremental {
+                    Some(n) => format!("{count} · {n} değişen nesne denetlendi"),
+                    None => count,
+                }
             })
             .unwrap_or_default();
         let one = (chosen.len() == 1 && !stale)

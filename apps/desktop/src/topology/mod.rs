@@ -7,6 +7,12 @@
 //! (`topologyFix`, the step “Topoloji düzelt”) and checks again; İstisna yap
 //! marks the chosen findings in the project's settings. The rules window is
 //! `rules.rs`, the words and cells `plan.rs`, the view `view.rs`.
+//!
+//! A check is bound to the drawing's state it saw (docs/adr/0524): once the
+//! drawing changes its findings are said to be old, and Değişenleri denetle
+//! (and a fix) checks again only what the change can touch
+//! (`topology_rules::incremental::recheck`): the same findings as checking all.
+//! A finding keeps its lasting key across checks; the chosen rows follow it.
 
 mod plan;
 pub(crate) mod rules;
@@ -27,7 +33,7 @@ use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::ops::topology_rules::{
-    self as core, Exception, Finding, Kind, Objects, Rule, check, fix,
+    self as core, Exception, Finding, Kind, Objects, Rule, check, fix, incremental,
 };
 use kentos_interaction::{Level, Vec2, ViewChange};
 use kentos_native_application::geometry::{edit_geometry, shape};
@@ -65,6 +71,24 @@ pub(crate) struct Checked {
     pub revision: u64,
     /// Rules whose layer or other layer the project does not have.
     pub missing: usize,
+    /// The tolerance and the exceptions as checked: either changed, the check is made whole again.
+    pub tolerance: f64,
+    pub exceptions: Vec<Exception>,
+    /// Whether the last check went over what changed alone (docs/adr/0524), and how many objects it looked at.
+    pub incremental: Option<usize>,
+}
+
+impl Checked {
+    /// A finding's lasting key (docs/adr/0524 §1).
+    pub(crate) fn key(&self, f: &Finding) -> String {
+        let uids: Vec<&str> = f
+            .objects
+            .iter()
+            .map(|&k| self.uids.get(k).map_or("", String::as_str))
+            .collect();
+        let rule = self.core_rules.get(f.rule).map_or("", |r| r.id.as_str());
+        incremental::finding_key(rule, &uids, f.at, self.tolerance)
+    }
 }
 
 /// The tab's state for as long as the app lives.
@@ -84,6 +108,8 @@ pub(crate) struct TopologyPanel {
 #[derive(Debug, Clone, PartialEq)]
 pub enum Event {
     Check,
+    /// Değişenleri denetle (docs/adr/0524): only what changed since the check.
+    Recheck,
     Rules,
     Filter(Filter),
     /// A rule by its place in the rules; none: every rule.
@@ -201,12 +227,15 @@ impl App {
             shapes,
             layers,
             uids,
+            tolerance: settings.tolerance(),
             rules: settings.rules,
             core_rules: rules,
             session: doc.session,
             generation: model.generation(),
             revision: model.revision(),
             missing,
+            exceptions,
+            incremental: None,
         };
         let total = checked.findings.len();
         let open = checked.findings.iter().filter(|f| !f.exception).count();
@@ -226,6 +255,147 @@ impl App {
                 Level::Info,
                 format!(
                     "Topoloji denetlendi: {n_rules} kural, {total} bulgu (açık {open}, istisna {}).",
+                    total - open
+                ),
+            );
+        }
+    }
+
+    /// Değişenleri denetle (docs/adr/0524): the rules over what changed since the check, its neighbours and the
+    /// clusters a gap can span; the rest of the findings kept. Checked whole when there was no check, or the rules,
+    /// the tolerance or the exceptions changed. The chosen rows follow their findings' keys.
+    pub(crate) fn topology_recheck(&mut self, quiet: bool) {
+        let Some(doc) = self.document.as_ref() else {
+            return;
+        };
+        let model = &doc.model;
+        let settings = model.settings().topology.clone().unwrap_or_default();
+        let rules = core_rules(&settings.rules);
+        let exceptions: Vec<Exception> = settings
+            .exceptions
+            .iter()
+            .map(|x| Exception {
+                rule: x.rule.clone(),
+                objects: x.objects.iter().map(|id| id.to_text()).collect(),
+                at: Vec2::new(x.at.x, x.at.y),
+            })
+            .collect();
+        let Some(old) = self
+            .topology_checked()
+            .filter(|c| {
+                c.rules == settings.rules
+                    && c.tolerance == settings.tolerance()
+                    && c.exceptions == exceptions
+            })
+            .cloned()
+        else {
+            return self.topology_check(quiet);
+        };
+        if !self.topology_stale() {
+            return;
+        }
+        let chosen: Vec<String> = self
+            .topology
+            .selected
+            .iter()
+            .filter_map(|&i| old.findings.get(i).map(|f| old.key(f)))
+            .collect();
+        let named: Vec<&str> = settings
+            .rules
+            .iter()
+            .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
+            .collect();
+        let objects: Vec<&kentos_contracts::Entity> = model
+            .entities()
+            .filter(|e| named.contains(&e.base().layer_id.as_str()))
+            .collect();
+        let slots: Vec<Slot> = objects.iter().map(|e| Slot(e.base().id)).collect();
+        let shapes: Vec<Shape> = objects.iter().map(|e| shape(e)).collect();
+        let layers: Vec<String> = objects.iter().map(|e| e.base().layer_id.clone()).collect();
+        let uids: Vec<String> = slots
+            .iter()
+            .map(|s| model.uid(*s).map(|u| u.to_string()).unwrap_or_default())
+            .collect();
+        // What changed: an object added, removed, moved or put on another layer; where it was and is.
+        let was: std::collections::HashMap<&str, (&Shape, &str)> = old
+            .uids
+            .iter()
+            .zip(old.shapes.iter().zip(&old.layers))
+            .map(|(u, (s, l))| (u.as_str(), (s, l.as_str())))
+            .collect();
+        let mut changed: std::collections::HashSet<&str> = std::collections::HashSet::new();
+        let mut touched = Vec::new();
+        for (i, u) in uids.iter().enumerate() {
+            match was.get(u.as_str()) {
+                Some((s, l)) if **s == shapes[i] && *l == layers[i] => {}
+                Some((s, _)) => {
+                    changed.insert(u);
+                    touched.push(incremental::shape_bounds(s));
+                    touched.push(incremental::shape_bounds(&shapes[i]));
+                }
+                None => {
+                    changed.insert(u);
+                    touched.push(incremental::shape_bounds(&shapes[i]));
+                }
+            }
+        }
+        let now: std::collections::HashSet<&str> = uids.iter().map(String::as_str).collect();
+        for (u, (s, _)) in &was {
+            if !now.contains(u) {
+                changed.insert(u);
+                touched.push(incremental::shape_bounds(s));
+            }
+        }
+        let n_changed = changed.len();
+        let found = incremental::recheck(
+            &Objects {
+                shapes: &shapes,
+                layers: &layers,
+                uids: &uids,
+            },
+            &rules,
+            settings.tolerance(),
+            &exceptions,
+            &incremental::Previous {
+                findings: &old.findings,
+                uids: &old.uids,
+            },
+            &changed,
+            &touched,
+        );
+        let checked = Checked {
+            findings: found.findings,
+            slots,
+            shapes,
+            layers,
+            uids,
+            rules: settings.rules.clone(),
+            core_rules: rules,
+            session: doc.session,
+            generation: model.generation(),
+            revision: model.revision(),
+            missing: old.missing,
+            tolerance: settings.tolerance(),
+            exceptions,
+            incremental: Some(n_changed),
+        };
+        let total = checked.findings.len();
+        let open = checked.findings.iter().filter(|f| !f.exception).count();
+        let selected: Vec<usize> = checked
+            .findings
+            .iter()
+            .enumerate()
+            .filter(|(_, f)| chosen.contains(&checked.key(f)))
+            .map(|(i, _)| i)
+            .collect();
+        self.topology.checked = Some(checked);
+        self.topology.selected = selected;
+        self.topology.anchor = None;
+        if !quiet {
+            self.say(
+                Level::Info,
+                format!(
+                    "Değişenler denetlendi: {n_changed} nesne değişti; {total} bulgu (açık {open}, istisna {}).",
                     total - open
                 ),
             );
@@ -281,6 +451,7 @@ impl App {
     pub(crate) fn topology_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Check => self.topology_check(false),
+            Event::Recheck => self.topology_recheck(false),
             Event::Rules => return self.open_topology_rules(),
             Event::Filter(f) => {
                 self.topology.filter = f;
@@ -425,7 +596,7 @@ impl App {
             }
             CommandResult::Queued { .. } | CommandResult::Cancelled => return,
         }
-        self.topology_check(true);
+        self.topology_recheck(true);
         // The row at the same place, if any: the next finding of the list.
         if let Some(n) = self
             .topology_checked()

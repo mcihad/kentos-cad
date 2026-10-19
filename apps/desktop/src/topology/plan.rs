@@ -35,7 +35,9 @@ pub mod texts {
     pub const NO_RULES: &str =
         "Projede topoloji kuralı yok. Kurallar… ile katmanlara kural ekleyin.";
     pub const STALE: &str =
-        "Çizim son denetimden sonra değişti; sonuçlar eski olabilir. Denetle ile yenileyin.";
+        "Çizim son denetimden sonra değişti; sonuçlar eski olabilir. Değişenleri denetle ya da Denetle ile yenileyin.";
+    pub const RECHECK: &str = "Değişenleri denetle";
+    pub const RECHECK_HINT: &str = "Yalnız son denetimden sonra değişen nesneleri, komşularını ve boşluk kuralında bağlı alan kümelerini yeniden denetler; öbür bulgular kalır. Sonuç bütün çizimi denetlemekle aynıdır.";
     pub const NONE_SHOWN: &str = "Bu süzgeçte bulgu yok.";
 }
 

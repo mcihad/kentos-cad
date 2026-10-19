@@ -215,6 +215,9 @@ Liste:
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
+- [ ] `CBS-14` artımlı topoloji denetimi (ADR 0524, 19 Ekim): web'de gerekenler: `topologyRun.ts`'in yeniden denetimi
+  `incremental::recheck`'in WASM bağlayıcısıyla (`topologyRules` çağrılarına `recheck`), Topoloji panelinde Değişenleri denetle ve
+  seçimin anahtarla izlenmesi.
 - [ ] `CBS-19` bağlı görünümler ve tema (ADR 0523, 19 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok; geri dönüşte iki
   görünüm, görünüm başına tema (katman durumunun ağaç kopyası), Bağla ve kaydırmalı karşılaştırma; depo `labels_shown_in`'i
   WASM bağlayıcısına açar.
@@ -1950,6 +1953,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
+- [ ] `CBS-14` artımlı topoloji denetimi (dilim): bulgunun kalıcı anahtarı (kural, nesnelerin kimlikleri, yerin tolerans
+  hücresi), denetimin çizimin durumuna bağlanması, `incremental::recheck` (değişenler ve komşuları, en yakına uzaklık ölçen
+  kuralların erimi ve bağlantıları, boşluk kuralında kümeler ve adaları; tam denetimle aynı, rastgele düzenlemelerle sınanır),
+  Değişenleri denetle ve Düzelt'in artımlı yeniden denetimi. Kalan: dış sağlayıcıda revizyon ve görünüm dışı komşular (G2),
+  istisnanın geometri özeti, düzeltmenin etki önizlemesi. — **19 Ekim, [ADR 0524](docs/adr/0524-incremental-topology-findings.md).**
 - [ ] `CBS-19` bağlı görünümler ve tema (dilim): görünümün teması projenin katman durumu (görünürlük, dondurma, stiller ağacın
   kopyasında, çizim ve revizyon değişmez; `layer_states::themed`), stilli çizim görünümün önbelleğinde temayla
   (`scene_themed`), etkin görünümün teması seçme ve kenet (`Spatial::set_theme`), etiketler görünümün temasıyla

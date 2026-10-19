@@ -211,7 +211,7 @@ fn screens() {
     let only = std::env::var("KENTOS_SHOTS_ONLY").ok();
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
-            for name in ["bulgular", "bosluk", "duzelt", "kurallar", "serit"] {
+            for name in ["bulgular", "bosluk", "duzelt", "kurallar", "serit", "degisti", "yeniden"] {
                 if only
                     .as_deref()
                     .is_some_and(|o| !o.split(',').any(|x| x == name))
@@ -246,6 +246,13 @@ fn screens() {
                 if name == "kurallar" {
                     let _ = app.update(Message::Run("topology.rules"));
                 }
+                if name == "degisti" || name == "yeniden" {
+                    // The road moved after the check (docs/adr/0524): the findings old, then checked again.
+                    move_road(&mut app);
+                    if name == "yeniden" {
+                        ev(&mut app, Event::Recheck);
+                    }
+                }
                 if name == "serit" {
                     // The CBS ribbon's Analiz: its Topoloji panel beside Karşılaştırma.
                     let _ = app.update(Message::RibbonTab("analysis"));
@@ -260,4 +267,42 @@ fn screens() {
             }
         }
     }
+}
+
+/// The road (#17) moved 0.4 m east through `cad.entities.transform`.
+fn move_road(app: &mut App) {
+    let doc = &mut app.document.as_mut().expect("open").model;
+    let uid = doc.uid(Slot(17)).expect("the road").to_string();
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(doc),
+        "cad.entities.transform",
+        kentos_contracts::CallOp::Execute,
+        serde_json::json!({ "uids": [uid], "transform": { "kind": "move", "dx": 0.4, "dy": 0.0 } }),
+    );
+    assert!(answer.is_ok());
+}
+
+/// Değişenleri denetle (docs/adr/0524): after an object moves the findings are old; the recheck finds what checking
+/// all finds, and the chosen row follows its finding by its lasting key.
+#[test]
+fn the_recheck_after_a_move_finds_what_checking_all_finds() {
+    let mut app = checked();
+    ev(&mut app, Event::Press(0));
+    let key = {
+        let c = app.topology_checked().expect("checked");
+        c.key(&c.findings[app.topology.selected[0]])
+    };
+    move_road(&mut app);
+    assert!(app.topology_stale(), "the findings are old");
+    ev(&mut app, Event::Recheck);
+    assert!(!app.topology_stale());
+    let c = app.topology_checked().expect("rechecked");
+    assert_eq!(c.incremental, Some(1), "one object changed");
+    assert_eq!(c.key(&c.findings[app.topology.selected[0]]), key, "the chosen row follows its finding");
+    let mut again = app.topology_seen().expect("the tab").1;
+    ev(&mut app, Event::Check);
+    let mut all = app.topology_seen().expect("the tab").1;
+    again.sort();
+    all.sort();
+    assert_eq!(again, all);
 }

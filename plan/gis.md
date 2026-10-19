@@ -232,6 +232,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-14 — Topoloji bulgularını artımlı ve kaynak revision'ına bağlı izle — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0524](../docs/adr/0524-incremental-topology-findings.md)): bulgunun kalıcı anahtarı, denetimin çizimin durumuna bağlanması, yalnız değişenin, komşularının ve boşluk kümesinin yeniden denetlenmesi (rastgele düzenlemelerde tam denetimle aynı), Değişenleri denetle. Kalan: dış sağlayıcıda revizyon ve görünüm dışı komşular, istisnanın geometri bağlamı, düzeltmenin etki önizlemesi.*
+
   **Mevcut:** 13 topoloji kuralı, bulgu paneli, düzeltme ve istisna var [K07]. ArcGIS'in Error Inspector yaklaşımındaki yararlı taraf, hatayı haritada bulup gerekçeli olarak çözme akışıdır. [A01]
 
   **Yapılacak kalan iş:** Mevcut 13 kuralı, bulgu panelini, düzeltme ve istisna araçlarını yeniden yapma. Bunların üzerine kaynak revision'ına bağlı kalıcı bulgu kimliği, değişen bölge/komşuluk takibi ve yalnız etkilenen veriyi yeniden denetleme ekle. Kural değişimi veya feature revision'ı eski sonucu geçersiz kılmalı. İstisna aynı kimlik/geometri bağlamı değişince yeniden değerlendirilmelidir; yeni hatayı gizlememeli. Dış provider'dan tam komşuluk alınmadan temiz QA sonucu verme. Yeni kalite kaydı mevcut panelde gösterilsin; düzeltmenin kaynak etkisi ve ölçü farkı önizlenebilsin.

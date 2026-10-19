@@ -66,6 +66,7 @@ mod text_along;
 mod tiles;
 mod time;
 mod topology;
+mod topology_incremental;
 mod topology_rules;
 mod vertex_points;
 mod vertex_table;

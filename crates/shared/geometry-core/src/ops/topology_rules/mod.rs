@@ -10,6 +10,7 @@
 mod areas;
 pub mod calls;
 mod fixes;
+pub mod incremental;
 mod lines;
 
 pub use fixes::{Change, fix};
