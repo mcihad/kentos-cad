@@ -1,0 +1,148 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: assets a preparation refuses (no grid, a type a raster does not hold, three bands) and ones it takes, with the grid in the item's properties.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberReturned": 2,
+ "numberMatched": 2,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "GRIDS_1",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-05-05T08:00:00Z",
+    "eo:cloud_cover": 3,
+    "proj:epsg": 32637,
+    "proj:shape": [
+     200,
+     300
+    ],
+    "proj:transform": [
+     10,
+     0,
+     300000,
+     0,
+     -10,
+     4400000
+    ]
+   },
+   "assets": {
+    "plain": {
+     "href": "https://h.example/plain.tif",
+     "roles": [
+      "data"
+     ],
+     "raster:bands": [
+      {
+       "data_type": "float32",
+       "nodata": -9999
+      }
+     ]
+    },
+    "complex": {
+     "href": "https://h.example/complex.tif",
+     "raster:bands": [
+      {
+       "data_type": "cint16"
+      }
+     ]
+    },
+    "notype": {
+     "href": "https://h.example/notype.tif",
+     "eo:bands": [
+      {
+       "common_name": "red"
+      }
+     ]
+    },
+    "rgb": {
+     "href": "https://h.example/rgb.tif",
+     "eo:bands": [
+      {
+       "common_name": "red"
+      },
+      {
+       "common_name": "green"
+      },
+      {
+       "common_name": "blue"
+      }
+     ]
+    },
+    "dem": {
+     "href": "https://h.example/dem.tif",
+     "roles": [
+      "data"
+     ],
+     "raster:bands": [
+      {
+       "data_type": "int16",
+       "nodata": -32768,
+       "scale": 1,
+       "offset": 0
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/GRIDS_1"
+    }
+   ]
+  },
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "GRIDS_2",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-05-06T08:00:00Z",
+    "eo:cloud_cover": 4,
+    "proj:epsg": 32637
+   },
+   "assets": {
+    "nogrid": {
+     "href": "https://h.example/nogrid.tif",
+     "raster:bands": [
+      {
+       "data_type": "uint16"
+      }
+     ]
+    },
+    "halfgrid": {
+     "href": "https://h.example/halfgrid.tif",
+     "proj:shape": [
+      10,
+      10
+     ],
+     "raster:bands": [
+      {
+       "data_type": "uint16"
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/GRIDS_2"
+    }
+   ]
+  }
+ ],
+ "links": []
+}

@@ -37,6 +37,8 @@ kentos-formats = { path = "../../shared/formats" }
 kentos-kcad = { path = "../../shared/kcad" }
 # A linked table's file digest (docs/adr/0327 §5): SHA-256, the workspace's locked `sha2`.
 sha2 = { workspace = true }
+# STAC discovery and preparation (docs/adr/0528): the services core's rules; the fetch is the host's.
+kentos-services = { path = "../../shared/services" }
 # The protocol's wrapper (docs/adr/0253) reads every command's input as the type it is.
 serde = { workspace = true }
 serde_json = { workspace = true }

@@ -1,0 +1,9 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: no item matches.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberMatched": 0,
+ "numberReturned": 0,
+ "features": [],
+ "links": []
+}

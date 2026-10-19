@@ -18,6 +18,7 @@
 //! - [`picture`]: a picture tile cut into the raster atlas's slots.
 //! - [`cache`]: HTTP's caching rules; [`presets`]: the ready basemaps;
 //!   [`attribution`]: credits as text.
+//! - [`stac`]: STAC discovery and data preparation (docs/adr/0528).
 //! - [`geocode`]: Adres arama's online providers (docs/adr/0229 §10).
 //! - [`connect`]: Harita servisi's Bağlan (the requests in turn, the offer)
 //!   and the service layer a choice makes; [`feed`]: Servisten veri al's,
@@ -43,6 +44,7 @@ pub mod profile;
 pub mod query;
 pub mod request;
 pub mod source;
+pub mod stac;
 pub mod style;
 pub mod template;
 

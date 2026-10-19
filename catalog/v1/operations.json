@@ -724,6 +724,14 @@
       ],
       "note": "VRT'yi ve isteğe bağlı rasteri komut yazar; pencere planını gösterir (ADR 0517 §5)."
     },
+    "raster.stac": {
+      "level": "semantic",
+      "via": [
+        "cad.stac.search",
+        "cad.stac.prepare"
+      ],
+      "note": "Aramayı cad.stac.search, hazırlamayı cad.stac.prepare yapar; pencere seçimleri ve planı gösterir (ADR 0528 §7)."
+    },
     "pointcloud.add": {
       "level": "semantic",
       "via": [

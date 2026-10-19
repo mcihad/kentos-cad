@@ -6270,6 +6270,23 @@
    "tests": 0
   },
   {
+   "id": "raster.stac",
+   "kind": "command",
+   "title": "STAC'ta ara",
+   "level": "semantic",
+   "via": [
+    "cad.stac.search",
+    "cad.stac.prepare"
+   ],
+   "operation": null,
+   "python": "kentos.cad.stac.search, kentos.cad.stac.prepare",
+   "mcp": "cad.stac.search, cad.stac.prepare",
+   "note": "Aramayı cad.stac.search, hazırlamayı cad.stac.prepare yapar; pencere seçimleri ve planı gösterir (ADR 0528 §7).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.style",
    "kind": "command",
    "title": "Raster stili…",

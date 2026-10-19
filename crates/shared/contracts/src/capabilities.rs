@@ -1507,6 +1507,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // STAC keşfi ve veri hazırlama (docs/adr/0528).
+    Entry {
+        id: "cad.stac.search",
+        refusals: &[
+            &["invalid_stac_endpoint", "invalid_stac_bbox", "invalid_stac_datetime", "invalid_stac_cloud_cover"],
+            &["invalid_stac_limit", "invalid_stac_collection", "stac_next_foreign"],
+            &["stac_unavailable", "stac_request_failed", "stac_response_unreadable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.stac.prepare",
+        refusals: &[
+            &["invalid_stac_item", "stac_assets_empty", "stac_too_many_assets", "stac_asset_not_found"],
+            &["stac_href_not_http", "stac_no_grid", "stac_unsupported_sample", "stac_multiband", "stac_qa_unknown", "stac_qa_is_data"],
+            &["crs_mismatch", "invalid_group_name"],
+            REVISION,
+        ],
+        warnings: &[
+            "stac_signed_href_stripped",
+            "stac_grid_differs",
+            "stac_scale_differs",
+            "stac_item_incomplete",
+            "stac_qa_grid_differs",
+        ],
+        targets: none,
+    },
     // Raster oturt'un kaydı (docs/adr/0518).
     Entry {
         id: "cad.rasters.georef",

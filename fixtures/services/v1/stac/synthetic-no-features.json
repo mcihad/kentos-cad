@@ -1,0 +1,5 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: an error document, not an item collection.",
+ "code": "BadRequest",
+ "description": "Unknown collection"
+}
