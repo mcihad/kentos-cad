@@ -4,6 +4,7 @@ import type { LabelPin } from "./LabelPin";
 import type { LineType } from "./LineType";
 import type { LookPart } from "./LookPart";
 import type { RasterDataset } from "./RasterDataset";
+import type { RasterGeoref } from "./RasterGeoref";
 import type { RasterSample } from "./RasterSample";
 import type { RasterStyle } from "./RasterStyle";
 import type { Wipeout } from "./Wipeout";
@@ -108,4 +109,8 @@ opacity?: number,
 /**
  * A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
  */
-dataset?: RasterDataset, };
+dataset?: RasterDataset, 
+/**
+ * How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
+ */
+georef?: RasterGeoref, };

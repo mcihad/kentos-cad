@@ -323,6 +323,7 @@ fn raster_object(
             style,
             opacity: None,
             dataset: None,
+            georef: None,
         },
     })
 }

@@ -6225,13 +6225,13 @@
    "id": "raster.georef",
    "kind": "command",
    "title": "Raster oturt…",
-   "level": "geometry",
+   "level": "semantic",
    "via": [
-    "cad.entities.edit"
+    "cad.rasters.georef"
    ],
-   "operation": "rasterGeoref",
-   "python": "kentos.cad.entities.edit",
-   "mcp": "cad.entities.edit",
+   "operation": null,
+   "python": "kentos.cad.rasters.georef",
+   "mcp": "cad.rasters.georef",
    "note": null,
    "scope": "shared",
    "desktop": "implemented",

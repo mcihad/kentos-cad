@@ -86,6 +86,7 @@ pub fn run_raster(
                         style,
                         opacity: None,
                         dataset: None,
+                        georef: None,
                     },
                 })
             })

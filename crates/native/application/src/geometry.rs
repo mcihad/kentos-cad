@@ -660,6 +660,8 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         )?,
         opacity,
         dataset,
+        // A raster the core moved or reshaped is no longer where its record put it (docs/adr/0518 §3).
+        georef: None,
     })
 }
 

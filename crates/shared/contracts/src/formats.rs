@@ -215,7 +215,9 @@ use crate::layer::LineType;
 ///    the typed columns an insert's optional fourth field, its clipping as one JSON text. The web's copy stays 53.
 /// 93 (docs/adr/0519 §1): the settings' `heights` and `coordinateEpoch`: `.kcad` document schema 86. The web's copy
 ///    stays 53.
-pub const FORMATS_VERSION: u32 = 93;
+/// 94 (docs/adr/0518 §1): a raster's `georef` (its georeference record): `.kcad` document schema 88; in the typed
+///    columns a raster's option 5, the record as one JSON text. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 94;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -124,6 +124,7 @@ COMMANDS: dict[str, Any] = {
     "cad.processing.run": processing.run,
     "cad.processing.tools": processing.tools,
     "cad.ramps.create": ramps.create,
+    "cad.rasters.georef": rasters.georef,
     "cad.rasters.mosaic": rasters.mosaic,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,

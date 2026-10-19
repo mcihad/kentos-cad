@@ -1499,6 +1499,20 @@ FormWidgetName = Literal["text", "textArea", "number", "date", "check", "switch"
 """The names of :class:`FormWidget`, for a plain string."""
 
 
+class GeorefMethod(_StrEnum):
+    """A transform from the source's pixels to the drawing (docs/adr/0204 §6)."""
+    HELMERT = "helmert"
+    AFFINE = "affine"
+    PROJECTIVE = "projective"
+    POLY2 = "poly2"
+    POLY3 = "poly3"
+    THIN_PLATE = "thinPlate"
+
+
+GeorefMethodName = Literal["helmert", "affine", "projective", "poly2", "poly3", "thinPlate"]
+"""The names of :class:`GeorefMethod`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -18242,6 +18256,191 @@ class GeoidModel(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GeorefMade(_Model):
+    """The resampled raster the host wrote itself (the desktop, on a thread of its own, by the plan's grid): a file, or
+    an embedded raster of the project's library. The command reads it and refuses one that is not the plan's grid.
+    """
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeorefMade:
+        return cls(
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GeorefOutput(_Model):
+    """A resampled raster's grid: north-up, its corner on a multiple of its pixel (docs/adr/0204 §6).
+    Attributes:
+        affine: `[x₀, s, 0, y₀, 0, −s]`. Unit: system.
+        width: Unit: px.
+        height: Unit: px.
+        pixel: The pixel's side, s. Unit: length.
+        digest: The written file's SHA-256 when it was written.
+    """
+    affine: list[float]
+    width: int
+    height: int
+    pixel: float
+    digest: str | None | Unset = UNSET
+    resampling: RasterResampling | RasterResamplingName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["width"] = self.width
+        out["height"] = self.height
+        out["pixel"] = float(self.pixel)
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        if self.resampling is not UNSET:
+            out["resampling"] = _enum_out(self.resampling)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeorefOutput:
+        return cls(
+            affine=[float(e0) for e0 in data["affine"]],
+            width=data["width"],
+            height=data["height"],
+            pixel=float(data["pixel"]),
+            digest=data.get("digest", UNSET),
+            resampling=_enum_in(RasterResampling, data["resampling"]) if "resampling" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GeorefPoint(_Model):
+    """A control or check point: a pixel of the source (column, row; pixel corners, 0, 0 the upper left corner of the
+    upper left pixel, as GDAL's GCPs) and where it is (`target`, in the record's `srid`).
+    Attributes:
+        pixel: Unit: px.
+        target: Its east and north (a geographic system's longitude and latitude, degrees). Unit: system.
+        check: A check point: kept out of the fit; its error says how good the fit is where no control point is.
+        name: What the user calls it (a mark on the sheet, a survey point's name).
+        off: Left out (Kullan off): neither fits nor checks; its residual is still shown.
+    """
+    pixel: list[float]
+    target: list[float]
+    check: bool | Unset = UNSET
+    name: str | None | Unset = UNSET
+    off: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["pixel"] = [float(e0) for e0 in self.pixel]
+        out["target"] = [float(e0) for e0 in self.target]
+        if self.check is not UNSET:
+            out["check"] = self.check
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.off is not UNSET:
+            out["off"] = self.off
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeorefPoint:
+        return cls(
+            pixel=[float(e0) for e0 in data["pixel"]],
+            target=[float(e0) for e0 in data["target"]],
+            check=data.get("check", UNSET),
+            name=data.get("name", UNSET),
+            off=data.get("off", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GeorefResidual(_Model):
+    """A point's residual (control, left out) or error (check): the transformed pixel less its target, in the project's
+    system; none beyond a projective's horizon.
+    Attributes:
+        target: Its target in the project's system (carried from `srid`). Unit: system.
+        d: Unit: length.
+        dx: Unit: length.
+        dy: Unit: length.
+    """
+    target: list[float]
+    d: float | None | Unset = UNSET
+    dx: float | None | Unset = UNSET
+    dy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["target"] = [float(e0) for e0 in self.target]
+        if self.d is not UNSET:
+            out["d"] = None if self.d is None else float(self.d)
+        if self.dx is not UNSET:
+            out["dx"] = None if self.dx is None else float(self.dx)
+        if self.dy is not UNSET:
+            out["dy"] = None if self.dy is None else float(self.dy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeorefResidual:
+        return cls(
+            target=[float(e0) for e0 in data["target"]],
+            d=UNSET if "d" not in data else None if data["d"] is None else float(data["d"]),
+            dx=UNSET if "dx" not in data else None if data["dx"] is None else float(data["dx"]),
+            dy=UNSET if "dy" not in data else None if data["dy"] is None else float(data["dy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GeorefSource(_Model):
+    """The raster the points' pixels are of: what it read and its size.
+    Attributes:
+        width: Unit: px.
+        height: Unit: px.
+        asset: The project library's raster it was (embedded).
+        digest: Its bytes' SHA-256 (64 lowercase hex digits) when they were read: the revision the points belong to.
+        file: The file it was (linked), as kept.
+        url: The address it was read from.
+    """
+    width: int
+    height: int
+    asset: str | None | Unset = UNSET
+    digest: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["width"] = self.width
+        out["height"] = self.height
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.url is not UNSET:
+            out["url"] = self.url
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeorefSource:
+        return cls(
+            width=data["width"],
+            height=data["height"],
+            asset=data.get("asset", UNSET),
+            digest=data.get("digest", UNSET),
+            file=data.get("file", UNSET),
+            url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgExported(_Model):
     """What `file.export.gpkg` wrote, or with `plan` would write.
     Attributes:
@@ -30237,6 +30436,7 @@ class RasterEntity(Entity):
         color: Colour override; absent = the layer's colour ("katmana göre").
         dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        georef: How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
         label_pins: Its labels moved, turned, pinned or hidden by hand (docs/adr/0212
             §3.7), one a class at most.
         line_pattern: Its own project line type by its name (docs/adr/0313 §1), its nearest built-in in `line_type`; absent:
@@ -30273,6 +30473,7 @@ class RasterEntity(Entity):
     color: str | None | Unset = UNSET
     dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
+    georef: RasterGeoref | None | Unset = UNSET
     label: str | None | Unset = UNSET
     label_pins: list[LabelPin] | Unset = UNSET
     line_pattern: str | None | Unset = UNSET
@@ -30310,6 +30511,8 @@ class RasterEntity(Entity):
             out["dataset"] = None if self.dataset is None else self.dataset.to_json()
         if self.file is not UNSET:
             out["file"] = self.file
+        if self.georef is not UNSET:
+            out["georef"] = None if self.georef is None else self.georef.to_json()
         if self.label is not UNSET:
             out["label"] = self.label
         if self.label_pins is not UNSET:
@@ -30355,6 +30558,7 @@ class RasterEntity(Entity):
             color=data.get("color", UNSET),
             dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
+            georef=UNSET if "georef" not in data else None if data["georef"] is None else RasterGeoref.from_json(data["georef"]),
             label=data.get("label", UNSET),
             label_pins=[LabelPin.from_json(e0) for e0 in data["labelPins"]] if "labelPins" in data else UNSET,
             line_pattern=data.get("linePattern", UNSET),
@@ -30386,6 +30590,7 @@ class RasterFields(_Model):
             `asset` and `file` is given.
         dataset: A NetCDF file's variable and slice it shows (docs/adr/0243 §6).
         file: The file it shows (linked): absolute, or relative to the drawing's folder.
+        georef: How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
         opacity: 0.1 to 1; absent: opaque. Unit: 1.
         url: An HTTP or HTTPS address read by ranges (a COG; docs/adr/0207 §1).
     """
@@ -30399,6 +30604,7 @@ class RasterFields(_Model):
     asset: str | None | Unset = UNSET
     dataset: RasterDataset | None | Unset = UNSET
     file: str | None | Unset = UNSET
+    georef: RasterGeoref | None | Unset = UNSET
     opacity: float | None | Unset = UNSET
     url: str | None | Unset = UNSET
 
@@ -30417,6 +30623,8 @@ class RasterFields(_Model):
             out["dataset"] = None if self.dataset is None else self.dataset.to_json()
         if self.file is not UNSET:
             out["file"] = self.file
+        if self.georef is not UNSET:
+            out["georef"] = None if self.georef is None else self.georef.to_json()
         if self.opacity is not UNSET:
             out["opacity"] = None if self.opacity is None else float(self.opacity)
         if self.url is not UNSET:
@@ -30436,8 +30644,60 @@ class RasterFields(_Model):
             asset=data.get("asset", UNSET),
             dataset=UNSET if "dataset" not in data else None if data["dataset"] is None else RasterDataset.from_json(data["dataset"]),
             file=data.get("file", UNSET),
+            georef=UNSET if "georef" not in data else None if data["georef"] is None else RasterGeoref.from_json(data["georef"]),
             opacity=UNSET if "opacity" not in data else None if data["opacity"] is None else float(data["opacity"]),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RasterGeoref(_Model):
+    """How a raster was georeferenced (docs/adr/0518 §1): enough to do it again.
+    Attributes:
+        points: The control, check and left-out points, as given.
+        check_max: Unit: length.
+        check_rmse: The check points' root mean square error and largest error (the project's length unit). Unit: length.
+        m0: The control points' m0 (the project's length unit); none for the thin plate or without redundancy. Unit: length.
+        output: The output grid, for a resampled raster (projective, polynomials, thin plate).
+        srid: The targets' coordinate system (EPSG) when it is not the project's; they were carried to the project's. Unit: epsg.
+    """
+    method: GeorefMethod | GeorefMethodName
+    points: list[GeorefPoint]
+    source: GeorefSource
+    check_max: float | None | Unset = UNSET
+    check_rmse: float | None | Unset = UNSET
+    m0: float | None | Unset = UNSET
+    output: GeorefOutput | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["points"] = [e0.to_json() for e0 in self.points]
+        out["source"] = self.source.to_json()
+        if self.check_max is not UNSET:
+            out["checkMax"] = None if self.check_max is None else float(self.check_max)
+        if self.check_rmse is not UNSET:
+            out["checkRmse"] = None if self.check_rmse is None else float(self.check_rmse)
+        if self.m0 is not UNSET:
+            out["m0"] = None if self.m0 is None else float(self.m0)
+        if self.output is not UNSET:
+            out["output"] = None if self.output is None else self.output.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RasterGeoref:
+        return cls(
+            method=_enum_in(GeorefMethod, data["method"]),
+            points=[GeorefPoint.from_json(e0) for e0 in data["points"]],
+            source=GeorefSource.from_json(data["source"]),
+            check_max=UNSET if "checkMax" not in data else None if data["checkMax"] is None else float(data["checkMax"]),
+            check_rmse=UNSET if "checkRmse" not in data else None if data["checkRmse"] is None else float(data["checkRmse"]),
+            m0=UNSET if "m0" not in data else None if data["m0"] is None else float(data["m0"]),
+            output=UNSET if "output" not in data else None if data["output"] is None else GeorefOutput.from_json(data["output"]),
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -30514,6 +30774,114 @@ class RasterStyle(_Model):
             resampling=_enum_in(RasterResampling, data["resampling"]) if "resampling" in data else UNSET,
             stretch=_enum_in(RasterStretch, data["stretch"]) if "stretch" in data else UNSET,
             z_factor=UNSET if "zFactor" not in data else None if data["zFactor"] is None else float(data["zFactor"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGeoref(_Model):
+    """Input of `cad.rasters.georef` v1. Refusals, in this order: `invalid_uid`, `entity_not_found`, `not_a_raster`,
+    `layer_locked`, `invalid_control_point`, `unknown_srid`, `target_not_converted`, `too_few_control_points`,
+    `control_points_duplicate`, `control_points_collinear`, `georef_singular`, `invalid_pixel_size`, `georef_grid`,
+    `invalid_file_path`, `file_not_found`, `import_unreadable`, `unknown_asset`, `georef_output_mismatch`,
+    `invalid_revision`, `revision_conflict`.
+    Attributes:
+        uid: The raster.
+        points: Control, check and left-out points; the pixels are the source's (a resampled raster's record's source).
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+        made: The output the host resampled itself by the plan's grid; none: the command resamples.
+        output: Where a resampled linked raster is written (absolute, or relative to the drawing's folder); none: beside its
+            source as `<ad>-oturtulmus.tif`. An embedded source's output is embedded.
+        pixel: A resampled output's pixel side; none: the transform's mean scale at the control points. Unit: length.
+        srid: The targets' system (EPSG) when not the project's: they are carried to the project's system first. Unit: epsg.
+    """
+    uid: str
+    method: GeorefMethod | GeorefMethodName
+    points: list[GeorefPoint]
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    made: GeorefMade | None | Unset = UNSET
+    output: str | None | Unset = UNSET
+    pixel: float | None | Unset = UNSET
+    resampling: RasterResampling | RasterResamplingName | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["method"] = _enum_out(self.method)
+        out["points"] = [e0.to_json() for e0 in self.points]
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.made is not UNSET:
+            out["made"] = None if self.made is None else self.made.to_json()
+        if self.output is not UNSET:
+            out["output"] = self.output
+        if self.pixel is not UNSET:
+            out["pixel"] = None if self.pixel is None else float(self.pixel)
+        if self.resampling is not UNSET:
+            out["resampling"] = _enum_out(self.resampling)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGeoref:
+        return cls(
+            uid=data["uid"],
+            method=_enum_in(GeorefMethod, data["method"]),
+            points=[GeorefPoint.from_json(e0) for e0 in data["points"]],
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+            made=UNSET if "made" not in data else None if data["made"] is None else GeorefMade.from_json(data["made"]),
+            output=data.get("output", UNSET),
+            pixel=UNSET if "pixel" not in data else None if data["pixel"] is None else float(data["pixel"]),
+            resampling=_enum_in(RasterResampling, data["resampling"]) if "resampling" in data else UNSET,
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RastersGeoreffed(_Model):
+    """Output of `cad.rasters.georef` v1 (its plan's too: what it would write, nothing written).
+    Attributes:
+        residuals: Every point's, in the input's order.
+        control: Unit: count.
+        checks: Unit: count.
+        raster: The raster as it is written: its affine, size, source and record.
+        written: The file a resampling wrote (or, planned, will write).
+    """
+    uid: str
+    residuals: list[GeorefResidual]
+    control: int
+    checks: int
+    raster: RasterFields
+    revision: str
+    written: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["residuals"] = [e0.to_json() for e0 in self.residuals]
+        out["control"] = self.control
+        out["checks"] = self.checks
+        out["raster"] = self.raster.to_json()
+        out["revision"] = self.revision
+        if self.written is not UNSET:
+            out["written"] = self.written
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RastersGeoreffed:
+        return cls(
+            uid=data["uid"],
+            residuals=[GeorefResidual.from_json(e0) for e0 in data["residuals"]],
+            control=data["control"],
+            checks=data["checks"],
+            raster=RasterFields.from_json(data["raster"]),
+            revision=data["revision"],
+            written=data.get("written", UNSET),
         )
 
 
@@ -50318,6 +50686,13 @@ __all__ = [
     "GeographicCrsSystem",
     "GeographicDefinition",
     "GeoidModel",
+    "GeorefMade",
+    "GeorefMethod",
+    "GeorefMethodName",
+    "GeorefOutput",
+    "GeorefPoint",
+    "GeorefResidual",
+    "GeorefSource",
     "GpkgExported",
     "GpkgImported",
     "GpkgTableExported",
@@ -50854,6 +51229,7 @@ __all__ = [
     "RasterEntity",
     "RasterEntityGeometry",
     "RasterFields",
+    "RasterGeoref",
     "RasterRender",
     "RasterRenderName",
     "RasterResampling",
@@ -50863,6 +51239,8 @@ __all__ = [
     "RasterStretch",
     "RasterStretchName",
     "RasterStyle",
+    "RastersGeoref",
+    "RastersGeoreffed",
     "RastersMosaic",
     "RastersMosaicked",
     "RayEntity",

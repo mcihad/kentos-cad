@@ -53,15 +53,11 @@ pub enum Output {
     Memory,
 }
 
-/// A resampling's result: the new raster's grid and kind, and its file or bytes.
+/// A resampling's result: its size, and its file or bytes (`cad.rasters.georef` reads the rest from them, docs/adr/0518).
 #[derive(Clone, Debug)]
 pub struct Warped {
-    pub affine: [f64; 6],
     pub width: u32,
     pub height: u32,
-    pub bands: u32,
-    pub sample: kentos_contracts::RasterSample,
-    pub alpha: bool,
     pub path: Option<PathBuf>,
     pub bytes: Option<Arc<Vec<u8>>>,
 }
@@ -161,7 +157,6 @@ fn run(
         super::tiles::service().wake();
     }
     let grid = job.grid;
-    let (bands, sample, alpha) = (job.bands, job.sample, job.alpha);
     let (dirs, head) = job
         .finish()
         .map_err(|e| e.0)
@@ -185,12 +180,8 @@ fn run(
         }
     };
     Ok(Warped {
-        affine: grid.affine,
         width: grid.width,
         height: grid.height,
-        bands,
-        sample,
-        alpha,
         path,
         bytes,
     })

@@ -7,7 +7,7 @@
 //! 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-stili,raster-oturt cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=raster-vadi,raster-orto,raster-dem,raster-ekle,raster-stili,raster-oturt,raster-oturt-ince-plaka,raster-oturt-kayit cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -103,6 +103,34 @@ fn select(app: &mut App, layer: &str) {
     app.selection.set(vec![slot]);
 }
 
+/// Raster oturt's points on the scanned sheet (Kullan, Denetim, Ad, Sütun, Satır, Hedef Y, Hedef X): four corners
+/// fitted to, two check points (docs/adr/0518).
+const FIT_ROWS: [[&str; 7]; 6] = [
+    ["1", "0", "P1", "12.5", "14.0", "486882.6", "4420546.1"],
+    ["1", "0", "P2", "287.0", "11.5", "487157.2", "4420548.4"],
+    ["1", "0", "P3", "283.5", "248.0", "487153.9", "4420312.0"],
+    ["1", "0", "P4", "9.0", "251.5", "486879.0", "4420308.6"],
+    ["1", "1", "D1", "148.0", "130.0", "487018.3", "4420429.6"],
+    ["1", "1", "D2", "60.0", "200.0", "486929.9", "4420359.8"],
+];
+
+/// The rows into Raster oturt's window, solved.
+fn fit_rows(app: &mut App, rows: &[[&str; 7]]) {
+    let form = &mut app.calc.raster_fit;
+    form.rows = rows
+        .iter()
+        .map(|r| {
+            let mut row: crate::calc::raster_fit::Row = Default::default();
+            for (k, v) in r.iter().enumerate() {
+                row[k] = (*v).to_owned();
+            }
+            row
+        })
+        .collect();
+    let doc = app.document.as_ref().expect("a drawing");
+    app.calc.raster_fit.solve(&doc.model);
+}
+
 /// Draws until the raster service has made every tile the view asked for.
 pub(crate) fn tiles_made(s: &mut Snapshot, app: &mut App) {
     let mut update = |app: &mut App, message: Message| {
@@ -189,24 +217,37 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
                 select(app, "tarama");
                 run(app, "raster.georef");
-                let rows = [
-                    ["1", "12.5", "14.0", "486882.6", "4420546.1"],
-                    ["1", "287.0", "11.5", "487157.2", "4420548.4"],
-                    ["1", "283.5", "248.0", "487153.9", "4420312.0"],
-                    ["1", "9.0", "251.5", "486879.0", "4420308.6"],
-                ];
-                let form = &mut app.calc.raster_fit;
-                form.rows = rows
-                    .iter()
-                    .map(|r| {
-                        let mut row: [String; 8] = Default::default();
-                        for (k, v) in r.iter().enumerate() {
-                            row[k] = (*v).to_owned();
-                        }
-                        row
-                    })
-                    .collect();
-                form.solve();
+                fit_rows(app, &FIT_ROWS);
+            },
+            tiles_made,
+        ),
+        // Raster oturt by the thin plate: the check points' errors, the output grid the command plans (docs/adr/0518).
+        (
+            "raster-oturt-ince-plaka",
+            |app| {
+                opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+                select(app, "tarama");
+                run(app, "raster.georef");
+                app.calc.raster_fit.method = kentos_contracts::GeorefMethod::ThinPlate;
+                fit_rows(app, &FIT_ROWS);
+            },
+            tiles_made,
+        ),
+        // The affine applied, the window opened again: the rows from the raster's record, its line (docs/adr/0518).
+        (
+            "raster-oturt-kayit",
+            |app| {
+                opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+                select(app, "tarama");
+                run(app, "raster.georef");
+                fit_rows(app, &FIT_ROWS);
+                let task = app.update(crate::calc::raster_fit::raster_fit_event(
+                    crate::calc::raster_fit::Event::Apply,
+                ));
+                crate::files_testing::drive(app, task);
+                app.calc.raster_fit.rows = vec![Default::default(); 4];
+                select(app, "tarama");
+                run(app, "raster.georef");
             },
             tiles_made,
         ),

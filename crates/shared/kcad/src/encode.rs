@@ -1766,6 +1766,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 88 (docs/adr/0518 §1): a raster's georeference record.
+    if doc.entities.iter().any(|e| matches!(e, Entity::Raster(r) if r.raster.georef.is_some())) {
+        return crate::SCHEMA_WITH_GEOREF;
+    }
     // Schema 87 (docs/adr/0521): a network's turns or levels, a speed cost's time profile.
     if doc.settings.networks.iter().any(|n| {
         n.turns.is_some() || n.levels.is_some() || n.costs.iter().any(|c| !c.periods.is_empty())

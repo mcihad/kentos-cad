@@ -746,11 +746,10 @@
       "operation": "pointCloudStyle"
     },
     "raster.georef": {
-      "level": "geometry",
+      "level": "semantic",
       "via": [
-        "cad.entities.edit"
-      ],
-      "operation": "rasterGeoref"
+        "cad.rasters.georef"
+      ]
     },
     "pointcloud.query": {
       "level": "query"

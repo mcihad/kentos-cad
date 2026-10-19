@@ -677,6 +677,7 @@ impl App {
                 dims,
                 follow_time: follow,
             }),
+            georef: None,
         };
         let Some(doc) = &mut self.document else {
             return;

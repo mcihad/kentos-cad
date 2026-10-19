@@ -563,6 +563,8 @@ fn command_tool(c: &Value) -> Value {
             // With overwrite it writes over an existing VRT file (docs/adr/0517 §4).
             | "cad.rasters.mosaic"
             | "cad.inserts.clip"
+            // It moves a raster, or points it at a resampled file, and replaces its record (docs/adr/0518).
+            | "cad.rasters.georef"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

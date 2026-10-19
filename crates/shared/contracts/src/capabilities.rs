@@ -1507,6 +1507,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // Raster oturt'un kaydı (docs/adr/0518).
+    Entry {
+        id: "cad.rasters.georef",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "not_a_raster", "layer_locked", "invalid_control_point"],
+            &["unknown_srid", "target_not_converted", "too_few_control_points", "control_points_duplicate"],
+            &["control_points_collinear", "georef_singular", "invalid_pixel_size", "georef_grid"],
+            &["invalid_file_path", "file_not_found", "import_unreadable", "unknown_asset", "georef_output_mismatch"],
+            REVISION,
+        ],
+        warnings: &["no_check_points", "source_not_read"],
+        targets: || vec![target(None, &["raster"], &[], Some("not_a_raster"), None)],
+    },
     // Resmin kaynağı (docs/adr/0350 §1).
     Entry {
         id: "cad.images.edit",

@@ -1176,7 +1176,9 @@ impl<'d> Encoder<'d> {
                     .chain(&st.nodata)
                     .all(|v| v.is_finite());
                 if finite && let Some(words) = r.problem() {
-                    let field = if words.contains("dönüşüm") {
+                    let field = if words.contains("oturtma kaydı") {
+                        "georef"
+                    } else if words.contains("dönüşüm") {
                         "affine"
                     } else if words.contains("donukluğu") {
                         "opacity"
@@ -1216,6 +1218,10 @@ impl<'d> Encoder<'d> {
                 // Schema 38 (docs/adr/0243 §6).
                 if let Some(d) = &r.dataset {
                     f.push(("dataset", Val::Dataset(d)));
+                }
+                // Schema 88 (docs/adr/0518 §1): its georeference record, as its JSON.
+                if let Some(g) = &r.georef {
+                    f.push(("georef", Val::Json(serde_json::to_value(g).unwrap_or_default())));
                 }
             }
             // A record has no fields of its own; only the drawing's (docs/adr/0410 §2).

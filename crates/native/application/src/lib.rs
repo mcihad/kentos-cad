@@ -211,6 +211,8 @@ pub mod assets_check;
 pub mod images_edit;
 pub mod rasters_mosaic;
 pub mod inserts_clip;
+pub mod raster_files;
+pub mod rasters_georef;
 pub mod templates_apply;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
@@ -560,6 +562,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_RASTERS_MOSAIC,
         kentos_contracts::CAD_RASTERS_MOSAIC_VERSION,
+    ),
+    // Raster oturt'un kaydı ([`rasters_georef`], docs/adr/0518).
+    (
+        kentos_contracts::CAD_RASTERS_GEOREF,
+        kentos_contracts::CAD_RASTERS_GEOREF_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

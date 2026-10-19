@@ -2839,6 +2839,61 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_RASTERS_GEOREF.into(),
+            version: crate::CAD_RASTERS_GEOREF_VERSION,
+            title: "Raster oturt".into(),
+            summary: "Rasteri kontrol noktalarıyla çizime oturtur ve nasıl oturtulduğunu rasterin kaydına yazar (tek geri alma adımı “Raster oturt”). points: kaynağın pikseli (sütun, satır; piksel köşeleri, sol üst köşe 0, 0) ve hedefi (srid'in sisteminde; verilmezse projenin; başka sistem önce projeninkine çevrilir); check: dönüşüme girmeyen denetim noktası, hatası doğruluğu ölçer; off: kullanılmayan. method: helmert ve affine rasterin dönüşümünü değiştirir; projective, poly2, poly3 ve thinPlate rasteri kuzeye bakan ızgaraya yeniden örnekler (pixel verilmezse dönüşümün kontrol noktalarındaki ortalama ölçeği; resampling bilinear ya da nearest): bağlı kaynağın çıktısı output'a ya da kaynağın yanına “<ad>-oturtulmus.tif” olarak yazılır, gömülü kaynağınki kitaplığa gömülür; kaynak dosya değişmez. Yeniden örneklenmiş rasterin noktaları kaydındaki kaynağın pikselleridir; yeniden oturtma kaynaktan yapılır. made: ev sahibinin planın ızgarasıyla kendi yazdığı çıktı (dosya ya da kitaplıktaki raster); ızgarası planınki değilse ret. Kayıt: yöntem, noktalar, hedeflerin sistemi, kaynak ve SHA-256 özeti, m0, denetim noktalarının karesel ortalama ve en büyük hatası, çıktı ızgarası ve örnekleme. Denetim noktası yoksa no_check_points uyarısı. Plan yazmadan artıkları, hataları ve rasterin yeni hâlini verir."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RastersGeoref>(),
+            output: schema::<crate::RastersGeoreffed>(),
+            plan: Some(schema::<crate::RastersGeoreffed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Taranmış paftayı dört kontrol ve iki denetim noktasıyla afin oturt".into(),
+                    input: json!({
+                        "uid": "018f6c1e-0000-7000-8000-000000000001",
+                        "method": "affine",
+                        "points": [
+                            { "name": "K1", "pixel": [80.5, 60.5], "target": [487240.25, 4420771.4] },
+                            { "name": "K2", "pixel": [1940.5, 60.5], "target": [488170.25, 4420808.6] },
+                            { "name": "K3", "pixel": [1940.5, 1440.5], "target": [488211.65, 4420118.6] },
+                            { "name": "K4", "pixel": [80.5, 1440.5], "target": [487281.65, 4420081.4] },
+                            { "name": "D1", "pixel": [1000.5, 750.5], "target": [487722.75, 4420445.0], "check": true },
+                            { "name": "D2", "pixel": [400.5, 1100.5], "target": [487433.25, 4420258.0], "check": true }
+                        ]
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İnce plakayla yeniden örnekle, 0,5 m piksel, en yakın örnekleme".into(),
+                    input: json!({
+                        "uid": "018f6c1e-0000-7000-8000-000000000001",
+                        "method": "thinPlate",
+                        "points": [
+                            { "pixel": [0.0, 0.0], "target": [487100.0, 4420300.0] },
+                            { "pixel": [400.0, 0.0], "target": [487300.0, 4420316.0] },
+                            { "pixel": [400.0, 300.0], "target": [487315.0, 4420166.0] },
+                            { "pixel": [0.0, 300.0], "target": [487115.0, 4420150.0] },
+                            { "pixel": [200.0, 150.0], "target": [487208.0, 4420233.0], "check": true }
+                        ],
+                        "pixel": 0.5,
+                        "resampling": "nearest",
+                        "drawing": "/proje/pafta.kcad"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_RASTERS_MOSAIC.into(),
             version: crate::CAD_RASTERS_MOSAIC_VERSION,
             title: "Sanal mozaik".into(),
@@ -7868,6 +7923,9 @@ mod tests {
                     }
                     crate::CAD_IMAGES_EDIT => {
                         serde_json::from_value::<crate::ImagesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RASTERS_GEOREF => {
+                        serde_json::from_value::<crate::RastersGeoref>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_RASTERS_MOSAIC => {
                         serde_json::from_value::<crate::RastersMosaic>(e.input.clone()).map(|_| ())

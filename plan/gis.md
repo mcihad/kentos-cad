@@ -378,6 +378,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-29 — Georeferans GCP/check point ve warp işlem kaydını kalıcılaştır — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0518](../docs/adr/0518-georeference-record.md)): rasterin oturtma kaydı (yöntem, kontrol ve denetim noktaları piksel köşeleriyle, hedeflerin sistemi, kaynak ve SHA-256, m0, denetimin karesel ortalama ve en büyük hatası, çıktı ızgarası ve örnekleme; `.kcad` şema 88), anlamsal `cad.rasters.georef` (yeniden örnekleme kaynağı değiştirmez, kayıtla yeniden çalıştırma aynı ızgarayı verir), Raster oturt'ta Denetim ve kayıttan açılış, `.points` dosyası, Python ve MCP. Kalan: dış sağlayıcının sistemine adaptör, projenin özel tanımında hedefler.*
+
   **Mevcut:** Helmert, affine, projective, polynomial 2/3 ve thin plate yöntemleri mevcut; inverse ve residual hesabı da var [K11]. Yeni bir georeferans motoru başlatmak gerekmiyor.
 
   **Yapılacak kalan iş:** Mevcut altı fit yöntemi, residual/RMS, nokta seçimi ve warp motorunu yeniden geliştirme. Kalan iş; GCP/check point seti, kaynak CRS, seçilen yöntem, bağımsız kontrol hatası ve çıktı grid/resampling ayarlarının kaynak revision'ıyla kalıcı, yeniden üretilebilir işlem kaydı olmasıdır. Mevcut raster dönüşüm arayüzü bu kaydı oluşturup geri açabilsin; dış provider CRS'sine dönüşüm yeni adapter'dan geçsin. Önceden bulunan GCP içe/dışa alma ve önizleme yolları tekrar yazılmadan kullanılsın. [F07]

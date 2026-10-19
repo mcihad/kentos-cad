@@ -36,6 +36,7 @@ mod python_calls;
 mod reassociate;
 mod sources;
 mod standards_cmd;
+mod rasters_georef;
 mod stretch_ties;
 mod tables_cmd;
 mod transform;

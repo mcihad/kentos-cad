@@ -193,6 +193,24 @@ fn raster_stili_shows_its_look_then_writes_it_as_one_step() {
     );
 }
 
+/// Raster oturt's rows from Kullan, Denetim, Ad, Sütun, Satır, Hedef Y and Hedef X.
+fn fit_rows(rows: &[[&str; 7]]) -> Vec<crate::calc::raster_fit::Row> {
+    rows.iter()
+        .map(|r| {
+            let mut row: crate::calc::raster_fit::Row = Default::default();
+            for (k, v) in r.iter().enumerate() {
+                row[k] = (*v).to_owned();
+            }
+            row
+        })
+        .collect()
+}
+
+fn solve(app: &mut App) {
+    let doc = app.document.as_ref().expect("a drawing");
+    app.calc.raster_fit.solve(&doc.model);
+}
+
 #[test]
 fn raster_oturt_sets_an_affine_as_one_step() {
     let mut app = with_raster();
@@ -200,21 +218,12 @@ fn raster_oturt_sets_an_affine_as_one_step() {
     drive(&mut app, task);
     // A pixel a metre and a half, 10 m east and 20 m north of where it was.
     let rows = [
-        ["1", "0", "0", "487210", "4420620"],
-        ["1", "480", "0", "487930", "4420620"],
-        ["1", "0", "324", "487210", "4420134"],
+        ["1", "0", "", "0", "0", "487210", "4420620"],
+        ["1", "0", "", "480", "0", "487930", "4420620"],
+        ["1", "0", "", "0", "324", "487210", "4420134"],
     ];
-    app.calc.raster_fit.rows = rows
-        .iter()
-        .map(|r| {
-            let mut row: [String; 8] = Default::default();
-            for (k, v) in r.iter().enumerate() {
-                row[k] = (*v).to_owned();
-            }
-            row
-        })
-        .collect();
-    app.calc.raster_fit.solve();
+    app.calc.raster_fit.rows = fit_rows(&rows);
+    solve(&mut app);
     send(&mut app, raster_fit_event(Fit::Apply));
     let r = rasters(&app).remove(0);
     let [x0, a, b, y0, c, d] = r.raster.affine;
@@ -228,8 +237,41 @@ fn raster_oturt_sets_an_affine_as_one_step() {
     ] {
         assert!((got - want).abs() < 1e-6, "{:?}", r.raster.affine);
     }
+    // The raster keeps how it was placed (docs/adr/0518): the method and the points, its source.
+    let record = r.raster.georef.as_ref().expect("the record");
+    assert_eq!(record.method, kentos_contracts::GeorefMethod::Affine);
+    assert_eq!(record.points.len(), 3);
+    assert_eq!((record.source.width, record.source.height), (r.raster.width, r.raster.height));
     let doc = app.document.as_mut().expect("a drawing");
     assert_eq!(doc.model.undo().as_deref(), Some("Raster oturt"));
+}
+
+/// Noktaları kaydet… writes QGIS's `.points` with the residuals; Noktaları al… reads it back into the rows, the check
+/// point still one (docs/adr/0518 §4).
+#[test]
+fn raster_oturt_points_go_to_a_file_and_back() {
+    let dir = crate::files_testing::scratch("raster-points");
+    let file = dir.join("noktalar.points");
+    let mut app = with_raster();
+    let task = app.run("raster.georef");
+    drive(&mut app, task);
+    let rows = [
+        ["1", "0", "K1", "0", "0", "487210", "4420620"],
+        ["1", "0", "K2", "480", "0", "487930", "4420620"],
+        ["1", "0", "K3", "0", "324", "487210", "4420134"],
+        ["1", "1", "D1", "240", "162", "487570.02", "4420377.01"],
+    ];
+    app.calc.raster_fit.rows = fit_rows(&rows);
+    solve(&mut app);
+    app.picker = Picker::File(file.clone());
+    send(&mut app, raster_fit_event(Fit::Export));
+    let written = std::fs::read_to_string(&file).expect("written");
+    assert!(written.starts_with(kentos_formats::raster::gcp::HEADER), "{written}");
+    assert!(written.contains(",check,D1"), "{written}");
+    let before = app.calc.raster_fit.points();
+    app.calc.raster_fit.rows = vec![Default::default(); 4];
+    send(&mut app, raster_fit_event(Fit::Import));
+    assert_eq!(app.calc.raster_fit.points(), before);
 }
 
 /// Raster oturt with a projective transform: the raster resampled beside its
@@ -256,24 +298,15 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     app.selection.set(vec![slot]);
     let task = app.run("raster.georef");
     drive(&mut app, task);
-    app.calc.raster_fit.method = kentos_geometry_core::ops::georef::Method::Projective;
+    app.calc.raster_fit.method = kentos_contracts::GeorefMethod::Projective;
     let rows = [
-        ["1", "12.5", "14.0", "486880.6", "4420547.1"],
-        ["1", "287.0", "11.5", "487159.2", "4420549.4"],
-        ["1", "283.5", "248.0", "487158.9", "4420309.0"],
-        ["1", "9.0", "251.5", "486876.0", "4420310.6"],
+        ["1", "0", "", "12.5", "14.0", "486880.6", "4420547.1"],
+        ["1", "0", "", "287.0", "11.5", "487159.2", "4420549.4"],
+        ["1", "0", "", "283.5", "248.0", "487158.9", "4420309.0"],
+        ["1", "0", "", "9.0", "251.5", "486876.0", "4420310.6"],
     ];
-    app.calc.raster_fit.rows = rows
-        .iter()
-        .map(|r| {
-            let mut row: [String; 8] = Default::default();
-            for (k, v) in r.iter().enumerate() {
-                row[k] = (*v).to_owned();
-            }
-            row
-        })
-        .collect();
-    app.calc.raster_fit.solve();
+    app.calc.raster_fit.rows = fit_rows(&rows);
+    solve(&mut app);
     send(&mut app, raster_fit_event(Fit::Apply));
     assert_eq!(
         app.calc.raster_fit.status, None,
@@ -301,6 +334,13 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     assert_eq!(r.raster.style.render, RasterRender::Rgb);
     // North up on the output grid: no turn in its affine.
     assert_eq!((r.raster.affine[2], r.raster.affine[4]), (0.0, 0.0));
+    // The record names the source the points' pixels are of, its digest, and the output grid (docs/adr/0518).
+    let record = r.raster.georef.as_ref().expect("the record");
+    assert!(record.source.file.as_deref().is_some_and(|f| f.ends_with("tarama.png")));
+    assert!(record.source.digest.is_some());
+    let output = record.output.as_ref().expect("the output grid");
+    assert_eq!((output.affine, output.width, output.height), (r.raster.affine, r.raster.width, r.raster.height));
+    assert!(output.digest.is_some());
     let doc = app.document.as_mut().expect("a drawing");
     assert_eq!(doc.model.undo().as_deref(), Some("Raster oturt"));
     assert!(

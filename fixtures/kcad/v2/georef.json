@@ -1,0 +1,289 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Oturtma kayıtları",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 487000.0,
+    "y": 4420000.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "pafta",
+      "name": "Taranmış pafta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "#6B5B7F",
+        "lineType": "continuous",
+        "lineWeight": 0.18
+      },
+      "children": []
+    }
+  ],
+  "activeLayer": "pafta",
+  "entities": [
+    {
+      "kind": "raster",
+      "id": 1,
+      "layerId": "pafta",
+      "attrs": {},
+      "affine": [
+        487199.9857,
+        0.5,
+        0.03,
+        4420800.0125,
+        0.02,
+        -0.5
+      ],
+      "width": 2000,
+      "height": 1500,
+      "bands": 1,
+      "sample": "u8",
+      "file": "tarama/pafta-12.tif",
+      "srid": 5256,
+      "style": {
+        "render": "gray",
+        "bands": [
+          1
+        ]
+      },
+      "georef": {
+        "method": "affine",
+        "points": [
+          {
+            "name": "K1",
+            "pixel": [
+              80.5,
+              60.5
+            ],
+            "target": [
+              487241.8,
+              4420771.37
+            ]
+          },
+          {
+            "name": "K2",
+            "pixel": [
+              1940.5,
+              60.5
+            ],
+            "target": [
+              488171.83,
+              4420808.56
+            ]
+          },
+          {
+            "name": "K3",
+            "pixel": [
+              1940.5,
+              1440.5
+            ],
+            "target": [
+              488213.23,
+              4420118.58
+            ]
+          },
+          {
+            "name": "K4",
+            "pixel": [
+              80.5,
+              1440.5
+            ],
+            "target": [
+              487283.19,
+              4420081.38
+            ]
+          },
+          {
+            "name": "D1",
+            "pixel": [
+              1000.5,
+              750.5
+            ],
+            "target": [
+              487722.53,
+              4420445.0
+            ],
+            "check": true
+          },
+          {
+            "name": "D2",
+            "pixel": [
+              400.5,
+              1100.5
+            ],
+            "target": [
+              487433.27,
+              4420258.0
+            ],
+            "check": true
+          },
+          {
+            "pixel": [
+              1500.25,
+              300.75
+            ],
+            "target": [
+              487955.0,
+              4420680.0
+            ],
+            "off": true
+          }
+        ],
+        "source": {
+          "width": 2000,
+          "height": 1500,
+          "file": "tarama/pafta-12.tif",
+          "digest": "3f2a9c0e5b7d14a6c8e0f2b4d6a8c0e2f4a6b8d0c2e4f6a8b0d2c4e6f8a0b2c4"
+        },
+        "m0": 0.0071,
+        "checkRmse": 0.0126,
+        "checkMax": 0.0158
+      }
+    },
+    {
+      "kind": "raster",
+      "id": 2,
+      "layerId": "pafta",
+      "attrs": {
+        "Not": "ince plakayla oturtuldu"
+      },
+      "affine": [
+        487100.0,
+        0.5,
+        0.0,
+        4420800.0,
+        0.0,
+        -0.5
+      ],
+      "width": 900,
+      "height": 700,
+      "bands": 4,
+      "sample": "u8",
+      "file": "tarama/kroki-oturtulmus.tif",
+      "srid": 5256,
+      "style": {
+        "render": "rgb",
+        "bands": [
+          1,
+          2,
+          3,
+          4
+        ]
+      },
+      "georef": {
+        "method": "thinPlate",
+        "points": [
+          {
+            "pixel": [
+              0.0,
+              0.0
+            ],
+            "target": [
+              33.36721,
+              39.93112
+            ]
+          },
+          {
+            "pixel": [
+              800.0,
+              0.0
+            ],
+            "target": [
+              33.37188,
+              39.93131
+            ]
+          },
+          {
+            "pixel": [
+              800.0,
+              600.0
+            ],
+            "target": [
+              33.37205,
+              39.92857
+            ]
+          },
+          {
+            "pixel": [
+              0.0,
+              600.0
+            ],
+            "target": [
+              33.36738,
+              39.92838
+            ]
+          },
+          {
+            "name": "Çeşme",
+            "pixel": [
+              400.0,
+              300.0
+            ],
+            "target": [
+              33.36963,
+              39.92985
+            ],
+            "check": true
+          }
+        ],
+        "srid": 4326,
+        "source": {
+          "width": 800,
+          "height": 600,
+          "asset": "raster-1be365b685ba77d1"
+        },
+        "checkRmse": 0.214,
+        "checkMax": 0.214,
+        "output": {
+          "affine": [
+            487100.0,
+            0.5,
+            0.0,
+            4420800.0,
+            0.0,
+            -0.5
+          ],
+          "width": 900,
+          "height": 700,
+          "pixel": 0.5,
+          "resampling": "nearest",
+          "digest": "0b1d3f5a7c9e1b3d5f7a9c1e3b5d7f9a1c3e5b7d9f1a3c5e7b9d1f3a5c7e9b1d"
+        }
+      }
+    }
+  ],
+  "uids": [
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5181",
+    "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d5182"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

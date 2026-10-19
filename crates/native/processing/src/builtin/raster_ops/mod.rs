@@ -260,6 +260,7 @@ pub fn run_raster_op(
                         style,
                         opacity: None,
                         dataset: None,
+                        georef: None,
                     },
                 })
             })

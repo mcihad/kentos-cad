@@ -17,8 +17,8 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 127 | 142 | 40 | 55 | 364 |
-| geometry | 16 | 59 | 0 | 8 | 83 |
+| semantic | 127 | 143 | 40 | 55 | 365 |
+| geometry | 16 | 58 | 0 | 8 | 82 |
 | processing | 0 | 11 | 2 | 141 | 154 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 7 | 23 | 2 | 4 | 36 |
@@ -31,9 +31,9 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 622 satırdan 136'i: geometry 75, none 20, processing 13, query 28.
+CBS'ye özgü olmayan 622 satırdan 135'i: geometry 74, none 20, processing 13, query 28.
 
-### Sonucu çağıran hesaplar (geometry) — 75
+### Sonucu çağıran hesaplar (geometry) — 74
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -44,7 +44,6 @@ CBS'ye özgü olmayan 622 satırdan 136'i: geometry 75, none 20, processing 13, 
 | `calc.resection` | Geriden kestirme… | shared | cad.entities.create `resection` |  |
 | `calc.traverse` | Poligon hesabı… | shared | cad.entities.create `traverse` |  |
 | `cogo.update` | Kayıtlı ölçüleri çizimden yaz | shared | cad.entities.set |  |
-| `raster.georef` | Raster oturt… | shared | cad.entities.edit `rasterGeoref` |  |
 | `tool.adjoin` | Bitişik alan | shared | cad.entities.create `adjoin` |  |
 | `tool.areaIntersect` | Alan kesiştir | shared | cad.entities.edit `areaIntersect` |  |
 | `tool.areaSplit` | Alan böl | shared | cad.entities.edit `areaSplit` |  |

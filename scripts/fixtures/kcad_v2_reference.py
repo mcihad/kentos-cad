@@ -1691,6 +1691,8 @@ KINDS = {
         "opacity": (f64, False),
         # Schema 38 (docs/adr/0243 §6): a NetCDF variable and its slice.
         "dataset": (raster_dataset, False),
+        # Schema 88 (docs/adr/0518 §1): its georeference record, the contract's JSON.
+        "georef": (opaque, False),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its look
     # and opacity; only in the drawing.
@@ -2133,6 +2135,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 88 (docs/adr/0518 §1): a raster's georeference record.
+    if any(e["kind"] == "raster" and "georef" in e for e in entities):
+        return 88
     # Schema 87 (docs/adr/0521): a network's turns or levels, a speed cost's time profile.
     if any("turns" in n or "levels" in n or any(c.get("periods") for c in n.get("costs", []))
            for n in (settings or {}).get("networks", [])):
@@ -2671,7 +2676,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-88.kcad"] = container(root(cmap(parts), version=uint(88)))
+    files["schema-version-89.kcad"] = container(root(cmap(parts), version=uint(89)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4408,6 +4413,26 @@ def build():
     out["broken/heights-epoch-years.kcad"] = heights_broken(lambda d: d["settings"].update(coordinateEpoch=1850.0))
     out["broken/heights-local-ellipsoidal.kcad"] = heights_broken(
         lambda d: (d["settings"].update(srid=0, heights={"kind": "ellipsoidal"}), d["settings"].pop("coordinateEpoch")))
+    # Georeference records (docs/adr/0518 §1): schema 88's; in schema 87 an unknown field; an unknown field of the
+    # record, a default written, an output grid on a placing method, a grid that is not the raster's, a check point
+    # left out, too few control points, a check error without check points refused.
+    out["georef.kcad"] = container(document(load("georef.json")))
+    georef_payload = document(load("georef.json"))
+    assert georef_payload.count(b"\x67version\x18\x58") == 1, "the georeference records are schema 88"
+    out["broken/georef-in-schema-87.kcad"] = container(georef_payload.replace(b"\x67version\x18\x58", b"\x67version\x18\x57"))
+
+    def georef_broken(change):
+        d = copy.deepcopy(load("georef.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/georef-unknown-field.kcad"] = georef_broken(lambda d: d["entities"][0]["georef"].update(when="dün"))
+    out["broken/georef-default-written.kcad"] = georef_broken(lambda d: d["entities"][1]["georef"]["output"].update(resampling="bilinear"))
+    out["broken/georef-output-on-affine.kcad"] = georef_broken(lambda d: d["entities"][0]["georef"].update(output=d["entities"][1]["georef"]["output"]))
+    out["broken/georef-grid-misfit.kcad"] = georef_broken(lambda d: d["entities"][1]["georef"]["output"].update(width=901))
+    out["broken/georef-check-off.kcad"] = georef_broken(lambda d: d["entities"][0]["georef"]["points"][4].update(off=True))
+    out["broken/georef-too-few.kcad"] = georef_broken(lambda d: [p.update(check=True) for p in d["entities"][0]["georef"]["points"][:2]])
+    out["broken/georef-check-without-checks.kcad"] = georef_broken(lambda d: [p.pop("check") for p in d["entities"][1]["georef"]["points"] if "check" in p])
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

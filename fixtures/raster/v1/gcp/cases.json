@@ -1,0 +1,202 @@
+{
+ "format": "kentos.gcp-file-cases",
+ "version": 1,
+ "reads": [
+  {
+   "file": "qgis.points",
+   "points": [
+    {
+     "pixel": [
+      80.5,
+      60.5
+     ],
+     "target": [
+      487240.25,
+      4420771.4
+     ]
+    },
+    {
+     "pixel": [
+      1940.5,
+      60.5
+     ],
+     "target": [
+      488170.25,
+      4420808.6
+     ]
+    },
+    {
+     "pixel": [
+      1940.5,
+      1440.5
+     ],
+     "target": [
+      488211.65,
+      4420118.6
+     ]
+    },
+    {
+     "pixel": [
+      80.5,
+      1440.5
+     ],
+     "target": [
+      487281.65,
+      4420081.4
+     ]
+    },
+    {
+     "pixel": [
+      1000.5,
+      750.5
+     ],
+     "target": [
+      487722.75,
+      4420445.0
+     ],
+     "off": true
+    }
+   ],
+   "crs": "PROJCRS[\"TUREF / TM33\",BASEGEOGCRS[\"TUREF\",DATUM[\"Turkish National Reference Frame\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101]]],CONVERSION[\"Transverse Mercator\",METHOD[\"Transverse Mercator\"],PARAMETER[\"Longitude of natural origin\",33],PARAMETER[\"False easting\",500000]],CS[Cartesian,2],ID[\"EPSG\",5255]]"
+  },
+  {
+   "file": "kentos.points",
+   "points": [
+    {
+     "name": "K1",
+     "pixel": [
+      80.5,
+      60.5
+     ],
+     "target": [
+      487240.25,
+      4420771.4
+     ]
+    },
+    {
+     "name": "K2",
+     "pixel": [
+      1940.5,
+      60.5
+     ],
+     "target": [
+      488170.25,
+      4420808.6
+     ]
+    },
+    {
+     "name": "K3",
+     "pixel": [
+      1940.5,
+      1440.5
+     ],
+     "target": [
+      488211.65,
+      4420118.6
+     ]
+    },
+    {
+     "name": "K4",
+     "pixel": [
+      80.5,
+      1440.5
+     ],
+     "target": [
+      487281.65,
+      4420081.4
+     ]
+    },
+    {
+     "name": "D1",
+     "pixel": [
+      1000.5,
+      750.5
+     ],
+     "target": [
+      487722.75,
+      4420445.0
+     ],
+     "check": true
+    },
+    {
+     "pixel": [
+      1500.25,
+      300.75
+     ],
+     "target": [
+      487955.0,
+      4420680.0
+     ],
+     "off": true
+    }
+   ],
+   "crs": null
+  }
+ ],
+ "writes": [
+  {
+   "points": [
+    {
+     "name": "K1",
+     "pixel": [
+      80.5,
+      60.5
+     ],
+     "target": [
+      487240.25,
+      4420771.4
+     ]
+    },
+    {
+     "name": "K,2",
+     "pixel": [
+      1940.5,
+      0.0
+     ],
+     "target": [
+      488170.25,
+      4420808.6
+     ]
+    },
+    {
+     "pixel": [
+      1000.5,
+      750.5
+     ],
+     "target": [
+      487722.75,
+      4420445.0
+     ],
+     "check": true
+    },
+    {
+     "pixel": [
+      1500.25,
+      300.75
+     ],
+     "target": [
+      487955.0,
+      4420680.0
+     ],
+     "off": true
+    }
+   ],
+   "residuals": [
+    [
+     0.004,
+     -0.002
+    ],
+    null,
+    [
+     0.0126,
+     -0.0031
+    ],
+    [
+     0.5,
+     0.25
+    ]
+   ],
+   "text": "mapX,mapY,sourceX,sourceY,enable,dX,dY,residual,role,name\n487240.25,4420771.4,80.5,-60.5,1,0.004,-0.002,0.004472135954999579,control,K1\n488170.25,4420808.6,1940.5,0,1,0,0,0,control,K2\n487722.75,4420445,1000.5,-750.5,0,0.0126,-0.0031,0.012975746606650424,check,\n487955,4420680,1500.25,-300.75,0,0.5,0.25,0.5590169943749475,off,\n"
+  }
+ ]
+}

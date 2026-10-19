@@ -12,6 +12,7 @@
 
 pub mod codec;
 pub mod cog;
+pub mod gcp;
 pub mod geotiff;
 pub mod layout;
 pub mod place;

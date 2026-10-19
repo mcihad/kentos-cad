@@ -171,7 +171,7 @@ fn state_words(s: XrefState) -> (&'static str, Kind) {
 
 impl App {
     /// The open drawing's file, for the references' relative paths and the cycle check.
-    fn drawing_path(&self) -> Option<String> {
+    pub(crate) fn drawing_path(&self) -> Option<String> {
         self.document.as_ref()?.path.as_ref().map(|p| p.display().to_string())
     }
 

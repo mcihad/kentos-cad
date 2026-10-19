@@ -487,6 +487,7 @@ impl App {
             style: read.style.clone(),
             opacity: None,
             dataset: None,
+            georef: None,
         };
         let Some(doc) = &mut self.document else {
             return;

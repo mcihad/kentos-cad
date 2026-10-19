@@ -316,6 +316,13 @@ SCHEMA_WITH_HEIGHTS = 86
 SCHEMA_WITH_NETWORK_TURNS = 87
 # The vertical systems a project may name (kentos_contracts::VERTICAL_SYSTEMS, EPSG's registry).
 VERTICAL_SRIDS = (5775, 3855, 5773, 5714, 8050, 5735)
+# Schema 88: schema 87 and a raster's georeference record `georef` (docs/adr/0518 §1).
+SCHEMA_WITH_GEOREF = 88
+GEOREF_METHODS = ("helmert", "affine", "projective", "poly2", "poly3", "thinPlate")
+# The fewest control points each method is fitted to.
+GEOREF_NEED = {"helmert": 2, "affine": 3, "projective": 4, "poly2": 6, "poly3": 10, "thinPlate": 3}
+MAX_GEOREF_POINTS = 1000
+MAX_GEOREF_NAME = 64
 MAX_XREF_PATHS = 64
 MAX_XREF_PATH = 1024
 SPACE_METHODS = ("net", "centerline", "gross")
@@ -511,7 +518,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2709,6 +2716,7 @@ class _Schema:
         self.clipping = version >= SCHEMA_WITH_CLIPPING
         self.heights = version >= SCHEMA_WITH_HEIGHTS
         self.network_turns = version >= SCHEMA_WITH_NETWORK_TURNS
+        self.georef = version >= SCHEMA_WITH_GEOREF
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -5931,6 +5939,100 @@ class _Schema:
         o = r.get("opacity")
         if o is not None and not (MIN_RASTER_OPACITY <= o <= MAX_RASTER_OPACITY):
             self.fail("bad_value", f"Rasterin donukluğu {MIN_RASTER_OPACITY} ile {MAX_RASTER_OPACITY} arasında olmalı; {o} verildi.")
+        g = r.get("georef")
+        if g is not None:
+            self.path.append("georef")
+            self.georef_rules(g, r)
+            self.path.pop()
+            if d is not None:
+                self.fail("bad_value", "Veri setini gösteren raster oturtulmaz; oturtma kaydı olamaz.")
+
+    def raster_georef(self, v):
+        """A raster's georeference record (§6.6, docs/adr/0518 §1), the contract's JSON: the method, the points (pixel
+        and target pairs of floats; `check` and `off` only when true; a name when given), the targets' system when not
+        the project's, the source (size, one of asset, file, url; its SHA-256 as hex), m0 and the check points' errors
+        when there are, and a resampled raster's output grid (`resampling` only when nearest)."""
+        def pair(x):
+            a = self.array(self.float)(x)
+            if len(a) != 2:
+                self.fail("bad_value", f"2 sayı olmalı, {len(a)} var")
+            return a
+
+        def six(x):
+            a = self.array(self.float)(x)
+            if len(a) != 6:
+                self.fail("bad_value", f"6 sayı olmalı, {len(a)} var")
+            return a
+
+        point = self.fields({"name": (self.text, False), "pixel": (pair, True), "target": (pair, True),
+                             "check": (self.only_true, False), "off": (self.only_true, False)})
+        source = self.fields({"width": (self.uint(32), True), "height": (self.uint(32), True), "asset": (self.text, False),
+                              "file": (self.text, False), "url": (self.text, False), "digest": (self.text, False)})
+        output = self.fields({"affine": (six, True), "width": (self.uint(32), True), "height": (self.uint(32), True),
+                              "pixel": (self.float, True), "resampling": (self.enum(("nearest",)), False),
+                              "digest": (self.text, False)})
+        return self.fields({"method": (self.enum(GEOREF_METHODS), True), "points": (self.array(point), True),
+                            "srid": (self.uint(32), False), "source": (source, True), "m0": (self.float, False),
+                            "checkRmse": (self.float, False), "checkMax": (self.float, False),
+                            "output": (output, False)})(v)
+
+    def georef_rules(self, g, r):
+        """The contract's `RasterGeoref::problem` and `misfit` (kentos_contracts::raster_georef), in their order."""
+        pts = g["points"]
+        if not 1 <= len(pts) <= MAX_GEOREF_POINTS:
+            self.fail("bad_value", f"Kaydın 1 ile {MAX_GEOREF_POINTS} arasında noktası olmalı.")
+        for p in pts:
+            if not all(math.isfinite(x) for x in p["pixel"] + p["target"]):
+                self.fail("bad_value", "Noktanın pikseli ve hedefi sonlu sayılar olmalı.")
+            if p.get("check") and p.get("off"):
+                self.fail("bad_value", "Kullanılmayan nokta denetim noktası olamaz; denetim noktası Kullan'da kalır.")
+            n = p.get("name")
+            if n is not None and (n.strip() == "" or n.strip() != n or len(n) > MAX_GEOREF_NAME or any(unicodedata.category(ch) == "Cc" for ch in n)):
+                self.fail("bad_value", f"Noktanın adı kırpılmış, boş olmayan ve en çok {MAX_GEOREF_NAME} harf olmalı.")
+        control = sum(1 for p in pts if not p.get("check") and not p.get("off"))
+        checks = sum(1 for p in pts if p.get("check"))
+        if control < GEOREF_NEED[g["method"]]:
+            self.fail("bad_value", f"{g['method']} en az {GEOREF_NEED[g['method']]} kontrol noktası ister; kayıtta {control} var.")
+        if g.get("srid") == 0:
+            self.fail("bad_value", "Hedeflerin sistemi verildiyse bir EPSG kodu olmalı.")
+        s = g["source"]
+        if not (1 <= s["width"] <= MAX_RASTER_SIDE and 1 <= s["height"] <= MAX_RASTER_SIDE):
+            self.fail("bad_value", f"Kaynağın genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı.")
+        named = [s[k] for k in ("asset", "file", "url") if k in s]
+        if len(named) != 1:
+            self.fail("bad_value", "Kaynak ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.")
+        if any(t.strip() == "" or len(t) > MAX_RASTER_PATH or any(unicodedata.category(ch) == "Cc" for ch in t) for t in named):
+            self.fail("bad_value", f"Kaynağın adı boş olmamalı, en çok {MAX_RASTER_PATH} harf olmalı.")
+
+        def digest_bad(d):
+            return d is not None and (len(d) != 64 or any(ch not in "0123456789abcdef" for ch in d))
+
+        if digest_bad(s.get("digest")):
+            self.fail("bad_value", "SHA-256 özeti 64 küçük onaltılık hane olmalı.")
+        for k in ("m0", "checkRmse", "checkMax"):
+            if k in g and not (math.isfinite(g[k]) and g[k] >= 0.0):
+                self.fail("bad_value", "m0 ve denetim hataları sonlu ve eksi olmayan sayılar olmalı.")
+        if ("checkRmse" in g) != ("checkMax" in g) or ("checkRmse" in g) != (checks > 0):
+            self.fail("bad_value", "Denetim noktası varken denetimin karesel ortalama hatası ve en büyük hatası birlikte yazılır, yokken hiçbiri.")
+        places = g["method"] in ("helmert", "affine")
+        o = g.get("output")
+        if o is not None and places:
+            self.fail("bad_value", "Bu yöntem rasteri yeniden örneklemez; çıktı ızgarası yazılmaz.")
+        if o is None and not places:
+            self.fail("bad_value", "Bu yöntem rasteri yeniden örnekler; çıktı ızgarası yazılır.")
+        if o is not None:
+            x0, a, b, y0, c, d = o["affine"]
+            px = o["pixel"]
+            if not (math.isfinite(px) and px > 0.0 and math.isfinite(x0) and math.isfinite(y0) and a == px and b == 0.0 and c == 0.0 and d == -px):
+                self.fail("bad_value", "Çıktı ızgarası kuzeye bakan ve pikseli kare olmalı: [x₀, s, 0, y₀, 0, −s].")
+            if not (1 <= o["width"] <= MAX_RASTER_SIDE and 1 <= o["height"] <= MAX_RASTER_SIDE):
+                self.fail("bad_value", f"Çıktının genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı.")
+            if digest_bad(o.get("digest")):
+                self.fail("bad_value", "SHA-256 özeti 64 küçük onaltılık hane olmalı.")
+            if o["affine"] != r["affine"] or o["width"] != r["width"] or o["height"] != r["height"]:
+                self.fail("bad_value", "Kaydın çıktı ızgarası rasterin dönüşümü ve boyu değil.")
+        elif s["width"] != r["width"] or s["height"] != r["height"]:
+            self.fail("bad_value", "Kaydın kaynağının boyu rasterin boyu değil.")
 
     def dataset_rules(self, d):
         """The contract's `RasterDataset::problem` (kentos_contracts::raster), in its order."""
@@ -7593,6 +7695,8 @@ ENTITY_KINDS = {
         "opacity": (s.float, False),
         # Schema 38 (docs/adr/0243 §6): a NetCDF variable and its slice.
         **({"dataset": (s.raster_dataset, False)} if s.multidim else {}),
+        # Schema 88 (docs/adr/0518 §1): how it was georeferenced.
+        **({"georef": (s.raster_georef, False)} if s.georef else {}),
     },
     # Schema 31 (docs/adr/0207 §3): a point cloud's files, their bounds and points together, the files' system, its
     # look and opacity; only in the drawing.

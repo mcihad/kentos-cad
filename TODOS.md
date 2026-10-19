@@ -215,6 +215,9 @@ Liste:
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
+- [ ] `CBS-29` raster oturtmanın kaydı (ADR 0518, 19 Ekim): web'de gerekenler: `cad.rasters.georef`'in işleyicisi (WASM'da
+  `rasters_georef`'in planı ve yeniden örneklemesi), Raster oturt penceresinde Denetim ve Ad sütunları, hedeflerin sistemi, kayıttan
+  açılış, `.points` alışverişi; `.kcad` şema 88'in TS kodeği ve sütunların rasterinin 5. seçeneği; TS türleri üretildi.
 - [ ] `CBS-26` dönüşler, seviyeler ve zaman profili (ADR 0521, 19 Ekim): web'de gerekenler: ağın işçisinde `Graph::build_with`'in
   dönüş girdisi ve `NetworkSession.time` (WASM bağlayıcısı), `model/networkInput.ts`'in seviye, dönem ve dönüş katmanı değerleri,
   Ağlar penceresinde Dönüşler, Seviyeler ve Zaman profili (`model/networkForm.ts`), araçlarda Saat (Z), İşlemler'in Kalkış saati;
@@ -1957,6 +1960,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
+- [ ] `CBS-29` raster oturtmanın kaydı (dilim): rasterin `georef`'i (yöntem, kontrol ve denetim noktaları, hedeflerin sistemi,
+  kaynak ve özeti, m0, denetim hataları, çıktı ızgarası; `.kcad` şema 88, `FORMATS_VERSION` 94), `cad.rasters.georef` (Raster oturt
+  aracı onunla yazar; masaüstü uzun yeniden örneklemeyi kendi yapıp `made` ile verir), `.points` okuma ve yazma, Python ve MCP. Kalan:
+  dış sağlayıcının sistemi, projenin özel tanımında hedefler, adresten okunan rasterin yeniden örneklenmesi. —
+  **19 Ekim, [ADR 0518](docs/adr/0518-georeference-record.md).**
 - [ ] `CBS-26` dönüşler, seviyeler ve zaman profili (dilim): ağın `turns`'ü (geri dönüş kuralı, kavşakta açıya göre ve geri
   dönüşün gecikmesi, en çok dört dönüş katmanı: yasak ya da kendi gecikmesi), `levels`'ı (kenarın baş, son ve iç seviye alanı;
   köprü ve tünel bağlanmaz) ve hızla maliyetin `periods`'ı (günün dönemleri, çarpan ya da hız alanı, kapalıda beklenir, ilk giren

@@ -517,6 +517,7 @@ fn check(doc: &Document, input: &RastersMosaic) -> Result<Planned, Stop> {
                     style: kentos_formats::raster::style::default_style(bands, sample, false),
                     opacity: None,
                     dataset: None,
+                    georef: None,
                 },
             }))
         }

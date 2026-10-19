@@ -1401,6 +1401,29 @@ codes! {
     /// A pasted block or style whose name this drawing has, renamed.
     XREF_READ_ONLY = "xref_read_only", Failed, false, "Dış başvurunun içeriği kaynak dosyasındadır; burada değişmez. Kaynağı açıp düzenleyin, sonra Yeniden yükle.";
     NAMES_RENAMED = "names_renamed", Warning, false, "Bu çizimde aynı adı taşıyan bloklar ya da stiller yeni adlarla yapıştırıldı.";
+    // ── Raster georeference record (docs/adr/0518) ──────────────────────
+    /// An object given is not a raster.
+    NOT_A_RASTER = "not_a_raster", Failed, false, "Verilen nesne bir raster değil.";
+    /// A point's numbers, name or roles are not a point's.
+    INVALID_CONTROL_POINT = "invalid_control_point", Failed, false, "Noktanın pikseli ya da hedefi sonlu değil, adı kurala uymuyor ya da kullanılmayan nokta denetim noktası yapılmış.";
+    /// The targets' system does not reach the project's.
+    TARGET_NOT_CONVERTED = "target_not_converted", Failed, false, "Hedef koordinatları projenin sistemine çevrilemedi: projenin sistemi yok ya da iki sistem arasında yol yok.";
+    /// Fewer control points than the transform needs.
+    TOO_FEW_CONTROL_POINTS = "too_few_control_points", Failed, false, "Dönüşüm için kullanılan kontrol noktası az; denetim noktaları dönüşüme girmez.";
+    /// Two control points at one pixel.
+    CONTROL_POINTS_DUPLICATE = "control_points_duplicate", Failed, false, "İki kontrol noktası aynı pikselde.";
+    /// The control points' pixels on one line.
+    CONTROL_POINTS_COLLINEAR = "control_points_collinear", Failed, false, "Kontrol noktalarının pikselleri bir doğru üzerinde; rasterin iki yönüne yayılmış noktalar verin.";
+    /// The transform does not solve with these points.
+    GEOREF_SINGULAR = "georef_singular", Failed, false, "Bu kontrol noktalarıyla dönüşüm çözülemiyor; noktaları rasterin geneline yayın.";
+    /// No output grid: the transform carries the raster too far or bends it.
+    GEOREF_GRID = "georef_grid", Failed, false, "Çıktının ızgarası kurulamadı: dönüşüm rasteri çok büyütüyor ya da bozuyor.";
+    /// The host's resampled output is not the plan's grid.
+    GEOREF_OUTPUT_MISMATCH = "georef_output_mismatch", Failed, false, "Verilen yeniden örneklenmiş raster planın ızgarası değil; hiçbir şey yazılmadı.";
+    /// No check point: m0 says how the control points fit, not how good the raster is between them.
+    NO_CHECK_POINTS = "no_check_points", Warning, false, "Denetim noktası yok: m0 yalnız kontrol noktalarının uyumunu söyler; dönüşüme girmeyen, rastere yayılmış denetim noktaları ekleyin.";
+    /// A placed raster's source was not found: its record has no digest.
+    SOURCE_NOT_READ = "source_not_read", Warning, false, "Rasterin kaynağı okunamadı; kayıt kaynağın özetini taşımıyor.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

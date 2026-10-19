@@ -559,6 +559,10 @@ pub struct RasterFields {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub dataset: Option<RasterDataset>,
+    /// How it was georeferenced (Raster oturt, docs/adr/0518): the points, the source and, resampled, the output grid.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub georef: Option<Box<crate::RasterGeoref>>,
 }
 
 impl RasterFields {
@@ -676,6 +680,14 @@ impl RasterFields {
             return Some(format!(
                 "Rasterin donukluğu {MIN_RASTER_OPACITY} ile {MAX_RASTER_OPACITY} arasında olmalı; {o} verildi."
             ));
+        }
+        if let Some(g) = &self.georef {
+            if let Some(p) = g.problem().or_else(|| g.misfit(self)) {
+                return Some(format!("Rasterin oturtma kaydı: {p}"));
+            }
+            if self.dataset.is_some() {
+                return Some("Veri setini gösteren raster oturtulmaz; oturtma kaydı olamaz.".into());
+            }
         }
         None
     }

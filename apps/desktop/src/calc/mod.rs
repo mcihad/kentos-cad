@@ -462,8 +462,10 @@ impl App {
         if window == Window::Fit {
             self.calc.fit.solve();
         }
-        if window == Window::RasterFit {
-            self.calc.raster_fit.solve();
+        if window == Window::RasterFit
+            && let Some(doc) = &self.document
+        {
+            self.calc.raster_fit.solve(&doc.model);
         }
         // Karne editörü reduces the station again (Kullan, a name).
         if window == Window::FieldBook

@@ -534,11 +534,14 @@ pub const SCHEMA_WITH_HEIGHTS: u32 = 86;
 /// Schema 87 (docs/adr/0521): a network's `turns` (U-turns, turn delays, turn layers) and `levels` (the level fields)
 /// and a speed cost's `periods` (its time profile), written only when a network has one.
 pub const SCHEMA_WITH_NETWORK_TURNS: u32 = 87;
+/// Schema 88 (docs/adr/0518 §1): a raster's `georef`, the record of how it was georeferenced (its JSON), written only
+/// when a raster has one.
+pub const SCHEMA_WITH_GEOREF: u32 = 88;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 86] = [
+pub const SCHEMAS: [u32; 87] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -625,6 +628,7 @@ pub const SCHEMAS: [u32; 86] = [
     SCHEMA_WITH_CLIPPING,
     SCHEMA_WITH_HEIGHTS,
     SCHEMA_WITH_NETWORK_TURNS,
+    SCHEMA_WITH_GEOREF,
 ];
 
 /// The file a drawing is saved as.

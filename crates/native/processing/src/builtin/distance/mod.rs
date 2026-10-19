@@ -117,6 +117,7 @@ fn raster_entity(
             style,
             opacity: None,
             dataset: None,
+            georef: None,
         },
     })
 }
