@@ -137,6 +137,13 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
             i += 1;
             continue;
         }
+        if let Some((end, closed)) = comment_at(&u, i) {
+            if !closed {
+                return Err(err("Yorum kapanmamış: sonuna */ yazın.", i + 1));
+            }
+            i = end;
+            continue;
+        }
         let at = i + 1;
         if starts_number(&u, i) {
             let j = number_end(&u, i);
@@ -237,4 +244,33 @@ pub fn tokenize(src: &str) -> Result<Vec<Token>, CompileError> {
         at: u.len() + 1,
     });
     Ok(out)
+}
+
+/// A comment starting at `i` (docs/adr/0603): `//` to the end of the line, `/* … */`; its end and whether it is closed.
+/// Neither can stand in an expression otherwise (no value starts with `/` or `*`). `--` stays a double minus.
+pub(crate) fn comment_at(u: &[u16], i: usize) -> Option<(usize, bool)> {
+    let (slash, star) = (u16::from(b'/'), u16::from(b'*'));
+    if u.get(i) != Some(&slash) {
+        return None;
+    }
+    match u.get(i + 1) {
+        Some(&c) if c == slash => {
+            let end = u[i..]
+                .iter()
+                .position(|&c| c == u16::from(b'\n'))
+                .map_or(u.len(), |k| i + k);
+            Some((end, true))
+        }
+        Some(&c) if c == star => {
+            let mut j = i + 2;
+            while j + 1 < u.len() {
+                if u[j] == star && u[j + 1] == slash {
+                    return Some((j + 2, true));
+                }
+                j += 1;
+            }
+            Some((u.len(), false))
+        }
+        _ => None,
+    }
 }

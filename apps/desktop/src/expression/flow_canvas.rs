@@ -151,6 +151,13 @@ impl FlowCanvas<'_> {
         let (head, row) = (core::HEAD as f32, core::ROW as f32);
         for n in f.nodes.iter().rev() {
             let (x, y, w, h) = (n.x as f32, n.y as f32, n.w as f32, n.h as f32);
+            // A constant in its input's row (docs/adr/0604) is selected, not wired from.
+            if n.inline.is_some() {
+                if p.x >= x && p.x <= x + w && p.y >= y && p.y <= y + h {
+                    return Some(Hit::Node(n.id.clone()));
+                }
+                continue;
+            }
             if n.kind != NodeKind::Result && p.distance(Point::new(x + w, y + head / 2.0)) <= PIN {
                 return Some(Hit::Out(n.id.clone()));
             }
@@ -419,6 +426,9 @@ impl canvas::Program<Message> for FlowCanvas<'_> {
                 let Some(child) = port.from.as_deref().and_then(|c| self.node(c)) else {
                     continue;
                 };
+                if child.inline.is_some() && pulled != Some((n.id.as_str(), k)) {
+                    continue;
+                }
                 if pulled == Some((n.id.as_str(), k)) {
                     continue;
                 }
@@ -433,15 +443,31 @@ impl canvas::Program<Message> for FlowCanvas<'_> {
                 );
             }
         }
+        // The pulled constant's chip goes with the wire.
+        let pulled_child = match &state.gesture {
+            Gesture::Pull { child, .. } if state.moved => Some(child.as_str()),
+            _ => None,
+        };
         for n in &self.flow.nodes {
             let at = self.at(state, n);
-            paint.node(
-                &mut frame,
-                n,
-                at,
-                self.selected == Some(n.id.as_str()),
-                self.values.get(&n.id),
-            );
+            let selected = self.selected == Some(n.id.as_str());
+            if n.inline.is_some() {
+                if pulled_child != Some(n.id.as_str()) {
+                    paint.chip(&mut frame, n, at, selected);
+                }
+                continue;
+            }
+            let chips: Vec<bool> = n
+                .ports
+                .iter()
+                .map(|p| {
+                    p.from
+                        .as_deref()
+                        .and_then(|c| self.node(c))
+                        .is_some_and(|c| c.inline.is_some())
+                })
+                .collect();
+            paint.node(&mut frame, n, at, selected, self.values.get(&n.id), &chips);
         }
         // The wire that follows the pointer.
         if state.moved
@@ -643,6 +669,7 @@ impl Paint<'_> {
         (x, y): (f32, f32),
         selected: bool,
         value: Option<&String>,
+        chips: &[bool],
     ) {
         let k = self.v.k;
         let (w, h) = (n.w as f32, n.h as f32);
@@ -712,10 +739,10 @@ impl Paint<'_> {
             room -= 16.0;
         }
         let (title_font, title_color, title_size) = match n.kind {
-            NodeKind::Result => (typography::ui_strong(), self.t.text, 12.0),
+            NodeKind::Result => (typography::ui_strong(), self.t.text, 13.0),
             // A sign reads better in the regular face, a little larger: the bold `=` runs its bars together.
-            NodeKind::Operator => (typography::mono(), accent, 13.5),
-            _ => (typography::mono_strong(), accent, 12.0),
+            NodeKind::Operator => (typography::mono(), accent, 14.5),
+            _ => (typography::mono_strong(), accent, 13.0),
         };
         self.text(
             frame,
@@ -765,7 +792,8 @@ impl Paint<'_> {
             );
         }
         // The inputs.
-        for p in &n.ports {
+        for (pi, p) in n.ports.iter().enumerate() {
+            let chip = chips.get(pi).copied().unwrap_or(false);
             let py = y + p.y as f32;
             let color = self.type_color(p.ty);
             let pin = self.to_screen(Point::new(x, py));
@@ -789,16 +817,23 @@ impl Paint<'_> {
             } else {
                 self.t.muted
             };
+            let room = if chip {
+                core::CHIP_X as f32 - 16.0
+            } else {
+                w - 60.0
+            };
             self.text(
                 frame,
-                clip(&p.name, w - 60.0, 11.0, false),
+                clip(&p.name, room, 12.0, false),
                 self.to_screen(Point::new(x + 12.0, py)),
-                11.0,
+                12.0,
                 name_color,
                 typography::ui(),
             );
             let row_right = self.to_screen(Point::new(x + w - 6.0, py));
-            if p.removable {
+            if chip {
+                // The constant's chip stands at the row's right.
+            } else if p.removable {
                 self.text(
                     frame,
                     "×".into(),
@@ -840,8 +875,8 @@ impl Paint<'_> {
                 (NodeKind::Result, None) => {
                     ("—".to_owned(), self.t.muted, typography::mono(), 12.0)
                 }
-                (_, Some(v)) => (format!("= {v}"), self.t.muted, typography::mono(), 11.0),
-                (_, None) => (String::new(), self.t.muted, typography::mono(), 11.0),
+                (_, Some(v)) => (format!("= {v}"), self.t.muted, typography::mono(), 12.0),
+                (_, None) => (String::new(), self.t.muted, typography::mono(), 12.0),
             };
             self.text(
                 frame,
@@ -862,6 +897,34 @@ impl Paint<'_> {
                 Stroke::default().with_color(fill).with_width(1.5 * k),
             );
         }
+    }
+
+    /// A constant written into its input's row (docs/adr/0604): a chip with its value, in its kind's colour.
+    fn chip(&self, frame: &mut Frame, n: &FlowNode, (x, y): (f32, f32), selected: bool) {
+        let k = self.v.k;
+        let top_left = self.to_screen(Point::new(x, y));
+        let size = Size::new(n.w as f32 * k, n.h as f32 * k);
+        let body = Path::rounded_rectangle(top_left, size, border::radius(4.0 * k));
+        let accent = self.accent(n.kind);
+        frame.fill(&body, self.t.field);
+        frame.stroke(
+            &body,
+            Stroke::default()
+                .with_color(if selected {
+                    self.t.accent
+                } else {
+                    accent.scale_alpha(0.55)
+                })
+                .with_width(if selected { 2.0 } else { 1.0 }),
+        );
+        self.text(
+            frame,
+            clip(&n.title, n.w as f32 - 12.0, 12.0, true),
+            Point::new(top_left.x + 6.0 * k, top_left.y + size.height / 2.0),
+            12.0,
+            accent,
+            typography::mono(),
+        );
     }
 
     /// Where a carried palette entry would stand.

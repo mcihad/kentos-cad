@@ -150,6 +150,36 @@ pub(crate) struct Builder {
     /// Metin or Akış, and the flow's own state.
     pub view_mode: ViewMode,
     pub flow: FlowState,
+    /// The tree's keys used lately, the latest first (Son kullanılanlar, docs/adr/0603).
+    pub recent: Vec<String>,
+}
+
+/// How many entries Son kullanılanlar keeps.
+const RECENT: usize = 8;
+
+/// The tree's keys of the functions and fields an expression uses, in order, each once.
+fn used_keys(source: &str) -> Vec<String> {
+    let units: Vec<u16> = source.encode_utf16().collect();
+    let mut keys: Vec<String> = Vec::new();
+    for t in core::tokens(source) {
+        let word = String::from_utf16_lossy(&units[t.start..t.end]);
+        let key = match t.class {
+            core::Class::Function => {
+                kentos_expression::library::find_function(&word).map(|d| format!("func:{}", d.name))
+            }
+            core::Class::Field => {
+                let name = word.trim_start_matches('[').trim_end_matches(']').trim();
+                Some(format!("field:{name}"))
+            }
+            _ => None,
+        };
+        if let Some(key) = key
+            && !keys.contains(&key)
+        {
+            keys.push(key);
+        }
+    }
+    keys
 }
 
 /// What the preview shows.
@@ -211,6 +241,10 @@ pub(crate) enum Event {
     Values(bool),
     /// A listed value pressed; twice soon, it goes in.
     Value(usize),
+    /// One of the help's examples pressed: it goes in where the cursor is (docs/adr/0603).
+    Example(usize),
+    /// Biçimle: the text on lines (docs/adr/0603).
+    Format,
     /// The preview's object before or after.
     Object(i32),
     /// Sahneden seç: the preview's object picked on the drawing.
@@ -357,6 +391,7 @@ impl Builder {
             picking: None,
             view_mode: ViewMode::Text,
             flow: FlowState::default(),
+            recent: Vec::new(),
         };
         b.read();
         b.moved(true);
@@ -562,10 +597,28 @@ impl Builder {
     /// group while searching), in order.
     fn shown(&self) -> Vec<Item> {
         let searching = !self.query.trim().is_empty();
-        core::catalog(&self.schema, &self.query)
+        let mut out = self.recent_items();
+        out.extend(
+            core::catalog(&self.schema, &self.query)
+                .into_iter()
+                .filter(|s| searching || self.open.contains(s.group.id()))
+                .flat_map(|s| s.items),
+        );
+        out
+    }
+
+    /// Son kullanılanlar: the entries used lately that the tree has (and the search finds).
+    pub(crate) fn recent_items(&self) -> Vec<Item> {
+        if self.recent.is_empty() {
+            return Vec::new();
+        }
+        let all: Vec<Item> = core::catalog(&self.schema, &self.query)
             .into_iter()
-            .filter(|s| searching || self.open.contains(s.group.id()))
             .flat_map(|s| s.items)
+            .collect();
+        self.recent
+            .iter()
+            .filter_map(|k| all.iter().find(|i| i.key == *k).cloned())
             .collect()
     }
 
@@ -724,11 +777,7 @@ impl App {
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
         // It opens in the view it was left in last (Metin or Akış).
-        if self.builder_flow {
-            builder.set_mode(ViewMode::Flow);
-        }
-        self.builder = Some(builder);
-        iced::widget::operation::focus(EDITOR)
+        self.show_builder(builder)
     }
 
     /// Öznitelik tablosu's ε: the builder on its filter, the layer's keys and objects.
@@ -766,11 +815,7 @@ impl App {
             },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
-        if self.builder_flow {
-            builder.set_mode(ViewMode::Flow);
-        }
-        self.builder = Some(builder);
-        iced::widget::operation::focus(EDITOR)
+        self.show_builder(builder)
     }
 
     /// Ağlar's ε: the builder on one of the form's expressions, the layer's keys and objects.
@@ -810,11 +855,7 @@ impl App {
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
-        if self.builder_flow {
-            builder.set_mode(ViewMode::Flow);
-        }
-        self.builder = Some(builder);
-        iced::widget::operation::focus(EDITOR)
+        self.show_builder(builder)
     }
 
     /// Katman süzgeci's ε: the builder on its condition, the layer's keys and objects.
@@ -927,11 +968,7 @@ impl App {
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
-        if self.builder_flow {
-            builder.set_mode(ViewMode::Flow);
-        }
-        self.builder = Some(builder);
-        iced::widget::operation::focus(EDITOR)
+        self.show_builder(builder)
     }
 
     /// The builder on an expression over a layer: the layer's fields first, then its objects'
@@ -963,11 +1000,7 @@ impl App {
             Objects { slots },
         );
         builder.preview_on(Some(&doc.model), self.spatial.store());
-        if self.builder_flow {
-            builder.set_mode(ViewMode::Flow);
-        }
-        self.builder = Some(builder);
-        iced::widget::operation::focus(EDITOR)
+        self.show_builder(builder)
     }
 
     /// Sembol tasarımcısı's ε beside an ƒ value: the builder on its expression, over the layer
@@ -1255,6 +1288,32 @@ impl App {
                     }
                 }
             }
+            Event::Format => match core::format(&b.source) {
+                Ok(text) => {
+                    let end = b.source.encode_utf16().count();
+                    let caret = text.encode_utf16().count();
+                    b.replace(0, end, &text, caret);
+                    focus = true;
+                }
+                Err(why) => b.preview = Preview::Note(why),
+            },
+            Event::Example(i) => {
+                let Some(insert) = b
+                    .help
+                    .as_ref()
+                    .and_then(|h| h.examples.get(i))
+                    .map(|e| e.0.clone())
+                else {
+                    return Task::none();
+                };
+                if b.view_mode == ViewMode::Flow {
+                    b.flow_add_text(&insert);
+                } else {
+                    let n = insert.encode_utf16().count();
+                    b.place(Kind::Function, &insert, n);
+                    focus = true;
+                }
+            }
             Event::Object(by) => {
                 let n = b.objects.len();
                 if n > 0 {
@@ -1288,6 +1347,16 @@ impl App {
     }
 
     /// Tamam: the text goes back to its field; with an error it stays.
+    /// The builder over its window: in the view it was left in last (Metin or Akış), with the entries used lately.
+    fn show_builder(&mut self, mut builder: Builder) -> Task<Message> {
+        if self.builder_flow {
+            builder.set_mode(ViewMode::Flow);
+        }
+        builder.recent = self.builder_recent.clone();
+        self.builder = Some(builder);
+        iced::widget::operation::focus(EDITOR)
+    }
+
     fn builder_ok(&mut self) -> Task<Message> {
         let Some(b) = &self.builder else {
             return Task::none();
@@ -1295,6 +1364,13 @@ impl App {
         if b.check.error.is_some() && !b.source.trim().is_empty() {
             return Task::none();
         }
+        // Its functions and fields come first in Son kullanılanlar next time (docs/adr/0603).
+        let used = used_keys(&b.source);
+        for key in used.into_iter().rev() {
+            self.builder_recent.retain(|k| *k != key);
+            self.builder_recent.insert(0, key);
+        }
+        self.builder_recent.truncate(RECENT);
         let text = b.source.clone();
         let target = b.target.clone();
         self.builder = None;

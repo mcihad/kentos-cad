@@ -35,8 +35,17 @@ pub fn roles(f: Func) -> Option<&'static [Role]> {
         | Func::Maximum
         | Func::Median
         | Func::StdDev
-        | Func::ArrayAgg => &[Value, Group, Condition],
-        Func::ConcatValues => &[Value, Text, Group, Condition],
+        | Func::ArrayAgg
+        | Func::Quartile1
+        | Func::Quartile3
+        | Func::Iqr
+        | Func::Range
+        | Func::Majority
+        | Func::Minority
+        | Func::CountMissing
+        | Func::MinLength
+        | Func::MaxLength => &[Value, Group, Condition],
+        Func::ConcatValues | Func::ConcatUnique => &[Value, Text, Group, Condition],
         Func::Aggregate => &[Layer, Text, Value, Condition],
         Func::FromLayer => &[Layer, Value, Text, Current],
         Func::Intersects | Func::IntersectCount => &[Layer, Current, Condition],

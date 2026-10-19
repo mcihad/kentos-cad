@@ -275,6 +275,27 @@ SOURCES = [
     "değerleri_dizi(Parsel, Ada)",
     "değerleri_dizi(Kat)",
     "topla(Kat, boş, yanlış)",
+    "çeyrek1(Kat)",
+    "çeyrek3(Kat)",
+    "q1($alan, Ada)",
+    "çeyrekler_arası(Kat)",
+    "iqr($id, Mahalle)",
+    "değer_aralığı($alan)",
+    "range(Kat, Ada, Kat > 1)",
+    "en_sık(Nitelik)",
+    "majority(Kat, Mahalle)",
+    "en_seyrek(Nitelik)",
+    "minority(Ada)",
+    "boş_say(Kat)",
+    "count_missing(Etiketler, Ada)",
+    "en_kısa(Nitelik)",
+    "max_length(Nitelik, Mahalle)",
+    "en_uzun(Parsel)",
+    "benzersizleri_birleştir(Nitelik)",
+    "concatenate_unique(Ada, ' / ', Mahalle)",
+    "benzersizleri_birleştir(Kat, ';', Ada, Kat > 2)",
+    "katman_toplamı('Sit alanı', 'çeyrek3', Derece)",
+    "katman_toplamı('Durak', 'en_uzun', Ad)",
     "katman_toplamı('Sit alanı', 'topla', Derece)",
     "katman_toplamı('SİT ALANI', 'count', Ad)",
     "katman_toplamı('Durak', 'değerleri_birleştir', Ad, Ad != 'Uzak')",
@@ -567,6 +588,59 @@ def aggregate(op, values, separator):
         return separator.join(item_text(v) for v in given) if given else None
     if op == "array":
         return Arr(item(v) for v in values)
+    # docs/adr/0602: Tukey's hinges (QGIS's q1 and q3: each half ⌈n/2⌉ long), the exact range, the most and least
+    # frequent value (ties: the least in the language's order), the empty ones, text lengths, each value once.
+    if op in ("q1", "q3", "iqr"):
+        nums = sorted(d for d in map(number_of, values) if d is not None)
+        if not nums:
+            return None
+        half = (len(nums) + 1) // 2
+
+        def mid(ds):
+            n = len(ds)
+            if n % 2:
+                return float(ds[n // 2])
+            with localcontext() as c:
+                c.prec = 200
+                return float((ds[n // 2 - 1] + ds[n // 2]) / 2)
+
+        lo, hi = mid(nums[:half]), mid(nums[len(nums) - half:])
+        return {"q1": lo, "q3": hi, "iqr": hi - lo}[op]
+    if op == "range":
+        nums = [d for d in map(number_of, values) if d is not None]
+        if not nums:
+            return None
+        with localcontext() as c:
+            c.prec = 200
+            return float(max(nums) - min(nums))
+    if op in ("majority", "minority"):
+        seen = {}
+        order = []
+        for v in given:
+            k = key(v)
+            if k not in seen:
+                seen[k] = [v, 0]
+                order.append(k)
+            seen[k][1] += 1
+        if not order:
+            return None
+        sign = -1 if op == "majority" else 1
+        best = min(order, key=lambda k: (sign * seen[k][1], sort_rank(seen[k][0])))
+        return seen[best][0]
+    if op == "missing":
+        return float(len(values) - len(given))
+    if op in ("min_length", "max_length"):
+        lengths = [len(item_text(v).encode("utf-16-le")) // 2 for v in given]
+        if not lengths:
+            return None
+        return float(min(lengths) if op == "min_length" else max(lengths))
+    if op == "concat_unique":
+        out = []
+        for v in given:
+            t = item_text(v)
+            if t not in out:
+                out.append(t)
+        return separator.join(out) if out else None
     raise AssertionError(op)
 
 
@@ -584,7 +658,13 @@ AGGREGATES = {"TOPLA": "sum", "SUM": "sum", "ORTALAMA": "mean", "MEAN": "mean", 
               "EN_YUKSEK": "max", "MAXIMUM": "max", "ORTA_DEGER": "median", "MEDIAN": "median",
               "STD_SAPMA": "stdev", "STDEV": "stdev", "STDDEV": "stdev",
               "DEGERLERI_BIRLESTIR": "concat", "CONCATENATE": "concat",
-              "DEGERLERI_DIZI": "array", "ARRAY_AGG": "array"}
+              "DEGERLERI_DIZI": "array", "ARRAY_AGG": "array",
+              "CEYREK1": "q1", "Q1": "q1", "CEYREK3": "q3", "Q3": "q3", "CEYREKLER_ARASI": "iqr", "IQR": "iqr",
+              "DEGER_ARALIGI": "range", "RANGE": "range", "EN_SIK": "majority", "MAJORITY": "majority",
+              "EN_SEYREK": "minority", "MINORITY": "minority", "BOS_SAY": "missing", "COUNT_MISSING": "missing",
+              "EN_KISA": "min_length", "MIN_LENGTH": "min_length", "EN_UZUN": "max_length",
+              "MAX_LENGTH": "max_length", "BENZERSIZLERI_BIRLESTIR": "concat_unique",
+              "CONCATENATE_UNIQUE": "concat_unique"}
 
 # ── Dates (ADR 0210 §3) ──────────────────────────────────────────────────
 
@@ -1155,7 +1235,14 @@ WORLD = {
         ("COUNT_DISTINCT", "count_distinct"), ("EN_DUSUK", "min"), ("MINIMUM", "min"),
         ("EN_YUKSEK", "max"), ("MAXIMUM", "max"), ("ORTA_DEGER", "median"), ("MEDIAN", "median"),
         ("STD_SAPMA", "stdev"), ("STDEV", "stdev"), ("STDDEV", "stdev"),
-        ("DEGERLERI_DIZI", "array"), ("ARRAY_AGG", "array")]},
+        ("DEGERLERI_DIZI", "array"), ("ARRAY_AGG", "array"),
+        ("CEYREK1", "q1"), ("Q1", "q1"), ("CEYREK3", "q3"), ("Q3", "q3"), ("CEYREKLER_ARASI", "iqr"),
+        ("IQR", "iqr"), ("DEGER_ARALIGI", "range"), ("RANGE", "range"), ("EN_SIK", "majority"),
+        ("MAJORITY", "majority"), ("EN_SEYREK", "minority"), ("MINORITY", "minority"), ("BOS_SAY", "missing"),
+        ("COUNT_MISSING", "missing"), ("EN_KISA", "min_length"), ("MIN_LENGTH", "min_length"),
+        ("EN_UZUN", "max_length"), ("MAX_LENGTH", "max_length")]},
+    "BENZERSIZLERI_BIRLESTIR": (1, 4, ("value", "text", "group", "condition"), "concat_unique"),
+    "CONCATENATE_UNIQUE": (1, 4, ("value", "text", "group", "condition"), "concat_unique"),
     "DEGERLERI_BIRLESTIR": (1, 4, ("value", "text", "group", "condition"), "concat"),
     "CONCATENATE": (1, 4, ("value", "text", "group", "condition"), "concat"),
     "KATMAN_TOPLAMI": (3, 4, ("layer", "text", "value", "condition"), "aggregate"),
@@ -1471,7 +1558,8 @@ def world_call(n, ctx):
     _, k, op, roles, args = n
     world = ctx.world
     named = dict(zip(roles, args))
-    if op in ("sum", "mean", "count", "count_distinct", "min", "max", "median", "stdev", "array", "concat"):
+    if op in ("sum", "mean", "count", "count_distinct", "min", "max", "median", "stdev", "array", "concat", "q1", "q3",
+              "iqr", "range", "majority", "minority", "missing", "min_length", "max_length", "concat_unique"):
         layer = ctx.layer
         values = inner_values(named["value"], layer, world)
         mask = [truthy(v) for v in inner_values(named["condition"], layer, world)] if "condition" in named \

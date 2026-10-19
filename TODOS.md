@@ -240,6 +240,17 @@ Liste:
 - [ ] `CBS-05` Shapefile dışa aktarma (ADR 0514, 19 Ekim): web'de gerekenler: `file.export.shp`'nin işleyicisi biçim işçisinde
   (`shp::write`'ın WASM bağlayıcısı; `.prj` tablosu `esri-prj.json`'dan), Shapefile dışa aktar penceresi (Kod sayfası, Hedef,
   kayıplar), indirme olarak zip (web'de klasör ve tek `.shp` yok); TS türleri üretildi.
+- [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
+  gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
+  (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
+- [ ] `EXPR-0601` iç içe ifadeler (ADR 0601, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İfade oluşturucusu `@öğe`, `@sayaç`
+  ve `değişkenle`'nin adını çekirdeğin tamamlamasından alır; web'in dil testleri yeniden koşmalı.
+- [ ] `EXPR-0602` toplamanın ekleri (ADR 0602, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İşlemler'i ve ifade
+  testleri yeni işlevlerle yeniden koşmalı.
+- [ ] `EXPR-0603` İfade oluşturucu (ADR 0603, 19 Ekim): web'de gerekenler: yorumlar çekirdekten (renk sınıfı `comment`), Biçimle
+  (`editor::format`'ın WASM bağlayıcısı), Son kullanılanlar, tıklanan örnekler; gövdedeki `@öğe` uyarısız.
+- [ ] `EXPR-0604` akışta değerler giriş satırında (ADR 0604, 19 Ekim): web'de gerekenler: akışın çizicisi `inline` düğümleri
+  girişin satırında kutu olarak çizer, kenarlarını atlar, kutudan tel çekmez; `flow.json` yeniden yazıldı (web'in akış e2e'si yeniden).
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede

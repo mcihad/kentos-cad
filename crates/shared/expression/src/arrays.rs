@@ -19,7 +19,7 @@ use crate::read::push_number_text;
 use crate::scalar::{self, R, Scratch, V, as_text, to_number};
 
 /// Text made at `mark`, unless it is past JavaScript's longest string.
-fn made(out: &str, mark: usize) -> R<'static> {
+pub(crate) fn made(out: &str, mark: usize) -> R<'static> {
     if out.len() - mark > MAX_STRING_UNITS && utf16_len(&out[mark..]) > MAX_STRING_UNITS {
         R::Thrown
     } else {
@@ -28,7 +28,7 @@ fn made(out: &str, mark: usize) -> R<'static> {
 }
 
 /// An item as a result: numbers and true/false as they are, text written.
-fn give(it: Item, out: &mut String) -> R<'static> {
+pub(crate) fn give(it: Item, out: &mut String) -> R<'static> {
     match it {
         Item::Null => R::V(V::Null),
         Item::Num(x) => R::V(V::Num(x)),
@@ -41,7 +41,7 @@ fn give(it: Item, out: &mut String) -> R<'static> {
 }
 
 /// An array of items as a result.
-fn give_array(items: &[Item], out: &mut String) -> R<'static> {
+pub(crate) fn give_array(items: &[Item], out: &mut String) -> R<'static> {
     if items.len() > MOST_ITEMS {
         return R::Thrown;
     }
@@ -51,14 +51,14 @@ fn give_array(items: &[Item], out: &mut String) -> R<'static> {
 }
 
 /// A map as a result.
-fn give_map(pairs: &[(String, Item)], out: &mut String) -> R<'static> {
+pub(crate) fn give_map(pairs: &[(String, Item)], out: &mut String) -> R<'static> {
     let mark = out.len();
     compound::push_map(out, pairs.iter().map(|(k, v)| (k.as_str(), v)));
     made(out, mark)
 }
 
 /// A position of an array (0 first, −1 last), as an index; None outside it.
-fn place(i: f64, len: usize) -> Option<usize> {
+pub(crate) fn place(i: f64, len: usize) -> Option<usize> {
     if !i.is_finite() {
         return None;
     }
@@ -202,6 +202,16 @@ impl PartialOrd for Turkish<'_> {
 impl Ord for Turkish<'_> {
     fn cmp(&self, o: &Self) -> Ordering {
         compare_tr(self.0, o.0).then_with(|| self.0.cmp(o.0))
+    }
+}
+
+/// Two items in the language's sort order (`dizi_sırala`): numbers, then Turkish text, true/false, arrays and maps; empty last.
+pub(crate) fn sort_order(a: &Item, b: &Item) -> Ordering {
+    match (sort_rank(a), sort_rank(b)) {
+        (Some(x), Some(y)) => x.cmp(&y),
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (None, None) => Ordering::Equal,
     }
 }
 

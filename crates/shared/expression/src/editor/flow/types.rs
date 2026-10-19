@@ -99,6 +99,42 @@ pub(crate) fn takes(f: Func, i: usize) -> Type {
         Func::ArrayGet => [Any, N][i.min(1)],
         Func::ArraySlice => [Any, N, N][i.min(2)],
         Func::ArraySort => [Any, Bool][i.min(1)],
+        // docs/adr/0600.
+        Func::ToDecimal
+        | Func::ToBase64
+        | Func::FromBase64
+        | Func::Md5
+        | Func::Sha256
+        | Func::Hash
+        | Func::Ltrim
+        | Func::Rtrim
+        | Func::Reverse
+        | Func::Title
+        | Func::SubstrCount
+        | Func::Format
+        | Func::Ascii
+        | Func::Unaccent
+        | Func::Levenshtein
+        | Func::Hamming
+        | Func::CommonPart => match (f, i) {
+            (Func::SubstrCount, 2) => Bool,
+            _ => Text,
+        },
+        Func::ToDms | Func::ToDm => [N, Text, N, Text][i.min(3)],
+        Func::Repeat | Func::WordWrap => [Text, N, Text][i.min(2)],
+        Func::Rand | Func::RandF => [N, N, Any][i.min(2)],
+        Func::Clamp
+        | Func::ScaleLinear
+        | Func::ScaleExponential
+        | Func::ScalePolynomial
+        | Func::Char
+        | Func::Series
+        | Func::FromEpoch => N,
+        Func::ArrayInsert | Func::ArrayRemoveAt => [Any, N, Any][i.min(2)],
+        Func::MapPrefixKeys => [Any, Text][i.min(1)],
+        Func::ArrayMajority | Func::ArrayMinority => [Any, Text][i.min(1)],
+        Func::ArrayFilter => [Any, Bool, N][i.min(2)],
+        Func::WithVariable => [Text, Any, Any][i.min(2)],
         f if f.family() == Family::World => match roles(f).and_then(|r| r.get(i)) {
             Some(Role::Layer | Role::Text) => Text,
             Some(Role::Condition) => Bool,
@@ -186,7 +222,8 @@ pub(crate) fn gives(f: Func) -> Type {
         | Func::RegexReplace
         | Func::ArrayToText
         | Func::ToJson
-        | Func::ConcatValues => Type::Text,
+        | Func::ConcatValues
+        | Func::ConcatUnique => Type::Text,
         Func::Matches
         | Func::ArrayContains
         | Func::MapHas
@@ -194,6 +231,44 @@ pub(crate) fn gives(f: Func) -> Type {
         | Func::Encloses
         | Func::Inside
         | Func::CenterIn => Type::Bool,
+        // docs/adr/0600.
+        Func::ToDecimal
+        | Func::Rand
+        | Func::RandF
+        | Func::Clamp
+        | Func::ScaleLinear
+        | Func::ScaleExponential
+        | Func::ScalePolynomial
+        | Func::SubstrCount
+        | Func::Ascii
+        | Func::Levenshtein
+        | Func::Hamming
+        | Func::ArrayCount
+        | Func::ArrayMedian
+        | Func::Epoch => Type::Number,
+        Func::ToDms
+        | Func::ToDm
+        | Func::ToBase64
+        | Func::FromBase64
+        | Func::Hash
+        | Func::Md5
+        | Func::Sha256
+        | Func::Uuid
+        | Func::Ltrim
+        | Func::Rtrim
+        | Func::Repeat
+        | Func::Reverse
+        | Func::Title
+        | Func::ConcatWs
+        | Func::Format
+        | Func::Char
+        | Func::Unaccent
+        | Func::WordWrap
+        | Func::CommonPart
+        | Func::UrlEncode
+        | Func::FromEpoch
+        | Func::MakeTime => Type::Text,
+        Func::ToBool | Func::ArrayAll | Func::ArrayIntersect => Type::Bool,
         _ => Type::Any,
     }
 }

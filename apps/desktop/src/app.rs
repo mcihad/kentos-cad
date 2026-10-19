@@ -1057,6 +1057,8 @@ pub struct App {
     pub(crate) builder: Option<crate::expression::Builder>,
     /// Whether İfade oluşturucu was left in Akış (for as long as the program runs).
     pub(crate) builder_flow: bool,
+    /// İfade oluşturucu's Son kullanılanlar (for as long as the program runs; docs/adr/0603).
+    pub(crate) builder_recent: Vec<String>,
     /// The ribbon's key tips while they show (ribbon_keys.rs, docs/adr/0118).
     pub(crate) key_tips: Option<crate::ribbon_keys::KeyTips>,
     /// Alt is down alone: letting it go shows the key tips.
@@ -1365,6 +1367,7 @@ impl App {
             processing: crate::processing::Processing::default(),
             builder: None,
             builder_flow: false,
+            builder_recent: Vec::new(),
             key_tips: None,
             alt_armed: false,
             ribbon_peek: false,

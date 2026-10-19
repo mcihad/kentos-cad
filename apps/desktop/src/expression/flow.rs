@@ -17,7 +17,7 @@ use crate::app::{App, Message};
 /// How many changes back Ctrl+Z goes.
 const UNDO: usize = 100;
 /// The smallest scale the flow first opens at: node text stays readable.
-pub(crate) const READABLE: f32 = 0.72;
+pub(crate) const READABLE: f32 = 0.8;
 
 /// Where the world is on the canvas: a world point `p` is at `p * k + (x, y)`.
 #[derive(Clone, Copy, Debug, PartialEq)]

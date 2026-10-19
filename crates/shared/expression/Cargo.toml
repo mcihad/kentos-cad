@@ -14,6 +14,9 @@ publish.workspace = true
 kentos-geometry-core = { path = "../geometry-core" }
 # The regular expression functions (docs/adr/0214 §2.4): rust-lang's small engine.
 regex-lite = { workspace = true }
+# `özet`, `sha256` (docs/adr/0600 §3): the workspace's pure SHA-1 and SHA-2 (MD5 is written here).
+sha1 = { workspace = true }
+sha2 = { workspace = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }

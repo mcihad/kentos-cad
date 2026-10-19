@@ -319,5 +319,25 @@ pub fn walk<'a>(
         }
         // Resolved when the expression compiled (`resolve`).
         Node::At(_) => Value::Null,
+        // An inner expression's frame: the body is walked in it (`lambda`).
+        Node::Local(_, slot) => s.local(*slot as usize),
+        Node::Lambda(l) => {
+            let mut values = Vec::with_capacity(l.args.len() + l.captured.len() + 1);
+            for a in l.args.iter().chain(&l.captured).chain(&l.otherwise) {
+                values.push(walk(a, s, sc).ok());
+            }
+            let views: Vec<Option<V>> =
+                values.iter().map(|v| v.as_ref().map(Value::view)).collect();
+            let mut made = String::new();
+            let code = crate::lambda::Code::of(l);
+            match crate::lambda::apply(&code, &views, &mut made, sc) {
+                R::V(V::Null) => Value::Null,
+                R::V(V::Num(x)) => Value::Num(x),
+                R::V(V::Bool(b)) => Value::Bool(b),
+                R::V(V::Text(t)) => Value::Text(Cow::Owned(t.to_owned())),
+                R::Made => Value::Text(Cow::Owned(made)),
+                R::Thrown => return Err(Thrown),
+            }
+        }
     })
 }

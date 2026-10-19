@@ -156,6 +156,24 @@ fn main(b: &Builder, mode: Mode) -> Element<'_, Message> {
                 Beside::Bottom,
             ))
         });
+    // Biçimle, beside the tabs: the text on lines the eye can follow (docs/adr/0603).
+    let tabs: Element<'_, Message> = if flow {
+        tabs.into()
+    } else {
+        row![
+            container(tabs).width(Fill),
+            tip(
+                button(label::caption("Biçimle"))
+                    .padding([3, 9])
+                    .style(style::button::secondary)
+                    .on_press_maybe((!b.source.trim().is_empty()).then(|| ev(Event::Format))),
+                Tip::new("Uzun ifadeyi girintili satırlara böler; anlamı değişmez"),
+                Beside::Bottom,
+            ),
+        ]
+        .align_y(Center)
+        .into()
+    };
     let mut out = Column::new()
         .spacing(8)
         .width(Fill)
@@ -346,6 +364,10 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
             groups.push(("values".to_owned(), "Sabit değerler".to_owned(), values));
         }
     }
+    let recent = b.recent_items();
+    if !recent.is_empty() {
+        groups.push(("recent".to_owned(), "Son kullanılanlar".to_owned(), recent));
+    }
     let sections: Vec<Section> = core::catalog(&b.schema, &b.query);
     groups.extend(
         sections
@@ -354,7 +376,7 @@ fn tree(b: &Builder, mode: Mode) -> Element<'_, Message> {
     );
     let mut place = 0usize;
     let roots = groups.into_iter().map(|(id, title, items)| {
-        let open = searching || id == "values" || b.open.contains(&id);
+        let open = searching || id == "values" || id == "recent" || b.open.contains(&id);
         let count = items.len();
         let s = Shown { title, items };
         let mut node = Node::new(s.title)
@@ -448,7 +470,7 @@ fn help(b: &Builder, mode: Mode) -> Element<'_, Message> {
             return column![
                 label::strong("Akış"),
                 label::body("İfadenin düğümleri: değer bir düğümün çıkışından (sağ) ötekinin girişine (sol) gider; sonuç sağdadır."),
-                label::caption("Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur. Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır. Düğüme tıklayın: burada düzenlenir; Delete siler, Ctrl+Z geri alır. Tekerlek yakınlaştırır.")
+                label::caption("Ağaçtan bir öğeyi sürükleyin ya da çift tıklayın: düğüm olur. Çıkışı bir girişe sürükleyin: bağlanır; girişin noktasını çekin: ayrılır. Sabitler, alanlar ve değerler girişin satırında kutu olarak durur. Düğüme ya da kutuya tıklayın: burada düzenlenir; Delete siler, Ctrl+Z geri alır. Tekerlek yakınlaştırır.")
                     .style(style::text::muted),
             ]
             .spacing(8)
@@ -511,14 +533,23 @@ fn help(b: &Builder, mode: Mode) -> Element<'_, Message> {
         out = out.push(heading("Argümanlar")).push(args);
     }
     if !h.examples.is_empty() {
-        let mut list = Column::new().spacing(6);
-        for (expr, result) in &h.examples {
-            list = list.push(column![
-                colored(expr, &syntax),
-                label::caption(format!("→ {result}")).style(style::text::muted),
-            ]);
+        let mut list = Column::new().spacing(4);
+        for (i, (expr, result)) in h.examples.iter().enumerate() {
+            // Pressed, the example goes into the expression (docs/adr/0603).
+            list = list.push(
+                button(column![
+                    colored(expr, &syntax),
+                    label::caption(format!("→ {result}")).style(style::text::muted),
+                ])
+                .width(Fill)
+                .padding([3, 6])
+                .style(style::button::ghost)
+                .on_press(ev(Event::Example(i))),
+            );
         }
-        out = out.push(heading("Örnekler")).push(list);
+        out = out
+            .push(heading("Örnekler · tıklayınca ifadeye yazılır"))
+            .push(list);
     }
     if !h.aliases.is_empty() {
         out = out.push(
