@@ -8433,6 +8433,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -13259,6 +13324,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -23036,6 +23108,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -25839,6 +25976,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -36231,6 +36375,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -41095,6 +41304,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -987420,6 +987636,1056 @@
       ]
     },
     {
+      "id": "cad.joins.edit",
+      "version": 1,
+      "title": "Birleşik görünümler",
+      "summary": "Projenin birleşik görünümlerini oluşturur (create), bir ilişkiden kurar (fromRelation: üst katman $uid ile, alt katman ilişkinin alanıyla), değiştirir (update) ve siler (remove). Görünüm bir katmanın kayıtlarını key alanıyla, with katmanının kayıtlarını withKey alanıyla eşler; anahtar bir alanın anahtarı ya da nesnenin kalıcı kimliği için $uid'dir. keep: all (varsayılan, eşleşmeyenler de) ya da matched; fields birleşen katmanın gösterilecek alanları. Satırlar kaydedilmez, cad.joins.query her okuyuşta çizimden kurar. Proje ayarıdır, geri alma adımı değildir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
+          "JoinsOp": {
+            "description": "What `cad.joins.edit` does.",
+            "oneOf": [
+              {
+                "description": "A new view.",
+                "properties": {
+                  "kind": {
+                    "const": "create",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/JoinView"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "view"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A new view of a relation: its parent layer by `$uid`, its child layer by the relation's field.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "keep": {
+                    "$ref": "#/$defs/JoinKeep"
+                  },
+                  "kind": {
+                    "const": "fromRelation",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "relation": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "relation",
+                  "id",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The view of the same id replaced.",
+                "properties": {
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/JoinView"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "view"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The view removed; the records stay as they are.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.joins.edit` v1.\n\nRefusals, in this order: `invalid_join_view`; `invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_join_view`, `join_view_exists`, `too_many_join_views`, `unknown_relation`, `layer_not_found`,\n`not_a_layer`, `field_not_found`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/JoinsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "JoinsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "views": {
+            "description": "The project's views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/JoinView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "JoinsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "views": {
+            "description": "The project's views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/JoinView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "JoinsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_join_view",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_join_view",
+          "join_view_exists",
+          "too_many_join_views",
+          "unknown_relation",
+          "layer_not_found",
+          "not_a_layer",
+          "field_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselleri maliklerine parsel numarasıyla bağla",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "view": {
+                "id": "parsel-malik",
+                "key": "no",
+                "layer": "parsel",
+                "name": "Parseller ve malikleri",
+                "with": "malik",
+                "withKey": "parsel"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.joins.query",
+      "version": 1,
+      "title": "Birleşik görünümü oku",
+      "summary": "Birleşik görünümün satırlarını çizimin şimdiki hâlinden sayfa sayfa verir, hiçbir şey yazmaz: kayıtlı görünüm (view) ya da tanım (definition, önizleme). Ana katmanın kaydı birden çok kayıtla eşleşirse birden çok satırdır; satırın kimliği iki kaydın kalıcı kimliğidir (left/right, eşleşmeyende left/), her okuyuşta aynı. Sütunlar kaydın tarafını (left, right) ve alanını söyler; bir hücre cad.entities.set ile o kayda yazılır, yazılamayanın (anahtar, kilitli katman) nedeni sütundadır. report kayıtların nasıl eşleştiğini (eşleşen, eşleşmeyen, anahtarsız, kardinalite 1:1, 1:N, N:1, N:N), totals sayı sütunlarının toplamını (her kayıt bir kez) verir. Katmanı ya da anahtarı kalkan görünüm broken ile söylenir, satır verilmez. Sayfa en çok 1000 (varsayılan 100); next sonraki sayfanın imleci.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.joins.query` v1: a kept view by its id, or a definition read as it is (a preview).\n\nRefusals: `invalid_join_view` (neither or both, or a definition that does not hold), `unknown_join_view`,\n`invalid_count` (a limit not 1–1000), `invalid_cursor`.",
+        "properties": {
+          "cursor": {
+            "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JoinView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit": {
+            "description": "Rows a page gives, 1–1000; none: 100.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "view": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "JoinsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "JoinColumn": {
+            "description": "A column of a view.",
+            "properties": {
+              "editable": {
+                "description": "Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "The attribute the cell is (the field's name in the record's attributes).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The heading: the field's name; a joined one the main layer has too with “ (layer)”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Why not, when not.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "side": {
+                "$ref": "#/$defs/JoinSide"
+              }
+            },
+            "required": [
+              "name",
+              "side",
+              "field",
+              "editable"
+            ],
+            "type": "object"
+          },
+          "JoinReport": {
+            "description": "How the records met.",
+            "properties": {
+              "cardinality": {
+                "description": "`1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.",
+                "type": "string"
+              },
+              "matched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nullKeys": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "description": "The main layer's records, those with a match, without one, and without a key.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "Every row of the view (all pages).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unmatched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withRecords": {
+                "description": "The joined layer's records and those some record met.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withUsed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "matched",
+              "unmatched",
+              "nullKeys",
+              "withRecords",
+              "withUsed",
+              "rows",
+              "cardinality"
+            ],
+            "type": "object"
+          },
+          "JoinRow": {
+            "description": "A row: a record of the main layer and one of its matches (none when it has none).",
+            "properties": {
+              "cells": {
+                "description": "The columns' values in order; none: no value (an attribute not written, or no match).",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "`left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.",
+                "type": "string"
+              },
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "left",
+              "cells"
+            ],
+            "type": "object"
+          },
+          "JoinSide": {
+            "description": "Which records a column's cells are.",
+            "oneOf": [
+              {
+                "const": "left",
+                "description": "The main layer's record (the row's `left`).",
+                "type": "string"
+              },
+              {
+                "const": "right",
+                "description": "The joined layer's record (the row's `right`).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinTotal": {
+            "description": "A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).",
+            "properties": {
+              "column": {
+                "description": "The column's place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "count": {
+                "description": "The records whose value was a number, and those whose value was not.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sum": {
+                "description": "The exact sum as text; none when too large to hold exactly.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "column",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.query` v1, and its plan.",
+        "properties": {
+          "broken": {
+            "description": "Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/JoinColumn"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next": {
+            "description": "The next page's cursor; none: the last page.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/JoinReport"
+          },
+          "revision": {
+            "description": "The document's revision the rows are of.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/JoinRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "description": "The sums of the columns with a number among their records' values, in column order.",
+            "items": {
+              "$ref": "#/$defs/JoinTotal"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "columns",
+          "rows",
+          "report",
+          "revision"
+        ],
+        "title": "JoinsAnswer",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "JoinColumn": {
+            "description": "A column of a view.",
+            "properties": {
+              "editable": {
+                "description": "Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "The attribute the cell is (the field's name in the record's attributes).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The heading: the field's name; a joined one the main layer has too with “ (layer)”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Why not, when not.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "side": {
+                "$ref": "#/$defs/JoinSide"
+              }
+            },
+            "required": [
+              "name",
+              "side",
+              "field",
+              "editable"
+            ],
+            "type": "object"
+          },
+          "JoinReport": {
+            "description": "How the records met.",
+            "properties": {
+              "cardinality": {
+                "description": "`1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.",
+                "type": "string"
+              },
+              "matched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nullKeys": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "description": "The main layer's records, those with a match, without one, and without a key.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "Every row of the view (all pages).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unmatched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withRecords": {
+                "description": "The joined layer's records and those some record met.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withUsed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "matched",
+              "unmatched",
+              "nullKeys",
+              "withRecords",
+              "withUsed",
+              "rows",
+              "cardinality"
+            ],
+            "type": "object"
+          },
+          "JoinRow": {
+            "description": "A row: a record of the main layer and one of its matches (none when it has none).",
+            "properties": {
+              "cells": {
+                "description": "The columns' values in order; none: no value (an attribute not written, or no match).",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "`left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.",
+                "type": "string"
+              },
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "left",
+              "cells"
+            ],
+            "type": "object"
+          },
+          "JoinSide": {
+            "description": "Which records a column's cells are.",
+            "oneOf": [
+              {
+                "const": "left",
+                "description": "The main layer's record (the row's `left`).",
+                "type": "string"
+              },
+              {
+                "const": "right",
+                "description": "The joined layer's record (the row's `right`).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinTotal": {
+            "description": "A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).",
+            "properties": {
+              "column": {
+                "description": "The column's place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "count": {
+                "description": "The records whose value was a number, and those whose value was not.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sum": {
+                "description": "The exact sum as text; none when too large to hold exactly.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "column",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.query` v1, and its plan.",
+        "properties": {
+          "broken": {
+            "description": "Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/JoinColumn"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next": {
+            "description": "The next page's cursor; none: the last page.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/JoinReport"
+          },
+          "revision": {
+            "description": "The document's revision the rows are of.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/JoinRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "description": "The sums of the columns with a number among their records' values, in column order.",
+            "items": {
+              "$ref": "#/$defs/JoinTotal"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "columns",
+          "rows",
+          "report",
+          "revision"
+        ],
+        "title": "JoinsAnswer",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_join_view",
+          "unknown_join_view",
+          "invalid_count",
+          "invalid_cursor"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsellerin maliklerini oku",
+          "input": {
+            "limit": 50,
+            "view": "parsel-malik"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.fill",
       "version": 1,
       "title": "Formla toplu yaz",
@@ -1033361,6 +1034627,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projede en çok 100 ilişki olur."
+    },
+    {
+      "code": "invalid_join_view",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Birleşik görünümün kimliği, adı, katmanları, anahtarları ya da alanları kurallarına uymuyor."
+    },
+    {
+      "code": "unknown_join_view",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle bir birleşik görünüm yok."
+    },
+    {
+      "code": "join_view_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle başka bir birleşik görünüm var."
+    },
+    {
+      "code": "too_many_join_views",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 50 birleşik görünüm olur."
     },
     {
       "code": "relation_field_unknown",

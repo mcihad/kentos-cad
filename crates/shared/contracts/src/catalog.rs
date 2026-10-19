@@ -6413,6 +6413,62 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // The project's join views kept and read (docs/adr/0527), held together by
+        // fixtures/commands/v1/cad.joins.edit.json and cad.joins.query.json. The web is paused (docs/adr/0228).
+        CommandDescriptor {
+            id: crate::CAD_JOINS_EDIT.into(),
+            version: crate::CAD_JOINS_EDIT_VERSION,
+            title: "Birleşik görünümler".into(),
+            summary: "Projenin birleşik görünümlerini oluşturur (create), bir ilişkiden kurar (fromRelation: üst katman $uid ile, alt katman ilişkinin alanıyla), değiştirir (update) ve siler (remove). Görünüm bir katmanın kayıtlarını key alanıyla, with katmanının kayıtlarını withKey alanıyla eşler; anahtar bir alanın anahtarı ya da nesnenin kalıcı kimliği için $uid'dir. keep: all (varsayılan, eşleşmeyenler de) ya da matched; fields birleşen katmanın gösterilecek alanları. \
+                      Satırlar kaydedilmez, cad.joins.query her okuyuşta çizimden kurar. Proje ayarıdır, geri alma adımı değildir. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JoinsEdit>(),
+            output: schema::<crate::JoinsEdited>(),
+            plan: Some(schema::<crate::JoinsEdited>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parselleri maliklerine parsel numarasıyla bağla".into(),
+                input: json!({ "edit": { "kind": "create", "view": { "id": "parsel-malik", "name": "Parseller ve malikleri", "layer": "parsel", "key": "no", "with": "malik", "withKey": "parsel" } } }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_JOINS_QUERY.into(),
+            version: crate::CAD_JOINS_QUERY_VERSION,
+            title: "Birleşik görünümü oku".into(),
+            summary: "Birleşik görünümün satırlarını çizimin şimdiki hâlinden sayfa sayfa verir, hiçbir şey yazmaz: kayıtlı görünüm (view) ya da tanım (definition, önizleme). \
+                      Ana katmanın kaydı birden çok kayıtla eşleşirse birden çok satırdır; satırın kimliği iki kaydın kalıcı kimliğidir (left/right, eşleşmeyende left/), her okuyuşta aynı. \
+                      Sütunlar kaydın tarafını (left, right) ve alanını söyler; bir hücre cad.entities.set ile o kayda yazılır, yazılamayanın (anahtar, kilitli katman) nedeni sütundadır. \
+                      report kayıtların nasıl eşleştiğini (eşleşen, eşleşmeyen, anahtarsız, kardinalite 1:1, 1:N, N:1, N:N), totals sayı sütunlarının toplamını (her kayıt bir kez) verir. \
+                      Katmanı ya da anahtarı kalkan görünüm broken ile söylenir, satır verilmez. Sayfa en çok 1000 (varsayılan 100); next sonraki sayfanın imleci."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::JoinsQuery>(),
+            output: schema::<crate::JoinsAnswer>(),
+            plan: Some(schema::<crate::JoinsAnswer>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsellerin maliklerini oku".into(),
+                input: json!({ "view": "parsel-malik", "limit": 50 }),
+                output: None,
+            }],
+        },
         // Many records through a form at once (docs/adr/0403 §5), held together by
         // fixtures/commands/v1/cad.forms.fill.json. The web is paused (docs/adr/0228).
         CommandDescriptor {
@@ -8179,6 +8235,12 @@ mod tests {
                     crate::CAD_FORMS_FILL => {
                         serde_json::from_value::<crate::FormsFill>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_JOINS_EDIT => {
+                        serde_json::from_value::<crate::JoinsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_JOINS_QUERY => {
+                        serde_json::from_value::<crate::JoinsQuery>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_RELATIONS_EDIT => {
                         serde_json::from_value::<crate::RelationsEdit>(e.input.clone()).map(|_| ())
                     }
@@ -8638,6 +8700,14 @@ mod tests {
                         }
                         crate::CAD_FORMS_FILL => {
                             serde_json::from_value::<crate::FormsFilled>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_JOINS_EDIT => {
+                            serde_json::from_value::<crate::JoinsEdited>(output.clone())
+                                .map(|_| ())
+                        }
+                        crate::CAD_JOINS_QUERY => {
+                            serde_json::from_value::<crate::JoinsAnswer>(output.clone())
                                 .map(|_| ())
                         }
                         crate::CAD_RELATIONS_EDIT => {

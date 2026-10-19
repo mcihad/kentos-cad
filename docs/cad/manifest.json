@@ -1561,6 +1561,23 @@
    "tests": 0
   },
   {
+   "id": "data.joinViews",
+   "kind": "command",
+   "title": "Birleşik görünümler…",
+   "level": "semantic",
+   "via": [
+    "cad.joins.edit",
+    "cad.joins.query"
+   ],
+   "operation": null,
+   "python": "kentos.cad.joins.edit, kentos.cad.joins.query",
+   "mcp": "cad.joins.edit, cad.joins.query",
+   "note": "Birleşik görünümler projenin ayarıdır, cad.joins.edit ile yazılır; satırları cad.joins.query her okuyuşta çizimden kurar, hücre cad.entities.set ile sahibi olan kayda yazılır (ADR 0527).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "data.layerRules",
    "kind": "command",
    "title": "Kayıt kuralları",

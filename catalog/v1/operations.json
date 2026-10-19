@@ -1522,6 +1522,14 @@
       ],
       "note": "Bütün kayıtlar cad.forms.audit ile denetlenir; pencere yazmaz, seçer ve Formla düzenle'yi açar (ADR 0406)."
     },
+    "data.joinViews": {
+      "level": "semantic",
+      "via": [
+        "cad.joins.edit",
+        "cad.joins.query"
+      ],
+      "note": "Birleşik görünümler projenin ayarıdır, cad.joins.edit ile yazılır; satırları cad.joins.query her okuyuşta çizimden kurar, hücre cad.entities.set ile sahibi olan kayda yazılır (ADR 0527)."
+    },
     "data.relations": {
       "level": "semantic",
       "via": [

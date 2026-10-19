@@ -2695,6 +2695,30 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.joins.edit",
+        refusals: &[
+            &["invalid_join_view"],
+            REVISION,
+            &[
+                "unknown_join_view",
+                "join_view_exists",
+                "too_many_join_views",
+                "unknown_relation",
+                "layer_not_found",
+                "not_a_layer",
+                "field_not_found",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.joins.query",
+        refusals: &[&["invalid_join_view", "unknown_join_view", "invalid_count", "invalid_cursor"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],

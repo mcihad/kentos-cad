@@ -183,6 +183,7 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             named_views: Vec::new(),
             forms: Vec::new(),
             relations: Vec::new(),
+            join_views: Vec::new(),
             ucs: None,
             srid: 5256,
             length_decimals: 3,

@@ -32,10 +32,11 @@ use kentos_interaction::Level;
 use crate::app::{App, Message};
 
 /// The commands this module runs.
-pub const COMMANDS: [&str; 10] = [
+pub const COMMANDS: [&str; 11] = [
     "data.forms",
     "data.formEdit",
     "data.relations",
+    "data.joinViews",
     "data.formAudit",
     "data.tableStyles",
     "data.subtypes",
@@ -81,6 +82,7 @@ impl App {
             "data.forms" => self.open_forms(None),
             "data.formEdit" => return self.open_form_entry(),
             "data.relations" => self.open_relations(),
+            "data.joinViews" => self.open_joins(),
             "data.formAudit" => return self.open_form_audit(None),
             "data.tableStyles" => return self.open_table_styles(),
             "data.subtypes" => return self.open_subtypes(),

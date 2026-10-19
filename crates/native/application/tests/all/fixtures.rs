@@ -67,6 +67,8 @@ use kentos_domain::contracts::{
 use kentos_native_application::{
     forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, schema_describe, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
+use kentos_domain::contracts::{JoinsEdit, JoinsQuery};
+use kentos_native_application::{joins_edit, joins_query};
 use serde_json::{Value, json};
 
 type Outcome<T> = Result<T, String>;
@@ -535,6 +537,18 @@ impl Input for RecordsCreate {
 }
 
 impl Input for RelationsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for JoinsEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for JoinsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3117,6 +3131,8 @@ fn run_op(
         kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
         kentos_domain::contracts::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),
         kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
+        kentos_domain::contracts::CAD_JOINS_EDIT => run!(joins_edit, JoinsEdit),
+        kentos_domain::contracts::CAD_JOINS_QUERY => run!(joins_query, JoinsQuery),
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),

@@ -638,6 +638,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.forms.import"
             // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
             | "cad.relations.edit"
+            | "cad.joins.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).

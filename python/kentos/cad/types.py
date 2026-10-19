@@ -1745,6 +1745,34 @@ IslandStyleName = Literal["outer", "normal", "ignore"]
 """The names of :class:`IslandStyle`, for a plain string."""
 
 
+class JoinKeep(_StrEnum):
+    """Which records of the layer a view shows.
+
+    - ``all``: Every record, the ones without a match with empty cells (a left join).
+    - ``matched``: Only the records with a match (an inner join).
+    """
+    ALL = "all"
+    MATCHED = "matched"
+
+
+JoinKeepName = Literal["all", "matched"]
+"""The names of :class:`JoinKeep`, for a plain string."""
+
+
+class JoinSide(_StrEnum):
+    """Which records a column's cells are.
+
+    - ``left``: The main layer's record (the row's `left`).
+    - ``right``: The joined layer's record (the row's `right`).
+    """
+    LEFT = "left"
+    RIGHT = "right"
+
+
+JoinSideName = Literal["left", "right"]
+"""The names of :class:`JoinSide`, for a plain string."""
+
+
 class JunctionRole(_StrEnum):
     """What a junction is (docs/adr/0209 §2).
 
@@ -5055,6 +5083,29 @@ class InsertsClipOperation(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> InsertsClipOperation:
         return _variant(_INSERTS_CLIP_OPERATION, "InsertsClipOperation", "kind", data).from_json(data)
+
+
+class JoinsOp(_Union):
+    """What `cad.joins.edit` does.
+
+    One of:
+
+    - :class:`CreateJoinsOp` (``kind: create``)
+    - :class:`FromRelationJoinsOp` (``kind: fromRelation``)
+    - :class:`UpdateJoinsOp` (``kind: update``)
+    - :class:`RemoveJoinsOp` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsOp:
+        return _variant(_JOINS_OP, "JoinsOp", "kind", data).from_json(data)
 
 
 class LeaderEdit(_Union):
@@ -20722,6 +20773,344 @@ class ItemWords(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class JoinColumn(_Model):
+    """A column of a view.
+    Attributes:
+        name: The heading: the field's name; a joined one the main layer has too with “ (layer)”.
+        field: The attribute the cell is (the field's name in the record's attributes).
+        editable: Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).
+        reason: Why not, when not.
+    """
+    name: str
+    side: JoinSide | JoinSideName
+    field: str
+    editable: bool
+    reason: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["side"] = _enum_out(self.side)
+        out["field"] = self.field
+        out["editable"] = self.editable
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinColumn:
+        return cls(
+            name=data["name"],
+            side=_enum_in(JoinSide, data["side"]),
+            field=data["field"],
+            editable=data["editable"],
+            reason=data.get("reason", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinReport(_Model):
+    """How the records met.
+    Attributes:
+        records: The main layer's records, those with a match, without one, and without a key. Unit: count.
+        matched: Unit: count.
+        unmatched: Unit: count.
+        null_keys: Unit: count.
+        with_records: The joined layer's records and those some record met. Unit: count.
+        with_used: Unit: count.
+        rows: Every row of the view (all pages). Unit: count.
+        cardinality: `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
+    """
+    records: int
+    matched: int
+    unmatched: int
+    null_keys: int
+    with_records: int
+    with_used: int
+    rows: int
+    cardinality: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["records"] = self.records
+        out["matched"] = self.matched
+        out["unmatched"] = self.unmatched
+        out["nullKeys"] = self.null_keys
+        out["withRecords"] = self.with_records
+        out["withUsed"] = self.with_used
+        out["rows"] = self.rows
+        out["cardinality"] = self.cardinality
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinReport:
+        return cls(
+            records=data["records"],
+            matched=data["matched"],
+            unmatched=data["unmatched"],
+            null_keys=data["nullKeys"],
+            with_records=data["withRecords"],
+            with_used=data["withUsed"],
+            rows=data["rows"],
+            cardinality=data["cardinality"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinRow(_Model):
+    """A row: a record of the main layer and one of its matches (none when it has none).
+    Attributes:
+        id: `left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.
+        cells: The columns' values in order; none: no value (an attribute not written, or no match).
+    """
+    id: str
+    left: str
+    cells: list[str | None]
+    right: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["left"] = self.left
+        out["cells"] = list(self.cells)
+        if self.right is not UNSET:
+            out["right"] = self.right
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinRow:
+        return cls(
+            id=data["id"],
+            left=data["left"],
+            cells=list(data["cells"]),
+            right=data.get("right", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinTotal(_Model):
+    """A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).
+    Attributes:
+        column: The column's place. Unit: count.
+        count: The records whose value was a number, and those whose value was not. Unit: count.
+        skipped: Unit: count.
+        sum: The exact sum as text; none when too large to hold exactly.
+    """
+    column: int
+    count: int
+    skipped: int | Unset = UNSET
+    sum: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["count"] = self.count
+        if self.skipped is not UNSET:
+            out["skipped"] = self.skipped
+        if self.sum is not UNSET:
+            out["sum"] = self.sum
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinTotal:
+        return cls(
+            column=data["column"],
+            count=data["count"],
+            skipped=data.get("skipped", UNSET),
+            sum=data.get("sum", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinView(_Model):
+    """A join view: the layer's records by `key` with the `with` layer's by `withKey`.
+    Attributes:
+        id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+        name: What the table's layer list shows; trimmed, 1–64 characters.
+        layer: The main layer's id: one row (or more) a record of it.
+        key: The main layer's key: a field's key, or `$uid`.
+        with_: The joined layer's id (the main one itself for a tree).
+        with_key: The joined layer's key: a field's key, or `$uid`.
+        fields: The joined layer's fields the view shows, in order (keys); none: all of them.
+        keep: Written only when not `all`.
+    """
+    id: str
+    name: str
+    layer: str
+    key: str
+    with_: str
+    with_key: str
+    fields: list[str] | Unset = UNSET
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["key"] = self.key
+        out["with"] = self.with_
+        out["withKey"] = self.with_key
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinView:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            layer=data["layer"],
+            key=data["key"],
+            with_=data["with"],
+            with_key=data["withKey"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsAnswer(_Model):
+    """Output of `cad.joins.query` v1, and its plan.
+    Attributes:
+        revision: The document's revision the rows are of.
+        broken: Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.
+        next: The next page's cursor; none: the last page.
+        totals: The sums of the columns with a number among their records' values, in column order.
+    """
+    name: str
+    columns: list[JoinColumn]
+    rows: list[JoinRow]
+    report: JoinReport
+    revision: str
+    broken: str | None | Unset = UNSET
+    next: str | None | Unset = UNSET
+    totals: list[JoinTotal] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        if self.next is not UNSET:
+            out["next"] = self.next
+        if self.totals is not UNSET:
+            out["totals"] = [e0.to_json() for e0 in self.totals]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsAnswer:
+        return cls(
+            name=data["name"],
+            columns=[JoinColumn.from_json(e0) for e0 in data["columns"]],
+            rows=[JoinRow.from_json(e0) for e0 in data["rows"]],
+            report=JoinReport.from_json(data["report"]),
+            revision=data["revision"],
+            broken=data.get("broken", UNSET),
+            next=data.get("next", UNSET),
+            totals=[JoinTotal.from_json(e0) for e0 in data["totals"]] if "totals" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdit(_Model):
+    """Input of `cad.joins.edit` v1.
+
+    Refusals, in this order: `invalid_join_view`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_join_view`, `join_view_exists`, `too_many_join_views`, `unknown_relation`, `layer_not_found`,
+    `not_a_layer`, `field_not_found`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: JoinsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdit:
+        return cls(
+            edit=JoinsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdited(_Model):
+    """Output of `cad.joins.edit` v1, and what plan says it would do.
+    Attributes:
+        views: The project's views afterwards, in order.
+        revision: The document's revision afterwards (plan: the one it was made against).
+    """
+    views: list[JoinView]
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdited:
+        return cls(
+            views=[JoinView.from_json(e0) for e0 in data["views"]],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsQuery(_Model):
+    """Input of `cad.joins.query` v1: a kept view by its id, or a definition read as it is (a preview).
+
+    Refusals: `invalid_join_view` (neither or both, or a definition that does not hold), `unknown_join_view`,
+    `invalid_count` (a limit not 1–1000), `invalid_cursor`.
+    Attributes:
+        cursor: The page after the one whose `next` this is.
+        limit: Rows a page gives, 1–1000; none: 100. Unit: count.
+    """
+    cursor: str | None | Unset = UNSET
+    definition: JoinView | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.definition is not UNSET:
+            out["definition"] = None if self.definition is None else self.definition.to_json()
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsQuery:
+        return cls(
+            cursor=data.get("cursor", UNSET),
+            definition=UNSET if "definition" not in data else None if data["definition"] is None else JoinView.from_json(data["definition"]),
+            limit=data.get("limit", UNSET),
+            view=data.get("view", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class JunctionLayer(_Model):
     """A junction layer: its points' role and, optionally, which of them it takes and which are closed.
     Attributes:
@@ -29702,6 +30091,7 @@ class ProjectSettings(_Model):
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
             and the geoid model; absent: not said, and no command takes them for either.
+        join_views: The project's join views (docs/adr/0527), in the table's order.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
@@ -29752,6 +30142,7 @@ class ProjectSettings(_Model):
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
+    join_views: list[JoinView] | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
@@ -29809,6 +30200,8 @@ class ProjectSettings(_Model):
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.heights is not UNSET:
             out["heights"] = None if self.heights is None else self.heights.to_json()
+        if self.join_views is not UNSET:
+            out["joinViews"] = [e0.to_json() for e0 in self.join_views]
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.leader_styles is not UNSET:
@@ -29874,6 +30267,7 @@ class ProjectSettings(_Model):
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
+            join_views=[JoinView.from_json(e0) for e0 in data["joinViews"]] if "joinViews" in data else UNSET,
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
@@ -45808,6 +46202,88 @@ class InvertInsertsClipOperation(InsertsClipOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateJoinsOp(JoinsOp):
+    """A new view."""
+    TAG_VALUE: ClassVar[str] = "create"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FromRelationJoinsOp(JoinsOp):
+    """A new view of a relation: its parent layer by `$uid`, its child layer by the relation's field."""
+    TAG_VALUE: ClassVar[str] = "fromRelation"
+    relation: str
+    id: str
+    name: str
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fromRelation"}
+        out["relation"] = self.relation
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FromRelationJoinsOp:
+        return cls(
+            relation=data["relation"],
+            id=data["id"],
+            name=data["name"],
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateJoinsOp(JoinsOp):
+    """The view of the same id replaced."""
+    TAG_VALUE: ClassVar[str] = "update"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveJoinsOp(JoinsOp):
+    """The view removed; the records stay as they are."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveJoinsOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -49977,6 +50453,9 @@ _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOpera
 _INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInsertsClipOperation, "remove": RemoveInsertsClipOperation, "frame": FrameInsertsClipOperation, "invert": InvertInsertsClipOperation}
 
 
+_JOINS_OP: dict[str, type[JoinsOp]] = {"create": CreateJoinsOp, "fromRelation": FromRelationJoinsOp, "update": UpdateJoinsOp, "remove": RemoveJoinsOp}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -50368,6 +50847,7 @@ __all__ = [
     "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
+    "CreateJoinsOp",
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
@@ -50682,6 +51162,7 @@ __all__ = [
     "FrameTableEdit",
     "FrameUcsTo",
     "FromFieldDomainsOp",
+    "FromRelationJoinsOp",
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -50794,7 +51275,21 @@ __all__ = [
     "IslandStyleName",
     "ItemWords",
     "JoggedDimensionMeasure",
+    "JoinColumn",
+    "JoinKeep",
+    "JoinKeepName",
+    "JoinReport",
+    "JoinRow",
+    "JoinSide",
+    "JoinSideName",
+    "JoinTotal",
+    "JoinView",
     "JoinWallsOperation",
+    "JoinsAnswer",
+    "JoinsEdit",
+    "JoinsEdited",
+    "JoinsOp",
+    "JoinsQuery",
     "JoinsWallsOperation",
     "JunctionLayer",
     "JunctionRole",
@@ -51293,6 +51788,7 @@ __all__ = [
     "RemoveFormsOp",
     "RemoveInsertsClipOperation",
     "RemoveIslandsHatchEdit",
+    "RemoveJoinsOp",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
     "RenameFormsOp",
@@ -51622,6 +52118,7 @@ __all__ = [
     "UpdateFeatureChange",
     "UpdateFieldEdit",
     "UpdateFormsOp",
+    "UpdateJoinsOp",
     "UpdateRelationsOp",
     "ValueProblem",
     "ValuesFieldsWriteOp",

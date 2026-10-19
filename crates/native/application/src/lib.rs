@@ -262,6 +262,8 @@ pub mod fields_migrate;
 pub mod forms_export;
 pub mod forms_import;
 pub mod forms_validate;
+pub mod joins_edit;
+pub mod joins_query;
 pub mod relations_edit;
 pub mod widths;
 
@@ -415,6 +417,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_RELATIONS_EDIT,
         kentos_contracts::CAD_RELATIONS_EDIT_VERSION,
+    ),
+    // The project's join views kept and read ([`joins_edit`], [`joins_query`], docs/adr/0527).
+    (
+        kentos_contracts::CAD_JOINS_EDIT,
+        kentos_contracts::CAD_JOINS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_JOINS_QUERY,
+        kentos_contracts::CAD_JOINS_QUERY_VERSION,
     ),
     // Taramanın sınırı, adaları ve ilişkisi ([`hatches_edit`], docs/adr/0329 §4).
     (

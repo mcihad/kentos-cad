@@ -30,6 +30,8 @@ use crate::{
 use serde_json::Value;
 
 use crate::blocks_insert;
+use crate::{joins_edit, joins_query};
+use kentos_contracts::{JoinsEdit, JoinsQuery};
 use crate::fields_write;
 use crate::{processing_run, processing_tools};
 use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
@@ -183,6 +185,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_RECORDS_CREATE => $then!(records, RecordsCreate),
             kentos_contracts::CAD_RECORDS_DUPLICATE => $then!(records_duplicate, RecordsDuplicate),
             kentos_contracts::CAD_RELATIONS_EDIT => $then!(relations_edit, RelationsEdit),
+            kentos_contracts::CAD_JOINS_EDIT => $then!(joins_edit, JoinsEdit),
+            kentos_contracts::CAD_JOINS_QUERY => $then!(joins_query, JoinsQuery),
             kentos_contracts::CAD_ENTITIES_TRIM => $then!(entities_trim, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_EXTEND => $then!(entities_extend, EntitiesTrim),
             kentos_contracts::CAD_ENTITIES_FILLET => $then!(entities_fillet, EntitiesFillet),

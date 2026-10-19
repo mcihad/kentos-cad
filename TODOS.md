@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-09` birleşik görünüm (ADR 0527, 19 Ekim): web'de gerekenler: `cad.joins.edit` ve `cad.joins.query`'nin işleyicileri
+  (satırlar WASM'da `joins_query::read`'in kuralıyla), Öznitelik tablosunda görünümler ve hücreden sahibi olan kayda yazma,
+  Birleşik görünümler penceresi; ortak durumlar `fixtures/commands/v1/cad.joins.*.json`.
 - [ ] `CBS-27` olay kaymasını denetle (ADR 0526, 19 Ekim): web'de gerekenler: `processing/builtin/lrs/`'e `linearRef.eventDrift`
   (kayma çekirdekten: `line_drift`, `point_drift`; WASM'da toplu işlem), `fixtures/processing/v1/lrs.json`'un üç `drift-` durumu,
   `routeDrift` ikonu ve Ağ analizi ▾'deki yeri.
@@ -1981,6 +1984,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-09` birleşik görünüm (dilim): projenin `joinViews`'u (`.kcad` şema 89), satırlar her okuyuşta çizimden, çoğalan satırın
+  kimliği iki kaydın kalıcı kimliği, rapor ve kardinalite, kaydı bir kez sayan toplamlar, sahibi olan kayda yazma, kopuk görünüm;
+  `cad.joins.edit`, `.query`, Öznitelik tablosu, pencere, Python, MCP. Kalan: dış kaynaklar arasında sağlayıcı sorgusu, PG görünümü
+  ve salt okunur SQL katmanı (G2). — **19 Ekim, [ADR 0527](docs/adr/0527-join-views.md).**
 - [ ] `CBS-27` olay kaymasını denetle (dilim): olay nesneleri rota kimliğiyle rotalarına bağlı, rotanın bugünkü hâliyle yeniden
   yerleştirilip kayma (nokta uzaklığı; çizgide köşelerin ve yay ortalarının öbür yola en büyük uzaklığı) ve gösterilemeyenler
   raporlanır, Yerine taşı tek adımda; İşlemler aracı `linearRef.eventDrift`, `cad.processing.run` ile Python ve MCP. Kalan:

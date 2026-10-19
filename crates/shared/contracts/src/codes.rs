@@ -280,6 +280,14 @@ codes! {
     RELATION_EXISTS = "relation_exists", Failed, false, "Bu kimlikle başka bir ilişki var.";
     /// A 101st relation.
     TOO_MANY_RELATIONS = "too_many_relations", Failed, false, "Projede en çok 100 ilişki olur.";
+    /// A join view by its shape (docs/adr/0527), or a query naming neither or both of a kept one and a definition.
+    INVALID_JOIN_VIEW = "invalid_join_view", Failed, false, "Birleşik görünümün kimliği, adı, katmanları, anahtarları ya da alanları kurallarına uymuyor.";
+    /// A join view the project has not.
+    UNKNOWN_JOIN_VIEW = "unknown_join_view", Failed, false, "Bu kimlikle bir birleşik görünüm yok.";
+    /// A new join view with the id of another.
+    JOIN_VIEW_EXISTS = "join_view_exists", Failed, false, "Bu kimlikle başka bir birleşik görünüm var.";
+    /// A 51st join view.
+    TOO_MANY_JOIN_VIEWS = "too_many_join_views", Failed, false, "Projede en çok 50 birleşik görünüm olur.";
     /// A relation's child field the child layer has not.
     RELATION_FIELD_UNKNOWN = "relation_field_unknown", Failed, false, "İlişkinin alanı alt katmanda yok.";
     /// A parent a `restrict` relation keeps from being deleted while it has children.
