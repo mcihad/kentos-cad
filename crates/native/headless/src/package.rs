@@ -4,6 +4,10 @@
 //! copies and encodes the project file; the write copies the files into a temporary folder, reads each back against
 //! its SHA-256, writes the project file whole and renames the folder into place. Missing files, databases and
 //! addresses stay as they are, each said.
+//!
+//! External references' sources go too (docs/adr/0350 §4), byte for byte so their digests hold; linked images and
+//! rasters, and the sources, are looked for with the project's search paths (`links::find_in`). A text style drawn in a
+//! substitute face is said as left out; KentOS's own faces come with it. `paket.json` lists all of it.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
@@ -11,9 +15,10 @@ use std::path::{Path, PathBuf};
 
 use kentos_contracts::encoding::{sha256_hex, sha256_reader_hex};
 use kentos_contracts::{
-    CommandWarning, DocumentSnapshotV2, LeftWhy, MAX_PACKAGE_NAME, PackageLeft, PackageProject,
-    PackagedFile, PackagedKind, ProjectPackaged, SourceKind, codes,
+    CommandWarning, DocumentSnapshotV2, FontMatch, FontsReport, LeftWhy, MAX_PACKAGE_NAME, PackageLeft,
+    PackageProject, PackagedFile, PackagedKind, ProjectPackaged, SourceKind, codes,
 };
+use kentos_native_application::links::find_in;
 use kentos_domain::Document;
 use serde_json::Value;
 
@@ -22,6 +27,10 @@ use crate::files;
 
 /// The folder the copies go into, in the package.
 const DATA: &str = "veri";
+
+/// The manifest's name in the package and its format (docs/adr/0350 §4).
+pub const MANIFEST: &str = "paket.json";
+pub const MANIFEST_FORMAT: &str = "kentos.package/1";
 
 /// A raster's files beside it, by the extension added to its stem or to its whole name.
 const WORLD_FILES: &[&str] = &[
@@ -45,6 +54,7 @@ pub struct Planned {
     target: PathBuf,
     name: String,
     project: Vec<u8>,
+    manifest: Vec<u8>,
     /// Each copy: the file it is copied from and its path in the package.
     copies: Vec<(PathBuf, String)>,
 }
@@ -246,23 +256,32 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
     let mut copies = Copies::default();
     let mut left: Vec<PackageLeft> = Vec::new();
     let from_ref = from.as_deref();
+    let search = doc.settings().xref_paths.clone();
     // Objects, the drawing's (named by their lasting ids) and the blocks' (by the block's id).
     let uids: Vec<String> = snapshot.uids.iter().map(ToString::to_string).collect();
     if let Some(Value::Array(list)) = value.get_mut("entities") {
         for (k, e) in list.iter_mut().enumerate() {
             let at = uids.get(k).cloned().unwrap_or_default();
-            walk_entity(e, &at, from_ref, &mut copies, &mut left);
+            walk_entity(e, &at, from_ref, &search, &mut copies, &mut left);
         }
     }
     if let Some(Value::Array(blocks)) = value.get_mut("blocks") {
         for b in blocks.iter_mut() {
+            // An external reference: its source copied, its link the copy; its content is the source's.
+            if b.get("xref").is_some_and(Value::is_object) {
+                let name = b.get("name").and_then(Value::as_str).unwrap_or_default().to_owned();
+                if let Some(x) = b.get_mut("xref") {
+                    xref(x, &name, from_ref, &search, &target, &mut copies, &mut left);
+                }
+                continue;
+            }
             let at = format!(
                 "blok:{}",
                 b.get("id").and_then(Value::as_str).unwrap_or_default()
             );
             if let Some(Value::Array(list)) = b.get_mut("entities") {
                 for e in list.iter_mut() {
-                    walk_entity(e, &at, from_ref, &mut copies, &mut left);
+                    walk_entity(e, &at, from_ref, &search, &mut copies, &mut left);
                 }
             }
         }
@@ -293,8 +312,9 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                 });
                 continue;
             }
-            let at = PathBuf::from(&path);
-            if !at.is_file() {
+            let relative = s.get("relative").and_then(Value::as_str).map(str::to_owned);
+            let found = find_in(&path, relative.as_deref(), from_ref, &[]).at;
+            let Some(at) = found else {
                 left.push(PackageLeft {
                     kind: PackagedKind::Source,
                     path,
@@ -302,11 +322,23 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                     at: id,
                 });
                 continue;
-            }
+            };
             let rel = copies.take(&at, PackagedKind::Source);
             let abs = rel.split('/').fold(target.clone(), |p, part| p.join(part));
             s["path"] = Value::String(abs.display().to_string());
             s["relative"] = Value::String(rel);
+        }
+    }
+    // The typefaces: KentOS's own faces come with it; a style naming another is drawn in a substitute.
+    let (fonts, _) = kentos_native_application::fonts_report::report(doc, &FontsReport::default());
+    for f in &fonts.styles {
+        if matches!(f.how, FontMatch::Shx | FontMatch::Missing) {
+            left.push(PackageLeft {
+                kind: PackagedKind::Font,
+                path: f.file.clone().unwrap_or_default(),
+                why: LeftWhy::Substituted,
+                at: format!("stil:{}", f.name),
+            });
         }
     }
     let packed: DocumentSnapshotV2 = serde_json::from_value(value).map_err(|e| {
@@ -355,6 +387,7 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
                     LeftWhy::Missing => "yerinde yok",
                     LeftWhy::Database => "veritabanı",
                     LeftWhy::Address => "adres",
+                    LeftWhy::Substituted => "yerine başka yüzle çizilir",
                 };
                 format!("{} ({why})", l.path)
             })
@@ -370,43 +403,106 @@ pub fn plan(doc: &Document, input: &PackageProject) -> Result<Planned, Refused> 
         });
     }
     let project_path = target.join(&name);
+    let project_sha256 = sha256_hex(&project);
+    let manifest = manifest_of(&name, project.len() as u64, &project_sha256, &files_out, &left, &fonts.faces);
+    bytes += manifest.len() as u64;
     Ok(Planned {
         output: ProjectPackaged {
             path: target.display().to_string(),
             project: project_path.display().to_string(),
             project_bytes: project.len() as u64,
-            project_sha256: sha256_hex(&project),
+            project_sha256,
             files: files_out,
             left,
+            manifest: target.join(MANIFEST).display().to_string(),
+            manifest_sha256: sha256_hex(&manifest),
+            faces: fonts.faces,
             bytes,
         },
         warnings,
         target,
         name,
         project,
+        manifest,
         copies: planned,
     })
 }
 
-/// One object's links: its file (an image or a raster), a point cloud's files, a linked table, its attachments.
+/// `paket.json` (docs/adr/0350 §4): the project file, every copy and every link left out, the faces drawn; keys in a
+/// fixed order, no time, so the same drawing gives the same manifest.
+fn manifest_of(
+    name: &str,
+    bytes: u64,
+    sha256: &str,
+    files: &[PackagedFile],
+    left: &[PackageLeft],
+    faces: &[kentos_contracts::DrawingFont],
+) -> Vec<u8> {
+    let manifest = serde_json::json!({
+        "format": MANIFEST_FORMAT,
+        "project": { "path": name, "bytes": bytes, "sha256": sha256 },
+        "files": files,
+        "left": left,
+        "faces": faces,
+    });
+    let mut out = serde_json::to_vec_pretty(&manifest).unwrap_or_default();
+    out.push(b'\n');
+    out
+}
+
+/// An external reference's source (its block's `xref`), copied byte for byte (its digest holds) and its link made the
+/// copy: `path` the copy in the package, `relative` `veri/…`; or left out, missing.
+fn xref(
+    x: &mut Value,
+    name: &str,
+    from: Option<&Path>,
+    search: &[String],
+    target: &Path,
+    copies: &mut Copies,
+    left: &mut Vec<PackageLeft>,
+) {
+    let path = x.get("path").and_then(Value::as_str).unwrap_or_default().to_owned();
+    let relative = x.get("relative").and_then(Value::as_str).map(str::to_owned);
+    match find_in(&path, relative.as_deref(), from, search).at {
+        Some(at) => {
+            let rel = copies.take(&at, PackagedKind::Xref);
+            let abs = rel.split('/').fold(target.to_path_buf(), |p, part| p.join(part));
+            x["path"] = Value::String(abs.display().to_string());
+            x["relative"] = Value::String(rel);
+        }
+        None => left.push(PackageLeft {
+            kind: PackagedKind::Xref,
+            path,
+            why: LeftWhy::Missing,
+            at: format!("xref:{name}"),
+        }),
+    }
+}
+
+/// One object's links: its file (an image or a raster, looked for with the search paths too), a point cloud's files,
+/// a linked table, its attachments.
 fn walk_entity(
     e: &mut Value,
     at: &str,
     from: Option<&Path>,
+    search: &[String],
     copies: &mut Copies,
     left: &mut Vec<PackageLeft>,
 ) {
     let at = at.to_owned();
     let raster = e.get("kind").and_then(Value::as_str) == Some("raster");
+    let picture = matches!(e.get("kind").and_then(Value::as_str), Some("image" | "raster"));
     let link = |slot: &mut Value,
                 kind: PackagedKind,
                 sidecars: bool,
+                looks: &[String],
                 copies: &mut Copies,
                 left: &mut Vec<PackageLeft>| {
         let Some(kept) = slot.as_str().map(str::to_owned) else {
             return;
         };
-        match place(&kept, from) {
+        let found = if looks.is_empty() { place(&kept, from) } else { find_in(&kept, None, from, looks).at };
+        match found {
             Some(p) if p.is_file() => {
                 let rel = copies.take(&p, kind);
                 if sidecars {
@@ -423,7 +519,8 @@ fn walk_entity(
         }
     };
     if let Some(slot) = e.get_mut("file") {
-        link(slot, PackagedKind::Picture, raster, copies, left);
+        let looks: &[String] = if picture { search } else { &[] };
+        link(slot, PackagedKind::Picture, raster, looks, copies, left);
     }
     if let Some(url) = e.get("url").and_then(Value::as_str) {
         left.push(PackageLeft {
@@ -436,7 +533,7 @@ fn walk_entity(
     if let Some(Value::Array(parts)) = e.get_mut("sources") {
         for part in parts.iter_mut() {
             if let Some(slot) = part.get_mut("file") {
-                link(slot, PackagedKind::Picture, false, copies, left);
+                link(slot, PackagedKind::Picture, false, &[], copies, left);
             }
             if let Some(url) = part.get("url").and_then(Value::as_str) {
                 left.push(PackageLeft {
@@ -449,12 +546,12 @@ fn walk_entity(
         }
     }
     if let Some(slot) = e.pointer_mut("/source/path") {
-        link(slot, PackagedKind::Table, false, copies, left);
+        link(slot, PackagedKind::Table, false, &[], copies, left);
     }
     if let Some(Value::Array(list)) = e.get_mut("attachments") {
         for a in list.iter_mut() {
             if let Some(slot) = a.get_mut("file") {
-                link(slot, PackagedKind::Attachment, false, copies, left);
+                link(slot, PackagedKind::Attachment, false, &[], copies, left);
             }
         }
     }
@@ -494,6 +591,13 @@ pub fn write(planned: &Planned) -> Result<(), Refused> {
         }
         files::write_bytes(&planned.project, &temp.join(&planned.name))
             .map_err(|e| fail(e.message))?;
+        let manifest = temp.join(MANIFEST);
+        fs::write(&manifest, &planned.manifest)
+            .map_err(|e| fail(format!("{} yazılamadı: {e}", manifest.display())))?;
+        let back = fs::read(&manifest).map_err(|e| fail(format!("{} geri okunamadı: {e}", manifest.display())))?;
+        if sha256_hex(&back) != planned.output.manifest_sha256 {
+            return Err(fail(format!("{} yazılırken değişti; paket yapılmadı.", manifest.display())));
+        }
         if target.is_dir() {
             fs::remove_dir(target)
                 .map_err(|e| fail(format!("{} kaldırılamadı: {e}", target.display())))?;

@@ -721,6 +721,11 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   denenenler); `cad.xrefs.list`'in `affected`'i (etkilenen paftalar ve adlı görünümler); masaüstü yüklü dış başvuruların dosyalarına beş
   saniyede bir bakar, değişen kaynağı çizimin üstünde kartla söyler (Yeniden yükle, Dış başvurular), kendiliğinden yüklemez; Dış
   başvurular penceresinde Arama yolları ve Diğer bağlı dosyalar (ADR 0349);
+  resim altlığı ve taşınabilir paket: `cad.images.edit` (Göm: bağlı resimlerin dosyası kitaplığa, PNG ve JPEG başlıktan; Yeniden bağla;
+  kilitli katmandakiler sayılarak atlanır), resim ve rasterler arama yollarıyla aranır (`links::find_in`), bulunamayan resim çizimde
+  kesikli çerçeve ve uyarı üçgeniyle, dosyası değişen resim izleyiciyle yeniden okunur (çizim hattında resmin dokusu pikselleri
+  değişince yeniden yapılır); Paketle dış başvuruların kaynaklarını bayt bayt (özetleri tutar) ve `paket.json`'u (`kentos.package/1`:
+  proje, kopyalar, kalanlar, yazı yüzleri; yerine başka yüzle çizilen yazı stili `left`'te) yazar (ADR 0350);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

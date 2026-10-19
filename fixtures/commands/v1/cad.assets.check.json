@@ -4,7 +4,7 @@
   "command": "cad.assets.check",
   "commandVersion": 1,
   "title": "Bağlı dosyalar: nerede bulundukları ve durumları",
-  "note": "Written by scripts/fixtures/assets_check_cases.py from docs/adr/0349 §1–§2; do not edit by hand.",
+  "note": "Written by scripts/fixtures/assets_check_cases.py from docs/adr/0349 §1–§2 and 0350 §2; do not edit by hand.",
   "setup": {"format": "kentos.document", "version": 1, "name": "Bağlı dosyalar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad"}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [], "styles": {"items": [], "categories": []}},
   "cases": [
     {
@@ -143,10 +143,25 @@
       ]
     },
     {
-      "name": "arama yolu resimlere uygulanmaz",
-      "setup": {"format": "kentos.document", "version": 1, "name": "Bağlı dosyalar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "xrefPaths": ["$fixture:raster/v1/files"]}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [{"kind": "image", "layerId": "cizim", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "width": 4.0, "height": 3.0, "rotation": 0.0, "file": "/yok/gray16.png", "id": 1}], "styles": {"items": [], "categories": []}},
+      "name": "arama yolu resimlere uygulanır: adıyla bulunur",
+      "setup": {"format": "kentos.document", "version": 1, "name": "Bağlı dosyalar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "xrefPaths": ["/ortak", "$fixture:raster/v1/files"]}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [{"kind": "image", "layerId": "cizim", "attrs": {}, "p": {"x": 0.0, "y": 0.0}, "width": 4.0, "height": 3.0, "rotation": 0.0, "file": "/yok/gray16.png", "id": 1}], "styles": {"items": [], "categories": []}},
+      "note": "ADR 0350 §2: resim ve raster dış başvuru gibi aranır.",
       "steps": [
-        {"op": "execute", "input": {}, "result": {"status": "completed", "output": {"assets": [{"kind": "image", "uid": "$uidOf:1", "name": "gray16.png", "path": "/yok/gray16.png", "via": "none", "state": "missing", "tried": ["/yok/gray16.png"]}], "counts": {"ok": 0, "changed": 0, "missing": 1, "other": 0}, "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "revision": "same"}}
+        {"op": "execute", "input": {}, "result": {"status": "completed", "output": {"assets": [{"kind": "image", "uid": "$uidOf:1", "name": "gray16.png", "path": "/yok/gray16.png", "found": "$fixture:raster/v1/files/gray16.png", "via": "searchPath", "state": "ok"}], "counts": {"ok": 1, "changed": 0, "missing": 0, "other": 0}, "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "arama yolu rasterlere uygulanır, göreli yoluyla",
+      "setup": {"format": "kentos.document", "version": 1, "name": "Bağlı dosyalar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "xrefPaths": ["v1"]}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [{"kind": "raster", "layerId": "cizim", "attrs": {}, "affine": [0.0, 1.0, 0.0, 10.0, 0.0, -1.0], "width": 10, "height": 10, "bands": 1, "sample": "u8", "srid": 0, "style": {"render": "gray", "bands": [1]}, "file": "files/i8.tif", "id": 1}], "styles": {"items": [], "categories": []}},
+      "steps": [
+        {"op": "execute", "input": {"drawing": "$fixture:raster/ana.kcad"}, "result": {"status": "completed", "output": {"assets": [{"kind": "raster", "uid": "$uidOf:1", "name": "i8.tif", "path": "files/i8.tif", "found": "$fixture:raster/v1/files/i8.tif", "via": "searchPath", "state": "ok"}], "counts": {"ok": 1, "changed": 0, "missing": 0, "other": 0}, "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "revision": "same"}}
+      ]
+    },
+    {
+      "name": "arama yolu eklere uygulanmaz",
+      "setup": {"format": "kentos.document", "version": 1, "name": "Bağlı dosyalar", "settings": {"srid": 0, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "deg", "plotScale": 50, "workspace": "cad", "xrefPaths": ["$fixture:interaction/v1/belgeler"]}, "origin": {"x": 0.0, "y": 0.0}, "layers": [{"id": "cizim", "name": "Çizim", "type": "layer", "visible": true, "locked": false, "expanded": true, "style": {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}, "children": []}], "activeLayer": "cizim", "entities": [{"kind": "line", "layerId": "cizim", "attrs": {}, "a": {"x": 0.0, "y": 0.0}, "b": {"x": 5.0, "y": 0.0}, "attachments": [{"name": "Tapu", "file": "/yok/tapu-101-5.pdf"}], "id": 1}], "styles": {"items": [], "categories": []}},
+      "steps": [
+        {"op": "execute", "input": {}, "result": {"status": "completed", "output": {"assets": [{"kind": "attachment", "uid": "$uidOf:1", "name": "Tapu", "path": "/yok/tapu-101-5.pdf", "via": "none", "state": "missing", "tried": ["/yok/tapu-101-5.pdf"]}], "counts": {"ok": 0, "changed": 0, "missing": 1, "other": 0}, "revision": "$current"}, "warnings": []}, "expect": {"canUndo": false, "revision": "same"}}
       ]
     },
     {

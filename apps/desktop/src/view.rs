@@ -728,6 +728,7 @@ impl App {
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
+                    missing: self.missing_pictures(),
                     bonds: self.bond_marks(),
                     constraints: self.constraint_marks(),
                     constraint_pointer: self.constraint_view.pointer,
@@ -891,6 +892,7 @@ impl App {
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
             broken: self.broken_marks(),
+            missing: self.missing_pictures(),
             bonds: self.bond_marks(),
             constraints: self.constraint_marks(),
             constraint_pointer: self.constraint_view.pointer,

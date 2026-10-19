@@ -1106,7 +1106,7 @@ codes! {
     /// The host has not registered İşlemler's tools (docs/adr/0508).
     TOOLS_UNAVAILABLE = "tools_unavailable", Failed, false, "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
-    PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı.";
+    PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.
@@ -1317,6 +1317,12 @@ codes! {
     XREF_CYCLE = "xref_cycle", Failed, false, "Dış başvuru zinciri kendine dönüyor.";
     /// A source with nothing a block may hold.
     XREF_EMPTY = "xref_empty", Failed, false, "Kaynakta dış başvuruya konacak nesne yok; resimler, rasterler ve tablolar bloğa konamaz.";
+
+    // ── Image underlays (docs/adr/0350 §1) ──────────────────────────────
+    /// An object given is not an image.
+    NOT_AN_IMAGE = "not_an_image", Failed, false, "Verilen nesne bir resim değil.";
+    /// Göm with no linked image to embed.
+    NOTHING_TO_EMBED = "nothing_to_embed", Failed, false, "Gömülecek bağlı resim yok; verilen resimler zaten gömülü.";
 
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.

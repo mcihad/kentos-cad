@@ -20,6 +20,12 @@ pub struct Found {
 /// `path` (absolute, or relative to the drawing's folder) and its `relative` path, from the open drawing's file
 /// `drawing`, then in `search` (absolute folders, or relative to the drawing's folder).
 pub fn find(path: &str, relative: Option<&str>, drawing: Option<&str>, search: &[String]) -> Found {
+    let folder = drawing.and_then(|d| Path::new(d).parent());
+    find_in(path, relative, folder, search)
+}
+
+/// [`find`] from the drawing's folder itself (Paketle's `from`, docs/adr/0350 §4).
+pub fn find_in(path: &str, relative: Option<&str>, folder: Option<&Path>, search: &[String]) -> Found {
     let mut tried: Vec<String> = Vec::new();
     let look = |p: PathBuf, tried: &mut Vec<String>| -> Option<PathBuf> {
         let text = p.display().to_string();
@@ -34,7 +40,7 @@ pub fn find(path: &str, relative: Option<&str>, drawing: Option<&str>, search: &
     {
         return Found { at: Some(at), via: AssetVia::Path, tried: Vec::new() };
     }
-    let folder: Option<PathBuf> = drawing.and_then(|d| Path::new(d).parent().map(Path::to_path_buf));
+    let folder: Option<PathBuf> = folder.map(Path::to_path_buf);
     // The relative path: the one kept beside, else the path itself when it is relative.
     let rel: Option<String> = relative
         .map(str::to_owned)

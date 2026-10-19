@@ -531177,6 +531177,310 @@
       ]
     },
     {
+      "id": "cad.images.edit",
+      "version": 1,
+      "title": "Resmin kaynağı",
+      "summary": "Resimlerin kaynağını değiştirir; her işlem tek geri alma adımı, bütün ya da hiç; çerçeve, dönüş, kırpma ve saydamlık değişmez. operation.kind: embed (Göm: uids'in, verilmezse çizimin bütün bağlı resimlerinin dosyası okunur, PNG ya da JPEG ve en çok 32 MB; baytları projenin kitaplığına içeriğinden kimlikli resim olarak girer, resim gömülü olur); relink (Yeniden bağla: uids'in resimleri file dosyasını gösterir, mutlak ya da drawing'in klasöründen göreli; gömülü resim bağlı olur). Bağlı resmin dosyası kayıtlı yolda, drawing'in klasöründen göreli ve projenin arama yollarında aranır. Plan yazmadan ne olacağını söyler.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "ImagesOperation": {
+            "description": "What `cad.images.edit` does.",
+            "oneOf": [
+              {
+                "description": "Göm: the images' files read into the project's library, the images made embedded; none given: every linked\nimage of the drawing.",
+                "properties": {
+                  "kind": {
+                    "const": "embed",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": [
+                      "array",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "kind"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Yeniden bağla: the images show `file` (absolute, or relative to the drawing's folder), linked.",
+                "properties": {
+                  "file": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "relink",
+                    "type": "string"
+                  },
+                  "uids": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "uids",
+                  "file"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.images.edit` v1. Refusals, in this order: `entity_not_found`, `not_an_image`, `layer_locked`,\n`nothing_to_embed`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/ImagesOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "ImagesEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ImageSourced": {
+            "description": "An image's new source.",
+            "properties": {
+              "asset": {
+                "description": "The library's image it now is (embedded).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it now shows (linked), as kept.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "read": {
+                "description": "Where the file was read from.",
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "uid",
+              "read",
+              "width",
+              "height"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.images.edit` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "assets": {
+            "description": "The library's images added (embedding a picture the library has adds none), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "images": {
+            "description": "The images changed, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ImageSourced"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "images",
+          "revision"
+        ],
+        "title": "ImagesEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ImageSourced": {
+            "description": "An image's new source.",
+            "properties": {
+              "asset": {
+                "description": "The library's image it now is (embedded).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "file": {
+                "description": "The file it now shows (linked), as kept.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              },
+              "read": {
+                "description": "Where the file was read from.",
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "px"
+              }
+            },
+            "required": [
+              "uid",
+              "read",
+              "width",
+              "height"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.images.edit` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "assets": {
+            "description": "The library's images added (embedding a picture the library has adds none), by id.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "images": {
+            "description": "The images changed, in the drawing's order.",
+            "items": {
+              "$ref": "#/$defs/ImageSourced"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "images",
+          "revision"
+        ],
+        "title": "ImagesEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "image"
+            ],
+            "refusedWith": "not_an_image"
+          }
+        ],
+        "refusals": [
+          "no_entities",
+          "invalid_uid",
+          "entity_not_found",
+          "not_an_image",
+          "layer_locked",
+          "nothing_to_embed",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "layer_locked"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün bağlı resimleri göm",
+          "input": {
+            "drawing": "/proje/ofis.kcad",
+            "operation": {
+              "kind": "embed"
+            }
+          }
+        },
+        {
+          "title": "Resmi başka dosyaya bağla",
+          "input": {
+            "drawing": "/proje/ofis.kcad",
+            "operation": {
+              "file": "fotograflar/cephe.jpg",
+              "kind": "relink",
+              "uids": [
+                "018f6c1e-0000-7000-8000-000000000001"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.assets.check",
       "version": 1,
       "title": "Bağlı dosyalar",
@@ -996867,6 +997171,19 @@
       },
       "output": {
         "$defs": {
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
           "LeftWhy": {
             "description": "Why a link was not packed.",
             "oneOf": [
@@ -996884,6 +997201,11 @@
                 "const": "address",
                 "description": "An address (http, https): read where the package opens, not copied.",
                 "type": "string"
+              },
+              {
+                "const": "substituted",
+                "description": "A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.",
+                "type": "string"
               }
             ]
           },
@@ -996891,7 +997213,7 @@
             "description": "A link left as it was.",
             "properties": {
               "at": {
-                "description": "The object (its lasting id) or bound layer (its id) that keeps it.",
+                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style\n(`stil:` and its name) that keeps it.",
                 "type": "string"
               },
               "kind": {
@@ -996981,6 +997303,16 @@
                 "const": "attachment",
                 "description": "An object's attachment.",
                 "type": "string"
+              },
+              {
+                "const": "xref",
+                "description": "An external reference's source drawing (docs/adr/0350 §4).",
+                "type": "string"
+              },
+              {
+                "const": "font",
+                "description": "A text style's typeface (left out only: KentOS's own faces come with it).",
+                "type": "string"
               }
             ]
           }
@@ -996989,11 +997321,18 @@
         "description": "What `file.package` made, or with `plan` would make.",
         "properties": {
           "bytes": {
-            "description": "Every byte written: the project file and the copies.",
+            "description": "Every byte written: the project file, the manifest and the copies.",
             "format": "uint64",
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "faces": {
+            "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
+            "items": {
+              "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
           },
           "files": {
             "items": {
@@ -997006,6 +997345,13 @@
               "$ref": "#/$defs/PackageLeft"
             },
             "type": "array"
+          },
+          "manifest": {
+            "description": "The manifest, `paket.json` in the folder, and its SHA-256.",
+            "type": "string"
+          },
+          "manifestSha256": {
+            "type": "string"
           },
           "path": {
             "description": "The folder.",
@@ -997031,6 +997377,8 @@
           "projectBytes",
           "projectSha256",
           "files",
+          "manifest",
+          "manifestSha256",
           "bytes"
         ],
         "title": "ProjectPackaged",
@@ -997038,6 +997386,19 @@
       },
       "plan": {
         "$defs": {
+          "DrawingFont": {
+            "description": "The typeface of the text that is part of the drawing (text objects,\ndimension values, labels; `app/appearance.ts` DRAWING_FONTS), bundled with\nthe app. A project setting: everyone who opens the project sees the same\nletters. Files written before it have none (Barlow).",
+            "enum": [
+              "barlow",
+              "arimo",
+              "overpass",
+              "quicksand",
+              "architects-daughter",
+              "courier-prime",
+              "plex-mono"
+            ],
+            "type": "string"
+          },
           "LeftWhy": {
             "description": "Why a link was not packed.",
             "oneOf": [
@@ -997055,6 +997416,11 @@
                 "const": "address",
                 "description": "An address (http, https): read where the package opens, not copied.",
                 "type": "string"
+              },
+              {
+                "const": "substituted",
+                "description": "A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.",
+                "type": "string"
               }
             ]
           },
@@ -997062,7 +997428,7 @@
             "description": "A link left as it was.",
             "properties": {
               "at": {
-                "description": "The object (its lasting id) or bound layer (its id) that keeps it.",
+                "description": "The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style\n(`stil:` and its name) that keeps it.",
                 "type": "string"
               },
               "kind": {
@@ -997152,6 +997518,16 @@
                 "const": "attachment",
                 "description": "An object's attachment.",
                 "type": "string"
+              },
+              {
+                "const": "xref",
+                "description": "An external reference's source drawing (docs/adr/0350 §4).",
+                "type": "string"
+              },
+              {
+                "const": "font",
+                "description": "A text style's typeface (left out only: KentOS's own faces come with it).",
+                "type": "string"
               }
             ]
           }
@@ -997160,11 +997536,18 @@
         "description": "What `file.package` made, or with `plan` would make.",
         "properties": {
           "bytes": {
-            "description": "Every byte written: the project file and the copies.",
+            "description": "Every byte written: the project file, the manifest and the copies.",
             "format": "uint64",
             "minimum": 0,
             "type": "integer",
             "x-unit": "bytes"
+          },
+          "faces": {
+            "description": "The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).",
+            "items": {
+              "$ref": "#/$defs/DrawingFont"
+            },
+            "type": "array"
           },
           "files": {
             "items": {
@@ -997177,6 +997560,13 @@
               "$ref": "#/$defs/PackageLeft"
             },
             "type": "array"
+          },
+          "manifest": {
+            "description": "The manifest, `paket.json` in the folder, and its SHA-256.",
+            "type": "string"
+          },
+          "manifestSha256": {
+            "type": "string"
           },
           "path": {
             "description": "The folder.",
@@ -997202,6 +997592,8 @@
           "projectBytes",
           "projectSha256",
           "files",
+          "manifest",
+          "manifestSha256",
           "bytes"
         ],
         "title": "ProjectPackaged",
@@ -1000932,7 +1001324,7 @@
       "code": "package_left",
       "kind": "warning",
       "retryable": false,
-      "meaning": "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı ya da adres); bağlar olduğu gibi kaldı."
+      "meaning": "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı."
     },
     {
       "code": "export_losses",
@@ -1001527,6 +1001919,18 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Kaynakta dış başvuruya konacak nesne yok; resimler, rasterler ve tablolar bloğa konamaz."
+    },
+    {
+      "code": "not_an_image",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen nesne bir resim değil."
+    },
+    {
+      "code": "nothing_to_embed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Gömülecek bağlı resim yok; verilen resimler zaten gömülü."
     },
     {
       "code": "already_committed",

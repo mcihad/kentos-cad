@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -458,6 +458,7 @@ __all__ = [
     "EllipseEntityGeometry",
     "EllipseHatchCurve",
     "Ellipsoid",
+    "EmbedImagesOperation",
     "EmptyCell",
     "EmptyInput",
     "EmptyResult",
@@ -707,6 +708,10 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "ImageSourced",
+    "ImagesEdit",
+    "ImagesEdited",
+    "ImagesOperation",
     "ImpactOwn",
     "ImpactTarget",
     "ImpactTargetName",
@@ -1211,6 +1216,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
@@ -1675,6 +1681,7 @@ __all__ = [
     "grids",
     "hatches",
     "hatchpatterns",
+    "images",
     "labels",
     "layers",
     "leaders",

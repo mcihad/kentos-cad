@@ -1946,13 +1946,15 @@ class LeftWhy(_StrEnum):
     - ``missing``: The file is not there.
     - ``database``: A database's table: the link stays, the computer that opens the package reaches the database itself.
     - ``address``: An address (http, https): read where the package opens, not copied.
+    - ``substituted``: A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
     """
     MISSING = "missing"
     DATABASE = "database"
     ADDRESS = "address"
+    SUBSTITUTED = "substituted"
 
 
-LeftWhyName = Literal["missing", "database", "address"]
+LeftWhyName = Literal["missing", "database", "address", "substituted"]
 """The names of :class:`LeftWhy`, for a plain string."""
 
 
@@ -2447,15 +2449,19 @@ class PackagedKind(_StrEnum):
     - ``sidecar``: A raster's world file or auxiliary file beside it.
     - ``table``: A linked table's file.
     - ``attachment``: An object's attachment.
+    - ``xref``: An external reference's source drawing (docs/adr/0350 §4).
+    - ``font``: A text style's typeface (left out only: KentOS's own faces come with it).
     """
     SOURCE = "source"
     PICTURE = "picture"
     SIDECAR = "sidecar"
     TABLE = "table"
     ATTACHMENT = "attachment"
+    XREF = "xref"
+    FONT = "font"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 
@@ -4760,6 +4766,27 @@ class HatchRegion(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> HatchRegion:
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
+
+
+class ImagesOperation(_Union):
+    """What `cad.images.edit` does.
+
+    One of:
+
+    - :class:`EmbedImagesOperation` (``kind: embed``)
+    - :class:`RelinkImagesOperation` (``kind: relink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesOperation:
+        return _variant(_IMAGES_OPERATION, "ImagesOperation", "kind", data).from_json(data)
 
 
 class LeaderEdit(_Union):
@@ -18715,6 +18742,105 @@ class ImageFields(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImageSourced(_Model):
+    """An image's new source.
+    Attributes:
+        read: Where the file was read from.
+        width: Unit: px.
+        height: Unit: px.
+        asset: The library's image it now is (embedded).
+        file: The file it now shows (linked), as kept.
+    """
+    uid: str
+    read: str
+    width: int
+    height: int
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["read"] = self.read
+        out["width"] = self.width
+        out["height"] = self.height
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImageSourced:
+        return cls(
+            uid=data["uid"],
+            read=data["read"],
+            width=data["width"],
+            height=data["height"],
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesEdit(_Model):
+    """Input of `cad.images.edit` v1. Refusals, in this order: `entity_not_found`, `not_an_image`, `layer_locked`,
+    `nothing_to_embed`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_revision`,
+    `revision_conflict`.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+    """
+    operation: ImagesOperation
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesEdit:
+        return cls(
+            operation=ImagesOperation.from_json(data["operation"]),
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesEdited(_Model):
+    """Output of `cad.images.edit` v1 (its plan's too: what it would do, nothing written).
+    Attributes:
+        images: The images changed, in the drawing's order.
+        assets: The library's images added (embedding a picture the library has adds none), by id.
+    """
+    images: list[ImageSourced]
+    revision: str
+    assets: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = [e0.to_json() for e0 in self.images]
+        out["revision"] = self.revision
+        if self.assets is not UNSET:
+            out["assets"] = list(self.assets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesEdited:
+        return cls(
+            images=[ImageSourced.from_json(e0) for e0 in data["images"]],
+            revision=data["revision"],
+            assets=list(data["assets"]) if "assets" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactOwn(_Model):
     """Objects keeping one property of their own.
     Attributes:
@@ -25049,7 +25175,8 @@ class PackageLeft(_Model):
     """A link left as it was.
     Attributes:
         path: The path or address as the project keeps it.
-        at: The object (its lasting id) or bound layer (its id) that keeps it.
+        at: The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
+            (`stil:` and its name) that keeps it.
     """
     kind: PackagedKind | PackagedKindName
     path: str
@@ -27598,14 +27725,19 @@ class ProjectPackaged(_Model):
         path: The folder.
         project: The project file, its bytes and their SHA-256.
         project_bytes: Unit: bytes.
-        bytes: Every byte written: the project file and the copies. Unit: bytes.
+        manifest: The manifest, `paket.json` in the folder, and its SHA-256.
+        bytes: Every byte written: the project file, the manifest and the copies. Unit: bytes.
+        faces: The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
     """
     path: str
     project: str
     project_bytes: int
     project_sha256: str
     files: list[PackagedFile]
+    manifest: str
+    manifest_sha256: str
     bytes: int
+    faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -27615,7 +27747,11 @@ class ProjectPackaged(_Model):
         out["projectBytes"] = self.project_bytes
         out["projectSha256"] = self.project_sha256
         out["files"] = [e0.to_json() for e0 in self.files]
+        out["manifest"] = self.manifest
+        out["manifestSha256"] = self.manifest_sha256
         out["bytes"] = self.bytes
+        if self.faces is not UNSET:
+            out["faces"] = [_enum_out(e0) for e0 in self.faces]
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
         return out
@@ -27628,7 +27764,10 @@ class ProjectPackaged(_Model):
             project_bytes=data["projectBytes"],
             project_sha256=data["projectSha256"],
             files=[PackagedFile.from_json(e0) for e0 in data["files"]],
+            manifest=data["manifest"],
+            manifest_sha256=data["manifestSha256"],
             bytes=data["bytes"],
+            faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
@@ -42957,6 +43096,48 @@ class ObjectsHatchRegion(HatchRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class EmbedImagesOperation(ImagesOperation):
+    """Göm: the images' files read into the project's library, the images made embedded; none given: every linked
+    image of the drawing.
+    """
+    TAG_VALUE: ClassVar[str] = "embed"
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "embed"}
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EmbedImagesOperation:
+        return cls(
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkImagesOperation(ImagesOperation):
+    """Yeniden bağla: the images show `file` (absolute, or relative to the drawing's folder), linked."""
+    TAG_VALUE: ClassVar[str] = "relink"
+    uids: list[str]
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "relink"}
+        out["uids"] = list(self.uids)
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkImagesOperation:
+        return cls(
+            uids=list(data["uids"]),
+            file=data["file"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -47076,6 +47257,9 @@ _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOperation, "relink": RelinkImagesOperation}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -47572,6 +47756,7 @@ __all__ = [
     "EllipseEntityGeometry",
     "EllipseHatchCurve",
     "Ellipsoid",
+    "EmbedImagesOperation",
     "EmptyCell",
     "EmptyInput",
     "EmptyResult",
@@ -47814,6 +47999,10 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "ImageSourced",
+    "ImagesEdit",
+    "ImagesEdited",
+    "ImagesOperation",
     "ImpactOwn",
     "ImpactTarget",
     "ImpactTargetName",
@@ -48299,6 +48488,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",

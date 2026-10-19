@@ -110,6 +110,8 @@ pub struct State {
 pub enum Purpose {
     Attach,
     Repath,
+    /// Yeniden bağla for the picture in this slot (docs/adr/0350 §1).
+    Image(kentos_domain::Slot),
 }
 
 #[derive(Clone, Debug)]
@@ -134,6 +136,8 @@ pub enum Event {
     AddPath,
     PathPicked(Option<PathBuf>),
     RemovePath(usize),
+    /// Öznitelikler's Yeniden bağla… for a picture.
+    RelinkImage(kentos_domain::Slot),
     Close,
 }
 
@@ -216,12 +220,17 @@ impl App {
         let title = match purpose {
             Purpose::Attach => ATTACH_TITLE,
             Purpose::Repath => "Dış başvurunun yeni yolu",
+            Purpose::Image(_) => "Resmin yeni dosyası",
+        };
+        let (kind, extensions): (&str, &[&str]) = match purpose {
+            Purpose::Image(_) => ("PNG ya da JPEG resmi", &["png", "jpg", "jpeg"]),
+            _ => ("KentOS çizimi (.kcad)", &["kcad"]),
         };
         Task::perform(
             async move {
                 let file = rfd::AsyncFileDialog::new()
                     .set_title(title)
-                    .add_filter("KentOS çizimi (.kcad)", &["kcad"])
+                    .add_filter(kind, extensions)
                     .pick_file()
                     .await?;
                 Some(file.path().to_path_buf())
@@ -262,6 +271,24 @@ impl App {
         // A command answered: the files as they are now are the ones seen.
         self.xref_watch_seen();
         Some(output)
+    }
+
+    /// Yeniden bağla: the picture at `slot` shows `path` (`cad.images.edit`), one step.
+    fn image_relinked(&mut self, slot: kentos_domain::Slot, path: &Path) {
+        let drawing = self.document.as_ref().and_then(|d| d.path.clone());
+        let Some(doc) = self.document.as_mut() else { return };
+        let Some(uid) = doc.model.uid(slot) else { return };
+        let operation = kentos_contracts::ImagesOperation::Relink {
+            uids: vec![uid.to_string()],
+            file: path.display().to_string(),
+        };
+        let said = crate::pictures::edit(&mut doc.model, operation, drawing.as_deref());
+        if said.is_empty() {
+            self.say(Level::Success, format!("Resim artık {} dosyasını gösteriyor.", file_name(path)));
+        }
+        for s in said {
+            self.warn(format!("Resmin kaynağı: {s}"));
+        }
     }
 
     fn say_warnings(&mut self, warnings: &[CommandWarning]) {
@@ -349,6 +376,8 @@ impl App {
                 self.xrefs.attach = Some(Attach { path, name, mode: Mode::Attach, scale: 1.0, rotation: 0.0 });
                 self.dialog = Some(Dialog::XrefAttach);
             }
+            Event::Picked(Purpose::Image(slot), Some(path)) => self.image_relinked(slot, &path),
+            Event::RelinkImage(slot) => return self.pick_xref_file(Purpose::Image(slot)),
             Event::Picked(Purpose::Repath, Some(path)) => {
                 if let Some(name) = self.chosen_name() {
                     let path = path.display().to_string();

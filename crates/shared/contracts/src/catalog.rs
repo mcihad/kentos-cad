@@ -2838,6 +2838,37 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_IMAGES_EDIT.into(),
+            version: crate::CAD_IMAGES_EDIT_VERSION,
+            title: "Resmin kaynağı".into(),
+            summary: "Resimlerin kaynağını değiştirir; her işlem tek geri alma adımı, bütün ya da hiç; çerçeve, dönüş, kırpma ve saydamlık değişmez. operation.kind: embed (Göm: uids'in, verilmezse çizimin bütün bağlı resimlerinin dosyası okunur, PNG ya da JPEG ve en çok 32 MB; baytları projenin kitaplığına içeriğinden kimlikli resim olarak girer, resim gömülü olur); relink (Yeniden bağla: uids'in resimleri file dosyasını gösterir, mutlak ya da drawing'in klasöründen göreli; gömülü resim bağlı olur). Bağlı resmin dosyası kayıtlı yolda, drawing'in klasöründen göreli ve projenin arama yollarında aranır. Plan yazmadan ne olacağını söyler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ImagesEdit>(),
+            output: schema::<crate::ImagesEdited>(),
+            plan: Some(schema::<crate::ImagesEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün bağlı resimleri göm".into(),
+                    input: json!({ "operation": { "kind": "embed" }, "drawing": "/proje/ofis.kcad" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Resmi başka dosyaya bağla".into(),
+                    input: json!({ "operation": { "kind": "relink", "uids": ["018f6c1e-0000-7000-8000-000000000001"], "file": "fotograflar/cephe.jpg" }, "drawing": "/proje/ofis.kcad" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
             id: crate::CAD_ASSETS_CHECK.into(),
             version: crate::CAD_ASSETS_CHECK_VERSION,
             title: "Bağlı dosyalar".into(),
@@ -7538,6 +7569,9 @@ mod tests {
                     }
                     crate::CAD_XREFS_LIST => {
                         serde_json::from_value::<crate::XrefsList>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_IMAGES_EDIT => {
+                        serde_json::from_value::<crate::ImagesEdit>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ASSETS_CHECK => {
                         serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())

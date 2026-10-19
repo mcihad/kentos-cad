@@ -1334,6 +1334,105 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
     }
 }
 
+#[test]
+fn a_package_carries_the_references_sources_and_says_the_fonts() {
+    // docs/adr/0350 §4: an external reference's source copied byte for byte (its digest holds, so the moved package's
+    // reference is ok), an image found by the project's search path, a text style naming an SHX font left out, and
+    // paket.json listing all of it.
+    let fixtures = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    let dir = scratch("transmit");
+    let work = dir.join("is");
+    std::fs::create_dir_all(work.join("mimari")).expect("folders");
+    std::fs::create_dir_all(dir.join("ortak")).expect("folders");
+    let plan = work.join("mimari/plan.kcad");
+    std::fs::copy(fixtures.join("xref/v1/plan.kcad"), &plan).expect("copied");
+    std::fs::copy(fixtures.join("interaction/v1/logo.png"), dir.join("ortak/logo.png")).expect("copied");
+    let project = work.join("ofis.kcad");
+    let mut s = new_drawing();
+    let layer = serde_json::to_value(s.document().to_snapshot_v2()).expect("json")["activeLayer"].clone();
+    let attached = s
+        .call(json!({ "command": "cad.xrefs.edit", "input": {
+            "operation": { "kind": "attach", "path": plan.display().to_string(), "layerId": layer },
+            "drawing": project.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(attached["status"], "completed", "{attached}");
+    let mut snapshot = serde_json::to_value(s.document().to_snapshot_v2()).expect("json");
+    let next = snapshot["entities"].as_array().map_or(0, Vec::len) as u64 + 100;
+    snapshot["entities"].as_array_mut().expect("entities").push(json!({ "kind": "image", "id": next,
+        "layerId": layer, "attrs": {}, "p": { "x": 0.0, "y": 0.0 }, "width": 4.0, "height": 3.0, "rotation": 0.0,
+        "file": "/eski/makine/logo.png" }));
+    snapshot["uids"].as_array_mut().expect("uids").push(json!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3100"));
+    snapshot["settings"]["xrefPaths"] = json!(["../ortak"]);
+    snapshot["settings"]["textStyles"] = json!([{ "id": "s1", "name": "Pafta", "font": "barlow", "fontFile": "romans.shx" }]);
+    let typed: kentos_contracts::DocumentSnapshotV2 = serde_json::from_value(snapshot).expect("a snapshot");
+    std::fs::write(&project, kentos_kcad::encode_verified(&typed).expect("encoded")).expect("written");
+    let mut s = Session::open(&project).expect("opens");
+    let out = dir.join("teslim");
+    let done = s
+        .call(json!({ "command": "file.package", "input": {
+            "path": out.display().to_string(), "name": "ofis", "from": work.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(done["status"], "completed", "{done}");
+    let kinds: Vec<(String, String)> = done["output"]["files"]
+        .as_array()
+        .expect("files")
+        .iter()
+        .map(|f| (f["path"].as_str().unwrap_or_default().to_owned(), f["kind"].as_str().unwrap_or_default().to_owned()))
+        .collect();
+    assert_eq!(
+        kinds,
+        [("veri/logo.png".to_owned(), "picture".to_owned()), ("veri/plan.kcad".to_owned(), "xref".to_owned())],
+        "{done}"
+    );
+    // The plan's own nested reference's source is not on this computer: said, as the font drawn in another face.
+    assert_eq!(
+        done["output"]["left"],
+        json!([
+            { "kind": "xref", "path": "/proje/detay.kcad", "why": "missing", "at": "xref:plan|Detay" },
+            { "kind": "font", "path": "romans.shx", "why": "substituted", "at": "stil:Pafta" }
+        ])
+    );
+    // No text in the drawing: no face drawn.
+    assert_eq!(done["output"]["faces"], Value::Null, "{done}");
+    let manifest = out.join("paket.json");
+    assert_eq!(done["output"]["manifest"], manifest.display().to_string());
+    let text = std::fs::read(&manifest).expect("the manifest");
+    assert_eq!(done["output"]["manifestSha256"], kentos_contracts::encoding::sha256_hex(&text));
+    // Moved elsewhere, the reference is found where the package put it, its digest the same.
+    let moved = dir.join("baska-bilgisayar");
+    std::fs::rename(&out, &moved).expect("moved");
+    std::fs::remove_file(&plan).expect("old source gone");
+    let mut opened = Session::open(&moved.join("ofis.kcad")).expect("opens");
+    let checked = opened
+        .call(json!({ "command": "cad.assets.check", "input": { "drawing": moved.join("ofis.kcad").display().to_string() } }))
+        .expect("answers");
+    let states: Vec<(String, String, String)> = checked["output"]["assets"]
+        .as_array()
+        .expect("assets")
+        .iter()
+        .map(|a| {
+            (
+                a["kind"].as_str().unwrap_or_default().to_owned(),
+                a["via"].as_str().unwrap_or_default().to_owned(),
+                a["state"].as_str().unwrap_or_default().to_owned(),
+            )
+        })
+        .collect();
+    assert_eq!(
+        states,
+        [
+            ("xref".to_owned(), "none".to_owned(), "missing".to_owned()),
+            ("xref".to_owned(), "relative".to_owned(), "ok".to_owned()),
+            ("image".to_owned(), "relative".to_owned(), "ok".to_owned())
+        ],
+        "{checked}"
+    );
+    // scripts/fixtures/package_cases.py reads this package too.
+    if let Ok(out) = std::env::var("KENTOS_TRANSMIT_OUT") {
+        std::fs::write(out, json!({ "package": moved.display().to_string() }).to_string()).expect("written");
+    }
+}
+
 /// A room's architectural objects as `arch_dxf_goes_round` writes them: grids and a column where they cross, four
 /// walls, a door, the space they close, a tag on the door, a section mark, a stair and a ramp.
 fn arch_room() -> Session {

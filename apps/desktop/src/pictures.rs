@@ -60,6 +60,14 @@ pub fn keep_in_library(model: &mut Model, id: &str, item: Value) {
     model.set_styles(styles);
 }
 
+/// A linked picture's or raster's file looked for as an external reference's source (docs/adr/0350 §2): as written
+/// when absolute, from the drawing's folder, then in the project's search paths; where it would be when not found.
+pub fn locate(file: &str, folder: Option<&Path>, search: &[String]) -> PathBuf {
+    kentos_native_application::links::find_in(file, None, folder, search)
+        .at
+        .unwrap_or_else(|| resolve(file, folder))
+}
+
 /// A linked picture's file: as written when absolute, else beside the drawing.
 pub fn resolve(file: &str, folder: Option<&Path>) -> PathBuf {
     let path = Path::new(file);
@@ -88,9 +96,10 @@ pub fn asset_words(model: &Model, id: &str) -> String {
     }
 }
 
-/// Öznitelikler's Kaynak for a linked picture: its file's name, and whether it was found.
-pub fn file_words(file: &str, drawing: Option<&Path>) -> String {
-    let path = resolve(file, drawing.and_then(Path::parent));
+/// Öznitelikler's Kaynak for a linked picture: its file's name, and whether it was found (with the project's search
+/// paths, `search`).
+pub fn file_words(file: &str, drawing: Option<&Path>, search: &[String]) -> String {
+    let path = locate(file, drawing.and_then(Path::parent), search);
     let name = path
         .file_name()
         .map_or_else(|| file.to_owned(), |n| n.to_string_lossy().into_owned());
@@ -101,36 +110,35 @@ pub fn file_words(file: &str, drawing: Option<&Path>) -> String {
     }
 }
 
-/// Göm: the linked picture at `slot` read and kept in the project's library,
-/// the picture made embedded in one step “Değiştir”; why not otherwise.
-pub fn embed(model: &mut Model, slot: Slot, folder: Option<&Path>) -> Vec<String> {
-    let Some(Entity::Image(im)) = model.get(slot).cloned() else {
+/// Göm: the linked picture at `slot` read and kept in the project's library, the picture made embedded in one step
+/// “Göm” by `cad.images.edit` (docs/adr/0350 §1); why not otherwise.
+pub fn embed(model: &mut Model, slot: Slot, drawing: Option<&Path>) -> Vec<String> {
+    let Some(uid) = model.uid(slot) else {
         return Vec::new();
     };
-    let Some(file) = im.image.file.clone() else {
-        return Vec::new();
+    edit(
+        model,
+        kentos_contracts::ImagesOperation::Embed { uids: Some(vec![uid.to_string()]) },
+        drawing,
+    )
+}
+
+/// Runs `cad.images.edit`: its refusal or warnings, said.
+pub fn edit(model: &mut Model, operation: kentos_contracts::ImagesOperation, drawing: Option<&Path>) -> Vec<String> {
+    use kentos_contracts::CommandResult;
+    let input = kentos_contracts::ImagesEdit {
+        operation,
+        drawing: drawing.map(|p| p.display().to_string()),
+        expected_revision: None,
     };
-    let path = resolve(&file, folder);
-    let name = path
-        .file_name()
-        .map_or_else(|| file.clone(), |n| n.to_string_lossy().into_owned());
-    let bytes = match std::fs::read(&path) {
-        Ok(bytes) => bytes,
-        Err(e) => {
-            return vec![format!(
-                "“{name}” okunamadı: {e}. Dosyanın yerini denetleyin."
-            )];
+    let mut cx = kentos_native_application::ExecutionContext::new(model);
+    match kentos_native_application::images_edit::execute(&mut cx, input) {
+        CommandResult::Completed { warnings, .. } => warnings.into_iter().map(|w| w.message).collect(),
+        CommandResult::Failed { error } | CommandResult::Conflict { error } | CommandResult::NeedsInput { error } => {
+            vec![error.message]
         }
-    };
-    let (id, item) = match library_item(&name, &bytes) {
-        Ok(it) => it,
-        Err(why) => return vec![why],
-    };
-    keep_in_library(model, &id, item);
-    let mut picture = im.clone();
-    picture.image.asset = Some(id);
-    picture.image.file = None;
-    kentos_interaction::properties::set_geometry(model, slot, &Entity::Image(picture))
+        _ => Vec::new(),
+    }
 }
 
 /// A PNG's or a JPEG's pixels for the drawing.
@@ -179,11 +187,39 @@ pub fn fetch(key: &str, model: &Model, folder: Option<&Path>) -> Option<Arc<Bitm
             .and_then(|it| it.get("data").and_then(Value::as_str))
             .and_then(data_bytes)
     } else if let Some(file) = key.strip_prefix("file:") {
-        std::fs::read(resolve(file, folder))
+        std::fs::read(locate(file, folder, &model.settings().xref_paths))
             .ok()
             .filter(|b| b.len() <= MOST_BYTES)
     } else {
         None
     };
     bytes.as_deref().and_then(decode).map(Arc::new)
+}
+
+impl crate::app::App {
+    /// The frames of the linked pictures whose file was not read (docs/adr/0350 §3), for their marks: the drawing's
+    /// objects are walked only while some picture is unread.
+    pub(crate) fn missing_pictures(&self) -> Vec<[kentos_interaction::Vec2; 4]> {
+        let unread: std::collections::HashSet<String> =
+            self.styles.images.files().into_iter().filter(|(_, read)| !read).map(|(f, _)| f).collect();
+        let Some(doc) = self.document.as_ref().filter(|_| !unread.is_empty()) else {
+            return Vec::new();
+        };
+        let layers = doc.model.layers();
+        doc.model
+            .entities()
+            .filter_map(|e| match e {
+                Entity::Image(im)
+                    if im.image.file.as_ref().is_some_and(|f| unread.contains(f))
+                        && layers.is_visible(&im.base.layer_id) =>
+                {
+                    let i = &im.image;
+                    let (c, s) = (i.rotation.cos(), i.rotation.sin());
+                    let at = |u: f64, v: f64| kentos_interaction::Vec2::new(i.p.x + u * c - v * s, i.p.y + u * s + v * c);
+                    Some([at(0.0, 0.0), at(i.width, 0.0), at(i.width, i.height), at(0.0, i.height)])
+                }
+                _ => None,
+            })
+            .collect()
+    }
 }

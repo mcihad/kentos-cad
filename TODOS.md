@@ -441,6 +441,9 @@ Liste:
   `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
   proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
   bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
+- [ ] `CAD-REF-16`, `20` resim altlığı ve taşınabilir paket (ADR 0350, 19 Ekim): web'de gerekenler: `cad.images.edit` (`product/`;
+  tarayıcıda dosya tutamacıyla), Öznitelikler'in Kaynak satırında Göm ve Yeniden bağla…, resim ve rasterlerde arama yolları,
+  bulunamayan resmin işareti, dosyası değişen resmin yeniden okunması; Paketle web'de yok (masaüstü ve başsız sunucu).
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

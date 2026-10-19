@@ -4,11 +4,11 @@
     python3 scripts/fixtures/assets_check_cases.py           # writes the file
     python3 scripts/fixtures/assets_check_cases.py --check   # writes nothing; compares
 
-Writes fixtures/commands/v1/cad.assets.check.json with Python's standard library, no KentOS code, from ADR 0349:
+Writes fixtures/commands/v1/cad.assets.check.json with Python's standard library, no KentOS code, from ADR 0349 and ADR 0350 §2:
 
 - a linked file is looked for at its path when absolute, then at its relative path from the open drawing's folder; an
-  external reference also in the project's search paths (`xrefPaths`), each first with its relative path, then with its
-  file's name; the places looked in are said when nothing is found;
+  external reference, a linked image and a raster also in the project's search paths (`xrefPaths`), each first with its
+  relative path, then with its file's name; the places looked in are said when nothing is found;
 - its state: `changed` when a SHA-256 is kept (an external reference's `digest`, a linked table's `digest`, a bound
   layer's `revision`) and the file's is another (`digests` asked), `missing` when not found, `unloaded`, `remote` for an
   address, `database` for a database's table, else `ok`;
@@ -310,9 +310,17 @@ add("dış başvuru göreli arama yolunda göreli yoluyla bulunur",
 add("arama yolu açık çizimin dosyası olmadan göreli ise atlanır",
     drawing([insert(XREF_ID)], blocks=[xref_block("/yok/plan.kcad", PLAN_SHA)], settings={"xrefPaths": ["v1", fx("xref/v1")]}), {},
     [status("xref", "/yok/plan.kcad", search=["v1", fx("xref/v1")], digest=PLAN_SHA, block=XREF_ID, name="Plan")])
-add("arama yolu resimlere uygulanmaz",
-    drawing([image("/yok/gray16.png")], settings={"xrefPaths": [fx("raster/v1/files")]}), {},
-    [status("image", "/yok/gray16.png", uid="$uidOf:1")])
+add("arama yolu resimlere uygulanır: adıyla bulunur",
+    drawing([image("/yok/gray16.png")], settings={"xrefPaths": ["/ortak", fx("raster/v1/files")]}), {},
+    [status("image", "/yok/gray16.png", search=["/ortak", fx("raster/v1/files")], uid="$uidOf:1")],
+    note="ADR 0350 §2: resim ve raster dış başvuru gibi aranır.")
+add("arama yolu rasterlere uygulanır, göreli yoluyla",
+    drawing([raster("files/i8.tif")], settings={"xrefPaths": ["v1"]}), {"drawing": fx("raster/ana.kcad")},
+    [status("raster", "files/i8.tif", drawing=fx("raster/ana.kcad"), search=["v1"], uid="$uidOf:1")])
+add("arama yolu eklere uygulanmaz",
+    drawing([line(attachments=[{"name": "Tapu", "file": "/yok/tapu-101-5.pdf"}])],
+            settings={"xrefPaths": [fx("interaction/v1/belgeler")]}), {},
+    [status("attachment", "/yok/tapu-101-5.pdf", uid="$uidOf:1", name="Tapu")])
 add("sıradan bloğun nesnesinin bağlı dosyası bloğuyla",
     drawing([insert(BLOCK_ID)], blocks=[{"id": BLOCK_ID, "name": "Pafta başlığı", "base": {"x": 0.0, "y": 0.0},
                                          "entities": [{**image(PNG, layerId=""), "id": 1}]}]), {},
@@ -353,7 +361,7 @@ def compact(v):
 def build():
     out = ["{", '  "format": "kentos.command-cases",', '  "version": 1,', '  "command": "cad.assets.check",',
            '  "commandVersion": 1,', '  "title": "Bağlı dosyalar: nerede bulundukları ve durumları",',
-           f'  "note": {compact("Written by scripts/fixtures/assets_check_cases.py from docs/adr/0349 §1–§2; do not edit by hand.")},',
+           f'  "note": {compact("Written by scripts/fixtures/assets_check_cases.py from docs/adr/0349 §1–§2 and 0350 §2; do not edit by hand.")},',
            f'  "setup": {compact(drawing())},', '  "cases": [']
     blocks = []
     for c in cases:

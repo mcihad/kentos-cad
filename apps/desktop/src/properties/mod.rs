@@ -615,6 +615,7 @@ impl App {
             .as_deref()
             .and_then(std::path::Path::parent)
             .map(std::path::Path::to_path_buf);
+        let drawing = doc.path.clone();
         let model = &mut doc.model;
         let said = match event {
             Event::Toggle(_) | Event::SelectObject(_) => Vec::new(),
@@ -717,7 +718,7 @@ impl App {
                 }
                 _ => Vec::new(),
             },
-            Event::EmbedImage(slot) => crate::pictures::embed(model, slot, folder.as_deref()),
+            Event::EmbedImage(slot) => crate::pictures::embed(model, slot, drawing.as_deref()),
             Event::EmbedRaster(slot) => crate::rasters::embed(model, slot, folder.as_deref()),
             Event::Wall(slot, change) => properties::edit_wall(model, slot, change),
             Event::WallOp(slot, op) => properties::edit_wall_op(model, slot, op),

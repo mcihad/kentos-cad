@@ -2,7 +2,8 @@
 //! seconds each loaded reference's file is looked at (its size and change time; the SHA-256 only when they moved), and
 //! a source that changed is told by a card over the drawing with the sheets and named views it affects — Yeniden yükle,
 //! Dış başvurular, Kapat. Nothing is loaded or saved by itself. When the drawing opens, `cad.assets.check` says the
-//! linked files that changed or are missing.
+//! linked files that changed or are missing. The linked pictures the drawing shows are looked at too (docs/adr/0350
+//! §3): a file that changed or came back is read again and drawn, quietly (its pixels are not the drawing's data).
 
 use std::collections::HashMap;
 use std::path::Path;
@@ -37,6 +38,8 @@ pub struct Watch {
     /// The SHA-256 of a changed source already told, so a closed card comes back only when the file changes again.
     told: HashMap<BlockId, String>,
     pub notice: Option<Notice>,
+    /// Each linked picture's file as last seen (none: not there).
+    pictures: HashMap<String, Option<(u64, SystemTime)>>,
 }
 
 #[derive(Clone, Debug)]
@@ -75,11 +78,55 @@ impl App {
         self.document.as_ref()?.path.as_ref().map(|p| p.display().to_string())
     }
 
-    /// Whether the open drawing has a loaded external reference to follow.
+    /// Whether the open drawing has a loaded external reference or a linked picture to follow.
     pub(crate) fn xrefs_watching(&self) -> bool {
-        self.document
-            .as_ref()
-            .is_some_and(|d| d.model.blocks().iter().any(|b| b.xref.as_ref().is_some_and(|x| !x.unloaded)))
+        self.document.as_ref().is_some_and(|d| {
+            d.model.blocks().iter().any(|b| b.xref.as_ref().is_some_and(|x| !x.unloaded))
+                || self.styles.images.has_files()
+        })
+    }
+
+    /// The linked pictures' files looked at: one that changed, came back or went is read again and drawn.
+    fn pictures_tick(&mut self) {
+        let Some(doc) = self.document.as_ref() else { return };
+        let folder = doc.path.as_deref().and_then(Path::parent).map(Path::to_path_buf);
+        let search = doc.model.settings().xref_paths.clone();
+        let seen: Vec<(String, Option<(u64, SystemTime)>)> = self
+            .styles
+            .images
+            .files()
+            .into_iter()
+            .map(|(file, _)| {
+                let now = stamp(&crate::pictures::locate(&file, folder.as_deref(), &search));
+                (file, now)
+            })
+            .collect();
+        let mut again = Vec::new();
+        for (file, now) in seen {
+            if let Some(before) = self.xref_watch.pictures.insert(file.clone(), now)
+                && before != now
+            {
+                again.push(file);
+            }
+        }
+        let mut said = Vec::new();
+        if let Some(doc) = self.document.as_ref() {
+            for file in again {
+                let key = format!("file:{file}");
+                let bitmap = crate::pictures::fetch(&key, &doc.model, folder.as_deref());
+                let read = bitmap.is_some();
+                self.styles.images.put_bitmap(key, bitmap);
+                let name = Path::new(&file).file_name().map_or_else(|| file.clone(), |n| n.to_string_lossy().into_owned());
+                said.push(if read {
+                    format!("{name} değişti; resim yeniden okundu.")
+                } else {
+                    format!("{name} okunamıyor; resmin yerinde uyarı çizildi.")
+                });
+            }
+        }
+        for s in said {
+            self.output(s);
+        }
     }
 
     /// The external references' files, with the SHA-256 compared (`cad.assets.check`).
@@ -171,6 +218,7 @@ impl App {
 
     /// The references' files looked at: a source that changed since it was told is told by the card.
     fn xrefs_tick(&mut self) {
+        self.pictures_tick();
         let Some(doc) = self.document.as_ref() else { return };
         let drawing = self.drawing_file();
         let search = doc.model.settings().xref_paths.clone();

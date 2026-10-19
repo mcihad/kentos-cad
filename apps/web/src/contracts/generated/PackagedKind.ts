@@ -3,4 +3,4 @@
 /**
  * What a packed or left link is.
  */
-export type PackagedKind = "source" | "picture" | "sidecar" | "table" | "attachment";
+export type PackagedKind = "source" | "picture" | "sidecar" | "table" | "attachment" | "xref" | "font";

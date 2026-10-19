@@ -44,7 +44,7 @@ pub(super) fn rows(
     let source = match x.sources.as_slice() {
         [one] => match (&one.asset, &one.file, &one.url) {
             (Some(a), _, _) => crate::pictures::asset_words(&doc.model, a),
-            (None, Some(path), _) => crate::pictures::file_words(path, doc.path.as_deref()),
+            (None, Some(path), _) => crate::pictures::file_words(path, doc.path.as_deref(), &[]),
             (None, None, Some(u)) => u.clone(),
             _ => "—".to_owned(),
         },

@@ -7,6 +7,9 @@
 //! KENTOS_SHOTS_ONLY=dis-basvuru-ekle,dis-basvuru,dis-basvuru-pencere,dis-basvuru-degisti cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0350's pictures: a linked picture not on this computer, Yeniden bağla and Göm
+//! (`resim-bulunamadi`, `resim-yeniden-bagla`, `resim-gomuldu`).
+//!
 //! Test code only.
 
 use std::path::PathBuf;
@@ -158,8 +161,70 @@ fn others(app: &mut App) {
     send(app, Event::Section(crate::xrefs_window::Section::Others));
 }
 
+/// Two linked pictures beside the plan's insert, one of them not on this computer (docs/adr/0350 §3), their pixels
+/// read as the drawing area reads them; the missing one selected. Its slot.
+fn pictures(app: &mut App) -> kentos_domain::Slot {
+    opened(app, crate::tools_scenes::Objects::new(), 50.0);
+    app.tab = "insert";
+    let logo = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/interaction/v1/logo.png");
+    let layer = app.document.as_ref().map(|d| d.model.layers().active().to_owned()).unwrap_or_default();
+    let objects = serde_json::json!([
+        { "kind": "image", "id": 0, "layerId": layer, "attrs": {}, "p": { "x": 0.0, "y": 0.0 }, "width": 8.0, "height": 6.0,
+          "rotation": 0.0, "file": logo.display().to_string() },
+        { "kind": "image", "id": 0, "layerId": layer, "attrs": {}, "p": { "x": 10.0, "y": 0.0 }, "width": 8.0, "height": 6.0,
+          "rotation": 0.2, "file": "/proje/fotograflar/cephe.png" }
+    ]);
+    let mut slots = Vec::new();
+    if let (Some(doc), Ok(list)) = (app.document.as_mut(), serde_json::from_value::<Vec<kentos_contracts::Entity>>(objects)) {
+        for e in list {
+            if let Ok(slot) = doc.model.add(e) {
+                slots.push(slot);
+            }
+        }
+    }
+    if let Some(doc) = app.document.as_ref() {
+        for file in [logo.display().to_string(), "/proje/fotograflar/cephe.png".to_owned()] {
+            let key = format!("file:{file}");
+            let bitmap = crate::pictures::fetch(&key, &doc.model, None);
+            app.styles.images.put_bitmap(key, bitmap);
+        }
+    }
+    let ids: Vec<f64> = slots.iter().map(|s| f64::from(s.0)).collect();
+    app.zoom_to_objects(&ids);
+    let missing = slots.last().copied().unwrap_or(kentos_domain::Slot(0));
+    app.selection.set([missing]);
+    missing
+}
+
+fn picture_missing(app: &mut App) {
+    pictures(app);
+}
+
+/// Yeniden bağla… with another PNG chosen: the picture shows it, one step.
+fn picture_relinked(app: &mut App) {
+    let slot = pictures(app);
+    let rgb = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/raster/v1/files/rgb.png");
+    send(app, Event::Picked(crate::xrefs_window::Purpose::Image(slot), Some(rgb.clone())));
+    if let Some(doc) = app.document.as_ref() {
+        let key = format!("file:{}", rgb.display());
+        let bitmap = crate::pictures::fetch(&key, &doc.model, None);
+        app.styles.images.put_bitmap(key, bitmap);
+    }
+}
+
+/// Göm on the found picture: Öznitelikler's Kaynak says it is embedded.
+fn picture_embedded(app: &mut App) {
+    let missing = pictures(app);
+    let found = kentos_domain::Slot(missing.0 - 1);
+    let _ = app.update(Message::Properties(crate::properties::Event::EmbedImage(found)));
+    app.selection.set([found]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
+        ("resim-bulunamadi", picture_missing),
+        ("resim-yeniden-bagla", picture_relinked),
+        ("resim-gomuldu", picture_embedded),
         ("dis-basvuru-bildirim", notice),
         ("dis-basvuru-yollar", paths),
         ("bagli-dosyalar", others),

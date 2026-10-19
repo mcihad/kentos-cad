@@ -16,7 +16,7 @@ pub enum Event {
     /// The folder to make; none when the dialog was cancelled.
     Picked(Option<PathBuf>),
     /// Packed, or why not.
-    Done(Result<(ProjectPackaged, Vec<CommandWarning>), String>),
+    Done(Result<Box<(ProjectPackaged, Vec<CommandWarning>)>, String>),
 }
 
 fn event(e: Event) -> Message {
@@ -68,19 +68,24 @@ impl App {
                         let planned = kentos_headless::package::plan(&model, &input)
                             .map_err(|e| e.message)?;
                         kentos_headless::package::write(&planned).map_err(|e| e.message)?;
-                        Ok((planned.output, planned.warnings))
+                        Ok(Box::new((planned.output, planned.warnings)))
                     },
                     |r| Exchange::Package(Event::Done(r)),
                 )
             }
-            Event::Done(Ok((out, warnings))) => {
+            Event::Done(Ok(done)) => {
+                let (out, warnings) = *done;
                 let mb = out.bytes as f64 / (1024.0 * 1024.0);
                 self.announce(
                     if out.left.is_empty() { Level::Success } else { Level::Warn },
                     format!(
-                        "Paket yapıldı: {} ve {} dosya ({mb:.1} MB). Klasör başka bilgisayarda açılınca bağlı katmanlar kaynaklarını bulur.",
+                        "Paket yapıldı: {} ve {} dosya ({mb:.1} MB{}); içindekiler paket.json'da. Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.",
                         out.project,
-                        out.files.len()
+                        out.files.len(),
+                        match out.files.iter().filter(|f| f.kind == kentos_contracts::PackagedKind::Xref).count() {
+                            0 => String::new(),
+                            n => format!(", {n} dış başvuru kaynağı"),
+                        }
                     ),
                 );
                 for w in warnings {

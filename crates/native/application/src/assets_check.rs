@@ -1,6 +1,7 @@
 //! `cad.assets.check` v1 (docs/adr/0349 §2; plan/cad.md `CAD-REF-19`): every file the drawing links to, where it was
-//! found and whether it changed since it was read. Read-only. External references are looked for with the project's
-//! search paths (`links::find`), the other links at their path and from the drawing's folder, as their own loaders do.
+//! found and whether it changed since it was read. Read-only. External references, linked images and rasters are looked
+//! for with the project's search paths (`links::find`, docs/adr/0350 §2), the other links at their path and from the
+//! drawing's folder, as their own loaders do.
 //! The shared cases are `fixtures/commands/v1/cad.assets.check.json`.
 
 use std::path::Path;
@@ -24,6 +25,8 @@ fn file_name(path: &str) -> String {
 /// What a check gathers, in the answer's order.
 struct Walk<'a> {
     input: &'a AssetsCheck,
+    /// The project's search paths: external references', images' and rasters' (docs/adr/0350 §2).
+    search: Vec<String>,
     out: Vec<AssetStatus>,
 }
 
@@ -107,12 +110,14 @@ impl Walk<'_> {
         match e {
             Entity::Image(i) => {
                 if let Some(f) = &i.image.file {
-                    self.file(AssetKind::Image, f, None, &[], None, uid.clone(), block, None, None);
+                    let search = self.search.clone();
+                    self.file(AssetKind::Image, f, None, &search, None, uid.clone(), block, None, None);
                 }
             }
             Entity::Raster(r) => {
                 if let Some(f) = &r.raster.file {
-                    self.file(AssetKind::Raster, f, None, &[], None, uid.clone(), block, None, None);
+                    let search = self.search.clone();
+                    self.file(AssetKind::Raster, f, None, &search, None, uid.clone(), block, None, None);
                 }
                 if let Some(u) = &r.raster.url {
                     self.address(AssetKind::Raster, u, uid.clone(), block, None);
@@ -149,8 +154,8 @@ impl Walk<'_> {
 
 /// The drawing's linked files.
 pub fn check_in(doc: &Document, input: &AssetsCheck) -> AssetsChecked {
-    let mut w = Walk { input, out: Vec::new() };
     let search = doc.settings().xref_paths.clone();
+    let mut w = Walk { input, search: search.clone(), out: Vec::new() };
     // External references, in the drawing's block order.
     for b in doc.blocks() {
         let Some(x) = &b.xref else { continue };
