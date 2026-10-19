@@ -218,6 +218,10 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-15` bağlı katmanda form ve ilişki işlemi (ADR 0532, 19 Ekim): web'de gerekenler: bağlı katman web'e gelince
+  `cad.sources.sync`'in `with`'i ve `cad.forms.submit`'in `commit`'i, `cad.sources.relate` ve `cad.records.page`'in işleyicileri,
+  İlişkiler penceresinin Dosyada bölümü, Formla düzenle'nin Kaynağa da yaz'ı; ortak durumlar `fixtures/commands/v1/cad.sources.relate.json`,
+  `cad.records.page.json`, `cad.sources.sync.together.json`, `cad.forms.submit.commit.json`.
 - [ ] `CBS-21` atlas PDF'i (ADR 0534, 19 Ekim): web'de gerekenler: `file.export.atlas`'ın işleyicisi (PDF çekirdeği `PdfInputs.atlas` ve
   `keywords` WASM'da hazır; sayfa başına harita içeriği, tablo ve lejant web'in çizicisiyle), Atlas penceresi (tanım, tema, zaman,
   önizleme, pin), pin'in WASM'da hesabı; kâğıt çıktısının süzgeç kuralı (`vector_content`'in `view_shown`'ı) web'in harita içeriğinde;
@@ -2006,6 +2010,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-15` bağlı katmanda form ve ilişki işlemi (dilim): `cad.sources.sync`'in `with`'i ve `cad.forms.submit`'in `commit`'i üst
+  ve alt kayıtları bağlı GeoPackage'a tek SQLite işleminde yazar (biri reddedilirse ne dosyaya ne çizime bir şey; ayrı dosya ya da
+  PostGIS `transaction_split`); `cad.sources.relate` (check, map, unmap) çoktan çoğa başvuruyu OGC 18-000 ilişki profiline
+  (`kentos_references`, `base_id`/`related_id`) eşler, yabancı ya da bozuk temsil metne çevrilmez (`relation_unsupported`,
+  `relation_unmapped`); `cad.records.page` kayıtları ve ilişkileri 1–500'lük sayfalarda, süzgeçten sonra sayılan toplamla ve kaynağın
+  sürümüyle okur; protokolün planı artık dosya yazmaz (`ExecutionContext::dry()`); masaüstünde İlişkiler'in Dosyada bölümü, Formla
+  düzenle'nin Kaynağa da yaz'ı ve Kaynak ▸ Kaynağa birlikte yaz; bina → parsel → malik örneği masaüstü, Python ve MCP'de aynı. Kalan:
+  PostGIS'te çok tablolu işlem ve bağlantı tablosu, ayrı dosyalar arası işlem, arayüzün lookup'ının `cad.records.page`'e bağlanması,
+  bulutta izinlere göre süzme (CBS-38). — **19 Ekim, [ADR 0532](docs/adr/0532-forms-and-sources-transaction.md).**
 - [ ] `CBS-21` atlas PDF'i (dilim): `file.export.atlas` (sayfalar paftanın atlas kurallarıyla, her sayfa kendi nesnesinin haritası, tablosu
   ve lejantıyla; GeoPDF), çıktı çizimin parçalarının damgalarına, katmanların özetine ve bağlı kaynağın SHA-256'sına sabitlenir
   (`pin_mismatch`, `source_changed`, `source_stale`, `source_unsaved`), tema, zaman ve sistem açık, süzgeç dışı nesne ve formda `redact`
