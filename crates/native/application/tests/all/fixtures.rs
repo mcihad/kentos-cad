@@ -29,7 +29,7 @@ use kentos_domain::contracts::{
 };
 use kentos_domain::contracts::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
-    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, MeasuredPoint,
+    EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf, MeasuredPoint,
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -55,7 +55,7 @@ use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_gpkg, stretch,
+    entities_reverse, file_import, file_import_gpkg, file_import_pdf, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -2049,6 +2049,13 @@ impl Input for ImportDxf {
     }
 }
 
+impl Input for ImportPdf {
+    /// The numbers a case may give through a placeholder: none, the file's are literal.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for ImportGpkg {
     /// No number: a path, table names and a choice.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3032,6 +3039,7 @@ fn run_op(
         kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
         kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
         kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
+        kentos_domain::contracts::FILE_IMPORT_PDF => run!(file_import_pdf, ImportPdf),
         kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
         kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
         kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),

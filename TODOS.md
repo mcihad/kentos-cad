@@ -441,6 +441,9 @@ Liste:
   `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
   proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
   bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
+- [ ] `CAD-IO-21`–`26` PDF içe aktarma (ADR 0352, 19 Ekim): web'de gerekenler: `file.import.pdf` (`product/`; okuyucu ve içe alma
+  WASM'a: `kentos_formats::pdf`'in eğrileri ve `flatten_cubic`'i), tarayıcıda dosya tutamacıyla PDF içe aktar penceresi (sayfa, ölçek,
+  yer, alınacaklar, eğriler, tolerans, bölge, katmanlar, planın özeti); bilinen bozulma: `PdfPath.curves` alanı.
 - [ ] `CAD-REF-01`–`04`, `12`, `15`, `17`, `18` belge sekmeleri, kırpma ve PDF altlığı (ADR 0351, 19 Ekim): web'de gerekenler:
   `cad.inserts.clip` (`product/`) ve Kırp aracı, çizim hatlarında kırpılmış içerik (çekirdeğin `block_clip`'i WASM'dan) ve ekranda
   çerçeve, PDF altlığı (okuyucu WASM'a: `kentos_formats::pdf`; `cad.xrefs.edit`'in `page` ve `underlay`'i, Dış başvurular'da Soldur, Tek

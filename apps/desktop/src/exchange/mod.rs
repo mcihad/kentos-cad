@@ -35,6 +35,7 @@ mod gnss_import;
 #[cfg(test)]
 mod gnss_tests;
 pub(crate) mod gpkg;
+pub(crate) mod pdf_import;
 #[cfg(test)]
 mod gpkg_tests;
 #[cfg(test)]
@@ -115,6 +116,8 @@ pub enum Window {
     Gpkg(gpkg::State),
     /// PostGIS'e bağlan (docs/adr/0505).
     Postgis(postgis::State),
+    /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
+    PdfImport(Box<pdf_import::State>),
 }
 
 #[derive(Debug, Clone)]
@@ -136,6 +139,7 @@ pub enum Event {
     PhotoImport(photo_import::Event),
     Gpkg(gpkg::Event),
     Postgis(postgis::Event),
+    PdfImport(pdf_import::Event),
     Package(package::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
@@ -144,7 +148,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 20] = [
+pub const COMMANDS: [&str; 21] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -161,6 +165,7 @@ pub const COMMANDS: [&str; 20] = [
     "file.export.gpx",
     "file.import.photos",
     "file.import.gpkg",
+    "file.import.pdf",
     "file.export.gpkg",
     "source.link",
     "source.postgis",
@@ -198,6 +203,7 @@ impl App {
             "file.import.kml" => self.pick(Kind::Kml),
             "file.import.photos" => self.pick_photos(),
             "file.import.gpkg" => self.gpkg_pick(false),
+            "file.import.pdf" => self.pdf_pick(),
             "source.link" => self.gpkg_pick(true),
             "source.postgis" => self.postgis_open(),
             "file.package" => self.package_pick(),
@@ -382,6 +388,7 @@ impl App {
             Event::Wgs84Export(e) => self.wgs84_export_event(e),
             Event::PhotoImport(e) => self.photo_import_event(e),
             Event::Gpkg(e) => self.gpkg_event(e),
+            Event::PdfImport(e) => self.pdf_event(e),
             Event::Postgis(e) => self.postgis_event(e),
             Event::Package(e) => self.package_event(e),
             Event::Written(outcome) => self.export_written(outcome),
@@ -422,6 +429,7 @@ impl App {
             Some(Window::PhotoImport(s)) => self.photo_import_view(s),
             Some(Window::Gpkg(s)) => self.gpkg_view(s),
             Some(Window::Postgis(s)) => self.postgis_view(s),
+            Some(Window::PdfImport(s)) => self.pdf_import_view(s),
             None => iced::widget::text("").into(),
         }
     }

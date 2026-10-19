@@ -595,6 +595,50 @@ cp.paint("S")
 add_file("egri.pdf", one_file([(cp, None)]), {"1": cp.expected(1, 1)})
 
 
+def curves_page():
+    """docs/adr/0352: runs of curves for the import, every number whole so the file holds it exactly."""
+    p = Page(400, 300)
+    # A circle of four cubics, closed, red.
+    p.stroke_rgb(1, 0, 0)
+    cx, cy, r, k = 100, 100, 40, 22
+    p.move(cx + r, cy)
+    p.curve(cx + r, cy + k, cx + k, cy + r, cx, cy + r)
+    p.curve(cx - k, cy + r, cx - r, cy + k, cx - r, cy)
+    p.curve(cx - r, cy - k, cx - k, cy - r, cx, cy - r)
+    p.curve(cx + k, cy - r, cx + r, cy - k, cx + r, cy)
+    p.close()
+    p.paint("S")
+    # A line, a curve and a line: open, dashed, blue.
+    p.stroke_rgb(0, 0, 1)
+    p.dash(True)
+    p.move(200, 50)
+    p.line(250, 50)
+    p.curve(270, 50, 280, 70, 280, 90)
+    p.line(280, 150)
+    p.paint("S")
+    p.dash(False)
+    # A leaf of two cubics, filled green, outlined black.
+    p.fill_rgb(0, 0.6, 0)
+    p.stroke_rgb(0)
+    p.line_width(2)
+    p.move(300, 200)
+    p.curve(330, 250, 370, 250, 390, 200)
+    p.curve(370, 170, 330, 170, 300, 200)
+    p.close()
+    p.paint("B")
+    # The paper: a white fill.
+    p.fill_rgb(1)
+    p.rect(10, 250, 50, 30)
+    p.paint("f")
+    p.fill_rgb(0)
+    p.text("F1", 10, [1, 0, 0, 1, 20, 20], [b"Egri"], words="Egri")
+    return p
+
+
+crv = curves_page()
+add_file("egriler.pdf", one_file([(crv, fonts_only)]), {"1": crv.expected(1, 1)})
+
+
 def incremental():
     """The first version's page draws one line; an update replaces its content with two."""
     p_old = Page(100, 100)

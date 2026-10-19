@@ -734,6 +734,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   güncelleme, süzgeçler, formlar, yazılar ve ToUnicode, isteğe bağlı içerik grupları), sayfa `cad.xrefs.edit`'in `page`'iyle dış
   başvuru olur, görünüşü `underlay` (soldur, tek renk, yazdırma); dış başvuru tanımı `cad.blocks.edit`'te salt okunur
   (`xref_read_only`), Kaynağı aç onu yeni sekmede açar; altlığın çizgisine kenet ve bağlı ölçü `underlay_measure` der (ADR 0351);
+  PDF içe aktarma: `file.import.pdf` (sayfa, bölge mm, ölçek 1:N, yer; çizgiler, dolgular, yazılar; eğriler toleransla çoklu çizgi ya da
+  kesin üçüncü dereceden NURBS, okuyucu eğrileri `PdfPath.curves`'te saklar; isteğe bağlı içerik grupları katman, `skipLayers`, `layers`,
+  `group`; beyaz dolgu kâğıt; `notes` PDF'in taşımadığını, `left` alınmayanı söyler; tek adım “PDF: ad.pdf”), masaüstünde CAD › Ekle ›
+  İçe aktar ve CBS › Veri'de PDF içe aktar penceresi (planın canlı özeti, yer çizimden); Python ve MCP (ADR 0352);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

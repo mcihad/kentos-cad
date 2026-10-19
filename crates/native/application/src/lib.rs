@@ -66,6 +66,7 @@ pub mod blocks_replace;
 pub mod blocks_sync;
 pub mod file_import_block;
 pub mod file_import_gpkg;
+pub mod file_import_pdf;
 pub mod provider;
 pub mod fields_write;
 pub mod processing_host;
@@ -961,6 +962,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_GPKG,
         kentos_contracts::FILE_IMPORT_GPKG_VERSION,
+    ),
+    // A PDF page into the drawing ([`file_import_pdf`], docs/adr/0352).
+    (
+        kentos_contracts::FILE_IMPORT_PDF,
+        kentos_contracts::FILE_IMPORT_PDF_VERSION,
     ),
     // Pafta kitabı ([`sheets_edit`], docs/adr/0252 §2).
     (

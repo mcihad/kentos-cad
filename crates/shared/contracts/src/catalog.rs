@@ -6585,6 +6585,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A PDF page into the drawing (docs/adr/0352), held together by fixtures/commands/v1/file.import.pdf.json.
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_PDF.into(),
+            version: crate::FILE_IMPORT_PDF_VERSION,
+            title: "PDF içe aktar".into(),
+            summary: "path'teki PDF'in bir sayfasının (page, varsayılan 1) çizgilerini, dolgularını ve yazılarını açık çizimin kendi nesneleri olarak alır: çizgi çizgi ya da çoklu çizgi (renk, kâğıttaki kalınlık, kesik), dolgu alan (beyaz dolgu kâğıt sayılır, alınmaz), yazı yazı (yer, yükseklik, dönüş, renk). strokes, fills, texts hangilerinin alınacağını seçer. \
+                      Kâğıt ölçüsü scale ile çizime büyür (1:scale; kâğıdın bir metresi çizimin scale metresi), sayfanın sol alt köşesi at'e gelir. region (sayfanın sol alt köşesinden milimetre) yalnız bütün noktaları içinde kalan parçaları ve başı içinde kalan yazıları alır. \
+                      Eğriler curves polyline ile tolerance (kâğıtta mm, varsayılan 0,01) içinde çoklu çizgi, nurbs ile kesin üçüncü dereceden NURBS eğrisi olur (aradaki düz kenarlar çizgi). Sayfanın isteğe bağlı içerik grupları katmandır (hiçbirinde olmayan “PDF”); skipLayers onları dışarıda bırakır, layers var olan katmana yönlendirir, yoksa aynı adlı katmana, o da yoksa dosyanın adındaki gruba yeni katman. \
+                      PDF yazdırılanı taşır, çizimi değil: ölçü, kılavuz ve tablo çizgileri ve yazılarıyla gelir; resimler, gölgelemeler ve okunamayan harfler alınmaz (import_losses). Bütün alınanlar tek geri alma adımıdır (“PDF: ad.pdf”); plan dosyayı okur, kutuyu, katmanları ve kayıpları verir, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["pdfin".into(), "pdfimport".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportPdf>(),
+            output: schema::<crate::PdfImported>(),
+            plan: Some(schema::<crate::PdfImported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Mimarın 1:50 basılmış planı".into(),
+                    input: json!({ "path": "/proje/kat-plani.pdf", "scale": 50, "curves": "nurbs" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "İkinci sayfanın yalnız sol yarısı, yazılar olmadan".into(),
+                    input: json!({ "path": "/proje/paftalar.pdf", "page": 2, "texts": false,
+                                   "region": { "a": { "x": 0, "y": 0 }, "b": { "x": 210, "y": 297 } } }),
+                    output: None,
+                },
+            ],
+        },
         // A GeoPackage into the drawing (docs/adr/0502), held together by fixtures/commands/v1/file.import.gpkg.json.
         CommandDescriptor {
             id: crate::FILE_IMPORT_GPKG.into(),
@@ -7912,6 +7948,9 @@ mod tests {
                     }
                     crate::FILE_IMPORT_DXF => {
                         serde_json::from_value::<crate::ImportDxf>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_PDF => {
+                        serde_json::from_value::<crate::ImportPdf>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_GPKG => {
                         serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())

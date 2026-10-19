@@ -125,6 +125,26 @@ fn pdf_manager(app: &mut App) {
     send(app, Event::Choose(0));
 }
 
+/// PDF içe aktar (docs/adr/0352) on the curves page: 1:50, NURBS, the plan shown.
+fn pdf_import_window(app: &mut App) {
+    opened(app, crate::tools_scenes::Objects::new(), 50.0);
+    app.tab = "insert";
+    let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::PdfImport(
+        crate::exchange::pdf_import::Event::Picked(Some(fixture("pdf/v1/egriler.pdf"))),
+    ))));
+    let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::PdfImport(
+        crate::exchange::pdf_import::Event::Curves(kentos_contracts::PdfCurveOutput::Nurbs),
+    ))));
+}
+
+/// The curves page taken in at 1:50.
+fn pdf_imported(app: &mut App) {
+    pdf_import_window(app);
+    let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::PdfImport(
+        crate::exchange::pdf_import::Event::Run,
+    ))));
+}
+
 /// Two drawings open: the office plan set aside in its tab, the site plan in front.
 fn tabs(app: &mut App) {
     plan(app);
@@ -147,5 +167,7 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("pdf-altlik", pdf_attached),
         ("pdf-altlik-pencere", pdf_manager),
         ("belge-sekmeleri", tabs),
+        ("pdf-ice-aktar", pdf_import_window),
+        ("pdf-ice-aktar-cizim", pdf_imported),
     ]
 }

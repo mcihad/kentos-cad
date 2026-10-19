@@ -10,7 +10,7 @@ use std::rc::Rc;
 use super::file::PdfFile;
 use super::font::Font;
 use super::object::{Dict, Lexer, Obj, Token};
-use super::{PdfLeft, PdfPath, PdfStroke, PdfText};
+use super::{PdfCurve, PdfLeft, PdfPath, PdfStroke, PdfText};
 
 pub type M = [f64; 6];
 
@@ -174,7 +174,10 @@ impl<'f, 'a> Run<'f, 'a> {
         let mut layers: Vec<Option<usize>> = Vec::new();
         let mut operands: Vec<Obj> = Vec::new();
         let mut parts: Vec<(Vec<[f64; 2]>, bool)> = Vec::new();
+        // Each part's cubic pieces, beside `parts` (docs/adr/0352 §2).
+        let mut curves: Vec<Vec<PdfCurve>> = Vec::new();
         let mut cur: Vec<[f64; 2]> = Vec::new();
+        let mut cur_curves: Vec<PdfCurve> = Vec::new();
         let mut start = [0.0, 0.0];
         let mut last = [0.0, 0.0];
         let mut tm = IDENTITY;
@@ -252,7 +255,9 @@ impl<'f, 'a> Run<'f, 'a> {
                 "m" => {
                     if cur.len() > 1 {
                         parts.push((std::mem::take(&mut cur), false));
+                        curves.push(std::mem::take(&mut cur_curves));
                     }
+                    cur_curves.clear();
                     let p = apply(&gs.ctm, n(0), n(1));
                     cur = vec![p];
                     start = p;
@@ -286,20 +291,26 @@ impl<'f, 'a> Run<'f, 'a> {
                     if cur.is_empty() {
                         cur.push(last);
                     }
-                    flatten_cubic(last, c1, c2, e, &mut cur);
+                    let at = cur.len() - 1;
+                    flatten_cubic([last, c1, c2, e], FLATNESS, &mut cur);
+                    cur_curves.push(PdfCurve { at, n: cur.len() - 1 - at, c: [last, c1, c2, e] });
                     last = e;
                 }
                 "h" => {
                     if cur.len() > 1 {
                         parts.push((std::mem::take(&mut cur), true));
+                        curves.push(std::mem::take(&mut cur_curves));
                     }
                     cur.clear();
+                    cur_curves.clear();
                     last = start;
                 }
                 "re" if nums.len() >= 4 => {
                     if cur.len() > 1 {
                         parts.push((std::mem::take(&mut cur), false));
+                        curves.push(std::mem::take(&mut cur_curves));
                     }
+                    cur_curves.clear();
                     let (x, y, w, h) = (nums[0], nums[1], nums[2], nums[3]);
                     let ring = vec![
                         apply(&gs.ctm, x, y),
@@ -310,18 +321,19 @@ impl<'f, 'a> Run<'f, 'a> {
                     last = ring[0];
                     start = ring[0];
                     parts.push((ring, true));
+                    curves.push(Vec::new());
                     cur.clear();
                 }
                 "S" | "s" | "f" | "F" | "f*" | "B" | "B*" | "b" | "b*" | "n" => {
-                    if op == "s" || op == "b" || op == "b*" {
-                        if cur.len() > 1 {
-                            parts.push((std::mem::take(&mut cur), true));
-                        }
-                    } else if cur.len() > 1 {
-                        parts.push((std::mem::take(&mut cur), false));
+                    if cur.len() > 1 {
+                        let closes = op == "s" || op == "b" || op == "b*";
+                        parts.push((std::mem::take(&mut cur), closes));
+                        curves.push(std::mem::take(&mut cur_curves));
                     }
                     cur.clear();
+                    cur_curves.clear();
                     let painted = std::mem::take(&mut parts);
+                    let painted_curves = std::mem::take(&mut curves);
                     if op != "n" && !painted.is_empty() {
                         let stroke = matches!(op.as_str(), "S" | "s" | "B" | "B*" | "b" | "b*").then(|| PdfStroke {
                             color: gs.stroke,
@@ -330,7 +342,7 @@ impl<'f, 'a> Run<'f, 'a> {
                         });
                         let fill = matches!(op.as_str(), "f" | "F" | "f*" | "B" | "B*" | "b" | "b*").then_some(gs.fill);
                         self.out.points += painted.iter().map(|p| p.0.len()).sum::<usize>();
-                        self.out.paths.push(PdfPath { parts: painted, stroke, fill, layer });
+                        self.out.paths.push(PdfPath { parts: painted, curves: painted_curves, stroke, fill, layer });
                     }
                 }
                 "W" | "W*" => {}
@@ -620,8 +632,10 @@ pub fn scale_of(m: &M) -> f64 {
     (m[0] * m[3] - m[1] * m[2]).abs().sqrt()
 }
 
-fn flatten_cubic(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], out: &mut Vec<[f64; 2]>) {
-    // The control points' distance from the chord bounds the curve's: pieces enough to stay within FLATNESS.
+/// A cubic Bézier's points after its start, within `tol` of the curve (docs/adr/0352 §3): the control points' distance
+/// from the chord bounds the curve's, so `ceil(sqrt(0.75 d / tol))` pieces, between 1 and 512, at even steps of t.
+pub fn flatten_cubic(c: [[f64; 2]; 4], tol: f64, out: &mut Vec<[f64; 2]>) {
+    let [p0, p1, p2, p3] = c;
     let d = |p: [f64; 2]| {
         let (dx, dy) = (p3[0] - p0[0], p3[1] - p0[1]);
         let len = (dx * dx + dy * dy).sqrt();
@@ -632,7 +646,7 @@ fn flatten_cubic(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2], p3: [f64; 2], out: &m
         }
     };
     let dist = d(p1).max(d(p2));
-    let n = ((dist * 0.75 / FLATNESS).sqrt().ceil() as usize).clamp(1, 512);
+    let n = ((dist * 0.75 / tol).sqrt().ceil() as usize).clamp(1, 512);
     for i in 1..=n {
         let t = i as f64 / n as f64;
         let u = 1.0 - t;

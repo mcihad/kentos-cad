@@ -312,6 +312,13 @@
       ],
       "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502)."
     },
+    "file.import.pdf": {
+      "level": "semantic",
+      "via": [
+        "file.import.pdf"
+      ],
+      "note": "Pencere sayfayı, ölçeği, yeri, eğrilerin çıktısını, bölgeyi ve katmanları sorar, komutun planını gösterir ve komutla yazar (ADR 0352)."
+    },
     "file.import.kml": {
       "level": "none"
     },

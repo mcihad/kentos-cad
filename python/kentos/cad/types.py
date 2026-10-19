@@ -2536,6 +2536,20 @@ PatternUnitName = Literal["paper", "drawing"]
 """The names of :class:`PatternUnit`, for a plain string."""
 
 
+class PdfCurveOutput(_StrEnum):
+    """What the page's curves become (docs/adr/0352 §3).
+
+    - ``polyline``: Points within the tolerance, as polylines.
+    - ``nurbs``: Each run of curves exactly, as a cubic NURBS curve; the straight runs between them as lines and polylines.
+    """
+    POLYLINE = "polyline"
+    NURBS = "nurbs"
+
+
+PdfCurveOutputName = Literal["polyline", "nurbs"]
+"""The names of :class:`PdfCurveOutput`, for a plain string."""
+
+
 class PhaseView(_StrEnum):
     """Which phases the drawing shows and how (docs/adr/0346 §2): Tümü, Mevcut durum, Yıkım planı, Yeni durum."""
     ALL = "all"
@@ -19107,6 +19121,97 @@ class ImportGpkg(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImportPdf(_Model):
+    """Input of `file.import.pdf` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `invalid_scale`,
+    `invalid_tolerance`, `invalid_pdf_region`, `file_not_found`, `import_unreadable` (not a PDF, encrypted or broken),
+    `pdf_page_not_found`, `layer_not_found` and `not_a_layer` (a target of `layers`), `layer_locked`,
+    `nothing_to_import`. Warnings: `import_losses` (pictures, shadings, letters that read as no character, white fills
+    taken for the paper, a page cut short).
+    Attributes:
+        path: The file to read, an absolute path.
+        at: Where the page's lower left corner goes in the drawing (metres on the wire). Absent: the origin. Unit: length.
+        curves: What the curves become; absent: polylines.
+        expected_revision: The drawing's revision the input was prepared against.
+        group: The group at the top of the tree the new layers go into, found by its name or made. Absent: one named after
+            the file; empty: the top of the tree.
+        layers: A page's layer → the drawing's layer (its id) its objects go onto. A layer not named here goes onto the
+            drawing's layer of the same name (case and Turkish marks aside), else onto a new layer.
+        page: The page, from 1. Absent: the first. Unit: index.
+        region: Only what lies inside this rectangle of the page: a part of a path whose every point is in it, a text whose
+            start is in it. Absent: the whole page.
+        scale: The drawing's scale denominator the page was printed at: a paper metre is this many of the drawing's metres.
+            Absent: 1 (the page at its paper size). Unit: 1.
+        skip_layers: The page's layers (its optional content groups, by name; “PDF” for what is in none) whose objects are left out.
+        strokes: What is taken: strokes, fills, texts. Absent: each of them.
+        tolerance: How far a polyline made of a curve may pass from it, millimetres on paper. Absent: 0.01. Unit: paper-mm.
+    """
+    path: str
+    at: Vec2 | None | Unset = UNSET
+    curves: PdfCurveOutput | PdfCurveOutputName | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+    fills: bool | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layers: dict[str, str] | Unset = UNSET
+    page: int | None | Unset = UNSET
+    region: PdfRegion | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    skip_layers: list[str] | Unset = UNSET
+    strokes: bool | Unset = UNSET
+    texts: bool | Unset = UNSET
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        if self.curves is not UNSET:
+            out["curves"] = _enum_out(self.curves)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.fills is not UNSET:
+            out["fills"] = self.fills
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layers is not UNSET:
+            out["layers"] = dict(self.layers)
+        if self.page is not UNSET:
+            out["page"] = self.page
+        if self.region is not UNSET:
+            out["region"] = None if self.region is None else self.region.to_json()
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.skip_layers is not UNSET:
+            out["skipLayers"] = list(self.skip_layers)
+        if self.strokes is not UNSET:
+            out["strokes"] = self.strokes
+        if self.texts is not UNSET:
+            out["texts"] = self.texts
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportPdf:
+        return cls(
+            path=data["path"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            curves=_enum_in(PdfCurveOutput, data["curves"]) if "curves" in data else UNSET,
+            expected_revision=data.get("expectedRevision", UNSET),
+            fills=data.get("fills", UNSET),
+            group=data.get("group", UNSET),
+            layers=dict(data["layers"]) if "layers" in data else UNSET,
+            page=data.get("page", UNSET),
+            region=UNSET if "region" not in data else None if data["region"] is None else PdfRegion.from_json(data["region"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+            strokes=data.get("strokes", UNSET),
+            texts=data.get("texts", UNSET),
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImportedLayer(_Model):
     """A layer an import made."""
     id: str
@@ -26076,6 +26181,180 @@ class PdfExported(_Model):
             replaced=data["replaced"],
             findings=data["findings"],
             notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfImported(_Model):
+    """Output (and plan) of `file.import.pdf` v1.
+    Attributes:
+        file: The file's name, its bytes and their SHA-256 (64 hex digits).
+        bytes: Unit: bytes.
+        page: The page taken and how many the file has. Unit: index.
+        pages: Unit: count.
+        paper: The page's size as it shows, millimetres. Unit: paper-mm.
+        objects: Unit: count.
+        targets: A page's layer → the drawing's layer its objects went onto; the layers left out are not here.
+        layers: The layers made, in the tree's order, and the group they went into.
+        notes: What a PDF cannot carry back (docs/adr/0352 §5), said once per import.
+        revision: The drawing's revision after the step (before it, in a plan).
+        bounds: The box of what was taken in the drawing, `[minX, minY, maxX, maxY]` (metres on the wire); absent when nothing. Unit: length.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    page: int
+    pages: int
+    paper: list[float]
+    objects: int
+    taken: PdfTaken
+    left: PdfLeftOut
+    targets: dict[str, str]
+    layers: list[ImportedLayer]
+    notes: list[str]
+    revision: str
+    bounds: list[float] | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["page"] = self.page
+        out["pages"] = self.pages
+        out["paper"] = [float(e0) for e0 in self.paper]
+        out["objects"] = self.objects
+        out["taken"] = self.taken.to_json()
+        out["left"] = self.left.to_json()
+        out["targets"] = dict(self.targets)
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["notes"] = list(self.notes)
+        out["revision"] = self.revision
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.group is not UNSET:
+            out["group"] = self.group
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfImported:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            page=data["page"],
+            pages=data["pages"],
+            paper=[float(e0) for e0 in data["paper"]],
+            objects=data["objects"],
+            taken=PdfTaken.from_json(data["taken"]),
+            left=PdfLeftOut.from_json(data["left"]),
+            targets=dict(data["targets"]),
+            layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]],
+            notes=list(data["notes"]),
+            revision=data["revision"],
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            group=data.get("group", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfLeftOut(_Model):
+    """What the page held that was not taken, by why.
+    Attributes:
+        images: Pictures and shadings: a PDF import takes vectors and texts, never pixels. Unit: count.
+        shadings: Unit: count.
+        unreadable: Letters of a font without a map to characters. Unit: count.
+        white: White fills, taken for the paper. Unit: count.
+        outside: Parts and texts outside the region. Unit: count.
+        truncated: The page held more than a page is read for; the rest is left out.
+    """
+    images: int
+    shadings: int
+    unreadable: int
+    white: int
+    outside: int
+    truncated: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = self.images
+        out["shadings"] = self.shadings
+        out["unreadable"] = self.unreadable
+        out["white"] = self.white
+        out["outside"] = self.outside
+        out["truncated"] = self.truncated
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfLeftOut:
+        return cls(
+            images=data["images"],
+            shadings=data["shadings"],
+            unreadable=data["unreadable"],
+            white=data["white"],
+            outside=data["outside"],
+            truncated=data["truncated"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfRegion(_Model):
+    """A rectangle on the page, millimetres from its lower left corner as it shows.
+    Attributes:
+        a: Unit: paper-mm.
+        b: Unit: paper-mm.
+    """
+    a: Vec2
+    b: Vec2
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["a"] = _vec2_out(self.a)
+        out["b"] = _vec2_out(self.b)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfRegion:
+        return cls(
+            a=Vec2.from_json(data["a"]),
+            b=Vec2.from_json(data["b"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PdfTaken(_Model):
+    """The objects taken, by kind.
+    Attributes:
+        lines: Unit: count.
+        polylines: Unit: count.
+        curves: Unit: count.
+        areas: Unit: count.
+        texts: Unit: count.
+    """
+    lines: int
+    polylines: int
+    curves: int
+    areas: int
+    texts: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["lines"] = self.lines
+        out["polylines"] = self.polylines
+        out["curves"] = self.curves
+        out["areas"] = self.areas
+        out["texts"] = self.texts
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PdfTaken:
+        return cls(
+            lines=data["lines"],
+            polylines=data["polylines"],
+            curves=data["curves"],
+            areas=data["areas"],
+            texts=data["texts"],
         )
 
 
@@ -48454,6 +48733,7 @@ __all__ = [
     "ImportDomainsOp",
     "ImportDxf",
     "ImportGpkg",
+    "ImportPdf",
     "ImportedLayer",
     "InfoCard",
     "InscribedRegularFrame",
@@ -48779,7 +49059,13 @@ __all__ = [
     "PatternText",
     "PatternUnit",
     "PatternUnitName",
+    "PdfCurveOutput",
+    "PdfCurveOutputName",
     "PdfExported",
+    "PdfImported",
+    "PdfLeftOut",
+    "PdfRegion",
+    "PdfTaken",
     "PercentLengthenChange",
     "PerpendicularConstraintRule",
     "PhaseView",

@@ -569,12 +569,14 @@ DWG desteği şu anda kodda reddediliyor; üretim uyumluluğunda büyük bir bo�
 
 ### 16.3 PDF içe alma ve çıktı ilişkisi
 
-- [ ] **CAD-IO-21:** PDF import; page/region, layer, text/vector/fill/raster seçenekleri ve target unit/scale ile çalışsın.
-- [ ] **CAD-IO-22:** PDF'nin CAD kaynak doğruluğunu ve nesne ilişkilerini taşımayabileceğini raporla; ölçü/kılavuz/table'ın parçalanmış görünüşünü kaynak semantic entity gibi tahmin etme.
-- [ ] **CAD-IO-23:** Bézier/line dönüşümü için açıklanan tolerans ve output geometry tipi sun; raster sayfa OCR/tracing ayrı isteğe bağlı iş olsun.
-- [ ] **CAD-IO-24:** PDF text/font ve SHX-as-geometry için açık sonuç/uyarı ver; tahmini text recovery kullanıcı tarafından gözden geçirilebilsin.
-- [ ] **CAD-IO-25:** İçe alma planında unit, bbox, target layer/style eşlemesi ve beklenen kayıplar görülsün; işlem tek undo olsun.
-- [ ] **CAD-IO-26:** Basic CAD dosya ve paket işlemleri Python/AI/headless'te dosya veya asset handle girdisiyle aynı davranışı sağlasın.
+- [x] **CAD-IO-21:** PDF import; page/region, layer, text/vector/fill/raster seçenekleri ve target unit/scale ile çalışsın.
+- [x] **CAD-IO-22:** PDF'nin CAD kaynak doğruluğunu ve nesne ilişkilerini taşımayabileceğini raporla; ölçü/kılavuz/table'ın parçalanmış görünüşünü kaynak semantic entity gibi tahmin etme.
+- [x] **CAD-IO-23:** Bézier/line dönüşümü için açıklanan tolerans ve output geometry tipi sun; raster sayfa OCR/tracing ayrı isteğe bağlı iş olsun.
+- [x] **CAD-IO-24:** PDF text/font ve SHX-as-geometry için açık sonuç/uyarı ver; tahmini text recovery kullanıcı tarafından gözden geçirilebilsin.
+- [x] **CAD-IO-25:** İçe alma planında unit, bbox, target layer/style eşlemesi ve beklenen kayıplar görülsün; işlem tek undo olsun.
+- [x] **CAD-IO-26:** Basic CAD dosya ve paket işlemleri Python/AI/headless'te dosya veya asset handle girdisiyle aynı davranışı sağlasın.
+
+*CAD-IO-21–26 bitti (19 Ekim; ADR 0352: `file.import.pdf`, okuyucunun eğrileri, eğrinin toleransı ya da kesin NURBS, bölge, katmanlar, planın özeti; masaüstü penceresi, Python ve MCP).*
 
 **Kabul:** Gerçek ofis dosyalarından oluşturulmuş korpusta desteklenen 2D entity, birim, layer, block, annotation ve layout kayıpsız korunur. Korunmayan semantik alanlar raporda görünür. AutoCAD'de açılan teslim çizimi ölçülebilir ve düzenlenebilir kalır; yalnız benzer ekran görüntüsü kabul kanıtı değildir.
 

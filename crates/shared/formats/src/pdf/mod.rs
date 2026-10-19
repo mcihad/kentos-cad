@@ -19,10 +19,22 @@ use object::{Dict, Obj};
 #[derive(Clone, Debug, PartialEq)]
 pub struct PdfPath {
     pub parts: Vec<(Vec<[f64; 2]>, bool)>,
+    /// Each part's cubic pieces, one list per part (docs/adr/0352 §2): the points keep them within 0.01 pt, an import
+    /// flattens them again at its own tolerance or keeps them exact.
+    pub curves: Vec<Vec<PdfCurve>>,
     pub stroke: Option<PdfStroke>,
     pub fill: Option<[u8; 3]>,
     /// Its layer (`PdfPage::layers`), when it is in an optional content group.
     pub layer: Option<usize>,
+}
+
+/// A cubic Bézier piece of a part: `at` is its start's index among the part's points, `n` the points its flattening
+/// put after it, `c` its start, its two control points and its end.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PdfCurve {
+    pub at: usize,
+    pub n: usize,
+    pub c: [[f64; 2]; 4],
 }
 
 #[derive(Clone, Debug, PartialEq)]

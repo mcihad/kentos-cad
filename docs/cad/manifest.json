@@ -3146,6 +3146,22 @@
    "tests": 0
   },
   {
+   "id": "file.import.pdf",
+   "kind": "command",
+   "title": "PDF…",
+   "level": "semantic",
+   "via": [
+    "file.import.pdf"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.pdf",
+   "mcp": "file.import.pdf",
+   "note": "Pencere sayfayı, ölçeği, yeri, eğrilerin çıktısını, bölgeyi ve katmanları sorar, komutun planını gösterir ve komutla yazar (ADR 0352).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.import.photos",
    "kind": "command",
    "title": "Konumlu fotoğraflar…",

@@ -2833,6 +2833,18 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.import.pdf",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["invalid_scale", "invalid_tolerance", "invalid_pdf_region", "file_not_found", "import_unreadable", "pdf_page_not_found"],
+            LAYER,
+            &["nothing_to_import"],
+        ],
+        warnings: &["import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.dxf",
         refusals: &[
             &["invalid_file_path"],

@@ -1337,6 +1337,8 @@ codes! {
     NOT_AN_UNDERLAY = "not_an_underlay", Failed, false, "Dış başvuru bir PDF altlığı değil.";
     /// An underlay's look out of its range.
     INVALID_UNDERLAY = "invalid_underlay", Failed, false, "Altlık görünüşü aralığı dışında: soldurma en çok %80.";
+    /// A region `file.import.pdf` cannot take (docs/adr/0352 §1).
+    INVALID_PDF_REGION = "invalid_pdf_region", Failed, false, "PDF'ten alınacak bölge sayfaya değen, eni ve boyu sıfırdan büyük bir dikdörtgen olmalı.";
     /// What a PDF page holds that an underlay does not take (pictures, shadings, texts it cannot read).
     PDF_LEFT_OUT = "pdf_left_out", Warning, false, "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar).";
     /// A point snapped or measured on a PDF underlay: a picture of a drawing, not its geometry.

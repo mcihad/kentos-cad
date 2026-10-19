@@ -966224,6 +966224,696 @@
       ]
     },
     {
+      "id": "file.import.pdf",
+      "version": 1,
+      "title": "PDF içe aktar",
+      "summary": "path'teki PDF'in bir sayfasının (page, varsayılan 1) çizgilerini, dolgularını ve yazılarını açık çizimin kendi nesneleri olarak alır: çizgi çizgi ya da çoklu çizgi (renk, kâğıttaki kalınlık, kesik), dolgu alan (beyaz dolgu kâğıt sayılır, alınmaz), yazı yazı (yer, yükseklik, dönüş, renk). strokes, fills, texts hangilerinin alınacağını seçer. Kâğıt ölçüsü scale ile çizime büyür (1:scale; kâğıdın bir metresi çizimin scale metresi), sayfanın sol alt köşesi at'e gelir. region (sayfanın sol alt köşesinden milimetre) yalnız bütün noktaları içinde kalan parçaları ve başı içinde kalan yazıları alır. Eğriler curves polyline ile tolerance (kâğıtta mm, varsayılan 0,01) içinde çoklu çizgi, nurbs ile kesin üçüncü dereceden NURBS eğrisi olur (aradaki düz kenarlar çizgi). Sayfanın isteğe bağlı içerik grupları katmandır (hiçbirinde olmayan “PDF”); skipLayers onları dışarıda bırakır, layers var olan katmana yönlendirir, yoksa aynı adlı katmana, o da yoksa dosyanın adındaki gruba yeni katman. PDF yazdırılanı taşır, çizimi değil: ölçü, kılavuz ve tablo çizgileri ve yazılarıyla gelir; resimler, gölgelemeler ve okunamayan harfler alınmaz (import_losses). Bütün alınanlar tek geri alma adımıdır (“PDF: ad.pdf”); plan dosyayı okur, kutuyu, katmanları ve kayıpları verir, hiçbir şey yazmaz.",
+      "aliases": [
+        "pdfin",
+        "pdfimport"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "PdfCurveOutput": {
+            "description": "What the page's curves become (docs/adr/0352 §3).",
+            "oneOf": [
+              {
+                "const": "polyline",
+                "description": "Points within the tolerance, as polylines.",
+                "type": "string"
+              },
+              {
+                "const": "nurbs",
+                "description": "Each run of curves exactly, as a cubic NURBS curve; the straight runs between them as lines and polylines.",
+                "type": "string"
+              }
+            ]
+          },
+          "PdfRegion": {
+            "description": "A rectangle on the page, millimetres from its lower left corner as it shows.",
+            "properties": {
+              "a": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "paper-mm"
+              },
+              "b": {
+                "$ref": "#/$defs/Vec2",
+                "x-unit": "paper-mm"
+              }
+            },
+            "required": [
+              "a",
+              "b"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.pdf` v1. Refusals (`CommandError.code`), in order: `invalid_file_path`, `invalid_scale`,\n`invalid_tolerance`, `invalid_pdf_region`, `file_not_found`, `import_unreadable` (not a PDF, encrypted or broken),\n`pdf_page_not_found`, `layer_not_found` and `not_a_layer` (a target of `layers`), `layer_locked`,\n`nothing_to_import`. Warnings: `import_losses` (pictures, shadings, letters that read as no character, white fills\ntaken for the paper, a page cut short).",
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Vec2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Where the page's lower left corner goes in the drawing (metres on the wire). Absent: the origin.",
+            "x-unit": "length"
+          },
+          "curves": {
+            "$ref": "#/$defs/PdfCurveOutput",
+            "description": "What the curves become; absent: polylines."
+          },
+          "expectedRevision": {
+            "description": "The drawing's revision the input was prepared against.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fills": {
+            "type": "boolean"
+          },
+          "group": {
+            "description": "The group at the top of the tree the new layers go into, found by its name or made. Absent: one named after\nthe file; empty: the top of the tree.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A page's layer → the drawing's layer (its id) its objects go onto. A layer not named here goes onto the\ndrawing's layer of the same name (case and Turkish marks aside), else onto a new layer.",
+            "type": "object"
+          },
+          "page": {
+            "description": "The page, from 1. Absent: the first.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "index"
+          },
+          "path": {
+            "description": "The file to read, an absolute path.",
+            "type": "string"
+          },
+          "region": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PdfRegion"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Only what lies inside this rectangle of the page: a part of a path whose every point is in it, a text whose\nstart is in it. Absent: the whole page."
+          },
+          "scale": {
+            "description": "The drawing's scale denominator the page was printed at: a paper metre is this many of the drawing's metres.\nAbsent: 1 (the page at its paper size).",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "1"
+          },
+          "skipLayers": {
+            "description": "The page's layers (its optional content groups, by name; “PDF” for what is in none) whose objects are left out.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "strokes": {
+            "description": "What is taken: strokes, fills, texts. Absent: each of them.",
+            "type": "boolean"
+          },
+          "texts": {
+            "type": "boolean"
+          },
+          "tolerance": {
+            "description": "How far a polyline made of a curve may pass from it, millimetres on paper. Absent: 0.01.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "paper-mm"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ImportPdf",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "PdfLeftOut": {
+            "description": "What the page held that was not taken, by why.",
+            "properties": {
+              "images": {
+                "description": "Pictures and shadings: a PDF import takes vectors and texts, never pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "outside": {
+                "description": "Parts and texts outside the region.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "shadings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "truncated": {
+                "description": "The page held more than a page is read for; the rest is left out.",
+                "type": "boolean"
+              },
+              "unreadable": {
+                "description": "Letters of a font without a map to characters.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "white": {
+                "description": "White fills, taken for the paper.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "images",
+              "shadings",
+              "unreadable",
+              "white",
+              "outside",
+              "truncated"
+            ],
+            "type": "object"
+          },
+          "PdfTaken": {
+            "description": "The objects taken, by kind.",
+            "properties": {
+              "areas": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "curves": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lines": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "polylines": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "texts": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "lines",
+              "polylines",
+              "curves",
+              "areas",
+              "texts"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `file.import.pdf` v1.",
+        "properties": {
+          "bounds": {
+            "description": "The box of what was taken in the drawing, `[minX, minY, maxX, maxY]` (metres on the wire); absent when nothing.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "left": {
+            "$ref": "#/$defs/PdfLeftOut"
+          },
+          "notes": {
+            "description": "What a PDF cannot carry back (docs/adr/0352 §5), said once per import.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "page": {
+            "description": "The page taken and how many the file has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "pages": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "paper": {
+            "description": "The page's size as it shows, millimetres.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "paper-mm"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (before it, in a plan).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "taken": {
+            "$ref": "#/$defs/PdfTaken"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A page's layer → the drawing's layer its objects went onto; the layers left out are not here.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "page",
+          "pages",
+          "paper",
+          "objects",
+          "taken",
+          "left",
+          "targets",
+          "layers",
+          "notes",
+          "revision"
+        ],
+        "title": "PdfImported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ImportedLayer": {
+            "description": "A layer an import made.",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
+          "PdfLeftOut": {
+            "description": "What the page held that was not taken, by why.",
+            "properties": {
+              "images": {
+                "description": "Pictures and shadings: a PDF import takes vectors and texts, never pixels.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "outside": {
+                "description": "Parts and texts outside the region.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "shadings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "truncated": {
+                "description": "The page held more than a page is read for; the rest is left out.",
+                "type": "boolean"
+              },
+              "unreadable": {
+                "description": "Letters of a font without a map to characters.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "white": {
+                "description": "White fills, taken for the paper.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "images",
+              "shadings",
+              "unreadable",
+              "white",
+              "outside",
+              "truncated"
+            ],
+            "type": "object"
+          },
+          "PdfTaken": {
+            "description": "The objects taken, by kind.",
+            "properties": {
+              "areas": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "curves": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lines": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "polylines": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "texts": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "lines",
+              "polylines",
+              "curves",
+              "areas",
+              "texts"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `file.import.pdf` v1.",
+        "properties": {
+          "bounds": {
+            "description": "The box of what was taken in the drawing, `[minX, minY, maxX, maxY]` (metres on the wire); absent when nothing.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "file": {
+            "description": "The file's name, its bytes and their SHA-256 (64 hex digits).",
+            "type": "string"
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, in the tree's order, and the group they went into.",
+            "items": {
+              "$ref": "#/$defs/ImportedLayer"
+            },
+            "type": "array"
+          },
+          "left": {
+            "$ref": "#/$defs/PdfLeftOut"
+          },
+          "notes": {
+            "description": "What a PDF cannot carry back (docs/adr/0352 §5), said once per import.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "page": {
+            "description": "The page taken and how many the file has.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "index"
+          },
+          "pages": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "paper": {
+            "description": "The page's size as it shows, millimetres.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "type": "array",
+            "x-unit": "paper-mm"
+          },
+          "revision": {
+            "description": "The drawing's revision after the step (before it, in a plan).",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "taken": {
+            "$ref": "#/$defs/PdfTaken"
+          },
+          "targets": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "A page's layer → the drawing's layer its objects went onto; the layers left out are not here.",
+            "type": "object"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "page",
+          "pages",
+          "paper",
+          "objects",
+          "taken",
+          "left",
+          "targets",
+          "layers",
+          "notes",
+          "revision"
+        ],
+        "title": "PdfImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "invalid_revision",
+          "revision_conflict",
+          "invalid_scale",
+          "invalid_tolerance",
+          "invalid_pdf_region",
+          "file_not_found",
+          "import_unreadable",
+          "pdf_page_not_found",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "nothing_to_import"
+        ],
+        "warnings": [
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mimarın 1:50 basılmış planı",
+          "input": {
+            "curves": "nurbs",
+            "path": "/proje/kat-plani.pdf",
+            "scale": 50
+          }
+        },
+        {
+          "title": "İkinci sayfanın yalnız sol yarısı, yazılar olmadan",
+          "input": {
+            "page": 2,
+            "path": "/proje/paftalar.pdf",
+            "region": {
+              "a": {
+                "x": 0,
+                "y": 0
+              },
+              "b": {
+                "x": 210,
+                "y": 297
+              }
+            },
+            "texts": false
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.gpkg",
       "version": 1,
       "title": "GeoPackage içe aktar",
@@ -1007782,6 +1008472,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Altlık görünüşü aralığı dışında: soldurma en çok %80."
+    },
+    {
+      "code": "invalid_pdf_region",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "PDF'ten alınacak bölge sayfaya değen, eni ve boyu sıfırdan büyük bir dikdörtgen olmalı."
     },
     {
       "code": "pdf_left_out",
