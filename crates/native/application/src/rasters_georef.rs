@@ -11,9 +11,10 @@ use std::path::{Path, PathBuf};
 
 use kentos_contracts::encoding::{base64_decode, base64_encode, sha256_hex, sha256_reader_hex};
 use kentos_contracts::{
-    CommandResult, CommandWarning, Entity, GeorefMethod, GeorefOutput, GeorefResidual, GeorefSource,
-    MAX_GEOREF_POINTS, RasterEntity, RasterFields, RasterGeoref, RasterRender, RasterResampling, RasterSample,
-    RasterStretch, RasterStyle, RastersGeoref, RastersGeoreffed, codes,
+    CommandResult, CommandWarning, Entity, GeorefMethod, GeorefOutput, GeorefResidual,
+    GeorefSource, MAX_GEOREF_POINTS, RasterEntity, RasterFields, RasterGeoref, RasterRender,
+    RasterResampling, RasterSample, RasterStretch, RasterStyle, RastersGeoref, RastersGeoreffed,
+    codes,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_formats::raster::warp::{self, Grid};
@@ -37,7 +38,9 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 }
 
 fn file_name(path: &str) -> String {
-    Path::new(path).file_name().map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
+    Path::new(path)
+        .file_name()
+        .map_or_else(|| path.to_owned(), |n| n.to_string_lossy().into_owned())
 }
 
 /// The source's header: what a resampling or a raster put back on its source reads.
@@ -100,7 +103,13 @@ impl Prepared {
             None => {
                 f.affine = self.georef.affine.unwrap_or(f.affine);
                 // A resampled raster put back on its source by a placing transform.
-                if self.before.raster.georef.as_ref().is_some_and(|g| g.output.is_some()) {
+                if self
+                    .before
+                    .raster
+                    .georef
+                    .as_ref()
+                    .is_some_and(|g| g.output.is_some())
+                {
                     f.width = self.source.width;
                     f.height = self.source.height;
                     f.asset = self.source.asset.clone();
@@ -120,7 +129,11 @@ impl Prepared {
                 let (header, alpha, digest) = match (&self.made, written) {
                     (Some((_, h, alpha, digest)), _) => (h.clone(), *alpha, Some(digest.clone())),
                     (None, Some(w)) => (
-                        SourceHeader { bands: w.bands, sample: w.sample, palette: false },
+                        SourceHeader {
+                            bands: w.bands,
+                            sample: w.sample,
+                            palette: false,
+                        },
                         w.alpha,
                         Some(w.digest.clone()),
                     ),
@@ -132,7 +145,15 @@ impl Prepared {
                             palette: false,
                         });
                         if h.sample == RasterSample::U8 || h.palette {
-                            (SourceHeader { bands: 4, sample: RasterSample::U8, palette: false }, true, None)
+                            (
+                                SourceHeader {
+                                    bands: 4,
+                                    sample: RasterSample::U8,
+                                    palette: false,
+                                },
+                                true,
+                                None,
+                            )
                         } else {
                             (h, false, None)
                         }
@@ -194,7 +215,10 @@ struct Written {
 /// The raster the points' pixels are of: a resampled raster's record's source, else the raster itself.
 fn source_of(r: &RasterFields) -> GeorefSource {
     match &r.georef {
-        Some(g) if g.output.is_some() => GeorefSource { digest: None, ..g.source.clone() },
+        Some(g) if g.output.is_some() => GeorefSource {
+            digest: None,
+            ..g.source.clone()
+        },
         _ => GeorefSource {
             width: r.width,
             height: r.height,
@@ -209,7 +233,8 @@ fn source_of(r: &RasterFields) -> GeorefSource {
 /// An embedded raster's bytes from the project's library.
 pub fn asset_bytes(doc: &Document, id: &str) -> Option<Vec<u8>> {
     let item = doc.styles().items.iter().find(|it| {
-        it.get("kind").and_then(|k| k.as_str()) == Some("asset") && it.get("id").and_then(|k| k.as_str()) == Some(id)
+        it.get("kind").and_then(|k| k.as_str()) == Some("asset")
+            && it.get("id").and_then(|k| k.as_str()) == Some(id)
     })?;
     let url = item.get("data").and_then(|d| d.as_str())?;
     let (_, data) = url.split_once(";base64,")?;
@@ -220,7 +245,11 @@ pub fn asset_bytes(doc: &Document, id: &str) -> Option<Vec<u8>> {
 fn given_path(text: &str, drawing: Option<&str>, at: &str) -> Result<PathBuf, Stop> {
     let t = text.trim();
     if t.is_empty() {
-        return Err(refuse(codes::INVALID_FILE_PATH, "Dosya yolu boş; bir dosyanın yolunu verin.".into(), at));
+        return Err(refuse(
+            codes::INVALID_FILE_PATH,
+            "Dosya yolu boş; bir dosyanın yolunu verin.".into(),
+            at,
+        ));
     }
     let p = Path::new(t);
     if p.is_absolute() {
@@ -230,7 +259,9 @@ fn given_path(text: &str, drawing: Option<&str>, at: &str) -> Result<PathBuf, St
         Some(folder) => Ok(crate::source_places::resolve(folder, &t.replace('\\', "/"))),
         None => Err(refuse(
             codes::INVALID_FILE_PATH,
-            format!("“{t}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."),
+            format!(
+                "“{t}” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin."
+            ),
             at,
         )),
     }
@@ -246,7 +277,9 @@ fn source_bytes(
         let Some(b) = asset_bytes(doc, id) else {
             return Err(refuse(
                 codes::UNKNOWN_ASSET,
-                format!("Rasterin kaynağı “{id}” projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir."),
+                format!(
+                    "Rasterin kaynağı “{id}” projenin kitaplığında yok: silinmiş ya da başka bir çizimin olabilir."
+                ),
                 "uid",
             ));
         };
@@ -257,7 +290,9 @@ fn source_bytes(
         if Path::new(file).is_relative() && drawing.is_none() {
             return Err(refuse(
                 codes::INVALID_FILE_PATH,
-                format!("Rasterin kaynağı “{file}” göreli bir yol, ama çizimin dosyası yok; çizimi kaydedin ya da drawing'i verin."),
+                format!(
+                    "Rasterin kaynağı “{file}” göreli bir yol, ama çizimin dosyası yok; çizimi kaydedin ya da drawing'i verin."
+                ),
                 "drawing",
             ));
         }
@@ -265,14 +300,24 @@ fn source_bytes(
         let Some(at) = found.at else {
             return Err(refuse(
                 codes::FILE_NOT_FOUND,
-                format!("Rasterin kaynağı {} bulunamadı. Bakılan yerler: {}.", file_name(file), found.tried.join(", ")),
+                format!(
+                    "Rasterin kaynağı {} bulunamadı. Bakılan yerler: {}.",
+                    file_name(file),
+                    found.tried.join(", ")
+                ),
                 "uid",
             ));
         };
         let digest = std::fs::File::open(&at)
             .and_then(sha256_reader_hex)
             .map(|(_, d)| d)
-            .map_err(|e| refuse(codes::FILE_NOT_FOUND, format!("{} okunamadı: {e}.", at.display()), "uid"))?;
+            .map_err(|e| {
+                refuse(
+                    codes::FILE_NOT_FOUND,
+                    format!("{} okunamadı: {e}.", at.display()),
+                    "uid",
+                )
+            })?;
         let bytes = Bytes::file(&at).map_err(|e| refuse(codes::FILE_NOT_FOUND, e, "uid"))?;
         return Ok((bytes, Some(at), digest));
     }
@@ -293,7 +338,11 @@ fn header_of(opened: &raster_files::Opened) -> SourceHeader {
 
 /// The targets in the project's system: as given, or carried from `srid` by the project's datum choices.
 fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u32>), Stop> {
-    let given: Vec<Vec2> = input.points.iter().map(|p| Vec2::new(p.target[0], p.target[1])).collect();
+    let given: Vec<Vec2> = input
+        .points
+        .iter()
+        .map(|p| Vec2::new(p.target[0], p.target[1]))
+        .collect();
     let settings = doc.settings();
     let Some(srid) = input.srid.filter(|s| *s != settings.srid) else {
         return Ok((given, None));
@@ -301,14 +350,18 @@ fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u
     let Some(from) = kentos_project::crs::system(srid) else {
         return Err(refuse(
             codes::UNKNOWN_SRID,
-            format!("EPSG:{srid} KentOS'un kayıtlı koordinat sistemlerinde yok; hedefleri kayıtlı bir sistemde verin."),
+            format!(
+                "EPSG:{srid} KentOS'un kayıtlı koordinat sistemlerinde yok; hedefleri kayıtlı bir sistemde verin."
+            ),
             "srid",
         ));
     };
     let Some(from) = from.transform_system() else {
         return Err(refuse(
             codes::TARGET_NOT_CONVERTED,
-            format!("EPSG:{srid} dönüştürülebilen bir sistem değil (yerel ya da datumu bilinmiyor)."),
+            format!(
+                "EPSG:{srid} dönüştürülebilen bir sistem değil (yerel ya da datumu bilinmiyor)."
+            ),
             "srid",
         ));
     };
@@ -329,7 +382,10 @@ fn targets(doc: &Document, input: &RastersGeoref) -> Result<(Vec<Vec2>, Option<u
             Err(_) => {
                 return Err(refuse(
                     codes::TARGET_NOT_CONVERTED,
-                    format!("{}. noktanın hedefi EPSG:{srid} sisteminden projenin sistemine çevrilemedi.", i + 1),
+                    format!(
+                        "{}. noktanın hedefi EPSG:{srid} sisteminden projenin sistemine çevrilemedi.",
+                        i + 1
+                    ),
                     &format!("points[{i}].target"),
                 ));
             }
@@ -364,13 +420,19 @@ pub struct Fitted {
 }
 
 /// [`Fitted`] for the input, nothing read; the refusal as the command answers it.
-pub fn fit(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Box<kentos_contracts::CommandError>> {
+pub fn fit(
+    doc: &Document,
+    input: &RastersGeoref,
+) -> Result<Fitted, Box<kentos_contracts::CommandError>> {
     fitted(doc, input).map_err(|s| Box::new(s.into_error()))
 }
 
 /// Checks the input and works out everything the command writes, reading the source where it must (the desktop's
 /// resampling takes the grid and the inverse from it); the refusal as the command answers it.
-pub fn prepare(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Box<kentos_contracts::CommandError>> {
+pub fn prepare(
+    doc: &Document,
+    input: &RastersGeoref,
+) -> Result<Prepared, Box<kentos_contracts::CommandError>> {
     check(doc, input).map_err(|s| Box::new(s.into_error()))
 }
 
@@ -378,7 +440,10 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
     if !checks::is_uid_text(&input.uid) {
         return Err(refuse(
             codes::INVALID_UID,
-            format!("“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.", input.uid),
+            format!(
+                "“{}” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir.",
+                input.uid
+            ),
             "uid",
         ));
     }
@@ -389,7 +454,10 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
     let Some((slot, entity)) = found else {
         return Err(refuse(
             codes::ENTITY_NOT_FOUND,
-            format!("“{}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir.", input.uid),
+            format!(
+                "“{}” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir.",
+                input.uid
+            ),
             "uid",
         ));
     };
@@ -409,23 +477,34 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
     }
     let layers = doc.layers();
     if layers.is_locked(&raster.base.layer_id) {
-        let name = layers.get(&raster.base.layer_id).map_or(raster.base.layer_id.as_str(), |n| n.name.as_str());
+        let name = layers
+            .get(&raster.base.layer_id)
+            .map_or(raster.base.layer_id.as_str(), |n| n.name.as_str());
         return Err(refuse(
             codes::LAYER_LOCKED,
-            format!("“{name}” katmanı kilitli; üzerindeki raster oturtulamaz. Kilidi Katmanlar panelinden açın."),
+            format!(
+                "“{name}” katmanı kilitli; üzerindeki raster oturtulamaz. Kilidi Katmanlar panelinden açın."
+            ),
             "uid",
         ));
     }
     if input.points.len() > MAX_GEOREF_POINTS {
         return Err(refuse(
             codes::INVALID_CONTROL_POINT,
-            format!("En çok {MAX_GEOREF_POINTS} nokta verilir; {} verildi.", input.points.len()),
+            format!(
+                "En çok {MAX_GEOREF_POINTS} nokta verilir; {} verildi.",
+                input.points.len()
+            ),
             "points",
         ));
     }
     for (i, p) in input.points.iter().enumerate() {
         if let Some(why) = p.problem() {
-            return Err(refuse(codes::INVALID_CONTROL_POINT, why, &format!("points[{i}]")));
+            return Err(refuse(
+                codes::INVALID_CONTROL_POINT,
+                why,
+                &format!("points[{i}]"),
+            ));
         }
     }
     let (targets, srid_given) = targets(doc, input)?;
@@ -434,7 +513,11 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
         .points
         .iter()
         .zip(&targets)
-        .map(|(p, t)| Gcp { pixel: Vec2::new(p.pixel[0], p.pixel[1]), target: *t, used: p.control() })
+        .map(|(p, t)| Gcp {
+            pixel: Vec2::new(p.pixel[0], p.pixel[1]),
+            target: *t,
+            used: p.control(),
+        })
         .collect();
     let g = solve(&gcps, method).map_err(|e| match e {
         GeorefError::TooFew(n) => refuse(
@@ -463,7 +546,11 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
         ),
     })?;
     // A control point beyond a projective's horizon makes no m0.
-    if gcps.iter().zip(&g.residuals).any(|(p, r)| p.used && !r[2].is_finite()) {
+    if gcps
+        .iter()
+        .zip(&g.residuals)
+        .any(|(p, r)| p.used && !r[2].is_finite())
+    {
         return Err(refuse(
             codes::GEOREF_SINGULAR,
             "Bir kontrol noktası dönüşümün ufkunun ötesine düşüyor; noktaları rasterin geneline yayın.".into(),
@@ -472,7 +559,13 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
     }
     let mut residuals = Vec::with_capacity(gcps.len());
     let (mut sum, mut most, mut n) = (0.0, 0.0f64, 0usize);
-    for (i, ((p, r), t)) in input.points.iter().zip(&g.residuals).zip(&targets).enumerate() {
+    for (i, ((p, r), t)) in input
+        .points
+        .iter()
+        .zip(&g.residuals)
+        .zip(&targets)
+        .enumerate()
+    {
         let fine = r[2].is_finite();
         if p.check {
             if !fine {
@@ -493,7 +586,11 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
             target: [t.x, t.y],
         });
     }
-    let (check_rmse, check_max) = if n > 0 { (Some((sum / n as f64).sqrt()), Some(most)) } else { (None, None) };
+    let (check_rmse, check_max) = if n > 0 {
+        (Some((sum / n as f64).sqrt()), Some(most))
+    } else {
+        (None, None)
+    };
     let control = gcps.iter().filter(|p| p.used).count() as u32;
     let source = source_of(&raster.raster);
     let mut warnings = Vec::new();
@@ -512,7 +609,9 @@ fn fitted(doc: &Document, input: &RastersGeoref) -> Result<Fitted, Stop> {
             Some(s) if !(s.is_finite() && s > 0.0) => {
                 return Err(refuse(
                     codes::INVALID_PIXEL_SIZE,
-                    format!("Çıktının piksel boyu sıfırdan büyük, sonlu bir uzunluk olmalı; {s} verildi."),
+                    format!(
+                        "Çıktının piksel boyu sıfırdan büyük, sonlu bir uzunluk olmalı; {s} verildi."
+                    ),
                     "pixel",
                 ));
             }
@@ -571,21 +670,33 @@ fn check(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Stop> {
     let raster = &before;
     let drawing = input.drawing.as_deref();
     // What is read: a resampling's source and output, a resampled raster's source when it is put back on it.
-    let reverting = grid.is_none() && raster.raster.georef.as_ref().is_some_and(|g| g.output.is_some());
+    let reverting = grid.is_none()
+        && raster
+            .raster
+            .georef
+            .as_ref()
+            .is_some_and(|g| g.output.is_some());
     let mut header = None;
     let mut source_at = None;
     let mut output = None;
     if grid.is_some() || reverting {
         let (bytes, at, digest) = source_bytes(doc, &source, drawing)?;
         let opened = raster_files::open(bytes).map_err(|e| {
-            refuse(codes::IMPORT_UNREADABLE, format!("Rasterin kaynağı okunamadı: {e}"), "uid")
+            refuse(
+                codes::IMPORT_UNREADABLE,
+                format!("Rasterin kaynağı okunamadı: {e}"),
+                "uid",
+            )
         })?;
         if opened.reader.info.width != source.width || opened.reader.info.height != source.height {
             return Err(refuse(
                 codes::IMPORT_UNREADABLE,
                 format!(
                     "Rasterin kaynağı {} × {} piksel, kayıttaki {} × {}; kaynak değişmiş. Rasteri yeniden ekleyin.",
-                    opened.reader.info.width, opened.reader.info.height, source.width, source.height
+                    opened.reader.info.width,
+                    opened.reader.info.height,
+                    source.width,
+                    source.height
                 ),
                 "uid",
             ));
@@ -628,10 +739,17 @@ fn check(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Stop> {
                 (None, Some(src)) => src.with_file_name(file_name(&kept)),
                 (None, None) => given_path(&kept, drawing, "output")?,
             };
-            if at.parent().is_some_and(|p| !p.as_os_str().is_empty() && !p.is_dir()) || at.is_dir() {
+            if at
+                .parent()
+                .is_some_and(|p| !p.as_os_str().is_empty() && !p.is_dir())
+                || at.is_dir()
+            {
                 return Err(refuse(
                     codes::INVALID_FILE_PATH,
-                    format!("“{}” yazılamaz: klasörü yok ya da bir klasör.", at.display()),
+                    format!(
+                        "“{}” yazılamaz: klasörü yok ya da bir klasör.",
+                        at.display()
+                    ),
                     "output",
                 ));
             }
@@ -650,7 +768,10 @@ fn check(doc: &Document, input: &RastersGeoref) -> Result<Prepared, Stop> {
         Some(_) if grid.is_none() => {
             return Err(refuse(
                 codes::GEOREF_OUTPUT_MISMATCH,
-                format!("{} rasteri yeniden örneklemez; made verilmez.", input.method.title()),
+                format!(
+                    "{} rasteri yeniden örneklemez; made verilmez.",
+                    input.method.title()
+                ),
                 "made",
             ));
         }
@@ -716,13 +837,24 @@ fn made_of(
         (Some(f), None) => {
             let p = given_path(f, drawing, "made.file")?;
             if !p.is_file() {
-                return Err(refuse(codes::FILE_NOT_FOUND, format!("{} bulunamadı.", p.display()), "made.file"));
+                return Err(refuse(
+                    codes::FILE_NOT_FOUND,
+                    format!("{} bulunamadı.", p.display()),
+                    "made.file",
+                ));
             }
             let digest = std::fs::File::open(&p)
                 .and_then(sha256_reader_hex)
                 .map(|(_, d)| d)
-                .map_err(|e| refuse(codes::FILE_NOT_FOUND, format!("{} okunamadı: {e}.", p.display()), "made.file"))?;
-            let bytes = Bytes::file(&p).map_err(|e| refuse(codes::FILE_NOT_FOUND, e, "made.file"))?;
+                .map_err(|e| {
+                    refuse(
+                        codes::FILE_NOT_FOUND,
+                        format!("{} okunamadı: {e}.", p.display()),
+                        "made.file",
+                    )
+                })?;
+            let bytes =
+                Bytes::file(&p).map_err(|e| refuse(codes::FILE_NOT_FOUND, e, "made.file"))?;
             (MadeAt::File(f.trim().to_owned()), bytes, digest)
         }
         (None, Some(id)) => {
@@ -740,15 +872,22 @@ fn made_of(
         _ => {
             return Err(refuse(
                 codes::GEOREF_OUTPUT_MISMATCH,
-                "made ya bir dosya (file) ya da kitaplıktaki raster (asset) olmalı; yalnız biri.".into(),
+                "made ya bir dosya (file) ya da kitaplıktaki raster (asset) olmalı; yalnız biri."
+                    .into(),
                 "made",
             ));
         }
     };
-    let opened = raster_files::open(bytes)
-        .map_err(|e| refuse(codes::IMPORT_UNREADABLE, format!("Verilen çıktı okunamadı: {e}"), "made"))?;
+    let opened = raster_files::open(bytes).map_err(|e| {
+        refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("Verilen çıktı okunamadı: {e}"),
+            "made",
+        )
+    })?;
     let i = &opened.reader.info;
-    let fits = grid.is_some_and(|g| i.width == g.width && i.height == g.height && i.affine == Some(g.affine));
+    let fits = grid
+        .is_some_and(|g| i.width == g.width && i.height == g.height && i.affine == Some(g.affine));
     if !fits {
         return Err(refuse(
             codes::GEOREF_OUTPUT_MISMATCH,
@@ -756,12 +895,21 @@ fn made_of(
             "made",
         ));
     }
-    let header = SourceHeader { bands: i.bands, sample: i.sample, palette: false };
+    let header = SourceHeader {
+        bands: i.bands,
+        sample: i.sample,
+        palette: false,
+    };
     Ok((at, header, i.alpha, digest))
 }
 
 /// Why `Stop` came from a prepare: as the command answers it.
-fn answer(p: &Prepared, raster: RasterFields, written: Option<String>, revision: String) -> RastersGeoreffed {
+fn answer(
+    p: &Prepared,
+    raster: RasterFields,
+    written: Option<String>,
+    revision: String,
+) -> RastersGeoreffed {
     RastersGeoreffed {
         uid: p.uid.clone(),
         residuals: p.residuals.clone(),
@@ -775,7 +923,10 @@ fn answer(p: &Prepared, raster: RasterFields, written: Option<String>, revision:
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &RastersGeoref) -> CommandResult<()> {
     match check(cx.doc, input) {
-        Ok(p) => CommandResult::Completed { output: (), warnings: p.warnings },
+        Ok(p) => CommandResult::Completed {
+            output: (),
+            warnings: p.warnings,
+        },
         Err(stop) => stop.into(),
     }
 }
@@ -795,7 +946,10 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RastersGeoref) -> CommandResult<R
 }
 
 /// Checks `input` again, resamples when it must, and writes the raster with its record: one undo step “Raster oturt”.
-pub fn execute(cx: &mut ExecutionContext<'_>, input: RastersGeoref) -> CommandResult<RastersGeoreffed> {
+pub fn execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RastersGeoref,
+) -> CommandResult<RastersGeoreffed> {
     crate::call::recorded(
         cx,
         kentos_contracts::CAD_RASTERS_GEOREF,
@@ -805,7 +959,10 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: RastersGeoref) -> CommandRe
     )
 }
 
-fn write_execute(cx: &mut ExecutionContext<'_>, input: RastersGeoref) -> CommandResult<RastersGeoreffed> {
+fn write_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: RastersGeoref,
+) -> CommandResult<RastersGeoreffed> {
     let p = match check(cx.doc, &input) {
         Ok(p) => p,
         Err(stop) => return stop.into(),
@@ -828,7 +985,12 @@ fn write_execute(cx: &mut ExecutionContext<'_>, input: RastersGeoref) -> Command
     }
     let raster = p.raster(written.as_ref());
     if let Some(why) = raster.problem() {
-        return Stop::failed(checks::error(codes::INVALID_RASTER, why, Some("uid".into()))).into();
+        return Stop::failed(checks::error(
+            codes::INVALID_RASTER,
+            why,
+            Some("uid".into()),
+        ))
+        .into();
     }
     if let Some((id, item)) = library
         && !crate::edit::has_raster(cx.doc, &id)
@@ -868,7 +1030,13 @@ fn resample(
     stop: &dyn Fn() -> bool,
     share: &dyn Fn(u64, u64),
 ) -> Result<(Written, Option<PathBuf>, Option<LibraryItem>), Resampled> {
-    let bad = |e: String| Resampled::Refused(refuse(codes::IMPORT_UNREADABLE, format!("Rasterin kaynağı okunamadı: {e}"), "uid"));
+    let bad = |e: String| {
+        Resampled::Refused(refuse(
+            codes::IMPORT_UNREADABLE,
+            format!("Rasterin kaynağı okunamadı: {e}"),
+            "uid",
+        ))
+    };
     let (bytes, _, _) = source_bytes(doc, &p.source, drawing).map_err(Resampled::Refused)?;
     let mut opened = raster_files::open(bytes).map_err(bad)?;
     let i = opened.reader.info.clone();
@@ -895,7 +1063,11 @@ fn resample(
         if e == raster_files::STOPPED {
             Resampled::Stopped
         } else {
-            Resampled::Refused(refuse(codes::INVALID_FILE_PATH, format!("Yeniden örneklenen raster yazılamadı: {e}"), "output"))
+            Resampled::Refused(refuse(
+                codes::INVALID_FILE_PATH,
+                format!("Yeniden örneklenen raster yazılamadı: {e}"),
+                "output",
+            ))
         }
     })?;
     match (&w.path, &w.bytes) {
@@ -903,9 +1075,17 @@ fn resample(
             let digest = std::fs::File::open(path)
                 .and_then(sha256_reader_hex)
                 .map(|(_, d)| d)
-                .map_err(|e| Resampled::Refused(refuse(codes::INVALID_FILE_PATH, format!("{e}"), "output")))?;
+                .map_err(|e| {
+                    Resampled::Refused(refuse(codes::INVALID_FILE_PATH, format!("{e}"), "output"))
+                })?;
             Ok((
-                Written { bands: w.bands, sample: w.sample, alpha: w.alpha, digest, asset: None },
+                Written {
+                    bands: w.bands,
+                    sample: w.sample,
+                    alpha: w.alpha,
+                    digest,
+                    asset: None,
+                },
                 Some(path.clone()),
                 None,
             ))
@@ -939,11 +1119,21 @@ fn resample(
                 "height": grid.height,
             });
             Ok((
-                Written { bands: w.bands, sample: w.sample, alpha: w.alpha, digest, asset: Some(id.clone()) },
+                Written {
+                    bands: w.bands,
+                    sample: w.sample,
+                    alpha: w.alpha,
+                    digest,
+                    asset: Some(id.clone()),
+                },
                 None,
                 Some((id, item)),
             ))
         }
-        (None, None) => Err(Resampled::Refused(refuse(codes::INVALID_FILE_PATH, "Çıktı yazılmadı.".into(), "output"))),
+        (None, None) => Err(Resampled::Refused(refuse(
+            codes::INVALID_FILE_PATH,
+            "Çıktı yazılmadı.".into(),
+            "output",
+        ))),
     }
 }

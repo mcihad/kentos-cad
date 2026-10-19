@@ -59,12 +59,19 @@ pub fn read(text: &str) -> Result<Read, String> {
             continue;
         }
         let names = columns.get_or_insert_with(|| {
-            ["mapx", "mapy", "sourcex", "sourcey", "enable", "dx", "dy", "residual"]
-                .into_iter()
-                .map(str::to_owned)
-                .collect()
+            [
+                "mapx", "mapy", "sourcex", "sourcey", "enable", "dx", "dy", "residual",
+            ]
+            .into_iter()
+            .map(str::to_owned)
+            .collect()
         });
-        let at = |name: &str| names.iter().position(|c| c == name).and_then(|i| f.get(i).copied());
+        let at = |name: &str| {
+            names
+                .iter()
+                .position(|c| c == name)
+                .and_then(|i| f.get(i).copied())
+        };
         let need = |name: &str, what: &str| -> Result<f64, String> {
             let t = at(name).ok_or_else(|| format!("{n}. satırda {what} yok."))?;
             number(t, what, n)
@@ -80,10 +87,20 @@ pub fn read(text: &str) -> Result<Read, String> {
             Some("off") => (false, true),
             Some("control") => (false, false),
             None | Some("") => (false, !enabled),
-            Some(other) => return Err(format!("{n}. satırın rolü bilinmiyor: “{other}” (control, check ya da off).")),
+            Some(other) => {
+                return Err(format!(
+                    "{n}. satırın rolü bilinmiyor: “{other}” (control, check ya da off)."
+                ));
+            }
         };
         let name = at("name").filter(|t| !t.is_empty()).map(str::to_owned);
-        points.push(GeorefPoint { name, pixel: [c, -r], target: [x, y], check, off });
+        points.push(GeorefPoint {
+            name,
+            pixel: [c, -r],
+            target: [x, y],
+            check,
+            off,
+        });
     }
     if points.is_empty() {
         return Err("Dosyada kontrol noktası yok.".into());
@@ -97,7 +114,11 @@ fn text(v: f64) -> String {
         return "0".into();
     }
     let t = format!("{v}");
-    if t.contains('e') { format!("{v:.17}") } else { t }
+    if t.contains('e') {
+        format!("{v:.17}")
+    } else {
+        t
+    }
 }
 
 /// The points as a `.points` file, with each point's residual (the transformed pixel less its target) when known.
@@ -105,7 +126,11 @@ pub fn write(points: &[GeorefPoint], residuals: &[Option<[f64; 2]>]) -> String {
     let mut out = String::from(HEADER);
     out.push('\n');
     for (k, p) in points.iter().enumerate() {
-        let (dx, dy) = residuals.get(k).copied().flatten().map_or((0.0, 0.0), |[a, b]| (a, b));
+        let (dx, dy) = residuals
+            .get(k)
+            .copied()
+            .flatten()
+            .map_or((0.0, 0.0), |[a, b]| (a, b));
         let role = if p.check {
             "check"
         } else if p.off {
@@ -114,7 +139,13 @@ pub fn write(points: &[GeorefPoint], residuals: &[Option<[f64; 2]>]) -> String {
             "control"
         };
         // The name never holds a comma or a line's end: they are left out.
-        let name: String = p.name.as_deref().unwrap_or("").chars().filter(|c| *c != ',' && !c.is_control()).collect();
+        let name: String = p
+            .name
+            .as_deref()
+            .unwrap_or("")
+            .chars()
+            .filter(|c| *c != ',' && !c.is_control())
+            .collect();
         out.push_str(&format!(
             "{},{},{},{},{},{},{},{},{role},{name}\n",
             text(p.target[0]),

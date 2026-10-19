@@ -139,7 +139,10 @@ impl GeorefPoint {
             return Some("Noktanın pikseli ve hedefi sonlu sayılar olmalı.".into());
         }
         if self.check && self.off {
-            return Some("Kullanılmayan nokta denetim noktası olamaz; denetim noktası Kullan'da kalır.".into());
+            return Some(
+                "Kullanılmayan nokta denetim noktası olamaz; denetim noktası Kullan'da kalır."
+                    .into(),
+            );
         }
         if let Some(n) = &self.name
             && (n.trim().is_empty()
@@ -248,7 +251,12 @@ pub struct RasterGeoref {
 
 fn digest_problem(d: &Option<String>) -> Option<String> {
     d.as_ref()
-        .filter(|d| d.len() != 64 || !d.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b)))
+        .filter(|d| {
+            d.len() != 64
+                || !d
+                    .bytes()
+                    .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        })
         .map(|_| "SHA-256 özeti 64 küçük onaltılık hane olmalı.".to_owned())
 }
 
@@ -264,7 +272,9 @@ impl RasterGeoref {
     /// command wrote.
     pub fn problem(&self) -> Option<String> {
         if self.points.is_empty() || self.points.len() > MAX_GEOREF_POINTS {
-            return Some(format!("Kaydın 1 ile {MAX_GEOREF_POINTS} arasında noktası olmalı."));
+            return Some(format!(
+                "Kaydın 1 ile {MAX_GEOREF_POINTS} arasında noktası olmalı."
+            ));
         }
         if let Some(p) = self.points.iter().find_map(GeorefPoint::problem) {
             return Some(p);
@@ -282,16 +292,24 @@ impl RasterGeoref {
         }
         let s = &self.source;
         if !(1..=MAX_RASTER_SIDE).contains(&s.width) || !(1..=MAX_RASTER_SIDE).contains(&s.height) {
-            return Some(format!("Kaynağın genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı."));
+            return Some(format!(
+                "Kaynağın genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı."
+            ));
         }
-        let given = usize::from(s.asset.is_some()) + usize::from(s.file.is_some()) + usize::from(s.url.is_some());
+        let given = usize::from(s.asset.is_some())
+            + usize::from(s.file.is_some())
+            + usize::from(s.url.is_some());
         if given != 1 {
             return Some("Kaynak ya gömülü varlık (asset), ya bağlı dosya (file), ya adres (url) olmalı; yalnız biri.".into());
         }
         if [&s.asset, &s.file, &s.url].into_iter().flatten().any(|t| {
-            t.trim().is_empty() || t.chars().count() > MAX_RASTER_PATH || t.chars().any(char::is_control)
+            t.trim().is_empty()
+                || t.chars().count() > MAX_RASTER_PATH
+                || t.chars().any(char::is_control)
         }) {
-            return Some(format!("Kaynağın adı boş olmamalı, en çok {MAX_RASTER_PATH} harf olmalı."));
+            return Some(format!(
+                "Kaynağın adı boş olmamalı, en çok {MAX_RASTER_PATH} harf olmalı."
+            ));
         }
         if let Some(p) = digest_problem(&s.digest) {
             return Some(p);
@@ -300,15 +318,23 @@ impl RasterGeoref {
         if !(fine(self.m0) && fine(self.check_rmse) && fine(self.check_max)) {
             return Some("m0 ve denetim hataları sonlu ve eksi olmayan sayılar olmalı.".into());
         }
-        if self.check_rmse.is_some() != self.check_max.is_some() || self.check_rmse.is_some() != (checks > 0) {
+        if self.check_rmse.is_some() != self.check_max.is_some()
+            || self.check_rmse.is_some() != (checks > 0)
+        {
             return Some("Denetim noktası varken denetimin karesel ortalama hatası ve en büyük hatası birlikte yazılır, yokken hiçbiri.".into());
         }
         match (&self.output, self.method.places()) {
             (Some(_), true) => {
-                return Some(format!("{} rasteri yeniden örneklemez; çıktı ızgarası yazılmaz.", self.method.title()));
+                return Some(format!(
+                    "{} rasteri yeniden örneklemez; çıktı ızgarası yazılmaz.",
+                    self.method.title()
+                ));
             }
             (None, false) => {
-                return Some(format!("{} rasteri yeniden örnekler; çıktı ızgarası yazılır.", self.method.title()));
+                return Some(format!(
+                    "{} rasteri yeniden örnekler; çıktı ızgarası yazılır.",
+                    self.method.title()
+                ));
             }
             (Some(o), false) => {
                 let [x0, a, b, y0, c, d] = o.affine;
@@ -320,8 +346,12 @@ impl RasterGeoref {
                 {
                     return Some("Çıktı ızgarası kuzeye bakan ve pikseli kare olmalı: [x₀, s, 0, y₀, 0, −s].".into());
                 }
-                if !(1..=MAX_RASTER_SIDE).contains(&o.width) || !(1..=MAX_RASTER_SIDE).contains(&o.height) {
-                    return Some(format!("Çıktının genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı."));
+                if !(1..=MAX_RASTER_SIDE).contains(&o.width)
+                    || !(1..=MAX_RASTER_SIDE).contains(&o.height)
+                {
+                    return Some(format!(
+                        "Çıktının genişliği ve yüksekliği 1 ile {MAX_RASTER_SIDE} piksel arasında olmalı."
+                    ));
                 }
                 if let Some(p) = digest_problem(&o.digest) {
                     return Some(p);

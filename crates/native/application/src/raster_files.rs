@@ -42,11 +42,15 @@ impl Bytes {
     }
 
     fn read(&mut self, at: u64, len: u64) -> Result<Vec<u8>, String> {
-        let end = at.checked_add(len).filter(|e| *e <= self.size()).ok_or("Dosya beklenenden kısa.")?;
+        let end = at
+            .checked_add(len)
+            .filter(|e| *e <= self.size())
+            .ok_or("Dosya beklenenden kısa.")?;
         match self {
             Bytes::Memory(b) => Ok(b[at as usize..end as usize].to_vec()),
             Bytes::File(f, _) => {
-                let mut out = vec![0; usize::try_from(len).map_err(|_| "Okunacak parça çok büyük.")?];
+                let mut out =
+                    vec![0; usize::try_from(len).map_err(|_| "Okunacak parça çok büyük.")?];
                 f.seek(SeekFrom::Start(at)).map_err(|e| e.to_string())?;
                 f.read_exact(&mut out).map_err(|e| e.to_string())?;
                 Ok(out)
@@ -63,7 +67,9 @@ pub struct Opened {
 
 impl std::fmt::Debug for Opened {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Opened").field("info", &self.reader.info).finish()
+        f.debug_struct("Opened")
+            .field("info", &self.reader.info)
+            .finish()
     }
 }
 
@@ -98,7 +104,10 @@ pub fn open(mut bytes: Bytes) -> Result<Opened, String> {
     }
     let whole = bytes.read(0, size)?;
     let reader = open_bytes(&whole, None, READER_BUDGET).map_err(|e| e.0)?;
-    Ok(Opened { reader, bytes: Bytes::Memory(whole) })
+    Ok(Opened {
+        reader,
+        bytes: Bytes::Memory(whole),
+    })
 }
 
 impl Opened {
@@ -155,7 +164,9 @@ pub fn resample(
         }
     };
     let mut file = match &part {
-        Some(p) => Some(File::create(p).map_err(|e| format!("“{}” yazılamadı: {e}.", p.display()))?),
+        Some(p) => {
+            Some(File::create(p).map_err(|e| format!("“{}” yazılamadı: {e}.", p.display()))?)
+        }
         None => None,
     };
     let mut memory: Vec<u8> = Vec::new();
@@ -225,11 +236,23 @@ pub fn resample(
                 cleanup(&part);
                 return Err(format!("“{}” yazılamadı: {e}.", target.display()));
             }
-            Ok(Written { path: Some(target), bytes: None, bands, sample, alpha })
+            Ok(Written {
+                path: Some(target),
+                bytes: None,
+                bands,
+                sample,
+                alpha,
+            })
         }
         _ => {
             memory[..head.len()].copy_from_slice(&head);
-            Ok(Written { path: None, bytes: Some(memory), bands, sample, alpha })
+            Ok(Written {
+                path: None,
+                bytes: Some(memory),
+                bands,
+                sample,
+                alpha,
+            })
         }
     }
 }
