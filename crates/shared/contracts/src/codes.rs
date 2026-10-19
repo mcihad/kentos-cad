@@ -968,6 +968,40 @@ codes! {
     /// A drawing unit other than metres for a project with a system.
     UNIT_NEEDS_LOCAL = "unit_needs_local", Failed, false, "Metreden başka çizim birimi yalnız yerel projede olur.";
 
+    // ── Heights, epochs and transformations (docs/adr/0519) ─────────────
+    /// Heights or an epoch that do not hold.
+    INVALID_HEIGHTS = "invalid_heights", Failed, false, "Yükseklik tanımı kurallarına uymuyor: elipsoit yüksekliği düşey sistem ve geoit anmaz, düşey sistem bilinenlerden olur.";
+    /// An epoch out of 1900–2100.
+    INVALID_EPOCH = "invalid_epoch", Failed, false, "Koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı.";
+    /// Ellipsoidal heights or an epoch for a project without a coordinate system.
+    HEIGHTS_NEED_SYSTEM = "heights_need_system", Failed, false, "Elipsoit yüksekliği ve koordinat epoku bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik tanımlanır.";
+    /// No point to transform, or too many.
+    NOTHING_TO_TRANSFORM = "nothing_to_transform", Failed, false, "Dönüştürülecek nokta yok ya da 100 000'den çok.";
+    /// A side is the project's system and the project has none.
+    NO_SYSTEM = "no_system", Failed, false, "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin.";
+    /// A source uncertainty not 0 or more.
+    INVALID_UNCERTAINTY = "invalid_uncertainty", Failed, false, "Kaynağın belirsizliği 0 ya da büyük sonlu bir sayı olmalı.";
+    /// A datum of the project's without a way to WGS 84.
+    NO_DATUM_LINK = "no_datum_link", Failed, false, "Projenin datumunun WGS 84'e yolu (yedi parametre) yok; iki sistem arasında yol kurulamıyor.";
+    /// The project's datum choice is a grid this device does not have.
+    GRID_MISSING = "grid_missing", Failed, false, "Projenin datum seçimi bu cihazda olmayan bir ızgara; ızgarayı Proje ayarları › Izgaralar'a ekleyin. Daha düşük doğruluklu yola geçilmez.";
+    /// Heights given, one side says what they are and the other not.
+    HEIGHTS_UNKNOWN = "heights_unknown", Failed, false, "Kotların bir yanda ne olduğu biliniyor, öbür yanda bilinmiyor; iki yanın yüksekliğini de söyleyin.";
+    /// Between ellipsoidal and orthometric heights.
+    GEOID_REQUIRED = "geoid_required", Failed, false, "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir; KentOS'ta geoit motoru yok, kotlar çevrilmedi.";
+    /// Between two vertical datums.
+    VERTICAL_UNSUPPORTED = "vertical_unsupported", Failed, false, "İki ayrı düşey datum arasında dönüşüm KentOS'ta yok; kotlar yaklaşık bir yolla çevrilmez.";
+    /// Two different coordinate epochs.
+    EPOCH_UNSUPPORTED = "epoch_unsupported", Failed, false, "İki ayrı koordinat epoku arasında zamana bağlı dönüşüm (hız modeli) KentOS'ta yok.";
+    /// Heights given, neither side says what they are.
+    HEIGHTS_UNCHANGED = "heights_unchanged", Warning, false, "Kotların ne olduğu iki yanda da bilinmiyor; kotlar değişmeden kaldı.";
+    /// An epoch given, the operation not time-dependent.
+    EPOCH_NOT_APPLIED = "epoch_not_applied", Warning, false, "Epok verildi ama seçilen işlem zamana bağlı değil; epok kayıtta, koordinatlara uygulanmadı.";
+    /// An EPSG operation of ED50.
+    UNOFFICIAL_OPERATION = "unofficial_operation", Warning, false, "ED50'nin EPSG işlemi kullanıldı; değerleri resmî dönüşümün değil.";
+    /// Some points have no value in the target.
+    POINTS_OUTSIDE = "points_outside", Warning, false, "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında).";
+
     // ── The sheet book (docs/adr/0252 §2) and the sheet core's refusals ─
     /// No operation given.
     NO_OPERATIONS = "no_operations", Failed, false, "Hiç işlem verilmedi.";

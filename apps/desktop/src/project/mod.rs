@@ -11,6 +11,7 @@ mod arch;
 mod ask_type;
 mod choices;
 mod content;
+mod heights;
 mod custom_crs;
 mod scale;
 pub(crate) mod settings;

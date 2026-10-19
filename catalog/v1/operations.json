@@ -652,7 +652,11 @@
       "note": "srid: atanır, koordinatlar dönüştürülmez."
     },
     "crs.transform": {
-      "level": "query"
+      "level": "query",
+      "via": [
+        "cad.crs.transform"
+      ],
+      "note": "Pencere aynı çekirdekten okur (crs::transform_in); Python ve ajan kotlarıyla, epokuyla ve işlemin kaydıyla cad.crs.transform ile (ADR 0519)."
     },
     "crs.query": {
       "level": "query"

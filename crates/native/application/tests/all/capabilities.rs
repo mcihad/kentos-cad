@@ -93,6 +93,16 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "çekirdeğin okuyamadığı pafta kitabını hiçbir komut yazmaz (cad.sheets.edit kitabı çekirdekle denetler); kurulum kitap vermez (ADR 0347 §1)",
     ),
     (
+        "cad.crs.transform",
+        "no_system",
+        "sistemsiz yerel projede tarafın projeninki olması; durum dosyasının tek kurulumu TUREF / TM30 projesidir, ret crs_transform.rs'in side'ındadır; Python SDK'nın test_crs.py'si yerel projede sınar (ADR 0519 §3)",
+    ),
+    (
+        "cad.crs.transform",
+        "no_datum_link",
+        "projenin WGS 84'e yolu olmayan kendi datumu; kayıttaki sistemlerle kurulamaz, geometri-core'un datum testi (Gap::NoLink) sınar (ADR 0168 §2, 0519 §3)",
+    ),
+    (
         "cad.grids.create",
         "invalid_attribute",
         "katmanın alanlarına göre öznitelik: her oluşturan komutun ortak denetimi (checks::object_attrs), cad.polygon.create'in ve cad.entities.create'in durumlarında (ADR 0199 §2)",

@@ -1400,11 +1400,13 @@
    "kind": "command",
    "title": "Koordinat dönüştür…",
    "level": "query",
-   "via": [],
+   "via": [
+    "cad.crs.transform"
+   ],
    "operation": null,
    "python": null,
    "mcp": null,
-   "note": null,
+   "note": "Pencere aynı çekirdekten okur (crs::transform_in); Python ve ajan kotlarıyla, epokuyla ve işlemin kaydıyla cad.crs.transform ile (ADR 0519).",
    "scope": "gis",
    "desktop": "implemented",
    "tests": 1

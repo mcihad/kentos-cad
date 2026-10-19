@@ -203,6 +203,9 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-08` (ADR 0519, 19 Ekim): web'in KCAD ve sütun okuyucusu şema 85'in `heights` ve `coordinateEpoch`'unu okusun; Proje
+  ayarları'nda Kotlar ve epok; `cad.crs.transform`'un web işleyicisi (WASM'a `crs::operation`); web'in GNSS içe aktarması kotu
+  projenin `heights`'ine göre yazsın.
 - [ ] `CBS-28` sanal mozaik (ADR 0517, 19 Ekim): web'in raster işçisinde VRT açma (`vrt::open_mosaic`, `BlockNeed.member`'a göre dosya
   dilimleri), Raster ekle'de `.vrt`, `cad.rasters.mosaic`'in TS işleyicisi ve Sanal mozaik penceresi.
 - [ ] `CBS-25` (ADR 0520, 19 Ekim): web'in Moran I ve Sıcak nokta araçlarına Çıkarım, Permütasyon sayısı, Tohum, Çoklu test
@@ -1961,6 +1964,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (`Reader::mosaic`, `BlockNeed.member`), `cad.rasters.mosaic` (gdalbuildvrt'nin kuralı; öncelik sıra, ince piksel, yeni tarih; `layer`
   ile raster tek adım), 38 ortak durum GDAL'la, Python, MCP, masaüstünde Sanal mozaik penceresi. Kalan: mozaiğin önizleme piramidi,
   adresten VRT, başsız sunucuda VRT, ETag ve bütçe. — **19 Ekim, [ADR 0517](docs/adr/0517-virtual-raster-mosaic.md).**
+- [ ] `CBS-08` (G1) düşey sistem, epok ve dönüşümün kaydı: projenin `heights`'i (elipsoit/ortometrik, düşey sistem, geoit adı ve
+  SHA-256) ve `coordinateEpoch`, `.kcad` şema 85, `FORMATS_VERSION` 92; `cad.settings.set`'in iki anahtarı; çekirdek `crs::operation`
+  (3B elipsoit yüksekliği, işlemin kaydı ve PROJ pipeline'ı); `cad.crs.transform` (kotlarıyla dönüşüm, kayıt, ayrı tutulan rapor;
+  `geoid_required`, `vertical_unsupported`, `epoch_unsupported`, `heights_unknown`, `grid_missing`); Proje ayarları › Kotlar ve epok;
+  GNSS içe aktar kotu projenin söylediğine göre; bağımsız başvuru `crs_vertical_cases.py` (28, PROJ). Kalan: geoit motoru, düşey ve
+  zamana bağlı dönüşüm, dış biçimlerin düşey sistemi, Koordinat dönüştür'de kotlar. — **19 Ekim,
+  [ADR 0519](docs/adr/0519-vertical-crs-and-epoch.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 

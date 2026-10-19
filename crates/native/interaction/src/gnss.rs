@@ -4,7 +4,12 @@
 //! them (docs/adr/0167, the project's datum choices taken), named, with
 //! their fix and heights as attributes and their ellipsoidal height, when
 //! the file gives one, as their elevation: a height whose datum the file
-//! does not say is never taken for it. Asked to, its routes, tracks and
+//! does not say is never taken for it. What the elevation becomes rests on
+//! what the project says its heights are (docs/adr/0519 §6): not said, the
+//! WGS 84 ellipsoidal height as before; ellipsoidal, the height moved with
+//! the datum's shift; orthometric, none (the ellipsoidal height stays an
+//! attribute: a geoid model stands between them and KentOS has no engine for
+//! it). Asked to, its routes, tracks and
 //! NMEA log become polylines of those points (docs/adr/0222 §6), whatever
 //! kinds of points are taken. The shared cases are
 //! fixtures/gnss/v1/import.json (scripts/fixtures/gnss_import_cases.py, with
@@ -13,9 +18,10 @@
 use std::collections::BTreeMap;
 
 use kentos_contracts::{
-    AreaPart, Entity, EntityBase, GnssLine, GnssPoint, LineError, PathEntity, PointEntity,
-    Vec2 as Wire,
+    AreaPart, Entity, EntityBase, GnssLine, GnssPoint, HeightKind, LineError, PathEntity,
+    PointEntity, Vec2 as Wire,
 };
+use kentos_geometry_core::crs::operation::transform_height_in;
 use kentos_geometry_core::crs::{Choice, Datum, System, Unreached, format_dd, transform_in};
 
 use crate::Vec2;
@@ -62,6 +68,46 @@ pub struct Plan {
     pub skipped: Vec<LineError>,
     pub lines: Vec<PlacedLine>,
     pub lines_skipped: Vec<LineError>,
+    /// What the elevations are, said when the project says what its heights are (docs/adr/0519 §6).
+    pub heights: Option<String>,
+}
+
+/// The elevation of a point at `p` (WGS 84) with the ellipsoidal height `h` in a project whose heights are
+/// `heights`: the height as it is when not said, moved with the datum's shift when ellipsoidal, none when
+/// orthometric.
+fn elevation(
+    p: Vec2,
+    h: Option<f64>,
+    to: &System,
+    choices: &[Choice],
+    heights: Option<HeightKind>,
+) -> Option<f64> {
+    let wgs84 = System::Geographic {
+        datum: Datum::Wgs84,
+    };
+    match heights {
+        Some(HeightKind::Orthometric) => None,
+        Some(HeightKind::Ellipsoidal) => h.and_then(|h| {
+            transform_height_in(&wgs84, to, p, h, choices)
+                .ok()
+                .map(|(_, h)| h)
+        }),
+        _ => h,
+    }
+}
+
+/// What the plan says of the elevations in a project whose heights are `heights`.
+fn heights_note(heights: Option<HeightKind>, system: &str) -> Option<String> {
+    match heights? {
+        HeightKind::Orthometric => Some(
+            "Projenin kotları ortometrik: GNSS'in elipsoit yükseklikleri kot olarak alınmadı (geoit modeli gerekir, KentOS'ta yok); öznitelikte kaldı."
+                .to_owned(),
+        ),
+        HeightKind::Ellipsoidal => Some(format!(
+            "Projenin kotları elipsoit yüksekliği: GNSS yükseklikleri WGS 84'ten {system} datumuna kaydırılarak kot oldu."
+        )),
+        HeightKind::Unknown => None,
+    }
 }
 
 /// What is said of a point the project's system does not reach; `{line}`,
@@ -114,6 +160,18 @@ pub fn place_lines(
     system: &str,
     choices: &[Choice],
 ) -> (Vec<PlacedLine>, Vec<LineError>) {
+    place_lines_in(points, lines, to, system, choices, None)
+}
+
+/// [`place_lines`] in a project whose heights are `heights` (docs/adr/0519 §6).
+pub fn place_lines_in(
+    points: &[GnssPoint],
+    lines: &[GnssLine],
+    to: &System,
+    system: &str,
+    choices: &[Choice],
+    heights: Option<HeightKind>,
+) -> (Vec<PlacedLine>, Vec<LineError>) {
     let wgs84 = System::Geographic {
         datum: Datum::Wgs84,
     };
@@ -147,7 +205,11 @@ pub fn place_lines(
                         way.get_or_insert_with(|| {
                             format!("WGS 84 → {system}: {}", accuracy_text(&moved))
                         });
-                        run.push((moved.point, g.ellipsoidal));
+                        let at = Vec2::new(g.lon, g.lat);
+                        run.push((
+                            moved.point,
+                            elevation(at, g.ellipsoidal, to, choices, heights),
+                        ));
                     }
                     Err(u) => {
                         skipped.push(say(LINE_SKIPPED, why(u)));
@@ -188,9 +250,23 @@ pub fn place_all(
     system: &str,
     choices: &[Choice],
 ) -> Plan {
-    let mut plan = place(points, options, to, system, choices);
+    place_all_in(points, lines, options, to, system, choices, None)
+}
+
+/// [`place_all`] in a project whose heights are `heights` (docs/adr/0519 §6).
+pub fn place_all_in(
+    points: &[GnssPoint],
+    lines: &[GnssLine],
+    options: &Options,
+    to: &System,
+    system: &str,
+    choices: &[Choice],
+    heights: Option<HeightKind>,
+) -> Plan {
+    let mut plan = place_in(points, options, to, system, choices, heights);
     if options.lines {
-        (plan.lines, plan.lines_skipped) = place_lines(points, lines, to, system, choices);
+        (plan.lines, plan.lines_skipped) =
+            place_lines_in(points, lines, to, system, choices, heights);
     }
     plan
 }
@@ -203,10 +279,25 @@ pub fn place(
     system: &str,
     choices: &[Choice],
 ) -> Plan {
+    place_in(points, options, to, system, choices, None)
+}
+
+/// [`place`] in a project whose heights are `heights` (docs/adr/0519 §6).
+pub fn place_in(
+    points: &[GnssPoint],
+    options: &Options,
+    to: &System,
+    system: &str,
+    choices: &[Choice],
+    heights: Option<HeightKind>,
+) -> Plan {
     let wgs84 = System::Geographic {
         datum: Datum::Wgs84,
     };
-    let mut plan = Plan::default();
+    let mut plan = Plan {
+        heights: heights_note(heights, system),
+        ..Plan::default()
+    };
     let mut number = options.start;
     for g in points.iter().filter(|g| options.kinds.contains(&g.kind)) {
         let moved = match transform_in(&wgs84, to, Vec2::new(g.lon, g.lat), choices) {
@@ -262,7 +353,7 @@ pub fn place(
             line: g.line,
             name,
             p: moved.point,
-            z: g.ellipsoidal,
+            z: elevation(Vec2::new(g.lon, g.lat), g.ellipsoidal, to, choices, heights),
             attrs,
         });
     }

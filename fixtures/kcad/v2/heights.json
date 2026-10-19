@@ -1,0 +1,234 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Kotlar ve epok",
+  "settings": {
+    "srid": 5254,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "deg",
+    "plotScale": 50.0,
+    "workspace": "gis",
+    "heights": {
+      "kind": "orthometric",
+      "verticalSrid": 5775,
+      "geoid": {
+        "name": "TG-20",
+        "sha256": "3b0c6e7c1f2a4d5e8b9a0c1d2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f7"
+      }
+    },
+    "coordinateEpoch": 2023.5
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "0",
+      "name": "0",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": []
+    },
+    {
+      "id": "xr-plan",
+      "name": "Dış başvuru: Plan",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "xr-plan-duvar",
+          "name": "Duvar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#C0C0C0",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        },
+        {
+          "id": "xr-plan-aks",
+          "name": "Aks",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#D04040",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    },
+    {
+      "id": "xr-detay",
+      "name": "Dış başvuru: Detay",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "xr-detay-cizgi",
+          "name": "Çizgi",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "fg",
+            "lineType": "continuous",
+            "lineWeight": 0.25
+          },
+          "children": []
+        }
+      ]
+    }
+  ],
+  "activeLayer": "0",
+  "uids": [
+    "0192f5a1-2222-7000-8000-000000000001",
+    "0192f5a1-2222-7000-8000-000000000002"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "blocks": [
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+      "name": "Plan",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "xref": {
+        "path": "/proje/mimari/plan.kcad",
+        "relative": "mimari/plan.kcad",
+        "digest": "9f2c000000000000000000000000000000000000000000000000000000000000",
+        "group": "xr-plan",
+        "objects": [
+          "0192f5a1-3333-7000-8000-000000000001",
+          "0192f5a1-3333-7000-8000-000000000002",
+          "0192f5a1-3333-7000-8000-000000000003"
+        ]
+      },
+      "units": "m",
+      "entities": [
+        {
+          "kind": "line",
+          "id": 1,
+          "layerId": "xr-plan-duvar",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": 0.0
+          },
+          "b": {
+            "x": 6.0,
+            "y": 0.0
+          }
+        },
+        {
+          "kind": "line",
+          "id": 2,
+          "layerId": "xr-plan-aks",
+          "attrs": {},
+          "a": {
+            "x": 0.0,
+            "y": -1.0
+          },
+          "b": {
+            "x": 0.0,
+            "y": 5.0
+          }
+        },
+        {
+          "kind": "insert",
+          "id": 3,
+          "layerId": "0",
+          "attrs": {},
+          "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+          "p": {
+            "x": 1.0,
+            "y": 1.0
+          },
+          "scale": 1.0,
+          "rotation": 0.0
+        }
+      ]
+    },
+    {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0102",
+      "name": "Plan|Detay",
+      "base": {
+        "x": 0.0,
+        "y": 0.0
+      },
+      "xref": {
+        "path": "/proje/mimari/detay.kcad",
+        "kind": "overlay",
+        "digest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "unloaded": true,
+        "group": "xr-detay",
+        "parent": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101"
+      },
+      "entities": []
+    }
+  ],
+  "entities": [
+    {
+      "kind": "insert",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+      "p": {
+        "x": 100.0,
+        "y": 200.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    },
+    {
+      "kind": "insert",
+      "id": 2,
+      "layerId": "0",
+      "attrs": {},
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0101",
+      "p": {
+        "x": 120.0,
+        "y": 200.0
+      },
+      "scale": 1.0,
+      "rotation": 0.0
+    }
+  ]
+}

@@ -95,6 +95,7 @@ pub const UNITS: &[(&str, &str)] = &[
     ("km/h", "Kilometre bölü saat."),
     ("system", "Adı verilen koordinat sisteminin kendi birimi."),
     ("arcsec", "Yay saniyesi (″)."),
+    ("year", "Ondalık yıl: koordinat epoku (2023.5 yılın ortası)."),
     (
         "size-unit",
         "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",

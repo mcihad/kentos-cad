@@ -6836,6 +6836,25 @@
             },
             "type": "object"
           },
+          "GeoidModel": {
+            "description": "A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).",
+            "properties": {
+              "name": {
+                "description": "“TG-20”, “EGM2008 (2.5′)”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
           "GradientShape": {
             "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
             "oneOf": [
@@ -7635,6 +7654,58 @@
                 "type": "string"
               }
             ]
+          },
+          "HeightKind": {
+            "description": "What a drawing's elevations are.",
+            "oneOf": [
+              {
+                "const": "ellipsoidal",
+                "description": "Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.",
+                "type": "string"
+              },
+              {
+                "const": "orthometric",
+                "description": "Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them\nand ellipsoidal heights stands a geoid model.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to\nforget the project's. A project never keeps it (its settings leave `heights` out instead).",
+                "type": "string"
+              }
+            ]
+          },
+          "HeightReference": {
+            "additionalProperties": false,
+            "description": "What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of\n[`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is\nthe horizontal system's.",
+            "properties": {
+              "geoid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GeoidModel"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/HeightKind"
+              },
+              "verticalSrid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
           },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
@@ -12736,6 +12807,15 @@
                 },
                 "type": "array"
               },
+              "coordinateEpoch": {
+                "description": "The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not\nsaid. Only a project with a coordinate system has one.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -12803,6 +12883,17 @@
                   "$ref": "#/$defs/HatchPatternDef"
                 },
                 "type": "array"
+              },
+              "heights": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HeightReference"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -22156,6 +22247,25 @@
             },
             "type": "object"
           },
+          "GeoidModel": {
+            "description": "A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).",
+            "properties": {
+              "name": {
+                "description": "“TG-20”, “EGM2008 (2.5′)”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
           "GridChoice": {
             "description": "An NTv2 grid the project's datum choice names: its SHA-256 (the\ndevice's grid library keeps it by that), the file's name and size, the\naccuracy the project gives it.",
             "properties": {
@@ -22241,6 +22351,58 @@
                 "type": "string"
               }
             ]
+          },
+          "HeightKind": {
+            "description": "What a drawing's elevations are.",
+            "oneOf": [
+              {
+                "const": "ellipsoidal",
+                "description": "Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.",
+                "type": "string"
+              },
+              {
+                "const": "orthometric",
+                "description": "Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them\nand ellipsoidal heights stands a geoid model.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to\nforget the project's. A project never keeps it (its settings leave `heights` out instead).",
+                "type": "string"
+              }
+            ]
+          },
+          "HeightReference": {
+            "additionalProperties": false,
+            "description": "What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of\n[`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is\nthe horizontal system's.",
+            "properties": {
+              "geoid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GeoidModel"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/HeightKind"
+              },
+              "verticalSrid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
           },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
@@ -24927,6 +25089,15 @@
                 },
                 "type": "array"
               },
+              "coordinateEpoch": {
+                "description": "The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not\nsaid. Only a project with a coordinate system has one.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -24994,6 +25165,17 @@
                   "$ref": "#/$defs/HatchPatternDef"
                 },
                 "type": "array"
+              },
+              "heights": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HeightReference"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -33765,6 +33947,25 @@
             },
             "type": "object"
           },
+          "GeoidModel": {
+            "description": "A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).",
+            "properties": {
+              "name": {
+                "description": "“TG-20”, “EGM2008 (2.5′)”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
           "GradientShape": {
             "description": "How a gradient runs over its hatch (docs/adr/0186 §3).",
             "oneOf": [
@@ -34564,6 +34765,58 @@
                 "type": "string"
               }
             ]
+          },
+          "HeightKind": {
+            "description": "What a drawing's elevations are.",
+            "oneOf": [
+              {
+                "const": "ellipsoidal",
+                "description": "Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.",
+                "type": "string"
+              },
+              {
+                "const": "orthometric",
+                "description": "Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them\nand ellipsoidal heights stands a geoid model.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to\nforget the project's. A project never keeps it (its settings leave `heights` out instead).",
+                "type": "string"
+              }
+            ]
+          },
+          "HeightReference": {
+            "additionalProperties": false,
+            "description": "What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of\n[`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is\nthe horizontal system's.",
+            "properties": {
+              "geoid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GeoidModel"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/HeightKind"
+              },
+              "verticalSrid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
           },
           "Helmert": {
             "description": "Seven parameters: translations (m), rotations (″) in their convention,\nthe scale difference (ppm), and the accuracy (m) when it is given.",
@@ -39703,6 +39956,15 @@
                 },
                 "type": "array"
               },
+              "coordinateEpoch": {
+                "description": "The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not\nsaid. Only a project with a coordinate system has one.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
               "customCrs": {
                 "anyOf": [
                   {
@@ -39770,6 +40032,17 @@
                   "$ref": "#/$defs/HatchPatternDef"
                 },
                 "type": "array"
+              },
+              "heights": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HeightReference"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -932132,7 +932405,7 @@
       "id": "cad.settings.set",
       "version": 1,
       "title": "Proje ayarları",
-      "summary": "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır) ve drawingFont. Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin kendi ayarlarından verilenleri değiştirir, verilmeyenler kalır: name (çizimin adı), projectType (cad ya da gis), srid (kayıttaki bir EPSG kodu ya da yerel proje için 0; atanır, koordinatlar dönüştürülmez; tanımlı sistemin yerini alır, sistem birimi metre yapar), secondSrid (kayıttaki, projeninkinden başka bir EPSG kodu ya da yok için 0), drawingUnit (yalnız sistemsiz yerel projede mm, cm ya da m), lengthDecimals ve areaDecimals (0–4), areaUnit (m2, donum, ha), angleUnit (grad, deg), plotScale (1 ile 1 000 000 arası tam sayı payda; eski genel yükseklikteki yazılar, kılavuzlar, ölçüler ve tablolar yenisini tek geri alma adımında, “Yazı yüksekliklerini uydur”, alır), drawingFont, heights (kotların ne olduğu, bütün olarak: ellipsoidal ya da orthometric, ortometrikte verticalSrid ve geoid {name, sha256}; {kind: unknown} kaldırır; atanır, kot değişmez) ve coordinateEpoch (1900–2100 ondalık yıl; 0 kaldırır; elipsoit yüksekliği ve epok sistem ister). Ayarlar projenin düzenlemesidir, geri alma adımı değildir. Kullanıcının ve cihazın ayarları (tema, grafik, kısayollar) projenin değildir; bilinmeyen anahtar reddedilir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -932276,6 +932549,77 @@
               }
             ]
           },
+          "GeoidModel": {
+            "description": "A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).",
+            "properties": {
+              "name": {
+                "description": "“TG-20”, “EGM2008 (2.5′)”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "HeightKind": {
+            "description": "What a drawing's elevations are.",
+            "oneOf": [
+              {
+                "const": "ellipsoidal",
+                "description": "Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.",
+                "type": "string"
+              },
+              {
+                "const": "orthometric",
+                "description": "Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them\nand ellipsoidal heights stands a geoid model.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to\nforget the project's. A project never keeps it (its settings leave `heights` out instead).",
+                "type": "string"
+              }
+            ]
+          },
+          "HeightReference": {
+            "additionalProperties": false,
+            "description": "What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of\n[`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is\nthe horizontal system's.",
+            "properties": {
+              "geoid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GeoidModel"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/HeightKind"
+              },
+              "verticalSrid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
           "LengthStyle": {
             "description": "How lengths are written (docs/adr/0262 §2); none (no setting) is decimal\nin the drawing's unit. The three are an inch or foot drawing's.",
             "oneOf": [
@@ -932346,7 +932690,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height); then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level a wall names taken away).",
+        "description": "Input of `cad.settings.set` v1: the keys given change, the others stay.\nUnknown keys are refused by the schema (a user's or a device's setting,\na theme, a key of another command): they are not the project's.\n\n- `name`: the drawing's name, trimmed;\n- `projectType`: `cad` or `gis` (`plan3d` and `disaster` cannot be chosen\n  yet);\n- `srid`: the project's coordinate system, an EPSG code of the registry,\n  or 0 for a local project without one; it is assigned, the coordinates\n  stay as they are (CLAUDE.md §5). It takes the place of a defined system\n  (docs/adr/0168 §1); a system makes the drawing unit metres;\n- `secondSrid`: the second system (docs/adr/0167 §1), an EPSG code of the\n  registry other than the project's own, or 0 for none; it takes the\n  place of a defined second system;\n- `drawingUnit`: a local project's unit (docs/adr/0165 §2), mm, cm, m,\n  in or ft (docs/adr/0262 §1);\n- `lengthStyle`: `decimal`, or in an inch or foot drawing\n  `architectural`, `engineering`, `fractional` (docs/adr/0262 §2); a\n  metric unit takes the style back to decimal;\n- `lengthDecimals`, `areaDecimals`: 0 to 4;\n- `areaUnit`, `angleUnit`;\n- `plotScale`: a whole denominator from 1 to 1 000 000; the texts,\n  leaders, dimensions and tables at the old general height take the new\n  one in one undo step “Yazı yüksekliklerini uydur” (docs/adr/0205 §3);\n- `drawingFont`: the drawing's typeface;\n- `arch`: the project's levels and the detail its walls are drawn at\n  (docs/adr/0339 §3), whole: the given settings take the place of the\n  old ones, an empty object takes them away;\n- `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with\n  the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its\n  file); `{\"kind\": \"unknown\"}` takes them away. Assigned: no elevation changes;\n- `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.\n\nSettings are an edit of the project, no undo step (docs/adr/0049).\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_set`\n(no key), `empty_name`, `invalid_project_type`, `invalid_decimals`\n(`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`\n(`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`\n(two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then\n`invalid_revision`, `revision_conflict` (status `conflict`);\n`second_needs_system` (a second system for a project without one),\n`second_is_own` (the second system the project's own), `unit_needs_local`\n(a unit other than metres for a project with a system),\n`style_needs_imperial` (a feet-and-inches style for a metric unit),\n`level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a\nproject without a system).",
         "properties": {
           "angleUnit": {
             "anyOf": [
@@ -932387,6 +932731,14 @@
               }
             ]
           },
+          "coordinateEpoch": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "year"
+          },
           "drawingFont": {
             "anyOf": [
               {
@@ -932413,6 +932765,16 @@
             "type": [
               "string",
               "null"
+            ]
+          },
+          "heights": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/HeightReference"
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "lengthDecimals": {
@@ -932575,6 +932937,9 @@
           "unit_needs_local",
           "style_needs_imperial",
           "level_in_use",
+          "invalid_heights",
+          "invalid_epoch",
+          "heights_need_system",
           "invalid_revision",
           "revision_conflict"
         ]
@@ -994356,6 +994721,1090 @@
       ]
     },
     {
+      "id": "cad.crs.transform",
+      "version": 1,
+      "title": "Koordinat dönüştür",
+      "summary": "Noktaları from tarafının sisteminden to tarafınınkine taşır; taraf srid (kayıttaki EPSG kodu) verilmezse projenin sistemidir ve projenin yükseklik tanımıyla (heights) ve epokuyla gelir. Noktalar tarafın kendi biriminde: ızgarada metre doğu ve kuzey, coğrafide derece boylam ve enlem; z kot.  Kayıt (operation): işlemin kimliği (datum adımlarının EPSG kodları ya da projenin seçiminin adı), adımları, aynı işi yapan PROJ pipeline'ı, motor, ızgaralar (dosya adı ve SHA-256), kullanım alanı, belirtilen doğruluk, kotların nasıl gittiği, epoklar.  Kotlar: elipsoit yüksekliği datum kaymasıyla birlikte (yer merkezli koordinatlarda) taşınır; aynı düşey sistemdeki ortometrik kot kalır, aynı datumun başka biriminde çevrilir (MSL m ↔ ft). Elipsoit ile ortometrik arası geoid_required, iki düşey datum arası vertical_unsupported, iki ayrı epok epoch_unsupported ile reddedilir: KentOS bunlar için motoru olmadığından yaklaşık yola (PROJ'un ballpark'ı gibi) geçmez.  Bir yanın yüksekliği söylenmiş öbürününki söylenmemişse kotlar varsayımla çevrilmez (heights_unknown); ikisi de söylenmemişse kotlar değişmeden kalır (heights_unchanged).  Rapor (report) sayıları ayrı tutar: kaynağın belirsizliği (uncertainty, verilen), dönüşümün doğruluğu, ikisinin karelerinin toplamının kökü (tahmin), topoloji toleransı ve gösterim basamakları. Çizimi değiştirmez; plan aynı cevabı verir.",
+      "aliases": [
+        "koordinat-donustur",
+        "cs2cs"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "CrsPoint": {
+            "description": "A point in a side's own units; `z` a height when there is one.",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "CrsSide": {
+            "additionalProperties": false,
+            "description": "One side of a transformation: a system of the registry by its EPSG code, or the project's own (absent `srid`);\nwhat its heights are and its coordinate epoch. Absent `heights` and `epoch` take the project's when the system is\nthe project's, none otherwise.",
+            "properties": {
+              "epoch": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
+              "heights": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/HeightReference"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "srid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "type": "object"
+          },
+          "GeoidModel": {
+            "description": "A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).",
+            "properties": {
+              "name": {
+                "description": "“TG-20”, “EGM2008 (2.5′)”.",
+                "type": "string"
+              },
+              "sha256": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "HeightKind": {
+            "description": "What a drawing's elevations are.",
+            "oneOf": [
+              {
+                "const": "ellipsoidal",
+                "description": "Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.",
+                "type": "string"
+              },
+              {
+                "const": "orthometric",
+                "description": "Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them\nand ellipsoidal heights stands a geoid model.",
+                "type": "string"
+              },
+              {
+                "const": "unknown",
+                "description": "Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to\nforget the project's. A project never keeps it (its settings leave `heights` out instead).",
+                "type": "string"
+              }
+            ]
+          },
+          "HeightReference": {
+            "additionalProperties": false,
+            "description": "What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of\n[`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is\nthe horizontal system's.",
+            "properties": {
+              "geoid": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GeoidModel"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/HeightKind"
+              },
+              "verticalSrid": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "type": "object"
+          },
+          "SourceUncertainty": {
+            "additionalProperties": false,
+            "description": "The source's own uncertainty (a standard deviation the caller knows, metres): horizontal and vertical.",
+            "properties": {
+              "horizontal": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "vertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.crs.transform` v1.\n\nRefusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`\n(a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side\nis the project's and the project has none), `invalid_heights` (a side's heights against their rules),\n`invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:\n`no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is\na grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other\nnot), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),\n`vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no\ntime-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:\nthey stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),\n`unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some\npoints have no value in the target: outside a projection or a grid).",
+        "properties": {
+          "from": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsSide"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "points": {
+            "items": {
+              "$ref": "#/$defs/CrsPoint"
+            },
+            "type": "array"
+          },
+          "to": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CrsSide"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "uncertainty": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SourceUncertainty"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "points"
+        ],
+        "title": "CrsTransform",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AccuracyReport": {
+            "description": "The four numbers a calculation's report keeps apart (docs/adr/0519 §4): the source's uncertainty (what the caller\ngave), the transformation's stated accuracy, their root sum of squares when both are known (an estimate), the\nproject's topology tolerance (when points count as one, not an error) and the decimals and step lengths are shown\nwith (not an accuracy). Metres.",
+            "properties": {
+              "combined": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "combinedVertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "displayDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "displayStep": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "source": {
+                "$ref": "#/$defs/SourceUncertainty"
+              },
+              "topologyTolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "transformation": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "transformationVertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "source",
+              "topologyTolerance",
+              "displayDecimals",
+              "displayStep"
+            ],
+            "type": "object"
+          },
+          "AreaOfUse": {
+            "description": "Where an operation may be used: its name and box (degrees, west, south, east, north).",
+            "properties": {
+              "east": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "name": {
+                "type": "string"
+              },
+              "north": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "south": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "west": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              }
+            },
+            "required": [
+              "name",
+              "west",
+              "south",
+              "east",
+              "north"
+            ],
+            "type": "object"
+          },
+          "CrsOperation": {
+            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaOfUse"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "engine": {
+                "type": "string"
+              },
+              "epochApplied": {
+                "type": "boolean"
+              },
+              "from": {
+                "type": "string"
+              },
+              "fromEpoch": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
+              "grids": {
+                "items": {
+                  "$ref": "#/$defs/GridUse"
+                },
+                "type": "array"
+              },
+              "heightAccuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "heights": {
+                "$ref": "#/$defs/HeightMethod"
+              },
+              "id": {
+                "type": "string"
+              },
+              "pipeline": {
+                "type": "string"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/OperationStep"
+                },
+                "type": "array"
+              },
+              "to": {
+                "type": "string"
+              },
+              "toEpoch": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
+              "unofficial": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "id",
+              "steps",
+              "pipeline",
+              "engine",
+              "grids",
+              "heights",
+              "epochApplied",
+              "unofficial"
+            ],
+            "type": "object"
+          },
+          "CrsPoint": {
+            "description": "A point in a side's own units; `z` a height when there is one.",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "GridUse": {
+            "description": "A grid an operation reads: its file's name and SHA-256.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "HeightMethod": {
+            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift.",
+            "enum": [
+              "none",
+              "unchanged",
+              "same",
+              "unit",
+              "ellipsoidal"
+            ],
+            "type": "string"
+          },
+          "OperationStep": {
+            "description": "One step of an operation: what it is, its identity (an EPSG code, the project's choice's name, the system it\nconverts), whether it runs reversed, its stated accuracy (m).",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "kind": {
+                "$ref": "#/$defs/StepKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reverse": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "reverse"
+            ],
+            "type": "object"
+          },
+          "SourceUncertainty": {
+            "additionalProperties": false,
+            "description": "The source's own uncertainty (a standard deviation the caller knows, metres): horizontal and vertical.",
+            "properties": {
+              "horizontal": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "vertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              }
+            },
+            "type": "object"
+          },
+          "StepKind": {
+            "description": "What a step of an operation is.",
+            "oneOf": [
+              {
+                "const": "conversion",
+                "description": "A projection's inverse or forward, or a local system's plane transform: exact.",
+                "type": "string"
+              },
+              {
+                "const": "helmert",
+                "description": "Seven parameters on Earth-centred coordinates.",
+                "type": "string"
+              },
+              {
+                "const": "null",
+                "description": "A null transformation (TUREF to WGS 84): coordinates stay.",
+                "type": "string"
+              },
+              {
+                "const": "grid",
+                "description": "An NTv2 grid.",
+                "type": "string"
+              },
+              {
+                "const": "unit",
+                "description": "Heights from one unit into another within one vertical datum: exact.",
+                "type": "string"
+              }
+            ]
+          },
+          "UnreachedPoint": {
+            "description": "A point the target has no value for: its index and why (`outside`: a projection does not take it; `outsideGrid`:\nthe grid does not reach it).",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "reason"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "properties": {
+          "operation": {
+            "$ref": "#/$defs/CrsOperation"
+          },
+          "points": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CrsPoint"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "report": {
+            "$ref": "#/$defs/AccuracyReport"
+          },
+          "unreached": {
+            "items": {
+              "$ref": "#/$defs/UnreachedPoint"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "points",
+          "unreached",
+          "operation",
+          "report"
+        ],
+        "title": "CrsTransformed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AccuracyReport": {
+            "description": "The four numbers a calculation's report keeps apart (docs/adr/0519 §4): the source's uncertainty (what the caller\ngave), the transformation's stated accuracy, their root sum of squares when both are known (an estimate), the\nproject's topology tolerance (when points count as one, not an error) and the decimals and step lengths are shown\nwith (not an accuracy). Metres.",
+            "properties": {
+              "combined": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "combinedVertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "displayDecimals": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "displayStep": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "source": {
+                "$ref": "#/$defs/SourceUncertainty"
+              },
+              "topologyTolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "transformation": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "transformationVertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "source",
+              "topologyTolerance",
+              "displayDecimals",
+              "displayStep"
+            ],
+            "type": "object"
+          },
+          "AreaOfUse": {
+            "description": "Where an operation may be used: its name and box (degrees, west, south, east, north).",
+            "properties": {
+              "east": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "name": {
+                "type": "string"
+              },
+              "north": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "south": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              },
+              "west": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "deg"
+              }
+            },
+            "required": [
+              "name",
+              "west",
+              "south",
+              "east",
+              "north"
+            ],
+            "type": "object"
+          },
+          "CrsOperation": {
+            "description": "The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's\nnames joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the\ngrids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the\nstated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether\nthe operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "area": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AreaOfUse"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "engine": {
+                "type": "string"
+              },
+              "epochApplied": {
+                "type": "boolean"
+              },
+              "from": {
+                "type": "string"
+              },
+              "fromEpoch": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
+              "grids": {
+                "items": {
+                  "$ref": "#/$defs/GridUse"
+                },
+                "type": "array"
+              },
+              "heightAccuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "heights": {
+                "$ref": "#/$defs/HeightMethod"
+              },
+              "id": {
+                "type": "string"
+              },
+              "pipeline": {
+                "type": "string"
+              },
+              "steps": {
+                "items": {
+                  "$ref": "#/$defs/OperationStep"
+                },
+                "type": "array"
+              },
+              "to": {
+                "type": "string"
+              },
+              "toEpoch": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "year"
+              },
+              "unofficial": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "id",
+              "steps",
+              "pipeline",
+              "engine",
+              "grids",
+              "heights",
+              "epochApplied",
+              "unofficial"
+            ],
+            "type": "object"
+          },
+          "CrsPoint": {
+            "description": "A point in a side's own units; `z` a height when there is one.",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "z": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "GridUse": {
+            "description": "A grid an operation reads: its file's name and SHA-256.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "sha256"
+            ],
+            "type": "object"
+          },
+          "HeightMethod": {
+            "description": "How heights went: not at all (none given, or neither side says what they are), the same vertical reference,\na unit's change, with the ellipsoid through the datum's shift.",
+            "enum": [
+              "none",
+              "unchanged",
+              "same",
+              "unit",
+              "ellipsoidal"
+            ],
+            "type": "string"
+          },
+          "OperationStep": {
+            "description": "One step of an operation: what it is, its identity (an EPSG code, the project's choice's name, the system it\nconverts), whether it runs reversed, its stated accuracy (m).",
+            "properties": {
+              "accuracy": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "kind": {
+                "$ref": "#/$defs/StepKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "reverse": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "reverse"
+            ],
+            "type": "object"
+          },
+          "SourceUncertainty": {
+            "additionalProperties": false,
+            "description": "The source's own uncertainty (a standard deviation the caller knows, metres): horizontal and vertical.",
+            "properties": {
+              "horizontal": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "vertical": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              }
+            },
+            "type": "object"
+          },
+          "StepKind": {
+            "description": "What a step of an operation is.",
+            "oneOf": [
+              {
+                "const": "conversion",
+                "description": "A projection's inverse or forward, or a local system's plane transform: exact.",
+                "type": "string"
+              },
+              {
+                "const": "helmert",
+                "description": "Seven parameters on Earth-centred coordinates.",
+                "type": "string"
+              },
+              {
+                "const": "null",
+                "description": "A null transformation (TUREF to WGS 84): coordinates stay.",
+                "type": "string"
+              },
+              {
+                "const": "grid",
+                "description": "An NTv2 grid.",
+                "type": "string"
+              },
+              {
+                "const": "unit",
+                "description": "Heights from one unit into another within one vertical datum: exact.",
+                "type": "string"
+              }
+            ]
+          },
+          "UnreachedPoint": {
+            "description": "A point the target has no value for: its index and why (`outside`: a projection does not take it; `outsideGrid`:\nthe grid does not reach it).",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "index",
+              "reason"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,\nthe operation's record and the report.",
+        "properties": {
+          "operation": {
+            "$ref": "#/$defs/CrsOperation"
+          },
+          "points": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/CrsPoint"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "type": "array"
+          },
+          "report": {
+            "$ref": "#/$defs/AccuracyReport"
+          },
+          "unreached": {
+            "items": {
+              "$ref": "#/$defs/UnreachedPoint"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "points",
+          "unreached",
+          "operation",
+          "report"
+        ],
+        "title": "CrsTransformed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "nothing_to_transform",
+          "not_finite",
+          "unknown_srid",
+          "no_system",
+          "invalid_heights",
+          "invalid_epoch",
+          "invalid_uncertainty",
+          "heights_unknown",
+          "geoid_required",
+          "vertical_unsupported",
+          "epoch_unsupported",
+          "no_datum_link",
+          "grid_missing"
+        ],
+        "warnings": [
+          "heights_unchanged",
+          "epoch_not_applied",
+          "unofficial_operation",
+          "points_outside"
+        ]
+      },
+      "examples": [
+        {
+          "title": "ED50 / TM30'dan TUREF / TM30'a, elipsoit yüksekliğiyle",
+          "input": {
+            "from": {
+              "heights": {
+                "kind": "ellipsoidal"
+              },
+              "srid": 2320
+            },
+            "points": [
+              {
+                "x": 412345.0,
+                "y": 4512345.0,
+                "z": 812.4
+              }
+            ],
+            "to": {
+              "heights": {
+                "kind": "ellipsoidal"
+              },
+              "srid": 5254
+            }
+          }
+        },
+        {
+          "title": "Antalya kotu EGM2008'e: reddedilir",
+          "input": {
+            "from": {
+              "heights": {
+                "kind": "orthometric",
+                "verticalSrid": 5775
+              },
+              "srid": 5254
+            },
+            "points": [
+              {
+                "x": 412345.0,
+                "y": 4512345.0,
+                "z": 812.4
+              }
+            ],
+            "to": {
+              "heights": {
+                "kind": "orthometric",
+                "verticalSrid": 3855
+              },
+              "srid": 5254
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.entities.relate",
       "version": 1,
       "title": "Standart ilişkiler",
@@ -1002482,6 +1003931,102 @@
       "meaning": "Metreden başka çizim birimi yalnız yerel projede olur."
     },
     {
+      "code": "invalid_heights",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Yükseklik tanımı kurallarına uymuyor: elipsoit yüksekliği düşey sistem ve geoit anmaz, düşey sistem bilinenlerden olur."
+    },
+    {
+      "code": "invalid_epoch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı."
+    },
+    {
+      "code": "heights_need_system",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Elipsoit yüksekliği ve koordinat epoku bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik tanımlanır."
+    },
+    {
+      "code": "nothing_to_transform",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dönüştürülecek nokta yok ya da 100 000'den çok."
+    },
+    {
+      "code": "no_system",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin koordinat sistemi yok; tarafın sistemini EPSG koduyla verin."
+    },
+    {
+      "code": "invalid_uncertainty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynağın belirsizliği 0 ya da büyük sonlu bir sayı olmalı."
+    },
+    {
+      "code": "no_datum_link",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin datumunun WGS 84'e yolu (yedi parametre) yok; iki sistem arasında yol kurulamıyor."
+    },
+    {
+      "code": "grid_missing",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projenin datum seçimi bu cihazda olmayan bir ızgara; ızgarayı Proje ayarları › Izgaralar'a ekleyin. Daha düşük doğruluklu yola geçilmez."
+    },
+    {
+      "code": "heights_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kotların bir yanda ne olduğu biliniyor, öbür yanda bilinmiyor; iki yanın yüksekliğini de söyleyin."
+    },
+    {
+      "code": "geoid_required",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Elipsoit yüksekliği ile ortometrik yükseklik arasında geoit modeli gerekir; KentOS'ta geoit motoru yok, kotlar çevrilmedi."
+    },
+    {
+      "code": "vertical_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki ayrı düşey datum arasında dönüşüm KentOS'ta yok; kotlar yaklaşık bir yolla çevrilmez."
+    },
+    {
+      "code": "epoch_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İki ayrı koordinat epoku arasında zamana bağlı dönüşüm (hız modeli) KentOS'ta yok."
+    },
+    {
+      "code": "heights_unchanged",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kotların ne olduğu iki yanda da bilinmiyor; kotlar değişmeden kaldı."
+    },
+    {
+      "code": "epoch_not_applied",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Epok verildi ama seçilen işlem zamana bağlı değil; epok kayıtta, koordinatlara uygulanmadı."
+    },
+    {
+      "code": "unofficial_operation",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "ED50'nin EPSG işlemi kullanıldı; değerleri resmî dönüşümün değil."
+    },
+    {
+      "code": "points_outside",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı noktaların hedef sistemde değeri yok (izdüşümün ya da ızgaranın dışında)."
+    },
+    {
       "code": "no_operations",
       "kind": "failed",
       "retryable": false,
@@ -1003781,6 +1005326,10 @@
     {
       "unit": "arcsec",
       "meaning": "Yay saniyesi (″)."
+    },
+    {
+      "unit": "year",
+      "meaning": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası)."
     },
     {
       "unit": "size-unit",

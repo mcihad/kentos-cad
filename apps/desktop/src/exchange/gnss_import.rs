@@ -239,6 +239,11 @@ impl App {
             .as_ref()
             .map(|d| systems::choices(d.settings()))
             .unwrap_or_default();
+        // What the project says its heights are (docs/adr/0519 §6).
+        let heights = self
+            .document
+            .as_ref()
+            .and_then(|d| d.settings().heights.as_ref().map(|h| h.kind));
         let Some(Window::GnssImport(s)) = &mut self.exchange else {
             return;
         };
@@ -262,13 +267,14 @@ impl App {
                     start: s.start,
                     lines: s.lines,
                 };
-                Some(Arc::new(gnss::place_all(
+                Some(Arc::new(gnss::place_all_in(
                     &read.points,
                     &read.lines,
                     &options,
                     &to,
                     &name,
                     &choices,
+                    heights,
                 )))
             }
             _ => None,
@@ -596,7 +602,10 @@ impl App {
                     };
                     lines.push(words::text_line(kind, format!("Dönüşüm: {way}.")));
                 }
-                if n > 0 {
+                // The project says what its heights are (docs/adr/0519 §6): the plan says what the elevations became.
+                if let Some(note) = plan.heights.as_ref().filter(|_| n > 0) {
+                    lines.push(words::text_line(Line::Info, note.clone()));
+                } else if n > 0 {
                     let bare = plan.placed.iter().filter(|p| p.z.is_none()).count();
                     let heights = "Kot elipsoit yüksekliğidir (dosyadaki yükseklik ile geoit ayrımının toplamı); ortometrik yüksekliğe çevrilmez.";
                     lines.push(words::text_line(

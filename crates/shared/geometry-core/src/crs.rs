@@ -15,6 +15,7 @@ mod datum;
 pub mod ground;
 pub mod measure;
 pub mod ntv2;
+pub mod operation;
 mod plane;
 pub mod text;
 pub mod wkt;

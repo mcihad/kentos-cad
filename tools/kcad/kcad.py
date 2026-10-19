@@ -305,6 +305,10 @@ SCHEMA_WITH_PHASES = 82
 SCHEMA_WITH_XREFS = 83
 # Schema 84: schema 83 and the settings' `xrefPaths`, the folders external references are looked for in (docs/adr/0349 §1).
 SCHEMA_WITH_XREF_PATHS = 84
+# Schema 85: schema 84 and the settings' `heights` and `coordinateEpoch` (docs/adr/0519 §1).
+SCHEMA_WITH_HEIGHTS = 85
+# The vertical systems a project may name (kentos_contracts::VERTICAL_SYSTEMS, EPSG's registry).
+VERTICAL_SRIDS = (5775, 3855, 5773, 5714, 8050, 5735)
 MAX_XREF_PATHS = 64
 MAX_XREF_PATH = 1024
 SPACE_METHODS = ("net", "centerline", "gross")
@@ -499,7 +503,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_HEIGHTS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2642,6 +2646,7 @@ class _Schema:
         self.phases = version >= SCHEMA_WITH_PHASES
         self.xrefs = version >= SCHEMA_WITH_XREFS
         self.xref_paths = version >= SCHEMA_WITH_XREF_PATHS
+        self.heights = version >= SCHEMA_WITH_HEIGHTS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3184,6 +3189,7 @@ class _Schema:
                     "domains": (self.domains_, False)} if self.forms else {}),
                 **({"hatchPatterns": (self.hatch_patterns_, False)} if self.hatch_extras else {}),
                 **({"xrefPaths": (self.xref_paths_, False)} if self.xref_paths else {}),
+                **({"heights": (self.heights_, False), "coordinateEpoch": (self.epoch_, False)} if self.heights else {}),
             }
         )(v)
         # A second coordinate system is another system than the project's own; a project without one has none (a
@@ -3203,7 +3209,43 @@ class _Schema:
         if "secondCustomCrs" in s and ("secondSrid" in s or not has_system):
             self.path.append("secondCustomCrs")
             self.fail("bad_value", "ikinci sistem ya EPSG kodu ya tanımdır; koordinat sistemi olmayan projenin ikinci sistemi olmaz")
+        # Ellipsoidal heights and an epoch rest on a datum (docs/adr/0519 §1).
+        if not has_system and s.get("heights", {}).get("kind") == "ellipsoidal":
+            self.path.append("heights")
+            self.fail("bad_value", "elipsoit yüksekliği bir koordinat sistemi ister")
+        if not has_system and "coordinateEpoch" in s:
+            self.path.append("coordinateEpoch")
+            self.fail("bad_value", "koordinat epoku bir koordinat sistemi ister")
         return s
+
+    def heights_(self, v):
+        # What the elevations are (schema 85, docs/adr/0519 §1): ellipsoidal or orthometric; only an orthometric height
+        # names a vertical system (one of VERTICAL_SRIDS) and a geoid model (a trimmed name of at most 128 letters, a
+        # lower-case 64-digit SHA-256).
+        h = self.fields({"kind": (self.text, True), "verticalSrid": (self.uint(32), False),
+                         "geoid": (self.fields({"name": (self.text, True), "sha256": (self.text, False)}), False)})(v)
+        if h["kind"] not in ("ellipsoidal", "orthometric"):
+            self.fail("bad_value", f"“{h['kind']}” bir yükseklik türü değil")
+        if h["kind"] != "orthometric" and ("verticalSrid" in h or "geoid" in h):
+            self.fail("bad_value", "düşey sistem ve geoit yalnız ortometrik yüksekliğin olur")
+        if "verticalSrid" in h and h["verticalSrid"] not in VERTICAL_SRIDS:
+            self.fail("bad_value", f"EPSG:{h['verticalSrid']} bilinen düşey sistemlerden değil")
+        g = h.get("geoid")
+        if g is not None:
+            name = g["name"]
+            if not name or name != name.strip() or len(name) > 128:
+                self.fail("bad_value", "geoit modelinin adı kırpılmış, boş olmayan ve en çok 128 harf olmalı")
+            sha = g.get("sha256")
+            if sha is not None and not (len(sha) == 64 and all(c in "0123456789abcdef" for c in sha)):
+                self.fail("bad_value", "geoit dosyasının özeti küçük harfli 64 onaltılık rakam olmalı")
+        return h
+
+    def epoch_(self, v):
+        # The coordinates' epoch (schema 85): a decimal year from 1900 to 2100.
+        e = self.float(v)
+        if not (1900.0 <= e <= 2100.0):
+            self.fail("bad_value", "koordinat epoku 1900 ile 2100 arasında olmalı")
+        return e
 
     def xref_paths_(self, v):
         # The external references' search paths (schema 84, docs/adr/0349 §1): not empty, each trimmed, not blank, at most

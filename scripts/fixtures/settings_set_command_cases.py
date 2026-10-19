@@ -227,6 +227,42 @@ def cases():
                        "Katlar geçersiz: “zemin” kimlikli kat iki kez var. Her katın kimliği ve adı ayrı olmalı.", "arch.levels"))
     out.append(refused("katın yüksekliği sıfır", {"arch": {"levels": [dict(levels[0], height=0)]}}, "invalid_arch",
                        "“Zemin kat” katının yüksekliği sıfırdan büyük olmalı.", "arch.levels[0].height"))
+    # What the elevations are and the coordinates' epoch (docs/adr/0519 §1): assigned, no elevation moves; unknown and 0
+    # take them away; ellipsoidal heights and an epoch need a system, and go with it.
+    ortho = {"kind": "orthometric", "verticalSrid": 5775, "geoid": {"name": "TG-20"}}
+    out.append({"name": "Kotlar ve epok (ADR 0519): atanır, kotlar değişmez; bilinmiyor ve 0 kaldırır",
+                "steps": [step("execute", {"heights": ortho, "coordinateEpoch": 2023.5}, done(["heights", "coordinateEpoch"]),
+                               {**FLAGS, "entities": {"4": E["4"]}, "settings": {"heights": ortho, "coordinateEpoch": 2023.5}}),
+                          step("execute", {"heights": {"kind": "unknown"}, "coordinateEpoch": 0}, done(["heights", "coordinateEpoch"]),
+                               {"settings": {"heights": None, "coordinateEpoch": None}, "revision": "changed"})]})
+    out.append({"name": "Yerel projede ortometrik kot olur",
+                "setup": setup(srid=0, secondSrid=None),
+                "steps": [step("execute", {"heights": {"kind": "orthometric", "verticalSrid": 5714}}, done(["heights"]),
+                               {**FLAGS, "settings": {"heights": {"kind": "orthometric", "verticalSrid": 5714}}})]})
+    out.append({"name": "Sistem kalkınca elipsoit yüksekliği ve epok da kalkar",
+                "setup": setup(heights={"kind": "ellipsoidal"}, coordinateEpoch=2020.0),
+                "steps": [step("execute", {"srid": 0}, done(["srid", "secondSrid", "heights", "coordinateEpoch"]),
+                               {**FLAGS, "settings": {"srid": 0, "secondSrid": None, "heights": None, "coordinateEpoch": None}})]})
+    heights_words = "Yükseklik tanımı: "
+    out.append(refused("elipsoit yüksekliği düşey sistem anmaz", {"heights": {"kind": "ellipsoidal", "verticalSrid": 3855}},
+                       "invalid_heights", heights_words + "düşey sistem ve geoit modeli yalnız ortometrik yüksekliğin olur; "
+                       "elipsoit yüksekliğinin elipsoidi yatay sistemindir.", "heights.kind"))
+    out.append(refused("bilinmeyen düşey sistem", {"heights": {"kind": "orthometric", "verticalSrid": 5703}}, "invalid_heights",
+                       heights_words + "EPSG:5703 KentOS'un bildiği düşey sistemlerden değil (Antalya, EGM2008, EGM96, MSL, "
+                       "Karadeniz).", "heights.verticalSrid"))
+    out.append(refused("geoit dosyasının özeti SHA-256 değil",
+                       {"heights": {"kind": "orthometric", "geoid": {"name": "TG-20", "sha256": "ABC"}}}, "invalid_heights",
+                       heights_words + "geoit dosyasının özeti küçük harfli 64 onaltılık rakamla SHA-256 olmalı.",
+                       "heights.geoid.sha256"))
+    out.append(refused("epok 1850", {"coordinateEpoch": 1850}, "invalid_epoch",
+                       "Epok: koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2023.5 gibi); 0 epoku kaldırır.",
+                       "coordinateEpoch"))
+    need = ("Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun "
+            "elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.")
+    out.append(refused("yerel projede elipsoit yüksekliği", {"srid": 0, "heights": {"kind": "ellipsoidal"}},
+                       "heights_need_system", need, "heights.kind"))
+    out.append(refused("yerel projede epok", {"srid": 0, "coordinateEpoch": 2023.5}, "heights_need_system", need,
+                       "coordinateEpoch"))
     out.append(refused("girdinin kuralları sürümden önce", {"lengthDecimals": 7, "expectedRevision": "on iki"}, "invalid_decimals",
                        "Gösterilen basamak 0 ile 4 arasında bir tam sayı olmalı.", "lengthDecimals"))
     out.append(refused("geçersiz beklenen sürüm", {"srid": 5255, "expectedRevision": "on iki"}, "invalid_revision", INVALID_REVISION, "expectedRevision"))

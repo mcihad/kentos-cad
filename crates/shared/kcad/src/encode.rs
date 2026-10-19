@@ -37,7 +37,7 @@ use kentos_contracts::{
     AnnotationHeights, AnnotationKind, DOCUMENT_FORMAT, DOCUMENT_VERSION, DOCUMENT_VERSION_2,
     DimensionStyle, DimensionStyleDef, DocumentSnapshotV2, Entity, LayerField, LayerNode,
     LayerNodeType, LayerSnap, LayerState, LayerStateNode, LayerStyle, LengthStyle, MigrationSource,
-    ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
+    HeightKind, HeightReference, ProjectSettings, SurveySettings, TopologySettings, Vec2, layer_fields_problem,
     layer_states_problem,
 };
 use serde_json::Value;
@@ -363,6 +363,8 @@ impl<'d> Encoder<'d> {
         let n = 6
             + usize::from(s.workspace.is_some())
             + usize::from(!s.xref_paths.is_empty())
+            + usize::from(s.heights.is_some())
+            + usize::from(s.coordinate_epoch.is_some())
             + usize::from(s.drawing_font.is_some())
             + usize::from(s.drawing_unit.is_some())
             + usize::from(s.length_style.is_some())
@@ -439,6 +441,11 @@ impl<'d> Encoder<'d> {
                     .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
                 e.plain(&value)
             })?;
+        }
+        // Schema 85 (docs/adr/0519 §1): what the elevations are.
+        if let Some(h) = &s.heights {
+            self.key("heights");
+            self.at(Seg::Name("heights"), |e| e.heights(s, h))?;
         }
         // Schema 74 (docs/adr/0503): the layers bound to their sources, written whole and checked.
         if !s.sources.is_empty() {
@@ -629,6 +636,19 @@ impl<'d> Encoder<'d> {
             self.key("addressLocators");
             self.at(Seg::Name("addressLocators"), |e| {
                 e.address_locators(&s.address_locators)
+            })?;
+        }
+        // Schema 85 (docs/adr/0519 §1): the coordinates' epoch.
+        if let Some(epoch) = s.coordinate_epoch {
+            self.key("coordinateEpoch");
+            self.at(Seg::Name("coordinateEpoch"), |e| {
+                if let Some(why) = kentos_contracts::epoch_problem(epoch) {
+                    return Err(e.fail(Code::BadValue, &why));
+                }
+                if !s.has_system() {
+                    return Err(e.fail(Code::BadValue, "koordinat epoku bir koordinat sistemi ister"));
+                }
+                e.float(epoch)
             })?;
         }
         if !s.datum_transforms.is_empty() {
@@ -960,6 +980,48 @@ impl<'d> Encoder<'d> {
             self.at(Seg::Name(kind.key()), |e| e.float(mm))?;
         }
         self.close();
+        Ok(())
+    }
+
+    /// Schema 85's heights (docs/adr/0519 §1), checked: their rules, a kind a project keeps, an ellipsoidal height
+    /// only with a system.
+    fn heights(&mut self, s: &ProjectSettings, h: &HeightReference) -> Result<(), KcadError> {
+        if let Some((_, why)) = h.problem() {
+            return Err(self.fail(Code::BadValue, &why));
+        }
+        let kind = match h.kind {
+            HeightKind::Ellipsoidal => "ellipsoidal",
+            HeightKind::Orthometric => "orthometric",
+            HeightKind::Unknown => {
+                return Err(self.fail(Code::BadValue, "bilinmeyen yükseklik yazılmaz; alan yazılmaz"));
+            }
+        };
+        if h.kind == HeightKind::Ellipsoidal && !s.has_system() {
+            return Err(self.fail(
+                Code::BadValue,
+                "elipsoit yüksekliği bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik olur",
+            ));
+        }
+        self.open(1 + usize::from(h.geoid.is_some()) + usize::from(h.vertical_srid.is_some()), true)?;
+        self.key("kind");
+        self.w.text(kind);
+        if let Some(g) = &h.geoid {
+            self.key("geoid");
+            self.at(Seg::Name("geoid"), |e| {
+                e.open(1 + usize::from(g.sha256.is_some()), true)?;
+                e.key("name");
+                e.text(&g.name)?;
+                if let Some(sha) = &g.sha256 {
+                    e.key("sha256");
+                    e.text(sha)?;
+                }
+                Ok(())
+            })?;
+        }
+        if let Some(v) = h.vertical_srid {
+            self.key("verticalSrid");
+            self.w.uint(u64::from(v));
+        }
         Ok(())
     }
 
@@ -1703,6 +1765,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 85 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
+    if doc.settings.heights.is_some() || doc.settings.coordinate_epoch.is_some() {
+        return crate::SCHEMA_WITH_HEIGHTS;
     }
     // Schema 84 (docs/adr/0349 §1): the external references' search paths.
     if !doc.settings.xref_paths.is_empty() {

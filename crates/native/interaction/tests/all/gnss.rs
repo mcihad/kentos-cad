@@ -212,3 +212,56 @@ fn a_point_the_system_does_not_reach_is_said_with_why() {
         ]
     );
 }
+
+/// What the elevations become as the project says its heights are (docs/adr/0519 §6): not said, the WGS 84
+/// ellipsoidal height; ellipsoidal, the height moved with the datum's shift (to ED50 here: PROJ's ED50 to WGS 84
+/// (30) reversed in 3D, WGS 84 to ED50 / TM33 promoted to 3D, gives 1000.0000193491578 m); orthometric, none, said.
+#[test]
+fn the_elevations_follow_what_the_project_says_its_heights_are() {
+    use kentos_contracts::HeightKind;
+    use kentos_interaction::gnss::place_all_in;
+    let point = GnssPoint {
+        kind: "wpt".into(),
+        name: Some("A".into()),
+        lat: 39.932_422_407_409_625,
+        lon: 32.859_363_516_103_47,
+        height: None,
+        geoid: None,
+        ellipsoidal: Some(1_040.340_680_593_624_7),
+        time: None,
+        fix: None,
+        satellites: None,
+        hdop: None,
+        line: 1,
+    };
+    let system = kentos_project::crs::system(2321).expect("ED50 / TM33");
+    let to = system.transform_system().expect("a transform system");
+    let options = Options {
+        kinds: vec!["wpt".into()],
+        prefix: "G".into(),
+        start: 1,
+        lines: false,
+    };
+    let z = |heights| {
+        let plan = place_all_in(
+            std::slice::from_ref(&point),
+            &[],
+            &options,
+            &to,
+            &system.name,
+            &[],
+            heights,
+        );
+        (plan.placed[0].z, plan.heights)
+    };
+    assert_eq!(z(None), (Some(1_040.340_680_593_624_7), None));
+    let (moved, note) = z(Some(HeightKind::Ellipsoidal));
+    assert!(
+        (moved.expect("a height") - 1_000.000_019_349_157_8).abs() < 1e-6,
+        "{moved:?}"
+    );
+    assert!(note.expect("said").contains("datumuna kaydırılarak"));
+    let (none, note) = z(Some(HeightKind::Orthometric));
+    assert_eq!(none, None);
+    assert!(note.expect("said").contains("geoit modeli gerekir"));
+}

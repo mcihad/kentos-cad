@@ -70,6 +70,7 @@ UNITS: dict[str, str] = {
     "km/h": "Kilometre bölü saat.",
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
     "arcsec": "Yay saniyesi (″).",
+    "year": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
     "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
 }
@@ -1600,6 +1601,37 @@ class HatchWay(_StrEnum):
 
 HatchWayName = Literal["object", "lines"]
 """The names of :class:`HatchWay`, for a plain string."""
+
+
+class HeightKind(_StrEnum):
+    """What a drawing's elevations are.
+
+    - ``ellipsoidal``: Heights above the horizontal datum's ellipsoid (a GNSS receiver's): they move with the datum's shift.
+    - ``orthometric``: Heights above a geoid or a mean sea level (levelling's): a horizontal datum's shift leaves them; between them
+    - ``unknown``: Not said: what a call says to mean that a side's heights are not known, and what `cad.settings.set` takes to
+    """
+    ELLIPSOIDAL = "ellipsoidal"
+    ORTHOMETRIC = "orthometric"
+    UNKNOWN = "unknown"
+
+
+HeightKindName = Literal["ellipsoidal", "orthometric", "unknown"]
+"""The names of :class:`HeightKind`, for a plain string."""
+
+
+class HeightMethod(_StrEnum):
+    """How heights went: not at all (none given, or neither side says what they are), the same vertical reference,
+    a unit's change, with the ellipsoid through the datum's shift.
+    """
+    NONE = "none"
+    UNCHANGED = "unchanged"
+    SAME = "same"
+    UNIT = "unit"
+    ELLIPSOIDAL = "ellipsoidal"
+
+
+HeightMethodName = Literal["none", "unchanged", "same", "unit", "ellipsoidal"]
+"""The names of :class:`HeightMethod`, for a plain string."""
 
 
 class ImpactTarget(_StrEnum):
@@ -3310,6 +3342,26 @@ class StandardIssueKind(_StrEnum):
 
 StandardIssueKindName = Literal["layerColor", "layerLineType", "layerWeight", "layerPlot", "missingTextStyle", "missingDimensionStyle", "dimensionStyleName", "missingLayer", "layerName", "projectFont", "textFont", "textStyleName", "objectLineType", "ownLook"]
 """The names of :class:`StandardIssueKind`, for a plain string."""
+
+
+class StepKind(_StrEnum):
+    """What a step of an operation is.
+
+    - ``conversion``: A projection's inverse or forward, or a local system's plane transform: exact.
+    - ``helmert``: Seven parameters on Earth-centred coordinates.
+    - ``null``: A null transformation (TUREF to WGS 84): coordinates stay.
+    - ``grid``: An NTv2 grid.
+    - ``unit``: Heights from one unit into another within one vertical datum: exact.
+    """
+    CONVERSION = "conversion"
+    HELMERT = "helmert"
+    NULL = "null"
+    GRID = "grid"
+    UNIT = "unit"
+
+
+StepKindName = Literal["conversion", "helmert", "null", "grid", "unit"]
+"""The names of :class:`StepKind`, for a plain string."""
 
 
 class StyleEditOperation(_StrEnum):
@@ -5584,6 +5636,60 @@ _WallFieldsT = TypeVar("_WallFieldsT", bound="WallFields")
 
 
 @dataclass(kw_only=True, slots=True)
+class AccuracyReport(_Model):
+    """The four numbers a calculation's report keeps apart (docs/adr/0519 §4): the source's uncertainty (what the caller
+    gave), the transformation's stated accuracy, their root sum of squares when both are known (an estimate), the
+    project's topology tolerance (when points count as one, not an error) and the decimals and step lengths are shown
+    with (not an accuracy). Metres.
+    Attributes:
+        topology_tolerance: Unit: m.
+        display_decimals: Unit: count.
+        display_step: Unit: length.
+        combined: Unit: m.
+        combined_vertical: Unit: m.
+        transformation: Unit: m.
+        transformation_vertical: Unit: m.
+    """
+    source: SourceUncertainty
+    topology_tolerance: float
+    display_decimals: int
+    display_step: float
+    combined: float | None | Unset = UNSET
+    combined_vertical: float | None | Unset = UNSET
+    transformation: float | None | Unset = UNSET
+    transformation_vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source.to_json()
+        out["topologyTolerance"] = float(self.topology_tolerance)
+        out["displayDecimals"] = self.display_decimals
+        out["displayStep"] = float(self.display_step)
+        if self.combined is not UNSET:
+            out["combined"] = None if self.combined is None else float(self.combined)
+        if self.combined_vertical is not UNSET:
+            out["combinedVertical"] = None if self.combined_vertical is None else float(self.combined_vertical)
+        if self.transformation is not UNSET:
+            out["transformation"] = None if self.transformation is None else float(self.transformation)
+        if self.transformation_vertical is not UNSET:
+            out["transformationVertical"] = None if self.transformation_vertical is None else float(self.transformation_vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AccuracyReport:
+        return cls(
+            source=SourceUncertainty.from_json(data["source"]),
+            topology_tolerance=float(data["topologyTolerance"]),
+            display_decimals=data["displayDecimals"],
+            display_step=float(data["displayStep"]),
+            combined=UNSET if "combined" not in data else None if data["combined"] is None else float(data["combined"]),
+            combined_vertical=UNSET if "combinedVertical" not in data else None if data["combinedVertical"] is None else float(data["combinedVertical"]),
+            transformation=UNSET if "transformation" not in data else None if data["transformation"] is None else float(data["transformation"]),
+            transformation_vertical=UNSET if "transformationVertical" not in data else None if data["transformationVertical"] is None else float(data["transformationVertical"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddressLocator(_Model):
     """A project's address data (docs/adr/0229 §2).
     Attributes:
@@ -6414,6 +6520,41 @@ class ArchSettings(_Model):
             levels=[ArchLevel.from_json(e0) for e0 in data["levels"]] if "levels" in data else UNSET,
             phase_view=UNSET if "phaseView" not in data else None if data["phaseView"] is None else _enum_in(PhaseView, data["phaseView"]),
             space_method=UNSET if "spaceMethod" not in data else None if data["spaceMethod"] is None else _enum_in(SpaceMethod, data["spaceMethod"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AreaOfUse(_Model):
+    """Where an operation may be used: its name and box (degrees, west, south, east, north).
+    Attributes:
+        west: Unit: deg.
+        south: Unit: deg.
+        east: Unit: deg.
+        north: Unit: deg.
+    """
+    name: str
+    west: float
+    south: float
+    east: float
+    north: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["west"] = float(self.west)
+        out["south"] = float(self.south)
+        out["east"] = float(self.east)
+        out["north"] = float(self.north)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AreaOfUse:
+        return cls(
+            name=data["name"],
+            west=float(data["west"]),
+            south=float(data["south"]),
+            east=float(data["east"]),
+            north=float(data["north"]),
         )
 
 
@@ -10119,6 +10260,212 @@ class CrsDefinition(_Model):
         return cls(
             name=data["name"],
             system=CrsSystem.from_json(data["system"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsOperation(_Model):
+    """The operation a call ran, as a record: its sides, its identity (the datum steps' EPSG codes or the project's
+    names joined by “ + ”; empty when the datum stays), its steps, a PROJ pipeline that runs the same, the engine, the
+    grids, the area of use (the datum step's; none when only a projection changes or the step is the project's), the
+    stated accuracy (none when a step's is unknown), how heights went and their accuracy, the two epochs and whether
+    the operation took them into account (never, in this engine), and whether an EPSG operation of ED50 was used.
+    Attributes:
+        accuracy: Unit: m.
+        from_epoch: Unit: year.
+        height_accuracy: Unit: m.
+        to_epoch: Unit: year.
+    """
+    from_: str
+    to: str
+    id: str
+    steps: list[OperationStep]
+    pipeline: str
+    engine: str
+    grids: list[GridUse]
+    heights: HeightMethod | HeightMethodName
+    epoch_applied: bool
+    unofficial: bool
+    accuracy: float | None | Unset = UNSET
+    area: AreaOfUse | None | Unset = UNSET
+    from_epoch: float | None | Unset = UNSET
+    height_accuracy: float | None | Unset = UNSET
+    to_epoch: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["id"] = self.id
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["pipeline"] = self.pipeline
+        out["engine"] = self.engine
+        out["grids"] = [e0.to_json() for e0 in self.grids]
+        out["heights"] = _enum_out(self.heights)
+        out["epochApplied"] = self.epoch_applied
+        out["unofficial"] = self.unofficial
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else self.area.to_json()
+        if self.from_epoch is not UNSET:
+            out["fromEpoch"] = None if self.from_epoch is None else float(self.from_epoch)
+        if self.height_accuracy is not UNSET:
+            out["heightAccuracy"] = None if self.height_accuracy is None else float(self.height_accuracy)
+        if self.to_epoch is not UNSET:
+            out["toEpoch"] = None if self.to_epoch is None else float(self.to_epoch)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsOperation:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            id=data["id"],
+            steps=[OperationStep.from_json(e0) for e0 in data["steps"]],
+            pipeline=data["pipeline"],
+            engine=data["engine"],
+            grids=[GridUse.from_json(e0) for e0 in data["grids"]],
+            heights=_enum_in(HeightMethod, data["heights"]),
+            epoch_applied=data["epochApplied"],
+            unofficial=data["unofficial"],
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+            area=UNSET if "area" not in data else None if data["area"] is None else AreaOfUse.from_json(data["area"]),
+            from_epoch=UNSET if "fromEpoch" not in data else None if data["fromEpoch"] is None else float(data["fromEpoch"]),
+            height_accuracy=UNSET if "heightAccuracy" not in data else None if data["heightAccuracy"] is None else float(data["heightAccuracy"]),
+            to_epoch=UNSET if "toEpoch" not in data else None if data["toEpoch"] is None else float(data["toEpoch"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsPoint(_Model):
+    """A point in a side's own units; `z` a height when there is one.
+    Attributes:
+        x: Unit: system.
+        y: Unit: system.
+        z: Unit: system.
+    """
+    x: float
+    y: float
+    z: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else float(self.z)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsPoint:
+        return cls(
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else float(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsSide(_Model):
+    """One side of a transformation: a system of the registry by its EPSG code, or the project's own (absent `srid`);
+    what its heights are and its coordinate epoch. Absent `heights` and `epoch` take the project's when the system is
+    the project's, none otherwise.
+    Attributes:
+        epoch: Unit: year.
+        srid: Unit: epsg.
+    """
+    epoch: float | None | Unset = UNSET
+    heights: HeightReference | None | Unset = UNSET
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.epoch is not UNSET:
+            out["epoch"] = None if self.epoch is None else float(self.epoch)
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsSide:
+        return cls(
+            epoch=UNSET if "epoch" not in data else None if data["epoch"] is None else float(data["epoch"]),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
+            srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsTransform(_Model):
+    """Input of `cad.crs.transform` v1.
+
+    Refusals (`CommandError.code`), checked in this order: `nothing_to_transform` (none, or more than 100 000), `not_finite`
+    (a coordinate or height not finite), `unknown_srid` (a side's EPSG code not in the registry), `no_system` (a side
+    is the project's and the project has none), `invalid_heights` (a side's heights against their rules),
+    `invalid_epoch` (an epoch outside 1900–2100), `invalid_uncertainty` (not 0 or more); then the way:
+    `no_datum_link` (a datum of the project's without a way to WGS 84), `grid_missing` (the project's datum choice is
+    a grid this device does not have); `heights_unknown` (heights given and one side says what they are, the other
+    not), `geoid_required` (between ellipsoidal and orthometric heights: KentOS has no geoid engine),
+    `vertical_unsupported` (between two vertical datums), `epoch_unsupported` (two different epochs: KentOS has no
+    time-dependent transformation). Warnings: `heights_unchanged` (heights given, neither side says what they are:
+    they stay as given), `epoch_not_applied` (an epoch given, the operation is not time-dependent),
+    `unofficial_operation` (an EPSG operation of ED50, not the official transformation), `points_outside` (some
+    points have no value in the target: outside a projection or a grid).
+    """
+    points: list[CrsPoint]
+    from_: CrsSide | None | Unset = UNSET
+    to: CrsSide | None | Unset = UNSET
+    uncertainty: SourceUncertainty | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [e0.to_json() for e0 in self.points]
+        if self.from_ is not UNSET:
+            out["from"] = None if self.from_ is None else self.from_.to_json()
+        if self.to is not UNSET:
+            out["to"] = None if self.to is None else self.to.to_json()
+        if self.uncertainty is not UNSET:
+            out["uncertainty"] = None if self.uncertainty is None else self.uncertainty.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsTransform:
+        return cls(
+            points=[CrsPoint.from_json(e0) for e0 in data["points"]],
+            from_=UNSET if "from" not in data else None if data["from"] is None else CrsSide.from_json(data["from"]),
+            to=UNSET if "to" not in data else None if data["to"] is None else CrsSide.from_json(data["to"]),
+            uncertainty=UNSET if "uncertainty" not in data else None if data["uncertainty"] is None else SourceUncertainty.from_json(data["uncertainty"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CrsTransformed(_Model):
+    """Output of `cad.crs.transform` v1: the points in the target's units (none where unreached), the unreached ones,
+    the operation's record and the report.
+    """
+    points: list[CrsPoint | None]
+    unreached: list[UnreachedPoint]
+    operation: CrsOperation
+    report: AccuracyReport
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["points"] = [None if e0 is None else e0.to_json() for e0 in self.points]
+        out["unreached"] = [e0.to_json() for e0 in self.unreached]
+        out["operation"] = self.operation.to_json()
+        out["report"] = self.report.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CrsTransformed:
+        return cls(
+            points=[None if e0 is None else CrsPoint.from_json(e0) for e0 in data["points"]],
+            unreached=[UnreachedPoint.from_json(e0) for e0 in data["unreached"]],
+            operation=CrsOperation.from_json(data["operation"]),
+            report=AccuracyReport.from_json(data["report"]),
         )
 
 
@@ -17600,6 +17947,30 @@ class GeographicDefinition(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GeoidModel(_Model):
+    """A geoid model by its name and, when the grid file is at hand, the SHA-256 of its bytes (lower-case hex).
+    Attributes:
+        name: “TG-20”, “EGM2008 (2.5′)”.
+    """
+    name: str
+    sha256: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.sha256 is not UNSET:
+            out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GeoidModel:
+        return cls(
+            name=data["name"],
+            sha256=data.get("sha256", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgExported(_Model):
     """What `file.export.gpkg` wrote, or with `plan` would write.
     Attributes:
@@ -17972,6 +18343,26 @@ class GridSeries(_Model):
             bubbles=UNSET if "bubbles" not in data else None if data["bubbles"] is None else _enum_in(GridBubbles, data["bubbles"]),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(SeriesSide, data["side"]),
             start=data.get("start", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GridUse(_Model):
+    """A grid an operation reads: its file's name and SHA-256."""
+    name: str
+    sha256: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["sha256"] = self.sha256
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GridUse:
+        return cls(
+            name=data["name"],
+            sha256=data["sha256"],
         )
 
 
@@ -18634,6 +19025,36 @@ class HatchesPlan(_Model):
             hatches=[Entity.from_json(e0) for e0 in data["hatches"]],
             revision=data["revision"],
             created=[Entity.from_json(e0) for e0 in data["created"]] if "created" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class HeightReference(_Model):
+    """What a drawing's elevations rest on: their kind, and for orthometric heights the vertical system (one of
+    [`VERTICAL_SYSTEMS`] by its EPSG code) and the geoid model. An ellipsoidal height names neither: its ellipsoid is
+    the horizontal system's.
+    Attributes:
+        vertical_srid: Unit: epsg.
+    """
+    kind: HeightKind | HeightKindName
+    geoid: GeoidModel | None | Unset = UNSET
+    vertical_srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        if self.geoid is not UNSET:
+            out["geoid"] = None if self.geoid is None else self.geoid.to_json()
+        if self.vertical_srid is not UNSET:
+            out["verticalSrid"] = self.vertical_srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> HeightReference:
+        return cls(
+            kind=_enum_in(HeightKind, data["kind"]),
+            geoid=UNSET if "geoid" not in data else None if data["geoid"] is None else GeoidModel.from_json(data["geoid"]),
+            vertical_srid=data.get("verticalSrid", UNSET),
         )
 
 
@@ -25409,6 +25830,37 @@ class OpeningsPlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class OperationStep(_Model):
+    """One step of an operation: what it is, its identity (an EPSG code, the project's choice's name, the system it
+    converts), whether it runs reversed, its stated accuracy (m).
+    Attributes:
+        accuracy: Unit: m.
+    """
+    kind: StepKind | StepKindName
+    name: str
+    reverse: bool
+    accuracy: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["reverse"] = self.reverse
+        if self.accuracy is not UNSET:
+            out["accuracy"] = None if self.accuracy is None else float(self.accuracy)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> OperationStep:
+        return cls(
+            kind=_enum_in(StepKind, data["kind"]),
+            name=data["name"],
+            reverse=data["reverse"],
+            accuracy=UNSET if "accuracy" not in data else None if data["accuracy"] is None else float(data["accuracy"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PackageLeft(_Model):
     """A link left as it was.
     Attributes:
@@ -28186,6 +28638,8 @@ class ProjectSettings(_Model):
             every kind's default.
         arch: The project's levels and the detail its walls are drawn at (docs/adr/0339 §3); absent: no level, by the scale.
         connections: The project's service connections without their secrets (docs/adr/0208 §2).
+        coordinate_epoch: The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
+            said. Only a project with a coordinate system has one. Unit: year.
         custom_crs: The project's own coordinate system when it is a definition
             (docs/adr/0168 §1); `srid` is then 0.
         datum_transforms: The project's datum choices (docs/adr/0168 §3); none: EPSG's ways.
@@ -28196,6 +28650,8 @@ class ProjectSettings(_Model):
             project without a coordinate system (SRID 0) has another.
         forms: The project's forms, in the order they were made (docs/adr/0401).
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
+        heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
+            and the geoid model; absent: not said, and no command takes them for either.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
@@ -28236,6 +28692,7 @@ class ProjectSettings(_Model):
     annotation: AnnotationHeights | None | Unset = UNSET
     arch: ArchSettings | None | Unset = UNSET
     connections: list[ServiceConnection] | Unset = UNSET
+    coordinate_epoch: float | None | Unset = UNSET
     custom_crs: CrsDefinition | None | Unset = UNSET
     datum_transforms: list[DatumTransform] | Unset = UNSET
     dimension_styles: list[DimensionStyleDef] | Unset = UNSET
@@ -28244,6 +28701,7 @@ class ProjectSettings(_Model):
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
+    heights: HeightReference | None | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
@@ -28281,6 +28739,8 @@ class ProjectSettings(_Model):
             out["arch"] = None if self.arch is None else self.arch.to_json()
         if self.connections is not UNSET:
             out["connections"] = [e0.to_json() for e0 in self.connections]
+        if self.coordinate_epoch is not UNSET:
+            out["coordinateEpoch"] = None if self.coordinate_epoch is None else float(self.coordinate_epoch)
         if self.custom_crs is not UNSET:
             out["customCrs"] = None if self.custom_crs is None else self.custom_crs.to_json()
         if self.datum_transforms is not UNSET:
@@ -28297,6 +28757,8 @@ class ProjectSettings(_Model):
             out["forms"] = [e0.to_json() for e0 in self.forms]
         if self.hatch_patterns is not UNSET:
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.leader_styles is not UNSET:
@@ -28352,6 +28814,7 @@ class ProjectSettings(_Model):
             annotation=UNSET if "annotation" not in data else None if data["annotation"] is None else AnnotationHeights.from_json(data["annotation"]),
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             connections=[ServiceConnection.from_json(e0) for e0 in data["connections"]] if "connections" in data else UNSET,
+            coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             custom_crs=UNSET if "customCrs" not in data else None if data["customCrs"] is None else CrsDefinition.from_json(data["customCrs"]),
             datum_transforms=[DatumTransform.from_json(e0) for e0 in data["datumTransforms"]] if "datumTransforms" in data else UNSET,
             dimension_styles=[DimensionStyleDef.from_json(e0) for e0 in data["dimensionStyles"]] if "dimensionStyles" in data else UNSET,
@@ -28360,6 +28823,7 @@ class ProjectSettings(_Model):
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
@@ -31038,7 +31502,11 @@ class SettingsSet(_Model):
     - `drawingFont`: the drawing's typeface;
     - `arch`: the project's levels and the detail its walls are drawn at
       (docs/adr/0339 §3), whole: the given settings take the place of the
-      old ones, an empty object takes them away.
+      old ones, an empty object takes them away;
+    - `heights`: what the drawing's elevations are (docs/adr/0519 §1), whole: `ellipsoidal`, or `orthometric` with
+      the vertical system (`verticalSrid`, one KentOS knows) and the geoid model (`geoid`: name, SHA-256 of its
+      file); `{"kind": "unknown"}` takes them away. Assigned: no elevation changes;
+    - `coordinateEpoch`: the coordinates' epoch, a decimal year from 1900 to 2100; 0 takes it away.
 
     Settings are an edit of the project, no undo step (docs/adr/0049).
 
@@ -31046,15 +31514,17 @@ class SettingsSet(_Model):
     (no key), `empty_name`, `invalid_project_type`, `invalid_decimals`
     (`lengthDecimals`, then `areaDecimals`), `invalid_scale`, `unknown_srid`
     (`srid`, then `secondSrid`: not 0 and not in the registry), `invalid_arch`
-    (two levels of one id or name, a level's elevation or height); then
+    (two levels of one id or name, a level's elevation or height), `invalid_heights`, `invalid_epoch`; then
     `invalid_revision`, `revision_conflict` (status `conflict`);
     `second_needs_system` (a second system for a project without one),
     `second_is_own` (the second system the project's own), `unit_needs_local`
     (a unit other than metres for a project with a system),
     `style_needs_imperial` (a feet-and-inches style for a metric unit),
-    `level_in_use` (a level a wall names taken away).
+    `level_in_use` (a level a wall names taken away), `heights_need_system` (ellipsoidal heights or an epoch for a
+    project without a system).
     Attributes:
         area_decimals: Unit: count.
+        coordinate_epoch: Unit: year.
         expected_revision: The document revision the input was prepared against, as decimal text.
         length_decimals: Unit: count.
         length_style: How lengths are written (docs/adr/0262 §2): decimal, or architectural,
@@ -31067,9 +31537,11 @@ class SettingsSet(_Model):
     arch: ArchSettings | None | Unset = UNSET
     area_decimals: int | None | Unset = UNSET
     area_unit: AreaUnit | AreaUnitName | None | Unset = UNSET
+    coordinate_epoch: float | None | Unset = UNSET
     drawing_font: DrawingFont | DrawingFontName | None | Unset = UNSET
     drawing_unit: DrawingUnit | DrawingUnitName | None | Unset = UNSET
     expected_revision: str | None | Unset = UNSET
+    heights: HeightReference | None | Unset = UNSET
     length_decimals: int | None | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
     name: str | None | Unset = UNSET
@@ -31088,12 +31560,16 @@ class SettingsSet(_Model):
             out["areaDecimals"] = self.area_decimals
         if self.area_unit is not UNSET:
             out["areaUnit"] = None if self.area_unit is None else _enum_out(self.area_unit)
+        if self.coordinate_epoch is not UNSET:
+            out["coordinateEpoch"] = None if self.coordinate_epoch is None else float(self.coordinate_epoch)
         if self.drawing_font is not UNSET:
             out["drawingFont"] = None if self.drawing_font is None else _enum_out(self.drawing_font)
         if self.drawing_unit is not UNSET:
             out["drawingUnit"] = None if self.drawing_unit is None else _enum_out(self.drawing_unit)
         if self.expected_revision is not UNSET:
             out["expectedRevision"] = self.expected_revision
+        if self.heights is not UNSET:
+            out["heights"] = None if self.heights is None else self.heights.to_json()
         if self.length_decimals is not UNSET:
             out["lengthDecimals"] = self.length_decimals
         if self.length_style is not UNSET:
@@ -31117,9 +31593,11 @@ class SettingsSet(_Model):
             arch=UNSET if "arch" not in data else None if data["arch"] is None else ArchSettings.from_json(data["arch"]),
             area_decimals=data.get("areaDecimals", UNSET),
             area_unit=UNSET if "areaUnit" not in data else None if data["areaUnit"] is None else _enum_in(AreaUnit, data["areaUnit"]),
+            coordinate_epoch=UNSET if "coordinateEpoch" not in data else None if data["coordinateEpoch"] is None else float(data["coordinateEpoch"]),
             drawing_font=UNSET if "drawingFont" not in data else None if data["drawingFont"] is None else _enum_in(DrawingFont, data["drawingFont"]),
             drawing_unit=UNSET if "drawingUnit" not in data else None if data["drawingUnit"] is None else _enum_in(DrawingUnit, data["drawingUnit"]),
             expected_revision=data.get("expectedRevision", UNSET),
+            heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
             length_decimals=data.get("lengthDecimals", UNSET),
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
             name=data.get("name", UNSET),
@@ -31957,6 +32435,32 @@ class SourceTable(_Model):
             capabilities=SourceCapabilities.from_json(data["capabilities"]),
             geometry=data.get("geometry", UNSET),
             srid=data.get("srid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourceUncertainty(_Model):
+    """The source's own uncertainty (a standard deviation the caller knows, metres): horizontal and vertical.
+    Attributes:
+        horizontal: Unit: m.
+        vertical: Unit: m.
+    """
+    horizontal: float | None | Unset = UNSET
+    vertical: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.horizontal is not UNSET:
+            out["horizontal"] = None if self.horizontal is None else float(self.horizontal)
+        if self.vertical is not UNSET:
+            out["vertical"] = None if self.vertical is None else float(self.vertical)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceUncertainty:
+        return cls(
+            horizontal=UNSET if "horizontal" not in data else None if data["horizontal"] is None else float(data["horizontal"]),
+            vertical=UNSET if "vertical" not in data else None if data["vertical"] is None else float(data["vertical"]),
         )
 
 
@@ -36121,6 +36625,30 @@ class UnitsChanged(_Model):
             objects=data["objects"],
             blocks=data["blocks"],
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnreachedPoint(_Model):
+    """A point the target has no value for: its index and why (`outside`: a projection does not take it; `outsideGrid`:
+    the grid does not reach it).
+    Attributes:
+        index: Unit: index.
+    """
+    index: int
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnreachedPoint:
+        return cls(
+            index=data["index"],
+            reason=data["reason"],
         )
 
 
@@ -48004,6 +48532,7 @@ _XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperat
 __all__ = [
     "AccessSource",
     "AccessSourceName",
+    "AccuracyReport",
     "ActionFormItem",
     "ActionKind",
     "ActionKindName",
@@ -48084,6 +48613,7 @@ __all__ = [
     "AreaLabelModeName",
     "AreaLevel",
     "AreaLevelName",
+    "AreaOfUse",
     "AreaPart",
     "AreaRectangleFrame",
     "AreaSource",
@@ -48305,8 +48835,13 @@ __all__ = [
     "CrossingSelectRegion",
     "CrsBase",
     "CrsDefinition",
+    "CrsOperation",
     "CrsPlane",
+    "CrsPoint",
+    "CrsSide",
     "CrsSystem",
+    "CrsTransform",
+    "CrsTransformed",
     "CurveConstruction",
     "CurveEdit",
     "CurvesConstruct",
@@ -48602,6 +49137,7 @@ __all__ = [
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
+    "GeoidModel",
     "GpkgExported",
     "GpkgImported",
     "GpkgTableExported",
@@ -48619,6 +49155,7 @@ __all__ = [
     "GridOriginName",
     "GridSeries",
     "GridTableEdit",
+    "GridUse",
     "GridsCreate",
     "GridsCreated",
     "GridsPlan",
@@ -48651,6 +49188,11 @@ __all__ = [
     "HatchesEdited",
     "HatchesPlan",
     "HeaderTableEdit",
+    "HeightKind",
+    "HeightKindName",
+    "HeightMethod",
+    "HeightMethodName",
+    "HeightReference",
     "Helmert",
     "HorizontalConstraintRule",
     "ImageEntity",
@@ -48953,6 +49495,7 @@ __all__ = [
     "OpeningsEdited",
     "OpeningsOperation",
     "OpeningsPlan",
+    "OperationStep",
     "OptionsDimensionEdit",
     "OrderTo",
     "OrderToName",
@@ -49294,6 +49837,7 @@ __all__ = [
     "SourceOverridesName",
     "SourceState",
     "SourceTable",
+    "SourceUncertainty",
     "SourcesDescribe",
     "SourcesDescribed",
     "SourcesEdit",
@@ -49347,6 +49891,8 @@ __all__ = [
     "StartSubPlace",
     "StepDivision",
     "StepExplodeDensity",
+    "StepKind",
+    "StepKindName",
     "StepWarning",
     "StreetSource",
     "StretchBlockAction",
@@ -49479,6 +50025,7 @@ __all__ = [
     "UnlinkTablesOperation",
     "UnloadXrefsOperation",
     "UnmergeTableEdit",
+    "UnreachedPoint",
     "UntieHatchEdit",
     "UnusedResource",
     "UpdateBlockChange",

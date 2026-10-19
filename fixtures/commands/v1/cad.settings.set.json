@@ -2699,6 +2699,644 @@
       ]
     },
     {
+      "name": "Kotlar ve epok (ADR 0519): atanır, kotlar değişmez; bilinmiyor ve 0 kaldırır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "orthometric",
+              "verticalSrid": 5775,
+              "geoid": {
+                "name": "TG-20"
+              }
+            },
+            "coordinateEpoch": 2023.5
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "heights",
+                "coordinateEpoch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "entities": {
+              "4": {
+                "kind": "line",
+                "id": 4,
+                "layerId": "yazi",
+                "attrs": {},
+                "a": {
+                  "x": 500000,
+                  "y": 4400010
+                },
+                "b": {
+                  "x": 500050,
+                  "y": 4400010
+                }
+              }
+            },
+            "settings": {
+              "heights": {
+                "kind": "orthometric",
+                "verticalSrid": 5775,
+                "geoid": {
+                  "name": "TG-20"
+                }
+              },
+              "coordinateEpoch": 2023.5
+            }
+          }
+        },
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "unknown"
+            },
+            "coordinateEpoch": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "heights",
+                "coordinateEpoch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "settings": {
+              "heights": null,
+              "coordinateEpoch": null
+            },
+            "revision": "changed"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Yerel projede ortometrik kot olur",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 0,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow"
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "orthometric",
+              "verticalSrid": 5714
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "heights"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "heights": {
+                "kind": "orthometric",
+                "verticalSrid": 5714
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sistem kalkınca elipsoit yüksekliği ve epok da kalkar",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Ayarlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "secondSrid": 4326,
+          "heights": {
+            "kind": "ellipsoidal"
+          },
+          "coordinateEpoch": 2020.0
+        },
+        "origin": {
+          "x": 500000,
+          "y": 4400000
+        },
+        "layers": [
+          {
+            "id": "yazi",
+            "name": "Yazı",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "yazi",
+        "entities": [
+          {
+            "kind": "text",
+            "id": 1,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500000,
+              "y": 4400000
+            },
+            "text": "T1",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 2,
+            "layerId": "yazi",
+            "attrs": {},
+            "p": {
+              "x": 500010,
+              "y": 4400000
+            },
+            "text": "T2",
+            "height": 7.0,
+            "rotation": 0
+          },
+          {
+            "kind": "text",
+            "id": 3,
+            "layerId": "kilitli",
+            "attrs": {},
+            "p": {
+              "x": 500020,
+              "y": 4400000
+            },
+            "text": "T3",
+            "height": 2.5,
+            "rotation": 0
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "yazi",
+            "attrs": {},
+            "a": {
+              "x": 500000,
+              "y": 4400010
+            },
+            "b": {
+              "x": 500050,
+              "y": 4400010
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "srid": 0
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "changed": [
+                "srid",
+                "secondSrid",
+                "heights",
+                "coordinateEpoch"
+              ],
+              "followed": 0,
+              "locked": 0,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "dirty": true,
+            "revision": "changed",
+            "canUndo": false,
+            "settings": {
+              "srid": 0,
+              "secondSrid": null,
+              "heights": null,
+              "coordinateEpoch": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "elipsoit yüksekliği düşey sistem anmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "ellipsoidal",
+              "verticalSrid": 3855
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_heights",
+              "message": "Yükseklik tanımı: düşey sistem ve geoit modeli yalnız ortometrik yüksekliğin olur; elipsoit yüksekliğinin elipsoidi yatay sistemindir.",
+              "path": "heights.kind"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "bilinmeyen düşey sistem",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "orthometric",
+              "verticalSrid": 5703
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_heights",
+              "message": "Yükseklik tanımı: EPSG:5703 KentOS'un bildiği düşey sistemlerden değil (Antalya, EGM2008, EGM96, MSL, Karadeniz).",
+              "path": "heights.verticalSrid"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "geoit dosyasının özeti SHA-256 değil",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "heights": {
+              "kind": "orthometric",
+              "geoid": {
+                "name": "TG-20",
+                "sha256": "ABC"
+              }
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_heights",
+              "message": "Yükseklik tanımı: geoit dosyasının özeti küçük harfli 64 onaltılık rakamla SHA-256 olmalı.",
+              "path": "heights.geoid.sha256"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "epok 1850",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "coordinateEpoch": 1850
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_epoch",
+              "message": "Epok: koordinat epoku 1900 ile 2100 arasında ondalık bir yıl olmalı (2023.5 gibi); 0 epoku kaldırır.",
+              "path": "coordinateEpoch"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "yerel projede elipsoit yüksekliği",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "srid": 0,
+            "heights": {
+              "kind": "ellipsoidal"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "heights_need_system",
+              "message": "Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.",
+              "path": "heights.kind"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "yerel projede epok",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "srid": 0,
+            "coordinateEpoch": 2023.5
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "heights_need_system",
+              "message": "Koordinat sistemi olmayan yerel projede elipsoit yüksekliği ve koordinat epoku olmaz: ikisi de bir datumun elipsoidine ve zamanına bağlıdır. Önce projeye bir sistem atayın ya da ortometrik yüksekliği seçin.",
+              "path": "coordinateEpoch"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "settings": {
+              "srid": 5256,
+              "secondSrid": 4326,
+              "plotScale": 1000
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "girdinin kuralları sürümden önce",
       "steps": [
         {

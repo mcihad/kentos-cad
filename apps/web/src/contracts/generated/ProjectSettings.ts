@@ -11,6 +11,7 @@ import type { DrawingFont } from "./DrawingFont";
 import type { DrawingUnit } from "./DrawingUnit";
 import type { FieldDomain } from "./FieldDomain";
 import type { HatchPatternDef } from "./HatchPatternDef";
+import type { HeightReference } from "./HeightReference";
 import type { LayerState } from "./LayerState";
 import type { LeaderStyleDef } from "./LeaderStyleDef";
 import type { LengthStyle } from "./LengthStyle";
@@ -177,4 +178,14 @@ lengthStyle?: LengthStyle,
  * The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
  * to the project file's folder with `/` between their parts.
  */
-xrefPaths?: Array<string>, };
+xrefPaths?: Array<string>, 
+/**
+ * What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
+ * and the geoid model; absent: not said, and no command takes them for either.
+ */
+heights?: HeightReference, 
+/**
+ * The coordinates' epoch (decimal year, docs/adr/0519 §1): when a dynamic system's coordinates hold; absent: not
+ * said. Only a project with a coordinate system has one.
+ */
+coordinateEpoch?: number, };

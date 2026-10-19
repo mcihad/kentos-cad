@@ -31,6 +31,7 @@ use kentos_contracts::{
     FieldChoice, LayerField, LayerFieldKind, LayerNode, LayerNodeType, LayerSnap, LayerState,
     LayerStateNode, LayerStyle, LengthStyle, LineType, MAX_ANNOTATION_MM, MigrationSource,
     PointStyle, PointSymbol, ProjectId, ProjectSettings, ProjectStyles, SurveySettings,
+    GeoidModel, HeightKind, HeightReference,
     TopologyException, TopologyRule, TopologyRuleKind, TopologySettings, Vec2, Workspace,
     annotation_mm_holds, layer_fields_problem, layer_states_problem,
 };
@@ -503,6 +504,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut sources = Vec::new();
     let mut length_style = None;
     let mut xref_paths = Vec::new();
+    let (mut heights, mut coordinate_epoch) = (None, None);
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let mut leader_styles = Vec::new();
     let mut wall_styles = Vec::new();
@@ -794,6 +796,15 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "ucs" if has.ucs => ucs = Some(ucs::ucs(r)?),
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
+            "heights" if has.heights => heights = Some(height_reference(r)?),
+            "coordinateEpoch" if has.heights => {
+                let at = r.position();
+                let e = r.float()?;
+                if let Some(why) = kentos_contracts::epoch_problem(e) {
+                    return Err(r.fail_at(Code::BadValue, at, &why));
+                }
+                coordinate_epoch = Some(e);
+            }
             "xrefPaths" if has.xref_paths => {
                 let at = r.position();
                 let paths = list(r, |r, _| text(r))?;
@@ -922,7 +933,25 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             r,
         ));
     }
+    // Ellipsoidal heights and an epoch rest on a datum: a project without a system has neither (docs/adr/0519 §1).
+    let system = srid != 0 || custom_crs.is_some();
+    if !system && heights.as_ref().is_some_and(|h: &HeightReference| h.kind == HeightKind::Ellipsoidal) {
+        return Err(relation(
+            "heights",
+            "elipsoit yüksekliği bir koordinat sistemi ister; yerel projede yalnız ortometrik yükseklik olur",
+            r,
+        ));
+    }
+    if !system && coordinate_epoch.is_some() {
+        return Err(relation(
+            "coordinateEpoch",
+            "koordinat epoku bir koordinat sistemi ister",
+            r,
+        ));
+    }
     Ok(ProjectSettings {
+        heights,
+        coordinate_epoch,
         line_type_scale,
         line_types,
         hatch_patterns,
@@ -1146,6 +1175,58 @@ fn layer_state_node(
         plot,
         path: None,
     })
+}
+
+/// Schema 85's heights (docs/adr/0519 §1): the kind (`ellipsoidal`, `orthometric`; not `unknown`, which a project
+/// does not keep), the vertical system and the geoid model, checked by their rules.
+fn height_reference(r: &mut Reader<'_>) -> Result<HeightReference, KcadError> {
+    let at = r.position();
+    let (mut kind, mut vertical_srid, mut geoid) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "kind" => {
+                let k_at = r.position();
+                kind = Some(match text(r)?.as_str() {
+                    "ellipsoidal" => HeightKind::Ellipsoidal,
+                    "orthometric" => HeightKind::Orthometric,
+                    other => {
+                        return Err(r.fail_at(
+                            Code::BadValue,
+                            k_at,
+                            &format!("“{other}” bir yükseklik türü değil (ellipsoidal, orthometric)"),
+                        ));
+                    }
+                });
+            }
+            "verticalSrid" => vertical_srid = Some(r.uint(u64::from(u32::MAX))? as u32),
+            "geoid" => {
+                let (mut name, mut sha256) = (None, None);
+                map(r, |r, key| {
+                    match key {
+                        "name" => name = Some(text(r)?),
+                        "sha256" => sha256 = Some(text(r)?),
+                        _ => return Err(unknown(r)),
+                    }
+                    Ok(())
+                })?;
+                geoid = Some(GeoidModel {
+                    name: required(r, name, "name")?,
+                    sha256,
+                });
+            }
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    let h = HeightReference {
+        kind: required(r, kind, "kind")?,
+        vertical_srid,
+        geoid,
+    };
+    match h.problem() {
+        Some((_, why)) => Err(r.fail_at(Code::BadValue, at, &why)),
+        None => Ok(h),
+    }
 }
 
 /// Schema 14's survey settings (docs/adr/0169 §3), checked whole: at least

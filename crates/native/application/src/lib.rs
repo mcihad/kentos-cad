@@ -136,6 +136,7 @@ pub use reverse::entities_reverse;
 pub mod entities_order;
 pub mod entities_pick;
 pub mod entities_relate;
+pub mod crs_transform;
 pub mod entities_select;
 pub mod entities_vertex;
 pub mod shapes;
@@ -613,6 +614,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_ENTITIES_RELATE,
         kentos_contracts::CAD_ENTITIES_RELATE_VERSION,
+    ),
+    // Points between coordinate systems with their heights, and how ([`crs_transform`], docs/adr/0519).
+    (
+        kentos_contracts::CAD_CRS_TRANSFORM,
+        kentos_contracts::CAD_CRS_TRANSFORM_VERSION,
     ),
     // The selection as one explicit query ([`entities_select`], docs/adr/0275).
     (

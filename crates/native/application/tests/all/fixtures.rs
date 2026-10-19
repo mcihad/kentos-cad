@@ -43,7 +43,7 @@ use kentos_native_application::sources::{describe as sources_describe, edit as s
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
-    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate,
+    edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate, crs_transform,
     entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
     layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
@@ -1329,6 +1329,28 @@ fn measured_number<'a>(
         (kentos_domain::contracts::MeasuredPoint::At { at }, "x") => Some(&mut at.x),
         (kentos_domain::contracts::MeasuredPoint::At { at }, "y") => Some(&mut at.y),
         _ => None,
+    }
+}
+
+impl Input for kentos_domain::contracts::CrsTransform {
+    /// `points[i].x`, `.y`, `.z`, `uncertainty.horizontal`, `.vertical` (docs/adr/0519).
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        if let Some(rest) = path.strip_prefix("points[") {
+            let (i, axis) = rest.split_once("].")?;
+            let p = self.points.get_mut(i.parse::<usize>().ok()?)?;
+            return match axis {
+                "x" => Some(&mut p.x),
+                "y" => Some(&mut p.y),
+                "z" => p.z.as_mut(),
+                _ => None,
+            };
+        }
+        let u = self.uncertainty.as_mut()?;
+        match path {
+            "uncertainty.horizontal" => u.horizontal.as_mut(),
+            "uncertainty.vertical" => u.vertical.as_mut(),
+            _ => None,
+        }
     }
 }
 
@@ -2798,6 +2820,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_ENTITIES_PICK => {
             run!(entities_pick, kentos_domain::contracts::EntitiesPick)
+        }
+        kentos_domain::contracts::CAD_CRS_TRANSFORM => {
+            run!(crs_transform, kentos_domain::contracts::CrsTransform)
         }
         kentos_domain::contracts::CAD_ENTITIES_RELATE => {
             run!(entities_relate, kentos_domain::contracts::EntitiesRelate)

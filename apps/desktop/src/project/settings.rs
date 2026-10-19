@@ -35,6 +35,7 @@ pub enum Section {
     /// Ölçek ve yazılar: the plot scale and the annotation heights (docs/adr/0205 §1; scale.rs).
     Scale,
     Crs,
+    Heights,
     Units,
     /// Ölçme: the survey settings (docs/adr/0169 §3; survey.rs).
     Survey,
@@ -45,10 +46,11 @@ pub enum Section {
 }
 
 impl Section {
-    const ALL: [Section; 7] = [
+    const ALL: [Section; 8] = [
         Section::General,
         Section::Scale,
         Section::Crs,
+        Section::Heights,
         Section::Units,
         Section::Survey,
         Section::Variables,
@@ -60,6 +62,7 @@ impl Section {
             Section::General => "Genel",
             Section::Scale => "Ölçek ve yazılar",
             Section::Crs => "Koordinat sistemi",
+            Section::Heights => "Kotlar ve epok",
             Section::Units => "Birimler ve hassasiyet",
             Section::Survey => "Ölçme",
             Section::Variables => "Değişkenler",
@@ -74,6 +77,7 @@ impl Section {
             Section::General => Icon::Properties,
             Section::Scale => crate::icons::from_web(Some("plotScale")),
             Section::Crs => Icon::Globe,
+            Section::Heights => crate::icons::from_web(Some("setElevation")),
             Section::Units => Icon::Ruler,
             Section::Survey => crate::icons::from_web(Some("surveyPolar")),
             Section::Variables => crate::icons::from_web(Some("projectVariables")),
@@ -86,6 +90,9 @@ impl Section {
             Section::General => "Projenin adı, türü ve çizimdeki yazıların yazı tipi.",
             Section::Scale => {
                 "Çizim ölçeği ve açıklamaların kâğıttaki yükseklikleri. Yeni yazılar, ölçüler, kılavuzlar ve tablolar ölçeğe göre bu boyda yazılır; değiştirince genel boydaki nesneler de yeni boyuna gelir, elle değiştirilenler kalır."
+            }
+            Section::Heights => {
+                "Kotların ne olduğu (elipsoit ya da ortometrik), düşey sistem, geoit modeli ve koordinat epoku; dönüşümün kaydı."
             }
             Section::Crs => {
                 "Bu projenin konum referansı. Koordinatlar bu sistemde saklanır, ölçülür ve dışa aktarılır."
@@ -205,6 +212,8 @@ pub struct State {
     arch_detail: Option<kentos_contracts::WallDetail>,
     /// Mimari: the spaces' measurement method (docs/adr/0342 §1).
     arch_method: Option<kentos_contracts::SpaceMethod>,
+    /// Kotlar ve epok as typed (docs/adr/0519 §5; heights.rs); Kaydet writes them through `cad.settings.set`.
+    heights: super::heights::Texts,
     /// Kaydet's question when a local project's unit changes with a drawing
     /// in it (docs/adr/0256 §2; unit_change.rs), over this window.
     pub(super) unit_question: Option<super::unit_change::Question>,
@@ -263,6 +272,8 @@ pub enum Event {
     AddLevel,
     ArchDetail(Option<kentos_contracts::WallDetail>),
     ArchMethod(Option<kentos_contracts::SpaceMethod>),
+    /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
+    Heights(super::heights::Edit),
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
     Reduce(bool),
     /// The shown section's own values back to their defaults (the web's
@@ -305,6 +316,10 @@ impl State {
             arch: super::arch::rows(doc.settings().arch.as_ref()),
             arch_detail: doc.settings().arch.as_ref().and_then(|a| a.detail),
             arch_method: doc.settings().arch.as_ref().and_then(|a| a.space_method),
+            heights: super::heights::texts(
+                doc.settings().heights.as_ref(),
+                doc.settings().coordinate_epoch,
+            ),
             unit_question: None,
         }
     }
@@ -332,6 +347,11 @@ impl State {
     }
 
     /// Whether Mimari's levels have something to put right: Kaydet waits.
+    /// Whether Kotlar ve epok has something to put right: Kaydet waits.
+    fn heights_blocked(&self) -> bool {
+        super::heights::read(&self.heights, self.settings.has_system()).is_err()
+    }
+
     fn arch_blocked(&self) -> bool {
         super::arch::read(&self.arch, self.arch_detail, self.arch_method).is_err()
     }
@@ -515,6 +535,10 @@ impl App {
             }
             Event::ArchDetail(detail) => s.arch_detail = detail,
             Event::ArchMethod(method) => s.arch_method = method,
+            Event::Heights(edit) => super::heights::edit(&mut s.heights, edit),
+            Event::ResetSection if s.section == Section::Heights => {
+                s.heights = super::heights::Texts::default();
+            }
             Event::ResetSection if s.section == Section::Arch => {
                 s.arch.clear();
                 s.arch_detail = None;
@@ -670,7 +694,12 @@ impl App {
             return;
         };
         // A datum choice, an Ölçme field or a variable with something to put right is not saved (its button waits too).
-        if s.choices.blocked() || s.survey_blocked() || s.variables_blocked() || s.arch_blocked() {
+        if s.choices.blocked()
+            || s.survey_blocked()
+            || s.variables_blocked()
+            || s.arch_blocked()
+            || s.heights_blocked()
+        {
             return;
         }
         // Mimari through `cad.settings.set` first (docs/adr/0339 §3): a level a wall names is kept, and nothing is
@@ -708,6 +737,10 @@ impl App {
         doc.model.set_name(&name);
         let mut settings = s.settings.clone();
         settings.arch = doc.model.settings().arch.clone();
+        // Kotlar ve epok go through `cad.settings.set` after the system (docs/adr/0519 §5): they rest on it.
+        settings.heights = doc.model.settings().heights.clone();
+        settings.coordinate_epoch = doc.model.settings().coordinate_epoch;
+        let heights = super::heights::read(&s.heights, s.settings.has_system()).unwrap_or_default();
         // A drawing unit is a local project's (docs/adr/0165 §2): one given a coordinate system is in metres.
         if settings.has_system() {
             settings.drawing_unit = None;
@@ -730,6 +763,41 @@ impl App {
             to: settings.annotation.clone().unwrap_or_default(),
         };
         doc.model.set_settings(settings);
+        if (heights.0.as_ref(), heights.1)
+            != (
+                doc.model.settings().heights.as_ref(),
+                doc.model.settings().coordinate_epoch,
+            )
+        {
+            let input = kentos_contracts::SettingsSet {
+                heights: Some(
+                    heights
+                        .0
+                        .clone()
+                        .unwrap_or(kentos_contracts::HeightReference {
+                            kind: kentos_contracts::HeightKind::Unknown,
+                            vertical_srid: None,
+                            geoid: None,
+                        }),
+                ),
+                coordinate_epoch: Some(heights.1.unwrap_or(0.0)),
+                ..Default::default()
+            };
+            let result = kentos_native_application::settings_set::execute(
+                &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
+                input,
+            );
+            if let kentos_contracts::CommandResult::Failed { error }
+            | kentos_contracts::CommandResult::Conflict { error }
+            | kentos_contracts::CommandResult::NeedsInput { error } = result
+            {
+                self.warn(error.message);
+                return;
+            }
+        }
+        let (Some(Window::Settings(s)), Some(doc)) = (&self.project, &mut self.document) else {
+            return;
+        };
         // The project's system, a definition's too (docs/adr/0168 §1).
         let assigned = (s.settings.srid, s.settings.custom_crs.as_ref())
             != (s.initial.srid, s.initial.custom_crs.as_ref());
@@ -815,6 +883,12 @@ impl App {
                 event(Event::ResetHeights),
             ),
             Section::Crs => self.crs_section(s),
+            Section::Heights => super::heights::view(
+                &s.heights,
+                s.settings.has_system(),
+                self.second_record(s),
+                |e| event(Event::Heights(e)),
+            ),
             Section::Units => units(s),
             Section::Survey => super::survey::view(
                 &s.survey,
@@ -887,12 +961,64 @@ impl App {
                     (!s.choices.blocked()
                         && !s.survey_blocked()
                         && !s.variables_blocked()
-                        && !s.arch_blocked())
+                        && !s.arch_blocked()
+                        && !s.heights_blocked())
                     .then(|| event(Event::Save)),
                 ))
                 .width(900.0)
                 .max_height(760.0),
         )
+    }
+
+    /// The way from the draft's system to its second as `cad.crs.transform` records it, at the drawing's origin
+    /// (docs/adr/0519 §5): its title and the answer or why there is none; none without a second system of the
+    /// registry.
+    fn second_record(
+        &self,
+        s: &State,
+    ) -> Option<(String, Result<kentos_contracts::CrsTransformed, String>)> {
+        let doc = self.document.as_ref()?;
+        let second = s.settings.second()?;
+        if s.settings.custom_crs.is_some() || crs::system(s.settings.srid).is_none() {
+            return None;
+        }
+        let origin = doc.model.origin();
+        let heights = super::heights::read(&s.heights, s.settings.has_system())
+            .ok()
+            .and_then(|(h, _)| h);
+        let input = kentos_contracts::CrsTransform {
+            points: vec![kentos_contracts::CrsPoint {
+                x: origin.x,
+                y: origin.y,
+                z: None,
+            }],
+            from: Some(kentos_contracts::CrsSide {
+                srid: Some(s.settings.srid),
+                heights,
+                epoch: None,
+            }),
+            to: Some(kentos_contracts::CrsSide {
+                srid: Some(second),
+                heights: None,
+                epoch: None,
+            }),
+            uncertainty: None,
+        };
+        let title = format!(
+            "{} → {}, çizimin orijininde",
+            crs::title_of(s.settings.srid),
+            crs::title_of(second)
+        );
+        Some((
+            title,
+            match kentos_native_application::crs_transform::answer(&doc.model, &input) {
+                kentos_contracts::CommandResult::Completed { output, .. } => Ok(output),
+                kentos_contracts::CommandResult::Failed { error }
+                | kentos_contracts::CommandResult::Conflict { error }
+                | kentos_contracts::CommandResult::NeedsInput { error } => Err(error.message),
+                _ => Err("Dönüşüm hesaplanamadı.".into()),
+            },
+        ))
     }
 
     fn general<'a>(&'a self, s: &'a State, doc: &'a Document) -> Element<'a, Message> {
@@ -1385,6 +1511,6 @@ fn reset_section(section: Section, d: &mut ProjectSettings) {
         Section::Survey => d.survey = None,
         Section::Variables => d.variables = Vec::new(),
         Section::Arch => d.arch = None,
-        Section::Crs => {}
+        Section::Crs | Section::Heights => {}
     }
 }
