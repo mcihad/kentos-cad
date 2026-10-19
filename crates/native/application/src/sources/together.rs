@@ -8,14 +8,17 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::{CommandWarning, SourceLink, SourcesSynced, SyncedLayer, SyncedRelation};
+use kentos_contracts::{
+    CommandWarning, SourceLink, SourcesSynced, SyncTopology, SyncedLayer, SyncedRelation,
+};
 use kentos_domain::Document;
 use kentos_geopackage::{Edits, GeoPackage};
 
 use super::relations::{self, Kept, Side, Tie};
 use super::{
-    Diff, Mover, Stored, at_one, codes, conflict, diff_skipping, file_sha, layer_digest, load_at,
-    mover_for, origin_from, refuse, set_link, table_area,
+    Diff, Followed, Mover, Origin, Stored, at_one, codes, conflict, derived_message, diff_skipping,
+    file_sha, follow_outside, layer_digest, load_at, mover_for, origin_from, refuse, set_link,
+    table_area,
 };
 use crate::checks::Stop;
 
@@ -24,6 +27,8 @@ struct Item {
     link: SourceLink,
     stored: Stored,
     diff: Diff,
+    /// The rows outside a part's area that follow the layer's shared corners (docs/adr/0531).
+    followed: Followed,
 }
 
 /// Where a refusal points: `layer` for the first layer, `with` for the others.
@@ -31,12 +36,15 @@ fn at(i: usize) -> &'static str {
     if i == 0 { "layer" } else { "with" }
 }
 
+/// A bound layer's table as a sync reads it, with the move and the part's area (in the table's system) it was read by.
+pub(super) struct Loaded {
+    pub stored: Stored,
+    pub mover: Option<Mover>,
+    pub area: Option<[f64; 4]>,
+}
+
 /// A bound layer's table, read as a sync reads it: in the table's system, the rows the move reaches.
-pub(super) fn load_link(
-    doc: &Document,
-    link: &SourceLink,
-    at: &str,
-) -> Result<(Stored, Option<Mover>), Stop> {
+pub(super) fn load_link(doc: &Document, link: &SourceLink, at: &str) -> Result<Loaded, Stop> {
     let mover = mover_for(doc, link.srid).map_err(|why| {
         refuse(
             codes::CRS_MISMATCH,
@@ -61,7 +69,11 @@ pub(super) fn load_link(
         area,
     )?;
     stored.reachable(mover.as_ref());
-    Ok((stored, mover))
+    Ok(Loaded {
+        stored,
+        mover,
+        area,
+    })
 }
 
 /// The names of the child fields whose references a mapping table holds, among `ties` for `layer`.
@@ -130,6 +142,7 @@ pub(super) fn write(
     doc: &mut Document,
     layers: &[String],
     write: bool,
+    topology: Option<SyncTopology>,
 ) -> Result<(SourcesSynced, Vec<CommandWarning>), Stop> {
     let mut seen = HashSet::new();
     for (i, l) in layers.iter().enumerate() {
@@ -193,11 +206,23 @@ pub(super) fn write(
                 at(i),
             ));
         }
+        // A derivative of a drawing is never written back (docs/adr/0530 §4).
+        if let Some(rec) = crate::gis_derive::derived_table(Path::new(&l.path), &l.table) {
+            return Err(refuse(
+                codes::DERIVED_DATASET,
+                derived_message(&l.table, &rec),
+                at(i),
+            ));
+        }
     }
     let ties = relations::ties(doc);
     let mut items: Vec<Item> = Vec::with_capacity(links.len());
     for (i, link) in links.iter().enumerate() {
-        let (stored, mover) = load_link(doc, link, at(i))?;
+        let Loaded {
+            stored,
+            mover,
+            area,
+        } = load_link(doc, link, at(i))?;
         if !link.writable || !stored.writable {
             return Err(refuse(
                 codes::SOURCE_READONLY,
@@ -232,10 +257,29 @@ pub(super) fn write(
                 at(i),
             ));
         }
+        // The neighbours outside a part's area follow the written objects' shared corners and edges (docs/adr/0531).
+        let followed = match topology {
+            None => Followed::default(),
+            Some(profile) => {
+                let mut columns = stored.layer.columns.clone();
+                columns.extend(d.added_columns.iter().cloned());
+                follow_outside(
+                    doc,
+                    link,
+                    Origin::File(Path::new(&link.path)),
+                    area,
+                    &stored,
+                    &columns,
+                    mover.as_ref(),
+                    profile,
+                )?
+            }
+        };
         items.push(Item {
             link: link.clone(),
             stored,
             diff: d,
+            followed,
         });
     }
     // Mapped references that touch the layers: their mapping rows follow the layers' references.
@@ -262,8 +306,8 @@ pub(super) fn write(
     for t in &touching {
         for (layer, link) in [(&t.child_layer, &t.child), (&t.parent_layer, &t.parent)] {
             if !layers.contains(layer) && !partners.contains_key(layer) {
-                let (s, _) = load_link(doc, link, "layer")?;
-                partners.insert(layer.clone(), s);
+                let loaded = load_link(doc, link, "layer")?;
+                partners.insert(layer.clone(), loaded.stored);
             }
         }
     }
@@ -330,6 +374,16 @@ pub(super) fn write(
                 path: Some("layer".into()),
             });
         }
+        if it.followed.left > 0 {
+            warnings.push(CommandWarning {
+                code: codes::NEIGHBOURS_LEFT.into(),
+                message: format!(
+                    "Alanın dışındaki {} komşu kayıt ortak köşeyi izleyince geçersiz kalacağı için olduğu gibi kaldı.",
+                    it.followed.left
+                ),
+                path: Some("topology".into()),
+            });
+        }
     }
     for note in relations::unmapped_notes(&ties, layers) {
         warnings.push(CommandWarning {
@@ -364,23 +418,29 @@ pub(super) fn write(
             Vec::new()
         },
         relations: synced_relations,
+        followed: items.iter().map(|it| it.followed.rows.len() as u32).sum(),
+        left: items.iter().map(|it| it.followed.left).sum(),
     };
     if !write {
         return Ok((out, warnings));
     }
     let before = items[0].stored.sha256.clone();
-    let nothing = items
-        .iter()
-        .all(|it| it.diff.is_empty() && it.diff.added_columns.is_empty())
-        && maps.is_empty();
+    let nothing = items.iter().all(|it| {
+        it.diff.is_empty() && it.diff.added_columns.is_empty() && it.followed.rows.is_empty()
+    }) && maps.is_empty();
     if !nothing {
         let edits: Vec<Edits> = items
             .iter_mut()
-            .map(|it| Edits {
-                add_columns: std::mem::take(&mut it.diff.added_columns),
-                update: std::mem::take(&mut it.diff.update),
-                insert: std::mem::take(&mut it.diff.insert),
-                delete: std::mem::take(&mut it.diff.delete),
+            .map(|it| {
+                let mut update = std::mem::take(&mut it.diff.update);
+                update.extend(std::mem::take(&mut it.followed.rows));
+                update.sort_by_key(|(fid, _)| *fid);
+                Edits {
+                    add_columns: std::mem::take(&mut it.diff.added_columns),
+                    update,
+                    insert: std::mem::take(&mut it.diff.insert),
+                    delete: std::mem::take(&mut it.diff.delete),
+                }
             })
             .collect();
         let jobs: Vec<(&kentos_geopackage::Layer, &Edits)> = items

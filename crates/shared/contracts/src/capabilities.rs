@@ -1507,6 +1507,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // STAC keşfi ve veri hazırlama (docs/adr/0528).
+    Entry {
+        id: "cad.stac.search",
+        refusals: &[
+            &["invalid_stac_endpoint", "invalid_stac_bbox", "invalid_stac_datetime", "invalid_stac_cloud_cover"],
+            &["invalid_stac_limit", "invalid_stac_collection", "stac_next_foreign"],
+            &["stac_unavailable", "stac_request_failed", "stac_response_unreadable"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.stac.prepare",
+        refusals: &[
+            &["invalid_stac_item", "stac_assets_empty", "stac_too_many_assets", "stac_asset_not_found"],
+            &["stac_href_not_http", "stac_no_grid", "stac_unsupported_sample", "stac_multiband", "stac_qa_unknown", "stac_qa_is_data"],
+            &["crs_mismatch", "invalid_group_name"],
+            REVISION,
+        ],
+        warnings: &[
+            "stac_signed_href_stripped",
+            "stac_grid_differs",
+            "stac_scale_differs",
+            "stac_item_incomplete",
+            "stac_qa_grid_differs",
+        ],
+        targets: none,
+    },
     // Raster oturt'un kaydı (docs/adr/0518).
     Entry {
         id: "cad.rasters.georef",
@@ -2697,6 +2725,30 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.joins.edit",
+        refusals: &[
+            &["invalid_join_view"],
+            REVISION,
+            &[
+                "unknown_join_view",
+                "join_view_exists",
+                "too_many_join_views",
+                "unknown_relation",
+                "layer_not_found",
+                "not_a_layer",
+                "field_not_found",
+            ],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.joins.query",
+        refusals: &[&["invalid_join_view", "unknown_join_view", "invalid_count", "invalid_cursor"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.relations.edit",
         refusals: &[
             &["invalid_relation"],
@@ -2806,7 +2858,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found", "invalid_address", "source_unreachable"],
             LAYER,
-            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent"],
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "derived_dataset"],
         ],
         warnings: &["crs_undeclared", "import_losses"],
         targets: none,
@@ -2858,11 +2910,13 @@ const ENTRIES: &[Entry] = &[
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
-            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent", "derived_dataset"],
+            // docs/adr/0531: the neighbours outside a part's area.
+            &["topology_on_read", "outside_neighbour_invalid"],
             // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
             &["invalid_input", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["export_losses", "relation_unmapped"],
+        warnings: &["export_losses", "neighbours_left", "relation_unmapped"],
         targets: none,
     },
     Entry {
@@ -2892,7 +2946,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             &["crs_mismatch", "entity_exists", "nothing_to_import"],
         ],
-        warnings: &["crs_undeclared", "import_losses"],
+        warnings: &["crs_undeclared", "import_losses", "derived_import"],
         targets: none,
     },
     Entry {
@@ -3163,6 +3217,25 @@ const ENTRIES: &[Entry] = &[
             "file_unwritable",
         ]],
         warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.gis",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_tolerance",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.gis.derivation",
+        refusals: &[&["invalid_file_path", "file_not_found", "import_unreadable", "not_a_derivation"]],
+        warnings: &["derivation_stale", "derivation_edited"],
         targets: none,
     },
     Entry {

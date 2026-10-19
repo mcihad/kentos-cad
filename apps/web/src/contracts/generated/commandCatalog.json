@@ -8433,6 +8433,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -13259,6 +13324,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -23036,6 +23108,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -25839,6 +25976,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -36231,6 +36375,71 @@
             },
             "type": "object"
           },
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -41095,6 +41304,13 @@
                   }
                 ],
                 "description": "What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system\nand the geoid model; absent: not said, and no command takes them for either."
+              },
+              "joinViews": {
+                "description": "The project's join views (docs/adr/0527), in the table's order.",
+                "items": {
+                  "$ref": "#/$defs/JoinView"
+                },
+                "type": "array"
               },
               "layerStates": {
                 "description": "The project's named layer states (docs/adr/0177 §4), in the menu's order.",
@@ -549163,6 +549379,2397 @@
       ]
     },
     {
+      "id": "cad.stac.search",
+      "version": 1,
+      "title": "STAC'ta ara",
+      "summary": "Bir STAC API'sinde (endpoint: kökü, örneğin https://earth-search.aws.element84.com/v1) alanı ve zamanı kaplayan görüntü öğelerini arar; çizimi değiştirmez. bbox [batı, güney, doğu, kuzey] derece (WGS 84), datetime RFC 3339 an ya da aralık (başlangıç/bitiş, açık uç ..; 2024-07-01 gibi bir gün kendi günüdür), collections koleksiyonlar, ids öğe kimlikleri, maxCloudCover en çok bulut yüzdesi (eo:cloud_cover; sunucudan istenir ve gelende yeniden denetlenir, bulut oranı olmayan öğe kalır), limit sayfa boyu (1–100, varsayılan 10). Cevap: gönderilen istek (request: POST /search, gövde anahtarları alfabetik), öğeler (kataloğun adresi, koleksiyon, kimlik, çekim zamanı, kutu, bulut oranı, platform, gsd, EPSG, lisans ve varlıkları: anahtar, imzasız adres, roller, bantlar, rasterın veri türü, nodata, ölçek ve öteleme, proj:shape ve proj:transform), sunucunun gönderdiği sayı (returned), süzülenler (dropped), toplam (matched) ve sonraki sayfa (next: sunucunun next bağlantısı; verilirse o sayfa alınır, adresi uç noktanın sunucusunda olmalı). Bir varlığın kalıcı kimliği kataloğun adresi + koleksiyon + öğe + varlık anahtarıdır; imzalı (geçici) adresin sorgusu hiçbir yerde gösterilmez ya da yazılmaz (signed: true). Ağ ev sahibinindir: masaüstü ve MCP ağa gider; ağı olmayan ev sahibi stac_unavailable der.",
+      "aliases": [
+        "stac",
+        "stacara",
+        "uydugoruntusu"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "StacMethod": {
+            "description": "An HTTP method of a STAC request.",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "type": "string"
+          },
+          "StacNext": {
+            "additionalProperties": false,
+            "description": "A `next` link of a search page (STAC API item search §paging): the next request as the server wrote it. It is\ntaken only when its address is on the endpoint's own host (`stac_next_foreign`).",
+            "properties": {
+              "body": {
+                "description": "A POST's body; with `merge` it is laid over the search's own body."
+              },
+              "href": {
+                "type": "string"
+              },
+              "merge": {
+                "type": "boolean"
+              },
+              "method": {
+                "$ref": "#/$defs/StacMethod"
+              }
+            },
+            "required": [
+              "method",
+              "href"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.stac.search` v1. `endpoint` is the STAC API's root (`https://…/v1`), without a query or a login.\n`bbox` is `[west, south, east, north]` in degrees (WGS 84; a box crossing the 180° meridian is two searches).\n`datetime` is an RFC 3339 instant or interval (`start/end`, an open end `..`); a bare date `2024-07-01` is its\nday (`T00:00:00Z`, and `T23:59:59Z` as an interval's end). `maxCloudCover` (percent) is asked of the server\n(`eo:cloud_cover`) and checked again on what comes back. With `next` the page after one already read; the other\nfields stay the search's (the filter on cloud cover still applies). Refusals, in this order:\n`invalid_stac_endpoint`, `invalid_stac_bbox`, `invalid_stac_datetime`, `invalid_stac_cloud_cover`,\n`invalid_stac_limit`, `invalid_stac_collection`, `stac_next_foreign`, `stac_unavailable` (the host cannot reach\na network), `stac_request_failed`, `stac_response_unreadable`.",
+        "properties": {
+          "bbox": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "deg"
+          },
+          "collections": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "datetime": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "endpoint": {
+            "type": "string"
+          },
+          "ids": {
+            "description": "Items by id (the search narrowed to them).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "limit": {
+            "description": "Items per page, 1 to 100; absent: 10.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "maxCloudCover": {
+            "description": "Percent, 0 to 100.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "percent"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StacNext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "endpoint"
+        ],
+        "title": "StacSearch",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "StacAssetInfo": {
+            "description": "An asset of an item.",
+            "properties": {
+              "bands": {
+                "items": {
+                  "$ref": "#/$defs/StacBand"
+                },
+                "type": "array"
+              },
+              "epsg": {
+                "description": "The asset's own or its item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "href": {
+                "description": "The address without any signature (a query that carries one is dropped). `s3://` and other schemes stay as the\ncatalog wrote them; only http and https addresses can be read by a raster.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The asset's key in the item (`red`, `scl`, `qa_pixel`): with the item it is the asset's lasting id.",
+                "type": "string"
+              },
+              "rasterBands": {
+                "items": {
+                  "$ref": "#/$defs/StacRasterBand"
+                },
+                "type": "array"
+              },
+              "roles": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shape": {
+                "description": "`[rows, columns]` (`proj:shape`).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "signed": {
+                "description": "The catalog's address carried a signature (or a token): it was dropped, and reading the file may need one.",
+                "type": "boolean"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transform": {
+                "description": "`[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "type": {
+                "description": "The media type, as written.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "href"
+            ],
+            "type": "object"
+          },
+          "StacBand": {
+            "description": "A band an asset names (STAC `eo:bands`).",
+            "properties": {
+              "centerWavelength": {
+                "description": "Micrometres, as the catalog writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "commonName": {
+                "description": "`red`, `nir`, `nir08`, `swir16` … (the eo extension's common names and the catalog's own).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacItemInfo": {
+            "description": "An item of a search, with what a preparation needs of it.",
+            "properties": {
+              "assets": {
+                "items": {
+                  "$ref": "#/$defs/StacAssetInfo"
+                },
+                "type": "array"
+              },
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "catalog": {
+                "description": "The endpoint (the API's root, normalized): with `collection` and `id` the item's lasting id.",
+                "type": "string"
+              },
+              "cloudCover": {
+                "description": "Percent (`eo:cloud_cover`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "datetime": {
+                "description": "The acquisition time (`datetime`), or the start of its interval.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endDatetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epsg": {
+                "description": "The item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "gsd": {
+                "description": "Metres of a pixel (`gsd`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "id": {
+                "type": "string"
+              },
+              "instruments": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "license": {
+                "description": "The license identifier (`license` of the item).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "licenseHref": {
+                "description": "The address of the license text (a `license` link), without any signature.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "platform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "selfHref": {
+                "description": "The item's own address (the `self` link).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "catalog",
+              "id",
+              "assets"
+            ],
+            "type": "object"
+          },
+          "StacMethod": {
+            "description": "An HTTP method of a STAC request.",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "type": "string"
+          },
+          "StacNext": {
+            "additionalProperties": false,
+            "description": "A `next` link of a search page (STAC API item search §paging): the next request as the server wrote it. It is\ntaken only when its address is on the endpoint's own host (`stac_next_foreign`).",
+            "properties": {
+              "body": {
+                "description": "A POST's body; with `merge` it is laid over the search's own body."
+              },
+              "href": {
+                "type": "string"
+              },
+              "merge": {
+                "type": "boolean"
+              },
+              "method": {
+                "$ref": "#/$defs/StacMethod"
+              }
+            },
+            "required": [
+              "method",
+              "href"
+            ],
+            "type": "object"
+          },
+          "StacRasterBand": {
+            "description": "A band's storage (STAC `raster:bands`): how its numbers are read.",
+            "properties": {
+              "dataType": {
+                "description": "`uint8`, `int16`, `float32` … as the catalog writes it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "offset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "scale": {
+                "description": "A value is `number × scale + offset` (absent: 1 and 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "spatialResolution": {
+                "description": "Metres of a pixel, the catalog's word.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacRequestInfo": {
+            "description": "The request a search sent, as the host sent it (a signed address never appears).",
+            "properties": {
+              "body": {
+                "description": "A POST's body as compact JSON, keys in alphabetical order.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "method": {
+                "$ref": "#/$defs/StacMethod"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "url"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.stac.search` v1, and its plan. `items` are the page's, in the server's order, without those over\n`maxCloudCover` (`dropped` counts them, an item without a cloud cover stays); `returned` is what the server\nsent; `matched` is its total (`numberMatched`) when it said; `next` is the page after.",
+        "properties": {
+          "dropped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/StacItemInfo"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StacNext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request": {
+            "$ref": "#/$defs/StacRequestInfo"
+          },
+          "returned": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "request",
+          "items",
+          "returned",
+          "dropped"
+        ],
+        "title": "StacSearched",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "StacAssetInfo": {
+            "description": "An asset of an item.",
+            "properties": {
+              "bands": {
+                "items": {
+                  "$ref": "#/$defs/StacBand"
+                },
+                "type": "array"
+              },
+              "epsg": {
+                "description": "The asset's own or its item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "href": {
+                "description": "The address without any signature (a query that carries one is dropped). `s3://` and other schemes stay as the\ncatalog wrote them; only http and https addresses can be read by a raster.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The asset's key in the item (`red`, `scl`, `qa_pixel`): with the item it is the asset's lasting id.",
+                "type": "string"
+              },
+              "rasterBands": {
+                "items": {
+                  "$ref": "#/$defs/StacRasterBand"
+                },
+                "type": "array"
+              },
+              "roles": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shape": {
+                "description": "`[rows, columns]` (`proj:shape`).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "signed": {
+                "description": "The catalog's address carried a signature (or a token): it was dropped, and reading the file may need one.",
+                "type": "boolean"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transform": {
+                "description": "`[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "type": {
+                "description": "The media type, as written.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "href"
+            ],
+            "type": "object"
+          },
+          "StacBand": {
+            "description": "A band an asset names (STAC `eo:bands`).",
+            "properties": {
+              "centerWavelength": {
+                "description": "Micrometres, as the catalog writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "commonName": {
+                "description": "`red`, `nir`, `nir08`, `swir16` … (the eo extension's common names and the catalog's own).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacItemInfo": {
+            "description": "An item of a search, with what a preparation needs of it.",
+            "properties": {
+              "assets": {
+                "items": {
+                  "$ref": "#/$defs/StacAssetInfo"
+                },
+                "type": "array"
+              },
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "catalog": {
+                "description": "The endpoint (the API's root, normalized): with `collection` and `id` the item's lasting id.",
+                "type": "string"
+              },
+              "cloudCover": {
+                "description": "Percent (`eo:cloud_cover`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "datetime": {
+                "description": "The acquisition time (`datetime`), or the start of its interval.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endDatetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epsg": {
+                "description": "The item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "gsd": {
+                "description": "Metres of a pixel (`gsd`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "id": {
+                "type": "string"
+              },
+              "instruments": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "license": {
+                "description": "The license identifier (`license` of the item).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "licenseHref": {
+                "description": "The address of the license text (a `license` link), without any signature.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "platform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "selfHref": {
+                "description": "The item's own address (the `self` link).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "catalog",
+              "id",
+              "assets"
+            ],
+            "type": "object"
+          },
+          "StacMethod": {
+            "description": "An HTTP method of a STAC request.",
+            "enum": [
+              "GET",
+              "POST"
+            ],
+            "type": "string"
+          },
+          "StacNext": {
+            "additionalProperties": false,
+            "description": "A `next` link of a search page (STAC API item search §paging): the next request as the server wrote it. It is\ntaken only when its address is on the endpoint's own host (`stac_next_foreign`).",
+            "properties": {
+              "body": {
+                "description": "A POST's body; with `merge` it is laid over the search's own body."
+              },
+              "href": {
+                "type": "string"
+              },
+              "merge": {
+                "type": "boolean"
+              },
+              "method": {
+                "$ref": "#/$defs/StacMethod"
+              }
+            },
+            "required": [
+              "method",
+              "href"
+            ],
+            "type": "object"
+          },
+          "StacRasterBand": {
+            "description": "A band's storage (STAC `raster:bands`): how its numbers are read.",
+            "properties": {
+              "dataType": {
+                "description": "`uint8`, `int16`, `float32` … as the catalog writes it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "offset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "scale": {
+                "description": "A value is `number × scale + offset` (absent: 1 and 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "spatialResolution": {
+                "description": "Metres of a pixel, the catalog's word.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacRequestInfo": {
+            "description": "The request a search sent, as the host sent it (a signed address never appears).",
+            "properties": {
+              "body": {
+                "description": "A POST's body as compact JSON, keys in alphabetical order.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "method": {
+                "$ref": "#/$defs/StacMethod"
+              },
+              "url": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "url"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.stac.search` v1, and its plan. `items` are the page's, in the server's order, without those over\n`maxCloudCover` (`dropped` counts them, an item without a cloud cover stays); `returned` is what the server\nsent; `matched` is its total (`numberMatched`) when it said; `next` is the page after.",
+        "properties": {
+          "dropped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/StacItemInfo"
+            },
+            "type": "array"
+          },
+          "matched": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StacNext"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "request": {
+            "$ref": "#/$defs/StacRequestInfo"
+          },
+          "returned": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "request",
+          "items",
+          "returned",
+          "dropped"
+        ],
+        "title": "StacSearched",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_stac_endpoint",
+          "invalid_stac_bbox",
+          "invalid_stac_datetime",
+          "invalid_stac_cloud_cover",
+          "invalid_stac_limit",
+          "invalid_stac_collection",
+          "stac_next_foreign",
+          "stac_unavailable",
+          "stac_request_failed",
+          "stac_response_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Sentinel-2 L2A'da bir alan için temmuzdaki en çok %20 bulutlu görüntüler",
+          "input": {
+            "bbox": [
+              36.9,
+              39.7,
+              37.1,
+              39.8
+            ],
+            "collections": [
+              "sentinel-2-l2a"
+            ],
+            "datetime": "2024-07-01/2024-07-20",
+            "endpoint": "https://earth-search.aws.element84.com/v1",
+            "limit": 2,
+            "maxCloudCover": 20
+          }
+        },
+        {
+          "title": "Aynı aramanın sonraki sayfası",
+          "input": {
+            "collections": [
+              "sentinel-2-l2a"
+            ],
+            "endpoint": "https://earth-search.aws.element84.com/v1",
+            "maxCloudCover": 20,
+            "next": {
+              "body": {
+                "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a"
+              },
+              "href": "https://earth-search.aws.element84.com/v1/search",
+              "merge": true,
+              "method": "POST"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.stac.prepare",
+      "version": 1,
+      "title": "STAC verisini hazırla",
+      "summary": "Aramanın döndürdüğü bir öğenin (item) seçilen varlıklarını (assets: red, nir, swir16 …; her biri tek bantlı COG) çizime adresleriyle bağlı raster olarak ekler: tek yeni grup (group; yoksa “STAC: öğenin kimliği”) ve her varlık için anahtarının adını taşıyan bir katman; tek geri alma adımı “STAC verisini hazırla”. Raster ızgarasını katalogdan alır (proj:shape, proj:transform, proj:epsg; varlıkta ya da öğede) ve dosya açılmaz; sistemi projeninkinden başkaysa crs_mismatch (dönüşüm yok). nodata ve veri türü kataloğundur. qa kalite bandıdır (asset + isteğe bağlı mask: values ya da bits; verilmezse platformun kuralı: Sentinel-2 scl sınıfları 0, 1, 3, 8, 9, 10; Landsat qa_pixel bitleri 0–4): ayrıca eklenir ve veri bantlarından değildir; maske bu komutta uygulanmaz, kaydedilir. search aramanın kaydıdır (endpoint, bbox, datetime, collections, maxCloudCover). Cevaptaki hazırlama kaydı (kentos.stac-preparation 1) aramayı, öğeyi, çekim zamanını, bulut oranını, her bandın adını, adresini (imzasız), veri türünü, nodata'sını, ölçeğini ve ötelemesini, ızgarasını, kalite bandını ve maske kuralını, katman ve nesne kimliklerini taşır; reflectance bantların ortak ölçek ve ötelemesidir (Spektral indis'in Ölçek ve Öteleme'si). Aynı kayıt her rasterin özniteliklerinde de durur (stac.catalog, stac.collection, stac.item, stac.asset, stac.href, stac.scale, stac.offset …). Adresi s3:// olan varlık stac_href_not_http ile reddedilir; imzalı adresin imzası yazılmaz (stac_signed_href_stripped): imza gerektiren dosya açılmaz. plan yazmadan kaydı söyler.",
+      "aliases": [
+        "stachazirla",
+        "uydugoruntusuhazirla"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "StacAssetInfo": {
+            "description": "An asset of an item.",
+            "properties": {
+              "bands": {
+                "items": {
+                  "$ref": "#/$defs/StacBand"
+                },
+                "type": "array"
+              },
+              "epsg": {
+                "description": "The asset's own or its item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "href": {
+                "description": "The address without any signature (a query that carries one is dropped). `s3://` and other schemes stay as the\ncatalog wrote them; only http and https addresses can be read by a raster.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The asset's key in the item (`red`, `scl`, `qa_pixel`): with the item it is the asset's lasting id.",
+                "type": "string"
+              },
+              "rasterBands": {
+                "items": {
+                  "$ref": "#/$defs/StacRasterBand"
+                },
+                "type": "array"
+              },
+              "roles": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "shape": {
+                "description": "`[rows, columns]` (`proj:shape`).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "signed": {
+                "description": "The catalog's address carried a signature (or a token): it was dropped, and reading the file may need one.",
+                "type": "boolean"
+              },
+              "title": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "transform": {
+                "description": "`[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "type": {
+                "description": "The media type, as written.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "key",
+              "href"
+            ],
+            "type": "object"
+          },
+          "StacBand": {
+            "description": "A band an asset names (STAC `eo:bands`).",
+            "properties": {
+              "centerWavelength": {
+                "description": "Micrometres, as the catalog writes it.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "commonName": {
+                "description": "`red`, `nir`, `nir08`, `swir16` … (the eo extension's common names and the catalog's own).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacItemInfo": {
+            "description": "An item of a search, with what a preparation needs of it.",
+            "properties": {
+              "assets": {
+                "items": {
+                  "$ref": "#/$defs/StacAssetInfo"
+                },
+                "type": "array"
+              },
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "catalog": {
+                "description": "The endpoint (the API's root, normalized): with `collection` and `id` the item's lasting id.",
+                "type": "string"
+              },
+              "cloudCover": {
+                "description": "Percent (`eo:cloud_cover`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "datetime": {
+                "description": "The acquisition time (`datetime`), or the start of its interval.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endDatetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epsg": {
+                "description": "The item's EPSG code (`proj:epsg`, `proj:code`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "gsd": {
+                "description": "Metres of a pixel (`gsd`).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "id": {
+                "type": "string"
+              },
+              "instruments": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "license": {
+                "description": "The license identifier (`license` of the item).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "licenseHref": {
+                "description": "The address of the license text (a `license` link), without any signature.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "platform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "selfHref": {
+                "description": "The item's own address (the `self` link).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "catalog",
+              "id",
+              "assets"
+            ],
+            "type": "object"
+          },
+          "StacMask": {
+            "description": "Which QA values or bits mean “not usable” (clouds, shadows, no data).",
+            "oneOf": [
+              {
+                "description": "A QA pixel with one of these values is masked (Sentinel-2's SCL classes).",
+                "properties": {
+                  "kind": {
+                    "const": "values",
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "value"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "values"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A QA pixel with any of these bits (0 is the lowest) set is masked (Landsat's QA_PIXEL).",
+                "properties": {
+                  "bits": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "bits",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "bits"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "StacQa": {
+            "additionalProperties": false,
+            "description": "The quality band of a preparation: which asset, and the mask rule. Without `mask` the platform's own is taken\n(Sentinel-2 `scl`: classes 0, 1, 3, 8, 9, 10; Landsat `qa_pixel`: bits 0 to 4: fill, dilated cloud, cirrus,\ncloud, cloud shadow); an asset of another platform needs one (`stac_qa_unknown`).",
+            "properties": {
+              "asset": {
+                "type": "string"
+              },
+              "mask": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacMask"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "asset"
+            ],
+            "type": "object"
+          },
+          "StacRasterBand": {
+            "description": "A band's storage (STAC `raster:bands`): how its numbers are read.",
+            "properties": {
+              "dataType": {
+                "description": "`uint8`, `int16`, `float32` … as the catalog writes it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "offset": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "scale": {
+                "description": "A value is `number × scale + offset` (absent: 1 and 0).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "spatialResolution": {
+                "description": "Metres of a pixel, the catalog's word.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "m"
+              },
+              "unit": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "StacSearchRecord": {
+            "additionalProperties": false,
+            "description": "What a search asked, kept in the preparation record.",
+            "properties": {
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "collections": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "datetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "maxCloudCover": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              }
+            },
+            "required": [
+              "endpoint"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.stac.prepare` v1: the `item` as a search returned it (only the assets used need to be in it),\nthe data assets to add (`assets`, each a single band read by address), the optional quality band, and what was\nsearched. One new group `group` (absent: `STAC: <item id>`) takes one layer per asset, named by its key; the\nQA band is added too (marked `qa`), and is never among the data bands. The rasters' system must be the\nproject's (no reprojection). Refusals, in this order: `invalid_stac_item`, `stac_assets_empty`,\n`stac_too_many_assets`, `stac_asset_not_found`, `stac_href_not_http`, `stac_no_grid`, `stac_unsupported_sample`,\n`stac_multiband`, `stac_qa_unknown`, `crs_mismatch`, `invalid_group_name`, then `invalid_revision`,\n`revision_conflict`.",
+        "properties": {
+          "assets": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "group": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "item": {
+            "$ref": "#/$defs/StacItemInfo"
+          },
+          "qa": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StacQa"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "search": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/StacSearchRecord"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "item",
+          "assets"
+        ],
+        "title": "StacPrepare",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "StacMask": {
+            "description": "Which QA values or bits mean “not usable” (clouds, shadows, no data).",
+            "oneOf": [
+              {
+                "description": "A QA pixel with one of these values is masked (Sentinel-2's SCL classes).",
+                "properties": {
+                  "kind": {
+                    "const": "values",
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "value"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "values"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A QA pixel with any of these bits (0 is the lowest) set is masked (Landsat's QA_PIXEL).",
+                "properties": {
+                  "bits": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "bits",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "bits"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "StacPreparation": {
+            "description": "The preparation record (`kentos.stac-preparation` 1): what was searched, the item and assets chosen, the band\nmapping, scale and offset, the quality band and the mask rule, the acquisition time.",
+            "properties": {
+              "bands": {
+                "items": {
+                  "$ref": "#/$defs/StacPreparedBand"
+                },
+                "type": "array"
+              },
+              "catalog": {
+                "type": "string"
+              },
+              "cloudCover": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "datetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              },
+              "license": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "licenseHref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "platform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "qa": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacPreparedQa"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "reflectance": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReflectance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Present when the data bands are reflectance and share one scale and offset."
+              },
+              "search": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacSearchRecord"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "catalog",
+              "item",
+              "bands"
+            ],
+            "type": "object"
+          },
+          "StacPreparedBand": {
+            "description": "A data band of a preparation.",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "asset": {
+                "description": "The asset's key, with the item's id and collection its lasting id.",
+                "type": "string"
+              },
+              "commonName": {
+                "description": "The band's common name when the catalog gave one (`red`, `nir`, `nir08`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epsg": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "href": {
+                "description": "The address without any signature.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer that holds the raster, and the raster's persistent id once written.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "offset": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "scale": {
+                "description": "A value is `number × scale + offset`: the catalog's, or 1 and 0 when it gave none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "signed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "asset",
+              "href",
+              "sample",
+              "scale",
+              "offset",
+              "width",
+              "height",
+              "affine",
+              "epsg"
+            ],
+            "type": "object"
+          },
+          "StacPreparedQa": {
+            "description": "The quality band of a preparation and its mask rule.",
+            "properties": {
+              "affine": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "defaultMask": {
+                "description": "Whether the rule is the platform's own default.",
+                "type": "boolean"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "href": {
+                "type": "string"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mask": {
+                "$ref": "#/$defs/StacMask"
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "signed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "asset",
+              "href",
+              "sample",
+              "mask",
+              "defaultMask",
+              "width",
+              "height",
+              "affine"
+            ],
+            "type": "object"
+          },
+          "StacReflectance": {
+            "description": "Reflectance's scale and offset when every data band shares them: the numbers İşlemler's Spektral indis takes\nas Ölçek and Öteleme (`ρ = number × scale + offset`).",
+            "properties": {
+              "offset": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "scale": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "scale",
+              "offset"
+            ],
+            "type": "object"
+          },
+          "StacSearchRecord": {
+            "additionalProperties": false,
+            "description": "What a search asked, kept in the preparation record.",
+            "properties": {
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "collections": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "datetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "maxCloudCover": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              }
+            },
+            "required": [
+              "endpoint"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.stac.prepare` v1, and its plan (the layers and uids are filled when it is written).",
+        "properties": {
+          "group": {
+            "description": "The group's id once written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preparation": {
+            "$ref": "#/$defs/StacPreparation"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "preparation",
+          "revision"
+        ],
+        "title": "StacPrepared",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          },
+          "StacMask": {
+            "description": "Which QA values or bits mean “not usable” (clouds, shadows, no data).",
+            "oneOf": [
+              {
+                "description": "A QA pixel with one of these values is masked (Sentinel-2's SCL classes).",
+                "properties": {
+                  "kind": {
+                    "const": "values",
+                    "type": "string"
+                  },
+                  "values": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "value"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "values"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A QA pixel with any of these bits (0 is the lowest) set is masked (Landsat's QA_PIXEL).",
+                "properties": {
+                  "bits": {
+                    "items": {
+                      "format": "uint32",
+                      "minimum": 0,
+                      "type": "integer"
+                    },
+                    "type": "array",
+                    "x-unit": "index"
+                  },
+                  "kind": {
+                    "const": "bits",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "bits"
+                ],
+                "type": "object"
+              }
+            ]
+          },
+          "StacPreparation": {
+            "description": "The preparation record (`kentos.stac-preparation` 1): what was searched, the item and assets chosen, the band\nmapping, scale and offset, the quality band and the mask rule, the acquisition time.",
+            "properties": {
+              "bands": {
+                "items": {
+                  "$ref": "#/$defs/StacPreparedBand"
+                },
+                "type": "array"
+              },
+              "catalog": {
+                "type": "string"
+              },
+              "cloudCover": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              },
+              "collection": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "datetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "type": "string"
+              },
+              "item": {
+                "type": "string"
+              },
+              "license": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "licenseHref": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "platform": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "qa": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacPreparedQa"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "reflectance": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacReflectance"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Present when the data bands are reflectance and share one scale and offset."
+              },
+              "search": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StacSearchRecord"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "catalog",
+              "item",
+              "bands"
+            ],
+            "type": "object"
+          },
+          "StacPreparedBand": {
+            "description": "A data band of a preparation.",
+            "properties": {
+              "affine": {
+                "description": "`[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "asset": {
+                "description": "The asset's key, with the item's id and collection its lasting id.",
+                "type": "string"
+              },
+              "commonName": {
+                "description": "The band's common name when the catalog gave one (`red`, `nir`, `nir08`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "epsg": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "href": {
+                "description": "The address without any signature.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer that holds the raster, and the raster's persistent id once written.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "offset": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "scale": {
+                "description": "A value is `number × scale + offset`: the catalog's, or 1 and 0 when it gave none.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              },
+              "signed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "asset",
+              "href",
+              "sample",
+              "scale",
+              "offset",
+              "width",
+              "height",
+              "affine",
+              "epsg"
+            ],
+            "type": "object"
+          },
+          "StacPreparedQa": {
+            "description": "The quality band of a preparation and its mask rule.",
+            "properties": {
+              "affine": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "asset": {
+                "type": "string"
+              },
+              "defaultMask": {
+                "description": "Whether the rule is the platform's own default.",
+                "type": "boolean"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "href": {
+                "type": "string"
+              },
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "mask": {
+                "$ref": "#/$defs/StacMask"
+              },
+              "nodata": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "sample": {
+                "$ref": "#/$defs/RasterSample"
+              },
+              "signed": {
+                "type": "boolean"
+              },
+              "uid": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "asset",
+              "href",
+              "sample",
+              "mask",
+              "defaultMask",
+              "width",
+              "height",
+              "affine"
+            ],
+            "type": "object"
+          },
+          "StacReflectance": {
+            "description": "Reflectance's scale and offset when every data band shares them: the numbers İşlemler's Spektral indis takes\nas Ölçek and Öteleme (`ρ = number × scale + offset`).",
+            "properties": {
+              "offset": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "scale": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "1"
+              }
+            },
+            "required": [
+              "scale",
+              "offset"
+            ],
+            "type": "object"
+          },
+          "StacSearchRecord": {
+            "additionalProperties": false,
+            "description": "What a search asked, kept in the preparation record.",
+            "properties": {
+              "bbox": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "deg"
+              },
+              "collections": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "datetime": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "endpoint": {
+                "type": "string"
+              },
+              "maxCloudCover": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "percent"
+              }
+            },
+            "required": [
+              "endpoint"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.stac.prepare` v1, and its plan (the layers and uids are filled when it is written).",
+        "properties": {
+          "group": {
+            "description": "The group's id once written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "preparation": {
+            "$ref": "#/$defs/StacPreparation"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "preparation",
+          "revision"
+        ],
+        "title": "StacPrepared",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_stac_item",
+          "stac_assets_empty",
+          "stac_too_many_assets",
+          "stac_asset_not_found",
+          "stac_href_not_http",
+          "stac_no_grid",
+          "stac_unsupported_sample",
+          "stac_multiband",
+          "stac_qa_unknown",
+          "stac_qa_is_data",
+          "crs_mismatch",
+          "invalid_group_name",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "stac_signed_href_stripped",
+          "stac_grid_differs",
+          "stac_scale_differs",
+          "stac_item_incomplete",
+          "stac_qa_grid_differs"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir Sentinel-2 öğesinin kırmızı ve yakın kızılötesi bantlarını, SCL kalite bandıyla ekle",
+          "input": {
+            "assets": [
+              "red",
+              "nir"
+            ],
+            "group": "STAC: S2A_37SCD_20240713",
+            "item": {
+              "assets": [],
+              "catalog": "https://earth-search.aws.element84.com/v1",
+              "collection": "sentinel-2-l2a",
+              "id": "S2A_37SCD_20240713_0_L2A"
+            },
+            "qa": {
+              "asset": "scl"
+            }
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.images.edit",
       "version": 1,
       "title": "Resmin kaynağı",
@@ -968132,12 +970739,26 @@
                 },
                 "type": "array"
               },
+              "followed": {
+                "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "layers": {
                 "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
                 "items": {
                   "$ref": "#/$defs/SyncedLayer"
                 },
                 "type": "array"
+              },
+              "left": {
+                "description": "Those that would have been left invalid and kept their shape (`loose`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
               },
               "modified": {
                 "format": "uint32",
@@ -968389,12 +971010,26 @@
                 },
                 "type": "array"
               },
+              "followed": {
+                "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "layers": {
                 "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
                 "items": {
                   "$ref": "#/$defs/SyncedLayer"
                 },
                 "type": "array"
+              },
+              "left": {
+                "description": "Those that would have been left invalid and kept their shape (`loose`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
               },
               "modified": {
                 "format": "uint32",
@@ -987690,6 +990325,1056 @@
       ]
     },
     {
+      "id": "cad.joins.edit",
+      "version": 1,
+      "title": "Birleşik görünümler",
+      "summary": "Projenin birleşik görünümlerini oluşturur (create), bir ilişkiden kurar (fromRelation: üst katman $uid ile, alt katman ilişkinin alanıyla), değiştirir (update) ve siler (remove). Görünüm bir katmanın kayıtlarını key alanıyla, with katmanının kayıtlarını withKey alanıyla eşler; anahtar bir alanın anahtarı ya da nesnenin kalıcı kimliği için $uid'dir. keep: all (varsayılan, eşleşmeyenler de) ya da matched; fields birleşen katmanın gösterilecek alanları. Satırlar kaydedilmez, cad.joins.query her okuyuşta çizimden kurar. Proje ayarıdır, geri alma adımı değildir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          },
+          "JoinsOp": {
+            "description": "What `cad.joins.edit` does.",
+            "oneOf": [
+              {
+                "description": "A new view.",
+                "properties": {
+                  "kind": {
+                    "const": "create",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/JoinView"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "view"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "A new view of a relation: its parent layer by `$uid`, its child layer by the relation's field.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "keep": {
+                    "$ref": "#/$defs/JoinKeep"
+                  },
+                  "kind": {
+                    "const": "fromRelation",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "relation": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "relation",
+                  "id",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The view of the same id replaced.",
+                "properties": {
+                  "kind": {
+                    "const": "update",
+                    "type": "string"
+                  },
+                  "view": {
+                    "$ref": "#/$defs/JoinView"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "view"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "The view removed; the records stay as they are.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "remove",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.joins.edit` v1.\n\nRefusals, in this order: `invalid_join_view`; `invalid_revision`, `revision_conflict` (status `conflict`);\n`unknown_join_view`, `join_view_exists`, `too_many_join_views`, `unknown_relation`, `layer_not_found`,\n`not_a_layer`, `field_not_found`.",
+        "properties": {
+          "edit": {
+            "$ref": "#/$defs/JoinsOp"
+          },
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "edit"
+        ],
+        "title": "JoinsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "views": {
+            "description": "The project's views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/JoinView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "JoinsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.edit` v1, and what plan says it would do.",
+        "properties": {
+          "changed": {
+            "type": "boolean"
+          },
+          "revision": {
+            "description": "The document's revision afterwards (plan: the one it was made against).",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "views": {
+            "description": "The project's views afterwards, in order.",
+            "items": {
+              "$ref": "#/$defs/JoinView"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "views",
+          "changed",
+          "revision"
+        ],
+        "title": "JoinsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_join_view",
+          "invalid_revision",
+          "revision_conflict",
+          "unknown_join_view",
+          "join_view_exists",
+          "too_many_join_views",
+          "unknown_relation",
+          "layer_not_found",
+          "not_a_layer",
+          "field_not_found"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parselleri maliklerine parsel numarasıyla bağla",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "view": {
+                "id": "parsel-malik",
+                "key": "no",
+                "layer": "parsel",
+                "name": "Parseller ve malikleri",
+                "with": "malik",
+                "withKey": "parsel"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.joins.query",
+      "version": 1,
+      "title": "Birleşik görünümü oku",
+      "summary": "Birleşik görünümün satırlarını çizimin şimdiki hâlinden sayfa sayfa verir, hiçbir şey yazmaz: kayıtlı görünüm (view) ya da tanım (definition, önizleme). Ana katmanın kaydı birden çok kayıtla eşleşirse birden çok satırdır; satırın kimliği iki kaydın kalıcı kimliğidir (left/right, eşleşmeyende left/), her okuyuşta aynı. Sütunlar kaydın tarafını (left, right) ve alanını söyler; bir hücre cad.entities.set ile o kayda yazılır, yazılamayanın (anahtar, kilitli katman) nedeni sütundadır. report kayıtların nasıl eşleştiğini (eşleşen, eşleşmeyen, anahtarsız, kardinalite 1:1, 1:N, N:1, N:N), totals sayı sütunlarının toplamını (her kayıt bir kez) verir. Katmanı ya da anahtarı kalkan görünüm broken ile söylenir, satır verilmez. Sayfa en çok 1000 (varsayılan 100); next sonraki sayfanın imleci.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "JoinKeep": {
+            "description": "Which records of the layer a view shows.",
+            "oneOf": [
+              {
+                "const": "all",
+                "description": "Every record, the ones without a match with empty cells (a left join).",
+                "type": "string"
+              },
+              {
+                "const": "matched",
+                "description": "Only the records with a match (an inner join).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinView": {
+            "additionalProperties": false,
+            "description": "A join view: the layer's records by `key` with the `with` layer's by `withKey`.",
+            "properties": {
+              "fields": {
+                "description": "The joined layer's fields the view shows, in order (keys); none: all of them.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.",
+                "type": "string"
+              },
+              "keep": {
+                "$ref": "#/$defs/JoinKeep",
+                "description": "Written only when not `all`."
+              },
+              "key": {
+                "description": "The main layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The main layer's id: one row (or more) a record of it.",
+                "type": "string"
+              },
+              "name": {
+                "description": "What the table's layer list shows; trimmed, 1–64 characters.",
+                "type": "string"
+              },
+              "with": {
+                "description": "The joined layer's id (the main one itself for a tree).",
+                "type": "string"
+              },
+              "withKey": {
+                "description": "The joined layer's key: a field's key, or `$uid`.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "layer",
+              "key",
+              "with",
+              "withKey"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.joins.query` v1: a kept view by its id, or a definition read as it is (a preview).\n\nRefusals: `invalid_join_view` (neither or both, or a definition that does not hold), `unknown_join_view`,\n`invalid_count` (a limit not 1–1000), `invalid_cursor`.",
+        "properties": {
+          "cursor": {
+            "description": "The page after the one whose `next` this is.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "definition": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/JoinView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "limit": {
+            "description": "Rows a page gives, 1–1000; none: 100.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "view": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "JoinsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "JoinColumn": {
+            "description": "A column of a view.",
+            "properties": {
+              "editable": {
+                "description": "Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "The attribute the cell is (the field's name in the record's attributes).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The heading: the field's name; a joined one the main layer has too with “ (layer)”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Why not, when not.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "side": {
+                "$ref": "#/$defs/JoinSide"
+              }
+            },
+            "required": [
+              "name",
+              "side",
+              "field",
+              "editable"
+            ],
+            "type": "object"
+          },
+          "JoinReport": {
+            "description": "How the records met.",
+            "properties": {
+              "cardinality": {
+                "description": "`1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.",
+                "type": "string"
+              },
+              "matched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nullKeys": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "description": "The main layer's records, those with a match, without one, and without a key.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "Every row of the view (all pages).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unmatched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withRecords": {
+                "description": "The joined layer's records and those some record met.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withUsed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "matched",
+              "unmatched",
+              "nullKeys",
+              "withRecords",
+              "withUsed",
+              "rows",
+              "cardinality"
+            ],
+            "type": "object"
+          },
+          "JoinRow": {
+            "description": "A row: a record of the main layer and one of its matches (none when it has none).",
+            "properties": {
+              "cells": {
+                "description": "The columns' values in order; none: no value (an attribute not written, or no match).",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "`left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.",
+                "type": "string"
+              },
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "left",
+              "cells"
+            ],
+            "type": "object"
+          },
+          "JoinSide": {
+            "description": "Which records a column's cells are.",
+            "oneOf": [
+              {
+                "const": "left",
+                "description": "The main layer's record (the row's `left`).",
+                "type": "string"
+              },
+              {
+                "const": "right",
+                "description": "The joined layer's record (the row's `right`).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinTotal": {
+            "description": "A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).",
+            "properties": {
+              "column": {
+                "description": "The column's place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "count": {
+                "description": "The records whose value was a number, and those whose value was not.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sum": {
+                "description": "The exact sum as text; none when too large to hold exactly.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "column",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.query` v1, and its plan.",
+        "properties": {
+          "broken": {
+            "description": "Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/JoinColumn"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next": {
+            "description": "The next page's cursor; none: the last page.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/JoinReport"
+          },
+          "revision": {
+            "description": "The document's revision the rows are of.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/JoinRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "description": "The sums of the columns with a number among their records' values, in column order.",
+            "items": {
+              "$ref": "#/$defs/JoinTotal"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "columns",
+          "rows",
+          "report",
+          "revision"
+        ],
+        "title": "JoinsAnswer",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "JoinColumn": {
+            "description": "A column of a view.",
+            "properties": {
+              "editable": {
+                "description": "Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).",
+                "type": "boolean"
+              },
+              "field": {
+                "description": "The attribute the cell is (the field's name in the record's attributes).",
+                "type": "string"
+              },
+              "name": {
+                "description": "The heading: the field's name; a joined one the main layer has too with “ (layer)”.",
+                "type": "string"
+              },
+              "reason": {
+                "description": "Why not, when not.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "side": {
+                "$ref": "#/$defs/JoinSide"
+              }
+            },
+            "required": [
+              "name",
+              "side",
+              "field",
+              "editable"
+            ],
+            "type": "object"
+          },
+          "JoinReport": {
+            "description": "How the records met.",
+            "properties": {
+              "cardinality": {
+                "description": "`1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.",
+                "type": "string"
+              },
+              "matched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nullKeys": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "records": {
+                "description": "The main layer's records, those with a match, without one, and without a key.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "Every row of the view (all pages).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unmatched": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withRecords": {
+                "description": "The joined layer's records and those some record met.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "withUsed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "records",
+              "matched",
+              "unmatched",
+              "nullKeys",
+              "withRecords",
+              "withUsed",
+              "rows",
+              "cardinality"
+            ],
+            "type": "object"
+          },
+          "JoinRow": {
+            "description": "A row: a record of the main layer and one of its matches (none when it has none).",
+            "properties": {
+              "cells": {
+                "description": "The columns' values in order; none: no value (an attribute not written, or no match).",
+                "items": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "type": "array"
+              },
+              "id": {
+                "description": "`left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.",
+                "type": "string"
+              },
+              "left": {
+                "type": "string"
+              },
+              "right": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "left",
+              "cells"
+            ],
+            "type": "object"
+          },
+          "JoinSide": {
+            "description": "Which records a column's cells are.",
+            "oneOf": [
+              {
+                "const": "left",
+                "description": "The main layer's record (the row's `left`).",
+                "type": "string"
+              },
+              {
+                "const": "right",
+                "description": "The joined layer's record (the row's `right`).",
+                "type": "string"
+              }
+            ]
+          },
+          "JoinTotal": {
+            "description": "A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).",
+            "properties": {
+              "column": {
+                "description": "The column's place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "count": {
+                "description": "The records whose value was a number, and those whose value was not.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "skipped": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sum": {
+                "description": "The exact sum as text; none when too large to hold exactly.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "column",
+              "count"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.joins.query` v1, and its plan.",
+        "properties": {
+          "broken": {
+            "description": "Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "columns": {
+            "items": {
+              "$ref": "#/$defs/JoinColumn"
+            },
+            "type": "array"
+          },
+          "name": {
+            "type": "string"
+          },
+          "next": {
+            "description": "The next page's cursor; none: the last page.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "report": {
+            "$ref": "#/$defs/JoinReport"
+          },
+          "revision": {
+            "description": "The document's revision the rows are of.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/JoinRow"
+            },
+            "type": "array"
+          },
+          "totals": {
+            "description": "The sums of the columns with a number among their records' values, in column order.",
+            "items": {
+              "$ref": "#/$defs/JoinTotal"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "columns",
+          "rows",
+          "report",
+          "revision"
+        ],
+        "title": "JoinsAnswer",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_join_view",
+          "unknown_join_view",
+          "invalid_count",
+          "invalid_cursor"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsellerin maliklerini oku",
+          "input": {
+            "limit": 50,
+            "view": "parsel-malik"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.forms.fill",
       "version": 1,
       "title": "Formla toplu yaz",
@@ -988190,6 +991875,720 @@
             "objects": 412,
             "revision": "9",
             "to": "mm"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.gis.derivation",
+      "version": 1,
+      "title": "GIS türevini denetle",
+      "summary": "path'teki, file.export.gis'in yazdığı GeoPackage'ın her satırını açık çizimde kaynağı olan nesneyle karşılaştırır; hiçbir şey yazmaz. Satırın kalıcı kimliği (kentos_uids, yoksa kentos_uid sütunu) çizimdeki nesneyi bulur. Nesnenin türev özeti (kentos_digest: bakışı dışında bütün alanlarının SHA-256'sı, blokta tanımın öznitelikleri de) satırınkinden başkaysa satır stale'dir: kaynak dışa aktarmadan sonra değişti, türev eski. Özet aynıysa satırın geometrisi ve öznitelik sütunları tablonun kaydındaki algoritma ve toleransla yeniden türetilen satırla karşılaştırılır (koordinatlar 1e-9 m içinde); farklıysa satır edited'dır: GIS'te değiştirilmiş, kaynak nesne değişmemiş; hangi alanların (geometry, öznitelik adları) farklı olduğu fields'tadır. Kimliği çizimde olmayan satır source_gone, tablonun katmanında olup satırı olmayan nesne not_exported'tur. Bir tablonun kaydındaki sapma kaydındaki toleransın üstündeyse over_tolerance sayılır. Cevap her tablonun sayılarını, toplamları, dosyanın kaydettiği kaynağı (proje, ad, sürüm) ve eşleşmeyen satırlar önce olmak üzere en çok limit satırı listeler. Türev, kaynağın yerine geçmez: stale ve edited satırlar çizimi değiştirmez ve GIS'teki değişiklik çizime geri yazılmaz.",
+      "aliases": [
+        "turevdenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.gis.derivation` v1, read only: the GeoPackage `path` made by `file.export.gis`, each of its rows\ncompared with the object it came from in the open drawing. Refusals, in order: `invalid_file_path`,\n`file_not_found`, `import_unreadable`, `not_a_derivation`. Warnings: `derivation_stale`, `derivation_edited`.",
+        "properties": {
+          "limit": {
+            "description": "How many rows to list (the ones that do not match come first); 100, at most 1000.",
+            "format": "uint32",
+            "maximum": 1000,
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "count"
+          },
+          "path": {
+            "description": "The file, an absolute path.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "GisDerivation",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "DerivationEntry": {
+            "description": "One row (or missing row) that is listed.",
+            "properties": {
+              "fid": {
+                "description": "The row's fid; none for an object the dataset has no row for.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "fields": {
+                "description": "What differs in an edited row: `geometry` and the attributes' names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The source object's kind as the row records it, or as the drawing has it now.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/DerivationStatus"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid",
+              "status",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "DerivationSource": {
+            "description": "Where a derived dataset came from, as its tables record.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "project": {
+                "description": "The project's lasting id, when it has one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The drawing's revision when the dataset was made.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The project's EPSG code (0 for a local project).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "revision",
+              "srid"
+            ],
+            "type": "object"
+          },
+          "DerivationStatus": {
+            "description": "How a derived row stands against its source.",
+            "oneOf": [
+              {
+                "const": "current",
+                "description": "The source is as it was and the row is what the derivation gives.",
+                "type": "string"
+              },
+              {
+                "const": "stale",
+                "description": "The source changed after the dataset was made: the row is old.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "The source is as it was and the row was changed in the GIS (its geometry or an attribute).",
+                "type": "string"
+              },
+              {
+                "const": "source_gone",
+                "description": "The source object is no longer in the drawing.",
+                "type": "string"
+              },
+              {
+                "const": "not_exported",
+                "description": "A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).",
+                "type": "string"
+              }
+            ]
+          },
+          "DerivationTable": {
+            "description": "A table's counts against the drawing.",
+            "properties": {
+              "current": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "edited": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer of a `layer` table, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "notExported": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "overTolerance": {
+                "description": "Rows whose recorded deviation is over the table's tolerance.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sourceGone": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stale": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "tolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "current",
+              "stale",
+              "edited",
+              "sourceGone",
+              "notExported",
+              "overTolerance",
+              "tolerance",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.gis.derivation` found.",
+        "properties": {
+          "algorithm": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "current": {
+            "description": "Totals over the tables.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edited": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "entries": {
+            "description": "The rows that do not match first, then the matching ones, at most `limit`.",
+            "items": {
+              "$ref": "#/$defs/DerivationEntry"
+            },
+            "type": "array"
+          },
+          "file": {
+            "type": "string"
+          },
+          "notExported": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision now.",
+            "type": "string"
+          },
+          "sameProject": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/$defs/DerivationSource",
+            "description": "Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,\nelse its name)."
+          },
+          "sourceGone": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DerivationTable"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unlisted": {
+            "description": "How many rows were not listed because of `limit`.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "source",
+          "sameProject",
+          "tables",
+          "current",
+          "stale",
+          "edited",
+          "sourceGone",
+          "notExported",
+          "entries",
+          "unlisted",
+          "revision"
+        ],
+        "title": "GisDerived",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "DerivationEntry": {
+            "description": "One row (or missing row) that is listed.",
+            "properties": {
+              "fid": {
+                "description": "The row's fid; none for an object the dataset has no row for.",
+                "format": "int64",
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "id"
+              },
+              "fields": {
+                "description": "What differs in an edited row: `geometry` and the attributes' names.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "The source object's kind as the row records it, or as the drawing has it now.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              },
+              "status": {
+                "$ref": "#/$defs/DerivationStatus"
+              },
+              "table": {
+                "type": "string"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "uid",
+              "status",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "DerivationSource": {
+            "description": "Where a derived dataset came from, as its tables record.",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "project": {
+                "description": "The project's lasting id, when it has one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "revision": {
+                "description": "The drawing's revision when the dataset was made.",
+                "type": "string"
+              },
+              "srid": {
+                "description": "The project's EPSG code (0 for a local project).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              }
+            },
+            "required": [
+              "name",
+              "revision",
+              "srid"
+            ],
+            "type": "object"
+          },
+          "DerivationStatus": {
+            "description": "How a derived row stands against its source.",
+            "oneOf": [
+              {
+                "const": "current",
+                "description": "The source is as it was and the row is what the derivation gives.",
+                "type": "string"
+              },
+              {
+                "const": "stale",
+                "description": "The source changed after the dataset was made: the row is old.",
+                "type": "string"
+              },
+              {
+                "const": "edited",
+                "description": "The source is as it was and the row was changed in the GIS (its geometry or an attribute).",
+                "type": "string"
+              },
+              {
+                "const": "source_gone",
+                "description": "The source object is no longer in the drawing.",
+                "type": "string"
+              },
+              {
+                "const": "not_exported",
+                "description": "A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).",
+                "type": "string"
+              }
+            ]
+          },
+          "DerivationTable": {
+            "description": "A table's counts against the drawing.",
+            "properties": {
+              "current": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "edited": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer of a `layer` table, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "notExported": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "overTolerance": {
+                "description": "Rows whose recorded deviation is over the table's tolerance.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sourceGone": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stale": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "tolerance": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "current",
+              "stale",
+              "edited",
+              "sourceGone",
+              "notExported",
+              "overTolerance",
+              "tolerance",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.gis.derivation` found.",
+        "properties": {
+          "algorithm": {
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "current": {
+            "description": "Totals over the tables.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "edited": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "entries": {
+            "description": "The rows that do not match first, then the matching ones, at most `limit`.",
+            "items": {
+              "$ref": "#/$defs/DerivationEntry"
+            },
+            "type": "array"
+          },
+          "file": {
+            "type": "string"
+          },
+          "notExported": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "The drawing's revision now.",
+            "type": "string"
+          },
+          "sameProject": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/$defs/DerivationSource",
+            "description": "Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,\nelse its name)."
+          },
+          "sourceGone": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "stale": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/DerivationTable"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "unlisted": {
+            "description": "How many rows were not listed because of `limit`.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "file",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "source",
+          "sameProject",
+          "tables",
+          "current",
+          "stale",
+          "edited",
+          "sourceGone",
+          "notExported",
+          "entries",
+          "unlisted",
+          "revision"
+        ],
+        "title": "GisDerived",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "not_a_derivation"
+        ],
+        "warnings": [
+          "derivation_stale",
+          "derivation_edited"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Dışa aktarılan türev hâlâ güncel mi",
+          "input": {
+            "path": "/veri/parsel-turev.gpkg"
           }
         }
       ]
@@ -989475,7 +993874,8 @@
           "source_not_found",
           "source_changed",
           "too_many_sources",
-          "invalid_extent"
+          "invalid_extent",
+          "derived_dataset"
         ],
         "warnings": [
           "crs_undeclared",
@@ -992425,6 +996825,21 @@
                 "type": "string"
               }
             ]
+          },
+          "SyncTopology": {
+            "description": "How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the\nwritten objects changed follow them, in the same transaction.",
+            "oneOf": [
+              {
+                "const": "strict",
+                "description": "All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).",
+                "type": "string"
+              },
+              {
+                "const": "loose",
+                "description": "The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -992440,6 +996855,17 @@
           "layer": {
             "description": "The bound layer, by id.",
             "type": "string"
+          },
+          "topology": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncTopology"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners\nand edges follow in the same transaction. Reading refuses it (`topology_on_read`)."
           },
           "with": {
             "description": "Writing: more bound layers (by id) written in the same transaction.",
@@ -992534,12 +996960,26 @@
             },
             "type": "array"
           },
+          "followed": {
+            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
             "items": {
               "$ref": "#/$defs/SyncedLayer"
             },
             "type": "array"
+          },
+          "left": {
+            "description": "Those that would have been left invalid and kept their shape (`loose`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "modified": {
             "format": "uint32",
@@ -992656,12 +997096,26 @@
             },
             "type": "array"
           },
+          "followed": {
+            "description": "The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
           "layers": {
             "description": "A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.",
             "items": {
               "$ref": "#/$defs/SyncedLayer"
             },
             "type": "array"
+          },
+          "left": {
+            "description": "Those that would have been left invalid and kept their shape (`loose`).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
           },
           "modified": {
             "format": "uint32",
@@ -992715,12 +997169,16 @@
           "file_unwritable",
           "pending_changes",
           "invalid_extent",
+          "derived_dataset",
+          "topology_on_read",
+          "outside_neighbour_invalid",
           "invalid_input",
           "transaction_split",
           "relation_dangling"
         ],
         "warnings": [
           "export_losses",
+          "neighbours_left",
           "relation_unmapped"
         ]
       },
@@ -994504,7 +998962,8 @@
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "derived_import"
         ]
       },
       "examples": [
@@ -1034783,6 +1039242,445 @@
       ]
     },
     {
+      "id": "file.export.gis",
+      "version": 1,
+      "title": "GIS türevi dışa aktar",
+      "summary": "Katmanları (layers boşsa nesnesi olan bütün katmanları) GeoPackage'a türev olarak yazar: çizim kaynak kalır, dosyadaki geometri onun bir türevidir. Her katman bir özellik tablosudur; her satır kaynak nesnenin kalıcı kimliğini (kentos_uid sütunu ve kentos_uids uzantısı) ve türünü (kentos_kind), türev sapmasını metrede (kentos_deviation) ve kaynağın özetini (kentos_digest) taşır, katmanın alanları ve öteki öznitelikler sütun olur; Z ve M köşelerde taşınır. Yaylar, daireler, çoklu çizgilerin yaylı kenarları ve elipsler, eğriler, NURBS düz kirişlerdir (GeoPackage'ın düz geometri türleri; eğri uzantısı yok): kirişler kaynağın eğrisinden en çok tolerance (metre, varsayılan 0,0001) uzakta kalır. Yay, daire ve yaylı kenarlarda algoritma kentos.chords/1'dir (eşit açılı kirişler, uçlar yayın üzerinde, sapma 2·r·sin²(φ/4) ile kesin); elips ve eğride sapma algoritmanın tuttuğu sınırdır, NURBS'ta örnek noktalarında denenen toleranstır. Her tablonun türetim kaydı (https://kentos.app/derivation/1: algoritma, tolerans, kaynak proje, ad ve sürüm, en büyük sapma, kaynak türlerine göre sapmanın nasıl bilindiği, zaman) GeoPackage'ın metadata uzantısındadır. Yazı ve bloklar tolerance'ın yanında annotations'a bağlıdır: table (varsayılan) onları katman tablolarına katmaz, ayrı tablolara yazar (her blok tanımının yerleştirmeleri blok adıyla nokta olarak, bloğun öznitelikleri sütun; yazılar kentos_annotations'ta nokta olarak, sözleri sütunda), skip onları sayar. Ölçü, tarama, kılavuz, tablo, resim, raster, nokta bulutu, yardımcı çizgi ve mimari nesneler yazılmaz; türlerine göre nedeniyle left'te ve export_losses uyarısındadır. Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Türevi çizime bağlamak ya da geri yazmak olmaz (derived_dataset); gerçeği cad.gis.derivation sınar.",
+      "aliases": [
+        "gisturev",
+        "gisexport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "GisAnnotations": {
+            "description": "What to do with texts and blocks, which a GIS has no geometry of the same meaning for.",
+            "oneOf": [
+              {
+                "const": "table",
+                "description": "Written to their own tables, never into the layers' feature tables: each block definition's insertions as\npoints with the block's attributes as columns, texts as points with their words.",
+                "type": "string"
+              },
+              {
+                "const": "skip",
+                "description": "Left out and counted.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of\nderived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),\n`layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the\nreason each kind is).",
+        "properties": {
+          "annotations": {
+            "$ref": "#/$defs/GisAnnotations",
+            "default": "table",
+            "description": "Texts and blocks: their own tables (the default) or left out."
+          },
+          "layers": {
+            "description": "The layers, by id (a group gives its layers); empty: every layer with objects.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "The file to write, an absolute path (`.gpkg`).",
+            "type": "string"
+          },
+          "tolerance": {
+            "description": "The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ExportGis",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "GisLeft": {
+            "description": "Objects of one kind left out of the dataset, and why.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "count",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "GisTableExported": {
+            "description": "A table of the derived dataset.",
+            "properties": {
+              "chorded": {
+                "description": "Rows whose geometry is chords of a curve rather than the source's own points.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "description": "The farthest any of the table's chords comes from its curve (m).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "chorded",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gis` wrote, or with `plan` would write.",
+        "properties": {
+          "algorithm": {
+            "description": "The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).",
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "chorded": {
+            "description": "Rows written as chords of a curve, in all.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Objects not written, by kind, each with its reason.",
+            "items": {
+              "$ref": "#/$defs/GisLeft"
+            },
+            "type": "array"
+          },
+          "maxDeviation": {
+            "description": "The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The drawing's revision the dataset was made from.",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GisTableExported"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "tables",
+          "chorded",
+          "maxDeviation",
+          "revision"
+        ],
+        "title": "GisExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "GisLeft": {
+            "description": "Objects of one kind left out of the dataset, and why.",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "type": "string"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "count",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "GisTableExported": {
+            "description": "A table of the derived dataset.",
+            "properties": {
+              "chorded": {
+                "description": "Rows whose geometry is chords of a curve rather than the source's own points.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxDeviation": {
+                "description": "The farthest any of the table's chords comes from its curve (m).",
+                "format": "double",
+                "type": "number",
+                "x-unit": "m"
+              },
+              "role": {
+                "$ref": "#/$defs/GisTableRole"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "source": {
+                "description": "The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "role",
+              "rows",
+              "chorded",
+              "maxDeviation"
+            ],
+            "type": "object"
+          },
+          "GisTableRole": {
+            "description": "What a derived table holds.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "A drawing layer's objects.",
+                "type": "string"
+              },
+              {
+                "const": "blocks",
+                "description": "The insertions of one block, its attributes as columns.",
+                "type": "string"
+              },
+              {
+                "const": "annotations",
+                "description": "The drawing's texts.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.gis` wrote, or with `plan` would write.",
+        "properties": {
+          "algorithm": {
+            "description": "The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).",
+            "type": "string"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "chorded": {
+            "description": "Rows written as chords of a curve, in all.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "left": {
+            "description": "Objects not written, by kind, each with its reason.",
+            "items": {
+              "$ref": "#/$defs/GisLeft"
+            },
+            "type": "array"
+          },
+          "maxDeviation": {
+            "description": "The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          },
+          "path": {
+            "type": "string"
+          },
+          "revision": {
+            "description": "The drawing's revision the dataset was made from.",
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "tables": {
+            "items": {
+              "$ref": "#/$defs/GisTableExported"
+            },
+            "type": "array"
+          },
+          "tolerance": {
+            "format": "double",
+            "type": "number",
+            "x-unit": "m"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "algorithm",
+          "tolerance",
+          "tables",
+          "chorded",
+          "maxDeviation",
+          "revision"
+        ],
+        "title": "GisExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "invalid_tolerance",
+          "layer_not_found",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parseller 1 mm toleransla",
+          "input": {
+            "layers": [
+              "parsel"
+            ],
+            "overwrite": true,
+            "path": "/veri/parsel-turev.gpkg",
+            "tolerance": 0.001
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.sld",
       "version": 1,
       "title": "Görünüşü SLD olarak dışa aktar",
@@ -1036268,6 +1041166,30 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projede en çok 100 ilişki olur."
+    },
+    {
+      "code": "invalid_join_view",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Birleşik görünümün kimliği, adı, katmanları, anahtarları ya da alanları kurallarına uymuyor."
+    },
+    {
+      "code": "unknown_join_view",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle bir birleşik görünüm yok."
+    },
+    {
+      "code": "join_view_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu kimlikle başka bir birleşik görünüm var."
+    },
+    {
+      "code": "too_many_join_views",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede en çok 50 birleşik görünüm olur."
     },
     {
       "code": "relation_field_unknown",
@@ -1038616,6 +1043538,24 @@
       "meaning": "Katman tablodan farklı; okumak katmandaki değişiklikleri götürür."
     },
     {
+      "code": "outside_neighbour_invalid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alanın dışındaki komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı."
+    },
+    {
+      "code": "topology_on_read",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Komşuların izlemesi yalnız yazarken olur."
+    },
+    {
+      "code": "neighbours_left",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
+    },
+    {
       "code": "invalid_address",
       "kind": "failed",
       "retryable": false,
@@ -1038758,6 +1043698,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dışa aktarma birden çok Shapefile yapıyor (birden çok katman ya da geometri türü); .shp yerine bir klasör ya da .zip verin."
+    },
+    {
+      "code": "derived_dataset",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tablo çizimden türetilmiş bir GIS verisi: kaynak çizimdedir, türev geometrisi (kirişler) kaynağın yerine geçmez. Bağlanmaz, katmana okunmaz, geri yazılmaz; GIS'te yapılanı cad.gis.derivation gösterir."
+    },
+    {
+      "code": "derived_import",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Alınan tablo çizimden türetilmiş bir GIS verisi: geometrisi kaynak yayların kirişleridir, yay olarak değil çoklu çizgi ve alan olarak alındı."
+    },
+    {
+      "code": "not_a_derivation",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyada KentOS'un türetim kaydı yok; file.export.gis'in yazdığı bir dosya değil."
+    },
+    {
+      "code": "derivation_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Türevin bazı satırlarının kaynağı dışa aktarmadan sonra değişti ya da silindi; türev eski. Yeniden dışa aktarın."
+    },
+    {
+      "code": "derivation_edited",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz."
     },
     {
       "code": "invalid_sld",
@@ -1039418,6 +1044388,162 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bazı dosyaların tarihi (TIFF DateTime) yok; tarih sırasında en alta kondular."
+    },
+    {
+      "code": "invalid_stac_endpoint",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "STAC adresi bir http ya da https adresi olmalı; kullanıcı adı, parola, sorgu ya da parça içeremez."
+    },
+    {
+      "code": "invalid_stac_bbox",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kutu [batı, güney, doğu, kuzey] derece olmalı: sonlu sayılar, enlem −90 ile 90, boylam −180 ile 180, batı doğudan küçük (180° meridyenini aşan kutu iki aramaya bölünür)."
+    },
+    {
+      "code": "invalid_stac_datetime",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Tarih bir RFC 3339 anı ya da aralığı olmalı (2024-07-01, 2024-07-01T00:00:00Z, başlangıç/bitiş, açık uç ..); başlangıç bitişten sonra olamaz."
+    },
+    {
+      "code": "invalid_stac_cloud_cover",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "En çok bulut oranı 0 ile 100 arasında sonlu bir sayı olmalı."
+    },
+    {
+      "code": "invalid_stac_limit",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sayfa boyu 1 ile 100 arasında olmalı."
+    },
+    {
+      "code": "invalid_stac_collection",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Koleksiyon ve öğe kimlikleri boş olmamalı ve denetim karakteri içermemeli."
+    },
+    {
+      "code": "stac_next_foreign",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sonraki sayfanın adresi uç noktanın kendi sunucusunda değil; başka bir sunucuya istek gönderilmez."
+    },
+    {
+      "code": "stac_unavailable",
+      "kind": "host",
+      "retryable": false,
+      "meaning": "Bu ev sahibi ağa erişmiyor: STAC araması masaüstünde (ya da ağ erişimi veren bir ev sahibinde) yapılır."
+    },
+    {
+      "code": "stac_request_failed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "STAC sunucusundan cevap alınamadı ya da sunucu hata verdi."
+    },
+    {
+      "code": "stac_response_unreadable",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "STAC sunucusunun cevabı okunamadı: JSON değil ya da bir öğe koleksiyonu (FeatureCollection) değil."
+    },
+    {
+      "code": "invalid_stac_item",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "STAC öğesi geçersiz: kimliği boş ya da adresi bir http(s) adresi olmayan ya da anahtarı boş bir varlığı var."
+    },
+    {
+      "code": "stac_assets_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Eklenecek varlık verilmedi."
+    },
+    {
+      "code": "stac_too_many_assets",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir hazırlama en çok 32 varlık ekler."
+    },
+    {
+      "code": "stac_asset_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Öğede böyle bir varlık yok."
+    },
+    {
+      "code": "stac_href_not_http",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Varlığın adresi http ya da https değil (s3:// ya da gs://); raster yalnız http(s) adresinden okunur. Kataloğun http adresi veren bir kopyasını kullanın ya da dosyayı indirin."
+    },
+    {
+      "code": "stac_no_grid",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Varlığın ızgarası bilinmiyor: proj:shape, proj:transform ve proj:epsg (varlıkta ya da öğede) birlikte gerekir."
+    },
+    {
+      "code": "stac_unsupported_sample",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Varlığın veri türü rasterde desteklenmiyor (uint8, int8, uint16, int16, uint32, int32, float32, float64 desteklenir)."
+    },
+    {
+      "code": "stac_multiband",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Varlığın birden çok bandı var (görsel ya da çok bantlı dosya); her biri tek bantlı varlıklar eklenir."
+    },
+    {
+      "code": "stac_qa_is_data",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kalite varlığı veri bantları arasında da verilmiş; bir varlık ya veri bandıdır ya kalite bandı."
+    },
+    {
+      "code": "stac_qa_unknown",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kalite varlığının maske kuralı bilinmiyor: Sentinel-2'nin scl'si ve Landsat'ın qa_pixel'i dışında bir varlık için maske verin."
+    },
+    {
+      "code": "invalid_group_name",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Grup adı boş olmamalı, en çok 120 harf olmalı ve denetim karakteri içermemeli."
+    },
+    {
+      "code": "stac_signed_href_stripped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir adresin imzası (geçici erişim anahtarı) projeye yazılmadı; dosyayı okumak için imza gerekiyorsa raster açılmaz."
+    },
+    {
+      "code": "stac_grid_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bantların ızgarası (piksel boyu ya da yeri) aynı değil; birlikte işlemeden önce ortak ızgaraya örneklenmeli."
+    },
+    {
+      "code": "stac_scale_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bantların ölçeği ya da ötelemesi aynı değil; Spektral indis tek ölçek ve öteleme alır, bantlar ayrı ayrı yansımaya çevrilmeli."
+    },
+    {
+      "code": "stac_item_incomplete",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Öğenin çekim zamanı ya da bulut oranı yok; kayıt bunları boş taşır."
+    },
+    {
+      "code": "stac_qa_grid_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Kalite bandının ızgarası veri bantlarınınkinden başka; maske uygulanmadan önce örneklenmeli."
     },
     {
       "code": "invalid_clipping",

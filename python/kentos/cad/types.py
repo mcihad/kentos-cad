@@ -921,6 +921,26 @@ CsvSeparatorName = Literal["comma", "semicolon", "tab"]
 """The names of :class:`CsvSeparator`, for a plain string."""
 
 
+class DerivationStatus(_StrEnum):
+    """How a derived row stands against its source.
+
+    - ``current``: The source is as it was and the row is what the derivation gives.
+    - ``stale``: The source changed after the dataset was made: the row is old.
+    - ``edited``: The source is as it was and the row was changed in the GIS (its geometry or an attribute).
+    - ``source_gone``: The source object is no longer in the drawing.
+    - ``not_exported``: A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    EDITED = "edited"
+    SOURCE_GONE = "source_gone"
+    NOT_EXPORTED = "not_exported"
+
+
+DerivationStatusName = Literal["current", "stale", "edited", "source_gone", "not_exported"]
+"""The names of :class:`DerivationStatus`, for a plain string."""
+
+
 class DimensionArrow(_StrEnum):
     """A dimension's arrowheads other than the oblique tick, which is no value but
     the field's absence (docs/adr/0183 §3).
@@ -1514,6 +1534,36 @@ GeorefMethodName = Literal["helmert", "affine", "projective", "poly2", "poly3", 
 """The names of :class:`GeorefMethod`, for a plain string."""
 
 
+class GisAnnotations(_StrEnum):
+    """What to do with texts and blocks, which a GIS has no geometry of the same meaning for.
+
+    - ``table``: Written to their own tables, never into the layers' feature tables: each block definition's insertions as
+    - ``skip``: Left out and counted.
+    """
+    TABLE = "table"
+    SKIP = "skip"
+
+
+GisAnnotationsName = Literal["table", "skip"]
+"""The names of :class:`GisAnnotations`, for a plain string."""
+
+
+class GisTableRole(_StrEnum):
+    """What a derived table holds.
+
+    - ``layer``: A drawing layer's objects.
+    - ``blocks``: The insertions of one block, its attributes as columns.
+    - ``annotations``: The drawing's texts.
+    """
+    LAYER = "layer"
+    BLOCKS = "blocks"
+    ANNOTATIONS = "annotations"
+
+
+GisTableRoleName = Literal["layer", "blocks", "annotations"]
+"""The names of :class:`GisTableRole`, for a plain string."""
+
+
 class GradientShape(_StrEnum):
     """How a gradient runs over its hatch (docs/adr/0186 §3).
 
@@ -1744,6 +1794,34 @@ class IslandStyle(_StrEnum):
 
 IslandStyleName = Literal["outer", "normal", "ignore"]
 """The names of :class:`IslandStyle`, for a plain string."""
+
+
+class JoinKeep(_StrEnum):
+    """Which records of the layer a view shows.
+
+    - ``all``: Every record, the ones without a match with empty cells (a left join).
+    - ``matched``: Only the records with a match (an inner join).
+    """
+    ALL = "all"
+    MATCHED = "matched"
+
+
+JoinKeepName = Literal["all", "matched"]
+"""The names of :class:`JoinKeep`, for a plain string."""
+
+
+class JoinSide(_StrEnum):
+    """Which records a column's cells are.
+
+    - ``left``: The main layer's record (the row's `left`).
+    - ``right``: The joined layer's record (the row's `right`).
+    """
+    LEFT = "left"
+    RIGHT = "right"
+
+
+JoinSideName = Literal["left", "right"]
+"""The names of :class:`JoinSide`, for a plain string."""
 
 
 class JunctionRole(_StrEnum):
@@ -3466,6 +3544,16 @@ SplitPolicyName = Literal["copy", "clear", "default", "ratio"]
 """The names of :class:`SplitPolicy`, for a plain string."""
 
 
+class StacMethod(_StrEnum):
+    """An HTTP method of a STAC request."""
+    GET = "GET"
+    POST = "POST"
+
+
+StacMethodName = Literal["GET", "POST"]
+"""The names of :class:`StacMethod`, for a plain string."""
+
+
 class StackMode(_StrEnum):
     """When a label is cut into lines.
 
@@ -3572,6 +3660,21 @@ class SyncDirection(_StrEnum):
 
 SyncDirectionName = Literal["write", "read"]
 """The names of :class:`SyncDirection`, for a plain string."""
+
+
+class SyncTopology(_StrEnum):
+    """How a write takes the table's rows outside a part's area (docs/adr/0531): those sharing a corner or an edge the
+    written objects changed follow them, in the same transaction.
+
+    - ``strict``: All or nothing: a row that would be left invalid refuses the whole write (`outside_neighbour_invalid`).
+    - ``loose``: The rows that can follow do; one that would be left invalid keeps its shape and is said (`neighbours_left`).
+    """
+    STRICT = "strict"
+    LOOSE = "loose"
+
+
+SyncTopologyName = Literal["strict", "loose"]
+"""The names of :class:`SyncTopology`, for a plain string."""
 
 
 class TableAlign(_StrEnum):
@@ -5128,6 +5231,29 @@ class InsertsClipOperation(_Union):
         return _variant(_INSERTS_CLIP_OPERATION, "InsertsClipOperation", "kind", data).from_json(data)
 
 
+class JoinsOp(_Union):
+    """What `cad.joins.edit` does.
+
+    One of:
+
+    - :class:`CreateJoinsOp` (``kind: create``)
+    - :class:`FromRelationJoinsOp` (``kind: fromRelation``)
+    - :class:`UpdateJoinsOp` (``kind: update``)
+    - :class:`RemoveJoinsOp` (``kind: remove``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsOp:
+        return _variant(_JOINS_OP, "JoinsOp", "kind", data).from_json(data)
+
+
 class LeaderEdit(_Union):
     """One edit of `cad.leaders.edit`.
 
@@ -5521,6 +5647,27 @@ class SpacesOperation(_Union):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> SpacesOperation:
         return _variant(_SPACES_OPERATION, "SpacesOperation", "kind", data).from_json(data)
+
+
+class StacMask(_Union):
+    """Which QA values or bits mean “not usable” (clouds, shadows, no data).
+
+    One of:
+
+    - :class:`ValuesStacMask` (``kind: values``)
+    - :class:`BitsStacMask` (``kind: bits``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacMask:
+        return _variant(_STAC_MASK, "StacMask", "kind", data).from_json(data)
 
 
 class SubPlace(_Union):
@@ -11024,6 +11171,144 @@ class DatumTransform(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DerivationEntry(_Model):
+    """One row (or missing row) that is listed.
+    Attributes:
+        fid: The row's fid; none for an object the dataset has no row for. Unit: id.
+        fields: What differs in an edited row: `geometry` and the attributes' names.
+        kind: The source object's kind as the row records it, or as the drawing has it now.
+    """
+    table: str
+    uid: str
+    status: DerivationStatus | DerivationStatusName
+    reason: str
+    fid: int | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+    kind: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["uid"] = self.uid
+        out["status"] = _enum_out(self.status)
+        out["reason"] = self.reason
+        if self.fid is not UNSET:
+            out["fid"] = self.fid
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationEntry:
+        return cls(
+            table=data["table"],
+            uid=data["uid"],
+            status=_enum_in(DerivationStatus, data["status"]),
+            reason=data["reason"],
+            fid=data.get("fid", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            kind=data.get("kind", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DerivationSource(_Model):
+    """Where a derived dataset came from, as its tables record.
+    Attributes:
+        revision: The drawing's revision when the dataset was made.
+        srid: The project's EPSG code (0 for a local project). Unit: epsg.
+        project: The project's lasting id, when it has one.
+    """
+    name: str
+    revision: str
+    srid: int
+    project: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["srid"] = self.srid
+        if self.project is not UNSET:
+            out["project"] = self.project
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationSource:
+        return cls(
+            name=data["name"],
+            revision=data["revision"],
+            srid=data["srid"],
+            project=data.get("project", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DerivationTable(_Model):
+    """A table's counts against the drawing.
+    Attributes:
+        rows: Unit: count.
+        current: Unit: count.
+        stale: Unit: count.
+        edited: Unit: count.
+        source_gone: Unit: count.
+        not_exported: Unit: count.
+        over_tolerance: Rows whose recorded deviation is over the table's tolerance. Unit: count.
+        tolerance: Unit: m.
+        max_deviation: Unit: m.
+        layer: The layer of a `layer` table, by id.
+    """
+    table: str
+    role: GisTableRole | GisTableRoleName
+    rows: int
+    current: int
+    stale: int
+    edited: int
+    source_gone: int
+    not_exported: int
+    over_tolerance: int
+    tolerance: float
+    max_deviation: float
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["role"] = _enum_out(self.role)
+        out["rows"] = self.rows
+        out["current"] = self.current
+        out["stale"] = self.stale
+        out["edited"] = self.edited
+        out["sourceGone"] = self.source_gone
+        out["notExported"] = self.not_exported
+        out["overTolerance"] = self.over_tolerance
+        out["tolerance"] = float(self.tolerance)
+        out["maxDeviation"] = float(self.max_deviation)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationTable:
+        return cls(
+            table=data["table"],
+            role=_enum_in(GisTableRole, data["role"]),
+            rows=data["rows"],
+            current=data["current"],
+            stale=data["stale"],
+            edited=data["edited"],
+            source_gone=data["sourceGone"],
+            not_exported=data["notExported"],
+            over_tolerance=data["overTolerance"],
+            tolerance=float(data["tolerance"]),
+            max_deviation=float(data["maxDeviation"]),
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionBreak(_Model):
     """A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
     the line; its width the options' `breakSize`.
@@ -15601,6 +15886,47 @@ class ExportDxf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGis(_Model):
+    """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of
+    derived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),
+    `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the
+    reason each kind is).
+    Attributes:
+        path: The file to write, an absolute path (`.gpkg`).
+        annotations: Texts and blocks: their own tables (the default) or left out.
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over a file that is there.
+        tolerance: The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given. Unit: m.
+    """
+    path: str
+    annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["annotations"] = _enum_out(self.annotations)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGis:
+        return cls(
+            path=data["path"],
+            annotations=_enum_in(GisAnnotations, data["annotations"]) if "annotations" in data else GisAnnotations.TABLE,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGpkg(_Model):
     """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
     a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
@@ -18581,6 +18907,233 @@ class GeorefSource(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class GisDerivation(_Model):
+    """Input of `cad.gis.derivation` v1, read only: the GeoPackage `path` made by `file.export.gis`, each of its rows
+    compared with the object it came from in the open drawing. Refusals, in order: `invalid_file_path`,
+    `file_not_found`, `import_unreadable`, `not_a_derivation`. Warnings: `derivation_stale`, `derivation_edited`.
+    Attributes:
+        path: The file, an absolute path.
+        limit: How many rows to list (the ones that do not match come first); 100, at most 1000. Unit: count.
+    """
+    path: str
+    limit: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDerivation:
+        return cls(
+            path=data["path"],
+            limit=data.get("limit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisDerived(_Model):
+    """What `cad.gis.derivation` found.
+    Attributes:
+        bytes: Unit: bytes.
+        tolerance: Unit: m.
+        source: Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,
+            else its name).
+        current: Totals over the tables. Unit: count.
+        stale: Unit: count.
+        edited: Unit: count.
+        source_gone: Unit: count.
+        not_exported: Unit: count.
+        entries: The rows that do not match first, then the matching ones, at most `limit`.
+        unlisted: How many rows were not listed because of `limit`. Unit: count.
+        revision: The drawing's revision now.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    algorithm: str
+    tolerance: float
+    source: DerivationSource
+    same_project: bool
+    tables: list[DerivationTable]
+    current: int
+    stale: int
+    edited: int
+    source_gone: int
+    not_exported: int
+    entries: list[DerivationEntry]
+    unlisted: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["algorithm"] = self.algorithm
+        out["tolerance"] = float(self.tolerance)
+        out["source"] = self.source.to_json()
+        out["sameProject"] = self.same_project
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["current"] = self.current
+        out["stale"] = self.stale
+        out["edited"] = self.edited
+        out["sourceGone"] = self.source_gone
+        out["notExported"] = self.not_exported
+        out["entries"] = [e0.to_json() for e0 in self.entries]
+        out["unlisted"] = self.unlisted
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDerived:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            algorithm=data["algorithm"],
+            tolerance=float(data["tolerance"]),
+            source=DerivationSource.from_json(data["source"]),
+            same_project=data["sameProject"],
+            tables=[DerivationTable.from_json(e0) for e0 in data["tables"]],
+            current=data["current"],
+            stale=data["stale"],
+            edited=data["edited"],
+            source_gone=data["sourceGone"],
+            not_exported=data["notExported"],
+            entries=[DerivationEntry.from_json(e0) for e0 in data["entries"]],
+            unlisted=data["unlisted"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisExported(_Model):
+    """What `file.export.gis` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        algorithm: The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).
+        tolerance: Unit: m.
+        chorded: Rows written as chords of a curve, in all. Unit: count.
+        max_deviation: The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held. Unit: m.
+        revision: The drawing's revision the dataset was made from.
+        left: Objects not written, by kind, each with its reason.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    algorithm: str
+    tolerance: float
+    tables: list[GisTableExported]
+    chorded: int
+    max_deviation: float
+    revision: str
+    left: list[GisLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["algorithm"] = self.algorithm
+        out["tolerance"] = float(self.tolerance)
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["chorded"] = self.chorded
+        out["maxDeviation"] = float(self.max_deviation)
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            algorithm=data["algorithm"],
+            tolerance=float(data["tolerance"]),
+            tables=[GisTableExported.from_json(e0) for e0 in data["tables"]],
+            chorded=data["chorded"],
+            max_deviation=float(data["maxDeviation"]),
+            revision=data["revision"],
+            left=[GisLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisLeft(_Model):
+    """Objects of one kind left out of the dataset, and why.
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisLeft:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+            reason=data["reason"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisTableExported(_Model):
+    """A table of the derived dataset.
+    Attributes:
+        rows: Unit: count.
+        chorded: Rows whose geometry is chords of a curve rather than the source's own points. Unit: count.
+        max_deviation: The farthest any of the table's chords comes from its curve (m). Unit: m.
+        geometry: The geometry column's type; none for an attribute table.
+        source: The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.
+    """
+    table: str
+    role: GisTableRole | GisTableRoleName
+    rows: int
+    chorded: int
+    max_deviation: float
+    geometry: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["role"] = _enum_out(self.role)
+        out["rows"] = self.rows
+        out["chorded"] = self.chorded
+        out["maxDeviation"] = float(self.max_deviation)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisTableExported:
+        return cls(
+            table=data["table"],
+            role=_enum_in(GisTableRole, data["role"]),
+            rows=data["rows"],
+            chorded=data["chorded"],
+            max_deviation=float(data["maxDeviation"]),
+            geometry=data.get("geometry", UNSET),
+            source=data.get("source", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class GpkgExported(_Model):
     """What `file.export.gpkg` wrote, or with `plan` would write.
     Attributes:
@@ -20858,6 +21411,344 @@ class ItemWords(_Model):
             help=data.get("help", UNSET),
             label=data.get("label", UNSET),
             placeholder=data.get("placeholder", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinColumn(_Model):
+    """A column of a view.
+    Attributes:
+        name: The heading: the field's name; a joined one the main layer has too with “ (layer)”.
+        field: The attribute the cell is (the field's name in the record's attributes).
+        editable: Whether a cell of a row with its record can be written (with `cad.entities.set` on that record).
+        reason: Why not, when not.
+    """
+    name: str
+    side: JoinSide | JoinSideName
+    field: str
+    editable: bool
+    reason: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["side"] = _enum_out(self.side)
+        out["field"] = self.field
+        out["editable"] = self.editable
+        if self.reason is not UNSET:
+            out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinColumn:
+        return cls(
+            name=data["name"],
+            side=_enum_in(JoinSide, data["side"]),
+            field=data["field"],
+            editable=data["editable"],
+            reason=data.get("reason", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinReport(_Model):
+    """How the records met.
+    Attributes:
+        records: The main layer's records, those with a match, without one, and without a key. Unit: count.
+        matched: Unit: count.
+        unmatched: Unit: count.
+        null_keys: Unit: count.
+        with_records: The joined layer's records and those some record met. Unit: count.
+        with_used: Unit: count.
+        rows: Every row of the view (all pages). Unit: count.
+        cardinality: `1:1`, `1:N` (a record met several), `N:1` (a joined record met by several), `N:N`; empty: no match.
+    """
+    records: int
+    matched: int
+    unmatched: int
+    null_keys: int
+    with_records: int
+    with_used: int
+    rows: int
+    cardinality: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["records"] = self.records
+        out["matched"] = self.matched
+        out["unmatched"] = self.unmatched
+        out["nullKeys"] = self.null_keys
+        out["withRecords"] = self.with_records
+        out["withUsed"] = self.with_used
+        out["rows"] = self.rows
+        out["cardinality"] = self.cardinality
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinReport:
+        return cls(
+            records=data["records"],
+            matched=data["matched"],
+            unmatched=data["unmatched"],
+            null_keys=data["nullKeys"],
+            with_records=data["withRecords"],
+            with_used=data["withUsed"],
+            rows=data["rows"],
+            cardinality=data["cardinality"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinRow(_Model):
+    """A row: a record of the main layer and one of its matches (none when it has none).
+    Attributes:
+        id: `left/right` of the records' persistent ids (`left/` without a match): the same row whenever read.
+        cells: The columns' values in order; none: no value (an attribute not written, or no match).
+    """
+    id: str
+    left: str
+    cells: list[str | None]
+    right: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["left"] = self.left
+        out["cells"] = list(self.cells)
+        if self.right is not UNSET:
+            out["right"] = self.right
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinRow:
+        return cls(
+            id=data["id"],
+            left=data["left"],
+            cells=list(data["cells"]),
+            right=data.get("right", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinTotal(_Model):
+    """A column's sum over its records, each once however many rows it is in (`kentos.statistics/1`).
+    Attributes:
+        column: The column's place. Unit: count.
+        count: The records whose value was a number, and those whose value was not. Unit: count.
+        skipped: Unit: count.
+        sum: The exact sum as text; none when too large to hold exactly.
+    """
+    column: int
+    count: int
+    skipped: int | Unset = UNSET
+    sum: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["column"] = self.column
+        out["count"] = self.count
+        if self.skipped is not UNSET:
+            out["skipped"] = self.skipped
+        if self.sum is not UNSET:
+            out["sum"] = self.sum
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinTotal:
+        return cls(
+            column=data["column"],
+            count=data["count"],
+            skipped=data.get("skipped", UNSET),
+            sum=data.get("sum", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinView(_Model):
+    """A join view: the layer's records by `key` with the `with` layer's by `withKey`.
+    Attributes:
+        id: Letters, digits, `-`, `_`, `.`; 1–64; unique in the project.
+        name: What the table's layer list shows; trimmed, 1–64 characters.
+        layer: The main layer's id: one row (or more) a record of it.
+        key: The main layer's key: a field's key, or `$uid`.
+        with_: The joined layer's id (the main one itself for a tree).
+        with_key: The joined layer's key: a field's key, or `$uid`.
+        fields: The joined layer's fields the view shows, in order (keys); none: all of them.
+        keep: Written only when not `all`.
+    """
+    id: str
+    name: str
+    layer: str
+    key: str
+    with_: str
+    with_key: str
+    fields: list[str] | Unset = UNSET
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["layer"] = self.layer
+        out["key"] = self.key
+        out["with"] = self.with_
+        out["withKey"] = self.with_key
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinView:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            layer=data["layer"],
+            key=data["key"],
+            with_=data["with"],
+            with_key=data["withKey"],
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsAnswer(_Model):
+    """Output of `cad.joins.query` v1, and its plan.
+    Attributes:
+        revision: The document's revision the rows are of.
+        broken: Why the view cannot be read now (its layer or key is gone): no rows, nothing of a former reading.
+        next: The next page's cursor; none: the last page.
+        totals: The sums of the columns with a number among their records' values, in column order.
+    """
+    name: str
+    columns: list[JoinColumn]
+    rows: list[JoinRow]
+    report: JoinReport
+    revision: str
+    broken: str | None | Unset = UNSET
+    next: str | None | Unset = UNSET
+    totals: list[JoinTotal] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["columns"] = [e0.to_json() for e0 in self.columns]
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["report"] = self.report.to_json()
+        out["revision"] = self.revision
+        if self.broken is not UNSET:
+            out["broken"] = self.broken
+        if self.next is not UNSET:
+            out["next"] = self.next
+        if self.totals is not UNSET:
+            out["totals"] = [e0.to_json() for e0 in self.totals]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsAnswer:
+        return cls(
+            name=data["name"],
+            columns=[JoinColumn.from_json(e0) for e0 in data["columns"]],
+            rows=[JoinRow.from_json(e0) for e0 in data["rows"]],
+            report=JoinReport.from_json(data["report"]),
+            revision=data["revision"],
+            broken=data.get("broken", UNSET),
+            next=data.get("next", UNSET),
+            totals=[JoinTotal.from_json(e0) for e0 in data["totals"]] if "totals" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdit(_Model):
+    """Input of `cad.joins.edit` v1.
+
+    Refusals, in this order: `invalid_join_view`; `invalid_revision`, `revision_conflict` (status `conflict`);
+    `unknown_join_view`, `join_view_exists`, `too_many_join_views`, `unknown_relation`, `layer_not_found`,
+    `not_a_layer`, `field_not_found`.
+    Attributes:
+        expected_revision: The document revision the input was prepared against, as decimal text.
+    """
+    edit: JoinsOp
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["edit"] = self.edit.to_json()
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdit:
+        return cls(
+            edit=JoinsOp.from_json(data["edit"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsEdited(_Model):
+    """Output of `cad.joins.edit` v1, and what plan says it would do.
+    Attributes:
+        views: The project's views afterwards, in order.
+        revision: The document's revision afterwards (plan: the one it was made against).
+    """
+    views: list[JoinView]
+    changed: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["views"] = [e0.to_json() for e0 in self.views]
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsEdited:
+        return cls(
+            views=[JoinView.from_json(e0) for e0 in data["views"]],
+            changed=data["changed"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class JoinsQuery(_Model):
+    """Input of `cad.joins.query` v1: a kept view by its id, or a definition read as it is (a preview).
+
+    Refusals: `invalid_join_view` (neither or both, or a definition that does not hold), `unknown_join_view`,
+    `invalid_count` (a limit not 1–1000), `invalid_cursor`.
+    Attributes:
+        cursor: The page after the one whose `next` this is.
+        limit: Rows a page gives, 1–1000; none: 100. Unit: count.
+    """
+    cursor: str | None | Unset = UNSET
+    definition: JoinView | None | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    view: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.cursor is not UNSET:
+            out["cursor"] = self.cursor
+        if self.definition is not UNSET:
+            out["definition"] = None if self.definition is None else self.definition.to_json()
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.view is not UNSET:
+            out["view"] = self.view
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> JoinsQuery:
+        return cls(
+            cursor=data.get("cursor", UNSET),
+            definition=UNSET if "definition" not in data else None if data["definition"] is None else JoinView.from_json(data["definition"]),
+            limit=data.get("limit", UNSET),
+            view=data.get("view", UNSET),
         )
 
 
@@ -30100,6 +30991,7 @@ class ProjectSettings(_Model):
         hatch_patterns: The project's own hatch patterns (docs/adr/0331 §1): a PAT file's or a user's, offered beside the library's.
         heights: What the drawing's elevations are (docs/adr/0519 §1): ellipsoidal or orthometric heights, the vertical system
             and the geoid model; absent: not said, and no command takes them for either.
+        join_views: The project's join views (docs/adr/0527), in the table's order.
         layer_states: The project's named layer states (docs/adr/0177 §4), in the menu's order.
         leader_styles: The project's named leader styles (docs/adr/0326 §4).
         length_style: How lengths are written (docs/adr/0262 §2): none, decimal; the others
@@ -30150,6 +31042,7 @@ class ProjectSettings(_Model):
     forms: list[ProjectForm] | Unset = UNSET
     hatch_patterns: list[HatchPatternDef] | Unset = UNSET
     heights: HeightReference | None | Unset = UNSET
+    join_views: list[JoinView] | Unset = UNSET
     layer_states: list[LayerState] | Unset = UNSET
     leader_styles: list[LeaderStyleDef] | Unset = UNSET
     length_style: LengthStyle | LengthStyleName | None | Unset = UNSET
@@ -30207,6 +31100,8 @@ class ProjectSettings(_Model):
             out["hatchPatterns"] = [e0.to_json() for e0 in self.hatch_patterns]
         if self.heights is not UNSET:
             out["heights"] = None if self.heights is None else self.heights.to_json()
+        if self.join_views is not UNSET:
+            out["joinViews"] = [e0.to_json() for e0 in self.join_views]
         if self.layer_states is not UNSET:
             out["layerStates"] = [e0.to_json() for e0 in self.layer_states]
         if self.leader_styles is not UNSET:
@@ -30272,6 +31167,7 @@ class ProjectSettings(_Model):
             forms=[ProjectForm.from_json(e0) for e0 in data["forms"]] if "forms" in data else UNSET,
             hatch_patterns=[HatchPatternDef.from_json(e0) for e0 in data["hatchPatterns"]] if "hatchPatterns" in data else UNSET,
             heights=UNSET if "heights" not in data else None if data["heights"] is None else HeightReference.from_json(data["heights"]),
+            join_views=[JoinView.from_json(e0) for e0 in data["joinViews"]] if "joinViews" in data else UNSET,
             layer_states=[LayerState.from_json(e0) for e0 in data["layerStates"]] if "layerStates" in data else UNSET,
             leader_styles=[LeaderStyleDef.from_json(e0) for e0 in data["leaderStyles"]] if "leaderStyles" in data else UNSET,
             length_style=UNSET if "lengthStyle" not in data else None if data["lengthStyle"] is None else _enum_in(LengthStyle, data["lengthStyle"]),
@@ -34528,11 +35424,14 @@ class SourcesSync(_Model):
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
+        topology: Writing a part's working copy (docs/adr/0531): the table's rows outside the area that share the changed corners
+            and edges follow in the same transaction. Reading refuses it (`topology_on_read`).
         with_: Writing: more bound layers (by id) written in the same transaction.
     """
     layer: str
     direction: SyncDirection | SyncDirectionName
     discard: bool | Unset = UNSET
+    topology: SyncTopology | SyncTopologyName | None | Unset = UNSET
     with_: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34541,6 +35440,8 @@ class SourcesSync(_Model):
         out["direction"] = _enum_out(self.direction)
         if self.discard is not UNSET:
             out["discard"] = self.discard
+        if self.topology is not UNSET:
+            out["topology"] = None if self.topology is None else _enum_out(self.topology)
         if self.with_ is not UNSET:
             out["with"] = list(self.with_)
         return out
@@ -34551,6 +35452,7 @@ class SourcesSync(_Model):
             layer=data["layer"],
             direction=_enum_in(SyncDirection, data["direction"]),
             discard=data.get("discard", UNSET),
+            topology=UNSET if "topology" not in data else None if data["topology"] is None else _enum_in(SyncTopology, data["topology"]),
             with_=list(data["with"]) if "with" in data else UNSET,
         )
 
@@ -34564,7 +35466,9 @@ class SourcesSynced(_Model):
         modified: Unit: count.
         removed: Unit: count.
         source: The file's SHA-256 after (plan: before).
+        followed: The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531). Unit: count.
         layers: A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.
+        left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
         relations: The mapped relations' mapping rows written.
     """
     added: int
@@ -34573,7 +35477,9 @@ class SourcesSynced(_Model):
     source: str
     revision: str
     columns: list[str] | Unset = UNSET
+    followed: int | Unset = UNSET
     layers: list[SyncedLayer] | Unset = UNSET
+    left: int | Unset = UNSET
     relations: list[SyncedRelation] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34585,8 +35491,12 @@ class SourcesSynced(_Model):
         out["revision"] = self.revision
         if self.columns is not UNSET:
             out["columns"] = list(self.columns)
+        if self.followed is not UNSET:
+            out["followed"] = self.followed
         if self.layers is not UNSET:
             out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.left is not UNSET:
+            out["left"] = self.left
         if self.relations is not UNSET:
             out["relations"] = [e0.to_json() for e0 in self.relations]
         return out
@@ -34600,7 +35510,9 @@ class SourcesSynced(_Model):
             source=data["source"],
             revision=data["revision"],
             columns=list(data["columns"]) if "columns" in data else UNSET,
+            followed=data.get("followed", UNSET),
             layers=[SyncedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
+            left=data.get("left", UNSET),
             relations=[SyncedRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
         )
 
@@ -35282,6 +36194,751 @@ class SplineEntity(Entity):
             symbol=data.get("symbol", UNSET),
             transparency=UNSET if "transparency" not in data else None if data["transparency"] is None else float(data["transparency"]),
             wipeout=UNSET if "wipeout" not in data else None if data["wipeout"] is None else Wipeout.from_json(data["wipeout"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacAssetInfo(_Model):
+    """An asset of an item.
+    Attributes:
+        key: The asset's key in the item (`red`, `scl`, `qa_pixel`): with the item it is the asset's lasting id.
+        href: The address without any signature (a query that carries one is dropped). `s3://` and other schemes stay as the
+            catalog wrote them; only http and https addresses can be read by a raster.
+        epsg: The asset's own or its item's EPSG code (`proj:epsg`, `proj:code`). Unit: epsg.
+        shape: `[rows, columns]` (`proj:shape`). Unit: count.
+        signed: The catalog's address carried a signature (or a token): it was dropped, and reading the file may need one.
+        transform: `[a, b, c, d, e, f]` (`proj:transform`): x = a·column + b·row + c, y = d·column + e·row + f. Unit: system.
+        type: The media type, as written.
+    """
+    key: str
+    href: str
+    bands: list[StacBand] | Unset = UNSET
+    epsg: int | None | Unset = UNSET
+    raster_bands: list[StacRasterBand] | Unset = UNSET
+    roles: list[str] | Unset = UNSET
+    shape: list[int] | None | Unset = UNSET
+    signed: bool | Unset = UNSET
+    title: str | None | Unset = UNSET
+    transform: list[float] | None | Unset = UNSET
+    type: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["key"] = self.key
+        out["href"] = self.href
+        if self.bands is not UNSET:
+            out["bands"] = [e0.to_json() for e0 in self.bands]
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.raster_bands is not UNSET:
+            out["rasterBands"] = [e0.to_json() for e0 in self.raster_bands]
+        if self.roles is not UNSET:
+            out["roles"] = list(self.roles)
+        if self.shape is not UNSET:
+            out["shape"] = None if self.shape is None else list(self.shape)
+        if self.signed is not UNSET:
+            out["signed"] = self.signed
+        if self.title is not UNSET:
+            out["title"] = self.title
+        if self.transform is not UNSET:
+            out["transform"] = None if self.transform is None else [float(e0) for e0 in self.transform]
+        if self.type is not UNSET:
+            out["type"] = self.type
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacAssetInfo:
+        return cls(
+            key=data["key"],
+            href=data["href"],
+            bands=[StacBand.from_json(e0) for e0 in data["bands"]] if "bands" in data else UNSET,
+            epsg=data.get("epsg", UNSET),
+            raster_bands=[StacRasterBand.from_json(e0) for e0 in data["rasterBands"]] if "rasterBands" in data else UNSET,
+            roles=list(data["roles"]) if "roles" in data else UNSET,
+            shape=UNSET if "shape" not in data else None if data["shape"] is None else list(data["shape"]),
+            signed=data.get("signed", UNSET),
+            title=data.get("title", UNSET),
+            transform=UNSET if "transform" not in data else None if data["transform"] is None else [float(e0) for e0 in data["transform"]],
+            type=data.get("type", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacBand(_Model):
+    """A band an asset names (STAC `eo:bands`).
+    Attributes:
+        center_wavelength: Micrometres, as the catalog writes it. Unit: value.
+        common_name: `red`, `nir`, `nir08`, `swir16` … (the eo extension's common names and the catalog's own).
+    """
+    center_wavelength: float | None | Unset = UNSET
+    common_name: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.center_wavelength is not UNSET:
+            out["centerWavelength"] = None if self.center_wavelength is None else float(self.center_wavelength)
+        if self.common_name is not UNSET:
+            out["commonName"] = self.common_name
+        if self.name is not UNSET:
+            out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacBand:
+        return cls(
+            center_wavelength=UNSET if "centerWavelength" not in data else None if data["centerWavelength"] is None else float(data["centerWavelength"]),
+            common_name=data.get("commonName", UNSET),
+            name=data.get("name", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacItemInfo(_Model):
+    """An item of a search, with what a preparation needs of it.
+    Attributes:
+        catalog: The endpoint (the API's root, normalized): with `collection` and `id` the item's lasting id.
+        bbox: Unit: deg.
+        cloud_cover: Percent (`eo:cloud_cover`). Unit: percent.
+        datetime: The acquisition time (`datetime`), or the start of its interval.
+        epsg: The item's EPSG code (`proj:epsg`, `proj:code`). Unit: epsg.
+        gsd: Metres of a pixel (`gsd`). Unit: m.
+        license: The license identifier (`license` of the item).
+        license_href: The address of the license text (a `license` link), without any signature.
+        self_href: The item's own address (the `self` link).
+    """
+    catalog: str
+    id: str
+    assets: list[StacAssetInfo]
+    bbox: list[float] | None | Unset = UNSET
+    cloud_cover: float | None | Unset = UNSET
+    collection: str | None | Unset = UNSET
+    datetime: str | None | Unset = UNSET
+    end_datetime: str | None | Unset = UNSET
+    epsg: int | None | Unset = UNSET
+    gsd: float | None | Unset = UNSET
+    instruments: list[str] | Unset = UNSET
+    license: str | None | Unset = UNSET
+    license_href: str | None | Unset = UNSET
+    platform: str | None | Unset = UNSET
+    self_href: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["catalog"] = self.catalog
+        out["id"] = self.id
+        out["assets"] = [e0.to_json() for e0 in self.assets]
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.cloud_cover is not UNSET:
+            out["cloudCover"] = None if self.cloud_cover is None else float(self.cloud_cover)
+        if self.collection is not UNSET:
+            out["collection"] = self.collection
+        if self.datetime is not UNSET:
+            out["datetime"] = self.datetime
+        if self.end_datetime is not UNSET:
+            out["endDatetime"] = self.end_datetime
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.gsd is not UNSET:
+            out["gsd"] = None if self.gsd is None else float(self.gsd)
+        if self.instruments is not UNSET:
+            out["instruments"] = list(self.instruments)
+        if self.license is not UNSET:
+            out["license"] = self.license
+        if self.license_href is not UNSET:
+            out["licenseHref"] = self.license_href
+        if self.platform is not UNSET:
+            out["platform"] = self.platform
+        if self.self_href is not UNSET:
+            out["selfHref"] = self.self_href
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacItemInfo:
+        return cls(
+            catalog=data["catalog"],
+            id=data["id"],
+            assets=[StacAssetInfo.from_json(e0) for e0 in data["assets"]],
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            cloud_cover=UNSET if "cloudCover" not in data else None if data["cloudCover"] is None else float(data["cloudCover"]),
+            collection=data.get("collection", UNSET),
+            datetime=data.get("datetime", UNSET),
+            end_datetime=data.get("endDatetime", UNSET),
+            epsg=data.get("epsg", UNSET),
+            gsd=UNSET if "gsd" not in data else None if data["gsd"] is None else float(data["gsd"]),
+            instruments=list(data["instruments"]) if "instruments" in data else UNSET,
+            license=data.get("license", UNSET),
+            license_href=data.get("licenseHref", UNSET),
+            platform=data.get("platform", UNSET),
+            self_href=data.get("selfHref", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacNext(_Model):
+    """A `next` link of a search page (STAC API item search §paging): the next request as the server wrote it. It is
+    taken only when its address is on the endpoint's own host (`stac_next_foreign`).
+    Attributes:
+        body: A POST's body; with `merge` it is laid over the search's own body.
+    """
+    method: StacMethod | StacMethodName
+    href: str
+    body: Any | Unset = UNSET
+    merge: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["href"] = self.href
+        if self.body is not UNSET:
+            out["body"] = self.body
+        if self.merge is not UNSET:
+            out["merge"] = self.merge
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacNext:
+        return cls(
+            method=_enum_in(StacMethod, data["method"]),
+            href=data["href"],
+            body=data.get("body", UNSET),
+            merge=data.get("merge", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacPreparation(_Model):
+    """The preparation record (`kentos.stac-preparation` 1): what was searched, the item and assets chosen, the band
+    mapping, scale and offset, the quality band and the mask rule, the acquisition time.
+    Attributes:
+        version: Unit: version.
+        cloud_cover: Unit: percent.
+        reflectance: Present when the data bands are reflectance and share one scale and offset.
+    """
+    format: str
+    version: int
+    catalog: str
+    item: str
+    bands: list[StacPreparedBand]
+    cloud_cover: float | None | Unset = UNSET
+    collection: str | None | Unset = UNSET
+    datetime: str | None | Unset = UNSET
+    license: str | None | Unset = UNSET
+    license_href: str | None | Unset = UNSET
+    platform: str | None | Unset = UNSET
+    qa: StacPreparedQa | None | Unset = UNSET
+    reflectance: StacReflectance | None | Unset = UNSET
+    search: StacSearchRecord | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["catalog"] = self.catalog
+        out["item"] = self.item
+        out["bands"] = [e0.to_json() for e0 in self.bands]
+        if self.cloud_cover is not UNSET:
+            out["cloudCover"] = None if self.cloud_cover is None else float(self.cloud_cover)
+        if self.collection is not UNSET:
+            out["collection"] = self.collection
+        if self.datetime is not UNSET:
+            out["datetime"] = self.datetime
+        if self.license is not UNSET:
+            out["license"] = self.license
+        if self.license_href is not UNSET:
+            out["licenseHref"] = self.license_href
+        if self.platform is not UNSET:
+            out["platform"] = self.platform
+        if self.qa is not UNSET:
+            out["qa"] = None if self.qa is None else self.qa.to_json()
+        if self.reflectance is not UNSET:
+            out["reflectance"] = None if self.reflectance is None else self.reflectance.to_json()
+        if self.search is not UNSET:
+            out["search"] = None if self.search is None else self.search.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacPreparation:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            catalog=data["catalog"],
+            item=data["item"],
+            bands=[StacPreparedBand.from_json(e0) for e0 in data["bands"]],
+            cloud_cover=UNSET if "cloudCover" not in data else None if data["cloudCover"] is None else float(data["cloudCover"]),
+            collection=data.get("collection", UNSET),
+            datetime=data.get("datetime", UNSET),
+            license=data.get("license", UNSET),
+            license_href=data.get("licenseHref", UNSET),
+            platform=data.get("platform", UNSET),
+            qa=UNSET if "qa" not in data else None if data["qa"] is None else StacPreparedQa.from_json(data["qa"]),
+            reflectance=UNSET if "reflectance" not in data else None if data["reflectance"] is None else StacReflectance.from_json(data["reflectance"]),
+            search=UNSET if "search" not in data else None if data["search"] is None else StacSearchRecord.from_json(data["search"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacPrepare(_Model):
+    """Input of `cad.stac.prepare` v1: the `item` as a search returned it (only the assets used need to be in it),
+    the data assets to add (`assets`, each a single band read by address), the optional quality band, and what was
+    searched. One new group `group` (absent: `STAC: <item id>`) takes one layer per asset, named by its key; the
+    QA band is added too (marked `qa`), and is never among the data bands. The rasters' system must be the
+    project's (no reprojection). Refusals, in this order: `invalid_stac_item`, `stac_assets_empty`,
+    `stac_too_many_assets`, `stac_asset_not_found`, `stac_href_not_http`, `stac_no_grid`, `stac_unsupported_sample`,
+    `stac_multiband`, `stac_qa_unknown`, `crs_mismatch`, `invalid_group_name`, then `invalid_revision`,
+    `revision_conflict`.
+    """
+    item: StacItemInfo
+    assets: list[str]
+    expected_revision: str | None | Unset = UNSET
+    group: str | None | Unset = UNSET
+    qa: StacQa | None | Unset = UNSET
+    search: StacSearchRecord | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["item"] = self.item.to_json()
+        out["assets"] = list(self.assets)
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.qa is not UNSET:
+            out["qa"] = None if self.qa is None else self.qa.to_json()
+        if self.search is not UNSET:
+            out["search"] = None if self.search is None else self.search.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacPrepare:
+        return cls(
+            item=StacItemInfo.from_json(data["item"]),
+            assets=list(data["assets"]),
+            expected_revision=data.get("expectedRevision", UNSET),
+            group=data.get("group", UNSET),
+            qa=UNSET if "qa" not in data else None if data["qa"] is None else StacQa.from_json(data["qa"]),
+            search=UNSET if "search" not in data else None if data["search"] is None else StacSearchRecord.from_json(data["search"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacPrepared(_Model):
+    """Output of `cad.stac.prepare` v1, and its plan (the layers and uids are filled when it is written).
+    Attributes:
+        group: The group's id once written.
+    """
+    preparation: StacPreparation
+    revision: str
+    group: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["preparation"] = self.preparation.to_json()
+        out["revision"] = self.revision
+        if self.group is not UNSET:
+            out["group"] = self.group
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacPrepared:
+        return cls(
+            preparation=StacPreparation.from_json(data["preparation"]),
+            revision=data["revision"],
+            group=data.get("group", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacPreparedBand(_Model):
+    """A data band of a preparation.
+    Attributes:
+        asset: The asset's key, with the item's id and collection its lasting id.
+        href: The address without any signature.
+        scale: A value is `number × scale + offset`: the catalog's, or 1 and 0 when it gave none. Unit: 1.
+        offset: Unit: value.
+        width: Unit: count.
+        height: Unit: count.
+        affine: `[x₀, a, b, y₀, c, d]` as a raster's (GDAL's geotransform order). Unit: system.
+        epsg: Unit: epsg.
+        common_name: The band's common name when the catalog gave one (`red`, `nir`, `nir08`).
+        layer: The layer that holds the raster, and the raster's persistent id once written.
+        nodata: Unit: value.
+    """
+    asset: str
+    href: str
+    sample: RasterSample | RasterSampleName
+    scale: float
+    offset: float
+    width: int
+    height: int
+    affine: list[float]
+    epsg: int
+    common_name: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    signed: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["asset"] = self.asset
+        out["href"] = self.href
+        out["sample"] = _enum_out(self.sample)
+        out["scale"] = float(self.scale)
+        out["offset"] = float(self.offset)
+        out["width"] = self.width
+        out["height"] = self.height
+        out["affine"] = [float(e0) for e0 in self.affine]
+        out["epsg"] = self.epsg
+        if self.common_name is not UNSET:
+            out["commonName"] = self.common_name
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.signed is not UNSET:
+            out["signed"] = self.signed
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacPreparedBand:
+        return cls(
+            asset=data["asset"],
+            href=data["href"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            scale=float(data["scale"]),
+            offset=float(data["offset"]),
+            width=data["width"],
+            height=data["height"],
+            affine=[float(e0) for e0 in data["affine"]],
+            epsg=data["epsg"],
+            common_name=data.get("commonName", UNSET),
+            layer=data.get("layer", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            signed=data.get("signed", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacPreparedQa(_Model):
+    """The quality band of a preparation and its mask rule.
+    Attributes:
+        default_mask: Whether the rule is the platform's own default.
+        width: Unit: count.
+        height: Unit: count.
+        affine: Unit: system.
+        nodata: Unit: value.
+    """
+    asset: str
+    href: str
+    sample: RasterSample | RasterSampleName
+    mask: StacMask
+    default_mask: bool
+    width: int
+    height: int
+    affine: list[float]
+    layer: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    signed: bool | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["asset"] = self.asset
+        out["href"] = self.href
+        out["sample"] = _enum_out(self.sample)
+        out["mask"] = self.mask.to_json()
+        out["defaultMask"] = self.default_mask
+        out["width"] = self.width
+        out["height"] = self.height
+        out["affine"] = [float(e0) for e0 in self.affine]
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.signed is not UNSET:
+            out["signed"] = self.signed
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacPreparedQa:
+        return cls(
+            asset=data["asset"],
+            href=data["href"],
+            sample=_enum_in(RasterSample, data["sample"]),
+            mask=StacMask.from_json(data["mask"]),
+            default_mask=data["defaultMask"],
+            width=data["width"],
+            height=data["height"],
+            affine=[float(e0) for e0 in data["affine"]],
+            layer=data.get("layer", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            signed=data.get("signed", UNSET),
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacQa(_Model):
+    """The quality band of a preparation: which asset, and the mask rule. Without `mask` the platform's own is taken
+    (Sentinel-2 `scl`: classes 0, 1, 3, 8, 9, 10; Landsat `qa_pixel`: bits 0 to 4: fill, dilated cloud, cirrus,
+    cloud, cloud shadow); an asset of another platform needs one (`stac_qa_unknown`).
+    """
+    asset: str
+    mask: StacMask | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["asset"] = self.asset
+        if self.mask is not UNSET:
+            out["mask"] = None if self.mask is None else self.mask.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacQa:
+        return cls(
+            asset=data["asset"],
+            mask=UNSET if "mask" not in data else None if data["mask"] is None else StacMask.from_json(data["mask"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacRasterBand(_Model):
+    """A band's storage (STAC `raster:bands`): how its numbers are read.
+    Attributes:
+        data_type: `uint8`, `int16`, `float32` … as the catalog writes it.
+        nodata: Unit: value.
+        offset: Unit: value.
+        scale: A value is `number × scale + offset` (absent: 1 and 0). Unit: 1.
+        spatial_resolution: Metres of a pixel, the catalog's word. Unit: m.
+    """
+    data_type: str | None | Unset = UNSET
+    nodata: float | None | Unset = UNSET
+    offset: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+    spatial_resolution: float | None | Unset = UNSET
+    unit: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.data_type is not UNSET:
+            out["dataType"] = self.data_type
+        if self.nodata is not UNSET:
+            out["nodata"] = None if self.nodata is None else float(self.nodata)
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else float(self.offset)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        if self.spatial_resolution is not UNSET:
+            out["spatialResolution"] = None if self.spatial_resolution is None else float(self.spatial_resolution)
+        if self.unit is not UNSET:
+            out["unit"] = self.unit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacRasterBand:
+        return cls(
+            data_type=data.get("dataType", UNSET),
+            nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else float(data["offset"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+            spatial_resolution=UNSET if "spatialResolution" not in data else None if data["spatialResolution"] is None else float(data["spatialResolution"]),
+            unit=data.get("unit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacReflectance(_Model):
+    """Reflectance's scale and offset when every data band shares them: the numbers İşlemler's Spektral indis takes
+    as Ölçek and Öteleme (`ρ = number × scale + offset`).
+    Attributes:
+        scale: Unit: 1.
+        offset: Unit: value.
+    """
+    scale: float
+    offset: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["scale"] = float(self.scale)
+        out["offset"] = float(self.offset)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacReflectance:
+        return cls(
+            scale=float(data["scale"]),
+            offset=float(data["offset"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacRequestInfo(_Model):
+    """The request a search sent, as the host sent it (a signed address never appears).
+    Attributes:
+        body: A POST's body as compact JSON, keys in alphabetical order.
+    """
+    method: StacMethod | StacMethodName
+    url: str
+    body: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["method"] = _enum_out(self.method)
+        out["url"] = self.url
+        if self.body is not UNSET:
+            out["body"] = self.body
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacRequestInfo:
+        return cls(
+            method=_enum_in(StacMethod, data["method"]),
+            url=data["url"],
+            body=data.get("body", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacSearch(_Model):
+    """Input of `cad.stac.search` v1. `endpoint` is the STAC API's root (`https://…/v1`), without a query or a login.
+    `bbox` is `[west, south, east, north]` in degrees (WGS 84; a box crossing the 180° meridian is two searches).
+    `datetime` is an RFC 3339 instant or interval (`start/end`, an open end `..`); a bare date `2024-07-01` is its
+    day (`T00:00:00Z`, and `T23:59:59Z` as an interval's end). `maxCloudCover` (percent) is asked of the server
+    (`eo:cloud_cover`) and checked again on what comes back. With `next` the page after one already read; the other
+    fields stay the search's (the filter on cloud cover still applies). Refusals, in this order:
+    `invalid_stac_endpoint`, `invalid_stac_bbox`, `invalid_stac_datetime`, `invalid_stac_cloud_cover`,
+    `invalid_stac_limit`, `invalid_stac_collection`, `stac_next_foreign`, `stac_unavailable` (the host cannot reach
+    a network), `stac_request_failed`, `stac_response_unreadable`.
+    Attributes:
+        bbox: Unit: deg.
+        ids: Items by id (the search narrowed to them).
+        limit: Items per page, 1 to 100; absent: 10. Unit: count.
+        max_cloud_cover: Percent, 0 to 100. Unit: percent.
+    """
+    endpoint: str
+    bbox: list[float] | None | Unset = UNSET
+    collections: list[str] | Unset = UNSET
+    datetime: str | None | Unset = UNSET
+    ids: list[str] | Unset = UNSET
+    limit: int | None | Unset = UNSET
+    max_cloud_cover: float | None | Unset = UNSET
+    next: StacNext | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["endpoint"] = self.endpoint
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.collections is not UNSET:
+            out["collections"] = list(self.collections)
+        if self.datetime is not UNSET:
+            out["datetime"] = self.datetime
+        if self.ids is not UNSET:
+            out["ids"] = list(self.ids)
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        if self.max_cloud_cover is not UNSET:
+            out["maxCloudCover"] = None if self.max_cloud_cover is None else float(self.max_cloud_cover)
+        if self.next is not UNSET:
+            out["next"] = None if self.next is None else self.next.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacSearch:
+        return cls(
+            endpoint=data["endpoint"],
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            collections=list(data["collections"]) if "collections" in data else UNSET,
+            datetime=data.get("datetime", UNSET),
+            ids=list(data["ids"]) if "ids" in data else UNSET,
+            limit=data.get("limit", UNSET),
+            max_cloud_cover=UNSET if "maxCloudCover" not in data else None if data["maxCloudCover"] is None else float(data["maxCloudCover"]),
+            next=UNSET if "next" not in data else None if data["next"] is None else StacNext.from_json(data["next"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacSearchRecord(_Model):
+    """What a search asked, kept in the preparation record.
+    Attributes:
+        bbox: Unit: deg.
+        max_cloud_cover: Unit: percent.
+    """
+    endpoint: str
+    bbox: list[float] | None | Unset = UNSET
+    collections: list[str] | Unset = UNSET
+    datetime: str | None | Unset = UNSET
+    max_cloud_cover: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["endpoint"] = self.endpoint
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.collections is not UNSET:
+            out["collections"] = list(self.collections)
+        if self.datetime is not UNSET:
+            out["datetime"] = self.datetime
+        if self.max_cloud_cover is not UNSET:
+            out["maxCloudCover"] = None if self.max_cloud_cover is None else float(self.max_cloud_cover)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacSearchRecord:
+        return cls(
+            endpoint=data["endpoint"],
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            collections=list(data["collections"]) if "collections" in data else UNSET,
+            datetime=data.get("datetime", UNSET),
+            max_cloud_cover=UNSET if "maxCloudCover" not in data else None if data["maxCloudCover"] is None else float(data["maxCloudCover"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class StacSearched(_Model):
+    """Output of `cad.stac.search` v1, and its plan. `items` are the page's, in the server's order, without those over
+    `maxCloudCover` (`dropped` counts them, an item without a cloud cover stays); `returned` is what the server
+    sent; `matched` is its total (`numberMatched`) when it said; `next` is the page after.
+    Attributes:
+        returned: Unit: count.
+        dropped: Unit: count.
+        matched: Unit: count.
+    """
+    request: StacRequestInfo
+    items: list[StacItemInfo]
+    returned: int
+    dropped: int
+    matched: int | None | Unset = UNSET
+    next: StacNext | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["request"] = self.request.to_json()
+        out["items"] = [e0.to_json() for e0 in self.items]
+        out["returned"] = self.returned
+        out["dropped"] = self.dropped
+        if self.matched is not UNSET:
+            out["matched"] = self.matched
+        if self.next is not UNSET:
+            out["next"] = None if self.next is None else self.next.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> StacSearched:
+        return cls(
+            request=StacRequestInfo.from_json(data["request"]),
+            items=[StacItemInfo.from_json(e0) for e0 in data["items"]],
+            returned=data["returned"],
+            dropped=data["dropped"],
+            matched=data.get("matched", UNSET),
+            next=UNSET if "next" not in data else None if data["next"] is None else StacNext.from_json(data["next"]),
         )
 
 
@@ -46613,6 +48270,88 @@ class InvertInsertsClipOperation(InsertsClipOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class CreateJoinsOp(JoinsOp):
+    """A new view."""
+    TAG_VALUE: ClassVar[str] = "create"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "create"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CreateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FromRelationJoinsOp(JoinsOp):
+    """A new view of a relation: its parent layer by `$uid`, its child layer by the relation's field."""
+    TAG_VALUE: ClassVar[str] = "fromRelation"
+    relation: str
+    id: str
+    name: str
+    keep: JoinKeep | JoinKeepName | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "fromRelation"}
+        out["relation"] = self.relation
+        out["id"] = self.id
+        out["name"] = self.name
+        if self.keep is not UNSET:
+            out["keep"] = _enum_out(self.keep)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FromRelationJoinsOp:
+        return cls(
+            relation=data["relation"],
+            id=data["id"],
+            name=data["name"],
+            keep=_enum_in(JoinKeep, data["keep"]) if "keep" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UpdateJoinsOp(JoinsOp):
+    """The view of the same id replaced."""
+    TAG_VALUE: ClassVar[str] = "update"
+    view: JoinView
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "update"}
+        out["view"] = self.view.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UpdateJoinsOp:
+        return cls(
+            view=JoinView.from_json(data["view"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RemoveJoinsOp(JoinsOp):
+    """The view removed; the records stay as they are."""
+    TAG_VALUE: ClassVar[str] = "remove"
+    id: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "remove"}
+        out["id"] = self.id
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RemoveJoinsOp:
+        return cls(
+            id=data["id"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -48452,6 +50191,48 @@ class ReboundSpacesOperation(SpacesOperation):
     def from_json(cls, data: Mapping[str, Any]) -> ReboundSpacesOperation:
         return cls(
             seed=UNSET if "seed" not in data else None if data["seed"] is None else Vec2.from_json(data["seed"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ValuesStacMask(StacMask):
+    """A QA pixel with one of these values is masked (Sentinel-2's SCL classes).
+    Attributes:
+        values: Unit: value.
+    """
+    TAG_VALUE: ClassVar[str] = "values"
+    values: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "values"}
+        out["values"] = list(self.values)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ValuesStacMask:
+        return cls(
+            values=list(data["values"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BitsStacMask(StacMask):
+    """A QA pixel with any of these bits (0 is the lowest) set is masked (Landsat's QA_PIXEL).
+    Attributes:
+        bits: Unit: index.
+    """
+    TAG_VALUE: ClassVar[str] = "bits"
+    bits: list[int]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bits"}
+        out["bits"] = list(self.bits)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BitsStacMask:
+        return cls(
+            bits=list(data["bits"]),
         )
 
 
@@ -50782,6 +52563,9 @@ _IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOpera
 _INSERTS_CLIP_OPERATION: dict[str, type[InsertsClipOperation]] = {"set": SetInsertsClipOperation, "remove": RemoveInsertsClipOperation, "frame": FrameInsertsClipOperation, "invert": InvertInsertsClipOperation}
 
 
+_JOINS_OP: dict[str, type[JoinsOp]] = {"create": CreateJoinsOp, "fromRelation": FromRelationJoinsOp, "update": UpdateJoinsOp, "remove": RemoveJoinsOp}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -50831,6 +52615,9 @@ _SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "
 
 
 _SPACES_OPERATION: dict[str, type[SpacesOperation]] = {"set": SetSpacesOperation, "merge": MergeSpacesOperation, "split": SplitSpacesOperation, "rebound": ReboundSpacesOperation}
+
+
+_STAC_MASK: dict[str, type[StacMask]] = {"values": ValuesStacMask, "bits": BitsStacMask}
 
 
 _SUB_PLACE: dict[str, type[SubPlace]] = {"node": NodeSubPlace, "start": StartSubPlace, "end": EndSubPlace, "center": CenterSubPlace, "vertex": VertexSubPlace, "mid": MidSubPlace, "along": AlongSubPlace}
@@ -51013,6 +52800,7 @@ __all__ = [
     "BatchRowRan",
     "BindLeaderEdit",
     "BindXrefsOperation",
+    "BitsStacMask",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -51175,6 +52963,7 @@ __all__ = [
     "CreateDomainsOp",
     "CreateFeatureChange",
     "CreateFormsOp",
+    "CreateJoinsOp",
     "CreateOperation",
     "CreateOperationName",
     "CreateRelationsOp",
@@ -51211,6 +53000,11 @@ __all__ = [
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
+    "DerivationEntry",
+    "DerivationSource",
+    "DerivationStatus",
+    "DerivationStatusName",
+    "DerivationTable",
     "DetachArchOperation",
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
@@ -51372,6 +53166,7 @@ __all__ = [
     "ExportBlock",
     "ExportCsv",
     "ExportDxf",
+    "ExportGis",
     "ExportGpkg",
     "ExportPdf",
     "ExportReport",
@@ -51489,6 +53284,7 @@ __all__ = [
     "FrameTableEdit",
     "FrameUcsTo",
     "FromFieldDomainsOp",
+    "FromRelationJoinsOp",
     "FrozenBlock",
     "GeographicCrsSystem",
     "GeographicDefinition",
@@ -51500,6 +53296,15 @@ __all__ = [
     "GeorefPoint",
     "GeorefResidual",
     "GeorefSource",
+    "GisAnnotations",
+    "GisAnnotationsName",
+    "GisDerivation",
+    "GisDerived",
+    "GisExported",
+    "GisLeft",
+    "GisTableExported",
+    "GisTableRole",
+    "GisTableRoleName",
     "GpkgExported",
     "GpkgImported",
     "GpkgTableExported",
@@ -51601,7 +53406,21 @@ __all__ = [
     "IslandStyleName",
     "ItemWords",
     "JoggedDimensionMeasure",
+    "JoinColumn",
+    "JoinKeep",
+    "JoinKeepName",
+    "JoinReport",
+    "JoinRow",
+    "JoinSide",
+    "JoinSideName",
+    "JoinTotal",
+    "JoinView",
     "JoinWallsOperation",
+    "JoinsAnswer",
+    "JoinsEdit",
+    "JoinsEdited",
+    "JoinsOp",
+    "JoinsQuery",
     "JoinsWallsOperation",
     "JunctionLayer",
     "JunctionRole",
@@ -52115,6 +53934,7 @@ __all__ = [
     "RemoveFormsOp",
     "RemoveInsertsClipOperation",
     "RemoveIslandsHatchEdit",
+    "RemoveJoinsOp",
     "RemoveParameterEdit",
     "RemoveRelationsOp",
     "RenameFormsOp",
@@ -52284,6 +54104,25 @@ __all__ = [
     "SplitSpacesOperation",
     "SplitTextEdit",
     "SplitWallsOperation",
+    "StacAssetInfo",
+    "StacBand",
+    "StacItemInfo",
+    "StacMask",
+    "StacMethod",
+    "StacMethodName",
+    "StacNext",
+    "StacPreparation",
+    "StacPrepare",
+    "StacPrepared",
+    "StacPreparedBand",
+    "StacPreparedQa",
+    "StacQa",
+    "StacRasterBand",
+    "StacReflectance",
+    "StacRequestInfo",
+    "StacSearch",
+    "StacSearchRecord",
+    "StacSearched",
     "StackMode",
     "StackModeName",
     "StairEntity",
@@ -52327,6 +54166,8 @@ __all__ = [
     "SymmetricConstraintRule",
     "SyncDirection",
     "SyncDirectionName",
+    "SyncTopology",
+    "SyncTopologyName",
     "SyncedLayer",
     "SyncedRelation",
     "TabFormItem",
@@ -52451,9 +54292,11 @@ __all__ = [
     "UpdateFeatureChange",
     "UpdateFieldEdit",
     "UpdateFormsOp",
+    "UpdateJoinsOp",
     "UpdateRelationsOp",
     "ValueProblem",
     "ValuesFieldsWriteOp",
+    "ValuesStacMask",
     "VariableKind",
     "VariableKindName",
     "VariableValue",

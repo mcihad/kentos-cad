@@ -17,6 +17,7 @@ pub mod add;
 pub mod jobs;
 pub mod look;
 pub mod mosaic;
+pub mod stac;
 pub mod multidim;
 pub mod pyramid;
 #[cfg(test)]
@@ -199,6 +200,8 @@ pub struct Windows {
     pub multidim: Option<multidim::State>,
     /// Sanal mozaik (docs/adr/0517 §5).
     pub mosaic: Option<mosaic::State>,
+    /// STAC'ta ara (docs/adr/0528 §7).
+    pub stac: Option<stac::State>,
 }
 
 /// What the raster windows and the pyramids' panel ask for.
@@ -208,6 +211,7 @@ pub enum Event {
     Look(look::Event),
     Multidim(multidim::Event),
     Mosaic(mosaic::Event),
+    Stac(stac::Event),
     /// Durdur on a pyramid's line, by its raster's key.
     StopPyramid(String),
     /// Durdur on Raster oturt's resampling.
@@ -236,6 +240,7 @@ impl crate::app::App {
             Event::Look(e) => self.raster_look_event(e),
             Event::Multidim(e) => self.multidim_event(e),
             Event::Mosaic(e) => self.raster_mosaic_event(e),
+            Event::Stac(e) => self.raster_stac_event(e),
             Event::StopPyramid(key) => {
                 pyramid::stop(&key);
                 Task::none()

@@ -143,6 +143,7 @@ fn drawing(n: usize, renderer: Option<Value>) -> Document {
             named_views: Vec::new(),
             forms: Vec::new(),
             relations: Vec::new(),
+            join_views: Vec::new(),
             ucs: None,
             srid: 5256,
             length_decimals: 3,

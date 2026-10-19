@@ -638,6 +638,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.forms.import"
             // Its remove takes a relation away, its update writes over one (docs/adr/0405 §3).
             | "cad.relations.edit"
+            | "cad.joins.edit"
             // It removes sheets and their items as the designer does (docs/adr/0252 §2).
             | "cad.sheets.edit"
             // A change set runs any of these (docs/adr/0253 §8).
@@ -652,6 +653,8 @@ fn command_tool(c: &Value) -> Value {
             | "file.import.sld"
             | "file.export.csv"
             | "file.import.csv"
+            // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
+            | "file.export.gis"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
@@ -683,7 +686,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search"), destructive),
     })
 }
 

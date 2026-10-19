@@ -1520,3 +1520,57 @@ fn an_agent_makes_publishes_and_uses_a_form() {
     );
     assert_eq!(refused["isError"], true, "{refused}");
 }
+
+/// STAC (docs/adr/0528): an agent prepares an item's assets as rasters by address, in one step, and gets the record;
+/// the search is a read-only tool whose bad request is a refusal it can act on, before any network.
+#[test]
+fn an_agent_prepares_a_stac_item_and_a_bad_search_is_a_refusal() {
+    let mut server = Server::new();
+    let tools = ask(&mut server, 2, "tools/list", json!({}));
+    let search = tools["result"]["tools"]
+        .as_array()
+        .and_then(|t| t.iter().find(|t| t["name"] == "cad.stac.search"))
+        .expect("the search tool");
+    assert_eq!(search["annotations"]["readOnlyHint"], true);
+    let made = call(&mut server, "drawing.new", json!({ "srid": 32637 }));
+    let drawing = made["structuredContent"]["drawing"].as_str().expect("a handle").to_owned();
+    let refused = call(
+        &mut server,
+        "cad.stac.search",
+        json!({ "drawing": drawing, "endpoint": "ftp://x.example/v1" }),
+    );
+    assert_eq!(refused["isError"], true);
+    assert_eq!(refused["structuredContent"]["error"]["code"], "invalid_stac_endpoint");
+    let asset = |key: &str, common: &str| {
+        json!({
+            "key": key, "href": format!("https://h.example/{key}.tif"), "roles": ["data", "reflectance"],
+            "bands": [{ "commonName": common }],
+            "rasterBands": [{ "dataType": "uint16", "nodata": 0, "scale": 0.0001, "offset": -0.1 }],
+            "epsg": 32637, "shape": [100, 200], "transform": [10, 0, 300000, 0, -10, 4400040]
+        })
+    };
+    let item = json!({
+        "catalog": "https://earth-search.aws.element84.com/v1", "collection": "sentinel-2-l2a", "id": "S2A_TEST",
+        "datetime": "2024-07-13T08:29:15Z", "cloudCover": 3.1,
+        "assets": [asset("nir", "nir"), asset("red", "red")]
+    });
+    let planned = call(
+        &mut server,
+        "cad.stac.prepare",
+        json!({ "drawing": drawing, "op": "plan", "item": item, "assets": ["red", "nir"] }),
+    );
+    assert_eq!(planned["isError"], false, "{planned}");
+    let written = call(
+        &mut server,
+        "cad.stac.prepare",
+        json!({ "drawing": drawing, "op": "execute", "item": item, "assets": ["red", "nir"] }),
+    );
+    assert_eq!(written["isError"], false, "{written}");
+    let record = &written["structuredContent"]["output"]["preparation"];
+    assert_eq!(record["format"], "kentos.stac-preparation");
+    assert_eq!(record["bands"][0]["asset"], "red");
+    assert_eq!(record["bands"][0]["scale"], 0.0001);
+    assert_eq!(record["reflectance"], json!({ "scale": 0.0001, "offset": -0.1 }));
+    let page = call(&mut server, "drawing.entities", json!({ "drawing": drawing, "kinds": ["raster"] }));
+    assert_eq!(page["structuredContent"]["items"].as_array().map(Vec::len), Some(2), "{page}");
+}

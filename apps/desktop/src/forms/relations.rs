@@ -321,7 +321,7 @@ impl App {
     }
 
     /// The layers a relation can join, by their path.
-    fn relation_layers(&self) -> Vec<(String, String)> {
+    pub(crate) fn relation_layers(&self) -> Vec<(String, String)> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };

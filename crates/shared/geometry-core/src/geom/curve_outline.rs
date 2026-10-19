@@ -55,30 +55,43 @@ fn halves(c: &[Vec2; 4]) -> ([Vec2; 4], [Vec2; 4]) {
 
 /// A Bézier's chords within the tolerance, in order, as their ends; only
 /// the pieces whose hull reaches `area` when one is given.
-fn bezier_chords(c: &[Vec2; 4], area: Option<&Bounds>, depth: u32, out: &mut Vec<(Vec2, Vec2)>) {
+fn bezier_chords(
+    c: &[Vec2; 4],
+    area: Option<&Bounds>,
+    depth: u32,
+    tol: f64,
+    out: &mut Vec<(Vec2, Vec2)>,
+) {
     if area.is_some_and(|a| !overlaps(&hull_box(c), a)) {
         return;
     }
-    let flat = js_max(to_segment(c[1], c[0], c[3]), to_segment(c[2], c[0], c[3])) <= CURVE_TOL;
+    let flat = js_max(to_segment(c[1], c[0], c[3]), to_segment(c[2], c[0], c[3])) <= tol;
     if flat || depth >= DEPTH {
         out.push((c[0], c[3]));
         return;
     }
     let (l, r) = halves(c);
-    bezier_chords(&l, area, depth + 1, out);
-    bezier_chords(&r, area, depth + 1, out);
+    bezier_chords(&l, area, depth + 1, tol, out);
+    bezier_chords(&r, area, depth + 1, tol, out);
 }
 
 /// A fit-point curve as a computation takes it. An open curve ends on its
 /// last point; a closed one's ring does not repeat its first; fewer than
 /// three points are drawn straight, closed or not.
 pub fn spline_outline(pts: &[Vec2], closed: bool) -> Vec<Vec2> {
+    spline_outline_tol(pts, closed, CURVE_TOL)
+}
+
+/// [`spline_outline`] with the chords within `tol` (m) of the curve instead of [`CURVE_TOL`]: the bound a derivation
+/// states (docs/adr/0530). Each span is halved until both its inner control points are within `tol` of its chord, so
+/// the curve is too (the distance to a segment is convex).
+pub fn spline_outline_tol(pts: &[Vec2], closed: bool, tol: f64) -> Vec<Vec2> {
     if pts.len() < 3 {
         return pts.to_vec();
     }
     let mut chords = Vec::new();
     for span in catmull_rom_beziers(pts, closed) {
-        bezier_chords(&span.ctrl, None, 0, &mut chords);
+        bezier_chords(&span.ctrl, None, 0, tol, &mut chords);
     }
     let mut out: Vec<Vec2> = chords.iter().map(|c| c.0).collect();
     if !closed {
@@ -97,7 +110,7 @@ pub fn spline_edges_in(pts: &[Vec2], closed: bool, area: &Bounds) -> Vec<Edge> {
     }
     let mut chords = Vec::new();
     for span in catmull_rom_beziers(pts, closed) {
-        bezier_chords(&span.ctrl, Some(area), 0, &mut chords);
+        bezier_chords(&span.ctrl, Some(area), 0, CURVE_TOL, &mut chords);
     }
     chords
         .into_iter()
@@ -108,6 +121,7 @@ pub fn spline_edges_in(pts: &[Vec2], closed: bool, area: &Bounds) -> Vec<Edge> {
 /// An ellipse piece's chords within the tolerance, in order, as their
 /// parameters' ends; only the pieces whose chord box, grown by its bound,
 /// reaches `area` when one is given.
+#[allow(clippy::too_many_arguments)]
 fn ellipse_chords(
     g: &EllipseGeom,
     a: f64,
@@ -115,6 +129,7 @@ fn ellipse_chords(
     (t1, p1): (f64, Vec2),
     area: Option<&Bounds>,
     depth: u32,
+    tol: f64,
     out: &mut Vec<(Vec2, Vec2)>,
 ) {
     let h = t1 - t0;
@@ -130,18 +145,18 @@ fn ellipse_chords(
             return;
         }
     }
-    if bound <= CURVE_TOL || depth >= DEPTH {
+    if bound <= tol || depth >= DEPTH {
         out.push((p0, p1));
         return;
     }
     let tm = (t0 + t1) / 2.0;
     let pm = ellipse_point(g, tm);
-    ellipse_chords(g, a, (t0, p0), (tm, pm), area, depth + 1, out);
-    ellipse_chords(g, a, (tm, pm), (t1, p1), area, depth + 1, out);
+    ellipse_chords(g, a, (t0, p0), (tm, pm), area, depth + 1, tol, out);
+    ellipse_chords(g, a, (tm, pm), (t1, p1), area, depth + 1, tol, out);
 }
 
 /// The chords of an ellipse (or its arc), from four first pieces.
-fn ellipse_pieces(g: &EllipseGeom, area: Option<&Bounds>) -> Vec<(Vec2, Vec2)> {
+fn ellipse_pieces(g: &EllipseGeom, area: Option<&Bounds>, tol: f64) -> Vec<(Vec2, Vec2)> {
     let sweep = ellipse_sweep(g);
     let a = major_length(g);
     let mut out = Vec::new();
@@ -151,7 +166,7 @@ fn ellipse_pieces(g: &EllipseGeom, area: Option<&Bounds>) -> Vec<(Vec2, Vec2)> {
     };
     for k in 0..4 {
         let k = f64::from(k);
-        ellipse_chords(g, a, at(k), at(k + 1.0), area, 0, &mut out);
+        ellipse_chords(g, a, at(k), at(k + 1.0), area, 0, tol, &mut out);
     }
     out
 }
@@ -159,7 +174,13 @@ fn ellipse_pieces(g: &EllipseGeom, area: Option<&Bounds>) -> Vec<(Vec2, Vec2)> {
 /// An ellipse or its arc as a computation takes it. A whole ellipse's ring
 /// does not repeat its first point.
 pub fn ellipse_outline(g: &EllipseGeom) -> Vec<Vec2> {
-    let chords = ellipse_pieces(g, None);
+    ellipse_outline_tol(g, CURVE_TOL)
+}
+
+/// [`ellipse_outline`] with the chords within `tol` (m) of the curve (docs/adr/0530): a piece of parameter step h
+/// comes no further than a·h²/8 from its chord, so it is halved until that is within `tol`.
+pub fn ellipse_outline_tol(g: &EllipseGeom, tol: f64) -> Vec<Vec2> {
+    let chords = ellipse_pieces(g, None, tol);
     let mut out: Vec<Vec2> = chords.iter().map(|c| c.0).collect();
     if !is_full_ellipse(g)
         && let Some(last) = chords.last()
@@ -171,7 +192,7 @@ pub fn ellipse_outline(g: &EllipseGeom) -> Vec<Vec2> {
 
 /// The chords of an ellipse (or its arc) that can come into `area`.
 pub fn ellipse_edges_in(g: &EllipseGeom, area: &Bounds) -> Vec<Edge> {
-    ellipse_pieces(g, Some(area))
+    ellipse_pieces(g, Some(area), CURVE_TOL)
         .into_iter()
         .map(|(a, b)| Edge::Seg { a, b })
         .collect()

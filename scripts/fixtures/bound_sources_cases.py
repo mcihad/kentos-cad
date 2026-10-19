@@ -4,6 +4,7 @@ CBS-01, CBS-02, CBS-11, CBS-36).
 
     /usr/bin/python3 scripts/fixtures/bound_sources_cases.py           # writes fixtures/commands/v1/cad.sources.*.json
     /usr/bin/python3 scripts/fixtures/bound_sources_cases.py --check   # compares
+    python3 scripts/fixtures/bound_sources_cases.py --files            # GDAL writes komsu.gpkg (neighbours, ADR 0531)
 
 A file's tables are read here with Python's sqlite3 from the GeoPackage tables themselves (gpkg_contents,
 gpkg_geometry_columns, gpkg_spatial_ref_sys, PRAGMA table_info), not with KentOS code; a column's field kind is ADR
@@ -276,6 +277,151 @@ def area_cases():
                   command="cad.sources.sync")),
     ]
     return out, sync_out
+
+
+# ── neighbours outside the area (docs/adr/0531) ────────────────────────────
+
+K = "komsu.gpkg"
+# A parcel with a bump (A), its right neighbour sharing the bump's edges (B) and a triangle over the bump (C); only A's
+# box meets the area, B and C lie outside it.
+BUMP = (487012.0, 4420005.0)
+K_ROWS = [
+    ("A", [(487000, 4420000), (487010, 4420000), BUMP, (487010, 4420010), (487000, 4420010)]),
+    ("B", [(487010, 4420000), (487020, 4420000), (487020, 4420010), (487010, 4420010), BUMP]),
+    ("C", [(487010, 4420000), BUMP, (487010, 4420010)]),
+]
+K_AREA = [486990.0, 4419990.0, 487009.0, 4420030.0]
+
+
+def write_files():
+    """komsu.gpkg by GDAL's OGR: the three parcels in TUREF / TM33 (EPSG 5256)."""
+    from osgeo import ogr, osr
+    path = DIR / K
+    if path.exists():
+        path.unlink()
+    srs = osr.SpatialReference()
+    srs.ImportFromEPSG(5256)
+    ds = ogr.GetDriverByName("GPKG").CreateDataSource(str(path))
+    lyr = ds.CreateLayer("parsel", srs=srs, geom_type=ogr.wkbPolygon)
+    lyr.CreateField(ogr.FieldDefn("ad", ogr.OFTString))
+    for ad, ring in K_ROWS:
+        f = ogr.Feature(lyr.GetLayerDefn())
+        wkt = "POLYGON ((" + ", ".join(f"{x} {y}" for x, y in [*ring, ring[0]]) + "))"
+        f.SetGeometry(ogr.CreateGeometryFromWkt(wkt))
+        f.SetField("ad", ad)
+        lyr.CreateFeature(f)
+    ds = None
+    print(f"yazıldı: {K}")
+
+
+def check_written():
+    """kentos-komsu.gpkg (crates/native/application/tests/all/sources.rs with KENTOS_WRITE_GPKG) by GDAL's OGR: A's bump
+    moved one metre east, B and C followed it, nothing else changed. None when it holds."""
+    path = DIR / "kentos-komsu.gpkg"
+    if not path.exists():
+        return "kentos-komsu.gpkg yok: KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application --test all a_part_writes"
+    from osgeo import ogr
+    ds = ogr.Open(str(path))
+    moved = (BUMP[0] + 1, BUMP[1])
+    want = {ad: [moved if p == BUMP else (float(p[0]), float(p[1])) for p in ring] for ad, ring in K_ROWS}
+    for f in ds.GetLayerByName("parsel"):
+        r = f.GetGeometryRef().GetGeometryRef(0)
+        got = [(r.GetX(i), r.GetY(i)) for i in range(r.GetPointCount() - 1)]
+        ring = want.pop(f.GetField("ad"), None)
+        n = len(got)
+        if ring is None or n != len(ring) or not any(
+                all(got[(i + k) % n] == ring[k] for k in range(n)) or all(got[(i - k) % n] == ring[k] for k in range(n))
+                for i in range(n)):
+            return f"kentos-komsu.gpkg'de {f.GetField('ad')} beklenen halka değil: {got}"
+    return f"kentos-komsu.gpkg'de eksik satır: {sorted(want)}" if want else None
+
+
+def follow(neighbours, change):
+    """ADR 0160's rule on rings outside the area: a move takes every corner at its place; a removal takes the corner
+    whose ring runs prev–at–next through it, and leaves a ring of fewer than three corners invalid. (edited, invalid)."""
+    same = lambda p, q: abs(p[0] - q[0]) <= 1e-9 and abs(p[1] - q[1]) <= 1e-9
+    edited = invalid = 0
+    for ring in neighbours:
+        n = len(ring)
+        if change[0] == "move":
+            if any(same(v, change[1]) for v in ring):
+                edited += 1
+            continue
+        _, at, prev, nxt = change
+        hit = [k for k in range(n) if same(ring[k], at)
+               and ((same(ring[k - 1], prev) and same(ring[(k + 1) % n], nxt))
+                    or (same(ring[k - 1], nxt) and same(ring[(k + 1) % n], prev)))]
+        if hit:
+            if n - 1 < 3:
+                invalid += 1
+            else:
+                edited += 1
+    return edited, invalid
+
+
+def neighbour_cases():
+    """The write's topology option on a part (docs/adr/0531)."""
+    k_link, _, _ = area_link_step("parsel", K_AREA, name=K, cmd="cad.sources.edit")
+    rows = rows_of(K, "parsel")
+    inside = in_area(K, "parsel", K_AREA)
+    a = next(r for r in rows if r["fid"] in inside)
+    outside = [[(p["x"], p["y"]) for p in r["geometry"]["pts"]] for r in rows if r["fid"] not in inside]
+    assert len(outside) == 2, "B and C lie outside the area"
+    pts = [(p["x"], p["y"]) for p in a["geometry"]["pts"]]
+    k = pts.index(BUMP)
+    moved = follow(outside, ("move", BUMP))
+    removed = follow(outside, ("remove", BUMP, pts[k - 1], pts[(k + 1) % len(pts)]))
+    assert moved == (2, 0) and removed == (1, 1), (moved, removed)
+
+    def out(followed=0, left=0, modified=1):
+        o = synced(modified=modified, name=K)
+        if followed:
+            o["followed"] = followed
+        if left:
+            o["left"] = left
+        return o
+
+    stretch = other("cad.entities.stretch", {"window": {"min": gi.P(BUMP[0] - 0.5, BUMP[1] - 0.5),
+                                                        "max": gi.P(BUMP[0] + 0.5, BUMP[1] + 0.5)},
+                                             "dx": 1, "dy": 0, "uids": [a["uid"]]})
+    remove = other("cad.entities.vertex", {"uid": a["uid"], "action": "remove",
+                                           "place": {"kind": "vertex", "part": 0, "ring": 0, "index": k}})
+    left_warning = {"code": "neighbours_left", "message": f"Alanın dışındaki {removed[1]} komşu kayıt ortak köşeyi "
+                    "izleyince geçersiz kalacağı için olduğu gibi kaldı.", "path": "topology"}
+
+    def sync(topology=None, **kw):
+        i = {"layer": "import-parsel", "direction": kw.pop("direction", "write")}
+        if topology:
+            i["topology"] = topology
+        return i
+
+    return [
+        case("alanın dışındaki komşular izlenmeden yazılırsa yalnız değişen nesne yazılacak",
+             k_link, stretch, step(sync(), done(out()), op="plan", command="cad.sources.sync")),
+        case("strict: ortak köşesi taşınan alanın dışındaki iki komşu da yazılacak",
+             k_link, stretch, step(sync("strict"), done(out(followed=moved[0])), op="plan",
+                                   command="cad.sources.sync")),
+        case("loose: ortak köşesi taşınan alanın dışındaki iki komşu da yazılacak",
+             k_link, stretch, step(sync("loose"), done(out(followed=moved[0])), op="plan",
+                                   command="cad.sources.sync")),
+        case("loose: köşe silinince geçersiz kalacak üçgen olduğu gibi kalır, söylenir",
+             k_link, remove, step(sync("loose"), done(out(followed=removed[0], left=removed[1]), [left_warning]),
+                                  op="plan", command="cad.sources.sync")),
+        case("strict: köşe silinince geçersiz kalacak komşu varsa hiçbir şey yazılmaz",
+             k_link, remove, step(sync("strict"), failed(
+                 "outside_neighbour_invalid", f"Alanın dışındaki {removed[1]} komşu kayıt ortak köşeyi izleyince "
+                 "geçersiz kalırdı; hiçbir şey yazılmadı. Alanı genişletip komşuları da çalışma kopyasına alın ya da "
+                 "gevşek kipte (loose) yazın.", "topology"), op="plan", command="cad.sources.sync")),
+        case("strict: hiçbir şey değişmediyse izlenen komşu da yok",
+             k_link, step(sync("strict"), done(out(modified=0)), op="plan", command="cad.sources.sync")),
+        case("okumada komşuların izlenmesi istenmez",
+             k_link, step(sync("strict", direction="read"), failed(
+                 "topology_on_read", "Komşuların izlenmesi (topology) yalnız yazarken olur; okumada tablonun satırları "
+                 "olduğu gibi gelir.", "topology"), op="plan", command="cad.sources.sync")),
+        case("bütün tablo bağlıyken alanın dışında komşu yoktur",
+             link_step("parsel", name=K, cmd="cad.sources.edit")[0], stretch,
+             step(sync("strict"), done(out()), op="plan", command="cad.sources.sync")),
+    ]
 
 
 def edit_cases():
@@ -636,7 +782,7 @@ FILES = {
     "cad.sources.edit": ("Kaynağa bağla: tablo katmana, bağı çöz, yeniden bağla",
                          lambda: edit_cases() + area_cases()[0]),
     "cad.sources.sync": ("Kaynakla eşitle: katmanın değişiklikleri tabloya, tablonun satırları katmana",
-                         lambda: sync_cases() + area_cases()[1]),
+                         lambda: sync_cases() + area_cases()[1] + neighbour_cases()),
 }
 NOTE = ("ADR 0503. Tablolar sqlite3 ile dosyanın kendi tablolarından okunur (gpkg_contents, gpkg_geometry_columns, "
         "gpkg_spatial_ref_sys, PRAGMA table_info); satırlar gpkg_import_cases.py'nin OGR okuyucusuyla ADR 0502'nin "
@@ -653,6 +799,9 @@ def build(command):
 
 
 def main():
+    if "--files" in sys.argv:
+        write_files()
+        return 0
     bad = 0
     for command in FILES:
         out = OUT / f"{command}.json"
@@ -665,6 +814,11 @@ def main():
             continue
         out.write_text(text, "utf-8")
         print(f"yazıldı: {out.relative_to(ROOT)} ({len(data['cases'])} durum)")
+    if "--check" in sys.argv:
+        problem = check_written()
+        if problem:
+            print(problem, file=sys.stderr)
+            bad += 1
     if "--check" in sys.argv and not bad:
         print("Bağlı katman durumları tutarlı: " + ", ".join(f"{c} {len(build(c)['cases'])}" for c in FILES))
     return 1 if bad else 0

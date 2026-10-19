@@ -271,7 +271,7 @@ fn run(
         });
     }
     // map and unmap write the file: both tables writable, the file as the layers last matched it.
-    let (child_stored, _) = load_link(doc, &child, "relation")?;
+    let child_stored = load_link(doc, &child, "relation")?.stored;
     for (link, stored_writable) in [(&child, child_stored.writable), (&parent, true)] {
         if !link.writable || !stored_writable {
             return Err(refuse(
@@ -342,7 +342,7 @@ fn run(
                 ));
             }
             drop(file);
-            let (parent_stored, _) = load_link(doc, &parent, "relation")?;
+            let parent_stored = load_link(doc, &parent, "relation")?.stored;
             let tie = relations::Tie {
                 relation: r.id.clone(),
                 child_layer: r.child.clone(),

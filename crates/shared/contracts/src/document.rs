@@ -337,6 +337,10 @@ pub struct ProjectSettings {
         ts(as = "Option<Vec<crate::ProjectRelation>>", optional)
     )]
     pub relations: Vec<crate::ProjectRelation>,
+    /// The project's join views (docs/adr/0527), in the table's order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::JoinView>>", optional))]
+    pub join_views: Vec<crate::JoinView>,
     /// How lengths are written (docs/adr/0262 §2): none, decimal; the others
     /// only in an inch or foot drawing.
     #[serde(default, skip_serializing_if = "Option::is_none")]

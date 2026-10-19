@@ -633,31 +633,40 @@ impl App {
                 .icon(icon("layerFields"));
         }
         // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503).
-        if self.bound_link(&id).is_some() {
+        if let Some(link) = self.bound_link(&id) {
+            // A part of a table (its area): Kaynağa yaz's neighbours outside it (docs/adr/0531).
+            let part = link.extent.is_some();
             let bound = |e: crate::bound::Event| Message::Bound(e);
-            menu = menu
-                .submenu(
-                    "Kaynak",
-                    Menu::new()
-                        .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
-                        .icon(icon("sourceWrite"))
-                        .item(
-                            "Kaynağa birlikte yaz",
-                            bound(crate::bound::Event::WriteTogether(Some(id.clone()))),
-                        )
-                        .icon(icon("sourceWrite"))
-                        .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
-                        .icon(icon("sourceRead"))
-                        .item("Kaynak durumu", bound(crate::bound::Event::Status))
-                        .icon(icon("sourceLinked"))
-                        .item(
-                            "Yeniden bağla…",
-                            bound(crate::bound::Event::Relink(Some(id.clone()))),
-                        )
-                        .separator()
-                        .item("Bağı çöz", bound(crate::bound::Event::Unlink(Some(id.clone()))))
-                        .icon(icon("sourceUnlink")),
+            let mut source = Menu::new()
+                .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
+                .icon(icon("sourceWrite"))
+                .item(
+                    "Kaynağa birlikte yaz",
+                    bound(crate::bound::Event::WriteTogether(Some(id.clone()))),
                 )
+                .icon(icon("sourceWrite"));
+            if part {
+                source = source
+                    .item(
+                        "Kaynağa yaz, komşular gevşek",
+                        bound(crate::bound::Event::WriteLoose(Some(id.clone()))),
+                    )
+                    .icon(icon("sourceWrite"));
+            }
+            let source = source
+                .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
+                .icon(icon("sourceRead"))
+                .item("Kaynak durumu", bound(crate::bound::Event::Status))
+                .icon(icon("sourceLinked"))
+                .item(
+                    "Yeniden bağla…",
+                    bound(crate::bound::Event::Relink(Some(id.clone()))),
+                )
+                .separator()
+                .item("Bağı çöz", bound(crate::bound::Event::Unlink(Some(id.clone()))))
+                .icon(icon("sourceUnlink"));
+            menu = menu
+                .submenu("Kaynak", source)
                 .icon(icon("sourceLinked"));
         }
         // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).

@@ -340,6 +340,8 @@ def settings(s):
                 "arch": (opaque, False),
                 # Schema 72 (docs/adr/0405 §1): the project's relations, as their JSON.
                 "relations": (opaque, False),
+                # Schema 89 (docs/adr/0527): the project's join views, as their JSON.
+                "joinViews": (opaque, False),
                 # Schema 72 (docs/adr/0430): the project's value lists, as their JSON.
                 "domains": (opaque, False),
                 # Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
@@ -2135,6 +2137,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 89 (docs/adr/0527): the project's join views.
+    if "joinViews" in (settings or {}):
+        return 89
     # Schema 88 (docs/adr/0518 §1): a raster's georeference record.
     if any(e["kind"] == "raster" and "georef" in e for e in entities):
         return 88
@@ -2676,7 +2681,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-89.kcad"] = container(root(cmap(parts), version=uint(89)))
+    files["schema-version-90.kcad"] = container(root(cmap(parts), version=uint(90)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4433,6 +4438,23 @@ def build():
     out["broken/georef-check-off.kcad"] = georef_broken(lambda d: d["entities"][0]["georef"]["points"][4].update(off=True))
     out["broken/georef-too-few.kcad"] = georef_broken(lambda d: [p.update(check=True) for p in d["entities"][0]["georef"]["points"][:2]])
     out["broken/georef-check-without-checks.kcad"] = georef_broken(lambda d: [p.pop("check") for p in d["entities"][1]["georef"]["points"] if "check" in p])
+    # Join views (docs/adr/0527): schema 89's; in schema 88 an unknown field; an unknown field of a view, a default
+    # written, an empty list, an empty field list, two views of one id.
+    out["join-views.kcad"] = container(document(load("join-views.json")))
+    join_payload = document(load("join-views.json"))
+    assert join_payload.count(b"\x67version\x18\x59") == 1, "the join views are schema 89"
+    out["broken/join-views-in-schema-88.kcad"] = container(join_payload.replace(b"\x67version\x18\x59", b"\x67version\x18\x58"))
+
+    def join_broken(change):
+        d = copy.deepcopy(load("join-views.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/join-views-unknown-field.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(sql="select 1"))
+    out["broken/join-views-default-written.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(keep="all"))
+    out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
+    out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
+    out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

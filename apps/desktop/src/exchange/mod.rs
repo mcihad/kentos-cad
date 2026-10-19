@@ -31,6 +31,10 @@ pub(crate) mod field_send;
 #[cfg(test)]
 mod field_send_tests;
 mod geojson_export;
+mod gis_check;
+mod gis_export;
+#[cfg(test)]
+mod gis_derivation_tests;
 mod gis_import;
 #[cfg(test)]
 mod gis_tests;
@@ -127,6 +131,9 @@ pub enum Window {
     CsvImport(csv_exchange::ImportState),
     /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
     PdfImport(Box<pdf_import::State>),
+    /// GIS türevi dışa aktar and GIS türevini denetle (docs/adr/0530).
+    GisExport(gis_export::State),
+    GisCheck(gis_check::State),
 }
 
 #[derive(Debug, Clone)]
@@ -152,6 +159,8 @@ pub enum Event {
     Package(package::Event),
     ShpExport(shp_export::Event),
     Csv(csv_exchange::Event),
+    GisExport(gis_export::Event),
+    GisCheck(gis_check::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -159,7 +168,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 24] = [
+pub const COMMANDS: [&str; 26] = [
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -181,6 +190,8 @@ pub const COMMANDS: [&str; 24] = [
     "file.export.shp",
     "file.export.csv",
     "file.import.csv",
+    "file.export.gis",
+    "gis.derivation",
     "source.link",
     "source.postgis",
     "file.package",
@@ -225,6 +236,8 @@ impl App {
             "file.export.shp" => self.shp_export_open(),
             "file.export.csv" => self.csv_export_open(),
             "file.import.csv" => self.csv_import_pick(),
+            "file.export.gis" => self.gis_export_open(),
+            "gis.derivation" => self.gis_check_open(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -410,6 +423,8 @@ impl App {
             Event::Package(e) => self.package_event(e),
             Event::ShpExport(e) => self.shp_export_event(e),
             Event::Csv(e) => self.csv_event(e),
+            Event::GisExport(e) => self.gis_export_event(e),
+            Event::GisCheck(e) => self.gis_check_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -451,6 +466,8 @@ impl App {
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
+            Some(Window::GisExport(s)) => self.gis_export_view(s),
+            Some(Window::GisCheck(s)) => self.gis_check_view(s),
             Some(Window::PdfImport(s)) => self.pdf_import_view(s),
             None => iced::widget::text("").into(),
         }

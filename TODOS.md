@@ -218,6 +218,12 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-12` alanın dışındaki komşularla yazma (ADR 0531, 19 Ekim): web'de gerekenler: bağlı katman web'de yok; gelince
+  `cad.sources.sync`'in `topology`'si (`strict`, `loose`) ve Kaynak ▸'nin Kaynağa yaz, komşular gevşek'i; ortak durumlar
+  `fixtures/commands/v1/cad.sources.sync.json`'un komşu durumları.
+- [ ] `CBS-09` birleşik görünüm (ADR 0527, 19 Ekim): web'de gerekenler: `cad.joins.edit` ve `cad.joins.query`'nin işleyicileri
+  (satırlar WASM'da `joins_query::read`'in kuralıyla), Öznitelik tablosunda görünümler ve hücreden sahibi olan kayda yazma,
+  Birleşik görünümler penceresi; ortak durumlar `fixtures/commands/v1/cad.joins.*.json`.
 - [ ] `CBS-27` olay kaymasını denetle (ADR 0526, 19 Ekim): web'de gerekenler: `processing/builtin/lrs/`'e `linearRef.eventDrift`
   (kayma çekirdekten: `line_drift`, `point_drift`; WASM'da toplu işlem), `fixtures/processing/v1/lrs.json`'un üç `drift-` durumu,
   `routeDrift` ikonu ve Ağ analizi ▾'deki yeri.
@@ -1981,6 +1987,16 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-12` alanın dışındaki komşularla yazma (dilim): alan sınırlı GeoPackage parçası yazılırken ortak köşeleri değişen,
+  çizimde olmayan komşular aynı dosya sürümünden okunur, ADR 0160'ın kuralıyla izler ve aynı SQLite işleminde yazılır;
+  `cad.sources.sync`'in `topology`'si (`strict`: geçersiz kalacak komşu varsa hiçbir şey yazılmaz, `loose`: o komşu kalır,
+  söylenir), cevapta `followed` ve `left`; masaüstünde Topoloji açıkken Kaynağa yaz ve Kaynağa yaz, komşular gevşek. Kalan:
+  PostGIS parçası (sağlayıcının alan sınırı, CBS-02), komşunun tam geçerlilik denetimi, yetki ve sürüm engeli (CBS-38), yazmadan
+  önce komşuların önizlemesi. — **19 Ekim, [ADR 0531](docs/adr/0531-neighbours-outside-the-area.md).**
+- [ ] `CBS-09` birleşik görünüm (dilim): projenin `joinViews`'u (`.kcad` şema 89), satırlar her okuyuşta çizimden, çoğalan satırın
+  kimliği iki kaydın kalıcı kimliği, rapor ve kardinalite, kaydı bir kez sayan toplamlar, sahibi olan kayda yazma, kopuk görünüm;
+  `cad.joins.edit`, `.query`, Öznitelik tablosu, pencere, Python, MCP. Kalan: dış kaynaklar arasında sağlayıcı sorgusu, PG görünümü
+  ve salt okunur SQL katmanı (G2). — **19 Ekim, [ADR 0527](docs/adr/0527-join-views.md).**
 - [ ] `CBS-27` olay kaymasını denetle (dilim): olay nesneleri rota kimliğiyle rotalarına bağlı, rotanın bugünkü hâliyle yeniden
   yerleştirilip kayma (nokta uzaklığı; çizgide köşelerin ve yay ortalarının öbür yola en büyük uzaklığı) ve gösterilemeyenler
   raporlanır, Yerine taşı tek adımda; İşlemler aracı `linearRef.eventDrift`, `cad.processing.run` ile Python ve MCP. Kalan:

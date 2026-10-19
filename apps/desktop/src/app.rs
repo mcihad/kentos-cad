@@ -220,6 +220,8 @@ pub enum Dialog {
     FormEntry,
     /// İlişkiler (forms/relations.rs, docs/adr/0405); the window is `App::relations_window`.
     Relations,
+    /// Birleşik görünümler (joins_window.rs, docs/adr/0527); the window is `App::joins_window`.
+    Joins,
     /// Kayıtları denetle (forms/audit.rs, docs/adr/0406); the window is `App::form_audit`.
     FormAudit,
     /// Koşullu biçim (forms/table_styles.rs, docs/adr/0413); the window is `App::table_styles`.
@@ -274,6 +276,8 @@ pub enum Dialog {
     RasterAdd,
     /// Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5); the window is `App::rasters.mosaic`.
     RasterMosaic,
+    /// STAC'ta ara (rasters/stac.rs, docs/adr/0528 §7); the window is `App::rasters.stac`.
+    RasterStac,
     /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
     RasterStyle,
     /// Mesh ekle and Raster ekle's NetCDF (rasters/multidim.rs, docs/adr/0243 §11); the window
@@ -511,6 +515,8 @@ pub enum Message {
     Forms(crate::forms::designer::Event),
     /// An event of İlişkiler (forms/relations.rs, docs/adr/0405).
     Relations(crate::forms::relations::Event),
+    /// An event of Birleşik görünümler (joins_window.rs, docs/adr/0527).
+    Joins(crate::joins_window::Event),
     TableStyles(crate::forms::table_styles::Event),
     Subtypes(crate::forms::subtypes::Event),
     Contingents(crate::forms::contingents::Event),
@@ -989,6 +995,8 @@ pub struct App {
     pub(crate) form_stack: Vec<crate::forms::entry::Entry>,
     /// İlişkiler (forms/relations.rs, docs/adr/0405).
     pub(crate) relations_window: Option<crate::forms::relations::Window>,
+    /// Birleşik görünümler (joins_window.rs, docs/adr/0527).
+    pub(crate) joins_window: Option<crate::joins_window::Window>,
     pub(crate) table_styles: Option<crate::forms::table_styles::Window>,
     pub(crate) subtypes: Option<crate::forms::subtypes::Window>,
     pub(crate) contingents: Option<crate::forms::contingents::Window>,
@@ -1330,6 +1338,7 @@ impl App {
             form_entry: None,
             form_stack: Vec::new(),
             relations_window: None,
+            joins_window: None,
             table_styles: None,
             subtypes: None,
             contingents: None,
@@ -1892,6 +1901,7 @@ impl App {
             Message::Views(event) => return self.views_event(event),
             Message::Forms(event) => return self.forms_event(event),
             Message::Relations(event) => return self.relations_event(event),
+            Message::Joins(event) => return self.joins_event(event),
             Message::TableStyles(event) => return self.table_styles_event(event),
             Message::Subtypes(event) => return self.subtypes_event(event),
             Message::Contingents(event) => return self.contingents_event(event),
@@ -2771,6 +2781,8 @@ impl App {
             "raster.add" => return self.raster_add_command(),
             // Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5).
             "raster.mosaic" => return self.raster_mosaic_command(),
+            // STAC'ta ara (rasters/stac.rs, docs/adr/0528 §7).
+            "raster.stac" => return self.raster_stac_command(),
             "raster.style" => return self.raster_look_command(),
             // Mesh ekle (rasters/multidim.rs, docs/adr/0243 §11).
             "mesh.add" => return self.mesh_add_command(),

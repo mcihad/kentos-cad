@@ -18,4 +18,12 @@ layers?: Array<SyncedLayer>,
 /**
  * The mapped relations' mapping rows written.
  */
-relations?: Array<SyncedRelation>, };
+relations?: Array<SyncedRelation>, 
+/**
+ * The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531).
+ */
+followed?: number, 
+/**
+ * Those that would have been left invalid and kept their shape (`loose`).
+ */
+left?: number, };

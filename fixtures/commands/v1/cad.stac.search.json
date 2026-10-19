@@ -1,0 +1,4482 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.stac.search",
+ "commandVersion": 1,
+ "title": "STAC'ta ara",
+ "note": "Written by scripts/fixtures/stac_cases.py from docs/adr/0528 and the STAC specification; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "STAC",
+  "settings": {
+   "srid": 32637,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 399960.0,
+   "y": 4400040.0
+  },
+  "layers": [
+   {
+    "id": "altlik",
+    "name": "Altlık",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "altlik",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Ret: uç nokta http değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "ftp://x.example/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_endpoint",
+       "message": "“ftp://x.example/v1” bir http ya da https adresi değil (http:// ya da https:// ile başlamalı).",
+       "path": "endpoint"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: uç noktada sorgu var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1?api_key=1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_endpoint",
+       "message": "STAC adresi sorgu ya da parça içeremez; arama parametreleri komutun alanlarıdır.",
+       "path": "endpoint"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: uç noktada kullanıcı adı ve parola var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://ali:gizli@x.example/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_endpoint",
+       "message": "STAC adresi kullanıcı adı ya da parola içeremez; gizli değerler adrese yazılmaz.",
+       "path": "endpoint"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: uç nokta boş",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "  ",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_endpoint",
+       "message": "STAC adresi boş.",
+       "path": "endpoint"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kutuda batı doğudan büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       37.1,
+       39.7,
+       36.9,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_bbox",
+       "message": "Batı doğudan küçük olmalı; 180° meridyenini aşan kutu iki aramaya bölünür.",
+       "path": "bbox"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kutuda enlem 90'dan büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       90.5
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_bbox",
+       "message": "Enlem −90 ile 90 arasında olmalı (güney 39.7, kuzey 90.5).",
+       "path": "bbox"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: kutuda boylam 180'den büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       179.5,
+       10,
+       180.5,
+       11
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_bbox",
+       "message": "Boylam −180 ile 180 arasında olmalı (batı 179.5, doğu 180.5).",
+       "path": "bbox"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tarih okunamıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "geçen ay",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_datetime",
+       "message": "“geçen ay” bir RFC 3339 tarih ya da an değil (2024-07-01 ya da 2024-07-01T08:30:00Z).",
+       "path": "datetime"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tarihte başlangıç bitişten sonra",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-20/2024-07-01",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_datetime",
+       "message": "Başlangıç (2024-07-20T00:00:00Z) bitişten (2024-07-01T23:59:59Z) sonra.",
+       "path": "datetime"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tarihte 29 Şubat artık yıl değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2023-02-29",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_datetime",
+       "message": "“2023-02-29” bir RFC 3339 tarih ya da an değil (2024-07-01 ya da 2024-07-01T08:30:00Z).",
+       "path": "datetime"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: tarih aralığının iki ucu açık",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "../..",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_datetime",
+       "message": "Tarih aralığının iki ucu da açık olamaz.",
+       "path": "datetime"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bulut oranı 100'den büyük",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 120,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_cloud_cover",
+       "message": "En çok bulut oranı 0 ile 100 arasında olmalı; 120 verildi.",
+       "path": "maxCloudCover"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: bulut oranı eksi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": -1,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_cloud_cover",
+       "message": "En çok bulut oranı 0 ile 100 arasında olmalı; -1 verildi.",
+       "path": "maxCloudCover"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sayfa boyu 0",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_limit",
+       "message": "Sayfa boyu 1 ile 100 arasında olmalı; 0 verildi.",
+       "path": "limit"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sayfa boyu 101",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 101
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_limit",
+       "message": "Sayfa boyu 1 ile 100 arasında olmalı; 101 verildi.",
+       "path": "limit"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: boş koleksiyon kimliği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a",
+       " "
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_collection",
+       "message": "Koleksiyon kimliği boş olmamalı ve denetim karakteri içermemeli.",
+       "path": "collections[1]"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: boş öğe kimliği",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2,
+      "ids": [
+       ""
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_collection",
+       "message": "Öğe kimliği boş olmamalı ve denetim karakteri içermemeli.",
+       "path": "ids[0]"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sonraki sayfa başka sunucuda",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2,
+      "next": {
+       "method": "POST",
+       "href": "https://kotu.example/v1/search",
+       "body": {
+        "next": "x"
+       }
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_next_foreign",
+       "message": "Sonraki sayfanın adresi (“https://kotu.example/v1/search”) uç noktanın sunucusunda (https://earth-search.aws.element84.com/v1) değil.",
+       "path": "next.href"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: sonraki sayfa başka düzenekte (http)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2,
+      "next": {
+       "method": "GET",
+       "href": "http://earth-search.aws.element84.com/v1/search?token=x"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_next_foreign",
+       "message": "Sonraki sayfanın adresi (“http://earth-search.aws.element84.com/v1/search?token=x”) uç noktanın sunucusunda (https://earth-search.aws.element84.com/v1) değil.",
+       "path": "next.href"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate: ret",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 500
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_stac_limit",
+       "message": "Sayfa boyu 1 ile 100 arasında olmalı; 500 verildi.",
+       "path": "limit"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate: istek kurulur, ağa gidilmez",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sentinel-2: iki öğe, toplam 4, sonraki sayfa (gerçek Earth Search cevabı)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-20T23:59:59Z\",\"limit\":2,\"query\":{\"eo:cloud_cover\":{\"lte\":20}}}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2A_37SCD_20240713_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-13T08:29:15.388000Z",
+         "bbox": [
+          36.666379132177,
+          38.73821881877811,
+          37.96188347692461,
+          39.74548443066538
+         ],
+         "cloudCover": 3.130919,
+         "platform": "sentinel-2a",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_37SCD_20240713_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        },
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2B_37SCD_20240708_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-08T08:29:15.791000Z",
+         "bbox": [
+          36.666379132177,
+          38.73821881877811,
+          37.96188347692461,
+          39.74548443066538
+         ],
+         "cloudCover": 5.715943,
+         "platform": "sentinel-2b",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_37SCD_20240708_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 2,
+       "dropped": 0,
+       "matched": 4,
+       "next": {
+        "method": "POST",
+        "href": "https://earth-search.aws.element84.com/v1/search",
+        "body": {
+         "datetime": "2024-07-01T00:00:00Z/2024-07-20T23:59:59Z",
+         "query": {
+          "eo:cloud_cover": {
+           "lte": 20
+          }
+         },
+         "collections": [
+          "sentinel-2-l2a"
+         ],
+         "bbox": [
+          36.9,
+          39.7,
+          37.1,
+          39.8
+         ],
+         "limit": 2,
+         "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a"
+        }
+       }
+      },
+      "warnings": []
+     }
+    }
+   ],
+   "note": "Bulut en çok 20; sunucu next bağlantısını POST gövdesiyle verir (merge false)."
+  },
+  {
+   "name": "Sentinel-2: sonraki sayfa next bağlantısıyla (gerçek cevap)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2,
+      "next": {
+       "method": "POST",
+       "href": "https://earth-search.aws.element84.com/v1/search",
+       "body": {
+        "datetime": "2024-07-01T00:00:00Z/2024-07-20T23:59:59Z",
+        "query": {
+         "eo:cloud_cover": {
+          "lte": 20
+         }
+        },
+        "collections": [
+         "sentinel-2-l2a"
+        ],
+        "bbox": [
+         36.9,
+         39.7,
+         37.1,
+         39.8
+        ],
+        "limit": 2,
+        "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-20T23:59:59Z\",\"limit\":2,\"next\":\"2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a\",\"query\":{\"eo:cloud_cover\":{\"lte\":20}}}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2A_37SCD_20240703_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-03T08:29:16.501000Z",
+         "bbox": [
+          36.666379132177,
+          38.73821881877811,
+          37.96188347692461,
+          39.74548443066538
+         ],
+         "cloudCover": 0.006012,
+         "platform": "sentinel-2a",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_37SCD_20240703_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240703_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        },
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2A_37TCE_20240703_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-03T08:29:02.037000Z",
+         "bbox": [
+          36.63533134446427,
+          39.63822747103917,
+          37.9485388509167,
+          40.64591937365975
+         ],
+         "cloudCover": 0.028626,
+         "platform": "sentinel-2a",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_37TCE_20240703_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4500000.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/T/CE/2024/7/S2A_37TCE_20240703_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4500000.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 2,
+       "dropped": 0,
+       "matched": 4,
+       "next": {
+        "method": "POST",
+        "href": "https://earth-search.aws.element84.com/v1/search",
+        "body": {
+         "datetime": "2024-07-01T00:00:00Z/2024-07-20T23:59:59Z",
+         "query": {
+          "eo:cloud_cover": {
+           "lte": 20
+          }
+         },
+         "collections": [
+          "sentinel-2-l2a"
+         ],
+         "next": "2024-07-03T08:29:02.037000Z,S2A_37TCE_20240703_0_L2A,sentinel-2-l2a",
+         "bbox": [
+          36.9,
+          39.7,
+          37.1,
+          39.8
+         ],
+         "limit": 2
+        }
+       }
+      },
+      "warnings": []
+     }
+    }
+   ],
+   "note": "Gövde next.body'dir (merge false): kutu, tarih ve sayfa anahtarı sunucunun yazdığıdır."
+  },
+  {
+   "name": "Landsat: s3 adresli varlıklar ve bulut oranı (gerçek cevap)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-31",
+      "collections": [
+       "landsat-c2-l2"
+      ],
+      "maxCloudCover": 30,
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"landsat-c2-l2\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-31T23:59:59Z\",\"limit\":1,\"query\":{\"eo:cloud_cover\":{\"lte\":30}}}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "LC08_L2SP_175032_20240725_02_T1",
+         "collection": "landsat-c2-l2",
+         "datetime": "2024-07-25T08:14:30.692848Z",
+         "bbox": [
+          34.89068,
+          39.209868,
+          37.756924,
+          41.433238
+         ],
+         "cloudCover": 7.4,
+         "platform": "landsat-8",
+         "instruments": [
+          "oli",
+          "tirs"
+         ],
+         "gsd": 30.0,
+         "epsg": 32637,
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/landsat-c2-l2/items/LC08_L2SP_175032_20240725_02_T1",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B2.TIF",
+           "title": "Blue Band",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B2",
+             "commonName": "blue",
+             "centerWavelength": 0.48
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B1.TIF",
+           "title": "Coastal/Aerosol Band",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B1",
+             "commonName": "coastal",
+             "centerWavelength": 0.44
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "green",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B3.TIF",
+           "title": "Green Band",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B3",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "mtl.json",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_MTL.json",
+           "title": "Product Metadata File (json)",
+           "type": "application/json",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B5.TIF",
+           "title": "Near Infrared Band 0.8",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B5",
+             "commonName": "nir08",
+             "centerWavelength": 0.87
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "qa_pixel",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_QA_PIXEL.TIF",
+           "title": "Pixel Quality Assessment Band",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "cloud",
+            "cloud-shadow",
+            "snow-ice",
+            "water-mask"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 1.0,
+             "spatialResolution": 30.0,
+             "unit": "bit index"
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B4.TIF",
+           "title": "Red Band",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B4",
+             "commonName": "red",
+             "centerWavelength": 0.65
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B6.TIF",
+           "title": "Short-wave Infrared Band 1.6",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B6",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_SR_B7.TIF",
+           "title": "Short-wave Infrared Band 2.2",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "OLI_B7",
+             "commonName": "swir22",
+             "centerWavelength": 2.2
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2,
+             "spatialResolution": 30.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "s3://usgs-landsat/collection02/level-2/standard/oli-tirs/2024/175/032/LC08_L2SP_175032_20240725_20240801_02_T1/LC08_L2SP_175032_20240725_20240801_02_T1_thumb_small.jpeg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637,
+           "shape": [
+            8011,
+            7891
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            156285.0,
+            0.0,
+            -30.0,
+            4587915.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 1,
+       "dropped": 0,
+       "matched": 4,
+       "next": {
+        "method": "POST",
+        "href": "https://earth-search.aws.element84.com/v1/search",
+        "body": {
+         "datetime": "2024-07-01T00:00:00Z/2024-07-31T23:59:59Z",
+         "query": {
+          "eo:cloud_cover": {
+           "lte": 30
+          }
+         },
+         "collections": [
+          "landsat-c2-l2"
+         ],
+         "bbox": [
+          36.9,
+          39.7,
+          37.1,
+          39.8
+         ],
+         "limit": 1,
+         "next": "2024-07-25T08:14:30.692848Z,LC08_L2SP_175032_20240725_02_T1,landsat-c2-l2"
+        }
+       }
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan da aynı cevabı verir (salt okunur)",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36.9,
+       39.7,
+       37.1,
+       39.8
+      ],
+      "datetime": "2024-07-01/2024-07-20",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "maxCloudCover": 20,
+      "limit": 2
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-20T23:59:59Z\",\"limit\":2,\"query\":{\"eo:cloud_cover\":{\"lte\":20}}}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2A_37SCD_20240713_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-13T08:29:15.388000Z",
+         "bbox": [
+          36.666379132177,
+          38.73821881877811,
+          37.96188347692461,
+          39.74548443066538
+         ],
+         "cloudCover": 3.130919,
+         "platform": "sentinel-2a",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2A_37SCD_20240713_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2A_37SCD_20240713_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        },
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2B_37SCD_20240708_0_L2A",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2024-07-08T08:29:15.791000Z",
+         "bbox": [
+          36.666379132177,
+          38.73821881877811,
+          37.96188347692461,
+          39.74548443066538
+         ],
+         "cloudCover": 5.715943,
+         "platform": "sentinel-2b",
+         "instruments": [
+          "msi"
+         ],
+         "epsg": 32637,
+         "licenseHref": "https://sentinel.esa.int/documents/247904/690755/Sentinel_Data_Legal_Notice",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_37SCD_20240708_0_L2A",
+         "assets": [
+          {
+           "key": "blue",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B02.tif",
+           "title": "Blue (band 2) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "coastal",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B01.tif",
+           "title": "Coastal aerosol (band 1) - 60m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "coastal",
+             "commonName": "coastal",
+             "centerWavelength": 0.443
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 60.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            1830,
+            1830
+           ],
+           "transform": [
+            60.0,
+            0.0,
+            300000.0,
+            0.0,
+            -60.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "granule_metadata",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/granule_metadata.xml",
+           "type": "application/xml",
+           "roles": [
+            "metadata"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "green",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B03.tif",
+           "title": "Green (band 3) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B08.tif",
+           "title": "NIR 1 (band 8) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir",
+             "centerWavelength": 0.842
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "nir08",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B8A.tif",
+           "title": "NIR 2 (band 8A) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir08",
+             "commonName": "nir08",
+             "centerWavelength": 0.865
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "red",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B04.tif",
+           "title": "Red (band 4) - 10m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "scl",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/SCL.tif",
+           "title": "Scene classification map (SCL)",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir16",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B11.tif",
+           "title": "SWIR 1 (band 11) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir16",
+             "commonName": "swir16",
+             "centerWavelength": 1.61
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "swir22",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/B12.tif",
+           "title": "SWIR 2 (band 12) - 20m",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "swir22",
+             "commonName": "swir22",
+             "centerWavelength": 2.19
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            300000.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "thumbnail",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/thumbnail.jpg",
+           "title": "Thumbnail image",
+           "type": "image/jpeg",
+           "roles": [
+            "thumbnail"
+           ],
+           "epsg": 32637
+          },
+          {
+           "key": "visual",
+           "href": "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/37/S/CD/2024/7/S2B_37SCD_20240708_0_L2A/TCI.tif",
+           "title": "True color image",
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "visual"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red",
+             "centerWavelength": 0.665
+            },
+            {
+             "name": "green",
+             "commonName": "green",
+             "centerWavelength": 0.56
+            },
+            {
+             "name": "blue",
+             "commonName": "blue",
+             "centerWavelength": 0.49
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            300000.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 2,
+       "dropped": 0,
+       "matched": 4,
+       "next": {
+        "method": "POST",
+        "href": "https://earth-search.aws.element84.com/v1/search",
+        "body": {
+         "datetime": "2024-07-01T00:00:00Z/2024-07-20T23:59:59Z",
+         "query": {
+          "eo:cloud_cover": {
+           "lte": 20
+          }
+         },
+         "collections": [
+          "sentinel-2-l2a"
+         ],
+         "bbox": [
+          36.9,
+          39.7,
+          37.1,
+          39.8
+         ],
+         "limit": 2,
+         "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a"
+        }
+       }
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sunucu bulut süzgecini yok saydı: gelende yeniden denetlenir, bulutsuz bilinmeyen kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "c"
+      ],
+      "maxCloudCover": 10,
+      "limit": 5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"collections\":[\"c\"],\"limit\":5,\"query\":{\"eo:cloud_cover\":{\"lte\":10}}}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "CLEAR_5",
+         "collection": "c",
+         "datetime": "2026-07-02T10:00:00Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "cloudCover": 5.0,
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/CLEAR_5",
+         "assets": []
+        },
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "UNKNOWN",
+         "collection": "c",
+         "datetime": "2026-07-03T10:00:00Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/UNKNOWN",
+         "assets": []
+        }
+       ],
+       "returned": 3,
+       "dropped": 1
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "İmzalı adresler: imza hiçbir yerde görünmez, signed işaretlenir; kimliksiz öğe atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "sentinel-2-l2a"
+      ],
+      "datetime": "2026-07-13",
+      "limit": 3,
+      "ids": [
+       "S2B_MSIL2A_20260713_R121_T36SUD"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2026-07-13T00:00:00Z/2026-07-13T23:59:59Z\",\"ids\":[\"S2B_MSIL2A_20260713_R121_T36SUD\"],\"limit\":3}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "S2B_MSIL2A_20260713_R121_T36SUD",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2026-07-13T08:29:11.025000Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "cloudCover": 1.2,
+         "platform": "Sentinel-2B",
+         "epsg": 32636,
+         "license": "proprietary",
+         "licenseHref": "https://scihub.copernicus.eu/twiki/pub/SciHubWebPortal/TermsConditions/Sentinel_Data_Terms_and_Conditions.pdf",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_MSIL2A_20260713_R121_T36SUD",
+         "assets": [
+          {
+           "key": "B04",
+           "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B04_10m.tif",
+           "signed": true,
+           "type": "image/tiff; application=geotiff; profile=cloud-optimized",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red"
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32636,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            399960.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "B08",
+           "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R10m/T36SUD_20260713T082911_B08_10m.tif",
+           "signed": true,
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "nir",
+             "commonName": "nir"
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32636,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            399960.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          },
+          {
+           "key": "SCL",
+           "href": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/36/S/UD/2026/07/13/S2B_MSIL2A_x/GRANULE/IMG_DATA/R20m/T36SUD_20260713T082911_SCL_20m.tif",
+           "signed": true,
+           "roles": [
+            "data"
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint8",
+             "nodata": 0.0,
+             "spatialResolution": 20.0
+            }
+           ],
+           "epsg": 32636,
+           "shape": [
+            5490,
+            5490
+           ],
+           "transform": [
+            20.0,
+            0.0,
+            399960.0,
+            0.0,
+            -20.0,
+            4400040.0
+           ]
+          }
+         ]
+        },
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "NOCLOUD_1",
+         "collection": "sentinel-2-l2a",
+         "datetime": "2026-07-01T00:00:00Z",
+         "endDatetime": "2026-07-31T23:59:59Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "epsg": 32636,
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/NOCLOUD_1",
+         "assets": [
+          {
+           "key": "B04",
+           "href": "https://h.example/b04.tif?versionId=7",
+           "bands": [
+            {
+             "name": "red",
+             "commonName": "red"
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 0.0001,
+             "offset": -0.1,
+             "spatialResolution": 10.0
+            }
+           ],
+           "epsg": 32636,
+           "shape": [
+            10980,
+            10980
+           ],
+           "transform": [
+            10.0,
+            0.0,
+            399960.0,
+            0.0,
+            -10.0,
+            4400040.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 3,
+       "dropped": 0,
+       "matched": 3
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "STAC 1.1'in birleşik bands dizisi okunur; context.matched toplamı verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1/",
+      "collections": [
+       "c"
+      ],
+      "datetime": "2026-06-01T00:00:00Z/..",
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"collections\":[\"c\"],\"datetime\":\"2026-06-01T00:00:00Z/..\",\"limit\":1}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "UNIFIED_1",
+         "collection": "c",
+         "datetime": "2026-06-01T09:00:00Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "cloudCover": 0.0,
+         "platform": "landsat-9",
+         "instruments": [
+          "oli2",
+          "tirs2"
+         ],
+         "gsd": 30.0,
+         "epsg": 32637,
+         "license": "CC-BY-4.0",
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/UNIFIED_1",
+         "assets": [
+          {
+           "key": "red",
+           "href": "https://h.example/red.tif",
+           "roles": [
+            "data",
+            "reflectance"
+           ],
+           "bands": [
+            {
+             "name": "SR_B4",
+             "commonName": "red",
+             "centerWavelength": 0.65
+            }
+           ],
+           "rasterBands": [
+            {
+             "dataType": "uint16",
+             "nodata": 0.0,
+             "scale": 2.75e-05,
+             "offset": -0.2
+            }
+           ],
+           "epsg": 32637,
+           "shape": [
+            100,
+            100
+           ],
+           "transform": [
+            30.0,
+            0.0,
+            300000.0,
+            0.0,
+            -30.0,
+            4400000.0
+           ]
+          }
+         ]
+        }
+       ],
+       "returned": 1,
+       "dropped": 0,
+       "matched": 1
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonraki bağlantı GET ve göreli: uç noktanın sunucusuna çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "c"
+      ],
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"collections\":[\"c\"],\"limit\":1}"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "PAGE_1",
+         "collection": "c",
+         "datetime": "2026-01-01T00:00:00Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/PAGE_1",
+         "assets": []
+        }
+       ],
+       "returned": 1,
+       "dropped": 0,
+       "next": {
+        "method": "GET",
+        "href": "https://earth-search.aws.element84.com/v1/search?token=next%3Apage2"
+       }
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "GET sonraki sayfa",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "c"
+      ],
+      "limit": 1,
+      "next": {
+       "method": "GET",
+       "href": "https://earth-search.aws.element84.com/v1/search?token=next%3Apage2"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "GET",
+        "url": "https://earth-search.aws.element84.com/v1/search?token=next%3Apage2"
+       },
+       "items": [
+        {
+         "catalog": "https://earth-search.aws.element84.com/v1",
+         "id": "PAGE_2",
+         "collection": "c",
+         "datetime": "2026-01-02T00:00:00Z",
+         "bbox": [
+          36.0,
+          39.0,
+          37.0,
+          40.0
+         ],
+         "selfHref": "https://earth-search.aws.element84.com/v1/collections/c/items/PAGE_2",
+         "assets": []
+        }
+       ],
+       "returned": 1,
+       "dropped": 0
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sonuç yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "c"
+      ],
+      "bbox": [
+       0,
+       0,
+       1,
+       1
+      ],
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[0,0,1,1],\"collections\":[\"c\"],\"limit\":1}"
+       },
+       "items": [],
+       "returned": 0,
+       "dropped": 0,
+       "matched": 0
+      },
+      "warnings": []
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sunucu 503 verir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "down"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_request_failed",
+       "message": "POST https://earth-search.aws.element84.com/v1/search isteği cevap vermedi: Sunucu HTTP 503 dedi."
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cevap JSON değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "html"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_response_unreadable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Cevap öğe koleksiyonu değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "collections": [
+       "error"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "stac_response_unreadable",
+       "message": "$any"
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tarih gün olarak, öğe kimlikleri ve kutu tamsayı: gövde sıralı ve sayılar noktasız",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "endpoint": "https://earth-search.aws.element84.com/v1",
+      "bbox": [
+       36,
+       39,
+       37,
+       40
+      ],
+      "ids": [
+       "A"
+      ],
+      "limit": 100,
+      "maxCloudCover": 12.5,
+      "datetime": "2024-07-13"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "request": {
+        "method": "POST",
+        "url": "https://earth-search.aws.element84.com/v1/search",
+        "body": "{\"bbox\":[36,39,37,40],\"datetime\":\"2024-07-13T00:00:00Z/2024-07-13T23:59:59Z\",\"ids\":[\"A\"],\"limit\":100,\"query\":{\"eo:cloud_cover\":{\"lte\":12.5}}}"
+       },
+       "items": [],
+       "returned": 0,
+       "dropped": 0,
+       "matched": 0
+      },
+      "warnings": []
+     }
+    }
+   ]
+  }
+ ]
+}

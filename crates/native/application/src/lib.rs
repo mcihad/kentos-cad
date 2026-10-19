@@ -75,6 +75,8 @@ pub mod processing_run;
 pub mod processing_tools;
 pub mod source_places;
 pub mod csv_table;
+pub mod gis_derivation;
+pub mod gis_derive;
 pub mod file_import_csv;
 pub mod shapefile;
 pub mod sld;
@@ -211,6 +213,9 @@ pub mod links;
 pub mod assets_check;
 pub mod images_edit;
 pub mod rasters_mosaic;
+pub mod stac_host;
+pub mod stac_prepare;
+pub mod stac_search;
 pub mod inserts_clip;
 pub mod raster_files;
 pub mod rasters_georef;
@@ -264,6 +269,8 @@ pub mod fields_migrate;
 pub mod forms_export;
 pub mod forms_import;
 pub mod forms_validate;
+pub mod joins_edit;
+pub mod joins_query;
 pub mod relations_edit;
 pub mod widths;
 
@@ -418,6 +425,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::CAD_RELATIONS_EDIT,
         kentos_contracts::CAD_RELATIONS_EDIT_VERSION,
     ),
+    // The project's join views kept and read ([`joins_edit`], [`joins_query`], docs/adr/0527).
+    (
+        kentos_contracts::CAD_JOINS_EDIT,
+        kentos_contracts::CAD_JOINS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_JOINS_QUERY,
+        kentos_contracts::CAD_JOINS_QUERY_VERSION,
+    ),
     // Taramanın sınırı, adaları ve ilişkisi ([`hatches_edit`], docs/adr/0329 §4).
     (
         kentos_contracts::CAD_HATCHES_EDIT,
@@ -559,6 +575,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_IMAGES_EDIT,
         kentos_contracts::CAD_IMAGES_EDIT_VERSION,
+    ),
+    // STAC keşfi ve veri hazırlama ([`stac_search`], [`stac_prepare`], docs/adr/0528).
+    (
+        kentos_contracts::CAD_STAC_SEARCH,
+        kentos_contracts::CAD_STAC_SEARCH_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_STAC_PREPARE,
+        kentos_contracts::CAD_STAC_PREPARE_VERSION,
     ),
     // Sanal mozaik ([`rasters_mosaic`], docs/adr/0517).
     (
@@ -1007,6 +1032,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::FILE_IMPORT_CSV,
         kentos_contracts::FILE_IMPORT_CSV_VERSION,
+    ),
+    // A derived GIS dataset against the drawing ([`gis_derivation`], docs/adr/0530).
+    (
+        kentos_contracts::CAD_GIS_DERIVATION,
+        kentos_contracts::CAD_GIS_DERIVATION_VERSION,
     ),
     // An SLD's look made a layer's ([`sld`], docs/adr/0516).
     (

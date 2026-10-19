@@ -33,6 +33,7 @@ mod error;
 pub mod export;
 pub mod file_commands;
 pub mod files;
+pub mod gis_export;
 pub mod package;
 mod query;
 pub mod rpc;
