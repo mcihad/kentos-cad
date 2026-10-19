@@ -1923,6 +1923,20 @@
         "cad.inserts.clip"
       ],
       "note": "Kırp: yerleştirme ve sınır çizimden, yazma cad.inserts.clip ile tek adımda (ADR 0351 §1)."
+    },
+    "file.export.gis": {
+      "level": "semantic",
+      "via": [
+        "file.export.gis"
+      ],
+      "note": "Pencerede tolerans, yazı ve blokların akıbeti seçilir; tablolar, sapmalar ve yazılmayanlar önizlenir, Dışa aktar… komutla türevi bütün yazar (ADR 0530)."
+    },
+    "gis.derivation": {
+      "level": "query",
+      "via": [
+        "cad.gis.derivation"
+      ],
+      "note": "Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530)."
     }
   },
   "tools": {

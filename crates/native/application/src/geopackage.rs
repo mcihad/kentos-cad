@@ -838,7 +838,7 @@ fn family(g: &Geometry) -> (u8, bool, bool) {
 }
 
 /// The column's type and the geometries fitted to it (singles made multi where the column is).
-fn fit(geoms: &mut [Option<Geometry>]) -> Option<String> {
+pub(crate) fn fit(geoms: &mut [Option<Geometry>]) -> Option<String> {
     let fams: Vec<(u8, bool, bool)> = geoms.iter().flatten().map(family).collect();
     let first = fams.first()?;
     if fams.iter().any(|f| f.0 != first.0) {
@@ -918,7 +918,7 @@ pub(crate) fn cell(text: Option<&String>, kind: &ColumnKind) -> Value {
 
 /// The project's coordinate system as a GeoPackage's (its EPSG code and WKT); the undefined cartesian one for a local
 /// project.
-fn srs_of(doc: &Document) -> gpkg::Srs {
+pub(crate) fn srs_of(doc: &Document) -> gpkg::Srs {
     let srid = doc.settings().srid;
     let found = kentos_project::crs::system(srid).and_then(|s| {
         let core = s.transform_system()?;

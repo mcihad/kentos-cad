@@ -1163,6 +1163,17 @@ codes! {
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
     /// A `.shp` path for an export of more than one Shapefile (docs/adr/0514).
     SEVERAL_SHAPEFILES = "several_shapefiles", Failed, false, "Dışa aktarma birden çok Shapefile yapıyor (birden çok katman ya da geometri türü); .shp yerine bir klasör ya da .zip verin.";
+    /// A table that is a CAD derivative (docs/adr/0530): it is not bound, read into a layer or written back, since
+    /// its chords would stand for the arcs of the drawing.
+    DERIVED_DATASET = "derived_dataset", Failed, false, "Tablo çizimden türetilmiş bir GIS verisi: kaynak çizimdedir, türev geometrisi (kirişler) kaynağın yerine geçmez. Bağlanmaz, katmana okunmaz, geri yazılmaz; GIS'te yapılanı cad.gis.derivation gösterir.";
+    /// A derivative's table taken in as it is (docs/adr/0530).
+    DERIVED_IMPORT = "derived_import", Warning, false, "Alınan tablo çizimden türetilmiş bir GIS verisi: geometrisi kaynak yayların kirişleridir, yay olarak değil çoklu çizgi ve alan olarak alındı.";
+    /// A file with no derivation record (docs/adr/0530).
+    NOT_A_DERIVATION = "not_a_derivation", Failed, false, "Dosyada KentOS'un türetim kaydı yok; file.export.gis'in yazdığı bir dosya değil.";
+    /// A derivative that no longer matches its sources (docs/adr/0530).
+    DERIVATION_STALE = "derivation_stale", Warning, false, "Türevin bazı satırlarının kaynağı dışa aktarmadan sonra değişti ya da silindi; türev eski. Yeniden dışa aktarın.";
+    /// A derivative's rows changed in the GIS (docs/adr/0530).
+    DERIVATION_EDITED = "derivation_edited", Warning, false, "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz.";
     /// An SLD whose look KentOS cannot read (docs/adr/0516).
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).

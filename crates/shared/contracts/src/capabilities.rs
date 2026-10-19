@@ -2856,7 +2856,7 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found", "invalid_address", "source_unreachable"],
             LAYER,
-            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent"],
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "derived_dataset"],
         ],
         warnings: &["crs_undeclared", "import_losses"],
         targets: none,
@@ -2908,7 +2908,7 @@ const ENTRIES: &[Entry] = &[
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
-            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+            &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent", "derived_dataset"],
             // docs/adr/0531: the neighbours outside a part's area.
             &["topology_on_read", "outside_neighbour_invalid"],
         ],
@@ -2922,7 +2922,7 @@ const ENTRIES: &[Entry] = &[
             LAYER,
             &["crs_mismatch", "entity_exists", "nothing_to_import"],
         ],
-        warnings: &["crs_undeclared", "import_losses"],
+        warnings: &["crs_undeclared", "import_losses", "derived_import"],
         targets: none,
     },
     Entry {
@@ -3193,6 +3193,25 @@ const ENTRIES: &[Entry] = &[
             "file_unwritable",
         ]],
         warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.export.gis",
+        refusals: &[&[
+            "invalid_file_path",
+            "file_exists",
+            "invalid_tolerance",
+            "layer_not_found",
+            "nothing_to_export",
+            "file_unwritable",
+        ]],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.gis.derivation",
+        refusals: &[&["invalid_file_path", "file_not_found", "import_unreadable", "not_a_derivation"]],
+        warnings: &["derivation_stale", "derivation_edited"],
         targets: none,
     },
     Entry {
