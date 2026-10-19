@@ -173,6 +173,21 @@ fn pointed_scenes() -> Vec<Pointed> {
                 s.input(app, App::view, &mut update, Input::Move(at));
             },
         ),
+        // Görünüş ▸ Renk ▸: a submenu's submenu, the third panel.
+        (
+            "katman-menu-renk",
+            |_| {},
+            |s, app| {
+                press_caption(s, app, "Parsel", true, false);
+                let mut update = |app: &mut App, message: Message| {
+                    let _ = app.update(message);
+                };
+                for caption in ["Görünüş", "Renk"] {
+                    let at = caption_at(s, app, caption, false);
+                    s.input(app, App::view, &mut update, Input::Move(at));
+                }
+            },
+        ),
         // Çizim dragged over the Kadastro group: dropped into it, its mark on the row.
         (
             "katman-surukle",

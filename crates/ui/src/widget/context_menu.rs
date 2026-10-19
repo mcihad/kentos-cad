@@ -19,6 +19,8 @@
 //! listeden art arda işaretlenir (seçim süzgecinin türleri). Başka
 //! bir yere sağ tıklamak menüyü orada yeniden açar. Klavyeyle de kullanılır:
 //! oklar komutlar arasında gezinir, sağ ok alt menüyü açar, Enter seçer.
+//! Alt menünün de alt menüsü olur: ana menüden sonra üç düzey açılır, her
+//! biri açıldığı satırın yanında; sol ok ve Esc bir düzey geri döner.
 //!
 //! Menü içeriği ([`Menu`]) menü açıkken, sağ tıklanan noktanın öğe
 //! içindeki konumuyla kurulur. Böylece model alanında tıklanan koordinata
@@ -121,6 +123,8 @@ const PREVIEW_MAX_WIDTH: f32 = 420.0;
 const DETAIL_LEADING: f32 = 1.35;
 /// Alt menünün ana menünün üstüne binen kısmı.
 const SUBMENU_OVERLAP: f32 = 2.0;
+/// How deep submenus open: a submenu, its submenu and one more.
+const DEPTH: usize = 3;
 /// Menü imlecin bu kadar sağında ve altında açılır.
 const CURSOR_GAP: f32 = 2.0;
 /// Menü düğmesinin menüsüyle düğme arasındaki boşluk.
@@ -705,7 +709,8 @@ enum Trigger {
 struct Open<'a, Message> {
     menu: Menu<Message>,
     main: Element<'a, Message>,
-    sub: Option<Element<'a, Message>>,
+    /// The open submenus' panels, the first's first.
+    subs: Vec<Element<'a, Message>>,
 }
 
 impl<'a, Message: Clone + 'a> ContextMenu<'a, Message> {
@@ -844,7 +849,8 @@ impl<'a, Message: Clone + 'a> From<MenuButton<'a, Message>> for Element<'a, Mess
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Target {
     Main(usize),
-    Sub(usize),
+    /// A row of the open submenu at a level (0: the main menu's).
+    Sub(usize, usize),
 }
 
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
@@ -854,8 +860,8 @@ struct State {
     /// Uygulamanın açtığı menüde son eşlenen yer ([`ContextMenu::controlled`]).
     synced: Option<Vector>,
     hovered: Option<Target>,
-    /// Açık alt menünün ana menüdeki sırası.
-    submenu: Option<usize>,
+    /// Açık alt menülerin üst menülerindeki sıraları: ilki ana menüde, sonrakiler bir üsttekinde.
+    submenu: [Option<usize>; DEPTH],
     /// İmleç menü düğmesinin üzerinde mi; değişince zemin yeniden çizilir.
     over: bool,
     /// Basılı değiştirici tuşlar; macOS'ta Control + tık sağ tıktır.
@@ -878,11 +884,13 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
     }
 
     fn children(&self) -> Vec<Tree> {
-        vec![Tree::new(&self.content), Tree::empty(), Tree::empty()]
+        let mut out = vec![Tree::new(&self.content), Tree::empty()];
+        out.extend((0..DEPTH).map(|_| Tree::empty()));
+        out
     }
 
     fn diff(&self, tree: &mut Tree) {
-        if tree.children.len() == 3 {
+        if tree.children.len() == 2 + DEPTH {
             tree.children[0].diff(&self.content);
         } else {
             tree.children = self.children();
@@ -1126,9 +1134,8 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
         } = tree;
         let state = state.downcast_mut::<State>();
         self.sync(state);
-        let [content_tree, main_tree, sub_tree] = children.as_mut_slice() else {
-            return None;
-        };
+        let (content_tree, rest) = children.split_first_mut()?;
+        let (main_tree, sub_trees) = rest.split_first_mut()?;
 
         let content = self.content.as_widget_mut().overlay(
             content_tree,
@@ -1145,27 +1152,34 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                 let main_highlight = match state.hovered {
                     Some(Target::Main(index)) => Some(index),
                     // Alt menüde gezinirken üst komut vurgulu kalır.
-                    _ => state.submenu,
-                };
-                let sub_highlight = match state.hovered {
-                    Some(Target::Sub(index)) => Some(index),
-                    _ => None,
+                    _ => state.submenu[0],
                 };
 
                 // The main box is drawn in a layer that clips it to the window,
-                // its shadow outside that layer (`draw`); the submenu draws its own.
+                // its shadow outside that layer (`draw`); the submenus draw their own.
                 let main = panel(&menu, main_highlight, style::container::popover_flat);
-                let sub = state
-                    .submenu
-                    .and_then(|index| menu.submenu_of(index))
-                    .map(|submenu| panel(submenu, sub_highlight, style::container::popover));
+                let mut subs = Vec::new();
+                let mut above = &menu;
+                for level in 0..DEPTH {
+                    let Some(sub) = state.submenu[level].and_then(|index| above.submenu_of(index))
+                    else {
+                        break;
+                    };
+                    let highlight = match state.hovered {
+                        Some(Target::Sub(l, index)) if l == level => Some(index),
+                        // A deeper submenu's row stays lit in the one it opened from.
+                        _ => state.submenu.get(level + 1).copied().flatten(),
+                    };
+                    subs.push(panel(sub, highlight, style::container::popover));
+                    above = sub;
+                }
 
-                let open = self.open.insert(Open { menu, main, sub });
+                let open = self.open.insert(Open { menu, main, subs });
 
                 main_tree.diff(&open.main);
 
-                if let Some(sub) = &open.sub {
-                    sub_tree.diff(sub);
+                for (sub, tree) in open.subs.iter().zip(sub_trees.iter_mut()) {
+                    tree.diff(sub);
                 }
 
                 let (anchor, gap) = match self.trigger {
@@ -1183,9 +1197,9 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for ContextMenu<'
                     gap,
                     menu: &open.menu,
                     main: &mut open.main,
-                    sub: open.sub.as_mut(),
+                    subs: open.subs.iter_mut().collect(),
                     main_tree,
-                    sub_tree,
+                    sub_trees,
                     state,
                     on_close: self.controlled.as_ref().map(|(_, message)| message.clone()),
                 })))
@@ -1220,9 +1234,10 @@ struct Overlay<'a, 'b, Message> {
     gap: Vector,
     menu: &'b Menu<Message>,
     main: &'b mut Element<'a, Message>,
-    sub: Option<&'b mut Element<'a, Message>>,
+    /// The open submenus' panels, the first's first, and their trees.
+    subs: Vec<&'b mut Element<'a, Message>>,
     main_tree: &'b mut Tree,
-    sub_tree: &'b mut Tree,
+    sub_trees: &'b mut [Tree],
     state: &'b mut State,
     /// The app's menu tells it when it closes ([`ContextMenu::controlled`]).
     on_close: Option<Message>,
@@ -1265,31 +1280,72 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         }
     }
 
-    fn set_submenu(&mut self, submenu: Option<usize>, shell: &mut Shell<'_, Message>) {
-        if self.state.submenu != submenu {
-            self.state.submenu = submenu;
+    /// The submenu at `level` opened from row `submenu` of the one above it (none: closed), the deeper ones closed.
+    fn set_submenu(
+        &mut self,
+        level: usize,
+        submenu: Option<usize>,
+        shell: &mut Shell<'_, Message>,
+    ) {
+        let mut next = self.state.submenu;
+        next[level] = submenu;
+        for deeper in next.iter_mut().skip(level + 1) {
+            *deeper = None;
+        }
+        if self.state.submenu != next {
+            self.state.submenu = next;
             shell.invalidate_layout();
             shell.request_redraw();
         }
     }
 
-    fn open_submenu(&self) -> Option<&'b Menu<Message>> {
-        let menu: &'b Menu<Message> = self.menu;
+    /// The open submenus, the first's first: each from its row in the one above.
+    fn open_menus(&self) -> Vec<&'b Menu<Message>> {
+        let mut out = Vec::new();
+        let mut above: &'b Menu<Message> = self.menu;
+        for index in self.state.submenu {
+            let Some(sub) = index.and_then(|index| above.submenu_of(index)) else {
+                break;
+            };
+            out.push(sub);
+            above = sub;
+        }
+        out
+    }
 
-        self.state.submenu.and_then(|index| menu.submenu_of(index))
+    /// The open submenu at `level`.
+    fn menu_at(&self, level: usize) -> Option<&'b Menu<Message>> {
+        self.open_menus().get(level).copied()
+    }
+
+    /// A target's item.
+    fn item_of(&self, target: Target) -> Option<&'b Item<Message>> {
+        match target {
+            Target::Main(index) => self.menu.items.get(index),
+            Target::Sub(level, index) => self.menu_at(level).and_then(|m| m.items.get(index)),
+        }
+    }
+
+    /// The row a submenu opened from: the main menu's or the level above's.
+    fn parent_of(level: usize, index: usize) -> Target {
+        if level == 0 {
+            Target::Main(index)
+        } else {
+            Target::Sub(level - 1, index)
+        }
     }
 
     /// İmlecin altındaki komut.
     fn target_at(&self, layout: Layout<'_>, position: Point) -> Option<Target> {
         let mut layouts = layout.children();
         let main = layouts.next()?.bounds();
-        let sub = layouts.next().map(|layout| layout.bounds());
+        let subs: Vec<Layout<'_>> = layouts.collect();
 
-        if let (Some(bounds), Some(_)) = (sub, self.open_submenu())
-            && bounds.contains(position)
-        {
-            let sub = layout.children().nth(1)?;
-            return row_at(sub, position).map(Target::Sub);
+        // The deepest submenu over the others.
+        for (level, sub) in subs.iter().enumerate().rev() {
+            if sub.bounds().contains(position) {
+                return row_at(*sub, position).map(|index| Target::Sub(level, index));
+            }
         }
 
         main.contains(position)
@@ -1339,12 +1395,7 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
     /// Komutu çalıştırır: alt menüyü açar ya da mesajı yayınlayıp kapatır
     /// ([`Menu::stay`] komutunda açık kalır).
     fn activate(&mut self, target: Target, shell: &mut Shell<'_, Message>) {
-        let menu: &'b Menu<Message> = self.menu;
-
-        let item = match target {
-            Target::Main(index) => menu.items.get(index),
-            Target::Sub(index) => self.open_submenu().and_then(|menu| menu.items.get(index)),
-        };
+        let item = self.item_of(target);
 
         match item {
             Some(Item::Command(Command {
@@ -1365,12 +1416,14 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
                 self.close(shell);
             }
             Some(Item::Submenu { menu, .. }) if !menu.is_empty() => {
-                if let Target::Main(index) = target {
-                    let first = menu.step(None, true);
-
-                    self.set_submenu(Some(index), shell);
-                    self.set_hovered(first.map(Target::Sub), shell);
-                }
+                let first = menu.step(None, true);
+                let (level, index) = match target {
+                    Target::Main(index) => (0, index),
+                    Target::Sub(level, index) if level + 1 < DEPTH => (level + 1, index),
+                    Target::Sub(..) => return,
+                };
+                self.set_submenu(level, Some(index), shell);
+                self.set_hovered(first.map(|i| Target::Sub(level, i)), shell);
             }
             _ => {}
         }
@@ -1382,12 +1435,7 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
 
         match key {
             Key::Named(Named::Escape) => {
-                if let (Some(Target::Sub(_)), Some(parent)) =
-                    (self.state.hovered, self.state.submenu)
-                {
-                    self.set_submenu(None, shell);
-                    self.set_hovered(Some(Target::Main(parent)), shell);
-                } else {
+                if !self.back(shell) {
                     self.close(shell);
                 }
             }
@@ -1395,12 +1443,16 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
                 let forward = key == Key::Named(Named::ArrowDown);
 
                 let hovered = match self.state.hovered {
-                    Some(Target::Sub(index)) => self
-                        .open_submenu()
-                        .and_then(|menu| menu.step(Some(index), forward))
-                        .map(Target::Sub),
+                    Some(Target::Sub(level, index)) => {
+                        if level + 1 < DEPTH {
+                            self.set_submenu(level + 1, None, shell);
+                        }
+                        self.menu_at(level)
+                            .and_then(|menu| menu.step(Some(index), forward))
+                            .map(|i| Target::Sub(level, i))
+                    }
                     Some(Target::Main(index)) => {
-                        self.set_submenu(None, shell);
+                        self.set_submenu(0, None, shell);
                         self.menu.step(Some(index), forward).map(Target::Main)
                     }
                     None => self.menu.step(None, forward).map(Target::Main),
@@ -1408,18 +1460,16 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
 
                 self.set_hovered(hovered, shell);
             }
+            // The arrow opens a submenu; on a command it does nothing (Enter runs it).
             Key::Named(Named::ArrowRight) => {
-                if let Some(Target::Main(index)) = self.state.hovered {
-                    self.activate(Target::Main(index), shell);
+                if let Some(target) = self.state.hovered
+                    && matches!(self.item_of(target), Some(Item::Submenu { .. }))
+                {
+                    self.activate(target, shell);
                 }
             }
             Key::Named(Named::ArrowLeft) => {
-                if let (Some(Target::Sub(_)), Some(parent)) =
-                    (self.state.hovered, self.state.submenu)
-                {
-                    self.set_submenu(None, shell);
-                    self.set_hovered(Some(Target::Main(parent)), shell);
-                }
+                self.back(shell);
             }
             Key::Named(Named::Enter | Named::Space) => {
                 if let Some(target) = self.state.hovered {
@@ -1430,6 +1480,26 @@ impl<'b, Message: Clone> Overlay<'_, 'b, Message> {
         }
 
         true
+    }
+}
+
+impl<Message: Clone> Overlay<'_, '_, Message> {
+    /// Back from a submenu to the row it opened from: false when none is lit.
+    fn back(&mut self, shell: &mut Shell<'_, Message>) -> bool {
+        let Some(Target::Sub(level, _)) = self.state.hovered else {
+            return false;
+        };
+        let Some(parent) = self.state.submenu[level] else {
+            return false;
+        };
+        self.set_submenu(level, None, shell);
+        self.set_hovered(Some(Self::parent_of(level, parent)), shell);
+        true
+    }
+
+    /// Whether a target's row can be chosen.
+    fn selectable(&self, target: Target) -> bool {
+        self.item_of(target).is_some_and(Item::is_selectable)
     }
 }
 
@@ -1449,9 +1519,11 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
                 .as_widget_mut()
                 .operate(self.main_tree, panel, renderer, operation);
         }
-        if let (Some(sub), Some(panel)) = (self.sub.as_mut(), children.next()) {
-            sub.as_widget_mut()
-                .operate(self.sub_tree, panel, renderer, operation);
+        for (level, panel) in children.enumerate() {
+            if let Some(sub) = self.subs.get_mut(level) {
+                sub.as_widget_mut()
+                    .operate(&mut self.sub_trees[level], panel, renderer, operation);
+            }
         }
     }
 
@@ -1513,26 +1585,51 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
         );
         let mut children = vec![visible.move_to(origin)];
 
-        if let (Some(sub), Some(index)) = (self.sub.as_mut(), self.state.submenu) {
-            let node = sub.as_widget_mut().layout(self.sub_tree, renderer, &limits);
+        // Each submenu beside the row it opened from: the main menu's (moved by its scroll), then the one above's.
+        let mut above = main_node;
+        let mut above_at = origin;
+        let mut above_scroll = scroll;
+        let mut above_menu: &Menu<Message> = self.menu;
+        let mut leftward = false;
+        for level in 0..self.subs.len() {
+            let Some(index) = self.state.submenu[level] else {
+                break;
+            };
+            let node = self.subs[level].as_widget_mut().layout(
+                &mut self.sub_trees[level],
+                renderer,
+                &limits,
+            );
             let sub_size = node.size();
 
             // Alt menünün ilk komutu üst komutla aynı hizada; sağa sığmazsa
-            // sola açılır.
-            let right = origin.x + size.width - SUBMENU_OVERLAP;
-            let x = if right + sub_size.width <= bounds.width {
-                right
+            // sola açılır. Sola açılmış bir alt menünün altındakiler de sola
+            // açılır: üstteki panellerin üstüne binmesinler.
+            let right = above_at.x + above.size().width - SUBMENU_OVERLAP;
+            let left = above_at.x - sub_size.width + SUBMENU_OVERLAP;
+            let fits_right = right + sub_size.width <= bounds.width;
+            leftward = if leftward {
+                left >= 0.0 || !fits_right
             } else {
-                (origin.x - sub_size.width + SUBMENU_OVERLAP).max(0.0)
+                !fits_right
             };
+            let x = if leftward { left.max(0.0) } else { right };
             // The row's own top in the panel as laid out (rows with a detail
             // line are as tall as their text).
-            let top = row_top(&main_node, index).unwrap_or_else(|| self.menu.offset(index));
-            let y = (origin.y + top - PADDING - scroll)
+            let top = row_top(&above, index).unwrap_or_else(|| above_menu.offset(index));
+            let y = (above_at.y + top - PADDING - above_scroll)
                 .min(bounds.height - sub_size.height)
                 .max(0.0);
+            let at = Point::new(x, y);
 
-            children.push(node.move_to(Point::new(x, y)));
+            children.push(node.clone().move_to(at));
+            match above_menu.submenu_of(index) {
+                Some(menu) => above_menu = menu,
+                None => break,
+            }
+            above = node;
+            above_at = at;
+            above_scroll = 0.0;
         }
 
         layout::Node::with_children(bounds, children)
@@ -1617,16 +1714,21 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             }
         }
 
-        if let (Some(sub), Some(layout)) = (self.sub.as_ref(), layouts.next()) {
-            sub.as_widget().draw(
-                self.sub_tree,
-                renderer,
-                theme,
-                style,
-                layout,
-                cursor,
-                &viewport,
-            );
+        // Each submenu in a layer of its own, over the panel it opened from.
+        for (level, layout) in layouts.enumerate() {
+            if let Some(sub) = self.subs.get(level) {
+                renderer.with_layer(viewport, |renderer| {
+                    sub.as_widget().draw(
+                        &self.sub_trees[level],
+                        renderer,
+                        theme,
+                        style,
+                        layout,
+                        cursor,
+                        &viewport,
+                    );
+                });
+            }
         }
     }
 
@@ -1646,17 +1748,22 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
 
         match event {
             Event::Mouse(mouse::Event::CursorMoved { .. }) => {
-                if let Some(Target::Main(index)) = target {
-                    let submenu = self.menu.submenu_of(index).map(|_| index);
-                    self.set_submenu(submenu, shell);
+                match target {
+                    Some(Target::Main(index)) => {
+                        let submenu = self.menu.submenu_of(index).map(|_| index);
+                        self.set_submenu(0, submenu, shell);
+                    }
+                    Some(Target::Sub(level, index)) if level + 1 < DEPTH => {
+                        let submenu = self
+                            .menu_at(level)
+                            .and_then(|menu| menu.submenu_of(index))
+                            .map(|_| index);
+                        self.set_submenu(level + 1, submenu, shell);
+                    }
+                    _ => {}
                 }
 
-                let selectable = target.filter(|target| match *target {
-                    Target::Main(index) => self.menu.items[index].is_selectable(),
-                    Target::Sub(index) => self
-                        .open_submenu()
-                        .is_some_and(|menu| menu.items[index].is_selectable()),
-                });
+                let selectable = target.filter(|target| self.selectable(*target));
 
                 // Menünün dışına çıkınca vurgu kalkar; alt menü açık kalır.
                 if over || self.state.hovered.is_some() {
@@ -1738,13 +1845,9 @@ impl<Message: Clone> overlay::Overlay<Message, Theme, Renderer> for Overlay<'_, 
             return mouse::Interaction::None;
         };
 
-        let selectable = match self.target_at(layout, position) {
-            Some(Target::Main(index)) => self.menu.items[index].is_selectable(),
-            Some(Target::Sub(index)) => self
-                .open_submenu()
-                .is_some_and(|menu| menu.items[index].is_selectable()),
-            None => false,
-        };
+        let selectable = self
+            .target_at(layout, position)
+            .is_some_and(|target| self.selectable(target));
 
         if selectable {
             mouse::Interaction::Pointer
@@ -2372,6 +2475,99 @@ mod tests {
             snapshot.input(&mut state, view, &mut update, Input::Key(key));
         }
         assert_eq!(state.1, vec![0, 1, 0, 9]);
+    }
+
+    #[test]
+    fn a_submenu_of_a_submenu_opens_by_the_mouse_and_the_keys() {
+        use crate::snapshot::{Input, Snapshot};
+        use iced::keyboard::key::Named;
+        use std::sync::{Arc, Mutex};
+
+        fn view(_: &Vec<u8>) -> Element<'_, u8> {
+            container(MenuButton::new(label::body("Katman"), || {
+                Menu::new().item("Gizle", 9_u8).submenu(
+                    "Görünüş",
+                    Menu::new()
+                        .submenu("Renk", Menu::new().item("Kırmızı", 1_u8).item("Mavi", 2_u8))
+                        .submenu(
+                            "Kalınlık",
+                            Menu::new().submenu("İnce", Menu::new().item("0,13", 3_u8)),
+                        ),
+                )
+            }))
+            .padding(iced::Padding {
+                top: 20.0,
+                left: 20.0,
+                ..iced::Padding::default()
+            })
+            .into()
+        }
+        fn row(snapshot: &mut Snapshot, picked: &Vec<u8>, caption: &str) -> Option<Point> {
+            struct Find(String, Arc<Mutex<Option<Rectangle>>>);
+            impl widget::Operation for Find {
+                fn traverse(&mut self, operate: &mut dyn FnMut(&mut dyn widget::Operation)) {
+                    operate(self);
+                }
+                fn text(&mut self, _id: Option<&widget::Id>, bounds: Rectangle, text: &str) {
+                    if text == self.0
+                        && let Ok(mut found) = self.1.lock()
+                    {
+                        *found = Some(bounds);
+                    }
+                }
+            }
+            let found = Arc::new(Mutex::new(None));
+            snapshot.operate(
+                view(picked),
+                Box::new(Find(caption.to_owned(), found.clone())),
+            );
+            let at = found.lock().ok().and_then(|f| *f);
+            at.map(|r| r.center())
+        }
+        let mut update = |p: &mut Vec<u8>, m: u8| p.push(m);
+        let mut snapshot = Snapshot::new(Size::new(600.0, 300.0)).expect("a renderer");
+        let mut picked: Vec<u8> = Vec::new();
+        let open = Input::Click(Point::new(30.0, 28.0));
+
+        // By the mouse: Görünüş, then Renk, then Mavi in the third panel.
+        snapshot.input(&mut picked, view, &mut update, open.clone());
+        for caption in ["Görünüş", "Renk"] {
+            let at = row(&mut snapshot, &picked, caption).expect(caption);
+            snapshot.input(&mut picked, view, &mut update, Input::Move(at));
+        }
+        let mavi = row(&mut snapshot, &picked, "Mavi").expect("the third level is open");
+        snapshot.input(&mut picked, view, &mut update, Input::Move(mavi));
+        snapshot.input(&mut picked, view, &mut update, Input::Click(mavi));
+        assert_eq!(picked, vec![2]);
+
+        // A fourth panel too: Görünüş › Kalınlık › İnce › 0,13.
+        snapshot.input(&mut picked, view, &mut update, open.clone());
+        for caption in ["Görünüş", "Kalınlık", "İnce"] {
+            let at = row(&mut snapshot, &picked, caption).expect(caption);
+            snapshot.input(&mut picked, view, &mut update, Input::Move(at));
+        }
+        let thin = row(&mut snapshot, &picked, "0,13").expect("the fourth panel is open");
+        snapshot.input(&mut picked, view, &mut update, Input::Move(thin));
+        snapshot.input(&mut picked, view, &mut update, Input::Click(thin));
+        assert_eq!(picked, vec![2, 3]);
+
+        // By the keys: down to Görünüş (right on Gizle runs nothing), right twice, Escape back a level, right again,
+        // down to Mavi, Enter.
+        snapshot.input(&mut picked, view, &mut update, open);
+        for key in [
+            Named::ArrowDown,
+            Named::ArrowRight,
+            Named::ArrowDown,
+            Named::ArrowRight,
+            Named::ArrowRight,
+            Named::Escape,
+            Named::ArrowRight,
+            Named::ArrowDown,
+            Named::Enter,
+        ] {
+            snapshot.input(&mut picked, view, &mut update, Input::Key(key));
+        }
+        assert_eq!(picked, vec![2, 3, 2]);
     }
 
     #[test]
