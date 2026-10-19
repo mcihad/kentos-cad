@@ -39,6 +39,8 @@ kentos-kcad = { path = "../../shared/kcad" }
 sha2 = { workspace = true }
 # STAC discovery and preparation (docs/adr/0528): the services core's rules; the fetch is the host's.
 kentos-services = { path = "../../shared/services" }
+# A point cloud's source metadata and its points by a lasting id (docs/adr/0536): the point cloud core reads the files.
+kentos-pointcloud = { path = "../../shared/pointcloud" }
 # The protocol's wrapper (docs/adr/0253) reads every command's input as the type it is.
 serde = { workspace = true }
 serde_json = { workspace = true }

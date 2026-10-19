@@ -760,7 +760,10 @@
       ]
     },
     "pointcloud.query": {
-      "level": "query"
+      "level": "query",
+      "python": "kentos.cad.pointclouds.query",
+      "mcp": "cad.pointclouds.query",
+      "note": "Araç kendi dizinleriyle en yakın noktayı bulur; komut aynı noktayı dosyanın tam çözünürlüğünde kalıcı kimliğiyle verir (ADR 0536)."
     },
     "pointcloud.vpcSave": {
       "level": "none"

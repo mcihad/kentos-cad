@@ -549400,6 +549400,1131 @@
       ]
     },
     {
+      "id": "cad.pointclouds.describe",
+      "version": 1,
+      "title": "Nokta bulutunun bilgisi",
+      "summary": "Çizimin nokta bulutlarının (uids; yoksa hepsi, çizimin sırasıyla) her kaynağının başlığını okur ve söyler; çizimi değiştirmez. Kaynak: türü (las, laz, copc, text) ve sürümü, nokta biçimi ve kaydın boyu, nokta sayısı, kutusu, ölçek ve öteleme; yatay sistem (EPSG ve dosyanın yazdığı ad) ve düşey sistem (WKT'nin VERT_CS ya da VERTCRS adı, GeoTIFF anahtarı 4096'nın EPSG:n'si; yazmayan dosyada yok: kotların dayanağı bilinmez); başlığın oluşturulma günü (YYYY-MM-DD), noktaların GPS zamanı (standard ya da week), sistem ve yazılım, kaynak kimliği, GUID; her noktanın boyutları LAS'ın sırasıyla ve ek baytların adları ve türleri, dönüşe göre nokta sayıları, COPC'nin düğümleri. classes ile her noktanın sınıfı sayılır (kaynak bütün okunur; bir çağrıda en çok 200 milyon nokta, fazlası too_many_cloud_points). Metin bulutunun başlığı yoktur: sayısı ve kutusu bulutun kaydından. Okunamayan kaynak (bulunamadı, adresteki bulut, bozuk dosya) why ile söylenir ve uyarılır (cloud_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır (kayıtlı yol, çizimin klasörü, arama yolları); drawing açık çizimin dosyasıdır.",
+      "aliases": [
+        "bulutbilgisi",
+        "lasbilgi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.describe` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,\n`too_many_points`.",
+        "properties": {
+          "classes": {
+            "description": "Count every point's classification (each source read whole).",
+            "type": "boolean"
+          },
+          "drawing": {
+            "description": "The open drawing's file, a relative source's folder (the host gives it).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The point clouds (persistent ids); none: every point cloud of the drawing, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "title": "PointCloudsDescribe",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CloudDescribed": {
+            "description": "A point cloud described.",
+            "properties": {
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSourceDescribed"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The cloud's system in the project (0: none).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "srid",
+              "count",
+              "sources"
+            ],
+            "type": "object"
+          },
+          "CloudExtra": {
+            "description": "An extra dimension of a source's points (LAS's extra bytes, LASF_Spec 4).",
+            "properties": {
+              "kind": {
+                "description": "`u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `f32`, `f64`, or `bytes` (an undocumented one).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "size": {
+                "description": "Its bytes in each point.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "size"
+            ],
+            "type": "object"
+          },
+          "CloudSourceDescribed": {
+            "description": "One source of a point cloud as its header says it.",
+            "properties": {
+              "asset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]` in the file's system.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "byReturn": {
+                "description": "The points by return number (the header's), up to the last that has any.",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "count"
+              },
+              "classes": {
+                "additionalProperties": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "With `classes`: each classification code (as text) and its points.",
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "created": {
+                "description": "The header's creation day as `YYYY-MM-DD`; none when the file leaves it 0.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "crsName": {
+                "description": "The horizontal system's name as the file writes it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimensions": {
+                "description": "The dimensions every point has, the format's in its order (`x`, `y`, `z`, `intensity`, …).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "epsg": {
+                "description": "The horizontal system's EPSG code, when the file names one KentOS can tell.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "extra": {
+                "items": {
+                  "$ref": "#/$defs/CloudExtra"
+                },
+                "type": "array"
+              },
+              "file": {
+                "description": "The source as the cloud names it: its file, address or library asset.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "gpsTime": {
+                "description": "Which GPS time the points carry: `standard` (adjusted standard GPS time) or `week` (seconds of the GPS week);\nnone when the format has no time.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "guid": {
+                "description": "The project's GUID as the header holds it (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`); none when it is zero.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "description": "`las`, `laz`, `copc`, or `text` (XYZ, PTS, TXT, CSV: a text cloud has no header, its count and bounds are the\ncloud's own record).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "A COPC's nodes.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "read": {
+                "description": "Whether its header was read; when not, `why`.",
+                "type": "boolean"
+              },
+              "recordLen": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "scale": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "software": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sourceId": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "system": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "`1.2`, `1.4`; none for a text cloud.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "vertical": {
+                "description": "The vertical system as the file names it: its name (a WKT's `VERT_CS`/`VERTCRS`) or `EPSG:n` (a GeoTIFF key);\nnone when the file names none (the heights' datum then unknown).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "why": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "read",
+              "kind",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.describe` v1.",
+        "properties": {
+          "clouds": {
+            "items": {
+              "$ref": "#/$defs/CloudDescribed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clouds",
+          "revision"
+        ],
+        "title": "PointCloudsDescribed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CloudDescribed": {
+            "description": "A point cloud described.",
+            "properties": {
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "sources": {
+                "items": {
+                  "$ref": "#/$defs/CloudSourceDescribed"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The cloud's system in the project (0: none).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "srid",
+              "count",
+              "sources"
+            ],
+            "type": "object"
+          },
+          "CloudExtra": {
+            "description": "An extra dimension of a source's points (LAS's extra bytes, LASF_Spec 4).",
+            "properties": {
+              "kind": {
+                "description": "`u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `f32`, `f64`, or `bytes` (an undocumented one).",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "size": {
+                "description": "Its bytes in each point.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "kind",
+              "size"
+            ],
+            "type": "object"
+          },
+          "CloudSourceDescribed": {
+            "description": "One source of a point cloud as its header says it.",
+            "properties": {
+              "asset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]` in the file's system.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "byReturn": {
+                "description": "The points by return number (the header's), up to the last that has any.",
+                "items": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "count"
+              },
+              "classes": {
+                "additionalProperties": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "With `classes`: each classification code (as text) and its points.",
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "created": {
+                "description": "The header's creation day as `YYYY-MM-DD`; none when the file leaves it 0.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "crsName": {
+                "description": "The horizontal system's name as the file writes it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dimensions": {
+                "description": "The dimensions every point has, the format's in its order (`x`, `y`, `z`, `intensity`, …).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "epsg": {
+                "description": "The horizontal system's EPSG code, when the file names one KentOS can tell.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "extra": {
+                "items": {
+                  "$ref": "#/$defs/CloudExtra"
+                },
+                "type": "array"
+              },
+              "file": {
+                "description": "The source as the cloud names it: its file, address or library asset.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "format": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "gpsTime": {
+                "description": "Which GPS time the points carry: `standard` (adjusted standard GPS time) or `week` (seconds of the GPS week);\nnone when the format has no time.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "guid": {
+                "description": "The project's GUID as the header holds it (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`); none when it is zero.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "description": "`las`, `laz`, `copc`, or `text` (XYZ, PTS, TXT, CSV: a text cloud has no header, its count and bounds are the\ncloud's own record).",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "A COPC's nodes.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "offset": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "read": {
+                "description": "Whether its header was read; when not, `why`.",
+                "type": "boolean"
+              },
+              "recordLen": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "scale": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "software": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "sourceId": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "system": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "version": {
+                "description": "`1.2`, `1.4`; none for a text cloud.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "vertical": {
+                "description": "The vertical system as the file names it: its name (a WKT's `VERT_CS`/`VERTCRS`) or `EPSG:n` (a GeoTIFF key);\nnone when the file names none (the heights' datum then unknown).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "why": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "read",
+              "kind",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.describe` v1.",
+        "properties": {
+          "clouds": {
+            "items": {
+              "$ref": "#/$defs/CloudDescribed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "clouds",
+          "revision"
+        ],
+        "title": "PointCloudsDescribed",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "pointcloud"
+            ],
+            "refusedWith": "not_a_pointcloud"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "too_many_cloud_points"
+        ],
+        "warnings": [
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün bulutların kaynakları",
+          "input": {}
+        },
+        {
+          "title": "Bir bulutun sınıfları sayılarak",
+          "input": {
+            "classes": true,
+            "uids": [
+              "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.pointclouds.query",
+      "version": 1,
+      "title": "XYZ sor",
+      "summary": "Bir yerin (at) planda radius içindeki en yakın noktasını kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır. COPC'de yalnız arama karesine değen düğümler okunur, LAS ve LAZ bütün okunur. Nokta kalıcı kimliğiyle söylenir: bulutun kalıcı kimliği (cloud), kaynağın buluttaki sırası (source) ve noktanın kaynağın sırasındaki yeri (index: LAS ve LAZ'da dosyanın sırası, COPC'de düğümler anahtarlarıyla); aynı dosya her okunuşta aynı kimliği verir. Cevap noktanın koordinatlarını, uzaklığını, sınıfını, yoğunluğunu, dönüşünü, kaynak kimliğini, GPS zamanını ve rengini, bakılan nokta sayısını (read) verir; eşit uzaklıkta önce bakılan kalır. Metin bulutu ve okunamayan kaynak uyarıyla atlanır (cloud_source_unreadable).",
+      "aliases": [
+        "xyzsor",
+        "noktasor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.query` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,\n`invalid_radius`, `invalid_point`.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "description": "The place in plan.",
+            "x-unit": "length"
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "radius": {
+            "description": "The most distance in plan to the point, above 0.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "The point clouds looked in; none: every visible one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "at",
+          "radius"
+        ],
+        "title": "PointCloudsQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CloudPoint": {
+            "description": "The point found: its lasting id and its record's facts.",
+            "properties": {
+              "class": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "cloud": {
+                "description": "The cloud's persistent id.",
+                "type": "string"
+              },
+              "distance": {
+                "description": "Its distance in plan from `at`.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "gpsTime": {
+                "description": "The point's GPS time, as the source's `gpsTime` says.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "s"
+              },
+              "index": {
+                "description": "The point's place in the source's order (LAS, LAZ: the file's; COPC: nodes by key).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "intensity": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "value"
+              },
+              "numberOfReturns": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pointSourceId": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "returnNumber": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "rgb": {
+                "items": {
+                  "format": "uint16",
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "source": {
+                "description": "The source's place in the cloud's sources (0 and up).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "cloud",
+              "source",
+              "index",
+              "x",
+              "y",
+              "z",
+              "distance",
+              "class",
+              "intensity",
+              "returnNumber",
+              "numberOfReturns",
+              "pointSourceId"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.query` v1: the nearest point, or none within the reach; the points looked at.",
+        "properties": {
+          "point": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CloudPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "read",
+          "revision"
+        ],
+        "title": "PointCloudsQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CloudPoint": {
+            "description": "The point found: its lasting id and its record's facts.",
+            "properties": {
+              "class": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "cloud": {
+                "description": "The cloud's persistent id.",
+                "type": "string"
+              },
+              "distance": {
+                "description": "Its distance in plan from `at`.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "gpsTime": {
+                "description": "The point's GPS time, as the source's `gpsTime` says.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "s"
+              },
+              "index": {
+                "description": "The point's place in the source's order (LAS, LAZ: the file's; COPC: nodes by key).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "intensity": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "value"
+              },
+              "numberOfReturns": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pointSourceId": {
+                "format": "uint16",
+                "maximum": 65535,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "returnNumber": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "rgb": {
+                "items": {
+                  "format": "uint16",
+                  "maximum": 65535,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "maxItems": 3,
+                "minItems": 3,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "source": {
+                "description": "The source's place in the cloud's sources (0 and up).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "cloud",
+              "source",
+              "index",
+              "x",
+              "y",
+              "z",
+              "distance",
+              "class",
+              "intensity",
+              "returnNumber",
+              "numberOfReturns",
+              "pointSourceId"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.query` v1: the nearest point, or none within the reach; the points looked at.",
+        "properties": {
+          "point": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/CloudPoint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "read",
+          "revision"
+        ],
+        "title": "PointCloudsQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "pointcloud"
+            ],
+            "refusedWith": "not_a_pointcloud"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_reach"
+        ],
+        "warnings": [
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir yerin 0,5 m içindeki en yakın noktası",
+          "input": {
+            "at": {
+              "x": 500150.0,
+              "y": 4400120.0
+            },
+            "radius": 0.5
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.stac.search",
       "version": 1,
       "title": "STAC'ta ara",
@@ -1045977,6 +1047102,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi."
+    },
+    {
+      "code": "not_a_pointcloud",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen nesne bir nokta bulutu değil."
+    },
+    {
+      "code": "too_many_cloud_points",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sınıflar sayılırken bir çağrının okuduğundan çok nokta okunurdu."
+    },
+    {
+      "code": "invalid_reach",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Aramanın erimi sıfırdan büyük olmalı."
+    },
+    {
+      "code": "cloud_source_unreadable",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu."
     },
     {
       "code": "invalid_address",

@@ -1133,6 +1133,14 @@ codes! {
     TOPOLOGY_ON_READ = "topology_on_read", Failed, false, "Komşuların izlemesi yalnız yazarken olur.";
     /// A loose write's neighbours outside the area that kept their shape (docs/adr/0531).
     NEIGHBOURS_LEFT = "neighbours_left", Warning, false, "Alanın dışındaki bazı komşu kayıtlar geçersiz kalacağı için izlemedi.";
+    /// A uid given to a point cloud command that is not a point cloud (docs/adr/0536).
+    NOT_A_POINTCLOUD = "not_a_pointcloud", Failed, false, "Verilen nesne bir nokta bulutu değil.";
+    /// Counting the classes would read more points than one call does (docs/adr/0536).
+    TOO_MANY_CLOUD_POINTS = "too_many_cloud_points", Failed, false, "Sınıflar sayılırken bir çağrının okuduğundan çok nokta okunurdu.";
+    /// A point query's reach that is not above 0 (docs/adr/0536).
+    INVALID_REACH = "invalid_reach", Failed, false, "Aramanın erimi sıfırdan büyük olmalı.";
+    /// A point cloud's source that could not be read (docs/adr/0536): the rest are read.
+    CLOUD_SOURCE_UNREADABLE = "cloud_source_unreadable", Warning, false, "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).

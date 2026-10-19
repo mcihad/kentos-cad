@@ -218,6 +218,10 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (ADR 0536, 20 Ekim): web'de gerekenler: nokta bulutu web'e
+  gelince (ADR 0207) `cad.pointclouds.describe` ve `cad.pointclouds.query`'nin işleyicileri (nokta bulutu çekirdeğinin WASM
+  bağlayıcısıyla), Öznitelikler'in başlık satırları; ortak durumlar `fixtures/commands/v1/cad.pointclouds.*.json` web'in oynatıcısında
+  (bugün tanımadığı komut).
 - [ ] `CBS-30` raster analizinde alan ve ızgaralar (ADR 0535, 20 Ekim): web'de gerekenler: çözümleme işçisinin raster işine
   `window` (WASM bağlayıcısı `Spec`'i olduğu gibi alır), yüzey araçlarının Kapsam ve Alan nesneleri parametreleri, sonucun nesnesi
   pencerenin ızgarasıyla; `fixtures/processing/v1/surface.json`'un yeni varsayılanları ve beş alan durumu (`rasterOf`'un `window`'u)
@@ -2014,6 +2018,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (dilim): `cad.pointclouds.describe` (her kaynağın başlığı: tür,
+  sürüm, biçim, sayı, kutu, ölçek, yatay ve düşey sistem, oluşturulma günü, GPS zamanının türü, yazan, GUID, boyutlar ve ek baytlar,
+  dönüşe göre sayılar, COPC düğümleri; `classes` ile bütün okunarak sınıf sayıları; okunamayan kaynak nedeniyle) ve
+  `cad.pointclouds.query` (en yakın nokta kaynağın tam çözünürlüğünde, kalıcı kimliğiyle: bulut, kaynak, sıradaki yer; COPC'de yalnız
+  değen düğümler); başsız sunucu bulutu ilk kez okur (Python, MCP); Öznitelikler'de başlık satırları. Kalan: mesh ve NetCDF boyutlarının
+  aynı sözleşmede, adresteki bulutun başsız okunması, metin bulutunun sorgusu, masaüstünün XYZ sor'unun kalıcı kimliği, sağlayıcıda
+  AOI ve profil sorgusu, çoklu VPC özeti, NetCDF-4, HDF5, GRIB, Zarr. — **20 Ekim, [ADR 0536](docs/adr/0536-point-cloud-metadata-and-lasting-ids.md).**
 - [ ] `CBS-30` raster analizinde alan ve ızgaralar (dilim): yüzey analizinin sekiz aracında Kapsam (Bütün raster, Nesnelerin
   kutusu): sonuç kaynağın ızgarasında kutunun değdiği hücreler, kenar hücrelerinin komşuları kaynaktan okunur, değerler bütün
   rasterin aynı hücreleriyle bit bit aynı (`Spec.window`, `window_of`, `window_affine`); çalışma kaydında `grids` (girdinin dosyası,

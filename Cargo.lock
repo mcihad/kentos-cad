@@ -2788,6 +2788,7 @@ dependencies = [
  "kentos-geometry-core",
  "kentos-geopackage",
  "kentos-kcad",
+ "kentos-pointcloud",
  "kentos-processing",
  "kentos-project",
  "kentos-services",

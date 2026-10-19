@@ -2941,6 +2941,69 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A point cloud's source metadata and its points by a lasting id (docs/adr/0536), held together by
+        // fixtures/commands/v1/cad.pointclouds.{describe,query}.json. The web is paused.
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_DESCRIBE.into(),
+            version: crate::CAD_POINTCLOUDS_DESCRIBE_VERSION,
+            title: "Nokta bulutunun bilgisi".into(),
+            summary: "Çizimin nokta bulutlarının (uids; yoksa hepsi, çizimin sırasıyla) her kaynağının başlığını okur ve söyler; çizimi değiştirmez. \
+                      Kaynak: türü (las, laz, copc, text) ve sürümü, nokta biçimi ve kaydın boyu, nokta sayısı, kutusu, ölçek ve öteleme; yatay sistem (EPSG ve dosyanın yazdığı ad) ve düşey sistem (WKT'nin VERT_CS ya da VERTCRS adı, GeoTIFF anahtarı 4096'nın EPSG:n'si; yazmayan dosyada yok: kotların dayanağı bilinmez); başlığın oluşturulma günü (YYYY-MM-DD), noktaların GPS zamanı (standard ya da week), sistem ve yazılım, kaynak kimliği, GUID; her noktanın boyutları LAS'ın sırasıyla ve ek baytların adları ve türleri, dönüşe göre nokta sayıları, COPC'nin düğümleri. \
+                      classes ile her noktanın sınıfı sayılır (kaynak bütün okunur; bir çağrıda en çok 200 milyon nokta, fazlası too_many_cloud_points). Metin bulutunun başlığı yoktur: sayısı ve kutusu bulutun kaydından. \
+                      Okunamayan kaynak (bulunamadı, adresteki bulut, bozuk dosya) why ile söylenir ve uyarılır (cloud_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır (kayıtlı yol, çizimin klasörü, arama yolları); drawing açık çizimin dosyasıdır."
+                .into(),
+            aliases: vec!["bulutbilgisi".into(), "lasbilgi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointCloudsDescribe>(),
+            output: schema::<crate::PointCloudsDescribed>(),
+            plan: Some(schema::<crate::PointCloudsDescribed>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün bulutların kaynakları".into(),
+                    input: json!({}),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir bulutun sınıfları sayılarak".into(),
+                    input: json!({ "uids": ["01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e61"], "classes": true }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_QUERY.into(),
+            version: crate::CAD_POINTCLOUDS_QUERY_VERSION,
+            title: "XYZ sor".into(),
+            summary: "Bir yerin (at) planda radius içindeki en yakın noktasını kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. \
+                      Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır. COPC'de yalnız arama karesine değen düğümler okunur, LAS ve LAZ bütün okunur. \
+                      Nokta kalıcı kimliğiyle söylenir: bulutun kalıcı kimliği (cloud), kaynağın buluttaki sırası (source) ve noktanın kaynağın sırasındaki yeri (index: LAS ve LAZ'da dosyanın sırası, COPC'de düğümler anahtarlarıyla); aynı dosya her okunuşta aynı kimliği verir. \
+                      Cevap noktanın koordinatlarını, uzaklığını, sınıfını, yoğunluğunu, dönüşünü, kaynak kimliğini, GPS zamanını ve rengini, bakılan nokta sayısını (read) verir; eşit uzaklıkta önce bakılan kalır. Metin bulutu ve okunamayan kaynak uyarıyla atlanır (cloud_source_unreadable)."
+                .into(),
+            aliases: vec!["xyzsor".into(), "noktasor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointCloudsQuery>(),
+            output: schema::<crate::PointCloudsQueried>(),
+            plan: Some(schema::<crate::PointCloudsQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir yerin 0,5 m içindeki en yakın noktası".into(),
+                input: json!({ "at": { "x": 500150.0, "y": 4400120.0 }, "radius": 0.5 }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_STAC_SEARCH.into(),
             version: crate::CAD_STAC_SEARCH_VERSION,
@@ -8319,6 +8382,12 @@ mod tests {
                     }
                     crate::CAD_STAC_PREPARE => {
                         serde_json::from_value::<crate::StacPrepare>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POINTCLOUDS_DESCRIBE => {
+                        serde_json::from_value::<crate::PointCloudsDescribe>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POINTCLOUDS_QUERY => {
+                        serde_json::from_value::<crate::PointCloudsQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

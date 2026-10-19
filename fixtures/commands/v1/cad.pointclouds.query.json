@@ -1,0 +1,1839 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.pointclouds.query",
+ "commandVersion": 1,
+ "title": "XYZ sor",
+ "note": "ADR 0536. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık baytlarından, sistemler pyproj'la, boyutlar LAS 1.4 R15'in tablolarından, COPC düğümleri COPC 1.0 belirtiminden; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta bulutlarının bilgisi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "entities": [
+   {
+    "kind": "pointcloud",
+    "id": 1,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.66,
+       4400001.51,
+       4.005,
+       500399.29,
+       4400298.95,
+       5.968
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.51,
+     4.005,
+     500399.29,
+     4400298.95,
+     5.968
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.21,
+       4400000.51,
+       4.015,
+       500399.32,
+       4400299.3,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500000.21,
+     4400000.51,
+     4.015,
+     500399.32,
+     4400299.3,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 4,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f3.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500004.34,
+       4400003.69,
+       4.024,
+       500399.62,
+       4400297.84,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500004.34,
+     4400003.69,
+     4.024,
+     500399.62,
+     4400297.84,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 5,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las13-f1.las",
+      "format": "las",
+      "count": 200,
+      "bounds": [
+       500000.66,
+       4400001.49,
+       4.048,
+       500399.29,
+       4400298.95,
+       5.989
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.49,
+     4.048,
+     500399.29,
+     4400298.95,
+     5.989
+    ],
+    "count": 200,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 6,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f6.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.61,
+       4400000.19,
+       4.014,
+       500396.69,
+       4400299.95,
+       5.9350000000000005
+      ]
+     }
+    ],
+    "bounds": [
+     500000.61,
+     4400000.19,
+     4.014,
+     500396.69,
+     4400299.95,
+     5.9350000000000005
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 7,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f7.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500001.02,
+       4400000.08,
+       4.054,
+       500398.71,
+       4400298.78,
+       5.982
+      ]
+     }
+    ],
+    "bounds": [
+     500001.02,
+     4400000.08,
+     4.054,
+     500398.71,
+     4400298.78,
+     5.982
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 8,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f8.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.48,
+       4400001.07,
+       4.0040000000000004,
+       500399.12,
+       4400299.84,
+       5.981
+      ]
+     }
+    ],
+    "bounds": [
+     500000.48,
+     4400001.07,
+     4.0040000000000004,
+     500399.12,
+     4400299.84,
+     5.981
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 9,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.laz",
+      "format": "laz",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 10,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.copc.laz",
+      "format": "copc",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 11,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/many-chunks.laz",
+      "format": "laz",
+      "count": 120000,
+      "bounds": [
+       0.0,
+       0.0,
+       7.0,
+       199.5,
+       149.5,
+       12.99
+      ]
+     }
+    ],
+    "bounds": [
+     0.0,
+     0.0,
+     7.0,
+     199.5,
+     149.5,
+     12.99
+    ],
+    "count": 120000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 12,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 13,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500200.72,
+     4400200.23,
+     50.7,
+     500209.99,
+     4400209.79,
+     59.52
+    ],
+    "count": 20,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 14,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 15,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 16,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "url": "https://ornek.invalid/bulut.copc.laz",
+      "format": "copc",
+      "count": 10,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 10,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 17,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/broken/not-las.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 18,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ],
+      "asset": "pointcloud-0536053605360536"
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "line",
+    "id": 19,
+    "layerId": "bulut",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 20,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300000000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 21,
+    "layerId": "gizli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 22,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     50.7,
+     500209.99,
+     4400209.79,
+     104.893
+    ],
+    "count": 60,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "pointcloud-0536053605360536",
+     "name": "las12-f0.las",
+     "data": "data:application/octet-stream;base64,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"
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "las12-f0.las: 17. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500068.15300000005,
+       "y": 4400198.257999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:1",
+        "source": 0,
+        "index": 17,
+        "x": 500068.15,
+        "y": 4400198.26,
+        "z": 5.521,
+        "distance": 0.003605551479006296,
+        "class": 4,
+        "intensity": 62996,
+        "returnNumber": 1,
+        "numberOfReturns": 2,
+        "pointSourceId": 1
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f1.laz: 120. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500181.683,
+       "y": 4400082.217999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:2",
+        "source": 0,
+        "index": 120,
+        "x": 500181.68,
+        "y": 4400082.22,
+        "z": 4.667,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 36532,
+        "returnNumber": 2,
+        "numberOfReturns": 4,
+        "pointSourceId": 3,
+        "gpsTime": 300000063.1299284
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f2.las: 5. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500194.733,
+       "y": 4400129.818
+      },
+      "radius": 0.2,
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:3",
+        "source": 0,
+        "index": 5,
+        "x": 500194.73,
+        "y": 4400129.82,
+        "z": 5.311,
+        "distance": 0.003605551479006296,
+        "class": 9,
+        "intensity": 51570,
+        "returnNumber": 2,
+        "numberOfReturns": 2,
+        "pointSourceId": 1,
+        "rgb": [
+         257,
+         29298,
+         54227
+        ]
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f3.laz: 250. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500078.983,
+       "y": 4400268.998
+      },
+      "radius": 1.0,
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:4",
+        "source": 0,
+        "index": 250,
+        "x": 500078.98,
+        "y": 4400269.0,
+        "z": 5.455,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 62185,
+        "returnNumber": 1,
+        "numberOfReturns": 2,
+        "pointSourceId": 2,
+        "gpsTime": 300000122.39916605,
+        "rgb": [
+         47288,
+         53970,
+         22873
+        ]
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las13-f1.las: 33. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500286.38300000003,
+       "y": 4400063.757999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:5",
+        "source": 0,
+        "index": 33,
+        "x": 500286.38,
+        "y": 4400063.76,
+        "z": 4.856,
+        "distance": 0.003605551479006296,
+        "class": 4,
+        "intensity": 49329,
+        "returnNumber": 2,
+        "numberOfReturns": 4,
+        "pointSourceId": 3,
+        "gpsTime": 300000016.819557
+       },
+       "read": 200,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f6.laz: 77. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500272.993,
+       "y": 4400258.578
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:6",
+        "source": 0,
+        "index": 77,
+        "x": 500272.99,
+        "y": 4400258.58,
+        "z": 5.396,
+        "distance": 0.003605551479006296,
+        "class": 4,
+        "intensity": 584,
+        "returnNumber": 5,
+        "numberOfReturns": 6,
+        "pointSourceId": 3,
+        "gpsTime": 300000042.385561
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f7.las: 199. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500077.853,
+       "y": 4400298.778
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:7",
+        "source": 0,
+        "index": 199,
+        "x": 500077.85,
+        "y": 4400298.78,
+        "z": 5.363,
+        "distance": 0.003605551479006296,
+        "class": 11,
+        "intensity": 23904,
+        "returnNumber": 1,
+        "numberOfReturns": 3,
+        "pointSourceId": 1,
+        "gpsTime": 300000096.5834192,
+        "rgb": [
+         18761,
+         30840,
+         25957
+        ]
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f8.laz: 3. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500141.89300000004,
+       "y": 4400175.658
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:8",
+        "source": 0,
+        "index": 3,
+        "x": 500141.89,
+        "y": 4400175.66,
+        "z": 4.244,
+        "distance": 0.003605551479006296,
+        "class": 22,
+        "intensity": 32936,
+        "returnNumber": 4,
+        "numberOfReturns": 6,
+        "pointSourceId": 2,
+        "gpsTime": 300000001.83960915,
+        "rgb": [
+         37522,
+         25186,
+         36751
+        ]
+       },
+       "read": 300,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "index-sample.laz: 4321. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 400007.353,
+       "y": 4500027.238
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:9",
+        "source": 0,
+        "index": 4321,
+        "x": 400007.35,
+        "y": 4500027.24,
+        "z": 19.98,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 536,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 2160.5,
+        "rgb": [
+         55000,
+         12000,
+         9000
+        ]
+       },
+       "read": 12000,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "index-sample.copc.laz: 1234. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 400012.08300000004,
+       "y": 4500019.347999999
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:10",
+        "source": 0,
+        "index": 8946,
+        "x": 400012.08,
+        "y": 4500019.35,
+        "z": 17.69,
+        "distance": 0.003605551479006296,
+        "class": 5,
+        "intensity": 517,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 2845.5,
+        "rgb": [
+         10000,
+         50000,
+         12000
+        ]
+       },
+       "read": 11605,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "many-chunks.laz: 99999. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 199.503,
+       "y": 124.498
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:11",
+        "source": 0,
+        "index": 99999,
+        "x": 199.5,
+        "y": 124.5,
+        "z": 7.01,
+        "distance": 0.003605551275449674,
+        "class": 2,
+        "intensity": 44633,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0
+       },
+       "read": 120000,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "meta-wkt.las: 11. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500107.76300000004,
+       "y": 4400103.878
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:12",
+        "source": 0,
+        "index": 11,
+        "x": 500107.76,
+        "y": 4400103.88,
+        "z": 104.291,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 55814,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 1400000002.75
+       },
+       "read": 40,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "meta-geokeys.las: 7. noktanın yanında en yakın nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500209.59300000005,
+       "y": 4400205.038
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:13"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:13",
+        "source": 0,
+        "index": 7,
+        "x": 500209.59,
+        "y": 4400205.04,
+        "z": 52.24,
+        "distance": 0.003605551479006296,
+        "class": 2,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 300010.5
+       },
+       "read": 20,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "erimin içinde nokta yoksa nokta yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 503068.15300000005,
+       "y": 4400198.257999999
+      },
+      "radius": 0.5,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "read": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "arama karesi kaynağın kutusuna değmezse dosya okunmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 400000.0,
+       "y": 4300000.0
+      },
+      "radius": 1.0,
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "read": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kaynaklı bulut: kaynağın sırası noktanın kimliğinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500209.59300000005,
+       "y": 4400205.038
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:22",
+       "$uidOf:22"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:22",
+        "source": 1,
+        "index": 7,
+        "x": 500209.59,
+        "y": 4400205.04,
+        "z": 52.24,
+        "distance": 0.003605551479006296,
+        "class": 2,
+        "intensity": 0,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 300010.5
+       },
+       "read": 20,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "uids verilmezse görünen bulutlar: gizli katmandaki bakılmaz, eşit uzaklıkta ilk bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500107.76300000004,
+       "y": 4400103.878
+      },
+      "radius": 0.3
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:12",
+        "source": 0,
+        "index": 11,
+        "x": 500107.76,
+        "y": 4400103.88,
+        "z": 104.291,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 55814,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 1400000002.75
+       },
+       "read": 2980,
+       "revision": "$current"
+      },
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gizli katmandaki bulut adıyla sorulunca bakılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500107.76300000004,
+       "y": 4400103.878
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:21"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:21",
+        "source": 0,
+        "index": 11,
+        "x": 500107.76,
+        "y": 4400103.88,
+        "z": 104.291,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 55814,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 1400000002.75
+       },
+       "read": 40,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "at": {
+       "x": 500107.76300000004,
+       "y": 4400103.878
+      },
+      "radius": 0.3,
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "point": {
+        "cloud": "$uidOf:12",
+        "source": 0,
+        "index": 11,
+        "x": 500107.76,
+        "y": 4400103.88,
+        "z": 104.291,
+        "distance": 0.003605551479006296,
+        "class": 6,
+        "intensity": 55814,
+        "returnNumber": 1,
+        "numberOfReturns": 1,
+        "pointSourceId": 0,
+        "gpsTime": 1400000002.75
+       },
+       "read": 40,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin bulutu aranmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500050.0,
+       "y": 4400050.0
+      },
+      "radius": 1.0,
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "read": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
+        "path": "clouds[0].sources[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "erim sıfır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500050.0,
+       "y": 4400050.0
+      },
+      "radius": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_reach",
+       "message": "Aramanın erimi sıfırdan büyük olmalı; noktanın en çok ne kadar uzakta aranacağını verin.",
+       "path": "radius"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eksi erim",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 500050.0,
+       "y": 4400050.0
+      },
+      "radius": -2.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_reach",
+       "message": "Aramanın erimi sıfırdan büyük olmalı; noktanın en çok ne kadar uzakta aranacağını verin.",
+       "path": "radius"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "radius": 1.0,
+      "uids": [
+       "bulut"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“bulut” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan bulut",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "radius": 1.0,
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta bulutu olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "at": {
+       "x": 0.0,
+       "y": 0.0
+      },
+      "radius": 1.0,
+      "uids": [
+       "$uidOf:19"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; bir nokta bulutunun kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

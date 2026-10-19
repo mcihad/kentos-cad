@@ -1,0 +1,3229 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.pointclouds.describe",
+ "commandVersion": 1,
+ "title": "Nokta bulutunun bilgisi",
+ "note": "ADR 0536. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık baytlarından, sistemler pyproj'la, boyutlar LAS 1.4 R15'in tablolarından, COPC düğümleri COPC 1.0 belirtiminden; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta bulutlarının bilgisi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "entities": [
+   {
+    "kind": "pointcloud",
+    "id": 1,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.66,
+       4400001.51,
+       4.005,
+       500399.29,
+       4400298.95,
+       5.968
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.51,
+     4.005,
+     500399.29,
+     4400298.95,
+     5.968
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.21,
+       4400000.51,
+       4.015,
+       500399.32,
+       4400299.3,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500000.21,
+     4400000.51,
+     4.015,
+     500399.32,
+     4400299.3,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 4,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f3.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500004.34,
+       4400003.69,
+       4.024,
+       500399.62,
+       4400297.84,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500004.34,
+     4400003.69,
+     4.024,
+     500399.62,
+     4400297.84,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 5,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las13-f1.las",
+      "format": "las",
+      "count": 200,
+      "bounds": [
+       500000.66,
+       4400001.49,
+       4.048,
+       500399.29,
+       4400298.95,
+       5.989
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.49,
+     4.048,
+     500399.29,
+     4400298.95,
+     5.989
+    ],
+    "count": 200,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 6,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f6.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.61,
+       4400000.19,
+       4.014,
+       500396.69,
+       4400299.95,
+       5.9350000000000005
+      ]
+     }
+    ],
+    "bounds": [
+     500000.61,
+     4400000.19,
+     4.014,
+     500396.69,
+     4400299.95,
+     5.9350000000000005
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 7,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f7.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500001.02,
+       4400000.08,
+       4.054,
+       500398.71,
+       4400298.78,
+       5.982
+      ]
+     }
+    ],
+    "bounds": [
+     500001.02,
+     4400000.08,
+     4.054,
+     500398.71,
+     4400298.78,
+     5.982
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 8,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f8.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.48,
+       4400001.07,
+       4.0040000000000004,
+       500399.12,
+       4400299.84,
+       5.981
+      ]
+     }
+    ],
+    "bounds": [
+     500000.48,
+     4400001.07,
+     4.0040000000000004,
+     500399.12,
+     4400299.84,
+     5.981
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 9,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.laz",
+      "format": "laz",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 10,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.copc.laz",
+      "format": "copc",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 11,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/many-chunks.laz",
+      "format": "laz",
+      "count": 120000,
+      "bounds": [
+       0.0,
+       0.0,
+       7.0,
+       199.5,
+       149.5,
+       12.99
+      ]
+     }
+    ],
+    "bounds": [
+     0.0,
+     0.0,
+     7.0,
+     199.5,
+     149.5,
+     12.99
+    ],
+    "count": 120000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 12,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 13,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500200.72,
+     4400200.23,
+     50.7,
+     500209.99,
+     4400209.79,
+     59.52
+    ],
+    "count": 20,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 14,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 15,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 16,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "url": "https://ornek.invalid/bulut.copc.laz",
+      "format": "copc",
+      "count": 10,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 10,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 17,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/broken/not-las.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 18,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ],
+      "asset": "pointcloud-0536053605360536"
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "line",
+    "id": 19,
+    "layerId": "bulut",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 20,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300000000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 21,
+    "layerId": "gizli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 22,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     50.7,
+     500209.99,
+     4400209.79,
+     104.893
+    ],
+    "count": 60,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "pointcloud-0536053605360536",
+     "name": "las12-f0.las",
+     "data": "data:application/octet-stream;base64,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"
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "las12-f0.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            149,
+            81,
+            46,
+            24
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f1.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.2",
+           "format": 1,
+           "recordLen": 28,
+           "count": 300,
+           "bounds": [
+            500000.66,
+            4400001.51,
+            4.005,
+            500399.29,
+            4400298.95,
+            5.968
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "byReturn": [
+            154,
+            80,
+            48,
+            18
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f2.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 2,
+           "recordLen": 26,
+           "count": 300,
+           "bounds": [
+            500000.21,
+            4400000.51,
+            4.015,
+            500399.32,
+            4400299.3,
+            5.986
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "red",
+            "green",
+            "blue"
+           ],
+           "byReturn": [
+            157,
+            83,
+            45,
+            15
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f3.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:4",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f3.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.2",
+           "format": 3,
+           "recordLen": 37,
+           "count": 300,
+           "bounds": [
+            500004.34,
+            4400003.69,
+            4.024,
+            500399.62,
+            4400297.84,
+            5.986
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 32635,
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue"
+           ],
+           "extra": [
+            {
+             "name": "ek1",
+             "kind": "u8",
+             "size": 1
+            },
+            {
+             "name": "ek2",
+             "kind": "u16",
+             "size": 2
+            }
+           ],
+           "byReturn": [
+            151,
+            81,
+            48,
+            20
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las13-f1.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:5",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 200,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las13-f1.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.3",
+           "format": 1,
+           "recordLen": 28,
+           "count": 200,
+           "bounds": [
+            500000.66,
+            4400001.49,
+            4.048,
+            500399.29,
+            4400298.95,
+            5.989
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "byReturn": [
+            107,
+            49,
+            27,
+            17
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f6.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:6",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las14-f6.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 30,
+           "count": 300,
+           "bounds": [
+            500000.61,
+            4400000.19,
+            4.014,
+            500396.69,
+            4400299.95,
+            5.9350000000000005
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "byReturn": [
+            111,
+            82,
+            49,
+            26,
+            19,
+            13
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f7.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:7",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las14-f7.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 7,
+           "recordLen": 39,
+           "count": 300,
+           "bounds": [
+            500001.02,
+            4400000.08,
+            4.054,
+            500398.71,
+            4400298.78,
+            5.982
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 32635,
+           "crsName": "WGS 84 / UTM zone 35N",
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue"
+           ],
+           "extra": [
+            {
+             "name": "ek1",
+             "kind": "u8",
+             "size": 1
+            },
+            {
+             "name": "ek2",
+             "kind": "u16",
+             "size": 2
+            }
+           ],
+           "byReturn": [
+            114,
+            68,
+            50,
+            43,
+            15,
+            10
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las14-f8.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:8",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las14-f8.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.4",
+           "format": 8,
+           "recordLen": 38,
+           "count": 300,
+           "bounds": [
+            500000.48,
+            4400001.07,
+            4.0040000000000004,
+            500399.12,
+            4400299.84,
+            5.981
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "TUDKA-99 height",
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue",
+            "nir"
+           ],
+           "byReturn": [
+            126,
+            67,
+            55,
+            34,
+            14,
+            4
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "index-sample.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:9",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 12000,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/index-sample.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.2",
+           "format": 3,
+           "recordLen": 34,
+           "count": 12000,
+           "bounds": [
+            400000.0,
+            4500000.0,
+            8.1,
+            400100.0,
+            4500100.0,
+            31.66
+           ],
+           "scale": [
+            0.001,
+            0.001,
+            0.001
+           ],
+           "offset": [
+            400000.0,
+            4500000.0,
+            0.0
+           ],
+           "created": "2026-10-08",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue"
+           ],
+           "byReturn": [
+            12000
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "index-sample.copc.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:10",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 12000,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/index-sample.copc.laz",
+           "read": true,
+           "kind": "copc",
+           "version": "1.4",
+           "format": 7,
+           "recordLen": 36,
+           "count": 12000,
+           "bounds": [
+            400000.0,
+            4500000.0,
+            8.1,
+            400100.0,
+            4500100.0,
+            31.66
+           ],
+           "scale": [
+            0.001,
+            0.001,
+            0.001
+           ],
+           "offset": [
+            400000.0,
+            4500000.0,
+            0.0
+           ],
+           "gpsTime": "week",
+           "system": "KentOS CAD",
+           "software": "KentOS CAD COPC",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue"
+           ],
+           "byReturn": [
+            12000
+           ],
+           "nodes": 91
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "many-chunks.laz: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:11",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 120000,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/many-chunks.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 120000,
+           "bounds": [
+            0.0,
+            0.0,
+            7.0,
+            199.5,
+            149.5,
+            12.99
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.01
+           ],
+           "offset": [
+            0.0,
+            0.0,
+            0.0
+           ],
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            120000
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "meta-wkt.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:12",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 40,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 34,
+           "count": 40,
+           "bounds": [
+            500100.38,
+            4400100.15,
+            100.007,
+            500117.31,
+            4400119.88,
+            104.893
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "EGM96 height",
+           "created": "2026-03-15",
+           "gpsTime": "standard",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 7,
+           "guid": "6f1c2a9e-4b3d-4c5e-9f00-112233445566",
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "extra": [
+            {
+             "name": "derinlik",
+             "kind": "f32",
+             "size": 4
+            }
+           ],
+           "byReturn": [
+            40
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "meta-geokeys.las: başlığı, sistemi, boyutları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:13"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:13",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 20,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 1,
+           "recordLen": 28,
+           "count": 20,
+           "bounds": [
+            500200.72,
+            4400200.23,
+            50.7,
+            500209.99,
+            4400209.79,
+            59.52
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.01
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "vertical": "EPSG:5773",
+           "created": "2025-12-31",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "byReturn": [
+            20
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "las12-f0.las: sınıflar sayılarak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            149,
+            81,
+            46,
+            24
+           ],
+           "classes": {
+            "1": 36,
+            "17": 35,
+            "2": 26,
+            "3": 30,
+            "4": 46,
+            "5": 42,
+            "6": 47,
+            "9": 38
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "meta-wkt.las: sınıflar sayılarak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:12",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 40,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 34,
+           "count": 40,
+           "bounds": [
+            500100.38,
+            4400100.15,
+            100.007,
+            500117.31,
+            4400119.88,
+            104.893
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "EGM96 height",
+           "created": "2026-03-15",
+           "gpsTime": "standard",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 7,
+           "guid": "6f1c2a9e-4b3d-4c5e-9f00-112233445566",
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "extra": [
+            {
+             "name": "derinlik",
+             "kind": "f32",
+             "size": 4
+            }
+           ],
+           "byReturn": [
+            40
+           ],
+           "classes": {
+            "2": 15,
+            "3": 5,
+            "6": 15,
+            "9": 5
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "index-sample.copc.laz: sınıflar sayılarak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:10",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 12000,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/index-sample.copc.laz",
+           "read": true,
+           "kind": "copc",
+           "version": "1.4",
+           "format": 7,
+           "recordLen": 36,
+           "count": 12000,
+           "bounds": [
+            400000.0,
+            4500000.0,
+            8.1,
+            400100.0,
+            4500100.0,
+            31.66
+           ],
+           "scale": [
+            0.001,
+            0.001,
+            0.001
+           ],
+           "offset": [
+            400000.0,
+            4500000.0,
+            0.0
+           ],
+           "gpsTime": "week",
+           "system": "KentOS CAD",
+           "software": "KentOS CAD COPC",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime",
+            "red",
+            "green",
+            "blue"
+           ],
+           "byReturn": [
+            12000
+           ],
+           "nodes": 91,
+           "classes": {
+            "1": 3033,
+            "2": 3090,
+            "5": 2898,
+            "6": 2979
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "many-chunks.laz: sınıflar sayılarak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:11"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:11",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 120000,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/many-chunks.laz",
+           "read": true,
+           "kind": "laz",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 120000,
+           "bounds": [
+            0.0,
+            0.0,
+            7.0,
+            199.5,
+            149.5,
+            12.99
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.01
+           ],
+           "offset": [
+            0.0,
+            0.0,
+            0.0
+           ],
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "LASzip DLL 3.5 r0 (251017)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            120000
+           ],
+           "classes": {
+            "2": 120000
+           }
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "metin bulutunun başlığı yok: sayısı ve kutusu bulutun kaydından",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:14",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 50,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+           "read": true,
+           "kind": "text",
+           "count": 50,
+           "bounds": [
+            500000.0,
+            4400000.0,
+            100.0,
+            500100.0,
+            4400100.0,
+            150.0
+           ],
+           "dimensions": [
+            "x",
+            "y",
+            "z"
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosyası olmayan kaynak okunmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:15"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:15",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/yok.las",
+           "read": false,
+           "why": "$any",
+           "kind": "las",
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       "$any"
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "adresteki kaynak burada okunmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:16"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:16",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 10,
+         "sources": [
+          {
+           "url": "https://ornek.invalid/bulut.copc.laz",
+           "read": false,
+           "why": "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur",
+           "kind": "copc",
+           "count": 10,
+           "bounds": [
+            500000.0,
+            4400000.0,
+            100.0,
+            500100.0,
+            4400100.0,
+            150.0
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "Bulutun 1. kaynağı okunamadı: adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur.",
+        "path": "clouds[0].sources[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bozuk dosya okunmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:17"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:17",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/broken/not-las.las",
+           "read": false,
+           "why": "$any",
+           "kind": "las",
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       "$any"
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gömülü bulut kitaplıktan okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:18",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "asset": "pointcloud-0536053605360536",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            149,
+            81,
+            46,
+            24
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "iki kaynaklı bulut: kaynakları sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:22"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:22",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 60,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 34,
+           "count": 40,
+           "bounds": [
+            500100.38,
+            4400100.15,
+            100.007,
+            500117.31,
+            4400119.88,
+            104.893
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "EGM96 height",
+           "created": "2026-03-15",
+           "gpsTime": "standard",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 7,
+           "guid": "6f1c2a9e-4b3d-4c5e-9f00-112233445566",
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "extra": [
+            {
+             "name": "derinlik",
+             "kind": "f32",
+             "size": 4
+            }
+           ],
+           "byReturn": [
+            40
+           ]
+          },
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 1,
+           "recordLen": 28,
+           "count": 20,
+           "bounds": [
+            500200.72,
+            4400200.23,
+            50.7,
+            500209.99,
+            4400209.79,
+            59.52
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.01
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "vertical": "EPSG:5773",
+           "created": "2025-12-31",
+           "gpsTime": "week",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "byReturn": [
+            20
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gizli katmandaki bulut adıyla sorulunca okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:21"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:21",
+         "layer": "gizli",
+         "srid": 5254,
+         "count": 40,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 34,
+           "count": 40,
+           "bounds": [
+            500100.38,
+            4400100.15,
+            100.007,
+            500117.31,
+            4400119.88,
+            104.893
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "EGM96 height",
+           "created": "2026-03-15",
+           "gpsTime": "standard",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 7,
+           "guid": "6f1c2a9e-4b3d-4c5e-9f00-112233445566",
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "extra": [
+            {
+             "name": "derinlik",
+             "kind": "f32",
+             "size": 4
+            }
+           ],
+           "byReturn": [
+            40
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı bulut iki kez verilse bir kez söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 300,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.2",
+           "format": 0,
+           "recordLen": 20,
+           "count": 300,
+           "bounds": [
+            500000.23,
+            4400000.02,
+            4.047,
+            500397.71,
+            4400299.88,
+            5.994
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "created": "2026-10-08",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 + LASzip",
+           "sourceId": 0,
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "scanAngleRank",
+            "userData",
+            "pointSourceId"
+           ],
+           "byReturn": [
+            149,
+            81,
+            46,
+            24
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı yazmadan verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "clouds": [
+        {
+         "uid": "$uidOf:12",
+         "layer": "bulut",
+         "srid": 5254,
+         "count": 40,
+         "sources": [
+          {
+           "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+           "read": true,
+           "kind": "las",
+           "version": "1.4",
+           "format": 6,
+           "recordLen": 34,
+           "count": 40,
+           "bounds": [
+            500100.38,
+            4400100.15,
+            100.007,
+            500117.31,
+            4400119.88,
+            104.893
+           ],
+           "scale": [
+            0.01,
+            0.01,
+            0.001
+           ],
+           "offset": [
+            500000.0,
+            4400000.0,
+            0.0
+           ],
+           "epsg": 5254,
+           "crsName": "TUREF / TM30",
+           "vertical": "EGM96 height",
+           "created": "2026-03-15",
+           "gpsTime": "standard",
+           "system": "KentOS fixtures",
+           "software": "laspy 2.7.0 (ADR 0536)",
+           "sourceId": 7,
+           "guid": "6f1c2a9e-4b3d-4c5e-9f00-112233445566",
+           "dimensions": [
+            "x",
+            "y",
+            "z",
+            "intensity",
+            "returnNumber",
+            "numberOfReturns",
+            "classificationFlags",
+            "scannerChannel",
+            "scanDirectionFlag",
+            "edgeOfFlightLine",
+            "classification",
+            "userData",
+            "scanAngle",
+            "pointSourceId",
+            "gpsTime"
+           ],
+           "extra": [
+            {
+             "name": "derinlik",
+             "kind": "f32",
+             "size": 4
+            }
+           ],
+           "byReturn": [
+            40
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "$uidOf:12"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "bulut"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“bulut” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta bulutu olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:19"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; bir nokta bulutunun kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sınıflar sayılırken çok nokta okunurdu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:20"
+      ],
+      "classes": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_many_cloud_points",
+       "message": "Sınıflar sayılırken 300000000 nokta okunurdu; bir çağrı en çok 200000000 nokta sayar. Bulutları ayrı ayrı sorun.",
+       "path": "classes"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

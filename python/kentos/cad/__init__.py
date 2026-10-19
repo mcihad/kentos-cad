@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -295,11 +295,15 @@ __all__ = [
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
+    "CloudDescribed",
+    "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudPoint",
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
+    "CloudSourceDescribed",
     "CodeCell",
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
@@ -1188,6 +1192,10 @@ __all__ = [
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
+    "PointCloudsDescribe",
+    "PointCloudsDescribed",
+    "PointCloudsQueried",
+    "PointCloudsQuery",
     "PointConstruction",
     "PointCreate",
     "PointCreated",
@@ -1893,6 +1901,7 @@ __all__ = [
     "openings",
     "parameters",
     "point",
+    "pointclouds",
     "points",
     "polygon",
     "polyline",

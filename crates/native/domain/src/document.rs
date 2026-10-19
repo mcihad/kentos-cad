@@ -191,6 +191,13 @@ impl Document {
         self.store.iter().map(|stored| &*stored.entity)
     }
 
+    /// Every object in document order with its persistent id.
+    pub fn entities_with_uids(&self) -> impl Iterator<Item = (Uuid, &Entity)> {
+        self.store
+            .iter()
+            .map(|stored| (stored.uid, &*stored.entity))
+    }
+
     /// The objects of a layer in document order.
     pub fn by_layer(&self, layer: &str) -> impl Iterator<Item = &Entity> {
         self.store.on_layer(layer).map(|stored| &*stored.entity)

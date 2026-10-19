@@ -32,6 +32,84 @@ pub(crate) fn format_name(f: CloudFormat) -> &'static str {
     }
 }
 
+/// A source's header as `cad.pointclouds.describe` reads it (docs/adr/0536), read once a session for each file.
+fn described(
+    doc: &Document,
+    s: &kentos_contracts::CloudSource,
+) -> kentos_contracts::CloudSourceDescribed {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock, PoisonError};
+    static SEEN: OnceLock<Mutex<HashMap<String, kentos_contracts::CloudSourceDescribed>>> =
+        OnceLock::new();
+    let key = format!("{:?}|{:?}|{:?}|{:?}", s.file, s.asset, s.url, doc.path);
+    let seen = SEEN.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(d) = seen
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .get(&key)
+    {
+        return d.clone();
+    }
+    let d = kentos_native_application::pointclouds::source_described(
+        &doc.model,
+        doc.path.as_deref().and_then(|p| p.to_str()),
+        s,
+    );
+    seen.lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .insert(key, d.clone());
+    d
+}
+
+/// The rows of a single source's header (docs/adr/0536): the file's version and format, the vertical system, the
+/// acquisition day, the GPS time, the extra dimensions and who wrote it.
+fn header_rows(d: &kentos_contracts::CloudSourceDescribed) -> Vec<Row> {
+    if !d.read {
+        return vec![Row::text(
+            "Başlık",
+            format!("Okunamadı: {}", d.why.clone().unwrap_or_default()),
+        )];
+    }
+    let mut out = Vec::new();
+    if let (Some(v), Some(fmt)) = (&d.version, d.format) {
+        out.push(Row::text(
+            "Dosya",
+            format!("{} {v}, nokta biçimi {fmt}", d.kind.to_uppercase()),
+        ));
+    }
+    out.push(Row::text(
+        "Düşey sistem",
+        d.vertical
+            .clone()
+            .unwrap_or_else(|| "Dosya söylemiyor".to_owned()),
+    ));
+    if let Some(c) = &d.created {
+        out.push(Row::text("Oluşturulma", c.clone()));
+    }
+    if let Some(g) = &d.gps_time {
+        out.push(Row::text(
+            "GPS zamanı",
+            if g == "standard" {
+                "Standart GPS zamanı"
+            } else {
+                "GPS haftasının saniyesi"
+            },
+        ));
+    }
+    if !d.extra.is_empty() {
+        let names: Vec<String> = d
+            .extra
+            .iter()
+            .map(|e| format!("{} ({})", e.name, e.kind))
+            .collect();
+        out.push(Row::text("Ek boyutlar", names.join(", ")));
+    }
+    if let Some(sw) = &d.software {
+        out.push(Row::text("Yazan", sw.clone()));
+    }
+    out
+}
+
 /// The rows of one cloud; editors unless its layer is locked.
 pub(super) fn rows(
     doc: &Document,
@@ -78,7 +156,11 @@ pub(super) fn rows(
             id: "pointcloud.style",
         }],
     });
-    vec![
+    let header = match x.sources.as_slice() {
+        [one] => header_rows(&described(doc, one)),
+        _ => Vec::new(),
+    };
+    let mut rows = vec![
         Row::text("Kaynak", source),
         Row::text("Biçim", formats.join(", ")),
         Row::figure("Nokta sayısı", crate::crs::js_number(x.count as f64)),
@@ -99,5 +181,12 @@ pub(super) fn rows(
         Row::figure("Saydamlık", fixed(clear, 0))
             .unit("%")
             .editor((!locked).then_some(Editor::Number(Field::CloudClear(slot)))),
-    ]
+    ];
+    // After Sistem: the file's own words of its systems and its acquisition.
+    let at = rows
+        .iter()
+        .position(|r| r.label == "Sistem")
+        .map_or(rows.len(), |i| i + 1);
+    rows.splice(at..at, header);
+    rows
 }

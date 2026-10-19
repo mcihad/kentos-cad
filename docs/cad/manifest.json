@@ -4075,9 +4075,9 @@
    "level": "query",
    "via": [],
    "operation": null,
-   "python": null,
-   "mcp": null,
-   "note": null,
+   "python": "kentos.cad.pointclouds.query",
+   "mcp": "cad.pointclouds.query",
+   "note": "Araç kendi dizinleriyle en yakın noktayı bulur; komut aynı noktayı dosyanın tam çözünürlüğünde kalıcı kimliğiyle verir (ADR 0536).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

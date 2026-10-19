@@ -172,6 +172,27 @@ pub(crate) fn pointed() -> Vec<Pointed> {
         ("bulut-zemin-penceresi", ground_window, clouds_made),
         // Its result: ground (brown), vegetation (greens), roofs (red), road (grey), noise.
         ("bulut-zemin-sonucu", ground_window, ground_run),
+        // Öznitelikler of the selected cloud with its file's header (docs/adr/0536): version and format, vertical
+        // system, the day it was made, GPS time, who wrote it.
+        (
+            "bulut-bilgi",
+            |app| {
+                opened(app, [-6.0, -4.0, 126.0, 94.0]);
+                select(app);
+                // The layers folded and Genel folded: the cloud's rows in view.
+                let upper = kentos_ui::widget::docking::Slot::Docked(
+                    kentos_ui::widget::docking::Side::Right,
+                    0,
+                );
+                let _ = app.update(Message::Dock(kentos_ui::widget::docking::Event::Collapsed(
+                    upper, true,
+                )));
+                let _ = app.update(Message::Properties(crate::properties::Event::Toggle(
+                    "general",
+                )));
+            },
+            clouds_made,
+        ),
         // The village in its colours, the parcels over it.
         (
             "bulut-koy",

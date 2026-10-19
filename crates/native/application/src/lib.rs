@@ -230,6 +230,7 @@ pub mod walls_joins;
 pub mod walls_from_lines;
 pub mod offset;
 pub mod point;
+pub mod pointclouds;
 pub mod points_construct;
 pub mod polygon;
 pub mod polyline;
@@ -585,6 +586,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_STAC_PREPARE,
         kentos_contracts::CAD_STAC_PREPARE_VERSION,
+    ),
+    // Nokta bulutunun bilgisi ve XYZ sor ([`pointclouds`], docs/adr/0536).
+    (
+        kentos_contracts::CAD_POINTCLOUDS_DESCRIBE,
+        kentos_contracts::CAD_POINTCLOUDS_DESCRIBE_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_POINTCLOUDS_QUERY,
+        kentos_contracts::CAD_POINTCLOUDS_QUERY_VERSION,
     ),
     // Sanal mozaik ([`rasters_mosaic`], docs/adr/0517).
     (

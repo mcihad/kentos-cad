@@ -1507,6 +1507,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // Nokta bulutunun bilgisi ve XYZ sor (docs/adr/0536).
+    Entry {
+        id: "cad.pointclouds.describe",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "too_many_cloud_points"]],
+        warnings: &["cloud_source_unreadable"],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
+    Entry {
+        id: "cad.pointclouds.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_reach"]],
+        warnings: &["cloud_source_unreadable"],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
     // STAC keşfi ve veri hazırlama (docs/adr/0528).
     Entry {
         id: "cad.stac.search",

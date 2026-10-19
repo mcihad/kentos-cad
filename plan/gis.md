@@ -424,6 +424,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-32 — Mevcut bulut/mesh metadata'sını provider'a bağla ve eksik biçimleri genişlet — P1/P2**
 
+  *Kısmen (20 Ekim 2026; [ADR 0536](../docs/adr/0536-point-cloud-metadata-and-lasting-ids.md)): nokta bulutunun kaynak bilgisi komutla (`cad.pointclouds.describe`: yatay ve düşey sistem, çekim günü, GPS zamanının türü, boyutlar ve ek baytlar, dönüş sayıları, COPC düğümleri; sınıf sayıları bütün dosyadan, örneklenmeden) ve nokta seçiminin kararlı kaynak kimliğine dönmesi (`cad.pointclouds.query`: bulut, kaynak ve kaynağın sırasındaki yer, kaynağın tam çözünürlüğünde, COPC'de yalnız değen düğümler okunarak); başsız sunucu, Python ve MCP bulutu okur. Kalan: mesh node-face ve zaman bilgisinin aynı sözleşmeye bağlanması, sağlayıcıda AOI, profil ve istatistik sorgusu, çoklu VPC özeti, NetCDF-4, HDF5, GRIB ve Zarr bağdaştırıcıları.*
+
   **Mevcut:** LAS/LAZ/COPC/VPC, sınıflama/rasterleştirme, klasik NetCDF CDF-1/2/5, UGRID/2DM ve zaman serisi mevcut [K11]. Mesh'in raster olarak çizilmesi tam 3D mesh düzenleyicisi veya solver değildir.
 
   **Yapılacak kalan iş:** Mevcut LAS/LAZ/COPC/VPC ve klasik NetCDF/UGRID/2DM okuyucularını yeniden kurma. CRS/düşey datum, acquisition time, point dimension/classification ve mesh node-face/time bilgilerini genel provider/metadata sözleşmesine bağla. Yeni provider query'si AOI/profile/statistics için kaynak çözünürlüğünü istesin; render LOD'unu hesap verisi yerine kullanmasın. Çoklu VPC overview ve NetCDF-4/HDF5/GRIB/Zarr genişlemeleri mevcut capability matrisiyle ayrı doğrulanıp gereken adapter olarak eklenir. [F08], [Q02]

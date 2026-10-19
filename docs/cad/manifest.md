@@ -31,7 +31,7 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 628 satırdan 136'i: geometry 74, none 20, processing 13, query 29.
+CBS'ye özgü olmayan 628 satırdan 135'i: geometry 74, none 20, processing 13, query 28.
 
 ### Sonucu çağıran hesaplar (geometry) — 74
 
@@ -155,7 +155,7 @@ CBS'ye özgü olmayan 628 satırdan 136'i: geometry 74, none 20, processing 13, 
 | `processing.run.pointcloud.thin` | Seyrelt… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 | `processing.run.pointcloud.tile` | Karola… | shared | — | İşlemler aracı; Python ve MCP'den çalıştırılamaz. |
 
-### Okuma, Python'da yok (query) — 29
+### Okuma, Python'da yok (query) — 28
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -178,7 +178,6 @@ CBS'ye özgü olmayan 628 satırdan 136'i: geometry 74, none 20, processing 13, 
 | `data.statistics` | Alan istatistikleri | shared | — |  |
 | `gis.derivation` | GIS türevini denetle… | shared | cad.gis.derivation | Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530). |
 | `layer.impact` | Değişikliğin etkisi | shared | cad.styles.impact |  |
-| `pointcloud.query` | Nokta bulutu XYZ sor | shared | — |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
 | `source.status` | Kaynak durumu | none | cad.sources.describe | cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503). |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |

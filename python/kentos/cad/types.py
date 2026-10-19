@@ -10095,6 +10095,140 @@ class Clip(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class CloudDescribed(_Model):
+    """A point cloud described.
+    Attributes:
+        srid: The cloud's system in the project (0: none). Unit: epsg.
+        count: Unit: count.
+    """
+    uid: str
+    layer: str
+    srid: int
+    count: int
+    sources: list[CloudSourceDescribed]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["srid"] = self.srid
+        out["count"] = self.count
+        out["sources"] = [e0.to_json() for e0 in self.sources]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudDescribed:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            srid=data["srid"],
+            count=data["count"],
+            sources=[CloudSourceDescribed.from_json(e0) for e0 in data["sources"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudExtra(_Model):
+    """An extra dimension of a source's points (LAS's extra bytes, LASF_Spec 4).
+    Attributes:
+        kind: `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `u64`, `i64`, `f32`, `f64`, or `bytes` (an undocumented one).
+        size: Its bytes in each point. Unit: count.
+    """
+    name: str
+    kind: str
+    size: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["kind"] = self.kind
+        out["size"] = self.size
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudExtra:
+        return cls(
+            name=data["name"],
+            kind=data["kind"],
+            size=data["size"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudPoint(_Model):
+    """The point found: its lasting id and its record's facts.
+    Attributes:
+        cloud: The cloud's persistent id.
+        source: The source's place in the cloud's sources (0 and up). Unit: index.
+        index: The point's place in the source's order (LAS, LAZ: the file's; COPC: nodes by key). Unit: index.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: length.
+        distance: Its distance in plan from `at`. Unit: length.
+        class_: Unit: index.
+        intensity: Unit: value.
+        return_number: Unit: index.
+        number_of_returns: Unit: count.
+        point_source_id: Unit: index.
+        gps_time: The point's GPS time, as the source's `gpsTime` says. Unit: s.
+        rgb: Unit: value.
+    """
+    cloud: str
+    source: int
+    index: int
+    x: float
+    y: float
+    z: float
+    distance: float
+    class_: int
+    intensity: int
+    return_number: int
+    number_of_returns: int
+    point_source_id: int
+    gps_time: float | None | Unset = UNSET
+    rgb: list[int] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cloud"] = self.cloud
+        out["source"] = self.source
+        out["index"] = self.index
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        out["distance"] = float(self.distance)
+        out["class"] = self.class_
+        out["intensity"] = self.intensity
+        out["returnNumber"] = self.return_number
+        out["numberOfReturns"] = self.number_of_returns
+        out["pointSourceId"] = self.point_source_id
+        if self.gps_time is not UNSET:
+            out["gpsTime"] = None if self.gps_time is None else float(self.gps_time)
+        if self.rgb is not UNSET:
+            out["rgb"] = None if self.rgb is None else list(self.rgb)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudPoint:
+        return cls(
+            cloud=data["cloud"],
+            source=data["source"],
+            index=data["index"],
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+            distance=float(data["distance"]),
+            class_=data["class"],
+            intensity=data["intensity"],
+            return_number=data["returnNumber"],
+            number_of_returns=data["numberOfReturns"],
+            point_source_id=data["pointSourceId"],
+            gps_time=UNSET if "gpsTime" not in data else None if data["gpsTime"] is None else float(data["gpsTime"]),
+            rgb=UNSET if "rgb" not in data else None if data["rgb"] is None else list(data["rgb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class CloudSource(_Model):
     """One file of a cloud.
     Attributes:
@@ -10134,6 +10268,150 @@ class CloudSource(_Model):
             asset=data.get("asset", UNSET),
             file=data.get("file", UNSET),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudSourceDescribed(_Model):
+    """One source of a point cloud as its header says it.
+    Attributes:
+        read: Whether its header was read; when not, `why`.
+        kind: `las`, `laz`, `copc`, or `text` (XYZ, PTS, TXT, CSV: a text cloud has no header, its count and bounds are the
+            cloud's own record).
+        count: Unit: count.
+        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]` in the file's system. Unit: system.
+        by_return: The points by return number (the header's), up to the last that has any. Unit: count.
+        classes: With `classes`: each classification code (as text) and its points. Unit: count.
+        created: The header's creation day as `YYYY-MM-DD`; none when the file leaves it 0.
+        crs_name: The horizontal system's name as the file writes it.
+        dimensions: The dimensions every point has, the format's in its order (`x`, `y`, `z`, `intensity`, …).
+        epsg: The horizontal system's EPSG code, when the file names one KentOS can tell. Unit: epsg.
+        file: The source as the cloud names it: its file, address or library asset.
+        format: Unit: index.
+        gps_time: Which GPS time the points carry: `standard` (adjusted standard GPS time) or `week` (seconds of the GPS week);
+            none when the format has no time.
+        guid: The project's GUID as the header holds it (`xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`); none when it is zero.
+        nodes: A COPC's nodes. Unit: count.
+        offset: Unit: system.
+        record_len: Unit: count.
+        scale: Unit: system.
+        source_id: Unit: index.
+        version: `1.2`, `1.4`; none for a text cloud.
+        vertical: The vertical system as the file names it: its name (a WKT's `VERT_CS`/`VERTCRS`) or `EPSG:n` (a GeoTIFF key);
+            none when the file names none (the heights' datum then unknown).
+    """
+    read: bool
+    kind: str
+    count: int
+    bounds: list[float]
+    asset: str | None | Unset = UNSET
+    by_return: list[int] | Unset = UNSET
+    classes: dict[str, int] | None | Unset = UNSET
+    created: str | None | Unset = UNSET
+    crs_name: str | None | Unset = UNSET
+    dimensions: list[str] | Unset = UNSET
+    epsg: int | None | Unset = UNSET
+    extra: list[CloudExtra] | Unset = UNSET
+    file: str | None | Unset = UNSET
+    format: int | None | Unset = UNSET
+    gps_time: str | None | Unset = UNSET
+    guid: str | None | Unset = UNSET
+    nodes: int | None | Unset = UNSET
+    offset: list[float] | None | Unset = UNSET
+    record_len: int | None | Unset = UNSET
+    scale: list[float] | None | Unset = UNSET
+    software: str | None | Unset = UNSET
+    source_id: int | None | Unset = UNSET
+    system: str | None | Unset = UNSET
+    url: str | None | Unset = UNSET
+    version: str | None | Unset = UNSET
+    vertical: str | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["read"] = self.read
+        out["kind"] = self.kind
+        out["count"] = self.count
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.by_return is not UNSET:
+            out["byReturn"] = list(self.by_return)
+        if self.classes is not UNSET:
+            out["classes"] = None if self.classes is None else dict(self.classes)
+        if self.created is not UNSET:
+            out["created"] = self.created
+        if self.crs_name is not UNSET:
+            out["crsName"] = self.crs_name
+        if self.dimensions is not UNSET:
+            out["dimensions"] = list(self.dimensions)
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.extra is not UNSET:
+            out["extra"] = [e0.to_json() for e0 in self.extra]
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.format is not UNSET:
+            out["format"] = self.format
+        if self.gps_time is not UNSET:
+            out["gpsTime"] = self.gps_time
+        if self.guid is not UNSET:
+            out["guid"] = self.guid
+        if self.nodes is not UNSET:
+            out["nodes"] = self.nodes
+        if self.offset is not UNSET:
+            out["offset"] = None if self.offset is None else [float(e0) for e0 in self.offset]
+        if self.record_len is not UNSET:
+            out["recordLen"] = self.record_len
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else [float(e0) for e0 in self.scale]
+        if self.software is not UNSET:
+            out["software"] = self.software
+        if self.source_id is not UNSET:
+            out["sourceId"] = self.source_id
+        if self.system is not UNSET:
+            out["system"] = self.system
+        if self.url is not UNSET:
+            out["url"] = self.url
+        if self.version is not UNSET:
+            out["version"] = self.version
+        if self.vertical is not UNSET:
+            out["vertical"] = self.vertical
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudSourceDescribed:
+        return cls(
+            read=data["read"],
+            kind=data["kind"],
+            count=data["count"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            asset=data.get("asset", UNSET),
+            by_return=list(data["byReturn"]) if "byReturn" in data else UNSET,
+            classes=UNSET if "classes" not in data else None if data["classes"] is None else dict(data["classes"]),
+            created=data.get("created", UNSET),
+            crs_name=data.get("crsName", UNSET),
+            dimensions=list(data["dimensions"]) if "dimensions" in data else UNSET,
+            epsg=data.get("epsg", UNSET),
+            extra=[CloudExtra.from_json(e0) for e0 in data["extra"]] if "extra" in data else UNSET,
+            file=data.get("file", UNSET),
+            format=data.get("format", UNSET),
+            gps_time=data.get("gpsTime", UNSET),
+            guid=data.get("guid", UNSET),
+            nodes=data.get("nodes", UNSET),
+            offset=UNSET if "offset" not in data else None if data["offset"] is None else [float(e0) for e0 in data["offset"]],
+            record_len=data.get("recordLen", UNSET),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else [float(e0) for e0 in data["scale"]],
+            software=data.get("software", UNSET),
+            source_id=data.get("sourceId", UNSET),
+            system=data.get("system", UNSET),
+            url=data.get("url", UNSET),
+            version=data.get("version", UNSET),
+            vertical=data.get("vertical", UNSET),
+            why=data.get("why", UNSET),
         )
 
 
@@ -29562,6 +29840,123 @@ class PointCloudStyle(_Model):
             rgb8=data.get("rgb8", UNSET),
             shape=_enum_in(PointShape, data["shape"]) if "shape" in data else UNSET,
             size_unit=_enum_in(PointSizeUnit, data["sizeUnit"]) if "sizeUnit" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsDescribe(_Model):
+    """Input of `cad.pointclouds.describe` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
+    `too_many_points`.
+    Attributes:
+        classes: Count every point's classification (each source read whole).
+        drawing: The open drawing's file, a relative source's folder (the host gives it).
+        uids: The point clouds (persistent ids); none: every point cloud of the drawing, in the drawing's order.
+    """
+    classes: bool | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.classes is not UNSET:
+            out["classes"] = self.classes
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsDescribe:
+        return cls(
+            classes=data.get("classes", UNSET),
+            drawing=data.get("drawing", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsDescribed(_Model):
+    """Output of `cad.pointclouds.describe` v1.
+    Attributes:
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    clouds: list[CloudDescribed]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["clouds"] = [e0.to_json() for e0 in self.clouds]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsDescribed:
+        return cls(
+            clouds=[CloudDescribed.from_json(e0) for e0 in data["clouds"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsQueried(_Model):
+    """Output of `cad.pointclouds.query` v1: the nearest point, or none within the reach; the points looked at.
+    Attributes:
+        read: Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    read: int
+    revision: str
+    point: CloudPoint | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["read"] = self.read
+        out["revision"] = self.revision
+        if self.point is not UNSET:
+            out["point"] = None if self.point is None else self.point.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsQueried:
+        return cls(
+            read=data["read"],
+            revision=data["revision"],
+            point=UNSET if "point" not in data else None if data["point"] is None else CloudPoint.from_json(data["point"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsQuery(_Model):
+    """Input of `cad.pointclouds.query` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
+    `invalid_radius`, `invalid_point`.
+    Attributes:
+        at: The place in plan. Unit: length.
+        radius: The most distance in plan to the point, above 0. Unit: length.
+        uids: The point clouds looked in; none: every visible one.
+    """
+    at: Vec2
+    radius: float
+    drawing: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        out["radius"] = float(self.radius)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsQuery:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            radius=float(data["radius"]),
+            drawing=data.get("drawing", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
         )
 
 
@@ -53647,11 +54042,15 @@ __all__ = [
     "CloseCurveEdit",
     "ClosedPolylines",
     "ClosedPolylinesName",
+    "CloudDescribed",
+    "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudPoint",
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
+    "CloudSourceDescribed",
     "CodeCell",
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
@@ -54506,6 +54905,10 @@ __all__ = [
     "PointCloudEntity",
     "PointCloudFields",
     "PointCloudStyle",
+    "PointCloudsDescribe",
+    "PointCloudsDescribed",
+    "PointCloudsQueried",
+    "PointCloudsQuery",
     "PointConstruction",
     "PointCreate",
     "PointCreated",
