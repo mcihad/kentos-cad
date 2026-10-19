@@ -8,25 +8,41 @@
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
+use std::sync::OnceLock;
+use std::time::Instant;
+
 use kentos_contracts::{
-    CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingRan, ProcessingRun,
-    ProcessingTool, ProcessingTools, ProcessingToolsListed, RunInput, RunSink, ToolNote,
+    BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
+    ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
+    ProcessingTools, ProcessingToolsListed, RecordStep, RecordTotal, RunInput, RunSink, ToolNote,
     ToolParameter, codes,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_native_application::processing_host::{ToolHost, register_tools};
+use kentos_native_application::processing_host::{BatchEnd, BatchFlow, ToolHost, register_tools};
 use serde_json::{Value, json};
 
 use crate::features::{Host, Scene};
-use crate::parameters::default_values;
+use crate::model::Model;
+use crate::model_runner::{MODEL_PREFIX, model_as_tool, run_model};
+use crate::parameters::{default_values, stored_values};
 use crate::registry::Registry;
-use crate::runner::{Level, Outcome, Runner};
+use crate::runner::{Level, Outcome, RunRecord, Runner};
 use crate::text::fold_turkish;
 use crate::types::{Defaults, OutputKind, ParamKind, Tool, Values};
 
-/// Registers İşlemler's built-in tools as the processing commands' (the first registration stays).
+/// What a run's record says about where it ran (docs/adr/0529 §2).
+static HOST: OnceLock<&'static str> = OnceLock::new();
+
+/// Registers İşlemler's built-in tools as the processing commands' (the first registration stays); the record says
+/// `headless`: Python, MCP, the agent's connection and the shared cases' runner.
 pub fn register() {
+    register_as("headless");
+}
+
+/// [`register`] for a host that says what it is in the runs' records (`desktop`).
+pub fn register_as(host: &'static str) {
+    let _ = HOST.set(host);
     register_tools(Box::new(Tools));
 }
 
@@ -133,6 +149,8 @@ fn slots_of(doc: &Document, uids: &[String], path: &str) -> Result<Vec<Slot>, Bo
 /// A run made ready: the tool, its values with the drawing's defaults, the selection and the box it reads.
 struct Ready {
     tool: Tool,
+    /// The model, when the tool is one (`model:…`): it runs its steps.
+    model: Option<Model>,
     values: Values,
     selection: Vec<Slot>,
     view: Option<Bounds>,
@@ -225,7 +243,7 @@ fn ready(
     doc: &Document,
     input: &ProcessingRun,
 ) -> Result<Ready, Box<CommandError>> {
-    let Some(tool) = registry.tool(&input.tool) else {
+    let Some(tool) = registry.get(&input.tool) else {
         return Err(refused(
             codes::UNKNOWN_TOOL,
             format!(
@@ -235,6 +253,11 @@ fn ready(
             Some("tool".into()),
         ));
     };
+    let model = input
+        .tool
+        .strip_prefix(MODEL_PREFIX)
+        .and_then(|id| registry.model(id))
+        .cloned();
     let selection = slots_of(doc, &input.selection, "selection")?;
     let view = input.view.map(|[min_x, min_y, max_x, max_y]| Bounds {
         min_x,
@@ -287,6 +310,7 @@ fn ready(
     }
     Ok(Ready {
         tool,
+        model,
         values,
         selection,
         view,
@@ -399,12 +423,31 @@ impl ToolHost for Tools {
                 .is_none_or(|c| in_category(&registry, t, c))
         });
         found.sort_by(|a, b| a.id.cmp(&b.id));
-        Ok(ProcessingToolsListed {
-            tools: found
-                .into_iter()
-                .map(|t| described(&registry, t, doc))
-                .collect(),
-        })
+        let mut tools: Vec<ProcessingTool> = found
+            .into_iter()
+            .map(|t| described(&registry, t, doc))
+            .collect();
+        // The models, when asked (docs/adr/0529): a model's inputs are its parameters.
+        if input.models {
+            let words: Vec<&str> = folded.split_whitespace().collect();
+            let lookup = |id: &str| registry.tool(id);
+            for m in registry.models() {
+                let as_tool = model_as_tool(m, &lookup);
+                let hay = fold_turkish(&format!(
+                    "{} {} {}",
+                    as_tool.id, as_tool.label, as_tool.description
+                ));
+                let found = words.iter().all(|w| hay.contains(w)) || as_tool.id == query;
+                let in_cat = input
+                    .category
+                    .as_deref()
+                    .is_none_or(|c| in_category(&registry, &as_tool, c));
+                if found && in_cat {
+                    tools.push(described(&registry, &as_tool, doc));
+                }
+            }
+        }
+        Ok(ProcessingToolsListed { tools })
     }
 
     fn check(&self, doc: &Document, input: &ProcessingRun) -> Result<(), Box<CommandError>> {
@@ -419,39 +462,437 @@ impl ToolHost for Tools {
     ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>> {
         let registry = Registry::builtin();
         let ready = ready(&registry, doc, input)?;
-        let inputs = inputs_of(doc, &ready);
         let Some(sink) = &input.sink else {
-            let (mut ran, _) = run_on(doc, ready)?;
-            ran.inputs = inputs;
+            let (ran, _) = run_on(doc, ready, &registry, &mut Digests::new())?;
             return Ok((ran, Vec::new()));
         };
         let target = sink_target(sink)?;
         let (tool_id, tool_label) = (ready.tool.id.clone(), ready.tool.label.clone());
         // The run is made on a copy: the drawing does not change, the file takes the result.
         let mut copy = doc.reading_copy();
-        let (mut ran, added) = run_on(&mut copy, ready)?;
+        let (mut ran, added) = run_on(&mut copy, ready, &registry, &mut Digests::new())?;
         let lineage = Lineage {
             tool: (&tool_id, &tool_label),
             request: input,
-            inputs: &inputs,
+            inputs: &ran.inputs,
             drawing: doc.revision().to_string(),
         };
         let (exported, warnings) = write_sink(&mut copy, &added, &target, write, &lineage)?;
-        ran.inputs = inputs;
         ran.sink = Some(exported);
         ran.step = None;
         ran.revision = doc.revision().to_string();
         Ok((ran, warnings))
     }
+
+    fn check_batch(
+        &self,
+        doc: &Document,
+        input: &ProcessingBatch,
+    ) -> Result<(), Box<CommandError>> {
+        let registry = Registry::builtin();
+        batch_size(input)?;
+        for (i, row) in input.rows.iter().enumerate() {
+            ready(&registry, doc, &row_run(input, row)).map_err(|e| in_row(e, i, row))?;
+        }
+        Ok(())
+    }
+
+    fn batch(
+        &self,
+        doc: &mut Document,
+        input: &ProcessingBatch,
+        flow: &dyn BatchFlow,
+    ) -> Result<BatchEnd, Box<CommandError>> {
+        let registry = Registry::builtin();
+        batch_size(input)?;
+        let clock = (now_ms(), Instant::now());
+        let revision = doc.revision().to_string();
+        let Some(tool) = registry.get(&input.tool) else {
+            return Err(refused(
+                codes::UNKNOWN_TOOL,
+                format!(
+                    "“{}” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
+                    input.tool
+                ),
+                Some("tool".into()),
+            ));
+        };
+        let total = input.rows.len() as u64;
+        // One undo step for all the rows, taken back whole when one stops (docs/adr/0529 §1).
+        let group = doc.begin_group(&format!("Toplu: {}", tool.label));
+        let mut ran_rows: Vec<BatchRowRan> = Vec::with_capacity(input.rows.len());
+        // A layer's digest is taken once for each state of the drawing: rows that leave it alone share it.
+        let mut digests = Digests::new();
+        for (i, row) in input.rows.iter().enumerate() {
+            if flow.stopped() {
+                doc.cancel_group(group);
+                return Ok(BatchEnd::Cancelled);
+            }
+            flow.progress(i as u64, total);
+            let label = row_label(i, row);
+            let made = ready(&registry, doc, &row_run(input, row))
+                .and_then(|r| run_on(doc, r, &registry, &mut digests))
+                .map(|(ran, _)| ran);
+            match made {
+                Ok(ran) => ran_rows.push(BatchRowRan {
+                    index: i as u32,
+                    label,
+                    ran,
+                }),
+                Err(e) => {
+                    doc.cancel_group(group);
+                    return Err(Box::new(CommandError {
+                        code: codes::BATCH_ROW_FAILED.into(),
+                        message: format!(
+                            "{label} çalışmadı: {} Toplu işin hiçbir sonucu yazılmadı.",
+                            e.message
+                        ),
+                        path: Some(format!("rows[{i}]")),
+                        ..CommandError::default()
+                    }));
+                }
+            }
+        }
+        flow.progress(total, total);
+        doc.end_group(group);
+        let edited = ran_rows.iter().any(|r| r.ran.step.is_some());
+        let record = batch_record(
+            &registry,
+            input,
+            &tool,
+            &ran_rows,
+            revision,
+            doc.settings().srid,
+            clock,
+        );
+        let added: usize = ran_rows.iter().map(|r| r.ran.added.len()).sum();
+        let changed: usize = ran_rows.iter().map(|r| r.ran.changed.len()).sum();
+        Ok(BatchEnd::Ran(ProcessingBatched {
+            tool: input.tool.clone(),
+            summary: format!(
+                "{} satır çalıştı: {added} nesne eklendi, {changed} nesne değişti.",
+                ran_rows.len()
+            ),
+            rows: ran_rows,
+            step: edited.then(|| format!("Toplu: {}", tool.label)),
+            record,
+            revision: doc.revision().to_string(),
+        }))
+    }
 }
 
-/// Runs a made-ready tool on `doc` (the drawing or a copy): what it did and the objects it made.
+/// The most rows one batch takes (docs/adr/0529 §1).
+pub const MAX_BATCH_ROWS: usize = 500;
+
+/// A batch's refusals of its size: no rows, too many.
+fn batch_size(input: &ProcessingBatch) -> Result<(), Box<CommandError>> {
+    if input.rows.is_empty() {
+        return Err(refused(
+            codes::EMPTY_BATCH,
+            "Toplu çalıştırmanın satırı yok; en az bir satır verin.".into(),
+            Some("rows".into()),
+        ));
+    }
+    if input.rows.len() > MAX_BATCH_ROWS {
+        return Err(refused(
+            codes::TOO_MANY_ROWS,
+            format!(
+                "{} satır verildi; toplu çalıştırma en çok {MAX_BATCH_ROWS} satır alır. Satırları bölüp ayrı çağırın.",
+                input.rows.len()
+            ),
+            Some("rows".into()),
+        ));
+    }
+    Ok(())
+}
+
+/// A row's name in the answer: the label it gave, else “Satır N” (N from 1).
+fn row_label(i: usize, row: &kentos_contracts::BatchRow) -> String {
+    row.label
+        .as_deref()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .map_or_else(|| format!("Satır {}", i + 1), str::to_owned)
+}
+
+/// A row as the run it is: the batch's values with the row's own over them, the batch's selection and view.
+fn row_run(input: &ProcessingBatch, row: &kentos_contracts::BatchRow) -> ProcessingRun {
+    let mut parameters = input.parameters.clone();
+    for (k, v) in &row.parameters {
+        parameters.insert(k.clone(), v.clone());
+    }
+    ProcessingRun {
+        tool: input.tool.clone(),
+        parameters,
+        selection: input.selection.clone(),
+        view: input.view,
+        sink: None,
+    }
+}
+
+/// A row's refusal with its parameter's path taken into the row (`rows[2].parameters.distance`) when the row gave
+/// that parameter its own value; a value every row shares keeps `parameters.…`.
+fn in_row(
+    mut e: Box<CommandError>,
+    i: usize,
+    row: &kentos_contracts::BatchRow,
+) -> Box<CommandError> {
+    if let Some(path) = e.path.take() {
+        let own = path
+            .strip_prefix("parameters.")
+            .and_then(|rest| rest.split(['.', '[']).next())
+            .is_some_and(|name| row.parameters.contains_key(name));
+        e.path = Some(if own {
+            format!("rows[{i}].{path}")
+        } else {
+            path
+        });
+    }
+    e
+}
+
+/// What a run began with, taken before it changes the drawing (docs/adr/0529 §2).
+struct Begun {
+    inputs: Vec<RunInput>,
+    revision: String,
+    parameters: BTreeMap<String, Value>,
+    selection: Vec<String>,
+    view: Option<[f64; 4]>,
+    srid: Option<u32>,
+    seed: Option<u64>,
+    definition: Option<String>,
+}
+
+impl Begun {
+    fn of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Self {
+        let srid = doc.settings().srid;
+        Begun {
+            inputs: inputs_of(doc, ready, digests),
+            revision: doc.revision().to_string(),
+            parameters: restated(doc, &ready.tool, &ready.values),
+            selection: uids(doc, &ready.selection),
+            view: ready.view.map(|b| [b.min_x, b.min_y, b.max_x, b.max_y]),
+            srid: (srid != 0).then_some(srid),
+            seed: ready
+                .values
+                .get("seed")
+                .and_then(Value::as_f64)
+                .filter(|n| *n >= 0.0 && n.fract() == 0.0 && *n < 9e15)
+                .map(|n| n as u64),
+            definition: ready.model.as_ref().map(definition_digest),
+        }
+    }
+}
+
+/// A window's values in the words the processing commands take (and a record keeps): a file as its name and path,
+/// objects as persistent ids (docs/adr/0529 §4).
+pub fn command_values(doc: &Document, tool: &Tool, values: &Values) -> BTreeMap<String, Value> {
+    restated(doc, tool, values)
+}
+
+/// The values a run took in the words a record keeps: a file as its name and path, objects as persistent ids.
+fn restated(doc: &Document, tool: &Tool, values: &Values) -> BTreeMap<String, Value> {
+    stored_values(tool, values)
+        .into_iter()
+        .map(|(k, v)| {
+            let slots: Option<Vec<Slot>> = (v.get("scope").and_then(Value::as_str) == Some("ids"))
+                .then(|| v.get("ids").and_then(Value::as_array))
+                .flatten()
+                .and_then(|list| {
+                    list.iter()
+                        .map(|n| n.as_u64().and_then(|n| u32::try_from(n).ok()).map(Slot))
+                        .collect()
+                });
+            let v = match (slots, v.as_object()) {
+                (Some(slots), Some(o)) => {
+                    let mut out = o.clone();
+                    out.remove("ids");
+                    out.insert("scope".into(), json!("uids"));
+                    out.insert("uids".into(), json!(uids(doc, &slots)));
+                    Value::Object(out)
+                }
+                _ => v,
+            };
+            (k, v)
+        })
+        .collect()
+}
+
+/// A model's definition as a digest: its steps, their wiring and fixed values, its inputs and outputs; where its boxes
+/// sit on the designer's canvas is not part of what it computes.
+fn definition_digest(model: &Model) -> String {
+    let mut v = model.to_json();
+    if let Some(o) = v.as_object_mut() {
+        o.remove("inputPositions");
+        if let Some(steps) = o.get_mut("steps").and_then(Value::as_array_mut) {
+            for s in steps {
+                if let Some(s) = s.as_object_mut() {
+                    s.remove("position");
+                    s.remove("caption");
+                }
+            }
+        }
+    }
+    kentos_contracts::encoding::sha256_hex(v.to_string().as_bytes())
+}
+
+/// The tool's version: bumped when what it computes from the same values changes (docs/adr/0529 §2). Every tool is at
+/// 1 today; a model is of the tool-and-model contract's 1.
+fn tool_version(_id: &str) -> u32 {
+    1
+}
+
+const RECORD_FORMAT: &str = "kentos.run-record";
+
+fn host_name() -> &'static str {
+    HOST.get().copied().unwrap_or("headless")
+}
+
+fn engine() -> String {
+    format!("KentOS {}", env!("CARGO_PKG_VERSION"))
+}
+
+/// The record of a tool's or a model's run (docs/adr/0529 §2), from what it began with and the history record the
+/// runner made of it.
+fn record_of(
+    begun: Begun,
+    tool: &Tool,
+    model: Option<&Model>,
+    ran: &RunRecord,
+) -> ProcessingRecord {
+    let steps = if model.is_some() {
+        ran.steps
+            .iter()
+            .map(|s| RecordStep {
+                id: s.id.clone(),
+                tool: s.tool_id.clone(),
+                label: s.label.clone(),
+                records_in: s.records_in,
+                records_out: s.records_out,
+                ms: s.ms,
+                summary: s.summary.clone(),
+            })
+            .collect()
+    } else {
+        vec![RecordStep {
+            id: tool.id.clone(),
+            tool: tool.id.clone(),
+            label: tool.label.clone(),
+            records_in: ran.records_in,
+            records_out: ran.records_out,
+            ms: ran.ms,
+            summary: ran.summary.clone(),
+        }]
+    };
+    ProcessingRecord {
+        format: RECORD_FORMAT.into(),
+        version: 1,
+        kind: if model.is_some() { "model" } else { "tool" }.into(),
+        tool: tool.id.clone(),
+        label: tool.label.clone(),
+        tool_version: tool_version(&tool.id),
+        definition: begun.definition,
+        parameters: begun.parameters,
+        selection: begun.selection,
+        view: begun.view,
+        inputs: begun.inputs,
+        document_revision: begun.revision,
+        srid: begun.srid,
+        seed: begun.seed,
+        engine: engine(),
+        host: host_name().into(),
+        started_at: utc_at(ran.started),
+        ms: ran.ms,
+        steps,
+        total: RecordTotal {
+            records_in: ran.records_in,
+            records_out: ran.records_out,
+        },
+    }
+}
+
+/// A batch's record (docs/adr/0529 §2): its rows are the steps, the layers they read are its inputs.
+fn batch_record(
+    registry: &Registry,
+    input: &ProcessingBatch,
+    tool: &Tool,
+    rows: &[BatchRowRan],
+    revision: String,
+    srid: u32,
+    clock: (u64, Instant),
+) -> ProcessingRecord {
+    let mut inputs: Vec<RunInput> = Vec::new();
+    let mut touched: BTreeSet<&str> = BTreeSet::new();
+    for r in rows {
+        for i in &r.ran.inputs {
+            if !inputs.iter().any(|x| x.layer == i.layer) {
+                inputs.push(i.clone());
+            }
+        }
+        touched.extend(
+            r.ran
+                .added
+                .iter()
+                .chain(&r.ran.changed)
+                .chain(&r.ran.selected)
+                .map(String::as_str),
+        );
+    }
+    let records_in: u64 = rows.iter().map(|r| r.ran.record.total.records_in).sum();
+    ProcessingRecord {
+        format: RECORD_FORMAT.into(),
+        version: 1,
+        kind: "batch".into(),
+        tool: tool.id.clone(),
+        label: tool.label.clone(),
+        tool_version: tool_version(&tool.id),
+        definition: input
+            .tool
+            .strip_prefix(MODEL_PREFIX)
+            .and_then(|id| registry.model(id))
+            .map(definition_digest),
+        parameters: input.parameters.clone(),
+        selection: input.selection.clone(),
+        view: input.view,
+        inputs,
+        document_revision: revision,
+        srid: (srid != 0).then_some(srid),
+        seed: None,
+        engine: engine(),
+        host: host_name().into(),
+        started_at: utc_at(clock.0),
+        ms: clock.1.elapsed().as_millis() as u64,
+        steps: rows
+            .iter()
+            .map(|r| RecordStep {
+                id: format!("rows[{}]", r.index),
+                tool: tool.id.clone(),
+                label: r.label.clone(),
+                records_in: r.ran.record.total.records_in,
+                records_out: r.ran.record.total.records_out,
+                ms: r.ran.record.ms,
+                summary: r.ran.summary.clone(),
+            })
+            .collect(),
+        total: RecordTotal {
+            records_in,
+            records_out: touched.len() as u64,
+        },
+    }
+}
+
+/// Runs a made-ready tool or model on `doc` (the drawing or a copy): what it did, with its record, and the objects it
+/// made.
 fn run_on(
     doc: &mut Document,
     ready: Ready,
+    registry: &Registry,
+    digests: &mut Digests,
 ) -> Result<(ProcessingRan, Vec<Slot>), Box<CommandError>> {
+    let begun = Begun::of(doc, &ready, digests);
     let Ready {
         tool,
+        model,
         values,
         selection,
         view,
@@ -467,7 +908,14 @@ fn run_on(
     // The raster tools read and write files where there is no window too (docs/adr/0515).
     let files = crate::local_files::LocalFiles::of(host.doc, None);
     let mut runner = Runner::with_files(std::sync::Arc::new(files));
-    let outcome = runner.run(&mut host, &tool, &values, true, &mut log);
+    let outcome = match &model {
+        // A model's steps one after another, one undo step, taken back whole when one stops.
+        Some(m) => {
+            let lookup = |id: &str| registry.tool(id);
+            run_model(m, &values, &mut runner, &mut host, &lookup, &mut log)
+        }
+        None => runner.run(&mut host, &tool, &values, true, &mut log),
+    };
     let Headless { doc, chosen, .. } = host;
     let notes: Vec<ToolNote> = log
         .iter()
@@ -489,11 +937,23 @@ fn run_on(
             record,
             ..
         } => {
-            let kinds: BTreeMap<&str, OutputKind> = tool
-                .outputs
-                .iter()
-                .map(|o| (o.name.as_str(), o.kind))
-                .collect();
+            let kinds: BTreeMap<String, OutputKind> = match &model {
+                None => tool
+                    .outputs
+                    .iter()
+                    .map(|o| (o.name.clone(), o.kind))
+                    .collect(),
+                Some(m) => m
+                    .outputs
+                    .iter()
+                    .filter_map(|o| {
+                        let step = m.steps.iter().find(|s| s.id == o.step)?;
+                        let t = registry.tool(&step.tool)?;
+                        let kind = t.outputs.iter().find(|x| x.name == o.output)?.kind;
+                        Some((o.name.clone(), kind))
+                    })
+                    .collect(),
+            };
             let outputs = result
                 .outputs
                 .iter()
@@ -510,18 +970,20 @@ fn run_on(
                 .filter(|s| !added_set.contains(s))
                 .collect();
             let layers = layer_ids(doc).difference(&before).cloned().collect();
+            let inputs = begun.inputs.clone();
             let ran = ProcessingRan {
                 tool: tool.id.clone(),
-                summary: record.summary,
+                summary: record.summary.clone(),
                 added: uids(doc, &added),
                 changed: uids(doc, &changed),
                 selected: chosen.map(|c| uids(doc, &c)).unwrap_or_default(),
                 layers,
                 outputs,
                 notes,
-                inputs: Vec::new(),
+                inputs,
                 sink: None,
                 step: edited.then(|| tool.label.clone()),
+                record: record_of(begun, &tool, model.as_ref(), &record),
                 revision: doc.revision().to_string(),
             };
             Ok((ran, added))
@@ -544,10 +1006,14 @@ fn run_on(
     }
 }
 
+/// The content digests taken so far, by the drawing's generation and the layer (docs/adr/0529 §6): hashing a big layer
+/// costs more than the run that reads it, and a generation is one state of the drawing.
+type Digests = BTreeMap<(u64, String), String>;
+
 /// The layers the features inputs read, in the inputs' order: a layer named, or the layers of the objects named or
 /// chosen; a bound layer with its source and the revision it read. The visible layers (`all`) and the view are not
 /// listed one by one.
-fn inputs_of(doc: &Document, ready: &Ready) -> Vec<RunInput> {
+fn inputs_of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Vec<RunInput> {
     let mut layers: Vec<String> = Vec::new();
     let mut add = |id: &str| {
         if !layers.iter().any(|l| l == id) {
@@ -594,7 +1060,12 @@ fn inputs_of(doc: &Document, ready: &Ready) -> Vec<RunInput> {
             RunInput {
                 source: link.map(|s| s.id.clone()),
                 revision: link.map(|s| s.revision.clone()),
-                digest: kentos_native_application::sources::layer_digest(doc, &layer),
+                digest: digests
+                    .entry((doc.generation(), layer.clone()))
+                    .or_insert_with(|| {
+                        kentos_native_application::sources::layer_digest(doc, &layer)
+                    })
+                    .clone(),
                 layer,
             }
         })
@@ -678,12 +1149,21 @@ impl Lineage<'_> {
     }
 }
 
+/// Milliseconds since the Unix epoch now.
+fn now_ms() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_millis() as u64)
+}
+
 /// The time now, `YYYY-MM-DDTHH:MM:SS.SSSZ`.
 fn utc_now() -> String {
-    let ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0.0, |d| d.as_millis() as f64);
-    let text = kentos_geometry_core::time::write(ms, false);
+    utc_at(now_ms())
+}
+
+/// A time as `YYYY-MM-DDTHH:MM:SS.SSSZ`, from milliseconds since the Unix epoch.
+fn utc_at(ms: u64) -> String {
+    let text = kentos_geometry_core::time::write(ms as f64, false);
     // A whole second is written without its milliseconds, and midnight as the day alone.
     let text = if text.len() == 10 {
         format!("{text}T00:00:00")

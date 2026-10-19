@@ -12,6 +12,12 @@ The expectations of `cad.processing.tools` come from the web's frozen inventory 
 from the web's TypeScript definitions of the same tools at 1aad00d0): each tool's id, name, aliases and parameters
 (name, label, kind, whether optional), in order.
 
+Models run through the command too (docs/adr/0529): the shared model case (the three-step parcel sheet) is restated
+as `cad.processing.run`'s case, and a model whose middle step stops (a layer's integer field refuses an edge length)
+takes the first step back. Every run's answer carries its record (kentos.run-record 1, docs/adr/0529 §2); its
+volatile parts (times, revision, content digests) are `$any`, its counts and steps are written out for the cases
+where the shared cases say what flowed.
+
   python3 scripts/fixtures/processing_command_cases.py          # writes the two files
   python3 scripts/fixtures/processing_command_cases.py --check  # fails when they differ
 """
@@ -39,8 +45,14 @@ def uid(slot: int) -> str:
     return f"$uidOf:{slot}"
 
 
+MODEL_FEATURE_OUTPUTS = {"model:builtin.parcelSheet": {"points"}}
+MODEL_LAYERS = {"model:builtin.parcelSheet": "parsel"}
+
+
 def features_kinds(tool: str) -> set[str]:
     """The names of a tool's features outputs, as the web's definitions give them."""
+    if tool.startswith("model:"):
+        return MODEL_FEATURE_OUTPUTS.get(tool, set())
     t = INVENTORY_TOOLS.get(tool)
     if t is None:
         return set()
@@ -76,10 +88,19 @@ def default_scope(tool: str, param: str) -> str:
     return "selection"
 
 
+def tool_of(c: dict) -> str:
+    """A case's tool id: a model's is “model:” and its own id (docs/adr/0529)."""
+    run = c["run"]
+    return run["tool"] if "tool" in run else "model:" + run["model"]
+
+
 def inputs_of(c: dict, doc: dict) -> list[dict]:
     """The layers a run read, as the command lists them: a features input's layer, or the layers of the objects named
     or chosen, in the inputs' order (ADR 0508 §3). A tool's features parameters come from the web's definitions; one left
     at its default reads the selection."""
+    tool = tool_of(c)
+    if tool.startswith("model:"):
+        return [{"layer": MODEL_LAYERS[tool], "digest": "$any"}]
     t = INVENTORY_TOOLS.get(c["run"]["tool"], {})
     layer_of = {e["id"]: e["layerId"] for e in doc["entities"]}
     sources = {s["layer"]: s for s in (doc.get("settings", {}).get("sources") or [])}
@@ -111,7 +132,7 @@ def inputs_of(c: dict, doc: dict) -> list[dict]:
 
 def run_case(c: dict, fixture_doc: str) -> dict:
     """One of İşlemler's cases as a cad.processing.run case."""
-    tool = c["run"]["tool"]
+    tool = tool_of(c)
     doc = document(c["document"])
     inp: dict = {"tool": tool}
     if c.get("values"):
@@ -150,6 +171,7 @@ def run_case(c: dict, fixture_doc: str) -> dict:
             output["inputs"] = inputs
         if want.get("undo"):
             output["step"] = want["undo"]
+        output["record"] = "$any"
         output["revision"] = "$current"
         step["result"] = {"status": "completed", "output": output, "warnings": []}
         expect["canUndo"] = bool(want.get("undo"))
@@ -196,7 +218,7 @@ def usable(c: dict) -> bool:
     """A case whose expectations say the whole result: a tool's run (not a model's) whose outputs, when the tool
     has any, are written out (a case may leave them to the tool's own tests)."""
     if "tool" not in c["run"]:
-        return False
+        return False  # a model's case is restated by `model_cases`
     want = c["expect"]
     if want["status"] != "ok":
         return True
@@ -227,6 +249,7 @@ def sink_case(c: dict, inputs: list[str]) -> dict:
             left[word] = left.get(word, 0) + 1
     rows = len(made) - sum(left.values())
     out.pop("step", None)
+    out["record"] = "$any"
     out["inputs"] = [{"layer": l, "digest": "$any"} for l in inputs]
     out["sink"] = {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
@@ -406,6 +429,136 @@ OWN_RUN = [
 ]
 
 
+def record(kind: str, tool: str, label: str, *, steps: list[dict], total: tuple[int, int], selection=(),
+           inputs=(), srid: int | None = 5256, definition: bool = False, parameters="$any", view=None) -> dict:
+    """A run's record as the command gives it (docs/adr/0529 §2), its volatile parts `$any`: the revision, the engine,
+    the times, a model's definition digest. The counts are written out by the caller from the shared cases."""
+    r: dict = {"format": "kentos.run-record", "version": 1, "kind": kind, "tool": tool, "label": label, "toolVersion": 1}
+    if definition:
+        r["definition"] = "$any"
+    r["parameters"] = parameters
+    if selection:
+        r["selection"] = list(selection)
+    if view:
+        r["view"] = view
+    if inputs:
+        r["inputs"] = list(inputs)
+    r.update({"documentRevision": "$any", "engine": "$any", "host": "headless", "startedAt": "$any", "ms": "$any"})
+    if srid:
+        r["srid"] = srid
+    r["steps"] = steps
+    r["total"] = {"recordsIn": total[0], "recordsOut": total[1]}
+    return r
+
+
+def step_of(id: str, tool: str, label: str, n_in: int, n_out: int, summary: str) -> dict:
+    return {"id": id, "tool": tool, "label": label, "recordsIn": n_in, "recordsOut": n_out, "ms": "$any", "summary": summary}
+
+
+PARCEL_MODEL = "model:builtin.parcelSheet"
+# The model's steps: their ids, tools and the tools' names (the record says a step by its tool's name; a refusal says
+# “2. adım (Kenar uzunluklarını yaz)”).
+PARCEL_STEPS = [
+    ("corners", "points.numberVertices", "Köşe noktalarını numarala"),
+    ("edges", "annotation.edgeLengths", "Kenar uzunluklarını yaz"),
+    ("area", "attributes.calculate", "Öznitelik hesapla"),
+]
+
+
+def model_record(cases: dict) -> dict:
+    """The parcel sheet's record from İşlemler's own shared case: each step read the two chosen parcels
+    (`recordsIn` 2); what the steps made or changed gives `recordsOut` (the points, the texts, the parcels written),
+    and the whole made or changed the distinct objects of all three."""
+    want = cases["model-parcel-sheet"]["expect"]
+    points = [a for a in want["added"] if a["kind"] == "point"]
+    texts = [a for a in want["added"] if a["kind"] == "text"]
+    written = want["updated"]
+    chosen = cases["model-parcel-sheet"]["selection"]
+    outs = [len(points), len(texts), len(written)]
+    # What each step said is the model's summary's sentences, in order.
+    sentences = want["summary"].split(". ", 1)[1]
+    parts = [
+        "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı.",
+        "2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı.",
+        "2 nesnede “Hesap alanı” yazıldı.",
+    ]
+    assert " ".join(parts) == sentences, sentences
+    steps = [step_of(i, t, name, len(chosen), n, text) for (i, t, name), n, text in zip(PARCEL_STEPS, outs, parts)]
+    return record(
+        "model", PARCEL_MODEL, "Parsel ölçü yazıları",
+        steps=steps, total=(len(chosen) * 3, len(points) + len(texts) + len(written)),
+        selection=[uid(n) for n in chosen], inputs=[{"layer": "parsel", "digest": "$any"}],
+        definition=True,
+    )
+
+
+def model_cases(cases: dict) -> list[dict]:
+    """The model through the command (docs/adr/0529 §3): the shared parcel-sheet case restated, its record, and a model
+    whose middle step stops."""
+    c = cases["model-parcel-sheet"]
+    ran = run_case(c, "parcels.kcad")
+    ran["name"] = "Model: " + ran["name"]
+    ran["steps"][0]["result"]["output"]["record"] = model_record(cases)
+    out = [ran]
+    # A model that is not there, and a plan that writes nothing.
+    out.append({
+        "name": "Bilinmeyen model: unknown_tool, aracın yolu",
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": "model:builtin.yok"},
+            "result": failed(
+                "unknown_tool",
+                "“model:builtin.yok” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
+                "tool",
+            ),
+            "expect": UNCHANGED,
+        }],
+    })
+    planned = json.loads(json.dumps(ran["steps"][0]))
+    planned["op"] = "plan"
+    # The objects the plan makes are the copy's: their ids are not the drawing's to name.
+    outputs = planned["result"]["output"]["outputs"]
+    outputs["points"] = ["$any"] * len(outputs["points"])
+    planned["expect"] = {"canUndo": False, "dirty": False, "revision": "same", "ids": list(range(1, 11))}
+    out.append({"name": "Model, plan: aynı sonuç bir kopyada, çizim değişmez", "steps": [planned]})
+    # The middle step stops: the first step's points and layer are taken back, nothing is written (docs/adr/0529 §3).
+    doc = document("parcels.kcad")
+    doc["layers"].append({
+        "id": "islem-kenar-olculeri", "name": "Kenar ölçüleri", "type": "layer", "visible": True, "locked": False,
+        "expanded": True, "style": {"color": "fg-dim", "lineType": "continuous", "lineWeight": 0.18}, "children": [],
+        "fields": [{"name": "Uzunluk (m)", "kind": "integer"}],
+    })
+    out.append({
+        "name": "Model: ortadaki adım çalışmaz (katmanın tam sayı alanı kenar uzunluğunu reddeder), ilk adım geri alınır",
+        "setup": doc,
+        "steps": [{
+            "op": "execute",
+            "input": {"tool": PARCEL_MODEL, "selection": [uid(1), uid(2)]},
+            "result": failed(
+                "tool_failed",
+                "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı "
+                "tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı.",
+                "tool",
+            ),
+            "expect": {"canUndo": False, "dirty": False, "revision": "same", "ids": [e["id"] for e in doc["entities"]]},
+        }],
+    })
+    return out
+
+
+def tool_record(cases: dict) -> dict:
+    """Öznitelik hesapla's record for the shared area case: it read the three chosen parcels and wrote all three."""
+    c = cases["calculate-area"]
+    n = len(c["selection"])
+    return record(
+        "tool", "attributes.calculate", "Öznitelik hesapla",
+        steps=[step_of("attributes.calculate", "attributes.calculate", "Öznitelik hesapla", n, len(c["expect"]["updated"]),
+                       c["expect"]["summary"])],
+        total=(n, len(c["expect"]["updated"])),
+        selection=[uid(i) for i in c["selection"]], inputs=[{"layer": "parsel", "digest": "$any"}],
+    )
+
+
 def own_run_from(cases: dict) -> list[dict]:
     """Cases the command adds on İşlemler's: the same runs with the objects named another way, and a plan."""
     out = []
@@ -430,6 +583,7 @@ def own_run_from(cases: dict) -> list[dict]:
                             "outputs": {"count": 1, "changed": ["$uidOf:1"]},
                             "inputs": [{"layer": "parsel", "digest": "$any"}],
                             "step": area["undo"],
+                            "record": "$any",
                             "revision": "$current",
                         },
                         "warnings": [],
@@ -443,6 +597,10 @@ def own_run_from(cases: dict) -> list[dict]:
             ],
         }
     )
+    area_case = run_case(cases["calculate-area"], "parcels.kcad")
+    area_case["name"] = "Kayıt: " + area_case["name"]
+    area_case["steps"][0]["result"]["output"]["record"] = tool_record(cases)
+    out.append(area_case)
     nv = cases["number-vertices"]
     run = run_case(nv, "parcels.kcad")
     planned = json.loads(json.dumps(run["steps"][0]))
@@ -573,6 +731,39 @@ def tools_cases() -> list[dict]:
             ],
         }
     )
+    # The models, when asked (docs/adr/0529): a model's id is “model:” and its own, its inputs its parameters (the web's
+    # built-in model, apps/web/src/processing/builtin/models.ts).
+    model_input = lambda name, label, kind: {  # noqa: E731
+        "name": name, "label": label, "kind": kind, "description": "$any", "optional": False,
+        "advanced": "$any", "default": "$any", "options": "$any",
+    }
+    model = {
+        "id": "model:builtin.parcelSheet",
+        "label": "Parsel ölçü yazıları",
+        "category": "$any",
+        "description": "Parsellerin köşelerini numaralar, kenar uzunluklarını yazar ve hesaplanan alanı özniteliğe yazar; "
+                       "hepsi tek adımda geri alınır.",
+        "aliases": [],
+        "parameters": [model_input("parcels", "Parseller", "features"), model_input("prefix", "Nokta öneki", "text")],
+    }
+    out.append({
+        "name": "Modeller: models ile model da listelenir (girdileri parametreleri)",
+        "steps": [{
+            "op": "execute",
+            "input": {"query": "model:builtin.parcelSheet", "models": True},
+            "result": {"status": "completed", "output": {"tools": [model]}, "warnings": []},
+            "expect": UNCHANGED,
+        }],
+    })
+    out.append({
+        "name": "Modeller: models olmadan listede model yok",
+        "steps": [{
+            "op": "execute",
+            "input": {"query": "model:builtin.parcelSheet"},
+            "result": {"status": "completed", "output": {"tools": []}, "warnings": []},
+            "expect": UNCHANGED,
+        }],
+    })
     t = INVENTORY_TOOLS["points.numberVertices"]
     out.append(
         {
@@ -626,6 +817,7 @@ def main() -> int:
     ]
     run_cases += sink_refusals()
     run_cases += own_run_from(cases)
+    run_cases += model_cases(cases)
     run_cases += OWN_RUN
     run = {
         "format": "kentos.command-cases",

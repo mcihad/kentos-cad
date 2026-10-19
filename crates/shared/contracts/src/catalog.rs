@@ -6593,7 +6593,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_PROCESSING_TOOLS_VERSION,
             title: "İşlem araçları".into(),
             summary: "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. \
-                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez."
+                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. models: true modelleri de listeler (kimliği model: ile başlar, parametreleri girdileridir). Çizimi değiştirmez."
                 .into(),
             aliases: vec!["islemler".into(), "araclar".into()],
             effect: CommandEffect::Query,
@@ -6621,7 +6621,9 @@ pub fn catalog() -> CommandCatalog {
                       Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
                       Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
                       Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. \
-                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman)."
+                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). \
+                      tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. \
+                      Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz."
                 .into(),
             aliases: vec!["islem".into(), "process".into()],
             effect: CommandEffect::Document,
@@ -6649,6 +6651,48 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir katmanın nesnelerine tampon".into(),
                     input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "distance": 5 } }),
+                    output: None,
+                },
+            ],
+        },
+        // Toplu çalıştırma (docs/adr/0529).
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_BATCH.into(),
+            version: crate::CAD_PROCESSING_BATCH_VERSION,
+            title: "İşlem aracını toplu çalıştır".into(),
+            summary: "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. \
+                      Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. \
+                      Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler). \
+                      Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur."
+                .into(),
+            aliases: vec!["topluislem".into(), "batch".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingBatch>(),
+            output: schema::<crate::ProcessingBatched>(),
+            plan: Some(schema::<crate::ProcessingBatched>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Aynı aracı üç tampon uzaklığıyla çalıştır".into(),
+                    input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" } }, "rows": [
+                        { "label": "5 m", "parameters": { "distance": 5 } },
+                        { "label": "10 m", "parameters": { "distance": 10 } },
+                        { "label": "20 m", "parameters": { "distance": 20 } }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel ölçü yazıları modelini iki ön ekle çalıştır".into(),
+                    input: json!({ "tool": "model:builtin.parcelSheet", "selection": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"], "rows": [
+                        { "parameters": { "prefix": "A" } },
+                        { "parameters": { "prefix": "B" } }
+                    ] }),
                     output: None,
                 },
             ],
@@ -8256,6 +8300,9 @@ mod tests {
                     }
                     crate::CAD_PROCESSING_RUN => {
                         serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_BATCH => {
+                        serde_json::from_value::<crate::ProcessingBatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())

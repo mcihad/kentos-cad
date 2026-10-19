@@ -16,9 +16,12 @@ pub const CAD_PROCESSING_TOOLS: &str = "cad.processing.tools";
 pub const CAD_PROCESSING_TOOLS_VERSION: u32 = 1;
 pub const CAD_PROCESSING_RUN: &str = "cad.processing.run";
 pub const CAD_PROCESSING_RUN_VERSION: u32 = 1;
+pub const CAD_PROCESSING_BATCH: &str = "cad.processing.batch";
+pub const CAD_PROCESSING_BATCH_VERSION: u32 = 1;
 
 /// Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
-/// (case and Turkish marks aside), or one category's (`category`, its id).
+/// (case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too
+/// (docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -31,6 +34,9 @@ pub struct ProcessingTools {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub category: Option<String>,
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub models: bool,
 }
 
 /// A parameter of a tool.
@@ -224,5 +230,218 @@ pub struct ProcessingRan {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub step: Option<String>,
+    /// What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again.
+    pub record: ProcessingRecord,
+    pub revision: String,
+}
+
+/// The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model
+/// and its version), with which explicit values and objects, on which state of the data (the revision, each input
+/// layer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what
+/// flowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON
+/// (`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same
+/// revision, the same data under another revision, or changed data.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProcessingRecord {
+    /// Always `kentos.run-record`.
+    pub format: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub version: u32,
+    /// `tool`, `model` or `batch`.
+    pub kind: String,
+    /// The tool's id, the model's (`model:…`), or a batch's tool.
+    pub tool: String,
+    pub label: String,
+    /// The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a
+    /// model's, the version of the tool-and-model contract.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
+    pub tool_version: u32,
+    /// A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub definition: Option<String>,
+    /// The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its
+    /// name and path, not its rows: giving them to `cad.processing.run` runs it again.
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>"))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "BTreeMap<String, serde_json::Value>")
+    )]
+    pub parameters: BTreeMap<String, Value>,
+    /// The input's own `selection` and `view`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub selection: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub view: Option<[f64; 4]>,
+    /// The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<RunInput>>", optional))]
+    pub inputs: Vec<RunInput>,
+    /// The drawing's revision when the run began.
+    pub document_revision: String,
+    /// The project's coordinate system (EPSG/SRID); none for a local project.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub srid: Option<u32>,
+    /// The seed a tool with one took (its `seed` parameter).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub seed: Option<u64>,
+    /// `KentOS <version>`.
+    pub engine: String,
+    /// Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).
+    pub host: String,
+    /// When it began, UTC (`2026-10-19T09:30:00.000Z`).
+    pub started_at: String,
+    /// How long the whole took, milliseconds.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
+    pub ms: u64,
+    /// The tool as one step, a model's steps in order, a batch's rows in order.
+    pub steps: Vec<RecordStep>,
+    /// What flowed through the whole, counted when it ended.
+    pub total: RecordTotal,
+}
+
+/// A step of a run (docs/adr/0529 §2).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordStep {
+    /// A model step's id, a batch row's `rows[i]`, a tool's own id.
+    pub id: String,
+    pub tool: String,
+    /// A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.
+    pub label: String,
+    /// The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when
+    /// the step ended, so exact.
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records_in: u64,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records_out: u64,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "ms")))]
+    pub ms: u64,
+    pub summary: String,
+}
+
+/// What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object
+/// several steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.
+/// The steps' own counts are exact too; a tool that reports only approximate progress while it runs
+/// (`Feedback::progress`) has this last, exact total.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct RecordTotal {
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records_in: u64,
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub records_out: u64,
+}
+
+/// The values one row of a batch takes over the batch's (docs/adr/0529 §1).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BatchRow {
+    /// Its name in the answer (“Satır 3” when not given).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub label: Option<String>,
+    /// The parameters it gives its own value to; every other parameter takes the batch's, then the default.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
+    )]
+    pub parameters: BTreeMap<String, Value>,
+}
+
+/// Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
+/// through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
+/// and the row's own values over them, with the input's `selection` and `view`. The rows run in order, each seeing
+/// what the rows before it wrote; the whole batch is one undo step named “Toplu: <tool>”, written all or not at all:
+/// a row that stops (or a stop asked between rows) takes back what the earlier rows did. At most 500 rows. Refusals,
+/// in order: `tools_unavailable`, `empty_batch`, `too_many_rows`, then each row's as `cad.processing.run` refuses
+/// them (`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters`), the path prefixed `rows[i].`; at run
+/// time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
+/// nothing written).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProcessingBatch {
+    pub tool: String,
+    /// The values every row takes unless it gives its own.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    #[cfg_attr(feature = "ts", ts(type = "Record<string, unknown>", optional))]
+    #[cfg_attr(
+        feature = "schema",
+        schemars(with = "Option<BTreeMap<String, serde_json::Value>>")
+    )]
+    pub parameters: BTreeMap<String, Value>,
+    pub rows: Vec<BatchRow>,
+    /// As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub selection: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub view: Option<[f64; 4]>,
+}
+
+/// A row of a batch as it ran.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct BatchRowRan {
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub index: u32,
+    pub label: String,
+    /// What the row did, as `cad.processing.run` answers it (its own record included).
+    pub ran: ProcessingRan,
+}
+
+/// What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ProcessingBatched {
+    pub tool: String,
+    pub summary: String,
+    /// Every row, in order, as it ran.
+    pub rows: Vec<BatchRowRan>,
+    /// The undo step's name; none when the drawing did not change.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub step: Option<String>,
+    /// The batch's own record: its rows as steps.
+    pub record: ProcessingRecord,
     pub revision: String,
 }

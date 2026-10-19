@@ -2843,6 +2843,16 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.processing.batch",
+        refusals: &[
+            &["tools_unavailable", "empty_batch", "too_many_rows"],
+            &["unknown_tool", "invalid_uid", "entity_not_found", "invalid_parameters"],
+            &["batch_row_failed"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.sources.sync",
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],

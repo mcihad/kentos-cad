@@ -1139,6 +1139,12 @@ codes! {
     TOOL_FAILED = "tool_failed", Failed, false, "Araç çalıştı ama bitiremedi; çizim değişmedi. İleti nedenini söyler.";
     /// The host has not registered İşlemler's tools (docs/adr/0508).
     TOOLS_UNAVAILABLE = "tools_unavailable", Failed, false, "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır.";
+    /// A batch with no rows (docs/adr/0529).
+    EMPTY_BATCH = "empty_batch", Failed, false, "Toplu çalıştırmanın satırı yok; en az bir satır verin.";
+    /// A batch of more rows than one command takes (docs/adr/0529).
+    TOO_MANY_ROWS = "too_many_rows", Failed, false, "Toplu çalıştırma en çok 500 satır alır; satırları bölüp ayrı çağırın.";
+    /// A row of a batch ran and stopped: nothing of the batch is written (docs/adr/0529).
+    BATCH_ROW_FAILED = "batch_row_failed", Failed, false, "Toplu çalıştırmanın bir satırı çalışıp durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; önceki satırların sonuçları geri alındı, hiçbir şey yazılmadı. İleti satırı ve nedenini söyler.";
     /// Links Paketle did not copy: a missing file, a database's table, an address (docs/adr/0506).
     PACKAGE_LEFT = "package_left", Warning, false, "Bazı bağlar pakete kopyalanmadı (yerinde olmayan dosya, veritabanı, adres ya da yerine başka yüzle çizilen yazı tipi); bağlar olduğu gibi kaldı.";
     /// A `.shp` path for an export of more than one Shapefile (docs/adr/0514).

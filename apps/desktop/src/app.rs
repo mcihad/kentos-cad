@@ -1480,6 +1480,12 @@ impl App {
             } else {
                 Subscription::none()
             },
+            // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
+            if self.processing.batch_running() {
+                Subscription::run(crate::processing::batch::ticks)
+            } else {
+                Subscription::none()
+            },
             // A file dropped on the window goes to the SVG editor while it is open (style/svgedit/).
             if self.styles.svg_editor.is_some() {
                 event::listen_with(crate::style::svgedit::dropped)

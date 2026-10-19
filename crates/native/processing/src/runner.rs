@@ -77,6 +77,24 @@ pub struct RunRecord {
     pub touched: Vec<Slot>,
     /// Where it ran; none when it did not start.
     pub target: Option<Target>,
+    /// What flowed through it, counted when it ended (docs/adr/0529 §2): the objects its features inputs
+    /// resolved to, and the distinct objects it made, changed or chose. A model's `records_in` adds its steps'.
+    pub records_in: u64,
+    pub records_out: u64,
+    /// A model's steps as they ran, in order (docs/adr/0529 §2); empty for a tool.
+    pub steps: Vec<StepRecord>,
+}
+
+/// One step of a model as it ran: the tool, what flowed through it and how long it took.
+#[derive(Clone, Debug, PartialEq)]
+pub struct StepRecord {
+    pub id: String,
+    pub tool_id: String,
+    pub label: String,
+    pub records_in: u64,
+    pub records_out: u64,
+    pub ms: u64,
+    pub summary: String,
 }
 
 /// How a run ended. A run ends once and `Ok` is its usual end: boxing the
@@ -531,7 +549,9 @@ impl Runner {
         added: Vec<Slot>,
         touched: Vec<Slot>,
         target: Option<Target>,
+        records_in: u64,
     ) -> RunRecord {
+        let records_out = distinct(added.iter().chain(touched.iter()).copied()).len() as u64;
         let r = RunRecord {
             seq: 0,
             tool_id: tool.id.clone(),
@@ -544,6 +564,9 @@ impl Runner {
             added,
             touched,
             target,
+            records_in,
+            records_out,
+            steps: Vec::new(),
         };
         if silent { r } else { self.add_record(r) }
     }
@@ -758,6 +781,7 @@ impl Runner {
                 Vec::new(),
                 Vec::new(),
                 None,
+                0,
             );
             return Prepared::Done(Outcome::Stopped {
                 status: Status::Error,
@@ -950,6 +974,7 @@ impl Runner {
             Vec::new(),
             Vec::new(),
             Some(job.target),
+            job.size() as u64,
         );
         Outcome::Stopped {
             status,
@@ -973,6 +998,7 @@ impl Runner {
         if canceled {
             return self.stop(job);
         }
+        let records_in = job.size() as u64;
         let Job {
             tool,
             target,
@@ -1003,6 +1029,7 @@ impl Runner {
                 Vec::new(),
                 Vec::new(),
                 target,
+                records_in,
             );
             return Outcome::Stopped {
                 status: Status::Error,
@@ -1038,6 +1065,7 @@ impl Runner {
                     Vec::new(),
                     Vec::new(),
                     target,
+                    records_in,
                 );
                 return Outcome::Stopped {
                     status: Status::Error,
@@ -1083,6 +1111,7 @@ impl Runner {
             added.clone(),
             touched.clone(),
             target,
+            records_in,
         );
         release(owned);
         let updated = {
