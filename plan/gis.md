@@ -254,6 +254,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-16 — CAD kaynağının dış GIS dataset'inde izlenebilir dönüşümünü tamamla — P0**
 
+  *Kısmen (19 Ekim 2026; [ADR 0530](../docs/adr/0530-cad-to-gis-derivation.md)): CAD→GeoPackage izlenebilir türev (`file.export.gis`: kiriş algoritması ve sapma sınırı, satır başına kaynak kimliği, türü, sapması ve özeti, Z/M, ayrı yazı ve blok tabloları, kayıplar nedenleriyle, tablo başına türetim kaydı), türevin denetimi (`cad.gis.derivation`: eski, GIS'te değişmiş, kaynağı yok, türevde yok) ve türevin kaynağın yerine geçmemesi (`derived_dataset`, `derived_import`). Kalan: GIS değişikliğinin kaynağa geri alınması ya da açık ilişki koparma, PostGIS, Shapefile ve GeoJSON türevi, mimari nesne ve ölçü türevi.*
+
   **Mevcut:** `source_kind`, `cad_definition` ve türev `geom` ayrımı mevcut [K04]. KentOS'un rakiplerinden ayrışabileceği yer, hassas CAD üretimini GIS veri anlamıyla birlikte korumaktır.
 
   **Yapılacak kalan iş:** CAD katmanı→GIS dataset/feature class dönüşümünde entity/feature kimliği, katman–şema eşlemesi, blok özniteliği, kaynak ilişki ve Z/M açıkça taşınsın. Yazı, ölçü, tarama ve blok; kendiliğinden aynı anlamdaki GIS polygon/point sayılmasın. Analitik yay/NURBS kaynak olarak kalsın; gerektiğinde GIS izdüşümü algoritma/sürüm ve maksimum sapma toleransıyla üretilebilsin. GIS'te türevi düzenleme; kaynağa geçerli ters işlem, açık ilişki koparma veya ret politikası taşısın. Kaynak geometriyi değiştirip eski türevi güncel bırakma.
@@ -332,6 +334,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-24 — Model çalıştırıcıya provider stream/sink, batch ve kalıcı run kaydı ekle — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0529](../docs/adr/0529-processing-batch-and-run-record.md)): `cad.processing.batch` ve modellerin komutla çalışması (`model:` kimliği), her çalışmanın kaydı (`kentos.run-record` 1: sürüm, parametre, girdi içerik özeti, çizim sürümü, srid, tohum, motor, adım başına kayıt sayısı ve süre, kesin toplam; aynı sürüm / aynı veri / değişmiş veri ayrımı) masaüstünde, Python'da ve MCP'de; üç adımlı parsel modeli komutta pencereyle aynı sonucu verir, ortadaki adım durunca yerel değişiklikler geri alınır. Kalan: provider stream girdisi, tablo ve raster sink'i, kaydın projede saklanması, `onError: continue`, satır içinde iptal, hızlı katman özeti.*
+
   **Mevcut:** Parametreli araç, tool registry, model tasarımcısı, bağımlılık sırası, arka plan ve tek undo var [K09]. QGIS Processing/ArcGIS ModelBuilder'ın güçlü tarafı, işi tekrar çalıştırılabilir bir tanıma dönüştürmesidir. [A03]
 
   **Yapılacak kalan iş:** Mevcut registry, model tasarımcısı, bağımlılık sırası, arka plan ve tek undo'yu koru. Eksik provider dataset/feature stream girdisi, tipli tablo/raster/dosya sink'i ve batch parametre tablosunu aynı descriptor/executor üzerinden ekle; `python.md` ile ayrı araç standardı oluşturma. Model bağlantılarında akan kayıt sayısı/adım süresi ve çalışmanın kalıcı kaynak revision/filtre/CRS/seed/engine kaydı bulunsun. Yeniden çalıştırmayı aynı parametre-güncel veri ile aynı revision arasında ayır. [Q02]
@@ -401,6 +405,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
   **Bağımlılık ve tamamlanma ölçütü:** CBS-08/24/28/29/39. Düz yüzey, bilinen eğim, çanak ve drenaj örnekleri bağımsız referansla tutmalı; blok boyutunu değiştirmek sonucu sınırların ötesinde değiştirmemeli. Rasterın gösterim renkleri analizin kaynak değerlerini değiştirmesin. Uygunluk ağırlığı ve sensör/datum belirsizliği raporlansın; yağış-akış fiziği doğrulanmadan DEM drenaj analizi afet simülasyonu diye sunulmasın.
 
 - [ ] **CBS-31 — Mevcut görüntü analizine STAC keşfi ve veri hazırlama kaydı ekle — P1**
+
+  *Kısmen (19 Ekim 2026; [ADR 0528](../docs/adr/0528-stac-discovery.md)): STAC API araması (`cad.stac.search`: bbox, tarih, koleksiyon, bulut oranı, sayfalama), seçilen öğenin varlıklarının adresli raster olarak hazırlanması (`cad.stac.prepare`: ızgara, veri türü, nodata, ölçek ve öteleme, QA bandı ve maske kuralı, hazırlama kaydı), kalıcı varlık kimliği ile geçici imzalı adresin ayrımı (imza yazılmaz), masaüstü penceresi, MCP ve Python. Kalan: imzalı adres akışı, s3 adresleri, yeniden izdüşüm, maskenin hesaplara uygulanması, eğitim ve test örneği ile model kaydı.*
 
   **Mevcut:** Bant işlemleri, indis, sınıflandırma, doğruluk, değişim ve fusion araçları mevcut [K09]. Eksik günlük iş; görüntüyü bulma, doğru band/kaliteyle hazırlama ve güvenilir deney kaydını birleştirmektir.
 
