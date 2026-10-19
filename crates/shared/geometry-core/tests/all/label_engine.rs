@@ -9,7 +9,7 @@ use kentos_geometry_core::store::Store;
 use kentos_geometry_core::store::labels::LABEL_STRIDE;
 use kentos_geometry_core::store::placing::{
     LABEL_PLACED, LABEL_PLACED_CALLOUT, LABEL_PLACED_LETTER, LABEL_PLACED_LINE, ObjectLabels,
-    PlaceOptions, Shown, label_at,
+    PlaceOptions, Prior, Shown, label_at,
 };
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::Value;
@@ -83,7 +83,22 @@ fn labels(shown: &Shown) -> Vec<Label> {
     out
 }
 
-fn place(case: &Value) -> Shown {
+/// A case's prior placing, when it has one: `{ scale, spots: [[id, class, chunk, x, y]…] }`.
+fn prior_of(v: &Value) -> Prior {
+    Prior::of(
+        num(&v["scale"]),
+        v["spots"].as_array().expect("spots").iter().map(|s| {
+            (
+                num(&s[0]),
+                num(&s[1]) as u16,
+                num(&s[2]) as u32,
+                Vec2::new(num(&s[3]), num(&s[4])),
+            )
+        }),
+    )
+}
+
+fn place_with_prior(case: &Value) -> (Shown, Prior) {
     let mut s = Store::new();
     s.put_json(&case["objects"].to_string())
         .expect("the objects");
@@ -137,7 +152,8 @@ fn place(case: &Value) -> Shown {
         max_x: w[2],
         max_y: w[3],
     };
-    s.place_labels(&window, num(&case["scale"]), &fixed, options)
+    let prior = case.get("prior").map(prior_of);
+    s.place_labels_after(&window, num(&case["scale"]), &fixed, options, prior.as_ref())
 }
 
 #[test]
@@ -147,7 +163,16 @@ fn the_store_places_the_labels_the_reference_places() {
     assert!(list.len() >= 40, "the cases are there");
     for case in list {
         let name = case["name"].as_str().expect("a name");
-        let shown = place(case);
+        let (shown, prior) = place_with_prior(case);
+        if let Some(next) = case.get("nextPrior") {
+            let want = prior_of(next);
+            assert_eq!(prior.entries().len(), want.entries().len(), "{name}: the next prior");
+            for (g, w) in prior.entries().iter().zip(want.entries()) {
+                assert_eq!((g.0, g.1, g.2), (w.0, w.1, w.2), "{name}: a spot");
+                close(g.3.x, w.3.x, &format!("{name}: spot x"));
+                close(g.3.y, w.3.y, &format!("{name}: spot y"));
+            }
+        }
         let got = labels(&shown);
         let want = case["expect"].as_array().expect("the expected labels");
         let say = |l: &Label| format!("{} {} st {} at {:?}", l.id, l.class, l.state, l.at);

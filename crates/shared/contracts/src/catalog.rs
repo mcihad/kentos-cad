@@ -5309,6 +5309,41 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Etiket denetimi (docs/adr/0533 §6), held together by fixtures/commands/v1/cad.labels.report.json.
+        CommandDescriptor {
+            id: crate::CAD_LABELS_REPORT.into(),
+            version: crate::CAD_LABELS_REPORT_VERSION,
+            title: "Etiketleri denetle".into(),
+            summary: "Bir pencerenin etiketlerini bir ölçekte etiket motoruyla yerleştirir ve sayar; çizimi değiştirmez. Ölçek pxPerMetre (görünümün ölçeği: ekran pikseli bölü metre) ya da paperScale (1:N: bir pafta haritasının o ölçekte yazdığı gibi, kâğıdın CSS pikseliyle) biridir; pencere window (batı, güney, doğu, kuzey) ya da çizimin kapsamıdır; layers yalnız bu katmanların etiketlerini sayar (öbürleri yine de yer tutar ve engeldir). \
+                      Cevap toplamlar ve katman katman sayılar: placed (yeri olan), unplaced (boş yer bulunamayan; çizilmez), hidden (elle gizlenen), pinned (yeri sabitlenen), forced (üst üste gelebilen sınıfın bindirdiği), collisions (yerleştirilenlerden kutusu başka bir yerleştirilenin kutusunu kesen; çizildiği gibi okunur, eğri yazı kutulanmaz: üst üste gelebilen sınıf yoksa 0), repeats (aynı katmanda ve sınıfta daha önce yerleşmiş bir etiketin metnini yineleyen: bir yolun adı boyunca yinelenir). \
+                      Bir kaynağın parçasını tutan bağlı katmanın (cad.sources.edit extent) etiketi ve engeli yalnız o parçanın satırlarıdır: katmanın source ve part'ı söylenir, pencere parçanın ötesine uzanıyorsa partial true olur. \
+                      Bir etiket motorunun sonucu görünüme göre değişir: bu komut tek bir pencereyi sayar; ardışık küçük kaydırmalarda etiketlerin yerinde kalması masaüstünün işidir (docs/adr/0533 §3), bu komutun değil."
+                .into(),
+            aliases: vec!["etiketdenetle".into(), "labelreport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::LabelsReport>(),
+            output: schema::<crate::LabelsReported>(),
+            plan: Some(schema::<crate::LabelsReported>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Çizimin tamamını 1:1000 pafta ölçeğinde denetle".into(),
+                    input: json!({ "paperScale": 1000 }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel katmanını 2 piksel/metrede bir pencerede denetle".into(),
+                    input: json!({ "pxPerMetre": 2.0, "window": [487000.0, 4420000.0, 487250.0, 4420180.0], "layers": ["parsel"] }),
+                    output: None,
+                },
+            ],
+        },
         // Katman stili (docs/adr/0213 §5), held together by fixtures/commands/v1/cad.layers.renderer.json.
         CommandDescriptor {
             id: crate::CAD_LAYERS_RENDERER.into(),
@@ -8197,6 +8232,9 @@ mod tests {
                     }
                     crate::CAD_LABELS_PIN => {
                         serde_json::from_value::<crate::LabelsPin>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_LABELS_REPORT => {
+                        serde_json::from_value::<crate::LabelsReport>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_LAYERS_RENDERER => {
                         serde_json::from_value::<crate::LayersRenderer>(e.input.clone()).map(|_| ())

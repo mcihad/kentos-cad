@@ -462,6 +462,20 @@ class Walk:
     def between(self, s0, s1):
         return [p for p, s in zip(self.pts, self.at) if s0 < s < s1]
 
+    def nearest(self, p):
+        """How far along the path its point nearest p is (the first of equals)."""
+        best = (math.inf, 0.0)
+        for i in range(len(self.pts) - 1):
+            a, b = self.pts[i], self.pts[i + 1]
+            dx, dy = b[0] - a[0], b[1] - a[1]
+            len2 = dx * dx + dy * dy
+            t = min(max(((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / len2, 0.0), 1.0) if len2 > 0.0 else 0.0
+            q = (a[0] + dx * t, a[1] + dy * t)
+            d = norm(p[0] - q[0], p[1] - q[1])
+            if d < best[0]:
+                best = (d, self.at[i] + t * (self.at[i + 1] - self.at[i]))
+        return best[1]
+
     def reversed(self):
         total = self.length()
         return Walk(self.pts[::-1], [total - s for s in self.at[::-1]])
@@ -603,6 +617,10 @@ def edge_toward(c, hw, hh, to):
 CELL = 32.0
 MARGIN = 256.0
 IMPROVE_TRIES = 32
+# docs/adr/0533 §3: how near, px, a candidate is to the place a label was last put, and how far its candidates are looked
+# through once a free one is known.
+PREFER_TOL = 2.0
+PREFER_TRIES = 48
 PATH_CANDIDATES = 21
 AREA_STEPS = 8
 OVERRUN = 0.5
@@ -704,11 +722,21 @@ def path_cands(f, u, font, walk, s0, s1, interior, out):
     def place(t):
         return 0.0001 + 0.001 * abs(t - mid) / ln
 
+    def tried(s0, s1, w):
+        """The middles tried, and the place the label was last put along this stretch when it is in it."""
+        got = middles(s0, s1, w)
+        if u.get("prefer") is not None:
+            t = walk.nearest(u["prefer"])
+            room = (ln - w) / 2.0
+            if ln >= w and abs(t - mid) <= room + 1e-9 and all(abs(m - t) > 0.5 for m in got):
+                got.append(t)
+        return got
+
     if mode == "horizontal":
-        for t in middles(s0, s1, f.w):
+        for t in tried(s0, s1, f.w):
             out.append(straight(f, u, walk.point(t), 0.0, place(t)))
     elif not curved:
-        for t in middles(s0, s1, f.w):
+        for t in tried(s0, s1, f.w):
             a, b = t - f.w / 2.0, t + f.w / 2.0
             p0, p1 = walk.point(a), walk.point(b)
             q = norm(p1[0] - p0[0], p1[1] - p0[1]) / f.w
@@ -742,7 +770,7 @@ def path_cands(f, u, font, walk, s0, s1, interior, out):
                 got.append((w.point(at), w.angle(at)))
             return got
 
-        for t in middles(s0, s1, f.w):
+        for t in tried(s0, s1, f.w):
             fwd = letters_on(walk, t - f.w / 2.0)
             if mode == "contour" and u["uphill"] is not None:
                 rev = not u["uphill"]
@@ -808,6 +836,14 @@ def area_cands(f, u, rings, pole_, bbox, free, out):
             a = upright(a)
             if abs(a) > 1e-3:
                 add(a, 0.0005)
+
+
+def area_last(f, u, rings, at):
+    """An area's candidate where its label was last put: only when it still fits inside (docs/adr/0533 §3)."""
+    c = u["cls"]
+    if not box_inside(Obb(at, 0.0, f.w / 2.0 + c.halo, f.h / 2.0 + c.halo), rings):
+        return None
+    return straight(f, u, at, 0.0, 0.0001)
 
 
 def outside_cands(f, u, bbox, pole_, out):
@@ -1039,11 +1075,31 @@ def place(scene):
                     forced[i] = u["pin"] is None
                     break
                 continue
-            for ci, c in enumerate(got):
-                if room.free(c.boxes) and not duplicate(u, c, i):
-                    take(i, c, (fi, ci))
-                    done = True
+            prefer = u.get("prefer")
+            # An area's label where it was, when that still fits and is free.
+            if prefer is not None and u["geo"][0] == "area" and not f.outside:
+                c = area_last(f, u, u["geo"][1], prefer)
+                if c is not None and obstacles.cost(c.boxes, u["id"], u["cls"].priority) is not None \
+                        and room.free(c.boxes) and not duplicate(u, c, i):
+                    take(i, c, (fi, 2 ** 31))
                     break
+            first_free = pick = None
+            for ci, c in enumerate(got):
+                free = room.free(c.boxes) and not duplicate(u, c, i)
+                near = prefer is not None and norm(middle_of(c)[0] - prefer[0], middle_of(c)[1] - prefer[1]) <= PREFER_TOL
+                if free:
+                    if first_free is None:
+                        first_free = ci
+                    if prefer is None or near:
+                        pick = ci
+                        break
+                if first_free is not None and ci + 1 >= PREFER_TRIES:
+                    break
+            if pick is None:
+                pick = first_free
+            if pick is not None:
+                take(i, got[pick], (fi, pick))
+                done = True
             if done:
                 break
 
@@ -1373,6 +1429,14 @@ def place_window(case):
             return lab["classes"][k] if k < len(lab["classes"]) else None
         return defaults.get(default_slot(e))
 
+    prior = case.get("prior")
+    last = {(sp[0], sp[1], sp[2]): (sp[3], sp[4]) for sp in prior["spots"]} if prior and prior["scale"] == s else {}
+
+    def prefer_of(id_, class_, chunk):
+        """A label's last place, in this window's pixels (docs/adr/0533 §3)."""
+        w = last.get((id_, class_, chunk))
+        return None if w is None else px(w)
+
     obstacles, contours = [], {}
     for e in objects:
         lay = layer_of(e)
@@ -1429,7 +1493,8 @@ def place_window(case):
 
             def unit(geo, chunk, target, e=e, ci=ci, cls=cls, text=text, rank=rank, pinned=pinned, hidden=hidden, order=order):
                 return {"id": e["id"], "order": order, "rank": rank, "class": ci, "cls": cls, "text": text, "chunk": chunk,
-                        "geo": geo, "target": target, "pin": pinned, "hidden": hidden, "uphill": None}
+                        "geo": geo, "target": target, "pin": pinned, "hidden": hidden, "uphill": None,
+                        "prefer": prefer_of(e["id"], ci, chunk)}
 
             corner_geo = ("corner", px((b[0], b[3])))
             if k == "point":
@@ -1489,7 +1554,8 @@ def place_window(case):
 
             def unit(geo, chunk, target, e=e, key=key, cls=cls, order=order, rank=rank):
                 return {"id": e["id"], "order": order, "rank": rank, "class": key[1], "cls": cls, "text": key[2], "chunk": chunk,
-                        "geo": geo, "target": target, "pin": None, "hidden": False, "uphill": None}
+                        "geo": geo, "target": target, "pin": None, "hidden": False, "uphill": None,
+                        "prefer": prefer_of(e["id"], key[1], chunk)}
 
             start = len(units)
             path_units(pts, cls, rect, False, False, unit, units)
@@ -1520,6 +1586,8 @@ def place_window(case):
     for l in labels:
         u, f, c = l["unit"], l["form"], l["cand"]
         rec = {"id": u["id"], "class": u["class"], "state": l["state"], "w": f.w, "h": f.h}
+        if prior is not None or case.get("emitPrior"):
+            rec["chunk"] = u["chunk"]
         if c.drawn[0] == "straight":
             _, m, angle, lines = c.drawn
             rec["at"], rec["angle"] = world(m), math.degrees(angle)
@@ -1779,13 +1847,75 @@ def cases():
          [{"id": "tanimsiz", "rank": 0}],
          [one(1, "Alan"), one(2, "Hat")],
          defaults={"polygon": {"placement": "center", "size": 10}, "polyline": {"placement": "along", "size": 10}})
+
+    # ── The last placing remembered (docs/adr/0533 §3): a label whose place is free goes back to it ──
+    def prior_after(objects, layers, texts, window=(0, 0, 100, 60), scale=4.0, **more):
+        """The spots a placing left, for the next one's prior."""
+        first = {"name": "", "window": list(window), "scale": scale, "layers": layers, "objects": objects, "texts": texts,
+                 "emitPrior": True, **more}
+        return {"scale": scale, "spots": spots_of(place_window(first))}
+
+    nokta_layers = [{"id": "nokta", "rank": 0, "point": 6, "label": NOKTA}]
+    blocked = [box(30, 30.5, 70, 40), box(50.5, 20, 70, 30.5)]
+    at_left_below = prior_after([point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")], fixed=blocked)
+    case("Önceki yer: nokta adı sol altta kalır (ilk aday sağ üstken)", [point(1, "nokta", 50, 30)], nokta_layers,
+         [one(1, "P.101")], prior=at_left_below)
+    case("Önceki yer dolunca ilk boş aday", [point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")],
+         prior=at_left_below, fixed=[box(40, 24, 50, 29.5)])
+    case("Ölçek değişince önceki yer yok sayılır", [point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")],
+         scale=8.0, window=(25, 15, 75, 45), prior={**at_left_below, "scale": 4.0})
+    near = {"scale": 4.0, "spots": [[sp[0], sp[1], sp[2], sp[3] + 0.375, sp[4]] for sp in at_left_below["spots"]]}
+    far = {"scale": 4.0, "spots": [[sp[0], sp[1], sp[2], sp[3] + 0.75, sp[4]] for sp in at_left_below["spots"]]}
+    case("Önceki yer 1,5 px ötedeyse yine o aday", [point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")], prior=near)
+    case("Önceki yer 3 px ötedeyse eşleşmez", [point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")], prior=far)
+    case("Önceki yeri olmayan nesne ilk boş adayı alır",
+         [point(1, "nokta", 30, 30), point(2, "nokta", 70, 30)], nokta_layers, [one(1, "P.1"), one(2, "P.2")],
+         prior={"scale": 4.0, "spots": [sp for sp in at_left_below["spots"]]})
+    parcel = {"placement": "center", "size": 10, "area": "parcel"}
+    parcel_layers = [{"id": "parsel", "rank": 0, "label": parcel}]
+    lot = [rect(1, "parsel", 30, 20, 70, 50)]
+    case("Alan: önceki yer kutuya sığıyorsa oradan kalkmaz", lot, parcel_layers, [one(1, "13/1")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 40.0, 30.0]]})
+    case("Alan: önceki yer kutuya sığmıyorsa kutup", lot, parcel_layers, [one(1, "13/1")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 31.0, 21.0]]})
+    case("Alan: önceki yer doluyken kutup", lot, parcel_layers, [one(1, "13/1")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 40.0, 30.0]]}, fixed=[box(36, 28, 44, 32)])
+    case("Alan: sığmayan etiket için önceki yer sayılmaz", [rect(1, "parsel", 48, 10, 50, 50)],
+         [{"id": "parsel", "rank": 0, "label": {**parcel, "outside": True}}], [one(1, "13/1")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 49.0, 30.0]]})
+    road = [polyline(1, "yol", [(0, 30), (100, 30)])]
+    road_layers = [{"id": "yol", "rank": 0, "label": {"placement": "along", "size": 10}}]
+    case("Yol: önceki yer şeritteyse etiket orada", road, road_layers, [one(1, "Atatürk Cd.")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 20.0, 31.0]]})
+    case("Yol: önceki yer uca yakınsa orta", road, road_layers, [one(1, "Atatürk Cd.")],
+         prior={"scale": 4.0, "spots": [[1, 0, 0, 2.0, 31.0]]})
+    repeat = [{"id": "yol", "rank": 0, "label": {"placement": "along", "size": 10, "repeat": 120}}]
+    case("Yineleme: parçanın önceki yeri yalnız o parçaya", [polyline(1, "yol", [(0, 30), (100, 30)])], repeat,
+         [one(1, "Atatürk Cd.")], prior={"scale": 4.0, "spots": [[1, 0, 1, 70.0, 31.0]]})
+    case("Eğri boyunca yazı: önceki yer", [polyline(1, "yol", [(0, 20), (40, 30), (80, 20), (100, 30)])],
+         [{"id": "yol", "rank": 0, "label": {"placement": "along", "size": 10, "line": "curved"}}],
+         [one(1, "Kırmızı Dere")], prior={"scale": 4.0, "spots": [[1, 0, 0, 30.0, 29.5]]})
+    case("İki etiketin önceki yeri çakışıyorsa öncelikli olan alır",
+         [point(1, "nokta", 50, 30), point(2, "nokta", 52, 30)],
+         [{"id": "nokta", "rank": 0, "point": 6, "label": NOKTA}], [one(1, "P.101"), one(2, "P.102")],
+         prior={"scale": 4.0, "spots": [sp for sp in at_left_below["spots"]] + [[2, 0, 0, at_left_below["spots"][0][3] + 0.5,
+                                                                                at_left_below["spots"][0][4]]]})
+    case("Sabit etiket önceki yerden etkilenmez", [point(1, "nokta", 50, 30)], nokta_layers, [one(1, "P.101")],
+         pins=[[1, [{"at": {"x": 10.0, "y": 8.0}}]]], prior=at_left_below)
     return out
+
+
+def spots_of(labels):
+    """What the next placing is given (docs/adr/0533 §3): each placed label's object, class, piece and middle (world)."""
+    return sorted([l["id"], l["class"], l["chunk"], l["at"][0], l["at"][1]] for l in labels if not l["state"] & (2 | 4))
 
 
 def run(case):
     labels = place_window(case)
     got = {"name": case["name"], **{k: v for k, v in case.items() if k != "name"}}
     got["expect"] = labels
+    if case.get("prior") is not None or case.get("emitPrior"):
+        got["nextPrior"] = {"scale": case["scale"], "spots": spots_of(labels)}
     if "hits" in case:
         got["hits"] = [{**h, "hit": label_at(labels, case["scale"], tuple(h["at"]), h["tol"], h.get("all", False))}
                        for h in case["hits"]]

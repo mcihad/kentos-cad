@@ -515,10 +515,12 @@ def describe_cases():
 
 # ── cad.sources.sync ───────────────────────────────────────────────────────
 
-def synced(added=0, modified=0, removed=0, columns=(), name=Q):
+def synced(added=0, modified=0, removed=0, columns=(), name=Q, pins=None):
     out = {"added": added, "modified": modified, "removed": removed, "source": sha(name), "revision": "$current"}
     if columns:
         out["columns"] = list(columns)
+    if pins is not None:
+        out["pins"] = pins
     return out
 
 
@@ -631,12 +633,287 @@ def sync_cases():
     ]
 
 
+
+# ── Label pins of bound layers (docs/adr/0533 §1, §2): the key, the area change, what a reload does to the pins ──
+
+KEY = "ada"
+PIN_A = {"at": {"x": 1.0, "y": 2.0}, "rotation": 10.0}
+PIN_B = {"at": {"x": -3.0, "y": 4.0}}
+LOST_WORDS = [("deleted", "satırı tabloda yok"), ("outside", "satırı katmanın alanının dışında"),
+              ("rebound", "satır kimliği artık başka bir kayıt (anahtar değeri değişmiş)"),
+              ("taken", "anahtarının satırında zaten iğneler var")]
+
+
+def pins_after(bearers, rows, key, outside=()):
+    """What a reload does to the pins of a layer's objects, by the rule of the ADR (§1). `bearers`: the objects that
+    hold pins, as {uid, value (the key's value they hold now, None without), pins}; `rows`: the table's rows as read, by
+    uid, each its key's value (None when it has none); `key`: the binding's key or None; `outside`: uids of rows the
+    layer's area leaves out. Returns the report and which pins each object holds after (the objects named only)."""
+    by_value = {}
+    for uid, value in rows.items():
+        if key and value:
+            by_value.setdefault(value, []).append(uid)
+    kept, moves, lost = 0, [], []
+    for b in bearers:
+        here = b["uid"] in rows
+        if here and (not key or b["value"] is None or rows[b["uid"]] == b["value"]):
+            kept += 1
+            continue
+        target = by_value.get(b["value"]) if b["value"] is not None else None
+        if target and len(target) == 1 and target[0] != b["uid"]:
+            moves.append((b, target[0]))
+        else:
+            reason = "rebound" if here else ("outside" if b["uid"] in outside else "deleted")
+            lost.append((b["uid"], reason))
+    leaving = {b["uid"] for b, _ in moves}
+    staying = {b["uid"] for b in bearers} - leaving
+    moved, after = [], {}
+    for b, to in moves:
+        if to in staying and to in {x["uid"] for x in bearers}:
+            lost.append((b["uid"], "taken"))
+        else:
+            after[to] = b["pins"]
+            moved.append({"from": b["uid"], "to": to, "key": b["value"]})
+    for uid in list(leaving) + [u for u, _ in lost]:
+        if uid in rows:
+            after.setdefault(uid, [])
+    moved.sort(key=lambda m: m["from"])
+    lost.sort()
+    return {"kept": kept, **({"moved": moved} if moved else {}),
+            **({"lost": [{"uid": u, "reason": r} for u, r in lost]} if lost else {})}, after
+
+
+def pin_warnings(table, key, report):
+    """The warnings a pins report comes with: lost pins, moved pins."""
+    out = []
+    lost = report.get("lost", [])
+    if lost:
+        parts = [f"{sum(1 for l in lost if l['reason'] == r)} nesnenin {w}" for r, w in LOST_WORDS
+                 if any(l["reason"] == r for l in lost)]
+        out.append({"code": "label_pins_lost",
+                    "message": f"{table}: etiket iğneleri korunamadı ({'; '.join(parts)}); okumayı geri alırsanız dönerler.",
+                    "path": "layer"})
+    moved = report.get("moved", [])
+    if moved:
+        out.append({"code": "label_pins_moved",
+                    "message": f"{table}: {len(moved)} nesnenin etiket iğneleri “{key}” anahtarının yeni satırına taşındı.",
+                    "path": "layer"})
+    return out
+
+
+def pin_of(uid, pin):
+    return other("cad.labels.pin", {"pins": [{"uid": uid, "pin": pin}]})
+
+
+def set_ada(uid, value):
+    return other("cad.entities.set", {"uids": [uid], "attrs": {KEY: value}, "operation": "attributes"})
+
+
+def keyed_link(table="parsel", key=KEY, name=Q):
+    """`link` onto a new layer with a key: the answer and the objects as ever, the key in the binding."""
+    s, b, ids = link_step(table, name, cmd="cad.sources.edit")
+    s = copy.deepcopy(s)
+    s["input"]["edit"]["key"] = key
+    b = {**b, "key": key}
+    s["result"]["output"]["link"] = b
+    s["expect"]["settings"] = {"sources": [b]}
+    return s, b, ids
+
+
+def pin_edit_cases():
+    parsel = rows_of(Q, "parsel")
+    ua, ub = parsel[0]["uid"], parsel[1]["uid"]
+    mal = rows_of(Q, "malik")
+    s_link, b, ids = link_step("parsel", cmd="cad.sources.edit")
+    k_link, kb, _ = keyed_link()
+    inside = in_area(Q, "parsel", AREA)
+    assert inside and len(inside) < len(parsel)
+    slot_of = {r["fid"]: 2 + i for i, r in enumerate(parsel)}
+    geometric = [r for r in parsel if r["kind"] != "record"]
+    keep_row = next(r for r in geometric if r["fid"] in inside)
+    out_row = next(r for r in geometric if r["fid"] not in inside)
+    # The whole table onto a new layer, a pin on an object inside the area and one outside, then the area.
+    rows_in = {r["uid"]: r["attrs"].get(KEY) for r in parsel if r["fid"] in inside}
+    outside_uids = {r["uid"] for r in parsel if r["fid"] not in inside}
+    bearers = [{"uid": keep_row["uid"], "value": keep_row["attrs"].get(KEY), "pins": [PIN_A]},
+               {"uid": out_row["uid"], "value": out_row["attrs"].get(KEY), "pins": [PIN_B]}]
+    report, _ = pins_after(bearers, rows_in, None, outside_uids)
+    narrowed = {**b, "extent": AREA}
+    gone_slots = [slot_of[r["fid"]] for r in parsel if r["fid"] not in inside]
+    remaining = [1] + [slot_of[r["fid"]] for r in parsel if r["fid"] in inside]
+    extent_out = {"link": narrowed, "objects": 0, "pins": report, "revision": "$current"}
+    # An area on a table linked with the area, taken away: the rows outside come in, with no pins to give.
+    a_link, ab, _ = area_link_step("parsel", AREA, cmd="cad.sources.edit")
+    widened = {k: v for k, v in ab.items() if k != "extent"}
+    added = len(parsel) - len(inside)
+    cs = [
+        case("anahtarla bağlanır: ada alanı, katmanın bağında", k_link),
+        case("anahtar tabloda olmayan bir alan: invalid_key",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "key": "yok"}},
+                  failed("invalid_key", f"“yok” alanı 3 nesnede yok ya da boş (örneğin {ua}); anahtar her nesnede bir "
+                         "değer taşımalı.", "edit.key"))),
+        case("anahtar bir nesnede boşsa invalid_key",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "key": "parsel_no"}},
+                  failed("invalid_key", f"“parsel_no” alanı 1 nesnede yok ya da boş (örneğin {ub}); anahtar her nesnede "
+                         "bir değer taşımalı.", "edit.key"))),
+        case("anahtar iki nesnede aynıysa invalid_key",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "malik", "key": "pay"}},
+                  failed("invalid_key", f"“pay” alanının “1/2” değeri iki nesnede ({mal[0]['uid']} ve {mal[1]['uid']}); "
+                         "anahtar iki nesnede aynı olamaz.", "edit.key"))),
+        case("anahtarın adı boş olamaz",
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "key": " "}},
+                  failed("invalid_key", "Anahtar alanı boş, çok uzun ya da denetim karakteri taşıyor.", "edit.key"))),
+        case("var olan katmana anahtarla bağlanır; anahtar katmanın nesnelerinde aranır",
+             other("file.import.gpkg", {"path": fx(Q), "tables": ["parsel"]}),
+             step({"edit": {"kind": "link", "path": fx(Q), "table": "parsel", "layer": "import-parsel", "key": KEY}},
+                  done({"link": {**link("parsel", "import-parsel"), "key": KEY}, "objects": 0, "revision": "$current"}),
+                  {"revision": "changed", "settings": {"sources": [{**link("parsel", "import-parsel"), "key": KEY}]}})),
+        case("key işlemi: bağlı katmana anahtar konur", s_link,
+             step({"edit": {"kind": "key", "id": "kaynak-1", "key": KEY}},
+                  done({"link": {**b, "key": KEY}, "objects": 0, "revision": "$current"}),
+                  {"revision": "changed", "settings": {"sources": [{**b, "key": KEY}]}})),
+        case("key işlemi: key verilmezse anahtar kalkar", k_link,
+             step({"edit": {"kind": "key", "id": "kaynak-1"}},
+                  done({"link": b, "objects": 0, "revision": "$current"}),
+                  {"revision": "changed", "settings": {"sources": [b]}})),
+        case("key işlemi: olmayan alan reddedilir", s_link,
+             step({"edit": {"kind": "key", "id": "kaynak-1", "key": "yok"}},
+                  failed("invalid_key", f"“yok” alanı 3 nesnede yok ya da boş (örneğin {ua}); anahtar her nesnede bir "
+                         "değer taşımalı.", "edit.key"))),
+        case("key işlemi: iki nesnede aynı değer reddedilir",
+             link_step("malik", cmd="cad.sources.edit")[0],
+             step({"edit": {"kind": "key", "id": "kaynak-1", "key": "pay"}},
+                  failed("invalid_key", f"“pay” alanının “1/2” değeri iki nesnede ({mal[0]['uid']} ve {mal[1]['uid']}); "
+                         "anahtar iki nesnede aynı olamaz.", "edit.key"))),
+        case("key işlemi: olmayan bağ",
+             step({"edit": {"kind": "key", "id": "kaynak-9", "key": KEY}},
+                  failed("source_not_found", "“kaynak-9” kimlikli bir bağ yok; cad.sources.describe bağları listeler.",
+                         "edit.id"))),
+        case("alan sınırı değişir: alanın dışına çıkan nesnenin iğnesi söylenir", s_link,
+             pin_of(keep_row["uid"], PIN_A), pin_of(out_row["uid"], PIN_B),
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}}, done(extent_out, pin_warnings("parsel", None, report)),
+                  {"ids": remaining, "fields": {str(slot_of[keep_row["fid"]]): {"labelPins": [PIN_A]}},
+                   "revision": "changed", "canUndo": True, "settings": {"sources": [narrowed]}}),
+             {"op": "undo", "returns": "Alan sınırı: parsel",
+              "expect": {"ids": [1, 2, 3, 4], "settings": {"sources": [narrowed]},
+                         "fields": {str(slot_of[out_row["fid"]]): {"labelPins": [PIN_B]}}}}),
+        case("alan sınırı kalkar: dışarıdakiler iğnesiz geri gelir", a_link,
+             step({"edit": {"kind": "extent", "id": "kaynak-1"}},
+                  done({"link": widened, "objects": added, "revision": "$current"}),
+                  {"ids": [1, *range(2, 2 + len(parsel))],
+                   "revision": "changed", "canUndo": True, "settings": {"sources": [widened]}})),
+        case("aynı alan: değişen bir şey yok", a_link,
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}},
+                  done({"link": ab, "objects": 0, "revision": "$current"}), {"revision": "same"})),
+        case("alan sınırı ters verilirse invalid_extent", s_link,
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": [487050.0, 4419990.0, 486990.0, 4420030.0]}},
+                  failed("invalid_extent", "Alan sınırının en küçüğü en büyüğünden küçük olmalı.", "edit.extent"))),
+        case("geometrisiz tablonun alan sınırı olmaz", link_step("malik", cmd="cad.sources.edit")[0],
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}},
+                  failed("invalid_extent", "“malik” tablosunun geometrisi yok; alan sınırı geometrili tabloda olur.",
+                         "edit.extent"))),
+        case("katman değişmişse alan değişmez: pending_changes", s_link,
+             other("cad.entities.set", {"uids": [ua], "attrs": {"ada": "Yeni Mahalle"}, "operation": "attributes"}),
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}},
+                  conflict("pending_changes", "“import-parsel” katmanı dosyayla son eşleştiğinden beri değişti; alanı "
+                           "değiştirmek bu değişiklikleri götürür. Önce yazın (cad.sources.sync write).", "edit.id"))),
+        case("olmayan bağın alanı değişmez",
+             step({"edit": {"kind": "extent", "id": "kaynak-9", "extent": AREA}},
+                  failed("source_not_found", "“kaynak-9” kimlikli bir bağ yok; cad.sources.describe bağları listeler.",
+                         "edit.id"))),
+        case("plan alan değişince ne olacağını söyler, yazmaz", s_link,
+             pin_of(keep_row["uid"], PIN_A), pin_of(out_row["uid"], PIN_B),
+             step({"edit": {"kind": "extent", "id": "kaynak-1", "extent": AREA}},
+                  done(extent_out, pin_warnings("parsel", None, report)),
+                  {"ids": [1, 2, 3, 4], "revision": "same", "settings": {"sources": [b]}}, op="plan")),
+    ]
+    return cs
+
+
+def pin_sync_cases():
+    parsel = rows_of(Q, "parsel")
+    ua, ub = parsel[0]["uid"], parsel[1]["uid"]
+    ka, kb = parsel[0]["attrs"][KEY], parsel[1]["attrs"][KEY]
+    s_link, b, ids = link_step("parsel", cmd="cad.sources.edit")
+    k_link, kb_link, _ = keyed_link()
+    rows = {r["uid"]: r["attrs"].get(KEY) for r in parsel}
+    r = {"layer": "import-parsel", "direction": "read", "discard": True}
+
+    def pins_of(slot, pins):
+        return {str(slot): {"labelPins": pins}}
+
+    out = []
+    # Without a key the row id is the record: a pin stays where the row is.
+    out.append(case("iğne satırı yerinde olan nesnede kalır (anahtarsız)", s_link, pin_of(ua, PIN_A),
+                    step({**r, "discard": False}, done(synced(pins={"kept": 1})),
+                         {"fields": pins_of(2, [PIN_A]), "revision": "same"})))
+    out.append(case("iğnesiz katmanın okuması iğne bilgisi taşımaz", s_link,
+                    step({**r, "discard": False}, done(synced()), {"revision": "same"})))
+    # An object the table has no row of: it goes, its pins are said.
+    report = {"kept": 0, "lost": [{"uid": "$uid:fazla", "reason": "deleted"}]}
+    out.append(case("satırı tabloda olmayan nesne gider, iğnesi söylenir", s_link,
+                    other("cad.point.create", {"layerId": "import-parsel", "p": gi.P(487600, 4420600)}),
+                    {"op": "captureUid", "id": 5, "as": "fazla"},
+                    pin_of("$uid:fazla", PIN_A),
+                    step(r, done(synced(removed=1, pins=report), pin_warnings("parsel", None, report)),
+                         {"ids": [1, 2, 3, 4], "revision": "changed", "canUndo": True})))
+    # The key: two objects that swapped records (the table was written again with other row ids).
+    swap = [{"uid": ua, "value": kb, "pins": [PIN_A]}, {"uid": ub, "value": ka, "pins": [PIN_B]}]
+    report, after = pins_after(swap, rows, KEY)
+    assert len(report["moved"]) == 2 and "lost" not in report
+    swapped = [k_link, pin_of(ua, PIN_A), pin_of(ub, PIN_B), set_ada(ua, kb), set_ada(ub, ka)]
+    out.append(case("anahtarla: satırı değişen nesnelerin iğneleri anahtarın yeni satırına taşınır", *swapped,
+                    step(r, done(synced(modified=2, pins=report), pin_warnings("parsel", KEY, report)),
+                         {"fields": {**pins_of(2, after[ua]), **pins_of(3, after[ub])}, "revision": "changed",
+                          "canUndo": True})))
+    out.append(case("anahtarsız: satırı değişen nesnenin iğnesi satır kimliğinde kalır (izlenemez)",
+                    s_link, pin_of(ua, PIN_A), pin_of(ub, PIN_B), set_ada(ua, kb), set_ada(ub, ka),
+                    step(r, done(synced(modified=2, pins={"kept": 2})),
+                         {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}, "revision": "changed",
+                          "canUndo": True})))
+    # The old value is nowhere in the table: the pin is the old record's, which is gone.
+    lone = [{"uid": ua, "value": "Eski Mahalle", "pins": [PIN_A]}]
+    report, after = pins_after(lone, rows, KEY)
+    assert report["lost"][0]["reason"] == "rebound"
+    out.append(case("anahtarla: eski değerin satırı yoksa iğne kaybolur (rebound), nesnenin iğnesi boşalır",
+                    k_link, pin_of(ua, PIN_A), set_ada(ua, "Eski Mahalle"),
+                    step(r, done(synced(modified=1, pins=report), pin_warnings("parsel", KEY, report)),
+                         {"fields": {**pins_of(2, None)}, "revision": "changed", "canUndo": True})))
+    # The row of the key has pins of its own: its pins are kept, the others' are lost.
+    taken = [{"uid": ua, "value": kb, "pins": [PIN_A]}, {"uid": ub, "value": kb, "pins": [PIN_B]}]
+    report, after = pins_after(taken, rows, KEY)
+    assert report["lost"] == [{"uid": ua, "reason": "taken"}] and report["kept"] == 1
+    out.append(case("anahtarla: anahtarın satırında iğne varsa o korunur, öbürü kaybolur (taken)",
+                    k_link, pin_of(ua, PIN_A), pin_of(ub, PIN_B), set_ada(ua, kb),
+                    step(r, done(synced(modified=1, pins=report), pin_warnings("parsel", KEY, report)),
+                         {"fields": {**pins_of(2, None), **pins_of(3, [PIN_B])}, "revision": "changed",
+                          "canUndo": True})))
+    # Nothing moved: the pins stay and are counted.
+    out.append(case("anahtarla: satırları yerinde olan nesnelerin iğneleri kalır", k_link, pin_of(ua, PIN_A),
+                    pin_of(ub, PIN_B),
+                    step({**r, "discard": False}, done(synced(pins={"kept": 2})),
+                         {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}, "revision": "same"})))
+    # Geri alma: okumanın adımı iğneleri de geri getirir.
+    out.append(case("anahtarla taşınan iğneler okumayı geri alınca döner", *swapped,
+                    step(r, done(synced(modified=2, pins=pins_after(swap, rows, KEY)[0]),
+                                 pin_warnings("parsel", KEY, pins_after(swap, rows, KEY)[0])),
+                         {"revision": "changed", "canUndo": True}),
+                    {"op": "undo", "returns": "Kaynaktan oku: parsel",
+                     "expect": {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}}}))
+    # The plan says it too.
+    report, _ = pins_after(swap, rows, KEY)
+    out.append(case("plan iğnelerin ne olacağını söyler, yazmaz", *swapped,
+                    step(r, done(synced(modified=2, pins=report), pin_warnings("parsel", KEY, report)),
+                         {"fields": {**pins_of(2, [PIN_A]), **pins_of(3, [PIN_B])}, "revision": "same"}, op="plan")))
+    return out
+
+
 FILES = {
     "cad.sources.describe": ("Kaynakları tanı: dosyanın tabloları ve bağlı katmanların durumu", describe_cases),
     "cad.sources.edit": ("Kaynağa bağla: tablo katmana, bağı çöz, yeniden bağla",
-                         lambda: edit_cases() + area_cases()[0]),
+                         lambda: edit_cases() + area_cases()[0] + pin_edit_cases()),
     "cad.sources.sync": ("Kaynakla eşitle: katmanın değişiklikleri tabloya, tablonun satırları katmana",
-                         lambda: sync_cases() + area_cases()[1]),
+                         lambda: sync_cases() + area_cases()[1] + pin_sync_cases()),
 }
 NOTE = ("ADR 0503. Tablolar sqlite3 ile dosyanın kendi tablolarından okunur (gpkg_contents, gpkg_geometry_columns, "
         "gpkg_spatial_ref_sys, PRAGMA table_info); satırlar gpkg_import_cases.py'nin OGR okuyucusuyla ADR 0502'nin "

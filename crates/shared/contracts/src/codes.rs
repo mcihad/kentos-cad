@@ -1131,6 +1131,16 @@ codes! {
     VALUES_SKIPPED = "values_skipped", Warning, false, "Alanların kurallarına uymayan değerler yazılmadı; diğerleri yazıldı.";
     /// An area a bound layer cannot hold (docs/adr/0510).
     INVALID_EXTENT = "invalid_extent", Failed, false, "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler.";
+    /// A key that is not an attribute of every object, repeats or is empty (docs/adr/0533 §1).
+    INVALID_KEY = "invalid_key", Failed, false, "Anahtar alanı geçerli değil: katmanın nesnelerinde yok, bir nesnede boş ya da iki nesnede aynı; ileti hangisini söyler.";
+    /// A reload took objects with label pins out of the layer, or could not keep their pins (docs/adr/0533 §1).
+    LABEL_PINS_LOST = "label_pins_lost", Warning, false, "Okuma, etiket iğnesi olan nesneleri katmandan çıkardı ya da iğnelerini koruyamadı; nesneleri sonuçta.";
+    /// Label pins followed their key to another row (docs/adr/0533 §1).
+    LABEL_PINS_MOVED = "label_pins_moved", Warning, false, "Etiket iğneleri anahtar değerinin yeni satırına taşındı.";
+    /// The table repeats the layer's key (docs/adr/0533 §1).
+    KEY_NOT_UNIQUE = "key_not_unique", Warning, false, "Tablo katmanın anahtar değerini birden çok satırda tekrarlıyor; o satırların iğneleri anahtarla izlenmedi.";
+    /// A window that is not one (docs/adr/0533 §6).
+    INVALID_WINDOW = "invalid_window", Failed, false, "Pencere geçerli değil: dört sonlu sayı, en küçükler en büyüklerinden küçük; çok büyük pencere de reddedilir.";
     /// A processing tool not among İşlemler's (docs/adr/0508).
     UNKNOWN_TOOL = "unknown_tool", Failed, false, "Böyle bir işlem aracı yok; araçların listesi cad.processing.tools'ta.";
     /// A processing tool's values do not fit its parameters (docs/adr/0508).

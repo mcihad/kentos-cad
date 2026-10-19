@@ -6,7 +6,9 @@ import type { SyncDirection } from "./SyncDirection";
  * `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
- * for stay in the drawing only).
+ * for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
+ * their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
+ * table repeats the layer's key: the pins of those rows are not followed).
  */
 export type SourcesSync = { 
 /**

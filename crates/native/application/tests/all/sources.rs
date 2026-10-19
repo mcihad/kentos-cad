@@ -286,6 +286,7 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
             revision: "0".repeat(64),
             digest: "0".repeat(64),
             srid: None,
+            key: None,
             extent: None,
             writable: true,
         })
@@ -531,5 +532,137 @@ fn wide_values_keep_their_meaning_through_a_bound_layer() {
         json!({ "layer": layer, "direction": "write" }),
     );
     assert_eq!(ok(&planned)["modified"], 1, "{planned}");
+    let _ = std::fs::remove_file(&tmp);
+}
+
+// ── Label pins when the table is written again by another program (docs/adr/0533 §1) ──
+
+/// Another program writes the parcels again: the first two rows are deleted and inserted anew (other row ids, other
+/// lasting ids, the same values), and `extra` more rows repeat the first's values.
+fn rewrite(file: &std::path::Path, extra: usize) {
+    use kentos_geopackage::{Edits, GeoPackage, NewRow, Query};
+    let mut gp = GeoPackage::open(file, true).expect("opens");
+    let layer = gp
+        .layers()
+        .expect("layers")
+        .into_iter()
+        .find(|l| l.name == "parsel")
+        .expect("the parcels");
+    let rows = gp.rows(&layer, &Query::default()).expect("rows");
+    let copy = |r: &kentos_geopackage::Row| NewRow {
+        fid: None,
+        geometry: match &r.geometry {
+            Some(Ok(g)) => Some(g.clone()),
+            _ => None,
+        },
+        values: r.values.clone(),
+    };
+    let mut edits = Edits::default();
+    for (i, r) in rows.iter().take(2).enumerate() {
+        edits.delete.push(r.fid);
+        edits.insert.push((
+            format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d77{i:02}"),
+            copy(r),
+        ));
+    }
+    for k in 0..extra {
+        edits.insert.push((
+            format!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d78{k:02}"),
+            copy(&rows[0]),
+        ));
+    }
+    gp.edit(&layer, &edits).expect("written again");
+}
+
+fn uid_of(d: &Document, ada: &str) -> String {
+    let layer = link_of(d).layer;
+    d.by_layer_with_uids(&layer)
+        .find(|(_, e)| e.base().attrs.get("ada").map(String::as_str) == Some(ada))
+        .map(|(u, _)| u.to_string())
+        .expect("the object")
+}
+
+/// A copy of QGIS's GeoPackage linked (with `key`), its two polygon parcels pinned by hand.
+fn pinned_parcels(tag: &str, key: Option<&str>) -> (Document, PathBuf) {
+    let tmp = std::env::temp_dir().join(format!("kentos-pins-{tag}-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("qgis.gpkg"), &tmp).expect("copied");
+    let mut d = doc();
+    let mut edit = json!({ "kind": "link", "path": tmp.display().to_string(), "table": "parsel" });
+    if let Some(k) = key {
+        edit["key"] = json!(k);
+    }
+    ok(&run(&mut d, "cad.sources.edit", CallOp::Execute, json!({ "edit": edit })));
+    for (ada, x) in [("Çağlayan", 1.0), ("Işık-Ğüşöç", 2.0)] {
+        let uid = uid_of(&d, ada);
+        ok(&run(
+            &mut d,
+            "cad.labels.pin",
+            CallOp::Execute,
+            json!({ "pins": [{ "uid": uid, "pin": { "at": { "x": x, "y": 2.0 } } }] }),
+        ));
+    }
+    (d, tmp)
+}
+
+fn pins_of(d: &Document, ada: &str) -> Value {
+    let uid = uid_of(d, ada);
+    let slot = d.slot_of(uid.parse().expect("uid")).expect("slot");
+    serde_json::to_value(&d.get(slot).expect("object").base().label_pins).expect("pins")
+}
+
+fn read_again(d: &mut Document) -> Value {
+    let layer = link_of(d).layer;
+    run(
+        d,
+        "cad.sources.sync",
+        CallOp::Execute,
+        json!({ "layer": layer, "direction": "read" }),
+    )
+}
+
+fn warning_codes(answer: &Value) -> Vec<String> {
+    answer["warnings"]
+        .as_array()
+        .map(|w| w.iter().map(|w| w["code"].as_str().unwrap_or("").to_string()).collect())
+        .unwrap_or_default()
+}
+
+/// The table written again with other row ids: with a key the pins follow their records to the new rows, and say so.
+#[test]
+fn pins_follow_their_key_when_the_table_is_written_again() {
+    let (mut d, tmp) = pinned_parcels("key", Some("ada"));
+    rewrite(&tmp, 0);
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    assert_eq!(out["pins"]["moved"].as_array().map(Vec::len), Some(2), "{read}");
+    assert!(out["pins"].get("lost").is_none(), "{read}");
+    assert_eq!(warning_codes(&read), ["label_pins_moved"], "{read}");
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([{ "at": { "x": 1.0, "y": 2.0 } }]));
+    assert_eq!(pins_of(&d, "Işık-Ğüşöç"), json!([{ "at": { "x": 2.0, "y": 2.0 } }]));
+    let _ = std::fs::remove_file(&tmp);
+}
+
+/// Without a key those pins belong to rows that are gone: lost, and said.
+#[test]
+fn pins_of_rows_a_rewritten_table_lacks_are_said_without_a_key() {
+    let (mut d, tmp) = pinned_parcels("nokey", None);
+    rewrite(&tmp, 0);
+    let read = read_again(&mut d);
+    let out = ok(&read);
+    assert_eq!(out["pins"]["lost"].as_array().map(Vec::len), Some(2), "{read}");
+    assert_eq!(out["pins"]["lost"][0]["reason"], "deleted", "{read}");
+    assert_eq!(warning_codes(&read), ["label_pins_lost"], "{read}");
+    assert_eq!(pins_of(&d, "Çağlayan"), json!([]));
+    let _ = std::fs::remove_file(&tmp);
+}
+
+/// A table that repeats the key's value is said; a repeated key value follows no pin.
+#[test]
+fn a_table_that_repeats_the_key_is_said() {
+    let (mut d, tmp) = pinned_parcels("dup", Some("ada"));
+    rewrite(&tmp, 1);
+    let read = read_again(&mut d);
+    let codes = warning_codes(&read);
+    assert!(codes.contains(&"key_not_unique".to_string()), "{read}");
     let _ = std::fs::remove_file(&tmp);
 }

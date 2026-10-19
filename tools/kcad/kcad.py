@@ -4609,6 +4609,7 @@ class _Schema:
             "digest": (self.text, True),
             "srid": (self.uint(32), False),
             "extent": (box, False),
+            "key": (self.text, False),
             "writable": (self.bool, True),
         })
         lst = self.array(source)(v)
@@ -4619,6 +4620,9 @@ class _Schema:
             if not s["id"].strip() or s["id"] in ids:
                 self.fail("bad_value", f"“{s['id']}” kaynak kimliği boş ya da iki kez kullanılmış")
             ids.add(s["id"])
+            if "key" in s and (not s["key"].strip() or len(s["key"]) > 128 or _control(s["key"])):
+                # docs/adr/0533 §1: a column's name, the key that ties a row to its object across rewrites.
+                self.fail("bad_value", "anahtar alanının adı boş, çok uzun ya da denetim karakteri taşıyor")
             if s["kind"] == "geopackage" and "extent" in s:
                 # docs/adr/0510: the area of a part's working copy, finite, its minimum below its maximum.
                 e = s["extent"]

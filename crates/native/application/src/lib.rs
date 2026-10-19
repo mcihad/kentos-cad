@@ -120,6 +120,7 @@ pub mod info_templates;
 pub mod jobs;
 pub mod label_texts;
 pub mod labels_pin;
+pub mod labels_report;
 pub mod lengthen;
 pub mod library_edit;
 pub mod reverse;
@@ -737,6 +738,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_LABELS_PIN,
         kentos_contracts::CAD_LABELS_PIN_VERSION,
+    ),
+    // Etiketleri denetle ([`labels_report`], docs/adr/0533 §6).
+    (
+        kentos_contracts::CAD_LABELS_REPORT,
+        kentos_contracts::CAD_LABELS_REPORT_VERSION,
     ),
     // Yeniden bağla ([`dimensions_reassociate`], docs/adr/0249 §3).
     (

@@ -110,6 +110,23 @@ pub fn layer<'a>(
     )
 }
 
+/// The bound layers' sources, by what they were when the layer last matched them (docs/adr/0533 §4): their id,
+/// revision and the area a part holds. A label cache that did not hold them would show a placing made against a
+/// source's other revision until the next unrelated change.
+pub fn sources_key(doc: &Document) -> Vec<(String, String, Option<[u64; 4]>)> {
+    doc.settings()
+        .sources
+        .iter()
+        .map(|s| {
+            (
+                s.id.clone(),
+                s.revision.clone(),
+                s.extent.map(|e| e.map(f64::to_bits)),
+            )
+        })
+        .collect()
+}
+
 /// What the label engine is asked besides the labels (docs/adr/0212 §4):
 /// the unplaced and the hidden too, pinned ones outlined; the main view's
 /// labels are kept for the tools' hit test.
@@ -203,8 +220,12 @@ fn build<'a>(
         hidden.map(|s| s.0),
     )
         .hash(&mut key);
-    // How the text is sized on screen (docs/adr/0205 §5); what the label engine is asked (docs/adr/0212 §4).
+    // How the text is sized on screen, the output scale a plot size reads (docs/adr/0205 §5); what the label
+    // engine is asked (docs/adr/0212 §4).
     format!("{size:?}{engine:?}").hash(&mut key);
+    // The bound layers' sources as the layers last matched them, and the part they hold (docs/adr/0533 §4): a
+    // read that changes a label's text or place counts, whatever the change's counter says.
+    sources_key(doc).hash(&mut key);
     // The time slider's window: its temporal layers' labels come and go (docs/adr/0210 §6).
     format!("{:?}", spatial.store().time_window()).hash(&mut key);
     // A twisted view lays its text out upright and turns it as a picture (docs/adr/0285 §2).

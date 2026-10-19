@@ -91,6 +91,7 @@ COMMANDS: dict[str, Any] = {
     "cad.images.edit": images.edit,
     "cad.inserts.clip": inserts.clip,
     "cad.labels.pin": labels.pin,
+    "cad.labels.report": labels.report,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
     "cad.layers.edit": layers.edit,

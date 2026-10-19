@@ -157,6 +157,31 @@ pub enum SourcesEditOp {
         #[cfg_attr(feature = "ts", ts(optional))]
         #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
         extent: Option<[f64; 4]>,
+        /// The attribute that names a row whatever its place in the table (docs/adr/0533 §1): unique and not empty
+        /// among the rows taken in.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        key: Option<String>,
+    },
+    /// Sets or clears (`key` absent) a bound layer's key (docs/adr/0533 §1): the layer's objects must hold the
+    /// attribute with a value each, no two alike. Nothing else changes; the next reload follows the pins by it.
+    Key {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        key: Option<String>,
+    },
+    /// Changes the area a part's working copy holds (docs/adr/0533 §2), or takes the whole table (`extent`
+    /// absent): the table is read again in the new area as one undo step, the rows that left it removed from
+    /// the layer and the ones that came in added. The layer must match its table (no pending changes); the pins
+    /// of an object that left the area are said. Undoing brings the objects back; the binding's area, like any
+    /// setting, is not an undo step.
+    Extent {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "ts", ts(optional))]
+        #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+        extent: Option<[f64; 4]>,
     },
     /// Unbinds a layer; its objects stay.
     Unlink { id: String },
@@ -168,7 +193,10 @@ pub enum SourcesEditOp {
 /// `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
 /// the table is bound already), `source_differs` (the layer given does not hold the table's objects),
 /// `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
-/// that is not one, on a table without geometry, onto a layer given, or of a database).
+/// that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
+/// not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
+/// layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved` (an area change that took objects with label
+/// pins out of the layer).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -195,7 +223,72 @@ pub struct SourcesEdited {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ImportedLayer>>", optional))]
     pub layers: Vec<ImportedLayer>,
+    /// What an area change did to the label pins (docs/adr/0533 §2).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pins: Option<SyncedPins>,
     pub revision: String,
+}
+
+/// Why a label pin went with no object to hold it (docs/adr/0533 §1).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum PinLoss {
+    /// The table has no such row any more.
+    Deleted,
+    /// The row is there but outside the area the layer holds.
+    Outside,
+    /// The row id is another record now (the key's value differs) and no row of the old value is left.
+    Rebound,
+    /// The row it would follow already has pins of its own.
+    Taken,
+}
+
+/// A label pin followed from one object to the row of the same key (docs/adr/0533 §1).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct PinMove {
+    pub from: String,
+    pub to: String,
+    /// The key's value that tied them.
+    pub key: String,
+}
+
+/// The pins of an object a reload took out of the layer, or could not keep.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LostPin {
+    /// The object's lasting id.
+    pub uid: String,
+    pub reason: PinLoss,
+}
+
+/// What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many
+/// objects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins
+/// has none of this.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SyncedPins {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub kept: u32,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PinMove>>", optional))]
+    pub moved: Vec<PinMove>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<LostPin>>", optional))]
+    pub lost: Vec<LostPin>,
 }
 
 /// Which way a sync goes.
@@ -215,7 +308,9 @@ pub enum SyncDirection {
 /// `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
 /// the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
-/// for stay in the drawing only).
+/// for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
+/// their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
+/// table repeats the layer's key: the pins of those rows are not followed).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -250,5 +345,9 @@ pub struct SourcesSynced {
     pub columns: Vec<String>,
     /// The file's SHA-256 after (plan: before).
     pub source: String,
+    /// What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub pins: Option<SyncedPins>,
     pub revision: String,
 }

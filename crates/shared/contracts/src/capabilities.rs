@@ -2255,6 +2255,12 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
+        id: "cad.labels.report",
+        refusals: &[&["invalid_scale", "invalid_window", "layer_not_found", "not_a_layer", "service_layer"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.renderer",
         refusals: &[
             &[
@@ -2832,9 +2838,10 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found", "invalid_address", "source_unreachable"],
             LAYER,
-            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent"],
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "invalid_key"],
+            &["pending_changes"],
         ],
-        warnings: &["crs_undeclared", "import_losses"],
+        warnings: &["crs_undeclared", "import_losses", "label_pins_lost", "label_pins_moved", "key_not_unique"],
         targets: none,
     },
     Entry {
@@ -2876,7 +2883,7 @@ const ENTRIES: &[Entry] = &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
             &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
         ],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "label_pins_lost", "label_pins_moved", "key_not_unique"],
         targets: none,
     },
     Entry {

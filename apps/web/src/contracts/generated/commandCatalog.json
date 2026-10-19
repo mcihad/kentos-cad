@@ -14997,6 +14997,13 @@
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
               },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
               },
@@ -26560,6 +26567,13 @@
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
+              },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
@@ -42868,6 +42882,13 @@
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
+              },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
@@ -951788,6 +951809,416 @@
       ]
     },
     {
+      "id": "cad.labels.report",
+      "version": 1,
+      "title": "Etiketleri denetle",
+      "summary": "Bir pencerenin etiketlerini bir ölçekte etiket motoruyla yerleştirir ve sayar; çizimi değiştirmez. Ölçek pxPerMetre (görünümün ölçeği: ekran pikseli bölü metre) ya da paperScale (1:N: bir pafta haritasının o ölçekte yazdığı gibi, kâğıdın CSS pikseliyle) biridir; pencere window (batı, güney, doğu, kuzey) ya da çizimin kapsamıdır; layers yalnız bu katmanların etiketlerini sayar (öbürleri yine de yer tutar ve engeldir). Cevap toplamlar ve katman katman sayılar: placed (yeri olan), unplaced (boş yer bulunamayan; çizilmez), hidden (elle gizlenen), pinned (yeri sabitlenen), forced (üst üste gelebilen sınıfın bindirdiği), collisions (yerleştirilenlerden kutusu başka bir yerleştirilenin kutusunu kesen; çizildiği gibi okunur, eğri yazı kutulanmaz: üst üste gelebilen sınıf yoksa 0), repeats (aynı katmanda ve sınıfta daha önce yerleşmiş bir etiketin metnini yineleyen: bir yolun adı boyunca yinelenir). Bir kaynağın parçasını tutan bağlı katmanın (cad.sources.edit extent) etiketi ve engeli yalnız o parçanın satırlarıdır: katmanın source ve part'ı söylenir, pencere parçanın ötesine uzanıyorsa partial true olur. Bir etiket motorunun sonucu görünüme göre değişir: bu komut tek bir pencereyi sayar; ardışık küçük kaydırmalarda etiketlerin yerinde kalması masaüstünün işidir (docs/adr/0533 §3), bu komutun değil.",
+      "aliases": [
+        "etiketdenetle",
+        "labelreport"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.labels.report` v1: how the labels of a window fall at a scale, counted; the drawing is not changed.\nThe scale is `pxPerMetre` (the view's: screen pixels per metre of ground) or `paperScale` (1:N, labels as a\nsheet's map at that scale places them: the paper's CSS pixels, `1000 ÷ (PX_MM × N)` of them to a metre), one of\nthe two. The window is the ground's `[min east, min north, max east, max north]`, the drawing's extent when\nabsent; `layers` limits the count to those layers.\n\nRefusals, in this order: `invalid_scale` (neither or both of the two scales, one that is not above zero, or a\npaper scale over 1:1 000 000), `invalid_window` (not four finite numbers with the minimum below the maximum, or\na window with more than 100 million pixels), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer\ndrawn from a service has no labels of its own).",
+        "properties": {
+          "layers": {
+            "description": "Only these layers' labels are counted (their objects and the others' still hold the room); absent: all.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "paperScale": {
+            "description": "The denominator of a sheet map's scale, 1:N.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "scale"
+          },
+          "pxPerMetre": {
+            "description": "Screen pixels per metre of ground.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "px/length"
+          },
+          "window": {
+            "description": "The ground's window; absent: the drawing's extent.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "title": "LabelsReport",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "LabelCounts": {
+            "description": "What a placing came to, in labels.",
+            "properties": {
+              "collisions": {
+                "description": "Of the placed, those whose box crosses another placed label's, read back from the labels as drawn (a curved\nlabel is not boxed): with no class that may overlap, none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "forced": {
+                "description": "Of the placed, those a class that may overlap put over another.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "hidden": {
+                "description": "Labels hidden by hand (a pin's `hidden`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pinned": {
+                "description": "Of the placed, those a pin put where they are.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "placed": {
+                "description": "Labels with a place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "repeats": {
+                "description": "Of the placed, those repeating the text of a label of the same layer and class placed before them (a\nstreet's name along its length is such).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unplaced": {
+                "description": "Labels no free place was found for (they are not drawn).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "placed",
+              "unplaced",
+              "hidden",
+              "pinned",
+              "forced",
+              "collisions",
+              "repeats"
+            ],
+            "type": "object"
+          },
+          "LayerLabelReport": {
+            "description": "One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).",
+            "properties": {
+              "counts": {
+                "$ref": "#/$defs/LabelCounts"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "part": {
+                "description": "The area of a part's working copy: only its rows are the layer's labels and obstacles, the table's other\nrows hold no room and have no label here. Absent: the whole table (or no source).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "partial": {
+                "description": "Of the window, how much a part's area leaves out: true when the window reaches past the part.",
+                "type": "boolean"
+              },
+              "source": {
+                "description": "The source the layer is bound to; absent for any other layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "counts"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.labels.report` v1, and its plan.",
+        "properties": {
+          "layers": {
+            "description": "The layers that have labels, in the layer tree's order.",
+            "items": {
+              "$ref": "#/$defs/LayerLabelReport"
+            },
+            "type": "array"
+          },
+          "pxPerMetre": {
+            "description": "The scale as used, screen pixels per metre.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "px/length"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/$defs/LabelCounts"
+          },
+          "window": {
+            "description": "The window as used.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "window",
+          "pxPerMetre",
+          "totals",
+          "layers",
+          "revision"
+        ],
+        "title": "LabelsReported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "LabelCounts": {
+            "description": "What a placing came to, in labels.",
+            "properties": {
+              "collisions": {
+                "description": "Of the placed, those whose box crosses another placed label's, read back from the labels as drawn (a curved\nlabel is not boxed): with no class that may overlap, none.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "forced": {
+                "description": "Of the placed, those a class that may overlap put over another.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "hidden": {
+                "description": "Labels hidden by hand (a pin's `hidden`).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "pinned": {
+                "description": "Of the placed, those a pin put where they are.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "placed": {
+                "description": "Labels with a place.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "repeats": {
+                "description": "Of the placed, those repeating the text of a label of the same layer and class placed before them (a\nstreet's name along its length is such).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "unplaced": {
+                "description": "Labels no free place was found for (they are not drawn).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "placed",
+              "unplaced",
+              "hidden",
+              "pinned",
+              "forced",
+              "collisions",
+              "repeats"
+            ],
+            "type": "object"
+          },
+          "LayerLabelReport": {
+            "description": "One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).",
+            "properties": {
+              "counts": {
+                "$ref": "#/$defs/LabelCounts"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "part": {
+                "description": "The area of a part's working copy: only its rows are the layer's labels and obstacles, the table's other\nrows hold no room and have no label here. Absent: the whole table (or no source).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "partial": {
+                "description": "Of the window, how much a part's area leaves out: true when the window reaches past the part.",
+                "type": "boolean"
+              },
+              "source": {
+                "description": "The source the layer is bound to; absent for any other layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "counts"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.labels.report` v1, and its plan.",
+        "properties": {
+          "layers": {
+            "description": "The layers that have labels, in the layer tree's order.",
+            "items": {
+              "$ref": "#/$defs/LayerLabelReport"
+            },
+            "type": "array"
+          },
+          "pxPerMetre": {
+            "description": "The scale as used, screen pixels per metre.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "px/length"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "totals": {
+            "$ref": "#/$defs/LabelCounts"
+          },
+          "window": {
+            "description": "The window as used.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": "array",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "window",
+          "pxPerMetre",
+          "totals",
+          "layers",
+          "revision"
+        ],
+        "title": "LabelsReported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_scale",
+          "invalid_window",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimin tamamını 1:1000 pafta ölçeğinde denetle",
+          "input": {
+            "paperScale": 1000
+          }
+        },
+        {
+          "title": "Parsel katmanını 2 piksel/metrede bir pencerede denetle",
+          "input": {
+            "layers": [
+              "parsel"
+            ],
+            "pxPerMetre": 2.0,
+            "window": [
+              487000.0,
+              4420000.0,
+              487250.0,
+              4420180.0
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.layers.renderer",
       "version": 1,
       "title": "Katman stili",
@@ -990486,6 +990917,13 @@
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
               },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
               },
@@ -990803,6 +991241,13 @@
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
               },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
               },
@@ -991045,6 +991490,13 @@
                     ],
                     "x-unit": "length"
                   },
+                  "key": {
+                    "description": "The attribute that names a row whatever its place in the table (docs/adr/0533 §1): unique and not empty\namong the rows taken in.",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
                   "kind": {
                     "const": "link",
                     "type": "string"
@@ -991069,6 +991521,59 @@
                   "kind",
                   "path",
                   "table"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Sets or clears (`key` absent) a bound layer's key (docs/adr/0533 §1): the layer's objects must hold the\nattribute with a value each, no two alike. Nothing else changes; the next reload follows the pins by it.",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "key": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "kind": {
+                    "const": "key",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Changes the area a part's working copy holds (docs/adr/0533 §2), or takes the whole table (`extent`\nabsent): the table is read again in the new area as one undo step, the rows that left it removed from\nthe layer and the ones that came in added. The layer must match its table (no pending changes); the pins\nof an object that left the area are said. Undoing brings the objects back; the binding's area, like any\nsetting, is not an undo step.",
+                "properties": {
+                  "extent": {
+                    "items": {
+                      "format": "double",
+                      "type": "number"
+                    },
+                    "maxItems": 4,
+                    "minItems": 4,
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "x-unit": "length"
+                  },
+                  "id": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "const": "extent",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "id"
                 ],
                 "type": "object"
               },
@@ -991114,7 +991619,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database).",
+        "description": "Input of `cad.sources.edit` v1. Refusals: `invalid_file_path`, `file_not_found`, `import_unreadable`,\n`table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or\nthe table is bound already), `source_differs` (the layer given does not hold the table's objects),\n`source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area\nthat is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is\nnot a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the\nlayer's own edits). Warnings: `label_pins_lost`, `label_pins_moved` (an area change that took objects with label\npins out of the layer).",
         "properties": {
           "edit": {
             "$ref": "#/$defs/SourcesEditOp"
@@ -991141,6 +991646,69 @@
             "required": [
               "id",
               "name"
+            ],
+            "type": "object"
+          },
+          "LostPin": {
+            "description": "The pins of an object a reload took out of the layer, or could not keep.",
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/PinLoss"
+              },
+              "uid": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "PinLoss": {
+            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
+            "oneOf": [
+              {
+                "const": "deleted",
+                "description": "The table has no such row any more.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "The row is there but outside the area the layer holds.",
+                "type": "string"
+              },
+              {
+                "const": "rebound",
+                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
+                "type": "string"
+              },
+              {
+                "const": "taken",
+                "description": "The row it would follow already has pins of its own.",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMove": {
+            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "key": {
+                "description": "The key's value that tied them.",
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "key"
             ],
             "type": "object"
           },
@@ -991185,6 +991753,13 @@
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
+              },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
@@ -991238,6 +991813,33 @@
               "writable"
             ],
             "type": "object"
+          },
+          "SyncedPins": {
+            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
+            "properties": {
+              "kept": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lost": {
+                "items": {
+                  "$ref": "#/$defs/LostPin"
+                },
+                "type": "array"
+              },
+              "moved": {
+                "items": {
+                  "$ref": "#/$defs/PinMove"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kept"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -991266,6 +991868,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "pins": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncedPins"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What an area change did to the label pins (docs/adr/0533 §2)."
           },
           "revision": {
             "type": "string"
@@ -991296,6 +991909,69 @@
             ],
             "type": "object"
           },
+          "LostPin": {
+            "description": "The pins of an object a reload took out of the layer, or could not keep.",
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/PinLoss"
+              },
+              "uid": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "PinLoss": {
+            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
+            "oneOf": [
+              {
+                "const": "deleted",
+                "description": "The table has no such row any more.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "The row is there but outside the area the layer holds.",
+                "type": "string"
+              },
+              {
+                "const": "rebound",
+                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
+                "type": "string"
+              },
+              {
+                "const": "taken",
+                "description": "The row it would follow already has pins of its own.",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMove": {
+            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "key": {
+                "description": "The key's value that tied them.",
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "key"
+            ],
+            "type": "object"
+          },
           "SourceKind": {
             "description": "What a source is.",
             "oneOf": [
@@ -991337,6 +992013,13 @@
               "id": {
                 "description": "Its own id, `kaynak-N`.",
                 "type": "string"
+              },
+              "key": {
+                "description": "The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique\namong the rows and not empty. A reload follows a label pin to the row of the same value when the table was\nwritten again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule\nof every bound layer before.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "kind": {
                 "$ref": "#/$defs/SourceKind"
@@ -991390,6 +992073,33 @@
               "writable"
             ],
             "type": "object"
+          },
+          "SyncedPins": {
+            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
+            "properties": {
+              "kept": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lost": {
+                "items": {
+                  "$ref": "#/$defs/LostPin"
+                },
+                "type": "array"
+              },
+              "moved": {
+                "items": {
+                  "$ref": "#/$defs/PinMove"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kept"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -991418,6 +992128,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "pins": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncedPins"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What an area change did to the label pins (docs/adr/0533 §2)."
           },
           "revision": {
             "type": "string"
@@ -991448,11 +992169,16 @@
           "source_not_found",
           "source_changed",
           "too_many_sources",
-          "invalid_extent"
+          "invalid_extent",
+          "invalid_key",
+          "pending_changes"
         ],
         "warnings": [
           "crs_undeclared",
-          "import_losses"
+          "import_losses",
+          "label_pins_lost",
+          "label_pins_moved",
+          "key_not_unique"
         ]
       },
       "examples": [
@@ -992806,7 +993532,7 @@
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only).",
+        "description": "Input of `cad.sources.sync` v1. Refusals: `source_not_found` (the layer is not bound), `layer_not_found`,\n`source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:\n`source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and\nthe layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry\nfor stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep\ntheir pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose\ntable repeats the layer's key: the pins of those rows are not followed).",
         "properties": {
           "direction": {
             "$ref": "#/$defs/SyncDirection"
@@ -992828,6 +993554,98 @@
         "type": "object"
       },
       "output": {
+        "$defs": {
+          "LostPin": {
+            "description": "The pins of an object a reload took out of the layer, or could not keep.",
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/PinLoss"
+              },
+              "uid": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "PinLoss": {
+            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
+            "oneOf": [
+              {
+                "const": "deleted",
+                "description": "The table has no such row any more.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "The row is there but outside the area the layer holds.",
+                "type": "string"
+              },
+              {
+                "const": "rebound",
+                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
+                "type": "string"
+              },
+              {
+                "const": "taken",
+                "description": "The row it would follow already has pins of its own.",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMove": {
+            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "key": {
+                "description": "The key's value that tied them.",
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "key"
+            ],
+            "type": "object"
+          },
+          "SyncedPins": {
+            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
+            "properties": {
+              "kept": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lost": {
+                "items": {
+                  "$ref": "#/$defs/LostPin"
+                },
+                "type": "array"
+              },
+              "moved": {
+                "items": {
+                  "$ref": "#/$defs/PinMove"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kept"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
         "properties": {
@@ -992848,6 +993666,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "pins": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncedPins"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins."
           },
           "removed": {
             "format": "uint32",
@@ -992874,6 +993703,98 @@
         "type": "object"
       },
       "plan": {
+        "$defs": {
+          "LostPin": {
+            "description": "The pins of an object a reload took out of the layer, or could not keep.",
+            "properties": {
+              "reason": {
+                "$ref": "#/$defs/PinLoss"
+              },
+              "uid": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "reason"
+            ],
+            "type": "object"
+          },
+          "PinLoss": {
+            "description": "Why a label pin went with no object to hold it (docs/adr/0533 §1).",
+            "oneOf": [
+              {
+                "const": "deleted",
+                "description": "The table has no such row any more.",
+                "type": "string"
+              },
+              {
+                "const": "outside",
+                "description": "The row is there but outside the area the layer holds.",
+                "type": "string"
+              },
+              {
+                "const": "rebound",
+                "description": "The row id is another record now (the key's value differs) and no row of the old value is left.",
+                "type": "string"
+              },
+              {
+                "const": "taken",
+                "description": "The row it would follow already has pins of its own.",
+                "type": "string"
+              }
+            ]
+          },
+          "PinMove": {
+            "description": "A label pin followed from one object to the row of the same key (docs/adr/0533 §1).",
+            "properties": {
+              "from": {
+                "type": "string"
+              },
+              "key": {
+                "description": "The key's value that tied them.",
+                "type": "string"
+              },
+              "to": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "key"
+            ],
+            "type": "object"
+          },
+          "SyncedPins": {
+            "description": "What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many\nobjects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins\nhas none of this.",
+            "properties": {
+              "kept": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "lost": {
+                "items": {
+                  "$ref": "#/$defs/LostPin"
+                },
+                "type": "array"
+              },
+              "moved": {
+                "items": {
+                  "$ref": "#/$defs/PinMove"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "kept"
+            ],
+            "type": "object"
+          }
+        },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "description": "Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,\nthe columns a write added to the table, and the file's revision after.",
         "properties": {
@@ -992894,6 +993815,17 @@
             "minimum": 0,
             "type": "integer",
             "x-unit": "count"
+          },
+          "pins": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SyncedPins"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins."
           },
           "removed": {
             "format": "uint32",
@@ -992936,7 +993868,10 @@
           "invalid_extent"
         ],
         "warnings": [
-          "export_losses"
+          "export_losses",
+          "label_pins_lost",
+          "label_pins_moved",
+          "key_not_unique"
         ]
       },
       "examples": [
@@ -1038134,6 +1039069,36 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Alan sınırı geçerli değil ya da bu bağda olmaz; ileti nedenini söyler."
+    },
+    {
+      "code": "invalid_key",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Anahtar alanı geçerli değil: katmanın nesnelerinde yok, bir nesnede boş ya da iki nesnede aynı; ileti hangisini söyler."
+    },
+    {
+      "code": "label_pins_lost",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Okuma, etiket iğnesi olan nesneleri katmandan çıkardı ya da iğnelerini koruyamadı; nesneleri sonuçta."
+    },
+    {
+      "code": "label_pins_moved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Etiket iğneleri anahtar değerinin yeni satırına taşındı."
+    },
+    {
+      "code": "key_not_unique",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tablo katmanın anahtar değerini birden çok satırda tekrarlıyor; o satırların iğneleri anahtarla izlenmedi."
+    },
+    {
+      "code": "invalid_window",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Pencere geçerli değil: dört sonlu sayı, en küçükler en büyüklerinden küçük; çok büyük pencere de reddedilir."
     },
     {
       "code": "unknown_tool",

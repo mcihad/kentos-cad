@@ -96,6 +96,54 @@ pub struct Shown {
     pub texts: Vec<String>,
 }
 
+/// Where the labels of a placing went, for the next one of a view that moved a little (docs/adr/0533 §3): each
+/// label's middle on the ground, by its object, class and repeated piece, and the scale it was placed at. A label
+/// whose last place is still free is put there again, so a pan moves the labels with the ground instead of
+/// re-choosing them; another scale places afresh.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Prior {
+    scale: f64,
+    spots: HashMap<(u64, u16, u32), Vec2>,
+}
+
+impl Prior {
+    /// A prior from its labels: object, class, repeated piece and middle on the ground, at `scale` px per metre.
+    pub fn of(scale: f64, spots: impl IntoIterator<Item = (f64, u16, u32, Vec2)>) -> Prior {
+        Prior {
+            scale,
+            spots: spots
+                .into_iter()
+                .map(|(id, class, chunk, at)| ((id.to_bits(), class, chunk), at))
+                .collect(),
+        }
+    }
+
+    /// What it remembers, by object, class and piece.
+    pub fn entries(&self) -> Vec<(f64, u16, u32, Vec2)> {
+        let mut out: Vec<(f64, u16, u32, Vec2)> = self
+            .spots
+            .iter()
+            .map(|(&(id, class, chunk), &at)| (f64::from_bits(id), class, chunk, at))
+            .collect();
+        out.sort_by(|a, b| a.0.total_cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)));
+        out
+    }
+
+    /// The scale it was made at, px per metre.
+    pub fn scale(&self) -> f64 {
+        self.scale
+    }
+
+    /// How many labels it remembers.
+    pub fn len(&self) -> usize {
+        self.spots.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.spots.is_empty()
+    }
+}
+
 /// What a placing is asked for besides the labels.
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct PlaceOptions {
@@ -664,6 +712,19 @@ impl Store {
         fixed: &[Vec<Vec2>],
         options: PlaceOptions,
     ) -> Shown {
+        self.place_labels_after(window, scale, fixed, options, None).0
+    }
+
+    /// [`place_labels`](Self::place_labels) for a view that moved a little since `prior` (docs/adr/0533 §3): the
+    /// labels where they were when that place is free; and where these went.
+    pub fn place_labels_after(
+        &self,
+        window: &Bounds,
+        scale: f64,
+        fixed: &[Vec<Vec2>],
+        options: PlaceOptions,
+        prior: Option<&Prior>,
+    ) -> (Shown, Prior) {
         let page = Page {
             x0: window.min_x,
             y0: window.min_y,
@@ -674,8 +735,15 @@ impl Store {
             (window.max_y - window.min_y) * scale,
         );
         if !(scale > 0.0) || !(width >= 0.0) || !(height >= 0.0) {
-            return Shown::default();
+            return (Shown::default(), Prior::default());
         }
+        // A label's last place, in this window's pixels, when it was placed at this scale.
+        let prefer = |id: f64, class: u16, chunk: u32| -> Option<Vec2> {
+            let p = prior.filter(|p| p.scale == scale)?;
+            p.spots
+                .get(&(id.to_bits(), class, chunk))
+                .map(|w| page.px(*w))
+        };
         let rect = [-MARGIN, -MARGIN, width + MARGIN, height + MARGIN];
         let reach = MARGIN / scale;
         let query = super::padded(*window, reach);
@@ -832,6 +900,7 @@ impl Store {
                     pin: pinned,
                     hidden,
                     uphill: None,
+                    prefer: prefer(it.id, *class, chunk),
                 };
                 let corner = Geo::Corner {
                     tl: page.px(Vec2::new(b.min_x, b.max_y)),
@@ -1011,6 +1080,7 @@ impl Store {
                     pin: None,
                     hidden: false,
                     uphill: None,
+                    prefer: prefer(it.id, class, chunk),
                 };
                 let start = units.len();
                 path_units(&px, cls, rect, false, false, &unit, &mut units);
@@ -1049,6 +1119,10 @@ impl Store {
         };
         let outcome = engine::place(&scene);
         let mut shown = Shown::default();
+        let mut next = Prior {
+            scale,
+            spots: HashMap::new(),
+        };
         for l in outcome.labels {
             let u = &scene.units[l.unit];
             let deg = |a: f64| a.to_degrees();
@@ -1063,6 +1137,9 @@ impl Store {
                 }
             };
             let cw = page.world(c);
+            if l.state & (engine::UNPLACED | engine::HIDDEN) == 0 {
+                next.spots.insert((u.id.to_bits(), u.class, u.chunk), cw);
+            }
             shown.records.extend([
                 u.id,
                 LABEL_PLACED,
@@ -1134,7 +1211,7 @@ impl Store {
                 ]);
             }
         }
-        shown
+        (shown, next)
     }
 }
 

@@ -192,6 +192,124 @@ pub struct LabelsPinPlan {
     pub revision: String,
 }
 
+/// Counts what the label engine's placing came to (docs/adr/0533 §6).
+pub const CAD_LABELS_REPORT: &str = "cad.labels.report";
+pub const CAD_LABELS_REPORT_VERSION: u32 = 1;
+
+/// Input of `cad.labels.report` v1: how the labels of a window fall at a scale, counted; the drawing is not changed.
+/// The scale is `pxPerMetre` (the view's: screen pixels per metre of ground) or `paperScale` (1:N, labels as a
+/// sheet's map at that scale places them: the paper's CSS pixels, `1000 ÷ (PX_MM × N)` of them to a metre), one of
+/// the two. The window is the ground's `[min east, min north, max east, max north]`, the drawing's extent when
+/// absent; `layers` limits the count to those layers.
+///
+/// Refusals, in this order: `invalid_scale` (neither or both of the two scales, one that is not above zero, or a
+/// paper scale over 1:1 000 000), `invalid_window` (not four finite numbers with the minimum below the maximum, or
+/// a window with more than 100 million pixels), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
+/// drawn from a service has no labels of its own).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LabelsReport {
+    /// Screen pixels per metre of ground.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
+    pub px_per_metre: Option<f64>,
+    /// The denominator of a sheet map's scale, 1:N.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "scale")))]
+    pub paper_scale: Option<u32>,
+    /// The ground's window; absent: the drawing's extent.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub window: Option<[f64; 4]>,
+    /// Only these layers' labels are counted (their objects and the others' still hold the room); absent: all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layers: Option<Vec<String>>,
+}
+
+/// What a placing came to, in labels.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LabelCounts {
+    /// Labels with a place.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub placed: u32,
+    /// Labels no free place was found for (they are not drawn).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub unplaced: u32,
+    /// Labels hidden by hand (a pin's `hidden`).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub hidden: u32,
+    /// Of the placed, those a pin put where they are.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub pinned: u32,
+    /// Of the placed, those a class that may overlap put over another.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub forced: u32,
+    /// Of the placed, those whose box crosses another placed label's, read back from the labels as drawn (a curved
+    /// label is not boxed): with no class that may overlap, none.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub collisions: u32,
+    /// Of the placed, those repeating the text of a label of the same layer and class placed before them (a
+    /// street's name along its length is such).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub repeats: u32,
+}
+
+/// One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LayerLabelReport {
+    pub layer: String,
+    pub counts: LabelCounts,
+    /// The source the layer is bound to; absent for any other layer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub source: Option<String>,
+    /// The area of a part's working copy: only its rows are the layer's labels and obstacles, the table's other
+    /// rows hold no room and have no label here. Absent: the whole table (or no source).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub part: Option<[f64; 4]>,
+    /// Of the window, how much a part's area leaves out: true when the window reaches past the part.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub partial: bool,
+}
+
+/// Output of `cad.labels.report` v1, and its plan.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct LabelsReported {
+    /// The window as used.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "length")))]
+    pub window: [f64; 4],
+    /// The scale as used, screen pixels per metre.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "px/length")))]
+    pub px_per_metre: f64,
+    pub totals: LabelCounts,
+    /// The layers that have labels, in the layer tree's order.
+    pub layers: Vec<LayerLabelReport>,
+    #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
+    pub revision: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
