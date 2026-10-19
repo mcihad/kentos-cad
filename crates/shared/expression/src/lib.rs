@@ -42,6 +42,7 @@ pub mod geometry;
 pub mod host;
 pub mod js;
 mod kernels;
+pub mod lambda;
 pub mod lexer;
 pub mod library;
 pub mod more;
@@ -143,6 +144,11 @@ pub trait Scope {
     fn id(&self) -> f64;
     /// Denominator of the plot scale while drawing a symbol; None elsewhere.
     fn scale(&self) -> Option<f64>;
+    /// A value an inner expression's frame holds (docs/adr/0601); only its body is walked in such a frame.
+    #[doc(hidden)]
+    fn local(&self, _slot: usize) -> Value<'_> {
+        Value::Null
+    }
 
     /// The world the expression's calls to other objects are answered from
     /// (docs/adr/0214 §3); without one they are empty.
@@ -228,7 +234,19 @@ fn compile_in(source: &str, schema: &Schema) -> Result<Expr, CompileError> {
         fields,
         world,
         unknown,
+        refused,
     } = resolve::resolve(parsed, &parser.fields, schema);
+    if let Some((message, func)) = refused {
+        let names: Vec<&str> = library::FUNCTIONS
+            .iter()
+            .filter(|d| d.func == func)
+            .map(|d| d.name)
+            .collect();
+        return Err(CompileError {
+            message,
+            at: first_call(source, &names).unwrap_or(1),
+        });
+    }
     let mut needs = Needs::default();
     uses(&root, &mut needs);
     let types = fields.iter().map(|f| schema.resolve(f)).collect();
@@ -300,7 +318,15 @@ pub(crate) fn uses(n: &Node, needs: &mut Needs) {
             needs.id = true;
             own.iter().for_each(|a| uses(a, needs));
         }
-        Node::Lit(_) | Node::Field(_) | Node::At(_) => {}
+        // The body reads only its frame and constants (`lambda::hoist`).
+        Node::Lambda(l) => {
+            l.args.iter().for_each(|a| uses(a, needs));
+            l.captured.iter().for_each(|a| uses(a, needs));
+            if let Some(e) = &l.otherwise {
+                uses(e, needs);
+            }
+        }
+        Node::Lit(_) | Node::Field(_) | Node::At(_) | Node::Local(..) => {}
     }
 }
 

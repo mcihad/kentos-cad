@@ -133,6 +133,8 @@ pub(crate) fn takes(f: Func, i: usize) -> Type {
         Func::ArrayInsert | Func::ArrayRemoveAt => [Any, N, Any][i.min(2)],
         Func::MapPrefixKeys => [Any, Text][i.min(1)],
         Func::ArrayMajority | Func::ArrayMinority => [Any, Text][i.min(1)],
+        Func::ArrayFilter => [Any, Bool, N][i.min(2)],
+        Func::WithVariable => [Text, Any, Any][i.min(2)],
         f if f.family() == Family::World => match roles(f).and_then(|r| r.get(i)) {
             Some(Role::Layer | Role::Text) => Text,
             Some(Role::Condition) => Bool,

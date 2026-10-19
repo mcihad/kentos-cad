@@ -66,6 +66,26 @@ pub enum Node {
     /// A function that looks at other objects, resolved (`resolve`): its
     /// place in `Expr::world` and its arguments that are the object's own.
     World(u32, Vec<Node>),
+    /// A value an inner expression binds (docs/adr/0601), resolved: the frame counted from the innermost (0) and its
+    /// slot (the function's own values first, then the values taken from the object).
+    Local(u8, u8),
+    /// An inner expression resolved (docs/adr/0601).
+    Lambda(Box<Lambda>),
+}
+
+/// `dizi_her`, `dizi_süz`, `değişkenle` or `dene` resolved (docs/adr/0601): the arguments evaluated where the call
+/// stands, the parts of the body that do not depend on its own values (`captured`, evaluated where the call stands,
+/// once per object), and the body, which reads its frame: the function's own values (`own` of them: the item and its
+/// position, or the variable's value), then the captured ones.
+#[derive(Clone, Debug)]
+pub struct Lambda {
+    pub func: Func,
+    pub args: Vec<Node>,
+    pub captured: Vec<Node>,
+    pub body: Node,
+    /// `dene`'s value when the body gives none.
+    pub otherwise: Option<Node>,
+    pub own: u8,
 }
 
 /// The language's words (in either language); the builder colours and completes them too.

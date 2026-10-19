@@ -48,14 +48,16 @@ pub fn site_seed(moment: Option<&str>, place: u32) -> f64 {
     (mix(base ^ u64::from(place).wrapping_mul(0xA24B_AED4_963E_E407)) >> 11) as f64
 }
 
-/// The draw of a call: its seed when given, else the compiled site with the object's position.
-fn draw(seed: V, site: V, index: V) -> Option<u64> {
+/// The draw of a call: its seed when given, else the compiled site with the object's position (and, inside an inner
+/// expression, the item's).
+fn draw(seed: V, site: V, index: V, item: V) -> Option<u64> {
     if let Some(s) = seed_of(seed) {
         return Some(mix(s));
     }
     let site = to_number(site)? as u64;
     let index = to_number(index).map_or(0, |x| (x + 0.0).to_bits());
-    Some(mix(site ^ mix(index)))
+    let item = to_number(item).map_or(0, |x| mix((x + 0.0).to_bits()));
+    Some(mix(site ^ mix(index) ^ item))
 }
 
 /// A number in [0, 1) from 53 bits.
@@ -83,7 +85,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
     match f {
         Func::Uuid => {
             // Compiled with the site and the position (§3); a call the resolver did not see draws at 0.
-            let r = draw(V::Null, arg(0), arg(1)).unwrap_or_else(|| mix(0));
+            let r = draw(V::Null, arg(0), arg(1), arg(2)).unwrap_or_else(|| mix(0));
             uuid_text(out, r, mix(r));
             R::Made
         }
@@ -95,7 +97,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
             if hi < lo {
                 return R::V(V::Null);
             }
-            let Some(r) = draw(arg(2), arg(3), arg(4)) else {
+            let Some(r) = draw(arg(2), arg(3), arg(4), arg(5)) else {
                 return R::V(V::Null);
             };
             let span = hi - lo + 1.0;
@@ -118,7 +120,7 @@ pub(super) fn call<'a>(f: Func, args: &[V<'a>], out: &mut String) -> R<'a> {
             if hi < lo {
                 return R::V(V::Null);
             }
-            let Some(r) = draw(arg(2), arg(3), arg(4)) else {
+            let Some(r) = draw(arg(2), arg(3), arg(4), arg(5)) else {
                 return R::V(V::Null);
             };
             R::V(V::Num(lo + unit(r) * (hi - lo)))

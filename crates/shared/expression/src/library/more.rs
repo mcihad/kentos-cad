@@ -726,4 +726,78 @@ pub(super) const ALL: &[FuncDef] = &[
             ("saat_yap('9:05')", "'09:05:00'"),
         ],
     },
+    // ── İç içe ifadeler (docs/adr/0601) ─────────────────────────────────
+    FuncDef {
+        func: Func::ArrayForeach,
+        name: "dizi_her",
+        aliases: &["array_foreach"],
+        arity: (2, Some(2)),
+        signature: "dizi_her(dizi, ifade)",
+        description: "İfadeyi dizinin her öğesinde değerlendirir, sonuçların dizisini verir; ifadede @öğe (@element) öğe, @sayaç (@counter) öğenin yeri (0'dan)",
+        group: Group::Arrays,
+        args: &[
+            ("dizi", "Dizi; boş değer boş dizi"),
+            ("ifade", "Her öğe için: @öğe ve @sayaç okunur"),
+        ],
+        examples: &[
+            ("dizi_her(dizi(1, 2, 3), @öğe * 10)", "[10, 20, 30]"),
+            (
+                "dizi_metin(dizi_her(metin_dizi('a,b'), büyük(@öğe)), '-')",
+                "'A-B'",
+            ),
+        ],
+    },
+    FuncDef {
+        func: Func::ArrayFilter,
+        name: "dizi_süz",
+        aliases: &["array_filter", "dizi_suz"],
+        arity: (2, Some(3)),
+        signature: "dizi_süz(dizi, koşul, sınır)",
+        description: "Koşulu doğru olan öğelerin dizisi; koşulda @öğe (@element) ve @sayaç (@counter); sınır verilirse en çok o kadar öğe",
+        group: Group::Arrays,
+        args: &[
+            ("dizi", "Dizi; boş değer boş dizi"),
+            ("koşul", "Her öğe için: @öğe ve @sayaç okunur"),
+            ("sınır", "isteğe bağlı: en çok kaç öğe"),
+        ],
+        examples: &[
+            ("dizi_süz(dizi(1, 2, 3, 4), @öğe > 2)", "[3, 4]"),
+            (
+                "dizi_uzunluğu(dizi_süz(dizi(1, 2, 3, 4), @öğe > 1, 2))",
+                "2",
+            ),
+        ],
+    },
+    FuncDef {
+        func: Func::WithVariable,
+        name: "değişkenle",
+        aliases: &["with_variable", "degiskenle"],
+        arity: (3, Some(3)),
+        signature: "değişkenle(ad, değer, ifade)",
+        description: "Değeri bir kez hesaplar ve ifadede @ad olarak okutur",
+        group: Group::Conditionals,
+        args: &[
+            ("ad", "Değişkenin adı, tırnak içinde"),
+            ("değer", "Bir kez hesaplanacak değer"),
+            ("ifade", "@ad'ı okuyan ifade"),
+        ],
+        examples: &[("değişkenle('k', 5, @k * @k + @k)", "30")],
+    },
+    FuncDef {
+        func: Func::Try,
+        name: "dene",
+        aliases: &["try"],
+        arity: (1, Some(2)),
+        signature: "dene(ifade, yedek)",
+        description: "İfadenin değeri; ifade boş verir ya da değerlendirilemezse (çok uzun metin) yedek ya da boş",
+        group: Group::Conditionals,
+        args: &[
+            ("ifade", "Denenecek ifade"),
+            ("yedek", "isteğe bağlı: ifade değer vermezse"),
+        ],
+        examples: &[
+            ("dene(tamsayı('a'), -1)", "-1"),
+            ("dene(tamsayı('7'), -1)", "7"),
+        ],
+    },
 ];

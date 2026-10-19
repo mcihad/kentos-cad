@@ -6,13 +6,15 @@
 
 use std::cmp::Ordering;
 
-use super::catalog::{at_items, field_item, function_item, offered, operator_item, variable_item};
+use super::catalog::{
+    at_item, at_items, field_item, function_item, offered, operator_item, variable_item,
+};
 use super::lex::{Lex, Piece, called, lex};
 use super::{Item, Kind};
 use crate::Schema;
 use crate::js::collate::compare_tr;
 use crate::js::text::{fold_turkish, utf16_len};
-use crate::library::{FUNCTIONS, FuncDef, OPERATORS, VARIABLES, find_function};
+use crate::library::{FUNCTIONS, Func, FuncDef, OPERATORS, VARIABLES, find_function};
 
 /// The entries that can stand at the cursor and the span they replace.
 #[derive(Clone, Debug, PartialEq)]
@@ -130,7 +132,10 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
         }
     }
     if matches!(want, Want::At) || (matches!(want, Want::Any) && key.is_empty()) {
-        for item in at_items(schema) {
+        for item in frame_items(&u, &pieces, start)
+            .into_iter()
+            .chain(at_items(schema))
+        {
             let name = item.label.trim_start_matches('@').to_string();
             add(&[&name], item);
         }
@@ -170,6 +175,62 @@ pub fn complete(src: &str, cursor: usize, schema: &Schema, explicit: bool) -> Op
         end,
         items: found.into_iter().map(|(_, item)| item).collect(),
     })
+}
+
+/// The `@` names the inner expressions around `cursor` bind (docs/adr/0601): `@öğe` and `@sayaç` in the body of
+/// `dizi_her` and `dizi_süz`, the name `değişkenle` gives in its body; innermost first.
+fn frame_items(u: &[u16], pieces: &[Piece], cursor: usize) -> Vec<Item> {
+    // Open parentheses before the cursor: the function, the commas at its level, the piece after the `(`.
+    let mut open: Vec<(Option<Func>, usize, usize)> = Vec::new();
+    for (i, p) in pieces.iter().enumerate() {
+        if p.start >= cursor {
+            break;
+        }
+        match p.lex {
+            Lex::Op("(") => {
+                let f = match i.checked_sub(1).map(|j| &pieces[j].lex) {
+                    Some(Lex::Word { name }) => find_function(name).map(|d| d.func),
+                    _ => None,
+                };
+                open.push((f, 0, i + 1));
+            }
+            Lex::Op(")") => {
+                open.pop();
+            }
+            Lex::Op(",") => {
+                if let Some(top) = open.last_mut() {
+                    top.1 += 1;
+                }
+            }
+            _ => {}
+        }
+    }
+    let mut items = Vec::new();
+    for &(f, commas, first) in open.iter().rev() {
+        match (f, commas) {
+            (Some(Func::ArrayForeach | Func::ArrayFilter), 1) => {
+                items.push(at_item("öğe", "dizinin öğesi (dizi_her, dizi_süz)", None));
+                items.push(at_item(
+                    "sayaç",
+                    "öğenin yeri, 0'dan (dizi_her, dizi_süz)",
+                    None,
+                ));
+            }
+            (Some(Func::WithVariable), 2) => {
+                if let Some(p) = pieces.get(first)
+                    && matches!(p.lex, Lex::Str { closed: true })
+                    && p.end >= p.start + 2
+                {
+                    let name = text(&u[p.start + 1..p.end - 1]);
+                    if !name.trim().is_empty() {
+                        items.push(at_item(name.trim(), "değişkenle'nin değeri", None));
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    items
 }
 
 /// How well a name matched what was typed, best first.
@@ -572,5 +633,41 @@ mod tests {
             })
         );
         assert_eq!(bracket("a + b", 2), None);
+    }
+}
+
+#[cfg(test)]
+mod frame_tests {
+    use super::complete;
+    use crate::Schema;
+
+    fn labels(src: &str, cursor: usize) -> Vec<String> {
+        complete(src, cursor, &Schema::default(), true)
+            .map(|c| c.items.into_iter().map(|i| i.label).collect())
+            .unwrap_or_default()
+    }
+
+    /// An inner expression's body offers the names it binds; its other arguments do not (docs/adr/0601).
+    #[test]
+    fn a_body_offers_its_frames_names() {
+        let src = "dizi_her(dizi(1), @)";
+        let at = src.encode_utf16().count() - 1;
+        let got = labels(src, at);
+        assert!(
+            got.iter().any(|l| l == "@öğe") && got.iter().any(|l| l == "@sayaç"),
+            "{got:?}"
+        );
+        let src = "dizi_her(@";
+        assert!(
+            !labels(src, src.encode_utf16().count())
+                .iter()
+                .any(|l| l == "@öğe")
+        );
+        let src = "değişkenle('alan2', 5, @";
+        assert!(
+            labels(src, src.encode_utf16().count())
+                .iter()
+                .any(|l| l == "@alan2")
+        );
     }
 }

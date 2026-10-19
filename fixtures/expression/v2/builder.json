@@ -1563,6 +1563,15 @@
             "key": "var:köşe",
             "kind": "variable",
             "label": "$köşe"
+          },
+          {
+            "alias": "with_variable",
+            "caret": 11,
+            "detail": "değişkenle(ad, değer, ifade)",
+            "insert": "değişkenle()",
+            "key": "func:değişkenle",
+            "kind": "function",
+            "label": "değişkenle"
           }
         ],
         "start": 0
@@ -1924,12 +1933,28 @@
             "label": "dakika"
           },
           {
+            "caret": 11,
+            "detail": "değişkenle(ad, değer, ifade)",
+            "insert": "değişkenle()",
+            "key": "func:değişkenle",
+            "kind": "function",
+            "label": "değişkenle"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
             "key": "func:değiştir",
             "kind": "function",
             "label": "değiştir"
+          },
+          {
+            "caret": 5,
+            "detail": "dene(ifade, yedek)",
+            "insert": "dene()",
+            "key": "func:dene",
+            "kind": "function",
+            "label": "dene"
           },
           {
             "caret": 7,
@@ -2084,6 +2109,14 @@
             "label": "dizi_hepsini_çıkar"
           },
           {
+            "caret": 9,
+            "detail": "dizi_her(dizi, ifade)",
+            "insert": "dizi_her()",
+            "key": "func:dizi_her",
+            "kind": "function",
+            "label": "dizi_her"
+          },
+          {
             "caret": 12,
             "detail": "dizi_içerir(dizi, değer)",
             "insert": "dizi_içerir()",
@@ -2162,6 +2195,14 @@
             "key": "func:dizi_son",
             "kind": "function",
             "label": "dizi_son"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_süz(dizi, koşul, sınır)",
+            "insert": "dizi_süz()",
+            "key": "func:dizi_süz",
+            "kind": "function",
+            "label": "dizi_süz"
           },
           {
             "caret": 10,
@@ -3411,12 +3452,28 @@
             "label": "dakika"
           },
           {
+            "caret": 11,
+            "detail": "değişkenle(ad, değer, ifade)",
+            "insert": "değişkenle()",
+            "key": "func:değişkenle",
+            "kind": "function",
+            "label": "değişkenle"
+          },
+          {
             "caret": 9,
             "detail": "değiştir(metin, aranan, yeni)",
             "insert": "değiştir()",
             "key": "func:değiştir",
             "kind": "function",
             "label": "değiştir"
+          },
+          {
+            "caret": 5,
+            "detail": "dene(ifade, yedek)",
+            "insert": "dene()",
+            "key": "func:dene",
+            "kind": "function",
+            "label": "dene"
           },
           {
             "caret": 7,
@@ -3571,6 +3628,14 @@
             "label": "dizi_hepsini_çıkar"
           },
           {
+            "caret": 9,
+            "detail": "dizi_her(dizi, ifade)",
+            "insert": "dizi_her()",
+            "key": "func:dizi_her",
+            "kind": "function",
+            "label": "dizi_her"
+          },
+          {
             "caret": 12,
             "detail": "dizi_içerir(dizi, değer)",
             "insert": "dizi_içerir()",
@@ -3649,6 +3714,14 @@
             "key": "func:dizi_son",
             "kind": "function",
             "label": "dizi_son"
+          },
+          {
+            "caret": 9,
+            "detail": "dizi_süz(dizi, koşul, sınır)",
+            "insert": "dizi_süz()",
+            "key": "func:dizi_süz",
+            "kind": "function",
+            "label": "dizi_süz"
           },
           {
             "caret": 10,
@@ -8523,6 +8596,22 @@
               "label": "boş"
             },
             {
+              "caret": 11,
+              "detail": "değişkenle(ad, değer, ifade)",
+              "insert": "değişkenle()",
+              "key": "func:değişkenle",
+              "kind": "function",
+              "label": "değişkenle"
+            },
+            {
+              "caret": 5,
+              "detail": "dene(ifade, yedek)",
+              "insert": "dene()",
+              "key": "func:dene",
+              "kind": "function",
+              "label": "dene"
+            },
+            {
               "caret": 12,
               "detail": "İlk doğru koşulun değeri",
               "insert": " durum eğer  ise  yoksa  son",
@@ -9363,6 +9452,14 @@
               "label": "dizi_hepsini_çıkar"
             },
             {
+              "caret": 9,
+              "detail": "dizi_her(dizi, ifade)",
+              "insert": "dizi_her()",
+              "key": "func:dizi_her",
+              "kind": "function",
+              "label": "dizi_her"
+            },
+            {
               "caret": 12,
               "detail": "dizi_içerir(dizi, değer)",
               "insert": "dizi_içerir()",
@@ -9441,6 +9538,14 @@
               "key": "func:dizi_son",
               "kind": "function",
               "label": "dizi_son"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_süz(dizi, koşul, sınır)",
+              "insert": "dizi_süz()",
+              "key": "func:dizi_süz",
+              "kind": "function",
+              "label": "dizi_süz"
             },
             {
               "caret": 10,
@@ -9653,6 +9758,14 @@
         {
           "group": "arrays",
           "items": [
+            {
+              "caret": 9,
+              "detail": "dizi_süz(dizi, koşul, sınır)",
+              "insert": "dizi_süz()",
+              "key": "func:dizi_süz",
+              "kind": "function",
+              "label": "dizi_süz"
+            },
             {
               "caret": 14,
               "detail": "dizi_uzunluğu(dizi)",
@@ -10196,6 +10309,22 @@
               "label": "boş"
             },
             {
+              "caret": 11,
+              "detail": "değişkenle(ad, değer, ifade)",
+              "insert": "değişkenle()",
+              "key": "func:değişkenle",
+              "kind": "function",
+              "label": "değişkenle"
+            },
+            {
+              "caret": 5,
+              "detail": "dene(ifade, yedek)",
+              "insert": "dene()",
+              "key": "func:dene",
+              "kind": "function",
+              "label": "dene"
+            },
+            {
               "caret": 12,
               "detail": "İlk doğru koşulun değeri",
               "insert": " durum eğer  ise  yoksa  son",
@@ -11036,6 +11165,14 @@
               "label": "dizi_hepsini_çıkar"
             },
             {
+              "caret": 9,
+              "detail": "dizi_her(dizi, ifade)",
+              "insert": "dizi_her()",
+              "key": "func:dizi_her",
+              "kind": "function",
+              "label": "dizi_her"
+            },
+            {
               "caret": 12,
               "detail": "dizi_içerir(dizi, değer)",
               "insert": "dizi_içerir()",
@@ -11114,6 +11251,14 @@
               "key": "func:dizi_son",
               "kind": "function",
               "label": "dizi_son"
+            },
+            {
+              "caret": 9,
+              "detail": "dizi_süz(dizi, koşul, sınır)",
+              "insert": "dizi_süz()",
+              "key": "func:dizi_süz",
+              "kind": "function",
+              "label": "dizi_süz"
             },
             {
               "caret": 10,

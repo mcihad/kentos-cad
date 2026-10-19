@@ -52,7 +52,7 @@ yoktur.
 1. **Bu ADR.** Nesneye bakmayan yeni işlevler (aşağıda) ve rastgele sayıların değişken çağrı kuralı.
 2. **ADR 0601: iç içe ifadeler.**
    - `dizi_her` (`array_foreach`), `dizi_süz` (`array_filter`): dizinin her öğesinde değerlendirilen ifade, `@öğe` (`@element`),
-     `@sıra` (`@counter`);
+     `@sayaç` (`@counter`);
    - `değişkenle` (`with_variable`);
    - `dene` (`try`): hatası boş ya da ikinci değer olan ifade.
 3. **ADR 0602: toplamanın ekleri:** `q1`, `q3`, `iqr`, `range`, `majority`, `minority`, `count_missing`, `min_length`, `max_length`,

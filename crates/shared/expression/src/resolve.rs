@@ -25,6 +25,8 @@ pub(crate) struct Resolved {
     pub world: Vec<WorldCall>,
     /// The `@` names the schema does not know, as written, each once.
     pub unknown: Vec<String>,
+    /// Why the expression cannot compile, found while resolving (docs/adr/0601), and the function it is at.
+    pub refused: Option<(String, Func)>,
 }
 
 pub(crate) fn resolve(root: Node, fields: &[String], schema: &Schema) -> Resolved {
@@ -34,6 +36,8 @@ pub(crate) fn resolve(root: Node, fields: &[String], schema: &Schema) -> Resolve
         world: Vec::new(),
         unknown: Vec::new(),
         random: 0,
+        scopes: Vec::new(),
+        refused: None,
     };
     let root = r.node(root);
     let (root, fields) = own_fields(root, fields);
@@ -42,6 +46,7 @@ pub(crate) fn resolve(root: Node, fields: &[String], schema: &Schema) -> Resolve
         fields,
         world: r.world,
         unknown: r.unknown,
+        refused: r.refused,
     }
 }
 
@@ -52,11 +57,29 @@ struct Resolver<'s> {
     unknown: Vec<String>,
     /// The unseeded random calls met so far (docs/adr/0600 §3).
     random: u32,
+    /// The inner expressions' frames being resolved, innermost last: each frame's own names (folded) and slots
+    /// (docs/adr/0601).
+    scopes: Vec<Vec<(String, u8)>>,
+    refused: Option<(String, Func)>,
 }
 
 impl Resolver<'_> {
+    /// `@name` bound by an inner expression around it, innermost first (docs/adr/0601).
+    fn local(&self, name: &str) -> Option<Node> {
+        let key = crate::js::text::fold_turkish(name);
+        for (up, frame) in self.scopes.iter().rev().enumerate() {
+            if let Some((_, slot)) = frame.iter().find(|(n, _)| *n == key) {
+                return Some(Node::Local(up as u8, *slot));
+            }
+        }
+        None
+    }
+
     /// `@name`'s value; the object's layer for `@katman_adi`, `@katman`.
     fn at(&mut self, name: &str) -> Node {
+        if let Some(n) = self.local(name) {
+            return n;
+        }
         if let Some(v) = self.schema.variable(name) {
             return Node::Lit(v.value.clone());
         }
@@ -102,6 +125,10 @@ impl Resolver<'_> {
         }
         args.push(Node::Lit(Value::Num(site)));
         args.push(Node::Var(Var::Index));
+        // Inside dizi_her or dizi_süz each item draws anew: the item's position too (docs/adr/0601).
+        if let Some(counter) = self.local("SAYAC") {
+            args.push(counter);
+        }
         Node::Call(f, args)
     }
 
@@ -113,6 +140,26 @@ impl Resolver<'_> {
             Node::Call(Func::Today, _) => self.at("tarih"),
             Node::Call(f, args) if f.family() == Family::World => self.world(f, args),
             Node::Call(f @ (Func::Rand | Func::RandF | Func::Uuid), args) => self.random(f, args),
+            Node::Call(f @ (Func::ArrayForeach | Func::ArrayFilter | Func::WithVariable), args) => {
+                self.lambda(f, args)
+            }
+            Node::Call(Func::Try, mut args) => {
+                let otherwise = (args.len() > 1)
+                    .then(|| args.pop())
+                    .flatten()
+                    .map(|o| self.node(o));
+                let body = self.node(args.pop().unwrap_or(Node::Lit(Value::Null)));
+                let mut captured = Vec::new();
+                let body = crate::lambda::hoist(body, 0, 0, &mut captured);
+                Node::Lambda(Box::new(crate::parser::Lambda {
+                    func: Func::Try,
+                    args: Vec::new(),
+                    captured,
+                    body,
+                    otherwise,
+                    own: 0,
+                }))
+            }
             Node::Call(f, args) => Node::Call(f, args.into_iter().map(|a| self.node(a)).collect()),
             Node::Not(a) => Node::Not(b(a)),
             Node::Neg(a) => Node::Neg(b(a)),
@@ -147,8 +194,66 @@ impl Resolver<'_> {
             Node::IsNull(x, negated) => Node::IsNull(b(x), negated),
             Node::Var(v) => self.var(v),
             Node::Field(i) => self.field(i),
-            n @ (Node::Lit(_) | Node::World(..)) => n,
+            n @ (Node::Lit(_) | Node::World(..) | Node::Local(..) | Node::Lambda(_)) => n,
         }
+    }
+
+    /// `dizi_her`, `dizi_süz` and `değişkenle` (docs/adr/0601): the arguments where the call stands, the body in a
+    /// frame of its own names, then the body's parts that do not read the frame taken out (`hoist`).
+    fn lambda(&mut self, f: Func, mut args: Vec<Node>) -> Node {
+        if self.scopes.len() >= 32 {
+            self.refused = Some(("İç içe ifadeler en çok 32 kat olabilir.".into(), f));
+            return Node::Lit(Value::Null);
+        }
+        let (outside, body, names): (Vec<Node>, Node, Vec<(String, u8)>) = match f {
+            Func::WithVariable => {
+                let name = match &args[0] {
+                    Node::Lit(Value::Text(t)) => crate::js::text::fold_turkish(t.trim()),
+                    _ => {
+                        self.refused = Some(("değişkenle'nin adı tırnak içinde bir metin olmalı: değişkenle('k', 5, @k * 2)".into(), f));
+                        return Node::Lit(Value::Null);
+                    }
+                };
+                let body = args.pop().unwrap_or(Node::Lit(Value::Null));
+                let value = self.node(args.pop().unwrap_or(Node::Lit(Value::Null)));
+                (vec![value], body, vec![(name, 0)])
+            }
+            _ => {
+                let body = args.remove(1);
+                let outside = args.into_iter().map(|a| self.node(a)).collect();
+                let names = [("ELEMENT", 0), ("OGE", 0), ("COUNTER", 1), ("SAYAC", 1)];
+                (
+                    outside,
+                    body,
+                    names.iter().map(|(n, k)| ((*n).to_owned(), *k)).collect(),
+                )
+            }
+        };
+        let own = if f == Func::WithVariable { 1 } else { 2 };
+        self.scopes.push(names);
+        let body = self.node(body);
+        self.scopes.pop();
+        if f == Func::WithVariable
+            && let Some(inlined) = crate::lambda::inline(&body, &outside[0])
+        {
+            return inlined;
+        }
+        let mut captured = Vec::new();
+        let body = crate::lambda::hoist(body, 0, own, &mut captured);
+        if crate::lambda::reads_world(&body) {
+            self.refused = Some((
+                "Başka katmana bakan işlev, iç içe ifadenin @öğe'sine bağlı kullanılamaz; onu dışarıda hesaplayın.".into(),
+                f,
+            ));
+        }
+        Node::Lambda(Box::new(crate::parser::Lambda {
+            func: f,
+            args: outside,
+            captured,
+            body,
+            otherwise: None,
+            own,
+        }))
     }
 
     /// A field the user defined with a type is read as that type (docs/adr/0401 §5): a yes/no field
@@ -197,8 +302,11 @@ impl Resolver<'_> {
 
     /// An expression over the other objects, compiled on its own.
     fn inner(&mut self, n: Node) -> Box<Expr> {
-        // An inner expression holds no call that looks at other objects (the parser saw to it).
+        // An inner expression holds no call that looks at other objects (the parser saw to it); it reads the other
+        // objects, so no inner expression's frame around the call binds its names.
+        let scopes = std::mem::take(&mut self.scopes);
         let n = self.node(n);
+        self.scopes = scopes;
         let (root, fields) = own_fields(n, self.fields);
         Box::new(inner_expr(root, fields))
     }
@@ -373,6 +481,19 @@ fn renumber(n: Node, all: &[String], map: &mut Vec<Option<usize>>, kept: &mut Ve
             Node::Like(Box::new(x), Box::new(go(*p)), fold, negated)
         }
         Node::IsNull(x, negated) => Node::IsNull(Box::new(go(*x)), negated),
-        n @ (Node::Lit(_) | Node::Var(_) | Node::At(_)) => n,
+        // The body reads only its frame (`lambda::hoist`): its fields were taken out with the rest.
+        Node::Lambda(l) => {
+            let l = *l;
+            let args = l.args.into_iter().map(&mut go).collect();
+            let captured = l.captured.into_iter().map(&mut go).collect();
+            let otherwise = l.otherwise.map(&mut go);
+            Node::Lambda(Box::new(crate::parser::Lambda {
+                args,
+                captured,
+                otherwise,
+                ..l
+            }))
+        }
+        n @ (Node::Lit(_) | Node::Var(_) | Node::At(_) | Node::Local(..)) => n,
     }
 }

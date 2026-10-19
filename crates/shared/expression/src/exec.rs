@@ -107,6 +107,18 @@ impl<'a> Slot<'_, 'a> {
             None => self.kinds[i] = NULL,
         }
     }
+
+    /// Object `i`'s value as it is (None: it threw).
+    #[inline]
+    pub(crate) fn value(&mut self, i: usize, v: Option<V<'a>>) {
+        match v {
+            Some(V::Null) => self.kinds[i] = NULL,
+            Some(V::Num(x)) => self.number(i, Some(x)),
+            Some(V::Bool(b)) => self.truth(i, Some(b)),
+            Some(V::Text(t)) => self.text(i, Some(t)),
+            None => self.kinds[i] = THROWN,
+        }
+    }
 }
 
 /// What a program reads of the objects, a column of a batch at a time.
@@ -388,6 +400,14 @@ pub fn run<'a>(
             Ins::World(k, args) => {
                 let cols: Vec<Col> = args.iter().map(|&o| col(o)).collect();
                 world(*k as usize, &cols, src.world(), &mut out);
+            }
+            // An inner expression (docs/adr/0601): its operands are columns, its body a program run over the items.
+            Ins::Lambda(k, args) => {
+                let cols: Vec<Col> = args.iter().map(|&o| col(o)).collect();
+                match p.lambdas.get(*k as usize) {
+                    Some(code) => crate::lambda::column(code, args, &cols, n, &mut out, scratch),
+                    None => out.k.fill(NULL),
+                }
             }
         }
     }

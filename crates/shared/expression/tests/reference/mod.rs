@@ -43,7 +43,7 @@ fn old(n: &Node) -> bool {
         Node::Call(_, args) => args.iter().all(old),
         Node::Lit(_) | Node::Field(_) | Node::Var(_) => true,
         // docs/adr/0214's `@` and calls to other objects.
-        Node::At(_) | Node::World(..) => false,
+        Node::At(_) | Node::World(..) | Node::Local(..) | Node::Lambda(_) => false,
     }
 }
 
@@ -87,7 +87,9 @@ fn uses(n: &Node, needs: &mut Needs) {
         | Node::Like(..)
         | Node::IsNull(..)
         | Node::At(_)
-        | Node::World(..) => {
+        | Node::World(..)
+        | Node::Local(..)
+        | Node::Lambda(_) => {
             panic!("the old language had no {n:?}")
         }
         Node::Not(a) | Node::Neg(a) => uses(a, needs),
@@ -771,7 +773,9 @@ fn eval<'a>(n: &'a Node, s: &'a dyn Scope) -> Result<Value<'a>, Thrown> {
         | Node::Like(..)
         | Node::IsNull(..)
         | Node::At(_)
-        | Node::World(..) => {
+        | Node::World(..)
+        | Node::Local(..)
+        | Node::Lambda(_) => {
             panic!("the old language had no {n:?}")
         }
     })

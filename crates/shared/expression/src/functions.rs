@@ -121,7 +121,7 @@ pub fn call<'a>(f: Func, args: &[V<'a>], out: &mut String, s: &mut Scratch) -> R
         Family::More => return crate::more::call(f, args, out, s),
         // `şimdi()` and `bugün()` are the caller's moment, read when the
         // expression compiles; the others look at other objects (`world`).
-        Family::Clock | Family::World => return R::V(V::Null),
+        Family::Clock | Family::World | Family::Lambda => return R::V(V::Null),
     }
     let arg = |i: usize| args.get(i).copied().unwrap_or(V::Null);
     let num = |i: usize| args.get(i).and_then(|&a| to_number(a));

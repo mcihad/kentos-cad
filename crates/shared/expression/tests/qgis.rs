@@ -232,3 +232,116 @@ fn unseeded_draws_are_their_own_per_call_and_object() {
     assert_ne!(draws[0][0], draws[1][0], "objects draw apart");
     assert_ne!(draws[0][3], draws[1][3], "uuids differ");
 }
+
+/// Inside `dizi_her` an unseeded draw is the item's own: the items of one object differ (docs/adr/0601 §3).
+#[test]
+fn an_inner_draw_is_the_items_own() {
+    let e = compile("dizi_her(seri(1, 50), rastgele(1, 1000000000))").expect("compiles");
+    let attrs = Map::new();
+    let object = Object {
+        fields: &[],
+        attrs: &attrs,
+    };
+    let Value::Text(t) = e.evaluate(&object) else {
+        panic!("an array");
+    };
+    let items: Vec<f64> = serde_json::from_str(&t).expect("JSON");
+    assert_eq!(items.len(), 50);
+    let mut sorted = items.clone();
+    sorted.sort_by(f64::total_cmp);
+    sorted.dedup();
+    assert_eq!(sorted.len(), 50, "{items:?}");
+}
+
+/// What an inner expression cannot hold is refused when it compiles, at the function's name (docs/adr/0601 §2).
+#[test]
+fn an_inner_expression_is_refused_where_it_cannot_run() {
+    let at = |s: &str| compile(s).err().map(|e| (e.at, e.message));
+    let (place, why) = at("değişkenle(Ad, 5, @k)").expect("refused");
+    assert_eq!(place, 1, "{why}");
+    assert!(why.contains("tırnak"), "{why}");
+    let deep = (0..33).fold("1".to_owned(), |inner, _| {
+        format!("değişkenle('k', 1, {inner})")
+    });
+    let (_, why) = at(&deep).expect("refused");
+    assert!(why.contains("32"), "{why}");
+    // A call to another layer whose own argument reads the item: refused even where other layers are given.
+    let schema = kentos_expression::Schema {
+        world: true,
+        ..Default::default()
+    };
+    let refused =
+        kentos_expression::compile_with("dizi_her(dizi(1, 2), kesişir('Yol', @öğe))", &schema)
+            .expect_err("refused");
+    assert!(refused.message.contains("dışarıda"), "{}", refused.message);
+    // Outside the item it is taken out of the body and runs once per object.
+    assert!(
+        kentos_expression::compile_with("dizi_her(dizi(1, 2), kesişir('Yol', 5))", &schema).is_ok()
+    );
+    // A name no frame binds stays an unknown `@` value, empty.
+    let e = compile("dizi_her(dizi(1), @öge2)").expect("compiles");
+    assert_eq!(e.unknown_variables, vec!["öge2".to_owned()]);
+}
+
+/// The column engine runs an inner expression's body over the items of a batch in chunks (docs/adr/0601 §5): on 700
+/// objects whose arrays are empty, short or longer than a chunk, each object's value is the tree walker's.
+#[test]
+fn inner_expressions_run_by_chunks_as_one_at_a_time() {
+    let lists: Vec<String> = (0..700usize)
+        .map(|i| match i % 7 {
+            0 => String::new(),
+            1 => "x".to_owned(),
+            k => (0..(i * k) % 300)
+                .map(|j| (j * 37 % 101).to_string())
+                .collect::<Vec<_>>()
+                .join(","),
+        })
+        .collect();
+    let long = vec!["L"; 140].join(" || ");
+    let sources = [
+        "dizi_her(metin_dizi(L), @öğe || '-' || @sayaç)".to_owned(),
+        "dizi_süz(metin_dizi(L), tamsayı(@öğe) % 2 = 0, 3)".to_owned(),
+        "dizi_süz(metin_dizi(L), tamsayı(@öğe) > 50)".to_owned(),
+        "dizi_her(dizi_dilim(metin_dizi(L), 0, 3), dizi_her(metin_dizi(L), @öğe || @sayaç))"
+            .to_owned(),
+        "dizi_her(seri(1, 300), @öğe * uzunluk(L))".to_owned(),
+        "dene(tamsayı(L), -1)".to_owned(),
+        "değişkenle('k', L, uzunluk(@k) * 2)".to_owned(),
+        format!("değişkenle('k', {long}, uzunluk(@k) + uzunluk(@k))"),
+        "dizi_her(metin_dizi(L), değişkenle('t', tamsayı(@öğe), @t * @t + @sayaç))".to_owned(),
+    ];
+    let fields = vec!["L".to_owned()];
+    for source in &sources {
+        let e = compile(source).unwrap_or_else(|err| panic!("{source}: {}", err.text()));
+        assert_eq!(e.fields, fields, "{source}");
+        let mut texts = String::new();
+        let mut lens = Vec::new();
+        for l in &lists {
+            texts.push_str(l);
+            lens.push(l.encode_utf16().count() as i32);
+        }
+        let input = RowsInput {
+            n: lists.len(),
+            texts: &texts,
+            text_lens: &lens,
+            numbers: &[],
+            measures: &[],
+            scale: f64::NAN,
+        };
+        let column = evaluate_rows(&e, &input, As::Value).expect("the table fits");
+        let mut cursor = (0, 0);
+        for (i, l) in lists.iter().enumerate() {
+            let mut attrs = Map::new();
+            attrs.insert("L".into(), Json::String(l.clone()));
+            let one = encode(&e.evaluate(&Object {
+                fields: &fields,
+                attrs: &attrs,
+            }));
+            let col = encode_column(&column, i, &mut cursor);
+            assert!(
+                same(&col, &one),
+                "{source}, nesne {i}: sütun {col} ≠ tek {one}"
+            );
+        }
+    }
+}

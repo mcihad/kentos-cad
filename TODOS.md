@@ -230,6 +230,8 @@ Liste:
 - [ ] `EXPR-0600` ifade motorunun yeni işlevleri (ADR 0600, 19 Ekim): web'de gerekenler: çekirdek ortak, yeni işlevler WASM'la
   gelir; web'in İfade oluşturucusu işlev tablosunu çekirdekten okur (`builder.json` yeniden yazıldı); web'in kendi dil testleri
   (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
+- [ ] `EXPR-0601` iç içe ifadeler (ADR 0601, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İfade oluşturucusu `@öğe`, `@sayaç`
+  ve `değişkenle`'nin adını çekirdeğin tamamlamasından alır; web'in dil testleri yeniden koşmalı.
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede

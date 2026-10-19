@@ -993,8 +993,8 @@
    "qgisSays": [
     "j",
     [
-     1,
-     2
+     2,
+     1
     ]
    ]
   },
@@ -1044,9 +1044,9 @@
    "qgisSays": [
     "j",
     [
-     1,
+     3,
      2,
-     3
+     1
     ]
    ]
   },
@@ -1224,6 +1224,240 @@
    "source": "saat_yap(25, 0, 0)",
    "value": null,
    "rule": "24 ve üstü saat boş"
+  },
+  {
+   "source": "dizi_her(dizi(1, 2, 3), @öğe * 10)",
+   "qgis": "array_foreach(array(1, 2, 3), @element * 10)",
+   "value": [
+    "j",
+    [
+     10,
+     20,
+     30
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(array('a', 'b'), upper(@element))",
+   "qgis": "array_foreach(array('a', 'b'), upper(@element))",
+   "value": [
+    "j",
+    [
+     "A",
+     "B"
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(array(10, 20, 30), @counter)",
+   "qgis": "array_foreach(array(10, 20, 30), @counter)",
+   "value": [
+    "j",
+    [
+     0,
+     1,
+     2
+    ]
+   ]
+  },
+  {
+   "source": "dizi_her(dizi(1, 2), @öğe + to_int(Parsel))",
+   "qgis": "array_foreach(array(1, 2), @element + to_int(\"Parsel\"))",
+   "value": [
+    "j",
+    [
+     13,
+     14
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(array(1, 2), array_foreach(array(10, 20), @element + 1))",
+   "qgis": "array_foreach(array(1, 2), array_foreach(array(10, 20), @element + 1))",
+   "value": [
+    "j",
+    [
+     [
+      11,
+      21
+     ],
+     [
+      11,
+      21
+     ]
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(array(1, 2), with_variable('t', @element * 2, @t + @counter))",
+   "qgis": "array_foreach(array(1, 2), with_variable('t', @element * 2, @t + @counter))",
+   "value": [
+    "j",
+    [
+     2,
+     5
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(string_to_array('a,b,c'), concat(@element, @counter))",
+   "qgis": "array_foreach(string_to_array('a,b,c'), concat(@element, @counter))",
+   "value": [
+    "j",
+    [
+     "a0",
+     "b1",
+     "c2"
+    ]
+   ]
+  },
+  {
+   "source": "array_foreach(NULL, @element)",
+   "qgis": "array_foreach(NULL, @element)",
+   "value": [
+    "j",
+    []
+   ]
+  },
+  {
+   "source": "array_sum(array_foreach(generate_series(1, 4), @element ^ 2))",
+   "qgis": "array_sum(array_foreach(generate_series(1, 4), @element ^ 2))",
+   "value": [
+    "n",
+    30.0
+   ]
+  },
+  {
+   "source": "dizi_süz(dizi(1, 2, 3, 4), @öğe > 2)",
+   "qgis": "array_filter(array(1, 2, 3, 4), @element > 2)",
+   "value": [
+    "j",
+    [
+     3,
+     4
+    ]
+   ]
+  },
+  {
+   "source": "array_filter(array(1, 2, 3, 4), @element > 1, 2)",
+   "qgis": "array_filter(array(1, 2, 3, 4), @element > 1, 2)",
+   "value": [
+    "j",
+    [
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "source": "array_filter(array(1, 2, 3), true, 0)",
+   "qgis": "array_filter(array(1, 2, 3), true, 0)",
+   "value": [
+    "j",
+    [
+     1,
+     2,
+     3
+    ]
+   ]
+  },
+  {
+   "source": "array_filter(array('a', 'bb', 'ccc'), length(@element) >= 2)",
+   "qgis": "array_filter(array('a', 'bb', 'ccc'), length(@element) >= 2)",
+   "value": [
+    "j",
+    [
+     "bb",
+     "ccc"
+    ]
+   ]
+  },
+  {
+   "source": "array_filter(array('Arsa', 'Tarla'), @element = Nitelik)",
+   "qgis": "array_filter(array('Arsa', 'Tarla'), @element = \"Nitelik\")",
+   "value": [
+    "j",
+    [
+     "Arsa"
+    ]
+   ]
+  },
+  {
+   "source": "dizi_süz(dizi(5, 6, 7), @sayaç >= 1)",
+   "value": [
+    "j",
+    [
+     6,
+     7
+    ]
+   ],
+   "rule": "QGIS dizi_süz'de @counter vermez; KentOS verir"
+  },
+  {
+   "source": "with_variable('x', 5, @x * @x + @x)",
+   "qgis": "with_variable('x', 5, @x * @x + @x)",
+   "value": [
+    "n",
+    30.0
+   ]
+  },
+  {
+   "source": "değişkenle('a', 2, değişkenle('b', @a + 1, @a * @b))",
+   "qgis": "with_variable('a', 2, with_variable('b', @a + 1, @a * @b))",
+   "value": [
+    "n",
+    6.0
+   ]
+  },
+  {
+   "source": "with_variable('k', 3, array_foreach(array(1, 2), @element * @k))",
+   "qgis": "with_variable('k', 3, array_foreach(array(1, 2), @element * @k))",
+   "value": [
+    "j",
+    [
+     3,
+     6
+    ]
+   ]
+  },
+  {
+   "source": "with_variable('ad', Ad, length(@ad))",
+   "qgis": "with_variable('ad', \"Ad\", length(@ad))",
+   "value": [
+    "n",
+    15.0
+   ]
+  },
+  {
+   "source": "try(to_int('7'), -1)",
+   "qgis": "try(to_int('7'), -1)",
+   "value": [
+    "n",
+    7.0
+   ]
+  },
+  {
+   "source": "try(to_int('a'), -1)",
+   "qgis": "try(to_int('a'), -1)",
+   "value": [
+    "n",
+    -1.0
+   ]
+  },
+  {
+   "source": "try(to_int('a'))",
+   "qgis": "try(to_int('a'))",
+   "value": null
+  },
+  {
+   "source": "dene(1 / 0, 'yok')",
+   "qgis": "try(1 / 0, 'yok')",
+   "value": [
+    "t",
+    "yok"
+   ],
+   "rule": "boş değer de yedeğe düşer (QGIS yalnız hatada)",
+   "qgisSays": null
   },
   {
    "source": "rastgele(1, 100, 7)",

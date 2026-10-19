@@ -1070,7 +1070,7 @@ enum Work {
     /// COG olarak kaydet (docs/adr/0515): the file's samples as they are, every band and alpha, on its own grid.
     Copy,
     Calc {
-        calc: Calc,
+        calc: Box<Calc>,
         maps: Vec<Mapping>,
     },
     Reclass {
@@ -1434,7 +1434,10 @@ impl OpsJob {
                 let maps = inputs.iter().map(|i| mapping(&grid, &i.affine)).collect();
                 (
                     grid,
-                    Work::Calc { calc, maps },
+                    Work::Calc {
+                        calc: Box::new(calc),
+                        maps,
+                    },
                     Some(float_kind(float_of(*sample))),
                     Some(ramp_style("Viridis")),
                 )

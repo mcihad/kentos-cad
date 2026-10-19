@@ -167,7 +167,7 @@ fn from_node(n: &Node, fields: &[String]) -> T {
         Node::Var(v) => T::Var(*v),
         Node::At(name) => T::At(name.clone()),
         // Only a compiled tree holds these (`resolve`).
-        Node::World(..) => T::Hole,
+        Node::World(..) | Node::Local(..) | Node::Lambda(_) => T::Hole,
         Node::Call(f, args) => T::Call(*f, args.iter().map(|a| from_node(a, fields)).collect()),
         Node::Not(a) => T::Not(b(a)),
         // A number with a minus before it is one number (`-5`), as it reads.

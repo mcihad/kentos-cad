@@ -738,6 +738,11 @@ pub enum Func {
     Epoch,
     FromEpoch,
     MakeTime,
+    // Inner expressions (docs/adr/0601).
+    ArrayForeach,
+    ArrayFilter,
+    WithVariable,
+    Try,
 }
 
 /// Where a function's work is done.
@@ -757,6 +762,8 @@ pub enum Family {
     World,
     /// docs/adr/0600's (`more`).
     More,
+    /// An inner expression (docs/adr/0601): resolved into `Node::Lambda`, evaluated by `walk`.
+    Lambda,
 }
 
 impl Func {
@@ -785,6 +792,7 @@ impl Func {
             | ArrayRemoveAll | ArrayReplace | ArrayIntersect | ArrayMajority | ArrayMinority
             | ArrayMedian | Series | MapConcat | MapPrefixKeys | UrlEncode | Epoch | FromEpoch
             | MakeTime => Family::More,
+            ArrayForeach | ArrayFilter | WithVariable | Try => Family::Lambda,
             _ => Family::Base,
         }
     }

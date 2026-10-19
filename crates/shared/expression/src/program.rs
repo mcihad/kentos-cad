@@ -99,6 +99,9 @@ pub enum Ins {
     /// A call that looks at other objects (docs/adr/0214 §3): its place in
     /// `Expr::world`; the object's id, then its own arguments.
     World(u32, Box<[Operand]>),
+    /// An inner expression (docs/adr/0601): its place in `Program::lambdas`; its arguments, the parts taken out of its
+    /// body, then `dene`'s value when the body gives none.
+    Lambda(u32, Box<[Operand]>),
 }
 
 impl Ins {
@@ -108,9 +111,11 @@ impl Ins {
             Ins::Not(a) | Ins::Neg(a) | Ins::IsNull(a, _) => std::slice::from_ref(a),
             Ins::Bin(_, ab) | Ins::Like(ab, ..) => ab,
             Ins::Between(abc, _) => abc,
-            Ins::Call(_, args) | Ins::Case(args, _) | Ins::In(args, _) | Ins::World(_, args) => {
-                args
-            }
+            Ins::Call(_, args)
+            | Ins::Case(args, _)
+            | Ins::In(args, _)
+            | Ins::World(_, args)
+            | Ins::Lambda(_, args) => args,
         }
     }
 
@@ -167,6 +172,8 @@ pub struct Program {
     pub consts: Vec<Const>,
     /// The expression's value.
     pub result: Option<Operand>,
+    /// The inner expressions `Ins::Lambda` evaluates.
+    pub lambdas: Vec<crate::lambda::Code>,
 }
 
 impl Program {
@@ -177,6 +184,7 @@ impl Program {
             code: b.code,
             consts: b.consts,
             result: Some(result),
+            lambdas: b.lambdas,
         };
         p.drop_unused_constants();
         p
@@ -234,7 +242,8 @@ impl Program {
                 Ins::Call(_, args)
                 | Ins::Case(args, _)
                 | Ins::In(args, _)
-                | Ins::World(_, args) => args.iter_mut().for_each(renumber),
+                | Ins::World(_, args)
+                | Ins::Lambda(_, args) => args.iter_mut().for_each(renumber),
             }
         }
         self.result.iter_mut().for_each(renumber);
@@ -247,6 +256,7 @@ struct Builder {
     consts: Vec<Const>,
     known: HashMap<Ins, u32>,
     scratch: Scratch,
+    lambdas: Vec<crate::lambda::Code>,
 }
 
 impl Builder {
@@ -328,6 +338,29 @@ impl Builder {
             }
             // Resolved before the program is made (`resolve`).
             Node::At(_) => self.constant(Const::Null),
+            // Only an inner expression's body reads its frame: its program loads slot `s` as the field `s`
+            // (the body reads no field of the object, `lambda::hoist`).
+            Node::Local(_, s) => self.emit(Ins::Load(Load::Field(u32::from(*s)))),
+            Node::Lambda(l) => {
+                let ops: Box<[Operand]> = l
+                    .args
+                    .iter()
+                    .chain(&l.captured)
+                    .chain(&l.otherwise)
+                    .map(|a| self.node(a))
+                    .collect();
+                self.lambdas.push(crate::lambda::Code::of(l));
+                let ins = Ins::Lambda(self.lambdas.len() as u32 - 1, ops);
+                // `dene` reads a part that threw as giving no value.
+                if l.func == crate::library::Func::Try {
+                    if ins.constant() {
+                        let c = self.fold(&ins);
+                        return self.constant(c);
+                    }
+                    return self.emit(ins);
+                }
+                self.op(ins)
+            }
         }
     }
 
@@ -394,6 +427,13 @@ impl Builder {
             Ins::Call(f, args) => {
                 let args: Vec<V> = args.iter().map(get).collect();
                 functions::call(*f, &args, &mut out, &mut self.scratch)
+            }
+            Ins::Lambda(k, ops) => {
+                let views: Vec<Option<V>> = ops.iter().map(view).collect();
+                match self.lambdas.get(*k as usize) {
+                    Some(code) => crate::lambda::apply(code, &views, &mut out, &mut None),
+                    None => R::V(V::Null),
+                }
             }
         };
         match r {
