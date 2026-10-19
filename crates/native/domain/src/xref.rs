@@ -138,6 +138,12 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         .collect();
     let still_used = placed_blocks(&outside, &ours_by_id);
     old_nested.retain(|b| !still_used.contains(b));
+    // A block the reference brought before keeps its id when it comes again under the same name: its inserts and the
+    // ties into its pieces stay with it.
+    let old_ids_by_name: HashMap<String, String> = old_nested
+        .iter()
+        .filter_map(|b| ours_by_id.get(b).map(|def| (fold(str_of(def, "name")), b.clone())))
+        .collect();
     arr_mut(&mut ours, "blocks").retain(|b| str_of(b, "id") != id && !old_nested.contains(str_of(b, "id")));
     let skip = overlaid(theirs);
     let all = arr(theirs, "entities");
@@ -193,16 +199,20 @@ pub fn load_json(ours: &Value, theirs: &Value, name: &str, id: &str, source: Xre
         .filter(|b| placed.contains(str_of(b, "id")))
         .cloned()
         .collect();
-    let block_of: HashMap<String, String> = brought
-        .iter()
-        .map(|b| (str_of(b, "id").to_owned(), nested_id(id, str_of(b, "id"))))
-        .collect();
     let taken_names: Vec<String> = arr(&ours, "blocks").iter().map(|b| str_of(b, "name").to_owned()).collect();
     let incoming: Vec<String> = brought
         .iter()
         .map(|b| format!("{name}|{}", str_of(b, "name")))
         .collect();
     let names = unique_names(&taken_names, &incoming);
+    let block_of: HashMap<String, String> = brought
+        .iter()
+        .zip(&names)
+        .map(|(b, n)| {
+            let new = old_ids_by_name.get(&fold(n)).cloned().unwrap_or_else(|| nested_id(id, str_of(b, "id")));
+            (str_of(b, "id").to_owned(), new)
+        })
+        .collect();
     // Styles by name: theirs mapped to ours of the same name; a missing one dropped from the object (the reference
     // draws with the drawing's styles, as AutoCAD's binds its own only on Bind).
     let styles: HashMap<String, Option<String>> = {

@@ -502,6 +502,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut relations = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
+    let mut xref_paths = Vec::new();
     let (mut text_styles, mut dimension_styles) = (Vec::new(), Vec::new());
     let mut leader_styles = Vec::new();
     let mut wall_styles = Vec::new();
@@ -793,6 +794,18 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             }
             "ucs" if has.ucs => ucs = Some(ucs::ucs(r)?),
             "namedUcs" if has.ucs => named_ucs = ucs::named_ucs(r)?,
+            "xrefPaths" if has.xref_paths => {
+                let at = r.position();
+                let paths = list(r, |r, _| text(r))?;
+                if paths.is_empty() || kentos_contracts::sanitized_xref_paths(paths.clone()) != paths {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "arama yolları kırpılmış, boş olmayan ve yinelenmeyen en çok 64 yol olmalı",
+                    ));
+                }
+                xref_paths = paths;
+            }
             "namedViews" if has.views => named_views = views::named_views(r, has.viewmarks)?,
             "textStyles" if has.styles => text_styles = styles::text_styles(r)?,
             // Schema 67 (docs/adr/0326 §4): the leader styles, as their JSON.
@@ -947,6 +960,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
         sources,
         length_style,
         domains,
+        xref_paths,
     })
 }
 

@@ -522,11 +522,14 @@ pub const SCHEMA_WITH_PHASES: u32 = 82;
 /// Schema 83 (docs/adr/0348 §1): a block definition's external reference source (`xref`, its JSON), written only when
 /// the drawing has one.
 pub const SCHEMA_WITH_XREFS: u32 = 83;
+/// Schema 84 (docs/adr/0349 §1): the settings' `xrefPaths`, the folders external references are looked for in, written
+/// only when the project has one.
+pub const SCHEMA_WITH_XREF_PATHS: u32 = 84;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 82] = [
+pub const SCHEMAS: [u32; 83] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -609,6 +612,7 @@ pub const SCHEMAS: [u32; 82] = [
     SCHEMA_WITH_VIEWMARKS,
     SCHEMA_WITH_PHASES,
     SCHEMA_WITH_XREFS,
+    SCHEMA_WITH_XREF_PATHS,
 ];
 
 /// The file a drawing is saved as.

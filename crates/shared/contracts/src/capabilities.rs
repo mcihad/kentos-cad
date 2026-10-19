@@ -1492,6 +1492,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Bağlı dosyaların durumu (docs/adr/0349 §2).
+    Entry {
+        id: "cad.assets.check",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
     // Pafta seti (docs/adr/0347 §1).
     Entry {
         id: "cad.sheets.set",

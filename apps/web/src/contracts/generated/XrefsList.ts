@@ -7,4 +7,8 @@ export type XrefsList = {
 /**
  * The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.
  */
-drawing?: string, };
+drawing?: string, 
+/**
+ * Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
+ */
+affected?: boolean, };

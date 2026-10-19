@@ -342,6 +342,11 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub length_style: Option<LengthStyle>,
+    /// The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
+    /// to the project file's folder with `/` between their parts.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub xref_paths: Vec<String>,
 }
 
 /// The refraction coefficient of trigonometric heights when a project names
@@ -777,6 +782,7 @@ impl ProjectSettings {
         }
         self.named_ucs = crate::sanitized_named_ucs(std::mem::take(&mut self.named_ucs));
         self.named_views = crate::sanitized_named_views(std::mem::take(&mut self.named_views));
+        self.xref_paths = crate::sanitized_xref_paths(std::mem::take(&mut self.xref_paths));
         self.forms = crate::sanitized_forms(std::mem::take(&mut self.forms));
         // A feet-and-inches style is an inch or foot drawing's; decimal is no setting (docs/adr/0262 §2).
         if self.length_style == Some(LengthStyle::Decimal) || !self.unit().imperial() {

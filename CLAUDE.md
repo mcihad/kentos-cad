@@ -715,6 +715,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   reload, unload, repath, detach, bind; yeniden yüklemede nesne yerel kimliğini korur, bağlar onunla gider; döngü `xref_cycle`) ve
   salt okunur `cad.xrefs.list` (yüklü, boşaltılmış, bulunamadı, değişti); kayıtta göreli yol; CAD › Ekle › Dış başvuru (Dış başvuru
   ekle, Dış başvurular), açılışta değişen ve bulunamayan söylenir; kurallar `kentos_domain::xref`; Python ve MCP (ADR 0348);
+  bağlı dosyalar ve arama yolları: projenin `xrefPaths`'i (`.kcad` şema 84, `FORMATS_VERSION` 91; `cad.xrefs.edit`'in `paths`'i), kaynak
+  kayıtlı yolda, göreli yolda, sonra arama yollarında aranır, denenen yollar söylenir (`links::find`); salt okunur `cad.assets.check`
+  (dış başvurular, bağlı resim, raster, nokta bulutu, tablo, ek ve kaynaklar: bulunduğu yer, `via`, `ok`/`changed`/`missing`/…,
+  denenenler); `cad.xrefs.list`'in `affected`'i (etkilenen paftalar ve adlı görünümler); masaüstü yüklü dış başvuruların dosyalarına beş
+  saniyede bir bakar, değişen kaynağı çizimin üstünde kartla söyler (Yeniden yükle, Dış başvurular), kendiliğinden yüklemez; Dış
+  başvurular penceresinde Arama yolları ve Diğer bağlı dosyalar (ADR 0349);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

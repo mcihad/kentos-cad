@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 use iced::widget::{Column, Row, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
 use kentos_contracts::{
-    CommandResult, CommandWarning, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefState, XrefsEdit, XrefsEdited,
+    AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, CommandResult, CommandWarning, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefState, XrefsEdit, XrefsEdited,
     XrefsList, XrefsOperation,
 };
 use kentos_interaction::pick::PickPoint;
@@ -33,6 +33,7 @@ const DETACH: &str = "Kaldır";
 const BIND: &str = "Bağla";
 const BIND_INSERT: &str = "Bağla, katmanları birleştir";
 const ADD: &str = "Ekle…";
+const ADD_PATH: &str = "Klasör ekle…";
 const IN_PLACE: &str = "Yerinde ekle";
 const ON_SCREEN: &str = "Noktayı seç";
 const CANCEL: &str = "Vazgeç";
@@ -54,6 +55,27 @@ impl std::fmt::Display for Mode {
 }
 
 const MODES: [Mode; 2] = [Mode::Attach, Mode::Overlay];
+
+/// The window's parts.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Section {
+    #[default]
+    References,
+    Paths,
+    Others,
+}
+
+impl std::fmt::Display for Section {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::References => "Dış başvurular",
+            Self::Paths => "Arama yolları",
+            Self::Others => "Diğer bağlı dosyalar",
+        })
+    }
+}
+
+const SECTIONS: [Section; 3] = [Section::References, Section::Paths, Section::Others];
 
 /// Dış başvuru ekle's choices, before the point.
 #[derive(Clone, Debug)]
@@ -77,6 +99,11 @@ pub struct State {
     /// Dış başvuru ekle's window, or its choices while the point is picked on the drawing.
     pub attach: Option<Attach>,
     pub picking: bool,
+    /// The project's search paths (docs/adr/0349 §1).
+    pub paths: Vec<String>,
+    /// The drawing's other linked files: pictures, rasters, point clouds, tables, attachments, sources.
+    pub others: Vec<AssetStatus>,
+    pub section: Section,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -103,6 +130,10 @@ pub enum Event {
     BindMenu,
     Bind(XrefBindMode),
     Add,
+    Section(Section),
+    AddPath,
+    PathPicked(Option<PathBuf>),
+    RemovePath(usize),
     Close,
 }
 
@@ -131,11 +162,29 @@ impl App {
 
     fn xrefs_listed(&self) -> Option<Vec<XrefInfo>> {
         let doc = self.document.as_ref()?;
-        let input = XrefsList { drawing: self.drawing_path() };
+        let input = XrefsList { drawing: self.drawing_path(), affected: false };
         match xrefs_list::plan(&ExecutionContext::new(&mut doc.model.clone()), &input) {
             CommandResult::Completed { output, .. } => Some(nested_under(output.xrefs)),
             _ => None,
         }
+    }
+
+    /// The other linked files (Diğer bağlı dosyalar) and the search paths, as the drawing has them now.
+    fn xrefs_others(&mut self) {
+        let Some(doc) = self.document.as_ref() else { return };
+        let drawing = self.drawing_path();
+        // Pictures, tables and attachments with their SHA-256 where one is kept; a bound layer's source (a large file) only
+        // looked for.
+        let near = AssetsCheck {
+            drawing: drawing.clone(),
+            kinds: Some(vec![AssetKind::Image, AssetKind::Raster, AssetKind::PointCloud, AssetKind::Table, AssetKind::Attachment]),
+            digests: Some(true),
+        };
+        let sources = AssetsCheck { drawing, kinds: Some(vec![AssetKind::Source]), digests: Some(false) };
+        let mut others = kentos_native_application::assets_check::check_in(&doc.model, &near).assets;
+        others.extend(kentos_native_application::assets_check::check_in(&doc.model, &sources).assets);
+        self.xrefs.others = others;
+        self.xrefs.paths = doc.model.settings().xref_paths.clone();
     }
 
     /// Dış başvurular (`xref.manager`).
@@ -147,6 +196,7 @@ impl App {
         self.xrefs.listed = self.xrefs_listed();
         self.xrefs.chosen = self.xrefs.listed.as_ref().filter(|l| !l.is_empty()).map(|_| 0);
         self.xrefs.bind_menu = false;
+        self.xrefs_others();
         self.dialog = Some(Dialog::Xrefs);
     }
 
@@ -181,7 +231,7 @@ impl App {
     }
 
     /// Runs `operation` as one step; the answer said, the list read again.
-    fn xref_run(&mut self, operation: XrefsOperation) -> Option<XrefsEdited> {
+    pub(crate) fn xref_run(&mut self, operation: XrefsOperation) -> Option<XrefsEdited> {
         let locked = self.tree_locked();
         let drawing = self.drawing_path();
         let doc = self.document.as_mut()?;
@@ -207,7 +257,10 @@ impl App {
             self.xrefs.listed = self.xrefs_listed();
             let n = self.xrefs.listed.as_ref().map_or(0, Vec::len);
             self.xrefs.chosen = self.xrefs.chosen.filter(|k| *k < n).or((n > 0).then_some(0));
+            self.xrefs_others();
         }
+        // A command answered: the files as they are now are the ones seen.
+        self.xref_watch_seen();
         Some(output)
     }
 
@@ -268,23 +321,19 @@ impl App {
         true
     }
 
-    /// What the drawing's references are when it opens: a changed or missing source said, never loaded silently.
-    pub(crate) fn xrefs_opened(&mut self) {
-        let Some(listed) = self.xrefs_listed() else { return };
-        let changed: Vec<&str> = listed.iter().filter(|x| x.state == XrefState::Changed).map(|x| x.name.as_str()).collect();
-        let missing: Vec<&str> = listed.iter().filter(|x| x.state == XrefState::Missing && x.parent.is_none()).map(|x| x.name.as_str()).collect();
-        if !changed.is_empty() {
-            self.warn(format!(
-                "Dış başvuruların kaynağı değişti: {}. Çizim son yüklenen hâlini gösteriyor; yenisini almak için Ekle › Dış başvurular'da Yeniden yükle'ye basın.",
-                changed.join(", ")
-            ));
+    /// The search paths written (a setting): the list and its states read again.
+    fn xrefs_paths(&mut self, paths: Vec<String>) {
+        if let Some(done) = self.xref_run(XrefsOperation::Paths { paths }) {
+            self.say(
+                Level::Success,
+                if done.paths.is_empty() {
+                    "Dış başvuruların arama yolu yok.".to_owned()
+                } else {
+                    format!("Dış başvuruların arama yolları: {}.", done.paths.join("; "))
+                },
+            );
         }
-        if !missing.is_empty() {
-            self.warn(format!(
-                "Dış başvuruların kaynağı bulunamadı: {}. Çizim son yüklenen hâlini gösteriyor; Ekle › Dış başvurular'da Yolu değiştir… ile dosyayı gösterin.",
-                missing.join(", ")
-            ));
-        }
+        self.open_xrefs();
     }
 
     fn chosen_name(&self) -> Option<String> {
@@ -389,6 +438,33 @@ impl App {
                 self.dialog = None;
                 return self.start_xref_attach();
             }
+            Event::AddPath => {
+                if let Picker::File(path) = &self.picker {
+                    let folder = path.parent().map(Path::to_path_buf);
+                    return Task::done(msg(Event::PathPicked(folder)));
+                }
+                return Task::perform(
+                    async {
+                        let folder = rfd::AsyncFileDialog::new().set_title("Arama yolu").pick_folder().await?;
+                        Some(folder.path().to_path_buf())
+                    },
+                    |folder| msg(Event::PathPicked(folder)),
+                );
+            }
+            Event::Section(s) => self.xrefs.section = s,
+            Event::PathPicked(None) => {}
+            Event::PathPicked(Some(folder)) => {
+                let mut paths = self.xrefs.paths.clone();
+                paths.push(folder.display().to_string());
+                self.xrefs_paths(paths);
+            }
+            Event::RemovePath(k) => {
+                let mut paths = self.xrefs.paths.clone();
+                if k < paths.len() {
+                    paths.remove(k);
+                    self.xrefs_paths(paths);
+                }
+            }
             Event::Close => {
                 self.xrefs = State::default();
                 self.dialog = None;
@@ -430,11 +506,17 @@ impl App {
                 Some(p) => meta.push(format!("“{p}” getirdi")),
                 None => meta.push(format!("{} yerleştirme", x.inserts)),
             }
+            let place = match x.via {
+                AssetVia::SearchPath => format!("{} · arama yolundan bulundu", x.path),
+                AssetVia::Relative => format!("{} · göreli yolundan bulundu", x.path),
+                _ if !x.tried.is_empty() => format!("Denenen: {}", x.tried.join("; ")),
+                _ => x.path.clone(),
+            };
             let text = Column::new()
                 .spacing(2)
                 .push(label::body(x.name.clone()).wrapping(iced::widget::text::Wrapping::None))
                 .push(label::caption(meta.join(" · ")))
-                .push(label::caption(x.path.clone()).wrapping(iced::widget::text::Wrapping::None));
+                .push(label::caption(place).wrapping(iced::widget::text::Wrapping::None));
             let glyph = match x.state {
                 XrefState::Loaded => "xrefAttach",
                 XrefState::Unloaded => "xrefManager",
@@ -467,12 +549,19 @@ impl App {
         if chosen.is_some_and(|x| x.parent.is_some()) {
             actions = actions.push(label::caption("İç içe olanı onu getiren değiştirir."));
         }
-        let mut body = Column::new()
-            .spacing(12)
-            .push(words::summary(vec![line]))
-            .push(iced::widget::scrollable(list).height(300.0))
-            .push(actions);
-        if self.xrefs.bind_menu && top {
+        let sections = Segmented::new(SECTIONS, self.xrefs.section, |s| msg(Event::Section(s)));
+        let mut body = Column::new().spacing(12).push(sections);
+        match self.xrefs.section {
+            Section::References => {
+                body = body
+                    .push(words::summary(vec![line]))
+                    .push(iced::widget::scrollable(list).height(300.0))
+                    .push(actions);
+            }
+            Section::Paths => body = body.push(self.xref_paths_view()),
+            Section::Others => body = body.push(self.xref_others_view()),
+        }
+        if self.xrefs.bind_menu && top && self.xrefs.section == Section::References {
             body = body.push(
                 container(
                     Column::new()
@@ -492,6 +581,92 @@ impl App {
                 .width(720.0),
             msg(Event::Close),
         )
+    }
+
+    /// Arama yolları: the project's folders in order, each removable, and Klasör ekle….
+    fn xref_paths_view(&self) -> Element<'_, Message> {
+        let line = words::text_line(
+            Kind::Info,
+            "Kaynak kayıtlı yolunda ve açık çizimin klasöründeki göreli yolunda yoksa bu klasörlerde, sırasıyla aranır: önce göreli yoluyla, sonra dosyanın adıyla. Göreli klasör projenin dosyasının klasöründendir. Arama yolları projenin ayarıdır.",
+        );
+        let mut list = Column::new().spacing(4);
+        if self.xrefs.paths.is_empty() {
+            list = list.push(label::caption("Arama yolu yok."));
+        }
+        for (k, p) in self.xrefs.paths.iter().enumerate() {
+            list = list.push(
+                container(
+                    row![
+                        icon(Icon::Folder).size(16.0).tone(Tone::Muted),
+                        container(label::body(p.clone()).wrapping(iced::widget::text::Wrapping::None)).width(Fill).clip(true),
+                        button(icon(Icon::Close).size(12.0).tone(Tone::Muted))
+                            .on_press(msg(Event::RemovePath(k)))
+                            .padding(4)
+                            .style(style::button::ghost),
+                    ]
+                    .spacing(10)
+                    .align_y(Center),
+                )
+                .padding([4, 10])
+                .style(style::container::field_box)
+                .width(Fill),
+            );
+        }
+        Column::new()
+            .spacing(12)
+            .push(words::summary(vec![line]))
+            .push(iced::widget::scrollable(list).height(260.0))
+            .push(Row::new().push(words::secondary(ADD_PATH, Some(msg(Event::AddPath)))))
+            .into()
+    }
+
+    /// Diğer bağlı dosyalar: the drawing's pictures, rasters, point clouds, tables, attachments and sources, read-only.
+    fn xref_others_view(&self) -> Element<'_, Message> {
+        let others = &self.xrefs.others;
+        let bad = others.iter().filter(|a| matches!(a.state, AssetState::Missing | AssetState::Changed)).count();
+        let line = if others.is_empty() {
+            words::text_line(Kind::Info, "Çizimin başka bağlı dosyası yok: resimler ve rasterler gömülü ya da hiç yok.")
+        } else if bad > 0 {
+            words::text_line(Kind::Warn, format!("{} bağlı dosyanın {bad} tanesi bulunamadı ya da değişti.", others.len()))
+        } else {
+            words::text_line(Kind::Ok, format!("{} bağlı dosya, hepsi yerinde.", others.len()))
+        };
+        let mut list = Column::new().spacing(4);
+        for a in others {
+            let what = match a.kind {
+                AssetKind::Image => "Resim",
+                AssetKind::Raster => "Raster",
+                AssetKind::PointCloud => "Nokta bulutu",
+                AssetKind::Table => "Tablo",
+                AssetKind::Attachment => "Ek",
+                AssetKind::Source => "Bağlı katman",
+                AssetKind::Xref => "Dış başvuru",
+            };
+            let (state, kind) = match a.state {
+                AssetState::Ok => ("Yerinde", Kind::Ok),
+                AssetState::Changed => ("Değişti", Kind::Warn),
+                AssetState::Missing => ("Bulunamadı", Kind::Error),
+                AssetState::Unloaded => ("Boşaltıldı", Kind::Info),
+                AssetState::Remote => ("Adres", Kind::Info),
+                AssetState::Database => ("Veritabanı", Kind::Info),
+            };
+            let place = match (&a.found, a.via) {
+                (Some(f), AssetVia::Relative) => format!("{f} · göreli yolundan"),
+                (Some(f), _) => f.clone(),
+                (None, _) if !a.tried.is_empty() => format!("Denenen: {}", a.tried.join("; ")),
+                (None, _) => a.path.clone(),
+            };
+            let text = Column::new()
+                .spacing(2)
+                .push(label::body(format!("{what} · {}", a.name)).wrapping(iced::widget::text::Wrapping::None))
+                .push(label::caption(place).wrapping(iced::widget::text::Wrapping::None));
+            list = list.push(
+                container(row![container(text).width(Fill).clip(true), state_chip(kind, state)].spacing(10).align_y(Center))
+                    .padding([6, 10])
+                    .width(Fill),
+            );
+        }
+        Column::new().spacing(12).push(words::summary(vec![line])).push(iced::widget::scrollable(list).height(300.0)).into()
     }
 
     pub(crate) fn xref_attach_view(&self) -> Element<'_, Message> {
@@ -553,6 +728,7 @@ impl App {
             Control::Press(IN_PLACE) => Some(msg(Event::InPlace)),
             Control::Press(ON_SCREEN) => Some(msg(Event::OnScreen)),
             Control::Press(CANCEL) => Some(msg(Event::CancelAttach)),
+            Control::Press(ADD_PATH) => Some(msg(Event::AddPath)),
             other => return Err(format!("“{TITLE}” penceresinde {other} yok")),
         })
     }

@@ -2778,7 +2778,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_XREFS_EDIT.into(),
             version: crate::CAD_XREFS_EDIT_VERSION,
             title: "Dış başvuru".into(),
-            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir. \
+            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır). \
                       Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler."
                 .into(),
             aliases: vec![],
@@ -2810,7 +2810,7 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_XREFS_LIST.into(),
             version: crate::CAD_XREFS_LIST_VERSION,
             title: "Dış başvurular".into(),
-            summary: "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu."
+            summary: "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir."
                 .into(),
             aliases: vec![],
             effect: CommandEffect::Query,
@@ -2824,11 +2824,49 @@ pub fn catalog() -> CommandCatalog {
             output: schema::<crate::XrefsListed>(),
             plan: Some(schema::<crate::XrefsListed>()),
             capabilities: None,
-            examples: vec![CommandExample {
-                title: "Dış başvurular ve durumları".into(),
-                input: json!({ "drawing": "/proje/ofis.kcad" }),
-                output: None,
-            }],
+            examples: vec![
+                CommandExample {
+                    title: "Dış başvurular ve durumları".into(),
+                    input: json!({ "drawing": "/proje/ofis.kcad" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Etkilenen paftalar ve görünümlerle".into(),
+                    input: json!({ "drawing": "/proje/ofis.kcad", "affected": true }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_ASSETS_CHECK.into(),
+            version: crate::CAD_ASSETS_CHECK_VERSION,
+            title: "Bağlı dosyalar".into(),
+            summary: "Çizimin bağlı olduğu bütün dosyaları tek listede verir; çizimi değiştirmez: dış başvurular (arama yollarıyla), bağlı resimler, rasterler, nokta bulutları, bağlı tablolar, ekler ve bağlı katmanların kaynakları. Her biri: türü, kimin (uid, block, source), adı, kayıtlı yolu, bulunduğu yer ve nasıl (path, relative, searchPath, none; adres ve veritabanına bakılmaz), durumu (ok, changed: kayıtlı SHA-256'dan başka, missing, unloaded, remote, database), denenen yollar. drawing açık çizimin dosyası; kinds yalnız bu türler; digests: false özet hesaplamaz."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::AssetsCheck>(),
+            output: schema::<crate::AssetsChecked>(),
+            plan: Some(schema::<crate::AssetsChecked>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Bütün bağlı dosyalar".into(),
+                    input: json!({ "drawing": "/proje/ofis.kcad" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yalnız dış başvurular ve resimler, özetsiz".into(),
+                    input: json!({ "drawing": "/proje/ofis.kcad", "kinds": ["xref", "image"], "digests": false }),
+                    output: None,
+                },
+            ],
         },
         CommandDescriptor {
             id: crate::CAD_SCHEDULES_CREATE.into(),
@@ -7500,6 +7538,9 @@ mod tests {
                     }
                     crate::CAD_XREFS_LIST => {
                         serde_json::from_value::<crate::XrefsList>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_ASSETS_CHECK => {
+                        serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

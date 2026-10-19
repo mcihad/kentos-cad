@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 
 use kentos_contracts::encoding::sha256_hex;
 use kentos_contracts::{
-    BlockDefinition, BlockId, CommandResult, CommandWarning, DocumentSnapshotV2, Entity, EntityBase, InsertEntity,
+    AssetVia, BlockDefinition, BlockId, CommandResult, CommandWarning, DocumentSnapshotV2, Entity, EntityBase, InsertEntity,
     Vec2, XrefBindMode, XrefInfo, XrefKind, XrefSource, XrefState, XrefsEdit, XrefsEdited, XrefsList,
     XrefsListed, XrefsOperation,
 };
@@ -21,7 +21,7 @@ use crate::ExecutionContext;
 use crate::checks::{self, Stop, error};
 use crate::codes;
 use crate::exchange_write::{Counts, put_blocks, put_nodes};
-use crate::source_places::{relative_path, resolve};
+use crate::source_places::relative_path;
 
 fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
@@ -144,15 +144,10 @@ fn cycle(drawing: Option<&str>, source: &Source, at: &str) -> Result<(), Stop> {
     Ok(())
 }
 
-/// The source's file as found: its path, else its relative path's from the drawing's folder.
-fn found(x: &XrefSource, drawing: Option<&str>) -> Option<PathBuf> {
-    let own = PathBuf::from(&x.path);
-    if own.is_file() {
-        return Some(own);
-    }
-    let folder = drawing.and_then(|d| Path::new(d).parent().map(Path::to_path_buf))?;
-    let p = resolve(&folder, x.relative.as_deref()?);
-    p.is_file().then_some(p)
+/// The source's file as looked for (docs/adr/0349 §1): its path, its relative path from the drawing's folder, the
+/// project's search paths.
+fn found(doc: &Document, x: &XrefSource, drawing: Option<&str>) -> crate::links::Found {
+    crate::links::find(&x.path, x.relative.as_deref(), drawing, &doc.settings().xref_paths)
 }
 
 fn relative_of(drawing: Option<&str>, file: &Path) -> Option<String> {
@@ -213,6 +208,7 @@ enum Plan {
     Unload { id: BlockId, name: String },
     Detach { id: BlockId, name: String },
     Bind { id: BlockId, name: String, mode: XrefBindMode },
+    Paths(Vec<String>),
 }
 
 fn numbers(at: Option<Vec2>, scale: Option<f64>, rotation: Option<f64>) -> Result<(), Stop> {
@@ -299,7 +295,7 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
             let (path, label) = match &input.operation {
                 XrefsOperation::Repath { path, .. } => (path.clone(), "Dış başvurunun yolunu değiştir"),
                 _ => {
-                    let at = found(&x, drawing).unwrap_or_else(|| PathBuf::from(&x.path));
+                    let at = found(doc, &x, drawing).at.unwrap_or_else(|| PathBuf::from(&x.path));
                     (at.to_string_lossy().into_owned(), "Dış başvuruyu yeniden yükle")
                 }
             };
@@ -328,6 +324,10 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
             top(def, &x, doc)?;
             checks::revision(doc, input.expected_revision.as_deref())?;
             Plan::Detach { id: def.id, name: def.name.clone() }
+        }
+        XrefsOperation::Paths { paths } => {
+            checks::revision(doc, input.expected_revision.as_deref())?;
+            Plan::Paths(kentos_contracts::sanitized_xref_paths(paths.clone()))
         }
         XrefsOperation::Bind { name, mode } => {
             let (def, x) = find(doc, name)?;
@@ -389,6 +389,7 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
                     nested: loaded.nested.into_iter().map(|(_, n)| n).collect(),
                     removed: 0,
                     merged: Vec::new(),
+                    paths: Vec::new(),
                     revision: doc.revision().to_string(),
                 },
                 warnings,
@@ -441,6 +442,12 @@ fn write(doc: &mut Document, input: &XrefsEdit) -> Result<(XrefsEdited, Vec<Comm
             }
             doc.end_group(group);
             Ok((XrefsEdited { name, removed, revision: doc.revision().to_string(), ..Default::default() }, warnings))
+        }
+        Plan::Paths(paths) => {
+            let mut settings = doc.settings().clone();
+            settings.xref_paths = paths.clone();
+            doc.set_settings(settings);
+            Ok((XrefsEdited { paths, revision: doc.revision().to_string(), ..Default::default() }, warnings))
         }
         Plan::Bind { id, name, mode } => {
             let gone = brought(doc, id);
@@ -516,6 +523,71 @@ pub mod edit {
     }
 }
 
+/// The inserts that show `block`'s content: its own, or for a reference another brought, the top one's (by lasting id).
+fn showing(doc: &Document, block: BlockId) -> Vec<String> {
+    let mut top = block;
+    for _ in 0..64 {
+        match doc.block(top).and_then(|b| b.xref.as_ref()).and_then(|x| x.parent) {
+            Some(p) => top = p,
+            None => break,
+        }
+    }
+    inserts_of(doc, top).into_iter().filter_map(|s| doc.uid(s).map(|u| u.to_string())).collect()
+}
+
+/// The sheets (by name, docs/adr/0347's `shows`) and the named views (by name, their window meeting the box) the
+/// objects `uids` are seen on.
+fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
+    if uids.is_empty() {
+        return (Vec::new(), Vec::new());
+    }
+    let mut sheets: Vec<String> = Vec::new();
+    let input = kentos_contracts::SheetsSet { uids: Some(uids.to_vec()) };
+    if let Ok(set) = crate::sheets_set::set_of(doc, &input) {
+        for a in set.affected.unwrap_or_default() {
+            if !a.reasons.contains(&kentos_contracts::AffectReason::Shows) {
+                continue;
+            }
+            if let Some(s) = set.sheets.iter().find(|s| s.id == a.sheet)
+                && !sheets.contains(&s.name)
+            {
+                sheets.push(s.name.clone());
+            }
+        }
+    }
+    let blocks = crate::blocks::core_blocks(doc.blocks());
+    let font = crate::geometry::drawing_font(doc.settings().drawing_font);
+    let boxes: Vec<kentos_geometry_core::geometry::Bounds> = uids
+        .iter()
+        .filter_map(|u| {
+            let slot = doc.slot_of(kentos_domain::Uuid::parse_str(u).ok()?)?;
+            let e = doc.get(slot)?;
+            Some(kentos_geometry_core::ops::arrange::object_bounds(&crate::geometry::shape(e), &blocks, font))
+        })
+        .collect();
+    let views = doc
+        .settings()
+        .named_views
+        .iter()
+        .filter(|v| {
+            let (c, s) = (v.twist.cos(), v.twist.sin());
+            let (hw, hh) = (v.width / 2.0, v.height / 2.0);
+            let corners = [(-hw, -hh), (hw, -hh), (hw, hh), (-hw, hh)].map(|(x, y)| {
+                (v.center.x + x * c - y * s, v.center.y + x * s + y * c)
+            });
+            let min_x = corners.iter().map(|p| p.0).fold(f64::INFINITY, f64::min);
+            let max_x = corners.iter().map(|p| p.0).fold(f64::NEG_INFINITY, f64::max);
+            let min_y = corners.iter().map(|p| p.1).fold(f64::INFINITY, f64::min);
+            let max_y = corners.iter().map(|p| p.1).fold(f64::NEG_INFINITY, f64::max);
+            boxes
+                .iter()
+                .any(|b| b.min_x <= max_x && min_x <= b.max_x && b.min_y <= max_y && min_y <= b.max_y)
+        })
+        .map(|v| v.name.clone())
+        .collect();
+    (sheets, views)
+}
+
 /// The drawing's references with their state.
 pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
     let drawing = input.drawing.as_deref();
@@ -525,11 +597,16 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
         .iter()
         .filter_map(|b| {
             let x = b.xref.as_ref()?;
-            let at = found(x, drawing);
+            // An unloaded reference's file is not looked at.
+            let look = if x.unloaded {
+                crate::links::Found { at: None, via: AssetVia::None, tried: Vec::new() }
+            } else {
+                found(doc, x, drawing)
+            };
             let state = if x.unloaded {
                 XrefState::Unloaded
             } else {
-                match &at {
+                match &look.at {
                     None => XrefState::Missing,
                     Some(p) => match std::fs::read(p) {
                         Ok(bytes) if sha256_hex(&bytes) == x.digest => XrefState::Loaded,
@@ -538,17 +615,22 @@ pub fn list_of(doc: &Document, input: &XrefsList) -> XrefsListed {
                     },
                 }
             };
+            let (sheets, views) = if input.affected { affected_by(doc, &showing(doc, b.id)) } else { Default::default() };
             Some(XrefInfo {
                 name: b.name.clone(),
                 block: b.id,
                 kind: x.kind,
-                path: at.map_or_else(|| x.path.clone(), |p| p.to_string_lossy().into_owned()),
+                path: look.at.as_ref().map_or_else(|| x.path.clone(), |p| p.to_string_lossy().into_owned()),
                 relative: x.relative.clone(),
                 state,
                 parent: x.parent.and_then(|p| names.get(&p).cloned()),
                 inserts: u32::try_from(inserts_of(doc, b.id).len()).unwrap_or(u32::MAX),
                 objects: u32::try_from(b.entities.len()).unwrap_or(u32::MAX),
                 group: x.group.as_ref().and_then(|g| doc.layers().get(g).map(|n| n.name.clone())),
+                via: look.via,
+                tried: look.tried,
+                sheets,
+                views,
             })
         })
         .collect();

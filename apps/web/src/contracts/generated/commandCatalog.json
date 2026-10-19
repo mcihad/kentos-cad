@@ -12983,6 +12983,13 @@
                   }
                 ],
                 "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
+              },
+              "xrefPaths": {
+                "description": "The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative\nto the project file's folder with `/` between their parts.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -25167,6 +25174,13 @@
                   }
                 ],
                 "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
+              },
+              "xrefPaths": {
+                "description": "The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative\nto the project file's folder with `/` between their parts.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -39936,6 +39950,13 @@
                   }
                 ],
                 "description": "The project's type; none while it is not asked (files written before\ntypes). The former Hibrit mode reads as written and means the same\n(see [`ProjectSettings::project_type`])."
+              },
+              "xrefPaths": {
+                "description": "The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative\nto the project file's folder with `/` between their parts.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -530234,7 +530255,7 @@
       "id": "cad.xrefs.edit",
       "version": 1,
       "title": "Dış başvuru",
-      "summary": "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir. Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.",
+      "summary": "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır). Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -530431,6 +530452,26 @@
                 "type": "object"
               },
               {
+                "description": "The project's search paths (docs/adr/0349 §1), all of them in order: a setting, not an undo step.",
+                "properties": {
+                  "kind": {
+                    "const": "paths",
+                    "type": "string"
+                  },
+                  "paths": {
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "paths"
+                ],
+                "type": "object"
+              },
+              {
                 "description": "Made an ordinary block, with those it brought.",
                 "properties": {
                   "kind": {
@@ -530543,6 +530584,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "paths": {
+            "description": "`paths`: the project's search paths as kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "`detach`: the inserts removed.",
             "format": "uint32",
@@ -530625,6 +530673,13 @@
             "type": "integer",
             "x-unit": "count"
           },
+          "paths": {
+            "description": "`paths`: the project's search paths as kept.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
           "removed": {
             "description": "`detach`: the inserts removed.",
             "format": "uint32",
@@ -530695,7 +530750,7 @@
       "id": "cad.xrefs.list",
       "version": 1,
       "title": "Dış başvurular",
-      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu.",
+      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.",
       "aliases": [],
       "effect": "query",
       "hosts": [
@@ -530713,6 +530768,10 @@
         "additionalProperties": false,
         "description": "Input of `cad.xrefs.list` v1 (“Dış başvurular”): read-only.",
         "properties": {
+          "affected": {
+            "description": "Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).",
+            "type": "boolean"
+          },
           "drawing": {
             "description": "The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.",
             "type": [
@@ -530726,6 +530785,41 @@
       },
       "output": {
         "$defs": {
+          "AssetVia": {
+            "description": "Where a linked file was found.",
+            "oneOf": [
+              {
+                "const": "path",
+                "description": "At its path as kept.",
+                "type": "string"
+              },
+              {
+                "const": "relative",
+                "description": "At its relative path, from the open drawing's folder.",
+                "type": "string"
+              },
+              {
+                "const": "searchPath",
+                "description": "In one of the project's search paths (an external reference only, docs/adr/0349 §1).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nowhere.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address: not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: not looked at.",
+                "type": "string"
+              }
+            ]
+          },
           "BlockId": {
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -530779,8 +530873,33 @@
                   "null"
                 ]
               },
+              "sheets": {
+                "description": "The sheets whose map frames show its inserts, by name (`affected`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "state": {
                 "$ref": "#/$defs/XrefState"
+              },
+              "tried": {
+                "description": "The places looked in, in order, when it was not found.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "via": {
+                "$ref": "#/$defs/AssetVia",
+                "description": "Where its source was found (docs/adr/0349 §1)."
+              },
+              "views": {
+                "description": "The named views whose window meets its inserts, by name (`affected`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -530790,7 +530909,8 @@
               "path",
               "state",
               "inserts",
-              "objects"
+              "objects",
+              "via"
             ],
             "type": "object"
           },
@@ -530852,6 +530972,41 @@
       },
       "plan": {
         "$defs": {
+          "AssetVia": {
+            "description": "Where a linked file was found.",
+            "oneOf": [
+              {
+                "const": "path",
+                "description": "At its path as kept.",
+                "type": "string"
+              },
+              {
+                "const": "relative",
+                "description": "At its relative path, from the open drawing's folder.",
+                "type": "string"
+              },
+              {
+                "const": "searchPath",
+                "description": "In one of the project's search paths (an external reference only, docs/adr/0349 §1).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nowhere.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address: not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: not looked at.",
+                "type": "string"
+              }
+            ]
+          },
           "BlockId": {
             "format": "uuid",
             "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
@@ -530905,8 +531060,33 @@
                   "null"
                 ]
               },
+              "sheets": {
+                "description": "The sheets whose map frames show its inserts, by name (`affected`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
               "state": {
                 "$ref": "#/$defs/XrefState"
+              },
+              "tried": {
+                "description": "The places looked in, in order, when it was not found.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "via": {
+                "$ref": "#/$defs/AssetVia",
+                "description": "Where its source was found (docs/adr/0349 §1)."
+              },
+              "views": {
+                "description": "The named views whose window meets its inserts, by name (`affected`).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
               }
             },
             "required": [
@@ -530916,7 +531096,8 @@
               "path",
               "state",
               "inserts",
-              "objects"
+              "objects",
+              "via"
             ],
             "type": "object"
           },
@@ -530984,6 +531165,668 @@
           "title": "Dış başvurular ve durumları",
           "input": {
             "drawing": "/proje/ofis.kcad"
+          }
+        },
+        {
+          "title": "Etkilenen paftalar ve görünümlerle",
+          "input": {
+            "affected": true,
+            "drawing": "/proje/ofis.kcad"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.assets.check",
+      "version": 1,
+      "title": "Bağlı dosyalar",
+      "summary": "Çizimin bağlı olduğu bütün dosyaları tek listede verir; çizimi değiştirmez: dış başvurular (arama yollarıyla), bağlı resimler, rasterler, nokta bulutları, bağlı tablolar, ekler ve bağlı katmanların kaynakları. Her biri: türü, kimin (uid, block, source), adı, kayıtlı yolu, bulunduğu yer ve nasıl (path, relative, searchPath, none; adres ve veritabanına bakılmaz), durumu (ok, changed: kayıtlı SHA-256'dan başka, missing, unloaded, remote, database), denenen yollar. drawing açık çizimin dosyası; kinds yalnız bu türler; digests: false özet hesaplamaz.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AssetKind": {
+            "description": "What a linked file is.",
+            "oneOf": [
+              {
+                "const": "xref",
+                "description": "An external reference's source drawing (docs/adr/0348).",
+                "type": "string"
+              },
+              {
+                "const": "image",
+                "description": "A linked image.",
+                "type": "string"
+              },
+              {
+                "const": "raster",
+                "description": "A linked raster.",
+                "type": "string"
+              },
+              {
+                "const": "pointCloud",
+                "description": "A point cloud's file.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A linked table's file.",
+                "type": "string"
+              },
+              {
+                "const": "attachment",
+                "description": "An object's attachment.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "A bound layer's source (docs/adr/0503).",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.assets.check` v1. No refusals: an unreadable file is `missing`, an unknown kind none listed.",
+        "properties": {
+          "digests": {
+            "description": "Whether a file whose SHA-256 is kept is read to compare it (default yes); no: `changed` is never said, a large\nfile is not read.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "drawing": {
+            "description": "The open drawing's file, an absolute path: relative paths and search paths are read from its folder. None: a\nrelative path is not looked for.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "kinds": {
+            "description": "Only these kinds; none: every kind.",
+            "items": {
+              "$ref": "#/$defs/AssetKind"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          }
+        },
+        "title": "AssetsCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AssetCounts": {
+            "description": "How many of each state.",
+            "properties": {
+              "changed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "missing": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ok": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "other": {
+                "description": "Unloaded, remote and database ones.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "ok",
+              "changed",
+              "missing",
+              "other"
+            ],
+            "type": "object"
+          },
+          "AssetKind": {
+            "description": "What a linked file is.",
+            "oneOf": [
+              {
+                "const": "xref",
+                "description": "An external reference's source drawing (docs/adr/0348).",
+                "type": "string"
+              },
+              {
+                "const": "image",
+                "description": "A linked image.",
+                "type": "string"
+              },
+              {
+                "const": "raster",
+                "description": "A linked raster.",
+                "type": "string"
+              },
+              {
+                "const": "pointCloud",
+                "description": "A point cloud's file.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A linked table's file.",
+                "type": "string"
+              },
+              {
+                "const": "attachment",
+                "description": "An object's attachment.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "A bound layer's source (docs/adr/0503).",
+                "type": "string"
+              }
+            ]
+          },
+          "AssetState": {
+            "description": "A linked file's state.",
+            "oneOf": [
+              {
+                "const": "ok",
+                "description": "Found, and the same as when read (or nothing kept to compare with).",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Found, and its SHA-256 is not the one kept.",
+                "type": "string"
+              },
+              {
+                "const": "missing",
+                "description": "Not found.",
+                "type": "string"
+              },
+              {
+                "const": "unloaded",
+                "description": "An external reference unloaded: its file is not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "remote",
+                "description": "An address.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table.",
+                "type": "string"
+              }
+            ]
+          },
+          "AssetStatus": {
+            "description": "One linked file.",
+            "properties": {
+              "block": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The block definition it is (an external reference) or in (an object of a block's)."
+              },
+              "current": {
+                "description": "The file's SHA-256 now, when it is not the one kept.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "digest": {
+                "description": "The SHA-256 kept, when one is.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "found": {
+                "description": "Where it was found.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/AssetKind"
+              },
+              "name": {
+                "description": "What it is called: an external reference's name, else the file's name.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The path as kept (or the address).",
+                "type": "string"
+              },
+              "relative": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "description": "The bound layer's source id (`kaynak-N`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "state": {
+                "$ref": "#/$defs/AssetState"
+              },
+              "tried": {
+                "description": "The places looked in, in order, when it was not found.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "description": "The object it belongs to (an image, raster, point cloud, table or an object with the attachment), by its\nlasting id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "$ref": "#/$defs/AssetVia"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "path",
+              "via",
+              "state"
+            ],
+            "type": "object"
+          },
+          "AssetVia": {
+            "description": "Where a linked file was found.",
+            "oneOf": [
+              {
+                "const": "path",
+                "description": "At its path as kept.",
+                "type": "string"
+              },
+              {
+                "const": "relative",
+                "description": "At its relative path, from the open drawing's folder.",
+                "type": "string"
+              },
+              {
+                "const": "searchPath",
+                "description": "In one of the project's search paths (an external reference only, docs/adr/0349 §1).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nowhere.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address: not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: not looked at.",
+                "type": "string"
+              }
+            ]
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.assets.check` v1.",
+        "properties": {
+          "assets": {
+            "description": "External references in the drawing's block order, then the objects' links in the drawing's order (an object's\nown file, then its attachments), then the blocks' objects' by block, then the bound layers' sources.",
+            "items": {
+              "$ref": "#/$defs/AssetStatus"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/$defs/AssetCounts"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assets",
+          "counts",
+          "revision"
+        ],
+        "title": "AssetsChecked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AssetCounts": {
+            "description": "How many of each state.",
+            "properties": {
+              "changed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "missing": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ok": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "other": {
+                "description": "Unloaded, remote and database ones.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "ok",
+              "changed",
+              "missing",
+              "other"
+            ],
+            "type": "object"
+          },
+          "AssetKind": {
+            "description": "What a linked file is.",
+            "oneOf": [
+              {
+                "const": "xref",
+                "description": "An external reference's source drawing (docs/adr/0348).",
+                "type": "string"
+              },
+              {
+                "const": "image",
+                "description": "A linked image.",
+                "type": "string"
+              },
+              {
+                "const": "raster",
+                "description": "A linked raster.",
+                "type": "string"
+              },
+              {
+                "const": "pointCloud",
+                "description": "A point cloud's file.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "A linked table's file.",
+                "type": "string"
+              },
+              {
+                "const": "attachment",
+                "description": "An object's attachment.",
+                "type": "string"
+              },
+              {
+                "const": "source",
+                "description": "A bound layer's source (docs/adr/0503).",
+                "type": "string"
+              }
+            ]
+          },
+          "AssetState": {
+            "description": "A linked file's state.",
+            "oneOf": [
+              {
+                "const": "ok",
+                "description": "Found, and the same as when read (or nothing kept to compare with).",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Found, and its SHA-256 is not the one kept.",
+                "type": "string"
+              },
+              {
+                "const": "missing",
+                "description": "Not found.",
+                "type": "string"
+              },
+              {
+                "const": "unloaded",
+                "description": "An external reference unloaded: its file is not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "remote",
+                "description": "An address.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table.",
+                "type": "string"
+              }
+            ]
+          },
+          "AssetStatus": {
+            "description": "One linked file.",
+            "properties": {
+              "block": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The block definition it is (an external reference) or in (an object of a block's)."
+              },
+              "current": {
+                "description": "The file's SHA-256 now, when it is not the one kept.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "digest": {
+                "description": "The SHA-256 kept, when one is.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "found": {
+                "description": "Where it was found.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/AssetKind"
+              },
+              "name": {
+                "description": "What it is called: an external reference's name, else the file's name.",
+                "type": "string"
+              },
+              "path": {
+                "description": "The path as kept (or the address).",
+                "type": "string"
+              },
+              "relative": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "description": "The bound layer's source id (`kaynak-N`).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "state": {
+                "$ref": "#/$defs/AssetState"
+              },
+              "tried": {
+                "description": "The places looked in, in order, when it was not found.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "uid": {
+                "description": "The object it belongs to (an image, raster, point cloud, table or an object with the attachment), by its\nlasting id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "via": {
+                "$ref": "#/$defs/AssetVia"
+              }
+            },
+            "required": [
+              "kind",
+              "name",
+              "path",
+              "via",
+              "state"
+            ],
+            "type": "object"
+          },
+          "AssetVia": {
+            "description": "Where a linked file was found.",
+            "oneOf": [
+              {
+                "const": "path",
+                "description": "At its path as kept.",
+                "type": "string"
+              },
+              {
+                "const": "relative",
+                "description": "At its relative path, from the open drawing's folder.",
+                "type": "string"
+              },
+              {
+                "const": "searchPath",
+                "description": "In one of the project's search paths (an external reference only, docs/adr/0349 §1).",
+                "type": "string"
+              },
+              {
+                "const": "none",
+                "description": "Nowhere.",
+                "type": "string"
+              },
+              {
+                "const": "address",
+                "description": "An address: not looked at.",
+                "type": "string"
+              },
+              {
+                "const": "database",
+                "description": "A database's table: not looked at.",
+                "type": "string"
+              }
+            ]
+          },
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.assets.check` v1.",
+        "properties": {
+          "assets": {
+            "description": "External references in the drawing's block order, then the objects' links in the drawing's order (an object's\nown file, then its attachments), then the blocks' objects' by block, then the bound layers' sources.",
+            "items": {
+              "$ref": "#/$defs/AssetStatus"
+            },
+            "type": "array"
+          },
+          "counts": {
+            "$ref": "#/$defs/AssetCounts"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "assets",
+          "counts",
+          "revision"
+        ],
+        "title": "AssetsChecked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": []
+      },
+      "examples": [
+        {
+          "title": "Bütün bağlı dosyalar",
+          "input": {
+            "drawing": "/proje/ofis.kcad"
+          }
+        },
+        {
+          "title": "Yalnız dış başvurular ve resimler, özetsiz",
+          "input": {
+            "digests": false,
+            "drawing": "/proje/ofis.kcad",
+            "kinds": [
+              "xref",
+              "image"
+            ]
           }
         }
       ]

@@ -34,4 +34,4 @@ rotation?: number,
 /**
  * The insert's layer.
  */
-layerId: string, } | { "kind": "reload", name: string, } | { "kind": "unload", name: string, } | { "kind": "repath", name: string, path: string, } | { "kind": "detach", name: string, } | { "kind": "bind", name: string, mode?: XrefBindMode, };
+layerId: string, } | { "kind": "reload", name: string, } | { "kind": "unload", name: string, } | { "kind": "repath", name: string, path: string, } | { "kind": "detach", name: string, } | { "kind": "paths", paths: Array<string>, } | { "kind": "bind", name: string, mode?: XrefBindMode, };

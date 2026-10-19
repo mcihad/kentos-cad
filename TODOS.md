@@ -437,6 +437,10 @@ Liste:
   ikizi ya da WASM bağlayıcısıyla; dosya yolu yerine tarayıcıda dosya tutamacı ya da proje varlığı), Ekle › Dış başvuru paneli
   (Dış başvuru ekle penceresi, Dış başvurular penceresi, ikonları `xrefAttach`, `xrefManager`), açılışta değişen ve bulunamayan
   dış başvurunun uyarısı; bilinen bozulmalar: şema 83 ve `FORMATS_VERSION` 90.
+- [ ] `CAD-REF-08`, `09`, `19` bağlı dosyalar ve arama yolları (ADR 0349, 19 Ekim): web'de gerekenler: `cad.assets.check` ve
+  `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
+  proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
+  bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

@@ -523,6 +523,7 @@ pub enum Message {
     ViewRefs(crate::viewmark_refs::Event),
     SheetSet(crate::sheet_set::Event),
     Xrefs(crate::xrefs_window::Event),
+    XrefWatch(crate::xrefs_watch::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -1003,6 +1004,8 @@ pub struct App {
     pub(crate) sheet_set: Option<crate::sheet_set::Window>,
     /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
     pub(crate) xrefs: crate::xrefs_window::State,
+    /// The loaded references' files followed, and the card of a changed one (xrefs_watch.rs, docs/adr/0349 §3).
+    pub(crate) xref_watch: crate::xrefs_watch::Watch,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1327,6 +1330,7 @@ impl App {
             view_refs: None,
             sheet_set: None,
             xrefs: Default::default(),
+            xref_watch: Default::default(),
             quantities: None,
             layer_purge: None,
             take_from: None,
@@ -1492,6 +1496,12 @@ impl App {
             // The map services' tiles as they come (services/, docs/adr/0208 §6).
             if crate::services::in_use() {
                 Subscription::run(crate::services::ready)
+            } else {
+                Subscription::none()
+            },
+            // The loaded external references' files, looked at every few seconds (xrefs_watch.rs, docs/adr/0349 §3).
+            if self.xrefs_watching() {
+                Subscription::run(crate::xrefs_watch::ticks)
             } else {
                 Subscription::none()
             },
@@ -1873,6 +1883,7 @@ impl App {
             Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
             Message::Xrefs(event) => return self.xrefs_event(event),
+            Message::XrefWatch(event) => return self.xref_watch_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2298,8 +2309,8 @@ impl App {
         self.followed = Some((doc.session, doc.model.generation()));
         self.xrefs = Default::default();
         self.document = Some(doc);
-        // A reference whose source changed or went is said, never loaded silently (docs/adr/0348 §5).
-        self.xrefs_opened();
+        // A linked file that changed or went is said, never loaded silently (docs/adr/0348 §5, 0349 §2).
+        self.xrefs_check_opened();
     }
 
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.

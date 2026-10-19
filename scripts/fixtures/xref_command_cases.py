@@ -701,14 +701,65 @@ add(edit_cases, "geçersiz beklenen sürüm", [
      "result": failed("invalid_revision", "$any", "expectedRevision"), "expect": NOTHING},
 ], note="Ad sürümden önce denetlenir.")
 
+# ── search paths (ADR 0349 §1) ──────────────────────────────────────────
+
+
+def paths_done(paths):
+    out = {"name": "", "objects": 0, "removed": 0, "revision": "$current"}
+    if paths:
+        out["paths"] = paths
+    return done(out)
+
+
+add(edit_cases, "arama yolları: kırpılır, boş ve yinelenen düşer, ayardır", [
+    {"op": "execute", "input": {"operation": {"kind": "paths", "paths": [" /ortak/mimari ", "", "../referanslar", "/ortak/mimari"]}},
+     "result": paths_done(["/ortak/mimari", "../referanslar"]),
+     "expect": {"settings": {"xrefPaths": ["/ortak/mimari", "../referanslar"]}, "canUndo": False}},
+], note="Ayar geri alma adımı değildir (cad.settings.set gibi).")
+add(edit_cases, "arama yolları boş listeyle kalkar", [
+    {"op": "execute", "input": {"operation": {"kind": "paths", "paths": ["/ortak"]}}, "result": paths_done(["/ortak"])},
+    {"op": "execute", "input": {"operation": {"kind": "paths", "paths": []}}, "result": paths_done([]),
+     "expect": {"settings": {"xrefPaths": None}}},
+])
+add(edit_cases, "arama yolları: plan yazmaz", [
+    {"op": "plan", "input": {"operation": {"kind": "paths", "paths": ["/ortak"]}}, "result": paths_done(["/ortak"]),
+     "expect": {"settings": {"xrefPaths": None}}},
+])
+add(edit_cases, "arama yolları: geçersiz beklenen sürüm", [
+    {"op": "execute", "input": {"operation": {"kind": "paths", "paths": ["/ortak"]}, "expectedRevision": "dün"},
+     "result": failed("invalid_revision", "$any", "expectedRevision"), "expect": {"settings": {"xrefPaths": None}}},
+])
+SEARCHED = with_ids(copy.deepcopy(ATTACHED))
+for b in SEARCHED["blocks"]:
+    if b["name"] == "Plan":
+        b["xref"]["path"] = "/yok/plan.kcad"
+SEARCHED["settings"]["xrefPaths"] = ["/ortak", F["plan.kcad"].rsplit("/", 1)[0]]
+add(edit_cases, "yeniden yükle: kaynak arama yolunda bulunur, kayıtlı yol oraya yazılır", [
+    {"op": "execute", "input": {"operation": {"kind": "reload", "name": "Plan"}},
+     "result": done(edited("Plan", block=SETUP_IDS[PLAN_ID], objects=INFO["objects"], nested=INFO["nested"]), [LEFT])},
+], setup=SEARCHED, note="İçerik aynı; kayıtlı yol bulunan dosyanın yolu olur ve adım yazılır.")
+MISSING = copy.deepcopy(SEARCHED)
+MISSING["settings"]["xrefPaths"] = ["/ortak"]
+add(edit_cases, "yeniden yükle: arama yollarında da yoksa dosya bulunamadı", [
+    {"op": "execute", "input": {"operation": {"kind": "reload", "name": "Plan"}},
+     "result": failed("file_not_found", "$any", "operation.name"), "expect": {"canUndo": False, "revision": "same"}},
+], setup=MISSING)
+
 # ── list ─────────────────────────────────────────────────────────────────
 
 
-def info(name, block, kind, path, state, *, relative=None, parent=None, inserts=0, objects=0, group=None):
+def info(name, block, kind, path, state, *, relative=None, parent=None, inserts=0, objects=0, group=None, via=None,
+         tried=(), sheets=(), views=()):
+    """A listed reference (ADR 0348 §3, 0349 §1, §3): found at its path unless `via` says otherwise; one not looked at or
+    not found says how it was looked for."""
     out = {"name": name, "block": block, "kind": kind, "path": path, "state": state, "inserts": inserts, "objects": objects}
     for k_, v in (("relative", relative), ("parent", parent), ("group", group)):
         if v is not None:
             out[k_] = v
+    out["via"] = via or ("none" if state in ("missing", "unloaded") else "path")
+    for k_, v in (("tried", tried), ("sheets", sheets), ("views", views)):
+        if v:
+            out[k_] = list(v)
     return out
 
 
@@ -743,23 +794,24 @@ add(list_cases, "değişti: dosyanın özeti yüklenenden başka", [
 ], setup=setup_with([("Plan", {"path": F["plan2.kcad"], "digest": DIGEST["plan.kcad"]})]))
 add(list_cases, "bulunamadı: dosya yok, göreli yol da yok", [
     {"op": "execute", "input": {}, "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach",
-                                                         "/yok/plan.kcad", "missing", inserts=1, objects=1))},
+                                                         "/yok/plan.kcad", "missing", inserts=1, objects=1,
+                                                         tried=["/yok/plan.kcad"]))},
 ], setup=setup_with([("Plan", {"path": "/yok/plan.kcad", "digest": DIGEST["plan.kcad"]})]))
 RELATIVE = setup_with([("Plan", {"path": "/yok/plan.kcad", "relative": "plan.kcad", "digest": DIGEST["plan.kcad"]})])
 add(list_cases, "göreli yol: dosya yerinde değil, açık çizimin klasöründe bulunur", [
     {"op": "execute", "input": {"drawing": DRAWING},
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
-                           relative="plan.kcad", inserts=1, objects=1))},
+                           relative="plan.kcad", inserts=1, objects=1, via="relative"))},
 ], setup=RELATIVE)
 add(list_cases, "göreli yol: açık çizimin dosyası verilmezse bulunamadı", [
     {"op": "execute", "input": {},
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", "/yok/plan.kcad", "missing",
-                           relative="plan.kcad", inserts=1, objects=1))},
+                           relative="plan.kcad", inserts=1, objects=1, tried=["/yok/plan.kcad"]))},
 ], setup=RELATIVE)
 add(list_cases, "göreli yol alt klasörden", [
     {"op": "execute", "input": {"drawing": "$fixture:xref/v1/proje/ana.kcad"},
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
-                           relative="../plan.kcad", inserts=1, objects=1))},
+                           relative="../plan.kcad", inserts=1, objects=1, via="relative"))},
 ], setup=setup_with([("Plan", {"path": "/yok/plan.kcad", "relative": "../plan.kcad", "digest": DIGEST["plan.kcad"]})]))
 add(list_cases, "boşaltılmış: dosyaya bakılmaz", [
     {"op": "execute", "input": {},
@@ -776,7 +828,7 @@ add(list_cases, "iç içe: getireni adıyla, kendi yerleştirmesi yok", [
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
                            inserts=1, objects=1),
                       info("Plan|Detay", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7401", "attach", "/proje/detay.kcad",
-                           "missing", parent="Plan", inserts=0, objects=1))},
+                           "missing", parent="Plan", inserts=0, objects=1, tried=["/proje/detay.kcad"]))},
 ], setup=setup_with([("Plan", {"path": F["plan.kcad"], "digest": DIGEST["plan.kcad"]}),
                      ("Plan|Detay", {"path": "/proje/detay.kcad", "digest": D_DETAY,
                                      "parent": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400"})]))
@@ -800,7 +852,7 @@ add(list_cases, "birkaç dış başvuru çizimin blok sırasıyla, yerleştirmel
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
                            inserts=2, objects=1),
                       info("Taşıyıcı", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7401", "attach", "/yok/tasiyici.kcad",
-                           "missing", inserts=1, objects=1))},
+                           "missing", inserts=1, objects=1, tried=["/yok/tasiyici.kcad"]))},
 ], setup=TWO)
 add(list_cases, "dış başvurusu olmayan çizim", [
     {"op": "execute", "input": {}, "result": listed()},
@@ -819,7 +871,8 @@ add(list_cases, "doğrulama", [
 add(list_cases, "olmayan dosyanın açık çizimi: göreli yol yine bulunamaz", [
     {"op": "execute", "input": {"drawing": "$fixture:xref/yok/ana.kcad"},
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", "/yok/plan.kcad", "missing",
-                           relative="plan.kcad", inserts=1, objects=1))},
+                           relative="plan.kcad", inserts=1, objects=1,
+                           tried=["/yok/plan.kcad", "$fixture:xref/yok/plan.kcad"]))},
 ], setup=RELATIVE)
 add(list_cases, "yeni eklenen dış başvuru yüklü görünür", [
     {"op": "execute", "input": {}, "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach",
@@ -834,7 +887,7 @@ add(list_cases, "değişen yolun göreli yolu varken dosyanın kendisi önce", [
 add(list_cases, "değişti: göreli yolda bulunan dosya da özetiyle denetlenir", [
     {"op": "execute", "input": {"drawing": DRAWING},
      "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan2.kcad"], "changed",
-                           relative="plan2.kcad", inserts=1, objects=1))},
+                           relative="plan2.kcad", inserts=1, objects=1, via="relative"))},
 ], setup=setup_with([("Plan", {"path": "/yok/plan2.kcad", "relative": "plan2.kcad", "digest": DIGEST["plan.kcad"]})]))
 UNPLACED = setup_with([("Plan", {"path": F["plan.kcad"], "digest": DIGEST["plan.kcad"]})])
 UNPLACED["entities"] = UNPLACED["entities"][:1]
@@ -842,6 +895,54 @@ add(list_cases, "yerleştirmesi silinmiş dış başvuru sıfır yerleştirmeyle
     {"op": "execute", "input": {}, "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach",
                                                          F["plan.kcad"], "loaded", inserts=0, objects=1))},
 ], setup=UNPLACED)
+
+add(list_cases, "arama yolu: kayıtlı yolda yok, mutlak arama yolunda adıyla bulunur", [
+    {"op": "execute", "input": {},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
+                           inserts=1, objects=1, via="searchPath"))},
+], setup={**setup_with([("Plan", {"path": "/yok/plan.kcad", "digest": DIGEST["plan.kcad"]})]),
+          "settings": {**SETTINGS, "xrefPaths": ["/ortak", "$fixture:xref/v1"]}})
+add(list_cases, "arama yolu: göreli arama yolunda göreli yoluyla, denenenler sırasıyla değil bulunan", [
+    {"op": "execute", "input": {"drawing": "$fixture:xref/ana.kcad"},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
+                           relative="plan.kcad", inserts=1, objects=1, via="searchPath"))},
+], setup={**setup_with([("Plan", {"path": "/yok/plan.kcad", "relative": "plan.kcad", "digest": DIGEST["plan.kcad"]})]),
+          "settings": {**SETTINGS, "xrefPaths": ["eski", "v1"]}})
+add(list_cases, "arama yolu: hiçbir yerde yok, denenen yollar sırasıyla", [
+    {"op": "execute", "input": {"drawing": "$fixture:xref/ana.kcad"},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", "/yok/mimari.kcad", "missing",
+                           relative="mimari.kcad", inserts=1, objects=1,
+                           tried=["/yok/mimari.kcad", "$fixture:xref/mimari.kcad", "/ortak/mimari.kcad",
+                                  "$fixture:xref/eski/mimari.kcad"]))},
+], setup={**setup_with([("Plan", {"path": "/yok/mimari.kcad", "relative": "mimari.kcad", "digest": DIGEST["plan.kcad"]})]),
+          "settings": {**SETTINGS, "xrefPaths": ["/ortak", "eski"]}},
+   note="Göreli yol ile dosyanın adı aynı yeri gösterince yer bir kez denenir.")
+VIEWS = setup_with([("Plan", {"path": F["plan.kcad"], "digest": DIGEST["plan.kcad"]}),
+                    ("Plan|Detay", {"path": "/proje/detay.kcad", "digest": D_DETAY,
+                                    "parent": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400"})])
+VIEWS["settings"] = {**SETTINGS, "namedViews": [
+    {"name": "Giriş", "center": P(0, 0), "width": 10.0, "height": 10.0, "twist": 0.0},
+    {"name": "Uzak", "center": P(500, 500), "width": 10.0, "height": 10.0, "twist": 0.0},
+    {"name": "Dönük", "center": P(7, 0), "width": 12.0, "height": 2.0, "twist": 1.5707963267948966}]}
+add(list_cases, "etkilenenler: yerleştirmenin kutusuyla kesişen adlı görünümler, iç içe olan getireninkiyle", [
+    {"op": "execute", "input": {"affected": True},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
+                           inserts=1, objects=1, views=["Giriş"]),
+                      info("Plan|Detay", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7401", "attach", "/proje/detay.kcad",
+                           "missing", parent="Plan", inserts=0, objects=1, tried=["/proje/detay.kcad"], views=["Giriş"]))},
+], setup=VIEWS, note="Dönük görünümün penceresi 2 × 12 dikey şerit, x 6–8: yerleştirmenin 0–1'lik çizgisine değmez. Paftaların etkilenmesi cad.sheets.set'in shows kuralıdır (kendi durumları).")
+add(list_cases, "etkilenenler istenmezse söylenmez", [
+    {"op": "execute", "input": {},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
+                           inserts=1, objects=1),
+                      info("Plan|Detay", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7401", "attach", "/proje/detay.kcad",
+                           "missing", parent="Plan", inserts=0, objects=1, tried=["/proje/detay.kcad"]))},
+], setup=VIEWS)
+add(list_cases, "etkilenenler: yerleştirmesi olmayanın görünümü yok", [
+    {"op": "execute", "input": {"affected": True},
+     "result": listed(info("Plan", "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d7400", "attach", F["plan.kcad"], "loaded",
+                           inserts=0, objects=1))},
+], setup={**UNPLACED, "settings": VIEWS["settings"]})
 
 
 def resolved(v):

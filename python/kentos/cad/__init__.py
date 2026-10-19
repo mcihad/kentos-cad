@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -131,6 +131,16 @@ __all__ = [
     "ArrayItem",
     "ArrayLayout",
     "ArraysEdit",
+    "AssetCounts",
+    "AssetKind",
+    "AssetKindName",
+    "AssetState",
+    "AssetStateName",
+    "AssetStatus",
+    "AssetVia",
+    "AssetViaName",
+    "AssetsCheck",
+    "AssetsChecked",
     "AssocArray",
     "AtMeasuredPoint",
     "AttachArchOperation",
@@ -1027,6 +1037,7 @@ __all__ = [
     "PatLineProblem",
     "PathArrayLayout",
     "PathEntity",
+    "PathsXrefsOperation",
     "PatternElement",
     "PatternHatchEdit",
     "PatternLine",
@@ -1641,6 +1652,7 @@ __all__ = [
     "arc",
     "arch",
     "arrays",
+    "assets",
     "attachments",
     "blocks",
     "catalog",

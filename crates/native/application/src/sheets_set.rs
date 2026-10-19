@@ -35,7 +35,7 @@ fn meets(a: &Bounds, b: &[f64; 4]) -> bool {
 }
 
 /// The set, and the frames `uids`' objects affect.
-fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResult, Stop> {
+pub(crate) fn set_of(doc: &Document, input: &SheetsSet) -> Result<SheetsSetResult, Stop> {
     let named = match &input.uids {
         Some(uids) => Some(checks::named(doc, uids)?),
         None => None,
