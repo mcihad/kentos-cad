@@ -260,7 +260,29 @@ pub(crate) fn run_with(
     area: Option<[f64; 4]>,
 ) -> Result<(GpkgImported, Vec<CommandWarning>), Stop> {
     let read = read_file(input, area)?;
-    run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))
+    // A table that is a derivative of a drawing (docs/adr/0530): its rows are taken in as the chords they are.
+    let derived: Vec<String> = crate::gis_derive::derived_tables(Path::new(&input.path))
+        .into_iter()
+        .filter(|(table, _)| read.tables.iter().any(|t| &t.name == table))
+        .map(|(table, rec)| {
+            format!(
+                "“{table}” (kaynak “{}”, {} sürümü, tolerans {} m)",
+                rec.source.name, rec.source.revision, rec.tolerance
+            )
+        })
+        .collect();
+    let (out, mut warnings) = run_read(doc, input, read, fresh, ("GeoPackage", ".gpkg"))?;
+    if !derived.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::DERIVED_IMPORT.into(),
+            message: format!(
+                "Alınan tablolar çizimden türetilmiş GIS verisi: {}. Geometrileri kaynak yayların kirişleridir; yay olarak değil çoklu çizgi ve alan olarak alındı. Kaynak nesneler hâlâ onların çizimindedir.",
+                derived.join(", ")
+            ),
+            path: Some("path".into()),
+        });
+    }
+    Ok((out, warnings))
 }
 
 /// A file's tables, read already (a GeoPackage, a CSV: docs/adr/0522), taken into the drawing: `name` the undo step's

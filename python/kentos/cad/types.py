@@ -920,6 +920,26 @@ CsvSeparatorName = Literal["comma", "semicolon", "tab"]
 """The names of :class:`CsvSeparator`, for a plain string."""
 
 
+class DerivationStatus(_StrEnum):
+    """How a derived row stands against its source.
+
+    - ``current``: The source is as it was and the row is what the derivation gives.
+    - ``stale``: The source changed after the dataset was made: the row is old.
+    - ``edited``: The source is as it was and the row was changed in the GIS (its geometry or an attribute).
+    - ``source_gone``: The source object is no longer in the drawing.
+    - ``not_exported``: A drawing object of an exported layer that the dataset has no row for (made, or moved there, since).
+    """
+    CURRENT = "current"
+    STALE = "stale"
+    EDITED = "edited"
+    SOURCE_GONE = "source_gone"
+    NOT_EXPORTED = "not_exported"
+
+
+DerivationStatusName = Literal["current", "stale", "edited", "source_gone", "not_exported"]
+"""The names of :class:`DerivationStatus`, for a plain string."""
+
+
 class DimensionArrow(_StrEnum):
     """A dimension's arrowheads other than the oblique tick, which is no value but
     the field's absence (docs/adr/0183 §3).
@@ -1511,6 +1531,36 @@ class GeorefMethod(_StrEnum):
 
 GeorefMethodName = Literal["helmert", "affine", "projective", "poly2", "poly3", "thinPlate"]
 """The names of :class:`GeorefMethod`, for a plain string."""
+
+
+class GisAnnotations(_StrEnum):
+    """What to do with texts and blocks, which a GIS has no geometry of the same meaning for.
+
+    - ``table``: Written to their own tables, never into the layers' feature tables: each block definition's insertions as
+    - ``skip``: Left out and counted.
+    """
+    TABLE = "table"
+    SKIP = "skip"
+
+
+GisAnnotationsName = Literal["table", "skip"]
+"""The names of :class:`GisAnnotations`, for a plain string."""
+
+
+class GisTableRole(_StrEnum):
+    """What a derived table holds.
+
+    - ``layer``: A drawing layer's objects.
+    - ``blocks``: The insertions of one block, its attributes as columns.
+    - ``annotations``: The drawing's texts.
+    """
+    LAYER = "layer"
+    BLOCKS = "blocks"
+    ANNOTATIONS = "annotations"
+
+
+GisTableRoleName = Literal["layer", "blocks", "annotations"]
+"""The names of :class:`GisTableRole`, for a plain string."""
 
 
 class GradientShape(_StrEnum):
@@ -10900,6 +10950,144 @@ class DatumTransform(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class DerivationEntry(_Model):
+    """One row (or missing row) that is listed.
+    Attributes:
+        fid: The row's fid; none for an object the dataset has no row for. Unit: id.
+        fields: What differs in an edited row: `geometry` and the attributes' names.
+        kind: The source object's kind as the row records it, or as the drawing has it now.
+    """
+    table: str
+    uid: str
+    status: DerivationStatus | DerivationStatusName
+    reason: str
+    fid: int | None | Unset = UNSET
+    fields: list[str] | Unset = UNSET
+    kind: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["uid"] = self.uid
+        out["status"] = _enum_out(self.status)
+        out["reason"] = self.reason
+        if self.fid is not UNSET:
+            out["fid"] = self.fid
+        if self.fields is not UNSET:
+            out["fields"] = list(self.fields)
+        if self.kind is not UNSET:
+            out["kind"] = self.kind
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationEntry:
+        return cls(
+            table=data["table"],
+            uid=data["uid"],
+            status=_enum_in(DerivationStatus, data["status"]),
+            reason=data["reason"],
+            fid=data.get("fid", UNSET),
+            fields=list(data["fields"]) if "fields" in data else UNSET,
+            kind=data.get("kind", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DerivationSource(_Model):
+    """Where a derived dataset came from, as its tables record.
+    Attributes:
+        revision: The drawing's revision when the dataset was made.
+        srid: The project's EPSG code (0 for a local project). Unit: epsg.
+        project: The project's lasting id, when it has one.
+    """
+    name: str
+    revision: str
+    srid: int
+    project: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["revision"] = self.revision
+        out["srid"] = self.srid
+        if self.project is not UNSET:
+            out["project"] = self.project
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationSource:
+        return cls(
+            name=data["name"],
+            revision=data["revision"],
+            srid=data["srid"],
+            project=data.get("project", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DerivationTable(_Model):
+    """A table's counts against the drawing.
+    Attributes:
+        rows: Unit: count.
+        current: Unit: count.
+        stale: Unit: count.
+        edited: Unit: count.
+        source_gone: Unit: count.
+        not_exported: Unit: count.
+        over_tolerance: Rows whose recorded deviation is over the table's tolerance. Unit: count.
+        tolerance: Unit: m.
+        max_deviation: Unit: m.
+        layer: The layer of a `layer` table, by id.
+    """
+    table: str
+    role: GisTableRole | GisTableRoleName
+    rows: int
+    current: int
+    stale: int
+    edited: int
+    source_gone: int
+    not_exported: int
+    over_tolerance: int
+    tolerance: float
+    max_deviation: float
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["role"] = _enum_out(self.role)
+        out["rows"] = self.rows
+        out["current"] = self.current
+        out["stale"] = self.stale
+        out["edited"] = self.edited
+        out["sourceGone"] = self.source_gone
+        out["notExported"] = self.not_exported
+        out["overTolerance"] = self.over_tolerance
+        out["tolerance"] = float(self.tolerance)
+        out["maxDeviation"] = float(self.max_deviation)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DerivationTable:
+        return cls(
+            table=data["table"],
+            role=_enum_in(GisTableRole, data["role"]),
+            rows=data["rows"],
+            current=data["current"],
+            stale=data["stale"],
+            edited=data["edited"],
+            source_gone=data["sourceGone"],
+            not_exported=data["notExported"],
+            over_tolerance=data["overTolerance"],
+            tolerance=float(data["tolerance"]),
+            max_deviation=float(data["maxDeviation"]),
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class DimensionBreak(_Model):
     """A gap in one of a dimension's lines where another object crosses it (AutoCAD's DIMBREAK), at the fraction `t` of
     the line; its width the options' `breakSize`.
@@ -15477,6 +15665,47 @@ class ExportDxf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportGis(_Model):
+    """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of
+    derived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),
+    `layer_not_found`, `nothing_to_export`, `file_unwritable`. Warnings: `export_losses` (objects left out and the
+    reason each kind is).
+    Attributes:
+        path: The file to write, an absolute path (`.gpkg`).
+        annotations: Texts and blocks: their own tables (the default) or left out.
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over a file that is there.
+        tolerance: The farthest a chord may come from the curve it stands for, metres; 0.0001 when not given. Unit: m.
+    """
+    path: str
+    annotations: GisAnnotations | GisAnnotationsName = GisAnnotations.TABLE
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+    tolerance: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["annotations"] = _enum_out(self.annotations)
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        if self.tolerance is not UNSET:
+            out["tolerance"] = None if self.tolerance is None else float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportGis:
+        return cls(
+            path=data["path"],
+            annotations=_enum_in(GisAnnotations, data["annotations"]) if "annotations" in data else GisAnnotations.TABLE,
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGpkg(_Model):
     """Input of `file.export.gpkg` v1: the layers (all with objects when none) as tables of a new GeoPackage, each object
     a row with its lasting id (`kentos_uids`), its layer's fields and its other attributes as columns; the project's
@@ -18437,6 +18666,233 @@ class GeorefSource(_Model):
             digest=data.get("digest", UNSET),
             file=data.get("file", UNSET),
             url=data.get("url", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisDerivation(_Model):
+    """Input of `cad.gis.derivation` v1, read only: the GeoPackage `path` made by `file.export.gis`, each of its rows
+    compared with the object it came from in the open drawing. Refusals, in order: `invalid_file_path`,
+    `file_not_found`, `import_unreadable`, `not_a_derivation`. Warnings: `derivation_stale`, `derivation_edited`.
+    Attributes:
+        path: The file, an absolute path.
+        limit: How many rows to list (the ones that do not match come first); 100, at most 1000. Unit: count.
+    """
+    path: str
+    limit: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.limit is not UNSET:
+            out["limit"] = self.limit
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDerivation:
+        return cls(
+            path=data["path"],
+            limit=data.get("limit", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisDerived(_Model):
+    """What `cad.gis.derivation` found.
+    Attributes:
+        bytes: Unit: bytes.
+        tolerance: Unit: m.
+        source: Where the dataset says it came from, and whether that is this drawing (its project id, when both have one,
+            else its name).
+        current: Totals over the tables. Unit: count.
+        stale: Unit: count.
+        edited: Unit: count.
+        source_gone: Unit: count.
+        not_exported: Unit: count.
+        entries: The rows that do not match first, then the matching ones, at most `limit`.
+        unlisted: How many rows were not listed because of `limit`. Unit: count.
+        revision: The drawing's revision now.
+    """
+    file: str
+    bytes: int
+    sha256: str
+    algorithm: str
+    tolerance: float
+    source: DerivationSource
+    same_project: bool
+    tables: list[DerivationTable]
+    current: int
+    stale: int
+    edited: int
+    source_gone: int
+    not_exported: int
+    entries: list[DerivationEntry]
+    unlisted: int
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["file"] = self.file
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["algorithm"] = self.algorithm
+        out["tolerance"] = float(self.tolerance)
+        out["source"] = self.source.to_json()
+        out["sameProject"] = self.same_project
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["current"] = self.current
+        out["stale"] = self.stale
+        out["edited"] = self.edited
+        out["sourceGone"] = self.source_gone
+        out["notExported"] = self.not_exported
+        out["entries"] = [e0.to_json() for e0 in self.entries]
+        out["unlisted"] = self.unlisted
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisDerived:
+        return cls(
+            file=data["file"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            algorithm=data["algorithm"],
+            tolerance=float(data["tolerance"]),
+            source=DerivationSource.from_json(data["source"]),
+            same_project=data["sameProject"],
+            tables=[DerivationTable.from_json(e0) for e0 in data["tables"]],
+            current=data["current"],
+            stale=data["stale"],
+            edited=data["edited"],
+            source_gone=data["sourceGone"],
+            not_exported=data["notExported"],
+            entries=[DerivationEntry.from_json(e0) for e0 in data["entries"]],
+            unlisted=data["unlisted"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisExported(_Model):
+    """What `file.export.gis` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        algorithm: The algorithm and its version (`kentos.chords/1`), and the tolerance it kept (m).
+        tolerance: Unit: m.
+        chorded: Rows written as chords of a curve, in all. Unit: count.
+        max_deviation: The farthest any chord of the dataset comes from its curve (m); at most `tolerance` unless a count cap held. Unit: m.
+        revision: The drawing's revision the dataset was made from.
+        left: Objects not written, by kind, each with its reason.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    algorithm: str
+    tolerance: float
+    tables: list[GisTableExported]
+    chorded: int
+    max_deviation: float
+    revision: str
+    left: list[GisLeft] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["algorithm"] = self.algorithm
+        out["tolerance"] = float(self.tolerance)
+        out["tables"] = [e0.to_json() for e0 in self.tables]
+        out["chorded"] = self.chorded
+        out["maxDeviation"] = float(self.max_deviation)
+        out["revision"] = self.revision
+        if self.left is not UNSET:
+            out["left"] = [e0.to_json() for e0 in self.left]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            algorithm=data["algorithm"],
+            tolerance=float(data["tolerance"]),
+            tables=[GisTableExported.from_json(e0) for e0 in data["tables"]],
+            chorded=data["chorded"],
+            max_deviation=float(data["maxDeviation"]),
+            revision=data["revision"],
+            left=[GisLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisLeft(_Model):
+    """Objects of one kind left out of the dataset, and why.
+    Attributes:
+        count: Unit: count.
+    """
+    kind: str
+    count: int
+    reason: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["count"] = self.count
+        out["reason"] = self.reason
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisLeft:
+        return cls(
+            kind=data["kind"],
+            count=data["count"],
+            reason=data["reason"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class GisTableExported(_Model):
+    """A table of the derived dataset.
+    Attributes:
+        rows: Unit: count.
+        chorded: Rows whose geometry is chords of a curve rather than the source's own points. Unit: count.
+        max_deviation: The farthest any of the table's chords comes from its curve (m). Unit: m.
+        geometry: The geometry column's type; none for an attribute table.
+        source: The drawing layer a `layer` table came from, by id; the block's name for a `blocks` table.
+    """
+    table: str
+    role: GisTableRole | GisTableRoleName
+    rows: int
+    chorded: int
+    max_deviation: float
+    geometry: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["table"] = self.table
+        out["role"] = _enum_out(self.role)
+        out["rows"] = self.rows
+        out["chorded"] = self.chorded
+        out["maxDeviation"] = float(self.max_deviation)
+        if self.geometry is not UNSET:
+            out["geometry"] = self.geometry
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> GisTableExported:
+        return cls(
+            table=data["table"],
+            role=_enum_in(GisTableRole, data["role"]),
+            rows=data["rows"],
+            chorded=data["chorded"],
+            max_deviation=float(data["maxDeviation"]),
+            geometry=data.get("geometry", UNSET),
+            source=data.get("source", UNSET),
         )
 
 
@@ -50404,6 +50860,11 @@ __all__ = [
     "DeleteUcsTo",
     "DeleteViewsOp",
     "DeltaLengthenChange",
+    "DerivationEntry",
+    "DerivationSource",
+    "DerivationStatus",
+    "DerivationStatusName",
+    "DerivationTable",
     "DetachArchOperation",
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
@@ -50565,6 +51026,7 @@ __all__ = [
     "ExportBlock",
     "ExportCsv",
     "ExportDxf",
+    "ExportGis",
     "ExportGpkg",
     "ExportPdf",
     "ExportReport",
@@ -50693,6 +51155,15 @@ __all__ = [
     "GeorefPoint",
     "GeorefResidual",
     "GeorefSource",
+    "GisAnnotations",
+    "GisAnnotationsName",
+    "GisDerivation",
+    "GisDerived",
+    "GisExported",
+    "GisLeft",
+    "GisTableExported",
+    "GisTableRole",
+    "GisTableRoleName",
     "GpkgExported",
     "GpkgImported",
     "GpkgTableExported",
