@@ -51,6 +51,8 @@ fn roads() -> NetworkDef {
         direction: NetworkDirection::Both,
         costs: Vec::new(),
         closed: None,
+        turns: None,
+        levels: None,
     }
 }
 
@@ -129,6 +131,7 @@ fn the_writer_refuses_what_the_reader_would() {
                     field: "u".into(),
                     unit: String::new(),
                     speed: None,
+                    periods: Vec::new(),
                 })
             }),
             "uzunluğunundur",
@@ -202,7 +205,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "networks/0/kind",
         ),
-        ("broken/schema-version-87.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-88.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

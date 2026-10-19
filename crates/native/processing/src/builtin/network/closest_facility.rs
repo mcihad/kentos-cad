@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use super::{
     RunNetwork, cost_value, line_geometry, missing_note, name_of, network_param, places_of,
-    points_param, reach_param, run_network,
+    points_param, reach_param, run_network, time_param,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::text::js_number;
@@ -60,6 +60,7 @@ pub fn tool() -> Tool {
             )
             .default_value(json!("toFacility")),
             reach_param("Noktalar ağa bu uzaklıktan yakınsa ağın en yakın yerine oturur."),
+            time_param(),
             layer_param_styled("layer", "Çıktı katmanı", "En yakın tesis", "#7B1FA2", 0.5, None, Some("Bu adda katman yoksa oluşturulur.")),
         ],
         outputs: vec![

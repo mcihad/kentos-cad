@@ -3000,6 +3000,802 @@
         "name": "A",
         "tolerance": 0.0001
       }
+    },
+    {
+      "name": "dönüşler",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "back": 30.0,
+          "layers": [
+            {
+              "field": "gecikme",
+              "layer": "donus"
+            }
+          ],
+          "left": 15.0,
+          "right": 5.0,
+          "uTurns": "deadEnds"
+        }
+      }
+    },
+    {
+      "name": "geri dönüş yok, gecikmesiz",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "uTurns": "never"
+        }
+      }
+    },
+    {
+      "name": "dönüş gecikmesi 3600 sn",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "left": 3600.0,
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "dönüş gecikmesi 3600 sn'den uzun",
+      "problem": "“A” ağının sola dönüş gecikmesi 3600.5 sn; 0 ile 3600 sn arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "left": 3600.5,
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "dönüş gecikmesi eksi",
+      "problem": "“A” ağının sağa dönüş gecikmesi -1 sn; 0 ile 3600 sn arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "right": -1.0,
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "5 dönüş katmanı",
+      "problem": "“A” ağının dönüş katmanı çok; en çok 4",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "layers": [
+            {
+              "layer": "d0"
+            },
+            {
+              "layer": "d1"
+            },
+            {
+              "layer": "d2"
+            },
+            {
+              "layer": "d3"
+            },
+            {
+              "layer": "d4"
+            }
+          ],
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "dönüş katmanının kimliği boş",
+      "problem": "“A” ağının dönüş katmanının kimliği boş",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "layers": [
+            {
+              "layer": ""
+            }
+          ],
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "dönüş katmanının alanı kırpılmamış",
+      "problem": "“A” ağının dönüş katmanının gecikme alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "layers": [
+            {
+              "field": " g",
+              "layer": "d"
+            }
+          ],
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "aynı dönüş katmanı aynı süzgeçle",
+      "problem": "“A” ağının aynı dönüş katmanı aynı süzgeçle iki kez var",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001,
+        "turns": {
+          "layers": [
+            {
+              "layer": "d"
+            },
+            {
+              "layer": "d"
+            }
+          ],
+          "uTurns": "allowed"
+        }
+      }
+    },
+    {
+      "name": "seviyeler",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "levels": {
+          "end": "z_son",
+          "inside": "z_orta",
+          "start": "z_bas"
+        },
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "seviyenin bitiş alanı boş",
+      "problem": "“A” ağının seviye alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "ends",
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "levels": {
+          "end": "",
+          "start": "z_bas"
+        },
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "zaman profili",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 420,
+                "to": 570
+              },
+              {
+                "field": "hiz_aksam",
+                "from": 1020,
+                "to": 1140
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "zaman profili 24:00'a kadar",
+      "problem": null,
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.0,
+                "from": 1380,
+                "to": 1440
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönemler örtüşüyor",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 2. dönem bir öncekiyle örtüşüyor ya da ondan önce; dönemler günün sırasıyla, örtüşmeden yazılır",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 420,
+                "to": 570
+              },
+              {
+                "factor": 0.7,
+                "from": 500,
+                "to": 600
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönem bitişinden önce başlamıyor",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 1. dönem 10:00–10:00; başlangıcı bitişinden önce, ikisi de 00:00 ile 24:00 arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 600,
+                "to": 600
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönem günün dışında",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 1. dönem 23:20–24:01; başlangıcı bitişinden önce, ikisi de 00:00 ile 24:00 arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 1400,
+                "to": 1441
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönemin çarpanı da alanı da var",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 1. dönemin ya çarpanı ya hız alanı olur, ikisi birden ya da hiçbiri olmaz",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "field": "h",
+                "from": 420,
+                "to": 570
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönemin çarpanı da alanı da yok",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 1. dönemin ya çarpanı ya hız alanı olur, ikisi birden ya da hiçbiri olmaz",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "from": 420,
+                "to": 570
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "dönemin çarpanı 10'dan büyük",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: 1. dönemin çarpanı 10.5; 0 ile 10 arasında olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 10.5,
+                "from": 420,
+                "to": 570
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "bütün gün kapalı",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: bütün gün kapalı; en az bir dakika açık olmalı",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.0,
+                "from": 0,
+                "to": 1440
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "25 dönem",
+      "problem": "“A” ağının “Süre” maliyetinin zaman profili: en çok 24 dönem",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "hiz",
+            "kind": "speed",
+            "name": "Süre",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 0,
+                "to": 10
+              },
+              {
+                "factor": 0.5,
+                "from": 50,
+                "to": 60
+              },
+              {
+                "factor": 0.5,
+                "from": 100,
+                "to": 110
+              },
+              {
+                "factor": 0.5,
+                "from": 150,
+                "to": 160
+              },
+              {
+                "factor": 0.5,
+                "from": 200,
+                "to": 210
+              },
+              {
+                "factor": 0.5,
+                "from": 250,
+                "to": 260
+              },
+              {
+                "factor": 0.5,
+                "from": 300,
+                "to": 310
+              },
+              {
+                "factor": 0.5,
+                "from": 350,
+                "to": 360
+              },
+              {
+                "factor": 0.5,
+                "from": 400,
+                "to": 410
+              },
+              {
+                "factor": 0.5,
+                "from": 450,
+                "to": 460
+              },
+              {
+                "factor": 0.5,
+                "from": 500,
+                "to": 510
+              },
+              {
+                "factor": 0.5,
+                "from": 550,
+                "to": 560
+              },
+              {
+                "factor": 0.5,
+                "from": 600,
+                "to": 610
+              },
+              {
+                "factor": 0.5,
+                "from": 650,
+                "to": 660
+              },
+              {
+                "factor": 0.5,
+                "from": 700,
+                "to": 710
+              },
+              {
+                "factor": 0.5,
+                "from": 750,
+                "to": 760
+              },
+              {
+                "factor": 0.5,
+                "from": 800,
+                "to": 810
+              },
+              {
+                "factor": 0.5,
+                "from": 850,
+                "to": 860
+              },
+              {
+                "factor": 0.5,
+                "from": 900,
+                "to": 910
+              },
+              {
+                "factor": 0.5,
+                "from": 950,
+                "to": 960
+              },
+              {
+                "factor": 0.5,
+                "from": 1000,
+                "to": 1010
+              },
+              {
+                "factor": 0.5,
+                "from": 1050,
+                "to": 1060
+              },
+              {
+                "factor": 0.5,
+                "from": 1100,
+                "to": 1110
+              },
+              {
+                "factor": 0.5,
+                "from": 1150,
+                "to": 1160
+              },
+              {
+                "factor": 0.5,
+                "from": 1200,
+                "to": 1210
+              }
+            ],
+            "speed": 50.0
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
+    },
+    {
+      "name": "alan maliyetinde zaman profili",
+      "problem": "“A” ağının “Ücret” maliyeti alandan okunur; zaman profili yalnız hızla maliyette olur",
+      "value": {
+        "connect": "ends",
+        "costs": [
+          {
+            "field": "ucret",
+            "kind": "field",
+            "name": "Ücret",
+            "periods": [
+              {
+                "factor": 0.5,
+                "from": 420,
+                "to": 570
+              }
+            ]
+          }
+        ],
+        "direction": {
+          "kind": "both"
+        },
+        "edges": [
+          {
+            "layer": "0"
+          }
+        ],
+        "id": "a",
+        "kind": "road",
+        "name": "A",
+        "tolerance": 0.0001
+      }
     }
   ],
   "note": "The rules of a project's networks (docs/adr/0209 §2), each case with the contract's words; null where the value is one. scripts/fixtures/network_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/network_rules.rs, KENTOS_WRITE_NETWORK_RULES=1 writes the words) and TypeScript (apps/web/src/model/networkRules.test.ts) give the same words.",

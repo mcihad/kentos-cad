@@ -93,6 +93,11 @@ pub const UNITS: &[(&str, &str)] = &[
         "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     ),
     ("km/h", "Kilometre bölü saat."),
+    ("s", "Saniye."),
+    (
+        "day-min",
+        "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
+    ),
     ("system", "Adı verilen koordinat sisteminin kendi birimi."),
     ("arcsec", "Yay saniyesi (″)."),
     ("year", "Ondalık yıl: koordinat epoku (2023.5 yılın ortası)."),

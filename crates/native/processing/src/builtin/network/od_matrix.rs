@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 
 use super::{
     RunNetwork, cost_value, missing_note, name_of, network_param, places_of, points_param,
-    reach_param, run_network,
+    reach_param, run_network, time_param,
 };
 use crate::builtin::geometry::{edit_object, layer_param_styled};
 use crate::types::{
@@ -48,6 +48,7 @@ pub fn tool() -> Tool {
                 .default_value(Value::Null)
                 .describe("Maliyeti bundan büyük varış yazılmaz."),
             reach_param("Noktalar ağa bu uzaklıktan yakınsa ağın en yakın yerine oturur."),
+            time_param(),
             ParamDef::new("lines", "Düz çizgiler", ParamKind::Boolean).default_value(json!(false)).describe("Her satır için başlangıçtan varışa düz çizgi yazılır."),
             layer_param_styled("layer", "Çizgilerin katmanı", "Maliyet matrisi", "#00897B", 0.18, None, None).shown_when(lines_on),
         ],

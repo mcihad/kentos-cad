@@ -1022,6 +1022,8 @@ mod tests {
             direction: NetworkDirection::Both,
             costs: Vec::new(),
             closed: None,
+            turns: None,
+            levels: None,
         };
         const AT: &str = "settings.networks";
         assert!(check_networks(&[], AT).is_ok());

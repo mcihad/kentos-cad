@@ -1766,6 +1766,12 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 87 (docs/adr/0521): a network's turns or levels, a speed cost's time profile.
+    if doc.settings.networks.iter().any(|n| {
+        n.turns.is_some() || n.levels.is_some() || n.costs.iter().any(|c| !c.periods.is_empty())
+    }) {
+        return crate::SCHEMA_WITH_NETWORK_TURNS;
+    }
     // Schema 86 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
     if doc.settings.heights.is_some() || doc.settings.coordinate_epoch.is_some() {
         return crate::SCHEMA_WITH_HEIGHTS;

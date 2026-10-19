@@ -239,6 +239,8 @@ pub(super) struct Features {
     pub(super) clipping: bool,
     /// Schema 86: the settings' heights and coordinate epoch (docs/adr/0519).
     pub(super) heights: bool,
+    /// Schema 87: a network's turns and levels, a speed cost's periods.
+    pub(super) network_turns: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -388,6 +390,7 @@ impl Features {
             xref_paths: schema >= crate::SCHEMA_WITH_XREF_PATHS,
             clipping: schema >= crate::SCHEMA_WITH_CLIPPING,
             heights: schema >= crate::SCHEMA_WITH_HEIGHTS,
+            network_turns: schema >= crate::SCHEMA_WITH_NETWORK_TURNS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,

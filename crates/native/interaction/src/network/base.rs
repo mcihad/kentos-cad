@@ -22,6 +22,22 @@ use crate::tool::{
 /// How far a click looks for the network, logical pixels (docs/adr/0209 §4).
 pub const REACH_PX: f64 = 20.0;
 
+/// Saat's choices (docs/adr/0521 §4): none, every hour alike (the edges' own speeds), then times of the day.
+pub const TIMES: [Option<u32>; 7] = [
+    None,
+    Some(450),
+    Some(480),
+    Some(720),
+    Some(1050),
+    Some(1080),
+    Some(1320),
+];
+
+/// Saat as the prompt says it.
+pub fn time_text(t: Option<u32>) -> String {
+    t.map_or_else(|| "her saat".to_owned(), kentos_contracts::clock_text)
+}
+
 /// The command that opens Ağlar.
 pub const MANAGE: &str = "network.manage";
 
@@ -132,6 +148,7 @@ impl Base {
                 network: network.to_owned(),
                 def: None,
                 question,
+                at: cx.memory.network_time.map(f64::from),
             })));
         ticket
     }
@@ -242,7 +259,28 @@ impl Base {
                 cx.view_changes.push(ViewChange::Command(MANAGE));
                 Some(Changed::Show)
             }
+            "Z" if costs => {
+                let at = TIMES
+                    .iter()
+                    .position(|t| *t == cx.memory.network_time)
+                    .unwrap_or(0);
+                cx.memory.network_time = TIMES[(at + 1) % TIMES.len()];
+                Some(Changed::Ask)
+            }
             _ => None,
+        }
+    }
+
+    /// Saat on a network with a time profile: its option, else the prompt as it is.
+    pub fn time_option(
+        prompt: crate::prompt::Prompt,
+        n: &NetworkDef,
+        time: Option<u32>,
+    ) -> crate::prompt::Prompt {
+        if n.timed() {
+            prompt.option_with("Saat", "Z", time_text(time))
+        } else {
+            prompt
         }
     }
 
@@ -278,6 +316,7 @@ impl Base {
                 });
                 out
             }
+            "Z" if costs => TIMES.iter().map(|t| choice(time_text(*t), false)).collect(),
             "M" if costs => network
                 .map(|n| {
                     Self::cost_names(n)
@@ -318,6 +357,15 @@ impl Base {
                     return None;
                 }
                 cx.memory.network_cost = Name::new(t).unwrap_or(Name::EMPTY);
+                Some(Changed::Ask)
+            }
+            // Saat: a time typed (07:30, 7.30, 7) or every hour alike.
+            "Z" if costs => {
+                cx.memory.network_time = if t == time_text(None) {
+                    None
+                } else {
+                    Some(super::form::clock_of(t)?)
+                };
                 Some(Changed::Ask)
             }
             _ => None,

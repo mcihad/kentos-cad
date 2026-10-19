@@ -101,6 +101,7 @@ struct Seen {
     separate: bool,
     trim: f64,
     lines: bool,
+    time: Option<u32>,
 }
 
 #[derive(Default)]
@@ -164,6 +165,7 @@ impl NetArea {
             separate: m.network_separate,
             trim: m.network_trim,
             lines: m.network_lines,
+            time: m.network_time,
         };
     }
 
@@ -498,6 +500,7 @@ impl Tool for NetArea {
             .option_with("Birleşik", "İ", on(!self.seen.separate))
             .option_with("Kenar payı", "K", f.length(self.seen.trim))
             .option_with("Çizgiler", "Ç", on(self.seen.lines));
+        let prompt = Base::time_option(prompt, n, self.seen.time);
         if self.shown.is_some() {
             prompt.option("Uygula", "Enter")
         } else {

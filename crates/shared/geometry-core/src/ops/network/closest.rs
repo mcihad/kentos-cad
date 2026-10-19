@@ -24,6 +24,8 @@ pub struct Nearest<'a> {
     pub cost: usize,
     pub reverse: bool,
     pub barriers: &'a [Location],
+    /// The time of day (minutes) the origins are set off from (`reverse`: arrived at), for a cost with a time profile.
+    pub at: Option<f64>,
 }
 
 /// Each origin's targets by cost, and when `paths` the way to each (from the origin, or from the target in a
@@ -45,6 +47,7 @@ pub fn nearest(
                 barriers: q.barriers,
                 cutoff: q.cutoff,
                 enough: Some(k),
+                at: q.at,
                 ..Query::from(&q.origins[i..i + 1], q.cost)
             },
         );
@@ -103,6 +106,8 @@ mod tests {
             direction: None,
             costs: Vec::new(),
             closed: false,
+            levels: [None, None, None],
+            periods: Vec::new(),
         }];
         let g = Graph::build(rules, &edges, &[]).0;
         let at = |x: f64| g.locate(Vec2::new(x, 1.0), 5.0).expect("near");
@@ -117,6 +122,7 @@ mod tests {
             cost: 0,
             reverse: true,
             barriers: &[],
+            at: None,
         };
         let rows = nearest(&g, &mut s, &q, true);
         let ids: Vec<Vec<usize>> = rows

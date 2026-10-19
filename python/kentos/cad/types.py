@@ -68,6 +68,8 @@ UNITS: dict[str, str] = {
     "version": "Sürüm numarası.",
     "value": "Verinin kendi birimi: rasterin değeri, kuralın eşiği, alanın değeri.",
     "km/h": "Kilometre bölü saat.",
+    "s": "Saniye.",
+    "day-min": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir).",
     "system": "Adı verilen koordinat sisteminin kendi birimi.",
     "arcsec": "Yay saniyesi (″).",
     "year": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
@@ -2350,6 +2352,22 @@ class NetworkKind(_StrEnum):
 
 NetworkKindName = Literal["road", "utility"]
 """The names of :class:`NetworkKind`, for a plain string."""
+
+
+class NetworkUTurns(_StrEnum):
+    """Where U-turns are made (docs/adr/0521 §2).
+
+    - ``allowed``: Her yerde: at every node.
+    - ``deadEnds``: Yalnız çıkmazlarda: where one piece ends (a dead end).
+    - ``never``: Hiçbir yerde.
+    """
+    ALLOWED = "allowed"
+    DEAD_ENDS = "deadEnds"
+    NEVER = "never"
+
+
+NetworkUTurnsName = Literal["allowed", "deadEnds", "never"]
+"""The names of :class:`NetworkUTurns`, for a plain string."""
 
 
 class NumberPlace(_StrEnum):
@@ -24742,12 +24760,15 @@ class NetworkCost(_Model):
     """A cost besides the length (docs/adr/0209 §2).
     Attributes:
         field: The attribute it reads: a speed in km/h, or the whole edge's cost.
+        periods: A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the
+            edges' own speeds. Read when a question gives a time.
         speed: A speed cost's speed (km/h) where the field gives none it can read. Unit: km/h.
         unit: A field cost's unit (“TL”, “dk”); a speed cost's is minutes and names none.
     """
     name: str
     kind: NetworkCostKind | NetworkCostKindName
     field: str
+    periods: list[NetworkPeriod] | Unset = UNSET
     speed: float | None | Unset = UNSET
     unit: str | Unset = UNSET
 
@@ -24756,6 +24777,8 @@ class NetworkCost(_Model):
         out["name"] = self.name
         out["kind"] = _enum_out(self.kind)
         out["field"] = self.field
+        if self.periods is not UNSET:
+            out["periods"] = [e0.to_json() for e0 in self.periods]
         if self.speed is not UNSET:
             out["speed"] = None if self.speed is None else float(self.speed)
         if self.unit is not UNSET:
@@ -24768,6 +24791,7 @@ class NetworkCost(_Model):
             name=data["name"],
             kind=_enum_in(NetworkCostKind, data["kind"]),
             field=data["field"],
+            periods=[NetworkPeriod.from_json(e0) for e0 in data["periods"]] if "periods" in data else UNSET,
             speed=UNSET if "speed" not in data else None if data["speed"] is None else float(data["speed"]),
             unit=data.get("unit", UNSET),
         )
@@ -24784,6 +24808,9 @@ class NetworkDef(_Model):
         closed: An expression: the edges it holds for are out of service, travelled by nothing.
         costs: The costs besides the length, in the order the tools offer them.
         junctions: The point layers whose points are junctions, sources or valves.
+        levels: Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
+            one at one level.
+        turns: Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free.
     """
     id: str
     name: str
@@ -24795,6 +24822,8 @@ class NetworkDef(_Model):
     closed: str | None | Unset = UNSET
     costs: list[NetworkCost] | Unset = UNSET
     junctions: list[JunctionLayer] | Unset = UNSET
+    levels: NetworkLevels | None | Unset = UNSET
+    turns: NetworkTurns | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -24811,6 +24840,10 @@ class NetworkDef(_Model):
             out["costs"] = [e0.to_json() for e0 in self.costs]
         if self.junctions is not UNSET:
             out["junctions"] = [e0.to_json() for e0 in self.junctions]
+        if self.levels is not UNSET:
+            out["levels"] = None if self.levels is None else self.levels.to_json()
+        if self.turns is not UNSET:
+            out["turns"] = None if self.turns is None else self.turns.to_json()
         return out
 
     @classmethod
@@ -24826,6 +24859,8 @@ class NetworkDef(_Model):
             closed=data.get("closed", UNSET),
             costs=[NetworkCost.from_json(e0) for e0 in data["costs"]] if "costs" in data else UNSET,
             junctions=[JunctionLayer.from_json(e0) for e0 in data["junctions"]] if "junctions" in data else UNSET,
+            levels=UNSET if "levels" not in data else None if data["levels"] is None else NetworkLevels.from_json(data["levels"]),
+            turns=UNSET if "turns" not in data else None if data["turns"] is None else NetworkTurns.from_json(data["turns"]),
         )
 
 
@@ -24917,6 +24952,111 @@ class NetworkLayer(_Model):
         return cls(
             layer=data["layer"],
             filter=data.get("filter", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkLevels(_Model):
+    """The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else
+    its ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).
+    """
+    start: str
+    end: str
+    inside: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["start"] = self.start
+        out["end"] = self.end
+        if self.inside is not UNSET:
+            out["inside"] = self.inside
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkLevels:
+        return cls(
+            start=data["start"],
+            end=data["end"],
+            inside=data.get("inside", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkPeriod(_Model):
+    """A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their
+    speed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).
+    Attributes:
+        from_: Unit: day-min.
+        to: Unit: day-min.
+        factor: Unit: 1.
+    """
+    from_: int
+    to: int
+    factor: float | None | Unset = UNSET
+    field: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        if self.factor is not UNSET:
+            out["factor"] = None if self.factor is None else float(self.factor)
+        if self.field is not UNSET:
+            out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkPeriod:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            factor=UNSET if "factor" not in data else None if data["factor"] is None else float(data["factor"]),
+            field=data.get("field", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class NetworkTurns(_Model):
+    """A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more
+    pieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the
+    edge at its start to the edge at its end through their common node: forbidden, or its own delay.
+    Attributes:
+        back: A U-turn, wherever it is made, seconds. Unit: s.
+        left: Unit: s.
+        right: Unit: s.
+        straight: Going straight on (within 30° of the way one came), seconds. Unit: s.
+    """
+    u_turns: NetworkUTurns | NetworkUTurnsName
+    back: float | Unset = UNSET
+    layers: list[TurnLayer] | Unset = UNSET
+    left: float | Unset = UNSET
+    right: float | Unset = UNSET
+    straight: float | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uTurns"] = _enum_out(self.u_turns)
+        if self.back is not UNSET:
+            out["back"] = float(self.back)
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.left is not UNSET:
+            out["left"] = float(self.left)
+        if self.right is not UNSET:
+            out["right"] = float(self.right)
+        if self.straight is not UNSET:
+            out["straight"] = float(self.straight)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> NetworkTurns:
+        return cls(
+            u_turns=_enum_in(NetworkUTurns, data["uTurns"]),
+            back=float(data["back"]) if "back" in data else UNSET,
+            layers=[TurnLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
+            left=float(data["left"]) if "left" in data else UNSET,
+            right=float(data["right"]) if "right" in data else UNSET,
+            straight=float(data["straight"]) if "straight" in data else UNSET,
         )
 
 
@@ -37070,6 +37210,33 @@ class TrimWindow(_Model):
         return cls(
             min=Vec2.from_json(data["min"]),
             max=Vec2.from_json(data["max"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TurnLayer(_Model):
+    """A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;
+    without a field every turn of the layer is forbidden.
+    """
+    layer: str
+    field: str | None | Unset = UNSET
+    filter: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.field is not UNSET:
+            out["field"] = self.field
+        if self.filter is not UNSET:
+            out["filter"] = self.filter
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TurnLayer:
+        return cls(
+            layer=data["layer"],
+            field=data.get("field", UNSET),
+            filter=data.get("filter", UNSET),
         )
 
 
@@ -50456,6 +50623,11 @@ __all__ = [
     "NetworkKind",
     "NetworkKindName",
     "NetworkLayer",
+    "NetworkLevels",
+    "NetworkPeriod",
+    "NetworkTurns",
+    "NetworkUTurns",
+    "NetworkUTurnsName",
     "NewColumn",
     "NewConstraint",
     "NewGrid",
@@ -51040,6 +51212,7 @@ __all__ = [
     "TrimPick",
     "TrimWallsOperation",
     "TrimWindow",
+    "TurnLayer",
     "TwoPointsUcsTo",
     "Ucs",
     "UcsChanged",

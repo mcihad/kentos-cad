@@ -5,9 +5,10 @@
 //! id (`from_store`), so the apps pass ids and the values they evaluated.
 
 use super::graph::{EdgeIn, JunctionIn, Role};
+use super::turns::TurnIn;
 use crate::entity::{Shape, area_parts};
 use crate::geom::bulge::bulge_path_edges;
-use crate::geom::intersect::Edge;
+use crate::geom::intersect::{Edge, point_at};
 use crate::ops::edges::entity_edges;
 use crate::store::Store;
 use crate::vec2::Vec2;
@@ -19,13 +20,27 @@ pub struct EdgeValues {
     pub direction: Option<String>,
     pub costs: Vec<Option<String>>,
     pub closed: bool,
+    /// Its level fields' values: start, end, inside (docs/adr/0521 §3).
+    pub levels: [Option<String>; 3],
+    /// Its costs' periods' field values, `periods[c - 1][k]` (docs/adr/0521 §4).
+    pub periods: Vec<Vec<Option<String>>>,
 }
 
-/// What the app gave for a junction object: its layer's role and whether its closed expression holds.
-#[derive(Clone, Copy, Debug, PartialEq)]
+/// What the app gave for a junction object: its layer's role, whether its closed expression holds and its level
+/// field's value.
+#[derive(Clone, Debug, PartialEq)]
 pub struct JunctionValues {
     pub role: Role,
     pub closed: bool,
+    pub level: Option<String>,
+}
+
+/// What the app gave for a turn layer's object (docs/adr/0521 §2): whether its layer reads a delay field and the
+/// field's value.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TurnValues {
+    pub field: bool,
+    pub value: Option<String>,
 }
 
 /// The edge paths of a shape: a line's, each polyline part's, an arc's; none for another kind.
@@ -80,6 +95,37 @@ pub fn kind_of(shape: &Shape) -> &'static str {
     }
 }
 
+/// A turn line's points: a line's, a polyline's first part's, an arc's ends; none for another kind.
+pub fn turn_points(shape: &Shape) -> Option<Vec<Vec2>> {
+    let path = paths_of(shape)?.into_iter().next()?;
+    let first = path.first()?;
+    let mut pts = vec![point_at(first, 0.0)];
+    pts.extend(path.iter().map(|e| point_at(e, 1.0)));
+    Some(pts)
+}
+
+/// The turn layers' lines from `store`: the objects `turns` with their values; and the objects not taken.
+pub fn turns_from_store(
+    store: &Store,
+    turns: &[(f64, TurnValues)],
+) -> (Vec<TurnIn>, Vec<(f64, &'static str)>) {
+    let mut out = Vec::with_capacity(turns.len());
+    let mut skipped = Vec::new();
+    for (id, v) in turns {
+        let Some(item) = store.get(*id) else { continue };
+        match turn_points(&item.shape) {
+            Some(pts) if pts.len() >= 2 => out.push(TurnIn {
+                id: *id,
+                pts,
+                field: v.field,
+                value: v.value.clone(),
+            }),
+            _ => skipped.push((*id, kind_of(&item.shape))),
+        }
+    }
+    (out, skipped)
+}
+
 /// The network's input from `store`: the edge objects `edges` with their values, the junction objects `junctions`
 /// with theirs (each list's values in its order), and the objects not taken with their kinds.
 pub fn from_store(
@@ -104,6 +150,8 @@ pub fn from_store(
                         direction: v.direction.clone(),
                         costs: v.costs.clone(),
                         closed: v.closed,
+                        levels: v.levels.clone(),
+                        periods: v.periods.clone(),
                     });
                 }
             }
@@ -119,6 +167,7 @@ pub fn from_store(
                 p,
                 role: v.role,
                 closed: v.closed,
+                level: v.level.clone(),
             })),
             None => skipped.push((*id, kind_of(&item.shape))),
         }

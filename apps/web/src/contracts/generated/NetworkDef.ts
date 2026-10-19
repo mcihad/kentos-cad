@@ -5,6 +5,8 @@ import type { NetworkCost } from "./NetworkCost";
 import type { NetworkDirection } from "./NetworkDirection";
 import type { NetworkKind } from "./NetworkKind";
 import type { NetworkLayer } from "./NetworkLayer";
+import type { NetworkLevels } from "./NetworkLevels";
+import type { NetworkTurns } from "./NetworkTurns";
 
 /**
  * A network (docs/adr/0209 §2).
@@ -37,4 +39,13 @@ costs?: Array<NetworkCost>,
 /**
  * An expression: the edges it holds for are out of service, travelled by nothing.
  */
-closed?: string, };
+closed?: string, 
+/**
+ * Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free.
+ */
+turns?: NetworkTurns, 
+/**
+ * Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
+ * one at one level.
+ */
+levels?: NetworkLevels, };

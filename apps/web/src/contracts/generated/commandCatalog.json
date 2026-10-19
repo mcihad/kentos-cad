@@ -10762,6 +10762,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -10841,6 +10848,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -10850,6 +10868,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -10959,6 +10988,124 @@
               "layer"
             ],
             "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
           },
           "NumberRule": {
             "additionalProperties": false,
@@ -17485,6 +17632,30 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
             "type": "object"
           },
           "Ucs": {
@@ -24594,6 +24765,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -24673,6 +24851,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -24682,6 +24871,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -24791,6 +24991,124 @@
               "layer"
             ],
             "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
           },
           "ObstacleKind": {
             "description": "What of an obstacle area a label avoids.",
@@ -26923,6 +27241,30 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
             "type": "object"
           },
           "Ucs": {
@@ -37973,6 +38315,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -38052,6 +38401,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -38061,6 +38421,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -38170,6 +38541,124 @@
               "layer"
             ],
             "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
           },
           "NumberRule": {
             "additionalProperties": false,
@@ -44786,6 +45275,30 @@
                 "x-unit": "length"
               }
             },
+            "type": "object"
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
             "type": "object"
           },
           "Ucs": {
@@ -900464,6 +900977,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -900543,6 +901063,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -900552,6 +901083,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -900669,6 +901211,148 @@
               },
               "layer": {
                 "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
                 "type": "string"
               }
             },
@@ -900794,6 +901478,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -900873,6 +901564,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -900882,6 +901584,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -900991,6 +901704,148 @@
               "layer"
             ],
             "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -901093,6 +901948,13 @@
               "name": {
                 "type": "string"
               },
+              "periods": {
+                "description": "A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the\nedges' own speeds. Read when a question gives a time.",
+                "items": {
+                  "$ref": "#/$defs/NetworkPeriod"
+                },
+                "type": "array"
+              },
               "speed": {
                 "description": "A speed cost's speed (km/h) where the field gives none it can read.",
                 "format": "double",
@@ -901172,6 +902034,17 @@
               "kind": {
                 "$ref": "#/$defs/NetworkKind"
               },
+              "levels": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkLevels"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every\none at one level."
+              },
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
@@ -901181,6 +902054,17 @@
                 "format": "double",
                 "type": "number",
                 "x-unit": "length"
+              },
+              "turns": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTurns"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free."
               }
             },
             "required": [
@@ -901283,6 +902167,148 @@
               },
               "layer": {
                 "description": "The layer's id. A layer the project no longer has is said when the network is built.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer"
+            ],
+            "type": "object"
+          },
+          "NetworkLevels": {
+            "description": "The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else\nits ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).",
+            "properties": {
+              "end": {
+                "type": "string"
+              },
+              "inside": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "start": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end"
+            ],
+            "type": "object"
+          },
+          "NetworkPeriod": {
+            "description": "A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their\nspeed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).",
+            "properties": {
+              "factor": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              },
+              "to": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "day-min"
+              }
+            },
+            "required": [
+              "from",
+              "to"
+            ],
+            "type": "object"
+          },
+          "NetworkTurns": {
+            "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
+            "properties": {
+              "back": {
+                "description": "A U-turn, wherever it is made, seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "layers": {
+                "items": {
+                  "$ref": "#/$defs/TurnLayer"
+                },
+                "type": "array"
+              },
+              "left": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "right": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "straight": {
+                "description": "Going straight on (within 30° of the way one came), seconds.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "s"
+              },
+              "uTurns": {
+                "$ref": "#/$defs/NetworkUTurns"
+              }
+            },
+            "required": [
+              "uTurns"
+            ],
+            "type": "object"
+          },
+          "NetworkUTurns": {
+            "description": "Where U-turns are made (docs/adr/0521 §2).",
+            "oneOf": [
+              {
+                "const": "allowed",
+                "description": "Her yerde: at every node.",
+                "type": "string"
+              },
+              {
+                "const": "deadEnds",
+                "description": "Yalnız çıkmazlarda: where one piece ends (a dead end).",
+                "type": "string"
+              },
+              {
+                "const": "never",
+                "description": "Hiçbir yerde.",
+                "type": "string"
+              }
+            ]
+          },
+          "TurnLayer": {
+            "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
+            "properties": {
+              "field": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "filter": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
                 "type": "string"
               }
             },
@@ -1012621,6 +1013647,14 @@
     {
       "unit": "km/h",
       "meaning": "Kilometre bölü saat."
+    },
+    {
+      "unit": "s",
+      "meaning": "Saniye."
+    },
+    {
+      "unit": "day-min",
+      "meaning": "Günün dakikası: 0 gece yarısı, 1440 ertesi gece yarısı (07:30 450'dir)."
     },
     {
       "unit": "system",

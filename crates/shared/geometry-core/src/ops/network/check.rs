@@ -30,8 +30,10 @@ pub enum ProblemKind {
     OffNetwork,
     /// A piece dropped as no longer than the tolerance.
     Short,
-    /// A cost field's value not read.
+    /// A cost field's value not read; with no cost, a level's or a turn's (docs/adr/0521).
     Unread,
+    /// A turn line not on two pieces meeting at a node (docs/adr/0521 §2).
+    Turn,
 }
 
 /// A problem: its kind, where, the edges' or junctions' ids and its measure (a gap, a part's length).
@@ -171,6 +173,11 @@ pub fn check(g: &Graph, report: &BuildReport) -> Checked {
             if pa == pb {
                 continue;
             }
+            // Insides at other levels cross by their data (a bridge over a road; docs/adr/0521 §3).
+            let inside = |p: u32| g.edges[g.pieces[p as usize].edge as usize].inside;
+            if g.rules.levels.is_some() && !inside(pa).meets(inside(pb)) {
+                continue;
+            }
             for h in intersect_edges(e, &g.geom[gj as usize]) {
                 let ends = [
                     g.pieces[pa as usize].from,
@@ -237,6 +244,24 @@ pub fn check(g: &Graph, report: &BuildReport) -> Checked {
             cost: Some(c),
         });
     }
+    for &(id, at) in &report.unread_other {
+        problems.push(Problem {
+            kind: ProblemKind::Unread,
+            at,
+            ids: vec![id],
+            value: None,
+            cost: None,
+        });
+    }
+    for &(id, at) in &report.unplaced {
+        problems.push(Problem {
+            kind: ProblemKind::Turn,
+            at,
+            ids: vec![id],
+            value: None,
+            cost: None,
+        });
+    }
     let mut counts: Vec<(ProblemKind, usize)> = Vec::new();
     for p in &problems {
         match counts.iter_mut().find(|(k, _)| *k == p.kind) {
@@ -276,6 +301,8 @@ mod tests {
             direction: None,
             costs: Vec::new(),
             closed: false,
+            levels: [None, None, None],
+            periods: Vec::new(),
         }
     }
 
@@ -300,6 +327,7 @@ mod tests {
             p: Vec2::new(300.0, 300.0),
             role: Role::Valve,
             closed: false,
+            level: None,
         }];
         let (g, report) = Graph::build(rules, &edges, &valve);
         let c = check(&g, &report);

@@ -191,6 +191,8 @@ mod tests {
             direction: None,
             costs: Vec::new(),
             closed: false,
+            levels: [None, None, None],
+            periods: Vec::new(),
         }
     }
 
@@ -210,6 +212,7 @@ mod tests {
             p: Vec2::new(x, y),
             role,
             closed: false,
+            level: None,
         };
         let junctions = [
             j(10.0, 0.0, 0.0, Role::Source),

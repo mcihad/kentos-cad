@@ -2,11 +2,12 @@
 //! docs/adr/0209 §2): checked whole by the contract's rules
 //! (`networks_problem`), as the readers check them, each map's keys sorted
 //! as RFC 8949 sorts them. An optional field is written only when it has a
-//! value, a list only when it is not empty.
+//! value, a list only when it is not empty. Schema 87 (docs/adr/0521) adds a
+//! network's `turns` and `levels` and a speed cost's `periods`.
 
 use kentos_contracts::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind,
-    networks_problem,
+    NetworkLevels, NetworkPeriod, NetworkTurns, NetworkUTurns, TurnLayer, networks_problem,
 };
 
 use super::Encoder;
@@ -22,6 +23,19 @@ enum V<'d> {
     Junctions(&'d NetworkDef),
     Direction(&'d NetworkDirection),
     Costs(&'d NetworkDef),
+    Uint(u32),
+    Turns(&'d NetworkTurns),
+    TurnLayers(&'d [TurnLayer]),
+    Levels(&'d NetworkLevels),
+    Periods(&'d [NetworkPeriod]),
+}
+
+fn u_turns_name(u: NetworkUTurns) -> &'static str {
+    match u {
+        NetworkUTurns::Allowed => "allowed",
+        NetworkUTurns::DeadEnds => "deadEnds",
+        NetworkUTurns::Never => "never",
+    }
 }
 
 fn kind_name(k: NetworkKind) -> &'static str {
@@ -70,6 +84,68 @@ impl<'d> Encoder<'d> {
         match v {
             V::Text(t) => self.text(t),
             V::Float(x) => self.float(x),
+            V::Uint(n) => {
+                self.w.uint(u64::from(n));
+                Ok(())
+            }
+            V::Turns(t) => {
+                let mut f = vec![("uTurns", V::Text(u_turns_name(t.u_turns)))];
+                for (key, d) in [
+                    ("straight", t.straight),
+                    ("right", t.right),
+                    ("left", t.left),
+                    ("back", t.back),
+                ] {
+                    if d != 0.0 {
+                        f.push((key, V::Float(d)));
+                    }
+                }
+                if !t.layers.is_empty() {
+                    f.push(("layers", V::TurnLayers(&t.layers)));
+                }
+                self.network_map(f)
+            }
+            V::TurnLayers(layers) => {
+                self.open(layers.len(), false)?;
+                for (i, l) in layers.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        let mut f = vec![("layer", V::Text(&l.layer))];
+                        if let Some(x) = &l.filter {
+                            f.push(("filter", V::Text(x)));
+                        }
+                        if let Some(x) = &l.field {
+                            f.push(("field", V::Text(x)));
+                        }
+                        e.network_map(f)
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Levels(l) => {
+                let mut f = vec![("start", V::Text(&l.start)), ("end", V::Text(&l.end))];
+                if let Some(x) = &l.inside {
+                    f.push(("inside", V::Text(x)));
+                }
+                self.network_map(f)
+            }
+            V::Periods(list) => {
+                self.open(list.len(), false)?;
+                for (i, p) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        let mut f = vec![("from", V::Uint(p.from)), ("to", V::Uint(p.to))];
+                        if let Some(x) = p.factor {
+                            f.push(("factor", V::Float(x)));
+                        }
+                        if let Some(x) = &p.field {
+                            f.push(("field", V::Text(x)));
+                        }
+                        e.network_map(f)
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
             V::Texts(list) => {
                 self.open(list.len(), false)?;
                 for (i, t) in list.iter().enumerate() {
@@ -151,6 +227,9 @@ impl<'d> Encoder<'d> {
                         if let Some(s) = c.speed {
                             f.push(("speed", V::Float(s)));
                         }
+                        if !c.periods.is_empty() {
+                            f.push(("periods", V::Periods(&c.periods)));
+                        }
                         e.network_map(f)
                     })?;
                 }
@@ -185,6 +264,12 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(x) = &n.closed {
                     f.push(("closed", V::Text(x)));
+                }
+                if let Some(t) = &n.turns {
+                    f.push(("turns", V::Turns(t)));
+                }
+                if let Some(l) = &n.levels {
+                    f.push(("levels", V::Levels(l)));
                 }
                 e.network_map(f)
             })?;

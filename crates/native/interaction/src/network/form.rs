@@ -5,11 +5,14 @@
 //! 50. `def_of` turns it into the contract's network or says, in words, what
 //! is wrong (the form's own words, then the contract's). New networks take
 //! their kind's defaults. Both are held to fixtures/network/v1/form.json
-//! (scripts/fixtures/network_form_cases.py).
+//! (scripts/fixtures/network_form_cases.py). Turns, levels and a speed cost's
+//! time profile (docs/adr/0521): the delays in seconds, a profile as
+//! `07:00-09:30 0,5; 17:00-19:00 hiz_aksam` (a factor or a speed field).
 
 use kentos_contracts::{
     JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost, NetworkCostKind,
-    NetworkDef, NetworkDirection, NetworkKind, NetworkLayer,
+    NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
+    NetworkTurns, NetworkUTurns, TurnLayer, clock_text,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -34,6 +37,16 @@ pub struct CostRow {
     pub field: String,
     pub unit: String,
     pub speed: String,
+    /// A speed cost's time profile as typed (docs/adr/0521 §4): `07:00-09:30 0,5; 17:00-19:00 hiz_aksam`.
+    pub periods: String,
+}
+
+/// A turn layer's row: its lines are turns; the field's number a delay (seconds), none: every turn forbidden.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct TurnRow {
+    pub layer: String,
+    pub filter: String,
+    pub field: String,
 }
 
 /// Yön as the form offers it.
@@ -60,6 +73,17 @@ pub struct NetworkForm {
     pub shut: String,
     pub costs: Vec<CostRow>,
     pub closed: String,
+    /// Dönüşler (docs/adr/0521 §2): none, no turn rules; the delays as typed, seconds (empty: 0).
+    pub u_turns: Option<NetworkUTurns>,
+    pub straight: String,
+    pub right: String,
+    pub left: String,
+    pub back: String,
+    pub turn_layers: Vec<TurnRow>,
+    /// Seviyeler (docs/adr/0521 §3): the level fields; the start and the end empty, none.
+    pub level_start: String,
+    pub level_end: String,
+    pub level_inside: String,
 }
 
 /// A speed cost's default speed when none is typed, km/sa.
@@ -101,6 +125,69 @@ pub fn values_of(text: &str) -> Vec<String> {
 
 fn joined(list: &[String]) -> String {
     list.join(", ")
+}
+
+/// A clock as typed (the contract's rule).
+pub use kentos_contracts::clock_of;
+
+/// A time profile as typed: periods split at semicolons, each `from-to` then a factor or a speed field.
+pub fn periods_of(text: &str) -> Result<Vec<NetworkPeriod>, String> {
+    let mut out = Vec::new();
+    for (i, part) in text
+        .split(';')
+        .map(js_trim)
+        .filter(|p| !p.is_empty())
+        .enumerate()
+    {
+        let n = i + 1;
+        let (span, rest) = match part.find(char::is_whitespace) {
+            Some(at) => (&part[..at], js_trim(&part[at..])),
+            None => (part, ""),
+        };
+        let clocks = span
+            .split_once(['-', '–'])
+            .and_then(|(a, b)| Some((clock_of(a)?, clock_of(b)?)));
+        let Some((from, to)) = clocks else {
+            return Err(format!("{n}. dönem saatleri “07:00-09:30” gibi yazılır."));
+        };
+        if rest.is_empty() {
+            return Err(format!(
+                "{n}. dönemin çarpanı ya da hız alanı yok (ör. “07:00-09:30 0,5”)."
+            ));
+        }
+        let (factor, field) = match decimal(rest) {
+            Some(f) => (Some(f), None),
+            None => (None, Some(rest.to_owned())),
+        };
+        out.push(NetworkPeriod {
+            from,
+            to,
+            factor,
+            field,
+        });
+    }
+    Ok(out)
+}
+
+/// A time profile as the form shows it.
+pub fn periods_text(periods: &[NetworkPeriod]) -> String {
+    periods
+        .iter()
+        .map(|p| {
+            let what = match (&p.factor, &p.field) {
+                (Some(f), _) => shown(*f).replace('.', ","),
+                (None, Some(f)) => f.clone(),
+                (None, None) => String::new(),
+            };
+            format!("{}-{} {what}", clock_text(p.from), clock_text(p.to))
+        })
+        .collect::<Vec<_>>()
+        .join("; ")
+}
+
+/// A delay as the form shows it: empty for none.
+fn delay_text(d: f64) -> String {
+    if d == 0.0 { String::new() } else { shown(d) }
 }
 
 /// A network as the form shows it; `from_metres` gives the project's length unit.
@@ -171,9 +258,56 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
                 field: c.field.clone(),
                 unit: c.unit.clone(),
                 speed: c.speed.map(shown).unwrap_or_default(),
+                periods: periods_text(&c.periods),
             })
             .collect(),
         closed: def.closed.clone().unwrap_or_default(),
+        u_turns: def.turns.as_ref().map(|t| t.u_turns),
+        straight: def
+            .turns
+            .as_ref()
+            .map(|t| delay_text(t.straight))
+            .unwrap_or_default(),
+        right: def
+            .turns
+            .as_ref()
+            .map(|t| delay_text(t.right))
+            .unwrap_or_default(),
+        left: def
+            .turns
+            .as_ref()
+            .map(|t| delay_text(t.left))
+            .unwrap_or_default(),
+        back: def
+            .turns
+            .as_ref()
+            .map(|t| delay_text(t.back))
+            .unwrap_or_default(),
+        turn_layers: def
+            .turns
+            .iter()
+            .flat_map(|t| &t.layers)
+            .map(|l| TurnRow {
+                layer: l.layer.clone(),
+                filter: l.filter.clone().unwrap_or_default(),
+                field: l.field.clone().unwrap_or_default(),
+            })
+            .collect(),
+        level_start: def
+            .levels
+            .as_ref()
+            .map(|l| l.start.clone())
+            .unwrap_or_default(),
+        level_end: def
+            .levels
+            .as_ref()
+            .map(|l| l.end.clone())
+            .unwrap_or_default(),
+        level_inside: def
+            .levels
+            .as_ref()
+            .and_then(|l| l.inside.clone())
+            .unwrap_or_default(),
     }
 }
 
@@ -185,6 +319,7 @@ fn road_cost() -> CostRow {
         field: "hiz".into(),
         unit: String::new(),
         speed: "50".into(),
+        periods: String::new(),
     }
 }
 
@@ -227,6 +362,15 @@ pub fn new_form(
             Vec::new()
         },
         closed: String::new(),
+        u_turns: None,
+        straight: String::new(),
+        right: String::new(),
+        left: String::new(),
+        back: String::new(),
+        turn_layers: Vec::new(),
+        level_start: String::new(),
+        level_end: String::new(),
+        level_inside: String::new(),
     }
 }
 
@@ -276,12 +420,15 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
                         "{who} “{cost}” maliyetinin hızı bir sayı olmalı (km/sa)."
                     ));
                 };
+                let periods = periods_of(&c.periods)
+                    .map_err(|e| format!("{who} “{cost}” maliyetinin zaman profili: {e}"))?;
                 costs.push(NetworkCost {
                     name: cost,
                     kind: NetworkCostKind::Speed,
                     field: js_trim(&c.field).to_owned(),
                     unit: String::new(),
                     speed: Some(speed),
+                    periods,
                 });
             }
             NetworkCostKind::Field => costs.push(NetworkCost {
@@ -290,9 +437,62 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
                 field: js_trim(&c.field).to_owned(),
                 unit: js_trim(&c.unit).to_owned(),
                 speed: None,
+                periods: Vec::new(),
             }),
         }
     }
+    let turns = match form.u_turns {
+        None => None,
+        Some(u_turns) => {
+            let mut delays = [0.0; 4];
+            for (slot, (what, typed)) in [
+                ("düz geçiş", &form.straight),
+                ("sağa dönüş", &form.right),
+                ("sola dönüş", &form.left),
+                ("geri dönüş", &form.back),
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                if js_trim(typed).is_empty() {
+                    continue;
+                }
+                let Some(d) = decimal(typed) else {
+                    return Err(format!("{who} {what} gecikmesi bir sayı olmalı (sn)."));
+                };
+                delays[slot] = d;
+            }
+            Some(NetworkTurns {
+                u_turns,
+                straight: delays[0],
+                right: delays[1],
+                left: delays[2],
+                back: delays[3],
+                layers: form
+                    .turn_layers
+                    .iter()
+                    .map(|l| TurnLayer {
+                        layer: l.layer.clone(),
+                        filter: opt(&l.filter),
+                        field: opt(&l.field),
+                    })
+                    .collect(),
+            })
+        }
+    };
+    let levels = match (opt(&form.level_start), opt(&form.level_end)) {
+        (None, None) if opt(&form.level_inside).is_none() => None,
+        (Some(start), Some(end)) => Some(NetworkLevels {
+            start,
+            end,
+            inside: opt(&form.level_inside),
+        }),
+        _ => {
+            return Err(format!(
+                "{who} seviyesi için başlangıç ve bitiş alanı birlikte yazılır."
+            ));
+        }
+    };
     let def = NetworkDef {
         id: form.id.clone(),
         name,
@@ -329,6 +529,8 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         },
         costs,
         closed: opt(&form.closed),
+        turns,
+        levels,
     };
     match def.problem() {
         Some(wrong) => Err(sentence(&wrong)),
@@ -354,6 +556,13 @@ pub fn form_expressions(form: &NetworkForm) -> Vec<(String, String)> {
     }
     if let Some(t) = opt(&form.closed) {
         out.push(("Kapalı kenarların ifadesi".to_owned(), t));
+    }
+    if form.u_turns.is_some() {
+        for (i, l) in form.turn_layers.iter().enumerate() {
+            if let Some(t) = opt(&l.filter) {
+                out.push((format!("{}. dönüş katmanının süzgeci", i + 1), t));
+            }
+        }
     }
     out
 }
@@ -460,9 +669,26 @@ mod tests {
                     field: text(c, "field"),
                     unit: text(c, "unit"),
                     speed: text(c, "speed"),
+                    periods: text(c, "periods"),
                 })
                 .collect(),
             closed: text(v, "closed"),
+            u_turns: (!v["uTurns"].is_null()).then(|| enum_of(&v["uTurns"])),
+            straight: text(v, "straight"),
+            right: text(v, "right"),
+            left: text(v, "left"),
+            back: text(v, "back"),
+            turn_layers: list("turnLayers")
+                .iter()
+                .map(|l| TurnRow {
+                    layer: text(l, "layer"),
+                    filter: text(l, "filter"),
+                    field: text(l, "field"),
+                })
+                .collect(),
+            level_start: text(v, "levelStart"),
+            level_end: text(v, "levelEnd"),
+            level_inside: text(v, "levelInside"),
         }
     }
 

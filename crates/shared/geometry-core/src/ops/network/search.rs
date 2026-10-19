@@ -11,6 +11,15 @@
 //! enough targets stops after the nodes of that same cost. The buffers live in a
 //! [`Searcher`] and are used again search after search: a tree given back
 //! (`recycle`) costs nothing to the next.
+//!
+//! With turns (docs/adr/0521 §5) a search goes by states, not nodes: an arc
+//! (a piece one way) as it reaches its node (`piece * 2`, `piece * 2 + 1`),
+//! the same at a virtual node, and each node as a start (no way in); a turn
+//! is tried on every step, forbidden ones not taken, delays added; at a
+//! virtual node a way goes straight on. A reverse search's state is the arc
+//! a way leaves its node by. With a time (`at`) a cost's time profile is read
+//! at the time each step is set off (a reverse search: arrived), the
+//! departure (the arrival) plus (minus) the cost so far.
 
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashMap};
@@ -21,9 +30,12 @@ use crate::geom::intersect::{Edge, point_at};
 use crate::vec2::Vec2;
 
 const NONE: u32 = u32::MAX;
+pub static PUSHES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+pub static POPS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 /// A search's question: from where (`origins`, at cost 0), with which cost, the way pieces are drawn or the reverse,
-/// which places to read (`targets`) and which not to pass (`barriers`), how far at most and how many targets are enough.
+/// which places to read (`targets`) and which not to pass (`barriers`), how far at most, how many targets are enough
+/// and at what time of day (minutes; a reverse search's arrival, else its departure) when the cost has a time profile.
 #[derive(Clone, Copy, Debug)]
 pub struct Query<'a> {
     pub cost: usize,
@@ -33,6 +45,7 @@ pub struct Query<'a> {
     pub barriers: &'a [Location],
     pub cutoff: Option<f64>,
     pub enough: Option<usize>,
+    pub at: Option<f64>,
 }
 
 impl<'a> Query<'a> {
@@ -46,6 +59,7 @@ impl<'a> Query<'a> {
             barriers: &[],
             cutoff: None,
             enough: None,
+            at: None,
         }
     }
 }
@@ -191,9 +205,9 @@ impl Places {
             for &entry in g.at_node(n) {
                 let piece = entry / 2;
                 let forward = entry % 2 == 0;
-                let p = &g.pieces[piece as usize];
                 match self.split_of(piece) {
                     Some(list) => {
+                        let p = &g.pieces[piece as usize];
                         let (next, share) = if forward {
                             let v = list[0];
                             (v, self.vnodes[(v - self.base) as usize].1 / p.len)
@@ -203,7 +217,7 @@ impl Places {
                         };
                         f(next, piece, forward, share);
                     }
-                    None => f(if forward { p.to } else { p.from }, piece, forward, 1.0),
+                    None => f(g.arc_head[entry as usize], piece, forward, 1.0),
                 }
             }
             return;
@@ -261,6 +275,54 @@ impl Places {
     }
 }
 
+/// The states of a search with turns (docs/adr/0521 §5): `arcs` arc states (two a piece), two at each of `virt`
+/// virtual nodes (forward, backward), then a start state at each node (graph and virtual: `base + virt`).
+#[derive(Clone, Copy, Debug)]
+struct States {
+    arcs: u32,
+    base: u32,
+    virt: u32,
+}
+
+impl States {
+    fn count(&self) -> usize {
+        (self.arcs + 2 * self.virt + self.base + self.virt) as usize
+    }
+
+    /// Node `n`'s start state.
+    fn start(&self, n: u32) -> u32 {
+        self.arcs + 2 * self.virt + n
+    }
+
+    /// Virtual node `n`'s state of the way that goes `forward` (the way its piece is drawn) or against it.
+    fn virtual_state(&self, n: u32, forward: bool) -> u32 {
+        self.arcs + 2 * (n - self.base) + u32::from(!forward)
+    }
+
+    /// The node state `s` is at: an arc's head (a reverse search's: its tail), a virtual node, a start's node.
+    fn node(&self, g: &Graph, s: u32, reverse: bool) -> u32 {
+        if s < self.arcs {
+            g.arc_head[(if reverse { s ^ 1 } else { s }) as usize]
+        } else if s < self.arcs + 2 * self.virt {
+            self.base + (s - self.arcs) / 2
+        } else {
+            s - self.arcs - 2 * self.virt
+        }
+    }
+
+    /// The arc state `s` came by (a reverse search's: leaves by); none for a start.
+    fn arc(&self, places: &Places, s: u32) -> Option<u32> {
+        if s < self.arcs {
+            Some(s)
+        } else if s < self.arcs + 2 * self.virt {
+            let k = s - self.arcs;
+            Some(places.vnodes[(k / 2) as usize].0 * 2 + k % 2)
+        } else {
+            None
+        }
+    }
+}
+
 #[derive(Clone, Copy, Debug)]
 struct Pred {
     node: u32,
@@ -292,15 +354,20 @@ impl PartialOrd for Waiting {
     }
 }
 
-/// A search's answer: every node's cost and the way to it.
+/// A search's answer: every node's cost and the way to it (with turns: every state's).
 pub struct Tree {
     pub cost: usize,
     pub reverse: bool,
     pub places: Places,
+    /// The time of day the search set off (a reverse search: arrived) when its cost has a time profile.
+    pub time: Option<f64>,
+    states: Option<States>,
     dist: Vec<f64>,
     pred: Vec<Pred>,
     stamp: Vec<u32>,
     round: u32,
+    /// Each query place's cost (origins, targets, barriers in order).
+    place_costs: Vec<f64>,
     /// The targets settled when the search stopped, in their order.
     pub settled: Vec<usize>,
 }
@@ -323,7 +390,12 @@ impl Searcher {
     /// Searches `g` for `q`.
     pub fn search(&mut self, g: &Graph, q: &Query) -> Tree {
         let places = Places::new(g, q.origins, q.targets, q.barriers);
-        let n = places.count();
+        let states = g.turns.as_ref().map(|_| States {
+            arcs: 2 * g.pieces.len() as u32,
+            base: g.nodes.len() as u32,
+            virt: places.vnodes.len() as u32,
+        });
+        let n = states.map_or(places.count(), |s| s.count());
         if self.stamp.len() < n {
             self.dist.resize(n, f64::INFINITY);
             self.pred.resize(
@@ -355,15 +427,16 @@ impl Searcher {
         };
         for k in 0..q.origins.len() {
             let node = places.node_of[k];
-            if get(&dist, &stamp, node) > 0.0 {
-                dist[node as usize] = 0.0;
-                stamp[node as usize] = round;
-                pred[node as usize] = Pred {
+            let s = states.map_or(node, |st| st.start(node));
+            if get(&dist, &stamp, s) > 0.0 {
+                dist[s as usize] = 0.0;
+                stamp[s as usize] = round;
+                pred[s as usize] = Pred {
                     node: NONE,
                     piece: NONE,
                     forward: true,
                 };
-                self.heap.push(Waiting { cost: 0.0, node });
+                self.heap.push(Waiting { cost: 0.0, node: s });
             }
         }
         // The targets each node stands for.
@@ -376,54 +449,123 @@ impl Searcher {
         }
         let mut settled = Vec::new();
         let c = q.cost;
+        // A time is read only by a cost with a time profile.
+        let time = q.at.filter(|_| g.clock(c).is_some());
+        let base = g.nodes.len() as u32;
         // Once enough targets are settled, the search goes on only at the same cost: of equal costs every target is
         // settled, so the list's order decides among them.
         let mut last: Option<f64> = None;
-        while let Some(Waiting { cost, node }) = self.heap.pop() {
-            if cost > get(&dist, &stamp, node) {
+        while let Some(Waiting { cost, node: s }) = self.heap.pop() {
+            if cost > get(&dist, &stamp, s) {
                 continue;
             }
+            POPS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             if q.cutoff.is_some_and(|m| cost > m) || last.is_some_and(|l| cost > l) {
                 break;
             }
-            if let Some(ts) = wanted.remove(&node) {
+            let node = states.map_or(s, |st| st.node(g, s, q.reverse));
+            if !wanted.is_empty()
+                && let Some(ts) = wanted.remove(&node)
+            {
                 settled.extend(ts);
                 if last.is_none() && q.enough.is_some_and(|k| settled.len() >= k) {
                     last = Some(cost);
                 }
             }
+            let came = states.and_then(|st| st.arc(&places, s));
+            // At a graph node the way in is one of its pieces (the way out of a reverse search's state): the turns'
+            // table is read by the pieces' places, the steps coming in the node's order.
+            let came_at = match came {
+                Some(a) if node < base => g
+                    .at_node(node)
+                    .iter()
+                    .position(|&e| e == if q.reverse { a } else { a ^ 1 }),
+                _ => None,
+            };
+            let mut m = 0usize;
             places.steps(g, node, |next, piece, forward, share| {
-                let along = g.cost(piece, c, forward != q.reverse);
+                let step_at = m;
+                m += 1;
+                let real = forward != q.reverse;
+                let along = g.cost(piece, c, real);
                 if !along.is_finite() || places.blocked(g, next) {
                     return;
                 }
-                let nd = cost + along * share;
-                if nd < get(&dist, &stamp, next) {
-                    dist[next as usize] = nd;
-                    stamp[next as usize] = round;
-                    pred[next as usize] = Pred {
-                        node,
+                let arc = piece * 2 + u32::from(!real);
+                // The turn from the way in (a reverse search: to the way out); straight on at a virtual node.
+                let delay = match (states, came) {
+                    (Some(_), Some(a)) if node >= base => {
+                        if a != arc {
+                            return;
+                        }
+                        0.0
+                    }
+                    (Some(_), Some(a)) => {
+                        let t = match came_at {
+                            Some(k) if q.reverse => g.turn_at(node, step_at, k, c),
+                            Some(k) => g.turn_at(node, k, step_at, c),
+                            None if q.reverse => g.turn(arc, a, node, c),
+                            None => g.turn(a, arc, node, c),
+                        };
+                        match t {
+                            Some(d) => d,
+                            None => return,
+                        }
+                    }
+                    _ => 0.0,
+                };
+                let set_off = cost + delay;
+                let step = match time {
+                    None => along * share,
+                    Some(t) => g.travel(
+                        piece,
+                        c,
+                        real,
+                        share * g.pieces[piece as usize].len,
+                        Some(if q.reverse {
+                            (t - set_off, true)
+                        } else {
+                            (t + set_off, false)
+                        }),
+                    ),
+                };
+                let nd = set_off + step;
+                let ns = match states {
+                    None => next,
+                    Some(st) if next >= base => st.virtual_state(next, real),
+                    Some(_) => arc,
+                };
+                if nd < get(&dist, &stamp, ns) {
+                    dist[ns as usize] = nd;
+                    stamp[ns as usize] = round;
+                    pred[ns as usize] = Pred {
+                        node: s,
                         piece,
                         forward,
                     };
-                    self.heap.push(Waiting {
-                        cost: nd,
-                        node: next,
-                    });
+                    PUSHES.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                    self.heap.push(Waiting { cost: nd, node: ns });
                 }
             });
         }
         settled.sort_unstable();
-        Tree {
+        let mut tree = Tree {
             cost: c,
             reverse: q.reverse,
             places,
+            time,
+            states,
             dist,
             pred,
             stamp,
             round,
+            place_costs: Vec::new(),
             settled,
-        }
+        };
+        tree.place_costs = (0..tree.places.node_of.len())
+            .map(|k| tree.node_cost(g, tree.places.node_of[k]).0)
+            .collect();
+        tree
     }
 
     /// Gives a tree's buffers back for the next search.
@@ -437,26 +579,138 @@ impl Searcher {
 }
 
 impl Tree {
-    /// Node `n`'s cost; infinite when it was not reached.
-    pub fn at(&self, n: u32) -> f64 {
-        if (n as usize) < self.stamp.len() && self.stamp[n as usize] == self.round {
-            self.dist[n as usize]
+    /// State (without turns: node) `k`'s cost; infinite when it was not reached.
+    fn got(&self, k: u32) -> f64 {
+        if (k as usize) < self.stamp.len() && self.stamp[k as usize] == self.round {
+            self.dist[k as usize]
         } else {
             f64::INFINITY
         }
     }
 
+    /// The node of state (without turns: node) `k`.
+    fn node_of(&self, g: &Graph, k: u32) -> u32 {
+        self.states.map_or(k, |st| st.node(g, k, self.reverse))
+    }
+
+    /// Node `n`'s cost, and the state it is reached by; infinite when it was not reached.
+    fn node_cost(&self, g: &Graph, n: u32) -> (f64, u32) {
+        let Some(st) = self.states else {
+            return (self.got(n), n);
+        };
+        let mut best = (self.got(st.start(n)), st.start(n));
+        let mut take = |s: u32| {
+            let d = self.got(s);
+            if d < best.0 {
+                best = (d, s);
+            }
+        };
+        if n >= st.base {
+            take(st.virtual_state(n, true));
+            take(st.virtual_state(n, false));
+        } else {
+            for &e in g.at_node(n) {
+                // An arc arriving at the node is the reverse of one leaving it; a reverse search's leaves it.
+                take(if self.reverse { e } else { e ^ 1 });
+            }
+        }
+        best
+    }
+
+    /// Node `n`'s cost; infinite when it was not reached.
+    pub fn at(&self, g: &Graph, n: u32) -> f64 {
+        self.node_cost(g, n).0
+    }
+
+    /// What it costs to be at node `n` ready to go along `piece` `forward` (the way it is drawn) or against it, and the
+    /// state that is from: the node's cost without turns; with turns its states' and the turn onto the piece (straight
+    /// on at a virtual node).
+    pub fn enter(&self, g: &Graph, n: u32, piece: u32, forward: bool) -> f64 {
+        self.enter_by(g, n, piece, forward).0
+    }
+
+    fn enter_by(&self, g: &Graph, n: u32, piece: u32, forward: bool) -> (f64, u32) {
+        let Some(st) = self.states else {
+            return (self.got(n), n);
+        };
+        let real = forward != self.reverse;
+        let arc = piece * 2 + u32::from(!real);
+        let mut best = (self.got(st.start(n)), st.start(n));
+        if n >= st.base {
+            let s = st.virtual_state(n, real);
+            if self.got(s) < best.0 {
+                best = (self.got(s), s);
+            }
+            return best;
+        }
+        for &e in g.at_node(n) {
+            let s = if self.reverse { e } else { e ^ 1 };
+            let d = self.got(s);
+            if !d.is_finite() {
+                continue;
+            }
+            let turn = if self.reverse {
+                g.turn(arc, s, n, self.cost)
+            } else {
+                g.turn(s, arc, n, self.cost)
+            };
+            if let Some(t) = turn
+                && d + t < best.0
+            {
+                best = (d + t, s);
+            }
+        }
+        best
+    }
+
     /// The cost of query place `k` (origins, targets, barriers in order).
     pub fn place_cost(&self, k: usize) -> f64 {
-        self.at(self.places.node_of[k])
+        self.place_costs[k]
     }
 
-    /// The cost of a piece's cost travelled the way the search reads it.
-    fn along(&self, g: &Graph, piece: u32, forward: bool) -> f64 {
-        g.cost(piece, self.cost, forward != self.reverse)
+    /// What going `d` metres along `piece` `forward` (or against it) costs having come at cost `so_far`: its share of
+    /// the piece's cost, or with a time its time set off at (arrived at) the search's time plus (minus) `so_far`.
+    pub fn go(&self, g: &Graph, piece: u32, forward: bool, d: f64, so_far: f64) -> f64 {
+        let real = forward != self.reverse;
+        if !so_far.is_finite() {
+            return f64::INFINITY;
+        }
+        match self.time {
+            None => {
+                g.cost(piece, self.cost, real) * (d / g.pieces[piece as usize].len)
+            }
+            Some(t) => g.travel(
+                piece,
+                self.cost,
+                real,
+                d,
+                Some(if self.reverse {
+                    (t - so_far, true)
+                } else {
+                    (t + so_far, false)
+                }),
+            ),
+        }
     }
 
-    /// What reaching `loc` costs (the search's way), through which node and from which offset, and where on its piece
+    /// How far along `piece` `forward` (or against it) a way gets in `dt` having come at cost `so_far`, with the search's
+    /// time (none: the cost's own rate).
+    pub fn reach(&self, g: &Graph, piece: u32, forward: bool, dt: f64, so_far: f64) -> f64 {
+        let real = forward != self.reverse;
+        let whole = g.cost(piece, self.cost, real);
+        if !whole.is_finite() {
+            return 0.0;
+        }
+        let p = &g.pieces[piece as usize];
+        match (self.time, g.clock(self.cost)) {
+            (Some(t), Some(k)) if self.reverse => k.reach_backward(p.edge, t - so_far, dt),
+            (Some(t), Some(k)) => k.reach_forward(p.edge, t + so_far, dt),
+            _ if whole > 0.0 => dt / (whole / p.len),
+            _ => f64::INFINITY,
+        }
+    }
+
+    /// What reaching `loc` costs (the search's way), through which state and from which offset, and where on its piece
     /// `loc` is taken: a place within the tolerance of a piece's end is that end, as a query's places are (`Places::new`);
     /// none when it is not reached.
     fn best(&self, g: &Graph, loc: &Location) -> Option<(f64, u32, f64, f64)> {
@@ -470,12 +724,24 @@ impl Tree {
             loc.offset
         };
         let ((lo, olo), (hi, ohi)) = self.places.around(g, loc.piece, x);
-        let via_lo = self.at(lo) + self.along(g, loc.piece, true) * ((x - olo) / p.len);
-        let via_hi = self.at(hi) + self.along(g, loc.piece, false) * ((ohi - x) / p.len);
+        // At a node itself the way only reaches it; inside the piece it turns onto it.
+        let from = |n: u32, o: f64, forward: bool| {
+            if o == x {
+                self.node_cost(g, n)
+            } else {
+                let (c, s) = self.enter_by(g, n, loc.piece, forward);
+                if !c.is_finite() {
+                    return (f64::INFINITY, s);
+                }
+                (c + self.go(g, loc.piece, forward, (x - o).abs(), c), s)
+            }
+        };
+        let (via_lo, s_lo) = from(lo, olo, true);
+        let (via_hi, s_hi) = from(hi, ohi, false);
         if via_lo <= via_hi && via_lo.is_finite() {
-            Some((via_lo, lo, olo, x))
+            Some((via_lo, s_lo, olo, x))
         } else if via_hi.is_finite() {
-            Some((via_hi, hi, ohi, x))
+            Some((via_hi, s_hi, ohi, x))
         } else {
             None
         }
@@ -489,22 +755,26 @@ impl Tree {
     /// The way between the search's origins and `loc`, in the way it is travelled: from an origin to `loc`, or in a
     /// reverse search from `loc` to an origin; none when `loc` is not reached.
     pub fn path_to(&self, g: &Graph, loc: &Location) -> Option<Path> {
-        let (cost, node, o, x) = self.best(g, loc)?;
+        let (cost, state, o, x) = self.best(g, loc)?;
         let mut spans = Vec::new();
-        let mut n = node;
+        let mut k = state;
         loop {
-            let pr = self.pred[n as usize];
-            if self.stamp[n as usize] != self.round || pr.node == NONE {
+            let pr = self.pred[k as usize];
+            if self.stamp[k as usize] != self.round || pr.node == NONE {
                 break;
             }
-            let start = self.places.offset(g, pr.node, pr.piece, pr.forward);
-            let end = self.places.offset(g, n, pr.piece, !pr.forward);
+            let start = self
+                .places
+                .offset(g, self.node_of(g, pr.node), pr.piece, pr.forward);
+            let end = self
+                .places
+                .offset(g, self.node_of(g, k), pr.piece, !pr.forward);
             spans.push(Span {
                 piece: pr.piece,
                 a: start,
                 b: end,
             });
-            n = pr.node;
+            k = pr.node;
         }
         let last = Span {
             piece: loc.piece,
@@ -542,6 +812,56 @@ pub fn spans_cost(g: &Graph, spans: &[Span], c: usize) -> f64 {
             g.cost(s.piece, c, s.b >= s.a) * ((s.b - s.a).abs() / p.len)
         })
         .sum()
+}
+
+/// The node two spans in a row meet at and the arcs they go by, when the first ends at a node (not inside a piece).
+fn joint(g: &Graph, a: &Span, b: &Span) -> Option<(u32, u32, u32)> {
+    let p = &g.pieces[a.piece as usize];
+    let node = if a.b == p.len && a.b != a.a {
+        p.to
+    } else if a.b == 0.0 && a.b != a.a {
+        p.from
+    } else {
+        return None;
+    };
+    let q = &g.pieces[b.piece as usize];
+    if a.piece == b.piece && b.a != 0.0 && b.a != q.len {
+        return None;
+    }
+    let arc = |s: &Span| s.piece * 2 + u32::from(s.b < s.a);
+    Some((node, arc(a), arc(b)))
+}
+
+/// What a way through `spans` costs with cost `c`, its turns (docs/adr/0521) and, with a time profile, set off at
+/// `at` (`arrive`: arriving at `at`): infinite when a span cannot be travelled with it or a turn is forbidden.
+pub fn way_cost(g: &Graph, spans: &[Span], c: usize, at: Option<f64>, arrive: bool) -> f64 {
+    let at = at.filter(|_| g.clock(c).is_some());
+    let len = |s: &Span| (s.b - s.a).abs();
+    let turn = |k: usize| match joint(g, &spans[k], &spans[k + 1]) {
+        Some((n, a, b)) => g.turn(a, b, n, c).unwrap_or(f64::INFINITY),
+        None => 0.0,
+    };
+    let mut total = 0.0;
+    if arrive && at.is_some() {
+        for k in (0..spans.len()).rev() {
+            if k + 1 < spans.len() {
+                total += turn(k);
+            }
+            let s = &spans[k];
+            total += g.travel(s.piece, c, s.b >= s.a, len(s), at.map(|t| (t - total, true)));
+        }
+        return total;
+    }
+    for (k, s) in spans.iter().enumerate() {
+        if k > 0 {
+            total += turn(k - 1);
+        }
+        total += match at {
+            Some(t) => g.travel(s.piece, c, s.b >= s.a, len(s), Some((t + total, false))),
+            None => g.cost(s.piece, c, s.b >= s.a) * (len(s) / g.pieces[s.piece as usize].len),
+        };
+    }
+    total
 }
 
 /// The primitives of `spans`, in the way they are travelled.
@@ -610,6 +930,8 @@ mod tests {
                 direction: dir.map(str::to_owned),
                 costs: Vec::new(),
                 closed: false,
+                levels: [None, None, None],
+                periods: Vec::new(),
             })
             .collect();
         Graph::build(rules, &edges, &[]).0

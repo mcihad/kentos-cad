@@ -34,6 +34,8 @@ pub struct AreaQuery<'a> {
     /// Ayrı: each facility on its own; else together (each place by its cheapest facility).
     pub separate: bool,
     pub barriers: &'a [Location],
+    /// The time of day the facilities are set off from (Tesise: arrived at), minutes, for a cost with a time profile.
+    pub at: Option<f64>,
 }
 
 /// The band a cost falls in: the first break it does not exceed.
@@ -112,6 +114,90 @@ fn bands_on(
     }
 }
 
+/// `bands_on` with a time profile (docs/adr/0521 §4): a place's cost from either end is the time to it from the
+/// time that end is set off at (a reverse search: arrived at), not proportional to the way; `[dg, dh, fw, bw]` the
+/// ends' costs and the piece's whole costs each way (infinite where it cannot be travelled). The meeting point is found
+/// by halving (the costs from the ends rise and fall along the stretch); a band's ends by what is gone in its time.
+fn bands_timed(
+    g: &Graph,
+    t: &Tree,
+    piece: u32,
+    [dg, dh, fw, bw]: [f64; 4],
+    (a, b): (f64, f64),
+    breaks: &[f64],
+    mut out: impl FnMut(usize, f64, f64),
+) {
+    let g_ok = dg.is_finite() && fw.is_finite();
+    let h_ok = dh.is_finite() && bw.is_finite();
+    if !g_ok && !h_ok {
+        return;
+    }
+    let gx = |x: f64| dg + t.go(g, piece, true, x - a, dg);
+    let hx = |x: f64| dh + t.go(g, piece, false, b - x, dh);
+    let m = match (g_ok, h_ok) {
+        (true, false) => b,
+        (false, true) => a,
+        _ if gx(b) <= hx(b) => b,
+        _ if gx(a) > hx(a) => a,
+        _ => {
+            let (mut lo, mut hi) = (a, b);
+            for _ in 0..200 {
+                let mid = lo + (hi - lo) / 2.0;
+                if mid <= lo || mid >= hi {
+                    break;
+                }
+                if gx(mid) <= hx(mid) {
+                    lo = mid;
+                } else {
+                    hi = mid;
+                }
+            }
+            lo
+        }
+    };
+    // What is gone in `dt` from an end set off at its cost; nothing for a time before it.
+    let gone_g = |dt: f64| {
+        if dt < 0.0 {
+            f64::NEG_INFINITY
+        } else {
+            t.reach(g, piece, true, dt, dg)
+        }
+    };
+    let gone_h = |dt: f64| {
+        if dt < 0.0 {
+            f64::NEG_INFINITY
+        } else {
+            t.reach(g, piece, false, dt, dh)
+        }
+    };
+    let mut lo = f64::NEG_INFINITY;
+    for (k, &hi) in breaks.iter().enumerate() {
+        let from_start = (g_ok && a < m).then(|| {
+            let (x0, x1) = (a + gone_g(lo - dg), a + gone_g(hi - dg));
+            (x0.clamp(a, m), x1.clamp(a, m))
+        });
+        let from_end = (h_ok && m < b).then(|| {
+            let (x0, x1) = (b - gone_h(hi - dh), b - gone_h(lo - dh));
+            (x0.clamp(m, b), x1.clamp(m, b))
+        });
+        match (
+            from_start.filter(|s| s.1 > s.0),
+            from_end.filter(|e| e.1 > e.0),
+        ) {
+            (Some(s), Some(e)) if s.1 == m && e.0 == m => out(k, s.0, e.1),
+            (s, e) => {
+                if let Some(s) = s {
+                    out(k, s.0, s.1);
+                }
+                if let Some(e) = e {
+                    out(k, e.0, e.1);
+                }
+            }
+        }
+        lo = hi;
+    }
+}
+
 /// The lines a tree reaches within `breaks`, piece by piece in the pieces' order.
 fn tree_lines(
     g: &Graph,
@@ -131,22 +217,24 @@ fn tree_lines(
         let (rf, rb) = (fw / p.len, bw / p.len);
         for w in ends.windows(2) {
             let ((na, a), (nb, b)) = (w[0], w[1]);
-            bands_on(
-                [t.at(na), t.at(nb), rf, rb],
-                (a, b),
-                breaks,
-                |band, x0, x1| {
-                    out.push(AreaLine {
-                        facility,
-                        band,
-                        span: Span {
-                            piece,
-                            a: x0,
-                            b: x1,
-                        },
-                    })
-                },
-            );
+            // The costs of setting off along the stretch from either end (with turns, the turn onto it).
+            let (dg, dh) = (t.enter(g, na, piece, true), t.enter(g, nb, piece, false));
+            let mut push = |band, x0, x1| {
+                out.push(AreaLine {
+                    facility,
+                    band,
+                    span: Span {
+                        piece,
+                        a: x0,
+                        b: x1,
+                    },
+                })
+            };
+            if t.time.is_some() {
+                bands_timed(g, t, piece, [dg, dh, fw, bw], (a, b), breaks, push);
+            } else {
+                bands_on([dg, dh, rf, rb], (a, b), breaks, &mut push);
+            }
         }
     }
 }
@@ -159,6 +247,7 @@ pub fn service_lines(g: &Graph, s: &mut Searcher, q: &AreaQuery) -> Vec<AreaLine
         reverse: q.toward,
         barriers: q.barriers,
         cutoff,
+        at: q.at,
         ..Query::from(origins, q.cost)
     };
     if q.separate {

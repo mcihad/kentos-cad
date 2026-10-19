@@ -19,7 +19,7 @@ use iced::Task;
 use iced::futures::channel::oneshot;
 use kentos_contracts::{Entity, NetworkDef};
 use kentos_domain::{ChangeMark, Changes, Document};
-use kentos_geometry_core::ops::network::input::from_store;
+use kentos_geometry_core::ops::network::input::{from_store, turns_from_store};
 use kentos_interaction::Level;
 use kentos_interaction::network::{Answer, NetworkAsk, NetworkReply};
 use kentos_processing::network::{NetworkInput, Source, network_input, rules_of};
@@ -142,6 +142,7 @@ impl App {
             network: ask.network,
             ticket,
             question: ask.question,
+            at: ask.at,
             done,
         });
         let answer = Task::perform(wait, move |r| {
@@ -190,12 +191,15 @@ impl App {
                 measures: &measures,
             },
         );
-        let (edges, junctions, skipped) = from_store(store, &input.edges, &input.junctions);
+        let (edges, junctions, mut skipped) = from_store(store, &input.edges, &input.junctions);
+        let (turns, not_turns) = turns_from_store(store, &input.turns);
+        skipped.extend(not_turns);
         let members: HashSet<u32> = input
             .edges
             .iter()
             .map(|(id, _)| *id as u32)
             .chain(input.junctions.iter().map(|(id, _)| *id as u32))
+            .chain(input.turns.iter().map(|(id, _)| *id as u32))
             .chain(skipped.iter().map(|(id, _)| *id as u32))
             .collect();
         self.networks.built.insert(
@@ -214,6 +218,7 @@ impl App {
             rules,
             edges,
             junctions,
+            turns,
             skipped,
             problems: input.problems,
             done,

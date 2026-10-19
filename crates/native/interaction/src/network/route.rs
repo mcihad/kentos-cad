@@ -59,6 +59,7 @@ struct Seen {
     def: Option<kentos_contracts::NetworkDef>,
     list: Vec<kentos_contracts::NetworkDef>,
     reorder: Option<Reorder>,
+    time: Option<u32>,
 }
 
 #[derive(Default)]
@@ -93,6 +94,7 @@ impl NetRoute {
             def: n.cloned(),
             list: Base::list(cx).to_vec(),
             reorder: Some(cx.memory.network_reorder),
+            time: cx.memory.network_time,
         };
     }
 
@@ -326,6 +328,10 @@ impl Tool for NetRoute {
             prompt.option("Engel", "E")
         };
         let prompt = prompt.option_with("Sıra", "S", reorder_name(self.seen_reorder()));
+        let prompt = match &self.seen.def {
+            Some(n) => Base::time_option(prompt, n, self.seen.time),
+            None => prompt,
+        };
         if self.route.is_some() {
             prompt.option("Uygula", "Enter")
         } else {

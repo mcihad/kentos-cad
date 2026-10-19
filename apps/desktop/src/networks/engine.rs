@@ -12,7 +12,9 @@ use std::time::Instant;
 
 use iced::futures::channel::oneshot;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
-use kentos_geometry_core::ops::network::{EdgeIn, Graph, JunctionIn, NetworkSession, Rules};
+use kentos_geometry_core::ops::network::{
+    EdgeIn, Graph, JunctionIn, NetworkSession, Rules, TurnIn,
+};
 use kentos_interaction::Vec2;
 use kentos_interaction::network::{Answer, NetworkQuestion, NetworkReply};
 
@@ -35,6 +37,7 @@ pub enum Job {
         rules: Rules,
         edges: Vec<EdgeIn>,
         junctions: Vec<JunctionIn>,
+        turns: Vec<TurnIn>,
         skipped: Vec<(f64, &'static str)>,
         problems: Vec<String>,
         done: oneshot::Sender<Built>,
@@ -42,6 +45,8 @@ pub enum Job {
     Ask {
         network: String,
         ticket: u64,
+        /// Saat: the time the question sets off at, minutes (docs/adr/0521 §4).
+        at: Option<f64>,
         question: NetworkQuestion,
         done: oneshot::Sender<NetworkReply>,
     },
@@ -83,12 +88,13 @@ fn run(jobs: mpsc::Receiver<Job>) {
                 rules,
                 edges,
                 junctions,
+                turns,
                 skipped,
                 problems,
                 done,
             } => {
                 let t0 = Instant::now();
-                let (graph, report) = Graph::build(rules, &edges, &junctions);
+                let (graph, report) = Graph::build_with(rules, &edges, &junctions, &turns);
                 let session = NetworkSession::new(graph, report, skipped);
                 let built = Built {
                     network: network.clone(),
@@ -105,11 +111,15 @@ fn run(jobs: mpsc::Receiver<Job>) {
             Job::Ask {
                 network,
                 ticket,
+                at,
                 question,
                 done,
             } => {
                 let answer = match nets.get_mut(&network) {
-                    Some(session) => answer(session, question),
+                    Some(session) => {
+                        session.time = at;
+                        answer(session, question)
+                    }
                     None => Answer::Failed("Ağ kurulmadan soruldu.".into()),
                 };
                 let _ = done.send(NetworkReply { ticket, answer });

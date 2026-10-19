@@ -61,6 +61,34 @@ pub enum CostRule {
     Field,
 }
 
+/// Where U-turns are made (docs/adr/0521 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum UTurns {
+    Allowed,
+    DeadEnds,
+    Never,
+}
+
+/// The definition's turns (docs/adr/0521 §2): the U-turn policy and the delays of a turn at a crossing of three or
+/// more pieces by its angle, minutes: straight on, right, left, and a U-turn's wherever it is made.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct TurnRule {
+    pub u_turns: UTurns,
+    pub straight: f64,
+    pub right: f64,
+    pub left: f64,
+    pub back: f64,
+}
+
+/// A period of a speed cost's day (docs/adr/0521 §4): minutes of the day from and to, and the factor of the edges'
+/// speeds (none: each edge's own field gives its speed).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PeriodRule {
+    pub from: f64,
+    pub to: f64,
+    pub factor: Option<f64>,
+}
+
 /// What the analyses read of a network's definition.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Rules {
@@ -70,6 +98,12 @@ pub struct Rules {
     pub direction: DirectionRule,
     /// The costs besides the length, in the definition's order (cost 1, 2 …; cost 0 is the length).
     pub costs: Vec<CostRule>,
+    /// Each cost's time profile besides the length's (none for most): `periods[c - 1]`.
+    pub periods: Vec<Vec<PeriodRule>>,
+    /// The turns; none: every turn free and the search by nodes (docs/adr/0209 §4).
+    pub turns: Option<TurnRule>,
+    /// The level fields: none when the definition has none; `Some(true)` when it names an inside field.
+    pub levels: Option<bool>,
 }
 
 /// A text as the rules compare it: trimmed, upper and lower case the same in
@@ -149,12 +183,88 @@ impl Rules {
                 .collect::<Result<Vec<_>, _>>()?,
             _ => return Err("ağın maliyetleri liste olmalı".into()),
         };
+        let mut periods = Vec::with_capacity(costs.len());
+        for (k, rule) in costs.iter().enumerate() {
+            let list = match def.get("costs") {
+                Json::Arr(l) => l[k].get("periods"),
+                _ => &Json::Null,
+            };
+            let read = match list {
+                Json::Null => Vec::new(),
+                Json::Arr(ps) if matches!(rule, CostRule::Speed { .. }) => ps
+                    .iter()
+                    .map(|p| match (p.get("from"), p.get("to"), p.get("factor")) {
+                        (Json::Num(f), Json::Num(t), factor) if f.is_finite() && t > f => {
+                            Ok(PeriodRule {
+                                from: *f,
+                                to: *t,
+                                factor: match factor {
+                                    Json::Num(x) if x.is_finite() && *x >= 0.0 => Some(*x),
+                                    _ => None,
+                                },
+                            })
+                        }
+                        _ => Err("ağın zaman profilinin dönemi from < to dakika olmalı".to_string()),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?,
+                _ => return Err("ağın zaman profili yalnız hızla maliyette bir liste olur".into()),
+            };
+            periods.push(read);
+        }
+        let turns = match def.get("turns") {
+            Json::Null => None,
+            t => {
+                let u_turns = match t.get("uTurns") {
+                    Json::Str(s) if s == "allowed" => UTurns::Allowed,
+                    Json::Str(s) if s == "deadEnds" => UTurns::DeadEnds,
+                    Json::Str(s) if s == "never" => UTurns::Never,
+                    _ => return Err("ağın geri dönüşü allowed, deadEnds ya da never olmalı".into()),
+                };
+                // Seconds in the definition, minutes in the costs.
+                let delay = |key: &str| match t.get(key) {
+                    Json::Num(x) if x.is_finite() && *x >= 0.0 => Ok(*x / 60.0),
+                    Json::Null => Ok(0.0),
+                    _ => Err(format!("ağın {key} gecikmesi sıfır ya da artı saniye olmalı")),
+                };
+                Some(TurnRule {
+                    u_turns,
+                    straight: delay("straight")?,
+                    right: delay("right")?,
+                    left: delay("left")?,
+                    back: delay("back")?,
+                })
+            }
+        };
+        let levels = match def.get("levels") {
+            Json::Null => None,
+            l => Some(!matches!(l.get("inside"), Json::Null)),
+        };
         Ok(Rules {
             connect,
             tolerance,
             direction,
             costs,
+            periods,
+            turns,
+            levels,
         })
+    }
+
+    /// Whether cost `c` is a time (a speed cost, minutes): turn delays are added to it.
+    pub fn is_time(&self, c: usize) -> bool {
+        c >= 1 && matches!(self.costs.get(c - 1), Some(CostRule::Speed { .. }))
+    }
+
+    /// The speed (km/h) an edge goes at with speed cost `c` by its field's value, and whether the value was not read;
+    /// none for another cost.
+    pub fn speed_of(&self, c: usize, value: Option<&str>) -> Option<(f64, bool)> {
+        match self.costs.get(c.checked_sub(1)?)? {
+            CostRule::Speed { kmh } => {
+                let read = value.and_then(number).filter(|s| *s > 0.0);
+                Some((read.unwrap_or(*kmh), read.is_none()))
+            }
+            CostRule::Field => None,
+        }
     }
 
     /// The way an edge goes by its direction field's value (none: the field is not set).

@@ -312,6 +312,8 @@ MAX_CLIPPING_CORNERS = 10_000
 MAX_UNDERLAY_FADE = 80
 # Schema 86: schema 85 and the settings' `heights` and `coordinateEpoch` (docs/adr/0519 §1).
 SCHEMA_WITH_HEIGHTS = 86
+# Schema 87: schema 86 and a network's `turns` and `levels` and a speed cost's `periods` (docs/adr/0521).
+SCHEMA_WITH_NETWORK_TURNS = 87
 # The vertical systems a project may name (kentos_contracts::VERTICAL_SYSTEMS, EPSG's registry).
 VERTICAL_SRIDS = (5775, 3855, 5773, 5714, 8050, 5735)
 MAX_XREF_PATHS = 64
@@ -397,6 +399,7 @@ NETWORK_CONNECTS = ("ends", "vertices")
 JUNCTION_ROLES = ("junction", "source", "valve")
 NETWORK_COST_KINDS = ("speed", "field")
 DIRECTION_KINDS = ("both", "digitized", "field")
+U_TURNS = ("allowed", "deadEnds", "never")
 # Map services' bounds and names (kentos_contracts::service).
 SERVICE_KINDS = ("xyz", "wms", "wmts", "ogcTiles", "arcgis", "google", "vector")
 FEED_KINDS = ("wfs", "ogcFeatures", "arcgis", "geojson")
@@ -508,7 +511,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -917,8 +920,60 @@ def network_problem(n):
                 return "Süre maliyeti birim almaz; varsayılan hızı 0 ile 1000 km/sa arasında olmalı."
         elif speed is not None or len(unit) > 12 or unit.strip() != unit:
             return "Alan maliyeti hız almaz; birimi kırpılmış ve en çok 12 karakter olmalı."
+        if c.get("periods"):
+            if c["kind"] != "speed":
+                return "Zaman profili yalnız hızla maliyette olur."
+            p = periods_problem(c["periods"])
+            if p:
+                return f"Maliyetin zaman profili: {p}"
     if bad_expression(n.get("closed")):
         return "Kapalı kenarlar ifadesi boş ya da uzun."
+
+    def bad_field(f):
+        return not f.strip() or f.strip() != f or len(f) > 64
+
+    t = n.get("turns")
+    if t is not None:
+        for key in ("straight", "right", "left", "back"):
+            d = t.get(key, 0.0)
+            if not (math.isfinite(d) and 0.0 <= d <= 3600.0):
+                return "Dönüş gecikmesi 0 ile 3600 sn arasında olmalı."
+        layers = t.get("layers", [])
+        if len(layers) > 4:
+            return "En çok 4 dönüş katmanı olur."
+        seen = []
+        for l_ in layers:
+            key = (l_["layer"], l_.get("filter"))
+            if not l_["layer"] or bad_expression(l_.get("filter")) or ("field" in l_ and bad_field(l_["field"])) or key in seen:
+                return "Dönüş katmanı boş, süzgeci ya da alanı bozuk, ya da aynı süzgeçle iki kez var."
+            seen.append(key)
+    lv = n.get("levels")
+    if lv is not None and (bad_field(lv["start"]) or bad_field(lv["end"]) or ("inside" in lv and bad_field(lv["inside"]))):
+        return "Seviye alanı boş, kırpılmamış ya da çok uzun."
+    return None
+
+
+def periods_problem(periods):
+    """A speed cost's time profile (kentos_contracts::network::periods_problem): at most 24 periods within the day, in
+    the day's order without overlapping, each a factor (0–10) or a field, not both; not the whole day closed."""
+    if len(periods) > 24:
+        return "en çok 24 dönem"
+    last = 0
+    for i, p in enumerate(periods):
+        if p["from"] >= p["to"] or p["to"] > 1440:
+            return f"{i + 1}. dönem günün içinde değil"
+        if i > 0 and p["from"] < last:
+            return f"{i + 1}. dönem bir öncekiyle örtüşüyor"
+        last = p["to"]
+        factor, field = p.get("factor"), p.get("field")
+        if (factor is None) == (field is None):
+            return f"{i + 1}. dönemin ya çarpanı ya hız alanı olur"
+        if factor is not None and not (math.isfinite(factor) and 0.0 <= factor <= 10.0):
+            return f"{i + 1}. dönemin çarpanı 0 ile 10 arasında olmalı"
+        if field is not None and (not field.strip() or field.strip() != field or len(field) > 64):
+            return f"{i + 1}. dönemin hız alanı bozuk"
+    if sum(p["to"] - p["from"] for p in periods if p.get("factor") == 0.0) == 1440:
+        return "bütün gün kapalı"
     return None
 
 
@@ -2653,6 +2708,7 @@ class _Schema:
         self.xref_paths = version >= SCHEMA_WITH_XREF_PATHS
         self.clipping = version >= SCHEMA_WITH_CLIPPING
         self.heights = version >= SCHEMA_WITH_HEIGHTS
+        self.network_turns = version >= SCHEMA_WITH_NETWORK_TURNS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4059,6 +4115,17 @@ class _Schema:
         junction = self.fields(
             {"layer": (self.text, True), "role": (self.enum(JUNCTION_ROLES), True), "filter": (self.text, False), "closed": (self.text, False)}
         )
+        def delay(v):
+            d = self.float(v)
+            if d == 0.0:
+                self.fail("bad_value", "sıfır gecikme yazılmaz")
+            return d
+
+        period = self.fields(
+            {"from": (self.uint(32), True), "to": (self.uint(32), True), "factor": (self.float, False), "field": (self.text, False)}
+        )
+        turn_layer = self.fields({"layer": (self.text, True), "filter": (self.text, False), "field": (self.text, False)})
+        turned = self.network_turns
         cost = self.fields(
             {
                 "name": (self.text, True),
@@ -4066,8 +4133,20 @@ class _Schema:
                 "field": (self.text, True),
                 "unit": (unit, False),
                 "speed": (self.float, False),
+                **({"periods": (nonempty(period, "boş dönem listesi yazılmaz"), False)} if turned else {}),
             }
         )
+        turns = self.fields(
+            {
+                "uTurns": (self.enum(U_TURNS), True),
+                "straight": (delay, False),
+                "right": (delay, False),
+                "left": (delay, False),
+                "back": (delay, False),
+                "layers": (nonempty(turn_layer, "boş dönüş katmanı listesi yazılmaz"), False),
+            }
+        )
+        levels = self.fields({"start": (self.text, True), "end": (self.text, True), "inside": (self.text, False)})
         network = self.fields(
             {
                 "id": (self.text, True),
@@ -4080,6 +4159,7 @@ class _Schema:
                 "direction": (direction, True),
                 "costs": (nonempty(cost, "boş maliyet listesi yazılmaz"), False),
                 "closed": (self.text, False),
+                **({"turns": (turns, False), "levels": (levels, False)} if turned else {}),
             }
         )
         all_ = self.array(network)(v)

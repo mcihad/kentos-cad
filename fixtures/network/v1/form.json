@@ -581,6 +581,363 @@
     "closed": ""
    },
    "problem": "Ağın toleransı bir sayı olmalı (ör. 0,01)."
+  },
+  {
+   "name": "zaman profili: çarpan ve hız alanı, 7 ve 7.30 saat",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "50",
+      "periods": "7-9.30 0,5; 17:00–19:00  hiz_aksam ;"
+     }
+    ],
+    "closed": ""
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "speed": 50.0,
+      "periods": [
+       {
+        "from": 420,
+        "to": 570,
+        "factor": 0.5
+       },
+       {
+        "from": 1020,
+        "to": 1140,
+        "field": "hiz_aksam"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "zaman profili: saat okunamıyor",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "50",
+      "periods": "07:00 0,5"
+     }
+    ],
+    "closed": ""
+   },
+   "problem": "“Yollar” ağının “Süre” maliyetinin zaman profili: 1. dönem saatleri “07:00-09:30” gibi yazılır."
+  },
+  {
+   "name": "zaman profili: çarpanı yok",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [
+     {
+      "name": "Süre",
+      "kind": "speed",
+      "field": "hiz",
+      "unit": "",
+      "speed": "50",
+      "periods": "07:00-09:00"
+     }
+    ],
+    "closed": ""
+   },
+   "problem": "“Yollar” ağının “Süre” maliyetinin zaman profili: 1. dönemin çarpanı ya da hız alanı yok (ör. “07:00-09:30 0,5”)."
+  },
+  {
+   "name": "dönüşler: gecikmeler, sıfırı yazılmaz, katmanlar",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "uTurns": "deadEnds",
+    "straight": "0",
+    "right": "5",
+    "left": "12,5",
+    "back": "30",
+    "turnLayers": [
+     {
+      "layer": "donus",
+      "filter": " tur = 'yasak' ",
+      "field": ""
+     },
+     {
+      "layer": "donus",
+      "filter": "",
+      "field": "gecikme"
+     }
+    ]
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "turns": {
+     "uTurns": "deadEnds",
+     "right": 5.0,
+     "left": 12.5,
+     "back": 30.0,
+     "layers": [
+      {
+       "layer": "donus",
+       "filter": "tur = 'yasak'"
+      },
+      {
+       "layer": "donus",
+       "field": "gecikme"
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "dönüş kuralı yokken gecikmeler okunmaz",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "uTurns": null,
+    "left": "x"
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    }
+   }
+  },
+  {
+   "name": "dönüş gecikmesi sayı değil",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "uTurns": "allowed",
+    "left": "çok"
+   },
+   "problem": "“Yollar” ağının sola dönüş gecikmesi bir sayı olmalı (sn)."
+  },
+  {
+   "name": "seviyeler: üç alan",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "levelStart": " z_bas ",
+    "levelEnd": "z_son",
+    "levelInside": "z_orta"
+   },
+   "network": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "both"
+    },
+    "levels": {
+     "start": "z_bas",
+     "end": "z_son",
+     "inside": "z_orta"
+    }
+   }
+  },
+  {
+   "name": "seviyenin yalnız başlangıcı",
+   "unit": "m",
+   "form": {
+    "id": "ag-1",
+    "name": "Yollar",
+    "kind": "road",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "both",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "levelStart": "z_bas"
+   },
+   "problem": "“Yollar” ağının seviyesi için başlangıç ve bitiş alanı birlikte yazılır."
   }
  ],
  "retype": [
@@ -1027,6 +1384,107 @@
     "kind": "digitized"
    },
    "closed": "durum = 'arızalı'"
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "costs": [
+    {
+     "name": "Süre",
+     "kind": "speed",
+     "field": "hiz",
+     "speed": 50.0,
+     "periods": [
+      {
+       "from": 420,
+       "to": 570,
+       "factor": 0.5
+      },
+      {
+       "from": 1020,
+       "to": 1140,
+       "field": "hiz_aksam"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "turns": {
+    "uTurns": "deadEnds",
+    "right": 5.0,
+    "left": 12.5,
+    "back": 30.0,
+    "layers": [
+     {
+      "layer": "donus",
+      "filter": "tur = 'yasak'"
+     },
+     {
+      "layer": "donus",
+      "field": "gecikme"
+     }
+    ]
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   }
+  },
+  {
+   "id": "ag-1",
+   "name": "Yollar",
+   "kind": "road",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "both"
+   },
+   "levels": {
+    "start": "z_bas",
+    "end": "z_son",
+    "inside": "z_orta"
+   }
   }
  ]
 }

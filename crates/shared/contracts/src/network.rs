@@ -35,6 +35,21 @@ pub const LENGTH_COST: &str = "Uzunluk";
 /// The greatest speed a speed cost's default may be (km/h).
 pub const NETWORK_SPEED_LIMIT: f64 = 1000.0;
 
+/// The most turn layers a network names (docs/adr/0521 §2).
+pub const NETWORK_TURN_LAYER_LIMIT: usize = 4;
+
+/// The longest turn delay (seconds).
+pub const NETWORK_DELAY_LIMIT: f64 = 3600.0;
+
+/// The most periods a speed cost's time profile holds (docs/adr/0521 §4).
+pub const NETWORK_PERIOD_LIMIT: usize = 24;
+
+/// The greatest factor a period may multiply the speeds by.
+pub const NETWORK_FACTOR_LIMIT: f64 = 10.0;
+
+/// A time profile's day, minutes.
+pub const DAY_MINUTES: u32 = 1440;
+
 /// The longest id, name, value, field name, unit and expression (characters).
 const ID_LENGTH: usize = 40;
 const NAME_LENGTH: usize = 80;
@@ -74,6 +89,120 @@ pub struct NetworkDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub closed: Option<String>,
+    /// Dönüşler (docs/adr/0521 §2): forbidden turns, U-turns and turn delays; none: every turn free.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub turns: Option<NetworkTurns>,
+    /// Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
+    /// one at one level.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub levels: Option<NetworkLevels>,
+}
+
+/// Where U-turns are made (docs/adr/0521 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum NetworkUTurns {
+    /// Her yerde: at every node.
+    Allowed,
+    /// Yalnız çıkmazlarda: where one piece ends (a dead end).
+    DeadEnds,
+    /// Hiçbir yerde.
+    Never,
+}
+
+/// A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more
+/// pieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the
+/// edge at its start to the edge at its end through their common node: forbidden, or its own delay.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkTurns {
+    pub u_turns: NetworkUTurns,
+    /// Going straight on (within 30° of the way one came), seconds.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub straight: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub right: f64,
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub left: f64,
+    /// A U-turn, wherever it is made, seconds.
+    #[serde(default, skip_serializing_if = "is_zero")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<f64>", optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "s")))]
+    pub back: f64,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TurnLayer>>", optional))]
+    pub layers: Vec<TurnLayer>,
+}
+
+fn is_zero(x: &f64) -> bool {
+    *x == 0.0
+}
+
+/// A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;
+/// without a field every turn of the layer is forbidden.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TurnLayer {
+    pub layer: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub filter: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub field: Option<String>,
+}
+
+/// The level fields (docs/adr/0521 §3): an edge's level at its start, at its end and, when given, inside it (else
+/// its ends' when they are one, none when they differ); a junction point's from `start` (empty: every level).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkLevels {
+    pub start: String,
+    pub end: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub inside: Option<String>,
+}
+
+/// A period of a speed cost's day (docs/adr/0521 §4): from `from` to `to` (minutes of the day), the edges go at their
+/// speed times `factor`, or at the speed `field` gives (km/h; 0 closed, empty or unreadable the edge's own speed).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkPeriod {
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "day-min")))]
+    pub from: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "day-min")))]
+    pub to: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "1")))]
+    pub factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub field: Option<String>,
 }
 
 /// Yol ağı or Şebeke: what the tools offer first; the graph is the same.
@@ -191,6 +320,11 @@ pub struct NetworkCost {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "km/h")))]
     pub speed: Option<f64>,
+    /// A speed cost's time profile (docs/adr/0521 §4): its periods in the day's order; the rest of the day the
+    /// edges' own speeds. Read when a question gives a time.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<NetworkPeriod>>", optional))]
+    pub periods: Vec<NetworkPeriod>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -389,8 +523,16 @@ impl NetworkDef {
                             "“{cost}” maliyetinin varsayılan hızı sıfırdan büyük, en çok {NETWORK_SPEED_LIMIT} km/sa olmalı"
                         )));
                     }
+                    if let Some(p) = periods_problem(&c.periods) {
+                        return Some(at(&format!("“{cost}” maliyetinin zaman profili: {p}")));
+                    }
                 }
                 NetworkCostKind::Field => {
+                    if !c.periods.is_empty() {
+                        return Some(at(&format!(
+                            "“{cost}” maliyeti alandan okunur; zaman profili yalnız hızla maliyette olur"
+                        )));
+                    }
                     if c.speed.is_some() {
                         return Some(at(&format!("“{cost}” maliyeti alandan okunur; hız almaz")));
                     }
@@ -402,7 +544,60 @@ impl NetworkDef {
                 }
             }
         }
-        expression_problem(&self.closed, &at("kapalı kenarlar ifadesi"))
+        if let Some(p) = expression_problem(&self.closed, &at("kapalı kenarlar ifadesi")) {
+            return Some(p);
+        }
+        if let Some(t) = &self.turns {
+            for (what, d) in [
+                ("düz geçiş", t.straight),
+                ("sağa dönüş", t.right),
+                ("sola dönüş", t.left),
+                ("geri dönüş", t.back),
+            ] {
+                if !(d.is_finite() && (0.0..=NETWORK_DELAY_LIMIT).contains(&d)) {
+                    return Some(at(&format!(
+                        "{what} gecikmesi {d} sn; 0 ile {NETWORK_DELAY_LIMIT} sn arasında olmalı"
+                    )));
+                }
+            }
+            if t.layers.len() > NETWORK_TURN_LAYER_LIMIT {
+                return Some(at(&format!(
+                    "dönüş katmanı çok; en çok {NETWORK_TURN_LAYER_LIMIT}"
+                )));
+            }
+            for (i, l) in t.layers.iter().enumerate() {
+                if l.layer.is_empty() {
+                    return Some(at("dönüş katmanının kimliği boş"));
+                }
+                if let Some(p) = expression_problem(&l.filter, &at("dönüş süzgeci")) {
+                    return Some(p);
+                }
+                if l.field.as_ref().is_some_and(|f| field_bad(f)) {
+                    return Some(at(
+                        "dönüş katmanının gecikme alanı boş, kırpılmamış ya da çok uzun",
+                    ));
+                }
+                if t.layers[..i]
+                    .iter()
+                    .any(|o| o.layer == l.layer && o.filter == l.filter)
+                {
+                    return Some(at("aynı dönüş katmanı aynı süzgeçle iki kez var"));
+                }
+            }
+        }
+        if let Some(l) = &self.levels
+            && (field_bad(&l.start)
+                || field_bad(&l.end)
+                || l.inside.as_ref().is_some_and(|f| field_bad(f)))
+        {
+            return Some(at("seviye alanı boş, kırpılmamış ya da çok uzun"));
+        }
+        None
+    }
+
+    /// Whether a question about the network may give a time: one of its speed costs has a time profile.
+    pub fn timed(&self) -> bool {
+        self.costs.iter().any(|c| !c.periods.is_empty())
     }
 
     /// The names of its costs in the tools' order: the length first.
@@ -412,7 +607,7 @@ impl NetworkDef {
             .collect()
     }
 
-    /// The layers it reads (edges, then junctions), each once in its first place.
+    /// The layers it reads (edges, then junctions, then turns), each once in its first place.
     pub fn layers(&self) -> Vec<&str> {
         let mut out: Vec<&str> = Vec::new();
         for l in self
@@ -420,6 +615,11 @@ impl NetworkDef {
             .iter()
             .map(|e| e.layer.as_str())
             .chain(self.junctions.iter().map(|j| j.layer.as_str()))
+            .chain(
+                self.turns
+                    .iter()
+                    .flat_map(|t| t.layers.iter().map(|l| l.layer.as_str())),
+            )
         {
             if !out.contains(&l) {
                 out.push(l);
@@ -427,6 +627,83 @@ impl NetworkDef {
         }
         out
     }
+}
+
+/// Whether a field name a network's turns, levels or periods name is not one: empty, untrimmed or too long.
+fn field_bad(f: &str) -> bool {
+    f.trim().is_empty() || f.trim() != f || chars(f) > FIELD_LENGTH
+}
+
+/// What is wrong with a speed cost's periods (docs/adr/0521 §4), if anything: each within the day, later than the one
+/// before it, a factor (0–10) or a field, not both; at most [`NETWORK_PERIOD_LIMIT`]; not the whole day closed.
+pub fn periods_problem(periods: &[NetworkPeriod]) -> Option<String> {
+    if periods.len() > NETWORK_PERIOD_LIMIT {
+        return Some(format!("en çok {NETWORK_PERIOD_LIMIT} dönem"));
+    }
+    let mut last = 0;
+    for (i, p) in periods.iter().enumerate() {
+        let n = i + 1;
+        if p.from >= p.to || p.to > DAY_MINUTES {
+            return Some(format!(
+                "{n}. dönem {}–{}; başlangıcı bitişinden önce, ikisi de 00:00 ile 24:00 arasında olmalı",
+                clock_text(p.from),
+                clock_text(p.to)
+            ));
+        }
+        if i > 0 && p.from < last {
+            return Some(format!(
+                "{n}. dönem bir öncekiyle örtüşüyor ya da ondan önce; dönemler günün sırasıyla, örtüşmeden yazılır"
+            ));
+        }
+        last = p.to;
+        match (&p.factor, &p.field) {
+            (Some(f), None) => {
+                if !(f.is_finite() && (0.0..=NETWORK_FACTOR_LIMIT).contains(f)) {
+                    return Some(format!(
+                        "{n}. dönemin çarpanı {f}; 0 ile {NETWORK_FACTOR_LIMIT} arasında olmalı"
+                    ));
+                }
+            }
+            (None, Some(f)) => {
+                if field_bad(f) {
+                    return Some(format!(
+                        "{n}. dönemin hız alanı boş, kırpılmamış ya da çok uzun"
+                    ));
+                }
+            }
+            _ => {
+                return Some(format!(
+                    "{n}. dönemin ya çarpanı ya hız alanı olur, ikisi birden ya da hiçbiri olmaz"
+                ));
+            }
+        }
+    }
+    let closed: u32 = periods
+        .iter()
+        .filter(|p| p.factor == Some(0.0))
+        .map(|p| p.to - p.from)
+        .sum();
+    (closed == DAY_MINUTES).then(|| "bütün gün kapalı; en az bir dakika açık olmalı".to_owned())
+}
+
+/// A clock as typed: `7`, `07:30`, `7.30`, `24:00`; minutes of the day, none when it is not one.
+pub fn clock_of(text: &str) -> Option<u32> {
+    let t = text.trim();
+    let (h, m) = match t.find([':', '.']) {
+        Some(i) => (&t[..i], &t[i + 1..]),
+        None => (t, "0"),
+    };
+    let digits = |s: &str| !s.is_empty() && s.len() <= 2 && s.chars().all(|c| c.is_ascii_digit());
+    if !digits(h) || !digits(m) {
+        return None;
+    }
+    let (h, m): (u32, u32) = (h.parse().ok()?, m.parse().ok()?);
+    (m < 60 && h * 60 + m <= DAY_MINUTES).then_some(h * 60 + m)
+}
+
+/// Minutes of the day as a clock says them: `07:30`, `24:00`.
+pub fn clock_text(minutes: u32) -> String {
+    format!("{:02}:{:02}", minutes / 60, minutes % 60)
 }
 
 /// What is wrong with a project's networks: too many, an id or a name twice, or one that does not hold.
@@ -510,8 +787,11 @@ mod tests {
                 field: "hiz".into(),
                 unit: String::new(),
                 speed: Some(50.0),
+                periods: Vec::new(),
             }],
             closed: None,
+            turns: None,
+            levels: None,
         }
     }
 
@@ -549,6 +829,56 @@ mod tests {
                 .contains("iki kez")
         );
         assert_eq!(sanitized_networks(vec![road(), two]).len(), 1);
+    }
+
+    #[test]
+    fn turns_levels_and_periods_say_what_is_wrong() {
+        let mut n = road();
+        n.turns = Some(NetworkTurns {
+            u_turns: NetworkUTurns::DeadEnds,
+            straight: 0.0,
+            right: 5.0,
+            left: 15.0,
+            back: 30.0,
+            layers: vec![TurnLayer {
+                layer: "donus".into(),
+                filter: None,
+                field: Some("gecikme".into()),
+            }],
+        });
+        n.levels = Some(NetworkLevels {
+            start: "z_bas".into(),
+            end: "z_son".into(),
+            inside: None,
+        });
+        let rush = |from: u32, to: u32, factor: f64| NetworkPeriod {
+            from,
+            to,
+            factor: Some(factor),
+            field: None,
+        };
+        n.costs[0].periods = vec![rush(420, 570, 0.5), rush(1020, 1140, 0.6)];
+        assert_eq!(n.problem(), None);
+        assert!(n.timed());
+        assert_eq!(n.layers(), vec!["yol", "donus"]);
+        let mut bad = n.clone();
+        bad.costs[0].periods.swap(0, 1);
+        assert!(bad.problem().unwrap().contains("örtüşüyor"));
+        let mut bad = n.clone();
+        bad.costs[0].periods = vec![rush(0, 1440, 0.0)];
+        assert!(bad.problem().unwrap().contains("bütün gün kapalı"));
+        let mut bad = n.clone();
+        bad.costs[0].periods[0].field = Some("hiz_sabah".into());
+        assert!(bad.problem().unwrap().contains("ikisi birden"));
+        let mut bad = n.clone();
+        if let Some(t) = &mut bad.turns {
+            t.left = -1.0;
+        }
+        assert!(bad.problem().unwrap().contains("sola dönüş"));
+        let mut bad = n.clone();
+        bad.levels.as_mut().unwrap().end = " z_son".into();
+        assert!(bad.problem().unwrap().contains("seviye alanı"));
+        assert_eq!(clock_text(450), "07:30");
     }
 
     #[test]

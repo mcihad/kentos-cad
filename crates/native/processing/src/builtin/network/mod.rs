@@ -79,6 +79,24 @@ pub fn reach_param(what: &str) -> ParamDef {
     .describe(what)
 }
 
+/// Kalkış saati (docs/adr/0521 §4): the time of day the questions set off at, for a network with a time profile.
+pub fn time_param() -> ParamDef {
+    ParamDef::new(
+        "time",
+        "Kalkış saati",
+        ParamKind::Text {
+            placeholder: Some("ör. 07:30".into()),
+            max_length: Some(5),
+            allow_empty: true,
+        },
+    )
+    .optional()
+    .advanced()
+    .describe(
+        "Zaman profili olan ağda maliyet bu saatin hızlarıyla hesaplanır; boş: her saat aynı.",
+    )
+}
+
 /// Builds the run's network; says what building said (expressions that did not compile, objects not taken).
 pub fn run_network(
     v: &Resolved<'_>,
@@ -88,11 +106,25 @@ pub fn run_network(
     let value = v.values.get("network").cloned().unwrap_or(Value::Null);
     let id = value.get("network").and_then(Value::as_str).unwrap_or("");
     let cost = value.get("cost").and_then(Value::as_str).unwrap_or("");
+    let time = match v.values.get("time").and_then(Value::as_str).map(js_trim) {
+        None | Some("") => None,
+        Some(t) => Some(
+            kentos_contracts::clock_of(t)
+                .ok_or_else(|| format!("Kalkış saati “{t}” okunamadı; 07:30 gibi yazın."))?,
+        ),
+    };
     let FromDocument {
         def,
-        session,
+        mut session,
         problems,
     } = from_document(ctx.doc, id)?;
+    session.time = time.map(f64::from);
+    if time.is_some() && !def.timed() {
+        feedback.warn(format!(
+            "{}: ağın zaman profili yok; kalkış saati maliyeti değiştirmez.",
+            def.name
+        ));
+    }
     for p in &problems {
         feedback.warn(format!("{}: {p}", def.name));
     }

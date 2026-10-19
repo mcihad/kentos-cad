@@ -394,7 +394,10 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ağacın kopyasında: `layer_states::themed`, `StyledCache::scene_themed`, `Spatial::set_theme`, `Store::labels_shown_in`; Görünümleri bağla, Kaydırmalı
   karşılaştır, çizim değişmez); 0522 CSV tablolar (`file.export.csv` ve `file.import.csv`: GDAL'ın CSV'si, geometri ISO WKT
   ya da X ve Y, yaylar kesin, `.csvt` türleri ve OGC WKT1 `.prj`; okuma GeoPackage içe aktarmasının yolundan, `kentos_geopackage::wkt`; Veri › Dosya alışverişi'nde
-  CSV içe ve dışa aktar); 0519 düşey sistem ve epok (projenin `heights`'i ve `coordinateEpoch`'u,
+  CSV içe ve dışa aktar); 0521 ağın dönüşleri, seviyeleri ve zaman profili (`turns`: geri dönüş kuralı, kavşak gecikmeleri,
+  dönüş katmanları; `levels`: köprü ve tünel; hızla maliyetin `periods`'ı, ilk giren ilk çıkar; `.kcad` şema 87,
+  `Graph::build_with`, `NetworkSession.time`, `ops::network::{turns, clock}`; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de
+  Kalkış saati, Python `Network.time`); 0519 düşey sistem ve epok (projenin `heights`'i ve `coordinateEpoch`'u,
   `.kcad` şema 86, `FORMATS_VERSION` 93, `cad.crs.transform` kotlarıyla ve işlemin kaydıyla, Proje ayarları › Kotlar ve epok); 0517 sanal raster mozaiği (GDAL VRT'si `kentos_formats::raster::vrt`,
   `Reader::mosaic`, `cad.rasters.mosaic` gdalbuildvrt'nin kuralıyla, Sanal mozaik penceresi); 0520 permütasyon çıkarımı (`kentos.spatial-inference/1`, katlanmış sözde
   p, koşullu permütasyon), Gi*'ın FDR ve Bonferroni'si, Yerel Moran `stats.localMoran`, deney profili; 0516 SLD alışverişi (`kentos_formats::sld`, SLD 1.1 / SE 1.1 iki yönde;

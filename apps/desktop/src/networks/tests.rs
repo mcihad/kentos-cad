@@ -158,6 +158,7 @@ fn screens() {
         "matris",
         "alanlar-cizim",
         "serit",
+        "donusler",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -184,6 +185,22 @@ fn screens() {
                             window(&mut app, Event::Choose(1));
                         }
                         window(&mut app, Event::Check);
+                    }
+                    // docs/adr/0521: turns, levels and Süre's time profile in the form.
+                    "donusler" => {
+                        send(&mut app, Message::Run("network.manage"));
+                        window(
+                            &mut app,
+                            Event::CostPeriods(0, "07:00-09:30 0,5; 17:00-19:00 0,6".into()),
+                        );
+                        window(&mut app, Event::UTurns(2));
+                        window(&mut app, Event::Delay(1, "5".into()));
+                        window(&mut app, Event::Delay(2, "15".into()));
+                        window(&mut app, Event::Delay(3, "30".into()));
+                        window(&mut app, Event::TurnAdd);
+                        window(&mut app, Event::TurnField(0, "gecikme".into()));
+                        window(&mut app, Event::LevelField(0, "z_bas".into()));
+                        window(&mut app, Event::LevelField(1, "z_son".into()));
                     }
                     "en-yakin" | "en-yakin-cizim" => {
                         send(
@@ -236,7 +253,7 @@ fn screens() {
                     // The window closed: the result in the drawing.
                     processing(&mut app, Processing::Close);
                     snapshot.settle(&mut app, App::view, &mut update);
-                } else if matches!(name, "matris" | "yollar" | "sebeke") {
+                } else if matches!(name, "matris" | "yollar" | "sebeke" | "donusler") {
                     // The form scrolled to its end: the table, or Denetle's answer under the definition.
                     let x = if name == "matris" {
                         width / 2.0 - 120.0
@@ -252,7 +269,10 @@ fn screens() {
                                 position: iced::Point::new(x, height / 2.0),
                             }),
                             iced::Event::Mouse(iced::mouse::Event::WheelScrolled {
-                                delta: iced::mouse::ScrollDelta::Lines { x: 0.0, y: -40.0 },
+                                delta: iced::mouse::ScrollDelta::Lines {
+                                    x: 0.0,
+                                    y: if name == "donusler" { -14.0 } else { -40.0 },
+                                },
                             }),
                         ],
                     );

@@ -10,12 +10,17 @@
 //! kind goes to the core, which says it by its kind. An expression's empty
 //! answer is “no”; an expression that does not compile matches nothing and is
 //! said. The desktop's network thread (its app) and Ağ analizi's İşlemler
-//! tools build from it.
+//! tools build from it. With turns, levels and time profiles (docs/adr/0521):
+//! the edges' level fields and their costs' periods' speed fields, the
+//! junctions' level (the start field), the turn layers' lines with their
+//! filter and their delay field's value.
 
 use std::collections::HashSet;
 
 use kentos_contracts::{Entity, JunctionRole, NetworkDef, NetworkDirection};
-use kentos_geometry_core::ops::network::input::{EdgeValues, JunctionValues, from_store};
+use kentos_geometry_core::ops::network::input::{
+    EdgeValues, JunctionValues, TurnValues, from_store, turns_from_store,
+};
 use kentos_geometry_core::ops::network::{Graph, NetworkSession, Role, Rules};
 use kentos_geometry_core::store::Store;
 use kentos_style_core::expr::Value;
@@ -28,6 +33,8 @@ use crate::expression::evaluate_all;
 pub struct NetworkInput {
     pub edges: Vec<(f64, EdgeValues)>,
     pub junctions: Vec<(f64, JunctionValues)>,
+    /// The turn layers' lines (docs/adr/0521 §2).
+    pub turns: Vec<(f64, TurnValues)>,
     /// Expressions that did not compile, in words.
     pub problems: Vec<String>,
 }
@@ -122,6 +129,8 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
         NetworkDirection::Field { field, .. } => Some(field.as_str()),
         _ => None,
     };
+    let levels = def.levels.as_ref();
+    let level_of = |e: &Entity, f: Option<&String>| f.and_then(|f| value(e, f));
     let edges = edges
         .iter()
         .zip(closed)
@@ -132,6 +141,21 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
                     direction: field.and_then(|f| value(e, f)),
                     costs: def.costs.iter().map(|c| value(e, &c.field)).collect(),
                     closed,
+                    levels: [
+                        level_of(e, levels.map(|l| &l.start)),
+                        level_of(e, levels.map(|l| &l.end)),
+                        level_of(e, levels.and_then(|l| l.inside.as_ref())),
+                    ],
+                    periods: def
+                        .costs
+                        .iter()
+                        .map(|c| {
+                            c.periods
+                                .iter()
+                                .map(|p| p.field.as_ref().and_then(|f| value(e, f)))
+                                .collect()
+                        })
+                        .collect(),
                 },
             )
         })
@@ -174,12 +198,49 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
         };
         for (e, closed) in mine.into_iter().zip(shut) {
             taken_j.insert(e.base().id);
-            junctions.push((f64::from(e.base().id), JunctionValues { role, closed }));
+            let level = level_of(e, levels.map(|l| &l.start));
+            junctions.push((
+                f64::from(e.base().id),
+                JunctionValues {
+                    role,
+                    closed,
+                    level,
+                },
+            ));
+        }
+    }
+    let mut turns = Vec::new();
+    let mut taken_t: HashSet<u32> = HashSet::new();
+    for (i, l) in def.turns.iter().flat_map(|t| &t.layers).enumerate() {
+        let list: Vec<&Entity> = (src.by_layer)(&l.layer)
+            .into_iter()
+            .filter(|e| !taken_t.contains(&e.base().id))
+            .collect();
+        let ok = holds(
+            l.filter.as_deref(),
+            true,
+            &list,
+            src,
+            &format!("{}. dönüş katmanının süzgeci", i + 1),
+            &mut problems,
+        );
+        for (e, k) in list.into_iter().zip(ok) {
+            if k {
+                taken_t.insert(e.base().id);
+                turns.push((
+                    f64::from(e.base().id),
+                    TurnValues {
+                        field: l.field.is_some(),
+                        value: l.field.as_ref().and_then(|f| value(e, f)),
+                    },
+                ));
+            }
         }
     }
     NetworkInput {
         edges,
         junctions,
+        turns,
         problems,
     }
 }
@@ -199,8 +260,10 @@ pub fn build(
     input: &NetworkInput,
 ) -> Result<NetworkSession, String> {
     let rules = rules_of(def)?;
-    let (e, j, skipped) = from_store(store, &input.edges, &input.junctions);
-    let (graph, report) = Graph::build(rules, &e, &j);
+    let (e, j, mut skipped) = from_store(store, &input.edges, &input.junctions);
+    let (t, not_turns) = turns_from_store(store, &input.turns);
+    skipped.extend(not_turns);
+    let (graph, report) = Graph::build_with(rules, &e, &j, &t);
     Ok(NetworkSession::new(graph, report, skipped))
 }
 

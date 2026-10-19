@@ -247,7 +247,7 @@ class Network:
     not take (expressions that did not compile); :attr:`counts` the nodes,
     pieces, length and the objects not taken."""
 
-    __slots__ = ("_native", "costs", "counts", "definition", "problems")
+    __slots__ = ("_native", "_time", "costs", "counts", "definition", "problems")
 
     def __init__(self, doc: Document, network: str) -> None:
         session = doc._session
@@ -262,6 +262,28 @@ class Network:
         self.costs: list[str] = s["costs"]
         self.counts: dict[str, Any] = s["counts"]
         self.problems: list[str] = s["problems"]
+        self._time: str | None = None
+
+    @property
+    def time(self) -> str | None:
+        """Saat (docs/adr/0521 §4): the time of day the questions set off at, ``"07:30"``; ``None``, every hour alike.
+        A speed cost with a time profile reads it; a network without one says so and answers as before."""
+        return self._time
+
+    @time.setter
+    def time(self, value: str | None) -> None:
+        if value is None:
+            self._native.set_time(None)
+            self._time = None
+            return
+        h, _, m = str(value).strip().replace(".", ":").partition(":")
+        if not (h.isdigit() and len(h) <= 2 and (m == "" or (m.isdigit() and len(m) <= 2))):
+            raise NetworkError(f"“{value}” bir saat değil; 07:30 gibi yazın.")
+        minutes = int(h) * 60 + int(m or 0)
+        if int(m or 0) >= 60 or minutes > 1440:
+            raise NetworkError(f"“{value}” günün bir saati değil (00:00–24:00).")
+        self._native.set_time(float(minutes))
+        self._time = f"{minutes // 60:02d}:{minutes % 60:02d}"
 
     def __repr__(self) -> str:
         c = self.counts

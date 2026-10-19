@@ -14,7 +14,7 @@ use super::graph::{BuildReport, Graph, Location, Role};
 use super::input::{EdgeValues, JunctionValues, from_store};
 use super::route::{Reorder, RouteError, route};
 use super::rules::Rules;
-use super::search::{Query, Searcher, Span, Tree, polyline_of, spans_cost, spans_edges};
+use super::search::{Query, Searcher, Span, Tree, polyline_of, spans_edges, way_cost};
 use super::trace::{TraceKind, trace};
 use crate::api::json::{self, Json};
 use crate::entity::Shape;
@@ -31,6 +31,9 @@ pub struct NetworkSession {
     pub report: BuildReport,
     /// Objects of the network's layers not taken: their ids and kinds.
     pub skipped: Vec<(f64, &'static str)>,
+    /// The time of day the questions set off at (a reverse question's arrival), minutes; read by a cost with a time
+    /// profile (docs/adr/0521 §4).
+    pub time: Option<f64>,
     searcher: Searcher,
     tree: Option<Tree>,
 }
@@ -314,6 +317,7 @@ pub fn problem_name(k: ProblemKind) -> &'static str {
         ProblemKind::OffNetwork => "offNetwork",
         ProblemKind::Short => "short",
         ProblemKind::Unread => "unread",
+        ProblemKind::Turn => "turn",
     }
 }
 
@@ -328,6 +332,7 @@ impl NetworkSession {
             graph,
             report,
             skipped,
+            time: None,
             searcher: Searcher::new(),
             tree: None,
         }
@@ -367,6 +372,21 @@ impl NetworkSession {
                         direction: text(item(v, 0)),
                         costs,
                         closed: matches!(item(v, 2), Json::Bool(true)),
+                        levels: [
+                            text(item(item(v, 3), 0)),
+                            text(item(item(v, 3), 1)),
+                            text(item(item(v, 3), 2)),
+                        ],
+                        periods: match item(v, 4) {
+                            Json::Arr(per) => per
+                                .iter()
+                                .map(|c| match c {
+                                    Json::Arr(list) => list.iter().map(text).collect(),
+                                    _ => Vec::new(),
+                                })
+                                .collect(),
+                            _ => Vec::new(),
+                        },
                     },
                 )
             })
@@ -389,6 +409,7 @@ impl NetworkSession {
                     JunctionValues {
                         role,
                         closed: matches!(item(v, 1), Json::Bool(true)),
+                        level: text(item(v, 2)),
                     },
                 )
             })
@@ -483,6 +504,7 @@ impl NetworkSession {
             &barriers,
             cost.min(g.costs - 1),
             reorder,
+            self.time,
         ) {
             Ok(r) => Ok(Routed {
                 totals: (0..g.costs).map(|c| r.total(g, c)).collect(),
@@ -536,6 +558,7 @@ impl NetworkSession {
             g,
             &Query {
                 barriers: &barriers,
+                at: self.time,
                 ..Query::from(std::slice::from_ref(&origin), c)
             },
         ));
@@ -604,6 +627,7 @@ impl NetworkSession {
             toward,
             separate,
             barriers: &barriers,
+            at: self.time,
         };
         let lines = service_lines(g, &mut self.searcher, &q);
         let polygons = if areas {
@@ -706,7 +730,9 @@ impl NetworkSession {
             cost: cost.min(g.costs - 1),
             reverse,
             barriers: &barriers,
+            at: self.time,
         };
+        let at = self.time;
         Ok(nearest(g, &mut self.searcher, &q, paths)
             .into_iter()
             .map(|row| {
@@ -716,7 +742,7 @@ impl NetworkSession {
                         cost: f.cost,
                         totals: path.as_ref().map(|p| {
                             (0..g.costs)
-                                .map(|c| finite(spans_cost(g, &p.spans, c)))
+                                .map(|c| finite(way_cost(g, &p.spans, c, at, reverse)))
                                 .collect()
                         }),
                         line: path.as_ref().map(|p| line_of(g, &p.spans)),

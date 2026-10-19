@@ -1,11 +1,14 @@
 //! Schema 33's networks (docs/specs/kcad-v2.md §6.4.8, docs/adr/0209 §2): the
 //! settings' `networks`, read field by field and then checked whole by the
 //! contract's rules (`networks_problem`), as the writers check them; an
-//! empty list is refused (a writer leaves it out).
+//! empty list is refused (a writer leaves it out). Schema 87 (docs/adr/0521)
+//! adds a network's `turns` and `levels` and a speed cost's `periods`; an
+//! older file holding them is refused.
 
 use kentos_contracts::{
     JunctionLayer, JunctionRole, NetworkConnect, NetworkCost, NetworkCostKind, NetworkDef,
-    NetworkDirection, NetworkKind, NetworkLayer, networks_problem,
+    NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod, NetworkTurns,
+    NetworkUTurns, TurnLayer, networks_problem,
 };
 
 use super::{list, map, named, required, text, unknown};
@@ -107,7 +110,122 @@ fn direction(r: &mut Reader<'_>) -> Result<NetworkDirection, KcadError> {
     }
 }
 
-fn costs(r: &mut Reader<'_>) -> Result<Vec<NetworkCost>, KcadError> {
+/// A speed cost's periods (schema 87), not empty; their order, the day's bounds and values are checked whole with the network.
+fn periods(r: &mut Reader<'_>) -> Result<Vec<NetworkPeriod>, KcadError> {
+    let at = r.position();
+    let all = list(r, |r, _| {
+        let (mut from, mut to, mut factor, mut field) = (None, None, None, None);
+        map(r, |r, key| {
+            match key {
+                "from" => from = Some(r.uint(u64::from(u32::MAX))? as u32),
+                "to" => to = Some(r.uint(u64::from(u32::MAX))? as u32),
+                "factor" => factor = Some(r.float()?),
+                "field" => field = Some(text(r)?),
+                _ => return Err(unknown(r)),
+            }
+            Ok(())
+        })?;
+        Ok(NetworkPeriod {
+            from: required(r, from, "from")?,
+            to: required(r, to, "to")?,
+            factor,
+            field,
+        })
+    })?;
+    if all.is_empty() {
+        return Err(r.fail_at(Code::BadValue, at, "boş dönem listesi yazılmaz"));
+    }
+    Ok(all)
+}
+
+/// A network's turns (schema 87): a delay is written only when it is not zero, the layers only when there are some.
+fn turns(r: &mut Reader<'_>) -> Result<NetworkTurns, KcadError> {
+    let kinds = [
+        ("allowed", NetworkUTurns::Allowed),
+        ("deadEnds", NetworkUTurns::DeadEnds),
+        ("never", NetworkUTurns::Never),
+    ];
+    let mut u_turns = None;
+    let mut delays = [0.0f64; 4];
+    let mut layers = Vec::new();
+    map(r, |r, key| {
+        let slot = match key {
+            "uTurns" => {
+                u_turns = Some(named(r, &kinds)?);
+                return Ok(());
+            }
+            "layers" => {
+                let at = r.position();
+                layers = list(r, |r, _| {
+                    let (mut layer, mut filter, mut field) = (None, None, None);
+                    map(r, |r, key| {
+                        match key {
+                            "layer" => layer = Some(text(r)?),
+                            "filter" => filter = Some(text(r)?),
+                            "field" => field = Some(text(r)?),
+                            _ => return Err(unknown(r)),
+                        }
+                        Ok(())
+                    })?;
+                    Ok(TurnLayer {
+                        layer: required(r, layer, "layer")?,
+                        filter,
+                        field,
+                    })
+                })?;
+                if layers.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş dönüş katmanı listesi yazılmaz",
+                    ));
+                }
+                return Ok(());
+            }
+            "straight" => 0,
+            "right" => 1,
+            "left" => 2,
+            "back" => 3,
+            _ => return Err(unknown(r)),
+        };
+        let at = r.position();
+        let d = r.float()?;
+        if d == 0.0 {
+            return Err(r.fail_at(Code::BadValue, at, "sıfır gecikme yazılmaz"));
+        }
+        delays[slot] = d;
+        Ok(())
+    })?;
+    Ok(NetworkTurns {
+        u_turns: required(r, u_turns, "uTurns")?,
+        straight: delays[0],
+        right: delays[1],
+        left: delays[2],
+        back: delays[3],
+        layers,
+    })
+}
+
+/// A network's level fields (schema 87).
+fn levels(r: &mut Reader<'_>) -> Result<NetworkLevels, KcadError> {
+    let (mut start, mut end, mut inside) = (None, None, None);
+    map(r, |r, key| {
+        match key {
+            "start" => start = Some(text(r)?),
+            "end" => end = Some(text(r)?),
+            "inside" => inside = Some(text(r)?),
+            _ => return Err(unknown(r)),
+        }
+        Ok(())
+    })?;
+    Ok(NetworkLevels {
+        start: required(r, start, "start")?,
+        end: required(r, end, "end")?,
+        inside,
+    })
+}
+
+fn costs(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkCost>, KcadError> {
     let at = r.position();
     let kinds = [
         ("speed", NetworkCostKind::Speed),
@@ -115,6 +233,7 @@ fn costs(r: &mut Reader<'_>) -> Result<Vec<NetworkCost>, KcadError> {
     ];
     let all = list(r, |r, _| {
         let (mut name, mut kind, mut field, mut unit, mut speed) = (None, None, None, None, None);
+        let mut times = Vec::new();
         map(r, |r, key| {
             match key {
                 "name" => name = Some(text(r)?),
@@ -129,6 +248,7 @@ fn costs(r: &mut Reader<'_>) -> Result<Vec<NetworkCost>, KcadError> {
                     unit = Some(u);
                 }
                 "speed" => speed = Some(r.float()?),
+                "periods" if turned => times = periods(r)?,
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -139,6 +259,7 @@ fn costs(r: &mut Reader<'_>) -> Result<Vec<NetworkCost>, KcadError> {
             field: required(r, field, "field")?,
             unit: unit.unwrap_or_default(),
             speed,
+            periods: times,
         })
     })?;
     if all.is_empty() {
@@ -148,7 +269,7 @@ fn costs(r: &mut Reader<'_>) -> Result<Vec<NetworkCost>, KcadError> {
 }
 
 /// The project's networks, checked whole; an empty list is not written.
-pub(super) fn networks(r: &mut Reader<'_>) -> Result<Vec<NetworkDef>, KcadError> {
+pub(super) fn networks(r: &mut Reader<'_>, turned: bool) -> Result<Vec<NetworkDef>, KcadError> {
     let at = r.position();
     let kinds = [
         ("road", NetworkKind::Road),
@@ -162,6 +283,7 @@ pub(super) fn networks(r: &mut Reader<'_>) -> Result<Vec<NetworkDef>, KcadError>
         let (mut id, mut name, mut kind, mut edge_layers) = (None, None, None, None);
         let (mut connect, mut tolerance, mut dir) = (None, None, None);
         let (mut junction_layers, mut cost_list, mut closed) = (Vec::new(), Vec::new(), None);
+        let (mut turn_rules, mut level_fields) = (None, None);
         map(r, |r, key| {
             match key {
                 "id" => id = Some(text(r)?),
@@ -172,8 +294,10 @@ pub(super) fn networks(r: &mut Reader<'_>) -> Result<Vec<NetworkDef>, KcadError>
                 "connect" => connect = Some(named(r, &connects)?),
                 "tolerance" => tolerance = Some(r.float()?),
                 "direction" => dir = Some(direction(r)?),
-                "costs" => cost_list = costs(r)?,
+                "costs" => cost_list = costs(r, turned)?,
                 "closed" => closed = Some(text(r)?),
+                "turns" if turned => turn_rules = Some(turns(r)?),
+                "levels" if turned => level_fields = Some(levels(r)?),
                 _ => return Err(unknown(r)),
             }
             Ok(())
@@ -189,6 +313,8 @@ pub(super) fn networks(r: &mut Reader<'_>) -> Result<Vec<NetworkDef>, KcadError>
             direction: required(r, dir, "direction")?,
             costs: cost_list,
             closed,
+            turns: turn_rules,
+            levels: level_fields,
         })
     })?;
     if all.is_empty() {

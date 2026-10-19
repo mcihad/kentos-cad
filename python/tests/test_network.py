@@ -182,6 +182,26 @@ class DocumentTest(unittest.TestCase):
             network.Network(doc, "ag-2")
         self.assertEqual(str(e.exception), "“ag-2” ağı projede yok; Ağlar penceresinden tanımlayın.")
 
+    def test_a_time_profile_slows_the_rush_hour(self) -> None:
+        """Saat (docs/adr/0521 §4): Süre's speeds halved from 07:00 to 09:00; a route that sets off at 08:00 takes twice
+        as long, one at 06:00 as long as without a time."""
+        doc = drawing(CASES["cases"][0]["scene"])
+        base = network.networks(doc)[0].to_json()
+        costs = [{**c, "periods": [{"from": 420, "to": 540, "factor": 0.5}]} if c["kind"] == "speed" else c for c in base["costs"]]
+        network.define(doc, {**base, "id": "ag-3", "name": "Saatli", "costs": costs})
+        net = network.Network(doc, "ag-3")
+        stops = [(500050.0, 4400001.0), (500350.0, 4400151.0)]
+        free = net.route(stops, cost="Süre").cost
+        net.time = "8"
+        self.assertEqual(net.time, "08:00")
+        self.assertAlmostEqual(net.route(stops, cost="Süre").cost, 2 * free, places=9)
+        net.time = "06:00"
+        self.assertAlmostEqual(net.route(stops, cost="Süre").cost, free, places=9)
+        net.time = None
+        self.assertAlmostEqual(net.route(stops, cost="Süre").cost, free, places=9)
+        with self.assertRaises(network.NetworkError):
+            net.time = "25:00"
+
 
 if __name__ == "__main__":
     unittest.main()

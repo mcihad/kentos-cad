@@ -38,6 +38,33 @@ def values_of(text):
     return [v.strip() for v in re.split(r"[,;]", text) if v.strip()]
 
 
+def clock_of(text):
+    """A clock as typed (07:30, 7.30, 7, 24:00): minutes of the day, None when it is not one (docs/adr/0521 §4)."""
+    t = text.strip()
+    m = re.fullmatch(r"(\d{1,2})(?:[:.](\d{1,2}))?", t)
+    if not m:
+        return None
+    h, mi = int(m.group(1)), int(m.group(2) or 0)
+    return h * 60 + mi if mi < 60 and h * 60 + mi <= 1440 else None
+
+
+def periods_of(text):
+    """A time profile as typed: `07:00-09:30 0,5; 17:00-19:00 hiz_aksam`; the periods or the words."""
+    out = []
+    for n, part in enumerate([p.strip() for p in text.split(";") if p.strip()], 1):
+        gap = re.search(r"\s", part)
+        span, rest = (part[:gap.start()], part[gap.start():].strip()) if gap else (part, "")
+        pair = re.split(r"[-–]", span, maxsplit=1)
+        clocks = (clock_of(pair[0]), clock_of(pair[1])) if len(pair) == 2 else (None, None)
+        if None in clocks:
+            return f"{n}. dönem saatleri “07:00-09:30” gibi yazılır."
+        if not rest:
+            return f"{n}. dönemin çarpanı ya da hız alanı yok (ör. “07:00-09:30 0,5”)."
+        f = decimal(rest)
+        out.append({"from": clocks[0], "to": clocks[1], **({"factor": f} if f is not None else {"field": rest})})
+    return out
+
+
 def def_of(form, unit):
     """The network a form writes, or the form's own words."""
     name = form["name"].strip()
@@ -53,7 +80,10 @@ def def_of(form, unit):
             speed = decimal(typed) if typed else DEFAULT_SPEED
             if speed is None:
                 return {"problem": f"{who} “{cost}” maliyetinin hızı bir sayı olmalı (km/sa)."}
-            costs.append({"name": cost, "kind": "speed", "field": c["field"].strip(), "speed": speed})
+            periods = periods_of(c.get("periods", ""))
+            if isinstance(periods, str):
+                return {"problem": f"{who} “{cost}” maliyetinin zaman profili: {periods}"}
+            costs.append({"name": cost, "kind": "speed", "field": c["field"].strip(), "speed": speed, **({"periods": periods} if periods else {})})
         else:
             out = {"name": cost, "kind": "field", "field": c["field"].strip()}
             if c["unit"].strip():
@@ -62,6 +92,28 @@ def def_of(form, unit):
 
     def opt(key, s):
         return {key: s.strip()} if s.strip() else {}
+
+    turns = None
+    if form.get("uTurns"):
+        turns = {"uTurns": form["uTurns"]}
+        for key, what in (("straight", "düz geçiş"), ("right", "sağa dönüş"), ("left", "sola dönüş"), ("back", "geri dönüş")):
+            typed = form.get(key, "").strip()
+            if not typed:
+                continue
+            d = decimal(typed)
+            if d is None:
+                return {"problem": f"{who} {what} gecikmesi bir sayı olmalı (sn)."}
+            if d != 0.0:
+                turns[key] = d
+        layers = [{"layer": l_["layer"], **opt("filter", l_["filter"]), **opt("field", l_["field"])} for l_ in form.get("turnLayers", [])]
+        if layers:
+            turns["layers"] = layers
+    start, end, inside = (form.get(k, "").strip() for k in ("levelStart", "levelEnd", "levelInside"))
+    levels = None
+    if start and end:
+        levels = {"start": start, "end": end, **({"inside": inside} if inside else {})}
+    elif start or end or inside:
+        return {"problem": f"{who} seviyesi için başlangıç ve bitiş alanı birlikte yazılır."}
 
     d = {"id": form["id"], "name": name, "kind": form["kind"], "edges": [{"layer": e["layer"], **opt("filter", e["filter"])} for e in form["edges"]]}
     if form["junctions"]:
@@ -76,6 +128,10 @@ def def_of(form, unit):
     if costs:
         d["costs"] = costs
     d.update(opt("closed", form["closed"]))
+    if turns is not None:
+        d["turns"] = turns
+    if levels is not None:
+        d["levels"] = levels
     return d
 
 
@@ -118,6 +174,18 @@ def cases():
     add("tolerans boş", form(tolerance=" "))
     add("hız sayı değil", form(costs=[{**SURE, "speed": "hızlı"}]))
     add("adsız ağın toleransı sayı değil", form(name="  ", tolerance="x"))
+    # Turns, levels and a time profile (docs/adr/0521).
+    add("zaman profili: çarpan ve hız alanı, 7 ve 7.30 saat",
+        form(costs=[{**SURE, "periods": "7-9.30 0,5; 17:00–19:00  hiz_aksam ;"}]))
+    add("zaman profili: saat okunamıyor", form(costs=[{**SURE, "periods": "07:00 0,5"}]))
+    add("zaman profili: çarpanı yok", form(costs=[{**SURE, "periods": "07:00-09:00"}]))
+    add("dönüşler: gecikmeler, sıfırı yazılmaz, katmanlar",
+        form(uTurns="deadEnds", straight="0", right="5", left="12,5", back="30",
+             turnLayers=[{"layer": "donus", "filter": " tur = 'yasak' ", "field": ""}, {"layer": "donus", "filter": "", "field": "gecikme"}]))
+    add("dönüş kuralı yokken gecikmeler okunmaz", form(uTurns=None, left="x"))
+    add("dönüş gecikmesi sayı değil", form(uTurns="allowed", left="çok"))
+    add("seviyeler: üç alan", form(levelStart=" z_bas ", levelEnd="z_son", levelInside="z_orta"))
+    add("seviyenin yalnız başlangıcı", form(levelStart="z_bas"))
     return out
 
 

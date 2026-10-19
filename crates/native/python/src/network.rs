@@ -75,6 +75,13 @@ impl PyNetwork {
         }))
     }
 
+    /// Saat (docs/adr/0521 §4): the time of day the questions set off at, minutes of the day; `None`, every hour
+    /// alike. Read by a cost with a time profile.
+    #[pyo3(signature = (minutes=None))]
+    fn set_time(&mut self, minutes: Option<f64>) {
+        self.inner.time = minutes;
+    }
+
     /// The place nearest `(x, y)` within `reach`: `{piece, offset, x, y, d}` or `null`.
     fn locate(&self, x: f64, y: f64, reach: f64) -> String {
         self.inner.locate_json(x, y, reach)

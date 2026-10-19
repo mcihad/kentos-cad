@@ -346,6 +346,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-26 — Mevcut rota analizine dönüş kısıtı, seviye ve zaman profili ekle — P1/P2**
 
+  *Kısmen (19 Ekim 2026; [ADR 0521](../docs/adr/0521-turns-levels-and-time-profiles.md)): dönüş yasağı ve gecikmesi (geri dönüş kuralı, kavşakta açıya göre gecikme, dönüş katmanları), köprü ve tünelin seviyeleri, hızla maliyetin gün içi zaman profili (kapanmada beklenir, ilk giren ilk çıkar); `.kcad` şema 87, Ağlar penceresi, araçlarda Saat, İşlemler'de Kalkış saati, Python; bağımsız başvuru 39 soru. Kalan: araç profilleri, tarih aralıklı kapanma, dış yönlendirici, bağlı katmanın revizyonu.*
+
   **Mevcut:** En kısa rota, duraklar, OD matrisi, en yakın tesis, servis alanı, yön/maliyet ve kapalı hat temeli var [K12]. İlk hedef bunların gerçek yol verisinde güvenilir kullanılabilmesidir.
 
   **Yapılacak kalan iş:** Mevcut rota/OD/tesis/servis alanı, tek yön, maliyet ve kapalı hat araçlarını yeniden geliştirme. Yeni kapsam; dönüş yasağı/cezası, köprü-tünel seviye ayrımı, profil ve zamana bağlı kapanma/maliyettir. Harici dataset revision'ı değişince graph/maliyet cache'i yenilensin; erişilemeyen durak/çiftin nedeni source ID ile verilsin. Kaynak maliyet birimini mevcut ağ sözleşmesinden taşı; yol parçaları ile tampon servis polygon'unu aynı çıktı sayma. Bölgesel ölçek gerektirirse Valhalla türü açık adapter ölçülerek seçilir. [D04]

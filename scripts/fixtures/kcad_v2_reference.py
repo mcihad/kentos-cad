@@ -1001,8 +1001,35 @@ def network_direction(d):
 
 def network_cost(c):
     assert c.get("unit", "x") != "", "boş birim yazılmaz"
-    table = {"name": (text, True), "kind": (enum(NETWORK_COST_KINDS), True), "field": (text, True), "unit": (text, False), "speed": (finite, False)}
+    table = {"name": (text, True), "kind": (enum(NETWORK_COST_KINDS), True), "field": (text, True), "unit": (text, False), "speed": (finite, False),
+             "periods": (nonempty(network_period), False)}
     return cmap(fields(c, table, f"maliyet {c.get('name')}"))
+
+
+# Schema 87 (docs/adr/0521): a speed cost's periods, a network's turns (a delay only when not zero, the layers only
+# when there are some) and level fields.
+U_TURNS = ("allowed", "deadEnds", "never")
+
+
+def network_period(p):
+    table = {"from": (uint, True), "to": (uint, True), "factor": (finite, False), "field": (text, False)}
+    return cmap(fields(p, table, "dönem"))
+
+
+def turn_layer(l_):
+    return cmap(fields(l_, {"layer": (text, True), "filter": (text, False), "field": (text, False)}, "dönüş katmanı"))
+
+
+def network_turns(t):
+    delays = {k: v for k, v in t.items() if k in ("straight", "right", "left", "back") and v != 0.0}
+    rest = {k: v for k, v in t.items() if k not in ("straight", "right", "left", "back")}
+    table = {"uTurns": (enum(U_TURNS), True), "layers": (nonempty(turn_layer), False),
+             "straight": (finite, False), "right": (finite, False), "left": (finite, False), "back": (finite, False)}
+    return cmap(fields({**rest, **delays}, table, "dönüşler"))
+
+
+def network_levels(l_):
+    return cmap(fields(l_, {"start": (text, True), "end": (text, True), "inside": (text, False)}, "seviyeler"))
 
 
 def network(n):
@@ -1017,6 +1044,8 @@ def network(n):
         "direction": (network_direction, True),
         "costs": (nonempty(network_cost), False),
         "closed": (text, False),
+        "turns": (network_turns, False),
+        "levels": (network_levels, False),
     }
     return cmap(fields(n, table, f"ağ {n.get('id')}"))
 
@@ -2104,6 +2133,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 87 (docs/adr/0521): a network's turns or levels, a speed cost's time profile.
+    if any("turns" in n or "levels" in n or any(c.get("periods") for c in n.get("costs", []))
+           for n in (settings or {}).get("networks", [])):
+        return 87
     # Schema 86 (docs/adr/0519 §1): what the elevations are, the coordinates' epoch.
     if "heights" in (settings or {}) or "coordinateEpoch" in (settings or {}):
         return 86
@@ -2638,7 +2671,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-87.kcad"] = container(root(cmap(parts), version=uint(87)))
+    files["schema-version-88.kcad"] = container(root(cmap(parts), version=uint(88)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3512,6 +3545,28 @@ def broken(minimal_content, minimal_file):
     files["network-cost-field-speed.kcad"] = networked([net(costs=array([cost(name="Ücret", kind="field", speed=f64(5.0))]))])
     files["network-costs-empty.kcad"] = networked([net(costs=array([]))])
     files["network-closed-blank.kcad"] = networked([net(closed=text("  "))])
+    # A network's turns, levels and a speed cost's periods are schema 87's (docs/adr/0521): in schema 86 unknown
+    # fields; an empty list, a zero delay and every rule of the contract's broken one at a time.
+    turning = lambda **t: cmap({"uTurns": text("deadEnds"), **t})  # noqa: E731
+    period = lambda a, b, **x: cmap({"from": uint(a), "to": uint(b), **x})  # noqa: E731
+    timed = lambda *ps: cost(periods=array(list(ps)))  # noqa: E731
+    files["network-turns-in-schema-86.kcad"] = networked([net(turns=turning())], schema=86)
+    files["network-periods-in-schema-86.kcad"] = networked([net(costs=array([timed(period(420, 570, factor=f64(0.5)))]))], schema=86)
+    files["network-turns-unknown-u-turn.kcad"] = networked([net(turns=cmap({"uTurns": text("sometimes")}))], schema=87)
+    files["network-turns-zero-delay.kcad"] = networked([net(turns=turning(left=f64(0.0)))], schema=87)
+    files["network-turns-delay-long.kcad"] = networked([net(turns=turning(left=f64(4000.0)))], schema=87)
+    files["network-turns-layers-empty.kcad"] = networked([net(turns=turning(layers=array([])))], schema=87)
+    files["network-turns-unknown-field.kcad"] = networked([net(turns=turning(slow=f64(5.0)))], schema=87)
+    files["network-levels-untrimmed.kcad"] = networked([net(levels=cmap({"start": text("z_bas"), "end": text(" z_son")}))], schema=87)
+    files["network-periods-empty.kcad"] = networked([net(costs=array([timed()]))], schema=87)
+    files["network-periods-overlap.kcad"] = networked(
+        [net(costs=array([timed(period(420, 570, factor=f64(0.5)), period(500, 600, factor=f64(0.7)))]))], schema=87)
+    files["network-periods-past-day.kcad"] = networked([net(costs=array([timed(period(1400, 1500, factor=f64(0.5)))]))], schema=87)
+    files["network-periods-both.kcad"] = networked(
+        [net(costs=array([timed(period(420, 570, factor=f64(0.5), field=text("hiz_sabah")))]))], schema=87)
+    files["network-periods-closed-day.kcad"] = networked([net(costs=array([timed(period(0, 1440, factor=f64(0.0)))]))], schema=87)
+    files["network-periods-on-field-cost.kcad"] = networked(
+        [net(costs=array([cost(name="Ücret", kind="field", periods=array([period(420, 570, factor=f64(0.5))]))]))], schema=87)
 
     # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
     # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
@@ -3979,6 +4034,7 @@ def build():
     out["pointclouds.kcad"] = container(document(load("pointclouds.json")))
     out["services.kcad"] = container(document(load("services.json")))
     out["networks.kcad"] = container(document(load("networks.json")))
+    out["network-turns.kcad"] = container(document(load("network-turns.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))

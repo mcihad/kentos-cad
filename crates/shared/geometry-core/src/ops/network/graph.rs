@@ -13,12 +13,20 @@
 //!    ends are one node is dropped and counted.
 //! 4. Edges that cross without an end or (`vertices`) a vertex there do not
 //!    connect: bridges, underpasses, pipes at other depths.
+//! 5. With level fields (docs/adr/0521 §3) a place connects only to places at
+//!    its level: an edge's start and end at theirs, its inside (its vertices,
+//!    another's end on it) at the inside field's, else its ends' when they are
+//!    one and nothing when they differ; a junction point at its own, or at every
+//!    level when it gives none (a connector). An end touches only an inside at
+//!    its level.
 //!
 //! The independent reference is `scripts/fixtures/network_cases.py`.
 
 use std::collections::HashMap;
 
+use super::clock::Clock;
 use super::rules::{Connect, Dir, Rules};
+use super::turns::{Level, TurnIn, TurnTable, heading, level_value};
 use crate::geom::arrangement::{edge_box, edge_len, reverse_edge, sub_edge};
 use crate::geom::intersect::{Edge, closest_on_edge, point_at};
 use crate::geometry::Bounds;
@@ -37,6 +45,33 @@ pub struct EdgeIn {
     pub direction: Option<String>,
     pub costs: Vec<Option<String>>,
     pub closed: bool,
+    /// Its level fields' values: at its start, at its end, inside it (docs/adr/0521 §3).
+    pub levels: [Option<String>; 3],
+    /// Its time profiles' field values: `periods[c - 1][k]` for cost `c`'s period `k` (docs/adr/0521 §4).
+    pub periods: Vec<Vec<Option<String>>>,
+}
+
+impl EdgeIn {
+    /// An edge with only its id, part, path and values (no levels, no period values).
+    pub fn new(
+        id: f64,
+        part: u32,
+        path: Vec<Edge>,
+        direction: Option<String>,
+        costs: Vec<Option<String>>,
+        closed: bool,
+    ) -> EdgeIn {
+        EdgeIn {
+            id,
+            part,
+            path,
+            direction,
+            costs,
+            closed,
+            levels: [None, None, None],
+            periods: Vec::new(),
+        }
+    }
 }
 
 /// What a junction is.
@@ -55,6 +90,8 @@ pub struct JunctionIn {
     pub p: Vec2,
     pub role: Role,
     pub closed: bool,
+    /// Its level field's value; none: every level (docs/adr/0521 §3).
+    pub level: Option<String>,
 }
 
 /// A piece: between two nodes along one edge, from `s0` to `s1` (metres
@@ -82,6 +119,8 @@ pub struct EdgeMeta {
     pub a: Vec2,
     pub b: Vec2,
     pub nodes: Option<(u32, u32)>,
+    /// Its inside's level (docs/adr/0521 §3).
+    pub inside: Level,
 }
 
 /// A junction as the graph keeps it: its node, none when it is off the network.
@@ -111,6 +150,11 @@ pub struct BuildReport {
     pub off_network: Vec<(f64, Vec2)>,
     /// Edges whose cost field was not read: (cost, the edge's id); a speed's default was taken, a field cost's edge is not travelled with it.
     pub unread: Vec<(usize, f64)>,
+    /// Edges and junctions whose level field was not read (ground, every level), and turn lines whose delay was not
+    /// read (forbidden): their ids and places.
+    pub unread_other: Vec<(f64, Vec2)>,
+    /// Turn lines not on two pieces meeting at a node: their ids and their first points.
+    pub unplaced: Vec<(f64, Vec2)>,
 }
 
 /// A place on the network: a piece and the metres along it from its start.
@@ -143,7 +187,13 @@ pub struct Graph {
     /// Each node's pieces: `piece * 2` leaving from its start the way it is drawn, `piece * 2 + 1` from its end against it.
     adj_start: Vec<u32>,
     adj: Vec<u32>,
+    /// Each arc's head: `piece * 2` the piece's end, `piece * 2 + 1` its start (a step's next node at a glance).
+    pub arc_head: Vec<u32>,
     tree: PackedTree,
+    /// The turns, when the definition has them: searches go by arcs (docs/adr/0521 §5).
+    pub turns: Option<TurnTable>,
+    /// Each cost's time profile (none for most), `clocks[c]`.
+    pub clocks: Vec<Option<Clock>>,
 }
 
 /// A cut along an edge: where (metres from its start), the point and its order among all cuts.
@@ -153,6 +203,7 @@ struct Cut {
     p: Vec2,
     /// The edge's own place (an end; in Köşelerde a vertex), not another edge's end or a junction cutting it.
     own: bool,
+    level: Level,
 }
 
 fn bounds_around(p: Vec2, r: f64) -> Bounds {
@@ -303,9 +354,22 @@ fn span_of(path: &[Edge], cum: &[f64], a: f64, b: f64, out: &mut Vec<Edge>, at: 
     }
 }
 
+/// How far a turn line's first and last points may be from the pieces they name (metres; the tolerance when larger).
+pub const TURN_REACH: f64 = 1.0;
+
 impl Graph {
     /// Builds the graph of `edges` and `junctions` by `rules` (§3).
     pub fn build(rules: Rules, edges: &[EdgeIn], junctions: &[JunctionIn]) -> (Graph, BuildReport) {
+        Self::build_with(rules, edges, junctions, &[])
+    }
+
+    /// Builds the graph of `edges`, `junctions` and the turn layers' lines `turns` by `rules` (§3, docs/adr/0521).
+    pub fn build_with(
+        rules: Rules,
+        edges: &[EdgeIn],
+        junctions: &[JunctionIn],
+        turns: &[TurnIn],
+    ) -> (Graph, BuildReport) {
         let tol = rules.tolerance;
         let mut report = BuildReport::default();
         // Each edge's primitives' starts along it.
@@ -323,6 +387,56 @@ impl Graph {
             })
             .collect();
         let lengths: Vec<f64> = cums.iter().map(|c| *c.last().unwrap_or(&0.0)).collect();
+        // The levels (docs/adr/0521 §3): each edge's start, end and inside; each junction's.
+        let first_point = |i: usize| {
+            edges[i]
+                .path
+                .first()
+                .map_or(Vec2::new(0.0, 0.0), |e| point_at(e, 0.0))
+        };
+        let levels: Vec<[Level; 3]> = edges
+            .iter()
+            .enumerate()
+            .map(|(i, e)| {
+                let Some(inside_given) = rules.levels else {
+                    return [Level::At(0); 3];
+                };
+                let mut bad = false;
+                let mut read = |k: usize| {
+                    level_value(e.levels[k].as_deref()).unwrap_or_else(|_| {
+                        bad = true;
+                        None
+                    })
+                };
+                let (a, b) = (read(0).unwrap_or(0), read(1).unwrap_or(0));
+                let given = if inside_given { read(2) } else { None };
+                let inside = match given {
+                    Some(v) => Level::At(v),
+                    None if a == b => Level::At(a),
+                    None => Level::Own(i as u32),
+                };
+                if bad {
+                    report.unread_other.push((e.id, first_point(i)));
+                }
+                [Level::At(a), Level::At(b), inside]
+            })
+            .collect();
+        let junction_levels: Vec<Level> = junctions
+            .iter()
+            .map(|j| {
+                if rules.levels.is_none() {
+                    return Level::Any;
+                }
+                match level_value(j.level.as_deref()) {
+                    Ok(Some(v)) => Level::At(v),
+                    Ok(None) => Level::Any,
+                    Err(_) => {
+                        report.unread_other.push((j.id, j.p));
+                        Level::Any
+                    }
+                }
+            })
+            .collect();
         // Every edge's primitives in one tree, to find what is near an end or a junction.
         let mut owner: Vec<(u32, u32)> = Vec::new();
         let mut boxes: Vec<(u32, Bounds)> = Vec::new();
@@ -347,6 +461,7 @@ impl Graph {
                 s: 0.0,
                 p: a,
                 own: true,
+                level: levels[i][0],
             });
             if rules.connect == Connect::Vertices {
                 for (k, p) in e.path.iter().enumerate().skip(1) {
@@ -354,6 +469,7 @@ impl Graph {
                         s: cums[i][k],
                         p: point_at(p, 0.0),
                         own: true,
+                        level: levels[i][2],
                     });
                 }
             }
@@ -361,21 +477,25 @@ impl Graph {
                 s: lengths[i],
                 p: b,
                 own: true,
+                level: levels[i][1],
             });
         }
-        // Where a point within the tolerance of an edge's inside cuts it; `skip` an edge's own end.
+        // Where a point at `level` within the tolerance of an edge's inside at its level cuts it; `skip` an edge's
+        // own end.
         let touch = |p: Vec2,
+                     level: Level,
                      skip: Option<(usize, f64)>,
                      cuts: &mut Vec<Vec<Cut>>,
-                     found: &mut Vec<u32>|
-         -> bool {
+                     found: &mut Vec<u32>| {
             found.clear();
             near.at(p, found);
             found.sort_unstable();
-            let mut any = false;
             for &q in found.iter() {
                 let (f, k) = owner[q as usize];
                 let (f, k) = (f as usize, k as usize);
+                if !level.meets(levels[f][2]) {
+                    continue;
+                }
                 let prim = &edges[f].path[k];
                 let c = closest_on_edge(prim, p);
                 if c.d > tol {
@@ -388,7 +508,6 @@ impl Graph {
                 {
                     continue;
                 }
-                any = true;
                 // Exactly at the other edge's own end: the cut there is that end's own, the same point bit for bit
                 // (`point_at` at 0 or 1 both ways); a second would only be a piece of no length.
                 if (s == 0.0 && c.t == 0.0 && k == 0)
@@ -400,34 +519,36 @@ impl Graph {
                     s,
                     p: c.p,
                     own: false,
+                    level: levels[f][2],
                 });
             }
-            any
         };
         for i in 0..edges.len() {
-            for (s, end) in [(0.0, start_of(i)), (lengths[i], end_of(i))] {
+            for (s, end, level) in [
+                (0.0, start_of(i), levels[i][0]),
+                (lengths[i], end_of(i), levels[i][1]),
+            ] {
                 if let Some(p) = end {
-                    touch(p, Some((i, s)), &mut cuts, &mut found);
+                    touch(p, level, Some((i, s)), &mut cuts, &mut found);
                 }
             }
         }
-        let mut attached = vec![false; junctions.len()];
         for (j, jn) in junctions.iter().enumerate() {
-            attached[j] = touch(jn.p, None, &mut cuts, &mut found);
-            if !attached[j] {
-                report.off_network.push((jn.id, jn.p));
-            }
+            touch(jn.p, junction_levels[j], None, &mut cuts, &mut found);
         }
         for c in &mut cuts {
             c.sort_by(|a, b| a.s.total_cmp(&b.s));
         }
         // 2. The nodes: every cut and junction point, in order, joined within the tolerance.
         let mut points: Vec<Vec2> = Vec::new();
+        let mut point_levels: Vec<Level> = Vec::new();
         for c in &cuts {
             points.extend(c.iter().map(|x| x.p));
+            point_levels.extend(c.iter().map(|x| x.level));
         }
         let first_junction = points.len();
         points.extend(junctions.iter().map(|j| j.p));
+        point_levels.extend(junction_levels.iter().copied());
         let mut parent: Vec<u32> = (0..points.len() as u32).collect();
         let cell =
             |p: Vec2| -> (i64, i64) { ((p.x / tol).floor() as i64, (p.y / tol).floor() as i64) };
@@ -458,7 +579,9 @@ impl Graph {
                             continue;
                         }
                         let q = points[j as usize];
-                        if js_hypot(q.x - p.x, q.y - p.y) <= tol {
+                        if js_hypot(q.x - p.x, q.y - p.y) <= tol
+                            && point_levels[i].meets(point_levels[j as usize])
+                        {
                             let (a, b) = (find(&mut parent, i as u32), find(&mut parent, j));
                             if a != b {
                                 // The lower root stays: a node is where its first member is.
@@ -480,6 +603,19 @@ impl Graph {
                 node_of_root[r] = (nodes.len() - 1) as u32;
             }
             node_of[i] = node_of_root[r];
+        }
+        // A junction is on the network when its node holds a cut (it touched an edge at its level).
+        let mut holds_cut = vec![false; nodes.len()];
+        for &n in &node_of[..first_junction] {
+            holds_cut[n as usize] = true;
+        }
+        let attached: Vec<bool> = (0..junctions.len())
+            .map(|j| holds_cut[node_of[first_junction + j] as usize])
+            .collect();
+        for (j, jn) in junctions.iter().enumerate() {
+            if !attached[j] {
+                report.off_network.push((jn.id, jn.p));
+            }
         }
         let mut kinds = vec![NodeKind::default(); nodes.len()];
         let mut junction_meta = Vec::with_capacity(junctions.len());
@@ -529,6 +665,7 @@ impl Graph {
                 a: cs.first().map_or(Vec2::new(0.0, 0.0), |c| c.p),
                 b: cs.last().map_or(Vec2::new(0.0, 0.0), |c| c.p),
                 nodes: (!cs.is_empty()).then(|| (node_of[order], node_of[order + cs.len() - 1])),
+                inside: levels[i][2],
             });
             let mut rates = vec![Some(1.0); costs];
             for c in 1..costs {
@@ -623,27 +760,206 @@ impl Graph {
             .map(|(g, e)| (g as u32, edge_box(e)))
             .collect();
         let tree = PackedTree::build(&entries);
-        (
-            Graph {
-                rules,
-                nodes,
-                kinds,
-                pieces,
-                geom,
-                geom_at,
-                geom_piece,
-                edges: metas,
-                junctions: junction_meta,
-                costs,
-                fw,
-                bw,
-                adj_start,
-                adj,
-                tree,
-            },
-            report,
-        )
+        // The time profiles (docs/adr/0521 §4): each edge's speed through the day.
+        let mut clocks: Vec<Option<Clock>> = vec![None; costs];
+        for (c, clock) in clocks.iter_mut().enumerate().skip(1) {
+            let periods = rules.periods.get(c - 1).map_or(&[][..], Vec::as_slice);
+            if periods.is_empty() {
+                continue;
+            }
+            let base: Vec<f64> = edges
+                .iter()
+                .map(|e| {
+                    rules
+                        .speed_of(c, e.costs.get(c - 1).and_then(|v| v.as_deref()))
+                        .map_or(0.0, |s| s.0)
+                })
+                .collect();
+            let values: Vec<Vec<Option<String>>> = edges
+                .iter()
+                .map(|e| e.periods.get(c - 1).cloned().unwrap_or_default())
+                .collect();
+            let mut bad = Vec::new();
+            *clock = Some(Clock::new(periods, &base, &values, &mut bad));
+            for e in bad {
+                if !report.unread.contains(&(c, edges[e].id)) {
+                    report.unread.push((c, edges[e].id));
+                }
+            }
+        }
+        let arc_head = pieces.iter().flat_map(|p| [p.to, p.from]).collect();
+        let mut g = Graph {
+            rules,
+            nodes,
+            kinds,
+            pieces,
+            geom,
+            geom_at,
+            geom_piece,
+            edges: metas,
+            junctions: junction_meta,
+            costs,
+            fw,
+            bw,
+            adj_start,
+            adj,
+            arc_head,
+            tree,
+            turns: None,
+            clocks,
+        };
+        if g.rules.turns.is_some() {
+            g.turns = Some(g.turn_table(turns, &mut report));
+        }
+        (g, report)
     }
+
+    /// The turn table (docs/adr/0521 §2): the pieces' headings, the nodes' pieces, which costs are times, and the turn
+    /// lines found on two pieces meeting at a node; the others said.
+    fn turn_table(&self, turns: &[TurnIn], report: &mut BuildReport) -> TurnTable {
+        let heads = self
+            .pieces
+            .iter()
+            .map(|p| {
+                let (g0, g1) = (p.g0 as usize, p.g1 as usize);
+                if g1 <= g0 {
+                    return [Vec2::new(0.0, 0.0); 2];
+                }
+                [
+                    heading(&self.geom[g0], false),
+                    heading(&self.geom[g1 - 1], true),
+                ]
+            })
+            .collect();
+        let degree = (0..self.nodes.len())
+            .map(|n| self.adj_start[n + 1] - self.adj_start[n])
+            .collect();
+        let times = (0..self.costs).map(|c| self.rules.is_time(c)).collect();
+        let reach = js_max(TURN_REACH, self.rules.tolerance);
+        let mut named: Vec<(u64, f64)> = Vec::new();
+        for t in turns {
+            let (Some(&first), Some(&last)) = (t.pts.first(), t.pts.last()) else {
+                continue;
+            };
+            let via = if t.pts.len() >= 3 {
+                t.pts[1]
+            } else {
+                Vec2::new((first.x + last.x) / 2.0, (first.y + last.y) / 2.0)
+            };
+            let Some(key) = self.turn_key(first, last, via, reach) else {
+                report.unplaced.push((t.id, first));
+                continue;
+            };
+            let delay = if !t.field {
+                f64::INFINITY
+            } else {
+                match t.value.as_deref().map(str::trim).filter(|v| !v.is_empty()) {
+                    None => f64::INFINITY,
+                    Some(v) => match super::rules::number(v).filter(|d| *d >= 0.0) {
+                        Some(d) => d / 60.0,
+                        None => {
+                            report.unread_other.push((t.id, first));
+                            f64::INFINITY
+                        }
+                    },
+                }
+            };
+            named.push((key, delay));
+        }
+        // A turn named twice: forbidden if either forbids it, else the longer delay.
+        named.sort_by(|a, b| a.0.cmp(&b.0).then(b.1.total_cmp(&a.1)));
+        named.dedup_by_key(|t| t.0);
+        let mut table = TurnTable {
+            rule: self.rules.turns,
+            named,
+            heads,
+            degree,
+            times,
+            ..TurnTable::default()
+        };
+        table.code_all(&self.adj_start, &self.adj);
+        table
+    }
+
+    /// The turn a line from `first` to `last` through `via` names (`in_arc << 32 | out_arc`): from the piece at its
+    /// first point to the piece at its last through the node they share nearest `via` (of equal ones the lower);
+    /// back along the one piece when both points are on it. None when a point is on no piece or they share no node.
+    fn turn_key(&self, first: Vec2, last: Vec2, via: Vec2, reach: f64) -> Option<u64> {
+        let (a, b) = (self.locate(first, reach)?, self.locate(last, reach)?);
+        let (pa, pb) = (&self.pieces[a.piece as usize], &self.pieces[b.piece as usize]);
+        let d = |n: u32| {
+            let q = self.nodes[n as usize];
+            js_hypot(q.x - via.x, q.y - via.y)
+        };
+        let mut node: Option<u32> = None;
+        for n in [pa.from, pa.to] {
+            if n != pb.from && n != pb.to {
+                continue;
+            }
+            if node.is_none_or(|m| d(n) < d(m) || (d(n) == d(m) && n < m)) {
+                node = Some(n);
+            }
+        }
+        let n = node?;
+        let in_arc = if pa.to == n {
+            a.piece * 2
+        } else {
+            a.piece * 2 + 1
+        };
+        let out_arc = if a.piece == b.piece {
+            in_arc ^ 1
+        } else if pb.from == n {
+            b.piece * 2
+        } else {
+            b.piece * 2 + 1
+        };
+        Some((u64::from(in_arc) << 32) | u64::from(out_arc))
+    }
+
+    /// What turning at `node` from arc `in_arc` to arc `out_arc` adds to cost `c`; none when it is forbidden. Every
+    /// turn is free in a network without turns.
+    pub fn turn(&self, in_arc: u32, out_arc: u32, node: u32, c: usize) -> Option<f64> {
+        match &self.turns {
+            Some(t) => t.turn(in_arc, out_arc, node, c),
+            None => Some(0.0),
+        }
+    }
+
+    /// The turn at graph node `node` from the arc arriving along its `k`th piece to the arc leaving along its `m`th
+    /// (`at_node`'s order); every turn is free in a network without turns.
+    pub fn turn_at(&self, node: u32, k: usize, m: usize, c: usize) -> Option<f64> {
+        match &self.turns {
+            Some(t) => t.turn_at(node, self.at_node(node), k, m, c),
+            None => Some(0.0),
+        }
+    }
+
+    /// Cost `c`'s time profile, when it has one.
+    pub fn clock(&self, c: usize) -> Option<&Clock> {
+        self.clocks.get(c).and_then(Option::as_ref)
+    }
+
+    /// What going `d` metres along piece `p` costs with cost `c`, the way it is drawn (`forward`) or against it:
+    /// with `at`, the time of day it is set off at (`back`: arrived at) when the cost has a time profile; else its
+    /// share of the piece's cost. Infinite when it cannot be travelled.
+    pub fn travel(&self, p: u32, c: usize, forward: bool, d: f64, at: Option<(f64, bool)>) -> f64 {
+        let whole = self.cost(p, c, forward);
+        if !whole.is_finite() {
+            return f64::INFINITY;
+        }
+        match (at, self.clock(c)) {
+            (Some((t, back)), Some(clock)) => {
+                let edge = self.pieces[p as usize].edge;
+                if back {
+                    clock.backward(edge, t, d)
+                } else {
+                    clock.forward(edge, t, d)
+                }
+            }
+            _ => whole * (d / self.pieces[p as usize].len),
+        }
+    }
+
 
     /// The pieces at node `n`: `piece * 2` leaving its start the way it is drawn, `piece * 2 + 1` leaving its end against it.
     pub fn at_node(&self, n: u32) -> &[u32] {
@@ -789,6 +1105,8 @@ mod tests {
             direction: None,
             costs: Vec::new(),
             closed: false,
+            levels: [None, None, None],
+            periods: Vec::new(),
         }
     }
 

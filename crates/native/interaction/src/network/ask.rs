@@ -64,6 +64,9 @@ pub struct NetworkAsk {
     pub network: String,
     pub def: Option<NetworkDef>,
     pub question: NetworkQuestion,
+    /// The time of day the question sets off at, minutes (Saat, docs/adr/0521 §4); read by a cost with a time
+    /// profile.
+    pub at: Option<f64>,
 }
 
 /// A network's answer.

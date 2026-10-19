@@ -215,6 +215,10 @@ Liste:
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
+- [ ] `CBS-26` dönüşler, seviyeler ve zaman profili (ADR 0521, 19 Ekim): web'de gerekenler: ağın işçisinde `Graph::build_with`'in
+  dönüş girdisi ve `NetworkSession.time` (WASM bağlayıcısı), `model/networkInput.ts`'in seviye, dönem ve dönüş katmanı değerleri,
+  Ağlar penceresinde Dönüşler, Seviyeler ve Zaman profili (`model/networkForm.ts`), araçlarda Saat (Z), İşlemler'in Kalkış saati;
+  `.kcad` şema 87'nin TS kodeği; TS türleri üretildi.
 - [ ] `CBS-14` artımlı topoloji denetimi (ADR 0524, 19 Ekim): web'de gerekenler: `topologyRun.ts`'in yeniden denetimi
   `incremental::recheck`'in WASM bağlayıcısıyla (`topologyRules` çağrılarına `recheck`), Topoloji panelinde Değişenleri denetle ve
   seçimin anahtarla izlenmesi.
@@ -1953,6 +1957,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
+- [ ] `CBS-26` dönüşler, seviyeler ve zaman profili (dilim): ağın `turns`'ü (geri dönüş kuralı, kavşakta açıya göre ve geri
+  dönüşün gecikmesi, en çok dört dönüş katmanı: yasak ya da kendi gecikmesi), `levels`'ı (kenarın baş, son ve iç seviye alanı;
+  köprü ve tünel bağlanmaz) ve hızla maliyetin `periods`'ı (günün dönemleri, çarpan ya da hız alanı, kapalıda beklenir, ilk giren
+  ilk çıkar); `.kcad` şema 87; Ağlar penceresi, araçlarda Saat (Z), İşlemler'de Kalkış saati, Python `Network.time`. Kalan: araç
+  profilleri, tarih aralıklı kapanma, Dönüş çiz aracı, dış yönlendirici, bağlı katmanın revizyonu. —
+  **19 Ekim, [ADR 0521](docs/adr/0521-turns-levels-and-time-profiles.md).**
 - [ ] `CBS-14` artımlı topoloji denetimi (dilim): bulgunun kalıcı anahtarı (kural, nesnelerin kimlikleri, yerin tolerans
   hücresi), denetimin çizimin durumuna bağlanması, `incremental::recheck` (değişenler ve komşuları, en yakına uzaklık ölçen
   kuralların erimi ve bağlantıları, boşluk kuralında kümeler ve adaları; tam denetimle aynı, rastgele düzenlemelerle sınanır),

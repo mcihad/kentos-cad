@@ -5,7 +5,7 @@
 //! totals the order first in the stops' own order (lexicographically).
 
 use super::graph::{Graph, Location};
-use super::search::{Path, Query, Searcher, Span, spans_cost};
+use super::search::{Path, Query, Searcher, Span, way_cost};
 
 /// The most stops whose order is bettered.
 pub const REORDER_LIMIT: usize = 12;
@@ -21,19 +21,25 @@ pub enum Reorder {
     KeepFirstLast,
 }
 
-/// A route: the stops' order visited, each leg, the spans in one row and the route's cost.
+/// A route: the stops' order visited, each leg, the spans in one row, the route's cost and the time of day it set off.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Route {
     pub order: Vec<usize>,
     pub legs: Vec<Path>,
     pub spans: Vec<Span>,
     pub cost: f64,
+    pub at: Option<f64>,
 }
 
 impl Route {
-    /// Its cost with cost `c` (none when a span cannot be travelled with it).
+    /// Its cost with cost `c` (none when a span cannot be travelled with it): each leg's, its turns (a stop is no turn:
+    /// a leg sets off afresh) and, with a time profile, set off when the legs before it arrive.
     pub fn total(&self, g: &Graph, c: usize) -> Option<f64> {
-        Some(spans_cost(g, &self.spans, c)).filter(|x| x.is_finite())
+        let mut total = 0.0;
+        for leg in &self.legs {
+            total += way_cost(g, &leg.spans, c, self.at.map(|t| t + total), false);
+        }
+        Some(total).filter(|x| x.is_finite())
     }
 }
 
@@ -57,6 +63,7 @@ pub fn stop_costs(
     stops: &[Location],
     barriers: &[Location],
     c: usize,
+    at: Option<f64>,
 ) -> Vec<Vec<f64>> {
     let mut m = vec![vec![f64::INFINITY; stops.len()]; stops.len()];
     for (i, row) in m.iter_mut().enumerate() {
@@ -66,6 +73,7 @@ pub fn stop_costs(
                 targets: stops,
                 barriers,
                 enough: Some(stops.len()),
+                at,
                 ..Query::from(&stops[i..i + 1], c)
             },
         );
@@ -149,7 +157,9 @@ pub fn best_order(m: &[Vec<f64>], first: usize, last: Option<usize>) -> Option<V
     Some(order)
 }
 
-/// The route through `stops` with cost `c`, not passing `barriers`, its order bettered by `reorder`.
+/// The route through `stops` with cost `c`, not passing `barriers`, its order bettered by `reorder`. With a time
+/// (`at`, minutes of the day) a cost's time profile is read: each leg sets off when the one before it arrives; the
+/// order is bettered by the stops' costs to each other set off at `at` (docs/adr/0521 §6).
 pub fn route(
     g: &Graph,
     s: &mut Searcher,
@@ -157,6 +167,7 @@ pub fn route(
     barriers: &[Location],
     c: usize,
     reorder: Reorder,
+    at: Option<f64>,
 ) -> Result<Route, RouteError> {
     if stops.len() < 2 {
         return Err(RouteError::TooFew);
@@ -165,12 +176,13 @@ pub fn route(
         Reorder::None => (0..stops.len()).collect(),
         _ if stops.len() > REORDER_LIMIT => return Err(RouteError::TooMany),
         Reorder::KeepFirst | Reorder::KeepFirstLast => {
-            let m = stop_costs(g, s, stops, barriers, c);
+            let m = stop_costs(g, s, stops, barriers, c, at);
             let last = (reorder == Reorder::KeepFirstLast).then_some(stops.len() - 1);
             best_order(&m, 0, last).ok_or(RouteError::NoOrder)?
         }
     };
-    let mut legs = Vec::with_capacity(order.len() - 1);
+    let mut legs: Vec<Path> = Vec::with_capacity(order.len() - 1);
+    let mut so_far = 0.0;
     for w in order.windows(2) {
         let (a, b) = (w[0], w[1]);
         let t = s.search(
@@ -179,12 +191,15 @@ pub fn route(
                 targets: &stops[b..b + 1],
                 barriers,
                 enough: Some(1),
+                at: at.map(|t| t + so_far),
                 ..Query::from(&stops[a..a + 1], c)
             },
         );
         let leg = t.path_to(g, &stops[b]);
         s.recycle(t);
-        legs.push(leg.ok_or(RouteError::Unreachable(a, b))?);
+        let leg = leg.ok_or(RouteError::Unreachable(a, b))?;
+        so_far += leg.cost;
+        legs.push(leg);
     }
     let spans: Vec<Span> = legs.iter().flat_map(|l| l.spans.iter().copied()).collect();
     let cost = legs.iter().map(|l| l.cost).sum();
@@ -193,6 +208,7 @@ pub fn route(
         legs,
         spans,
         cost,
+        at,
     })
 }
 

@@ -13,11 +13,11 @@ use iced::widget::{Column, Space, button, column, container, row, scrollable, te
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_contracts::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDefine,
-    NetworkDefineOperation, NetworkKind, networks_problem, next_network_id,
+    NetworkDefineOperation, NetworkKind, NetworkUTurns, networks_problem, next_network_id,
 };
 use kentos_geometry_core::ops::network::{Checked, ProblemKind};
 use kentos_interaction::network::form::{
-    CostRow, DIRECTION_DEFAULTS, DirectionKind, EdgeRow, JunctionRow, NetworkForm, def_of,
+    CostRow, DIRECTION_DEFAULTS, DirectionKind, EdgeRow, JunctionRow, NetworkForm, TurnRow, def_of,
     form_expressions, form_of, new_form, retyped,
 };
 use kentos_interaction::network::{Answer, NetworkAsk, NetworkQuestion, NetworkReply};
@@ -66,6 +66,13 @@ const ROLES: [(JunctionRole, &str); 3] = [
     (JunctionRole::Source, "Kaynak"),
     (JunctionRole::Valve, "Vana"),
 ];
+/// Dönüşler's first choice is none (no turn rules), then the U-turn policies (docs/adr/0521 §2).
+const U_TURNS: [(Option<NetworkUTurns>, &str); 4] = [
+    (None, "Dönüş kuralı yok"),
+    (Some(NetworkUTurns::Allowed), "Geri dönüş her yerde"),
+    (Some(NetworkUTurns::DeadEnds), "Geri dönüş yalnız çıkmazda"),
+    (Some(NetworkUTurns::Never), "Geri dönüş yok"),
+];
 const COST_KINDS: [(NetworkCostKind, &str); 2] = [
     (NetworkCostKind::Speed, "Süre (hızdan)"),
     (NetworkCostKind::Field, "Alandan"),
@@ -80,6 +87,7 @@ pub fn problem_label(k: ProblemKind) -> &'static str {
         ProblemKind::OffNetwork => "Ağın dışında düğüm",
         ProblemKind::Short => "Sıfır uzunluklu parça",
         ProblemKind::Unread => "Okunamayan değer",
+        ProblemKind::Turn => "Bağlanmayan dönüş",
     }
 }
 
@@ -90,6 +98,7 @@ pub enum Field {
     JunctionFilter(usize),
     JunctionClosed(usize),
     Closed,
+    TurnFilter(usize),
 }
 
 /// Denetle as last asked: its ticket while it waits, its answer or its words.
@@ -158,8 +167,18 @@ pub enum Event {
     CostField(usize, String),
     CostUnit(usize, String),
     CostSpeed(usize, String),
+    CostPeriods(usize, String),
     CostAdd,
     CostRemove(usize),
+    UTurns(usize),
+    /// A turn delay as typed: straight, right, left, back.
+    Delay(usize, String),
+    TurnLayer(usize, usize),
+    TurnField(usize, String),
+    TurnAdd,
+    TurnRemove(usize),
+    /// A level field as typed: start, end, inside.
+    LevelField(usize, String),
     Builder(Field),
     Check,
     Problem(usize),
@@ -422,6 +441,7 @@ impl App {
             network: format!("#{}", def.id),
             def: Some(def),
             question: NetworkQuestion::Check,
+            at: None,
         })
     }
 
@@ -502,6 +522,7 @@ impl App {
             Field::JunctionFilter(i) => f.junctions.get(i).map(|j| j.filter.clone()),
             Field::JunctionClosed(i) => f.junctions.get(i).map(|j| j.closed.clone()),
             Field::Closed => Some(f.closed.clone()),
+            Field::TurnFilter(i) => f.turn_layers.get(i).map(|l| l.filter.clone()),
         }
         .unwrap_or_default()
     }
@@ -522,6 +543,7 @@ impl App {
                 f.junctions.get(i).map(|j| j.layer.clone())
             }
             Field::Closed => f.edges.first().map(|e| e.layer.clone()),
+            Field::TurnFilter(i) => f.turn_layers.get(i).map(|l| l.layer.clone()),
         }
         .unwrap_or_default()
     }
@@ -939,6 +961,106 @@ impl App {
                 .spacing(6)
                 .align_y(Center),
             );
+            if c.kind == NetworkCostKind::Speed {
+                form = form.push(labelled(
+                    "Zaman profili",
+                    input(
+                        "boş: her saat aynı; ör. 07:00-09:30 0,5; 17:00-19:00 hiz_aksam",
+                        &c.periods,
+                        Box::new(move |t| Event::CostPeriods(i, t)),
+                    ),
+                ));
+            }
+        }
+        // Turns (docs/adr/0521 §2).
+        form = form.push(head(
+            "Dönüşler",
+            f.u_turns.map(|_| {
+                small(
+                    "plus",
+                    "Dönüş katmanı ekle",
+                    (f.turn_layers.len() < kentos_contracts::NETWORK_TURN_LAYER_LIMIT)
+                        .then(|| msg(Event::TurnAdd)),
+                )
+            }),
+        ));
+        form = form.push(labelled(
+            "Kural",
+            Select::new(
+                U_TURNS.iter().map(|(_, n)| Choice::new(*n)),
+                U_TURNS.iter().position(|(u, _)| *u == f.u_turns),
+                |k| msg(Event::UTurns(k)),
+            )
+            .into(),
+        ));
+        if f.u_turns.is_some() {
+            let mut delays = row![label::caption("Gecikme (sn)")]
+                .spacing(6)
+                .align_y(Center);
+            for (slot, (what, typed)) in [
+                ("Düz", &f.straight),
+                ("Sağ", &f.right),
+                ("Sol", &f.left),
+                ("Geri", &f.back),
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                delays = delays.push(label::caption(what));
+                delays = delays.push(number(typed, Box::new(move |t| Event::Delay(slot, t))));
+            }
+            form = form.push(labelled("Kavşakta", delays.into()));
+            for (i, l) in f.turn_layers.iter().enumerate() {
+                form = form.push(
+                    row![
+                        container(layer_select(&l.layer, Event::TurnLayer, i))
+                            .width(Length::FillPortion(2)),
+                        container(input(
+                            "süzgeç",
+                            &l.filter,
+                            Box::new(move |t| Event::Text(Field::TurnFilter(i), t))
+                        ))
+                        .width(Length::FillPortion(2)),
+                        builder(Field::TurnFilter(i)),
+                        container(input(
+                            "gecikme alanı (boş: yasak)",
+                            &l.field,
+                            Box::new(move |t| Event::TurnField(i, t))
+                        ))
+                        .width(Length::FillPortion(2)),
+                        remove(msg(Event::TurnRemove(i))),
+                    ]
+                    .spacing(6)
+                    .align_y(Center),
+                );
+            }
+            if f.turn_layers.is_empty() {
+                form = form.push(label::muted("Dönüş katmanı yok: yasak ya da gecikmeli dönüşler, gelinen kenardan gidilen kenara düğümün üstünden çizilen çizgilerdir."));
+            }
+        }
+        // Levels (docs/adr/0521 §3).
+        form = form.push(head("Seviyeler", None));
+        let mut levels = row![].spacing(6).align_y(Center);
+        for (slot, (hint, typed)) in [
+            ("başlangıç alanı", &f.level_start),
+            ("bitiş alanı", &f.level_end),
+            ("iç alanı (isteğe bağlı)", &f.level_inside),
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            levels = levels.push(
+                container(input(
+                    hint,
+                    typed,
+                    Box::new(move |t| Event::LevelField(slot, t)),
+                ))
+                .width(Length::FillPortion(1)),
+            );
+        }
+        form = form.push(labelled("Alanlar", levels.into()));
+        if f.level_start.trim().is_empty() && f.level_end.trim().is_empty() {
+            form = form.push(label::muted("Seviye yok: aynı yerde buluşan bütün kenarlar bağlanır. Köprü ve tünel için kenarın uçlarının seviye alanlarını yazın."));
         }
         // Closed edges.
         form = form.push(head("Kapalı kenarlar", None));
@@ -1112,6 +1234,8 @@ fn def_shell(id: &str) -> NetworkDef {
         direction: kentos_contracts::NetworkDirection::Both,
         costs: Vec::new(),
         closed: None,
+        turns: None,
+        levels: None,
     }
 }
 
@@ -1181,6 +1305,11 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
                 }
             }
             Field::Closed => f.closed = t,
+            Field::TurnFilter(i) => {
+                if let Some(l) = f.turn_layers.get_mut(i) {
+                    l.filter = t;
+                }
+            }
         },
         Event::Connect(k) => {
             if let Some(&(c, _)) = CONNECTS.get(k) {
@@ -1250,11 +1379,51 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
                 field: String::new(),
                 unit: String::new(),
                 speed: String::new(),
+                periods: String::new(),
             });
         }
         Event::CostRemove(i) if i < f.costs.len() => {
             f.costs.remove(i);
         }
+        Event::CostPeriods(i, t) => {
+            if let Some(c) = f.costs.get_mut(i) {
+                c.periods = t;
+            }
+        }
+        Event::UTurns(k) => {
+            if let Some(&(u, _)) = U_TURNS.get(k) {
+                f.u_turns = u;
+            }
+        }
+        Event::Delay(slot, t) => match slot {
+            0 => f.straight = t,
+            1 => f.right = t,
+            2 => f.left = t,
+            _ => f.back = t,
+        },
+        Event::TurnLayer(i, k) => {
+            if let (Some(l), Some(id)) = (f.turn_layers.get_mut(i), layer(k)) {
+                l.layer = id;
+            }
+        }
+        Event::TurnField(i, t) => {
+            if let Some(l) = f.turn_layers.get_mut(i) {
+                l.field = t;
+            }
+        }
+        Event::TurnAdd => f.turn_layers.push(TurnRow {
+            layer: layer(0).unwrap_or_default(),
+            filter: String::new(),
+            field: String::new(),
+        }),
+        Event::TurnRemove(i) if i < f.turn_layers.len() => {
+            f.turn_layers.remove(i);
+        }
+        Event::LevelField(slot, t) => match slot {
+            0 => f.level_start = t,
+            1 => f.level_end = t,
+            _ => f.level_inside = t,
+        },
         _ => {}
     }
 }

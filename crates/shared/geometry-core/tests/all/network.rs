@@ -78,6 +78,8 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
                     .map(|c| c.as_str().map(str::to_owned))
                     .collect(),
                 closed: e["closed"].as_bool().unwrap_or(false),
+                levels: [None, None, None],
+                periods: Vec::new(),
             }
         })
         .collect();
@@ -94,6 +96,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
                 _ => Role::Junction,
             },
             closed: j["closed"].as_bool().unwrap_or(false),
+            level: None,
         })
         .collect();
     Graph::build(rules, &edges, &junctions)
@@ -178,7 +181,15 @@ fn the_analyses_give_what_the_independent_reference_gives() {
                         _ => Reorder::None,
                     };
                     match (
-                        route(&g, &mut s, &pick(&q["stops"]), &barriers, cost, reorder),
+                        route(
+                            &g,
+                            &mut s,
+                            &pick(&q["stops"]),
+                            &barriers,
+                            cost,
+                            reorder,
+                            None,
+                        ),
                         want["error"].as_str(),
                     ) {
                         (Err(RouteError::Unreachable(a, b)), Some("unreachable")) => {
@@ -234,6 +245,7 @@ fn the_analyses_give_what_the_independent_reference_gives() {
                         toward: q["toward"].as_bool().unwrap_or(false),
                         separate: q["separate"].as_bool().unwrap_or(false),
                         barriers: &barriers,
+                        at: None,
                     };
                     let mut lines = service_lines(&g, &mut s, &aq);
                     let key = |f: Option<usize>| f.map_or(-1, |x| x as i64);
@@ -297,6 +309,7 @@ fn the_analyses_give_what_the_independent_reference_gives() {
                         cost,
                         reverse: q["reverse"].as_bool().unwrap_or(false),
                         barriers: &barriers,
+                        at: None,
                     };
                     let rows = nearest(&g, &mut s, &nq, paths);
                     let expected = want.as_array().expect("rows");
@@ -413,6 +426,7 @@ fn the_analyses_give_what_the_independent_reference_gives() {
                             ProblemKind::OffNetwork => "offNetwork",
                             ProblemKind::Short => "short",
                             ProblemKind::Unread => "unread",
+                            ProblemKind::Turn => "turn",
                         };
                         assert_eq!(kind, w["kind"].as_str().expect("a kind"), "{title}");
                         near(p.at.x, num(&w["at"][0]), &title);
@@ -511,6 +525,8 @@ fn timing() {
                 .or_else(|| (one_way < 0.1).then(|| "TF".to_owned())),
             costs: vec![Some(speed.to_string())],
             closed: r() < 0.01,
+            levels: [None, None, None],
+            periods: Vec::new(),
         });
     };
     for i in 0..N {
