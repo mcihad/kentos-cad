@@ -35,6 +35,7 @@ pub const TILE_OFFSETS: u16 = 324;
 pub const TILE_BYTE_COUNTS: u16 = 325;
 pub const EXTRA_SAMPLES: u16 = 338;
 pub const SAMPLE_FORMAT: u16 = 339;
+pub const DATE_TIME: u16 = 306;
 pub const JPEG_TABLES: u16 = 347;
 pub const YCBCR_SUBSAMPLING: u16 = 530;
 pub const MODEL_PIXEL_SCALE: u16 = 33550;
@@ -46,7 +47,7 @@ pub const GEO_ASCII_PARAMS: u16 = 34737;
 pub const GDAL_NODATA: u16 = 42113;
 
 /// The tags read; the rest are skipped.
-const WANTED: [u16; 28] = [
+const WANTED: [u16; 29] = [
     NEW_SUBFILE_TYPE,
     IMAGE_WIDTH,
     IMAGE_LENGTH,
@@ -66,6 +67,7 @@ const WANTED: [u16; 28] = [
     TILE_BYTE_COUNTS,
     EXTRA_SAMPLES,
     SAMPLE_FORMAT,
+    DATE_TIME,
     JPEG_TABLES,
     YCBCR_SUBSAMPLING,
     MODEL_PIXEL_SCALE,
@@ -106,6 +108,8 @@ pub struct Ifd {
     pub geo_doubles: Vec<f64>,
     pub geo_ascii: String,
     pub gdal_nodata: Option<String>,
+    /// DateTime (306): `YYYY:MM:DD HH:MM:SS`, as written (a mosaic's date priority, docs/adr/0517 §3).
+    pub date_time: Option<String>,
 }
 
 /// A file's header and directories.
@@ -438,6 +442,7 @@ pub fn parse(store: &ByteStore, size: u64) -> Result<Step<Tiff>, RasterError> {
                 GEO_DOUBLE_PARAMS => ifd.geo_doubles = floats(v),
                 GEO_ASCII_PARAMS => ifd.geo_ascii = text(v),
                 GDAL_NODATA => ifd.gdal_nodata = Some(text(v)),
+                DATE_TIME => ifd.date_time = Some(text(v)),
                 _ => {}
             }
         }

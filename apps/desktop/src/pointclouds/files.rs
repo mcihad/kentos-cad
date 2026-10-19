@@ -380,13 +380,11 @@ impl Files for DesktopFiles {
         let part = crate::rasters::part_of(raster);
         let open =
             crate::rasters::tiles::open_reader_part(&origin, part.as_ref(), RASTER_READER_BUDGET)?;
-        let source = open.source;
+        // A mosaic's blocks are its files' (docs/adr/0517 §2): the block source reads either.
+        let (reader, blocks) = open.split();
         Ok(RasterOpen {
-            reader: open.reader,
-            block: Box::new(move |need| match &source {
-                Some(b) if need.file == 0 => b.read(need.offset, need.len),
-                _ => Err("Rasterin bu bloğu okunamadı.".to_owned()),
-            }),
+            reader,
+            block: Box::new(move |need| blocks.read(need)),
             jpeg: Box::new(jpeg_pixels),
         })
     }

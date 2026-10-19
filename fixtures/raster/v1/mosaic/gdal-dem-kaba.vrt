@@ -1,0 +1,40 @@
+<VRTDataset rasterXSize="65" rasterYSize="40">
+  <SRS dataAxisToSRSAxisMapping="2,1">PROJCS["TUREF / TM36",GEOGCS["TUREF",DATUM["Turkish_National_Reference_Frame",SPHEROID["GRS 1980",6378137,298.257222101,AUTHORITY["EPSG","7019"]],AUTHORITY["EPSG","1057"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","5252"]],PROJECTION["Transverse_Mercator"],PARAMETER["latitude_of_origin",0],PARAMETER["central_meridian",36],PARAMETER["scale_factor",1],PARAMETER["false_easting",500000],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Northing",NORTH],AXIS["Easting",EAST],AUTHORITY["EPSG","5256"]]</SRS>
+  <GeoTransform>  4.8720000000000000e+05,  1.0000000000000000e+01,  0.0000000000000000e+00,  4.4206000000000000e+06,  0.0000000000000000e+00, -1.0000000000000000e+01</GeoTransform>
+  <VRTRasterBand dataType="Float32" band="1">
+    <NoDataValue>-9999</NoDataValue>
+    <ColorInterp>Gray</ColorInterp>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-a.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="40" RasterYSize="30" DataType="Float32" BlockXSize="16" BlockYSize="16" />
+      <SrcRect xOff="0" yOff="0" xSize="40" ySize="30" />
+      <DstRect xOff="0" yOff="0" xSize="40" ySize="30" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-b.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="40" RasterYSize="30" DataType="Float32" BlockXSize="16" BlockYSize="16" />
+      <SrcRect xOff="0" yOff="0" xSize="40" ySize="30" />
+      <DstRect xOff="25" yOff="10" xSize="40" ySize="30" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-c.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="30" RasterYSize="30" DataType="Float32" BlockXSize="16" BlockYSize="16" />
+      <SrcRect xOff="0" yOff="0" xSize="30" ySize="30" />
+      <DstRect xOff="20" yOff="5" xSize="15" ySize="15" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+    <ComplexSource>
+      <SourceFilename relativeToVRT="1">dem-e.tif</SourceFilename>
+      <SourceBand>1</SourceBand>
+      <SourceProperties RasterXSize="20" RasterYSize="20" DataType="Float32" BlockXSize="16" BlockYSize="16" />
+      <SrcRect xOff="0" yOff="0" xSize="20" ySize="20" />
+      <DstRect xOff="30" yOff="25" xSize="15" ySize="15" />
+      <NODATA>-9999</NODATA>
+    </ComplexSource>
+  </VRTRasterBand>
+</VRTDataset>

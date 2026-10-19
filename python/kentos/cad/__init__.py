@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -923,6 +923,11 @@ __all__ = [
     "MirrorTextName",
     "MirrorTransform",
     "ModeConstraintEdit",
+    "MosaicOrder",
+    "MosaicOrderName",
+    "MosaicResolution",
+    "MosaicResolutionName",
+    "MosaicSource",
     "MoveBlockAction",
     "MoveControlCurveEdit",
     "MoveFitCurveEdit",
@@ -1180,6 +1185,8 @@ __all__ = [
     "RasterStretch",
     "RasterStretchName",
     "RasterStyle",
+    "RastersMosaic",
+    "RastersMosaicked",
     "RayEntity",
     "RayEntityGeometry",
     "ReboundSpacesOperation",
@@ -1699,6 +1706,7 @@ __all__ = [
     "processing",
     "project",
     "ramps",
+    "rasters",
     "records",
     "rectangle",
     "relations",

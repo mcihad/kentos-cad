@@ -38,7 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
-use kentos_native_application::{assets_check, images_edit, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
+use kentos_native_application::{assets_check, images_edit, rasters_mosaic, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -167,7 +167,7 @@ fn fill(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<Value
         // Whatever the command gives (compared by `same`).
         Value::String(text) if text == "$any" => value.clone(),
         // A fixture file's absolute path, anywhere in a text (docs/adr/0257 §3).
-        Value::String(text) if text.contains("$fixture:") => Value::String(with_fixtures(text)),
+        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => Value::String(with_fixtures(text)),
         Value::String(text) if text.starts_with("$blockOf:") => {
             let name = &text["$blockOf:".len()..];
             let block = doc
@@ -278,7 +278,7 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
                 || text.starts_with("$uid:")
                 || text.starts_with("$layer:")
                 // An external reference's source file (docs/adr/0348).
-                || text.contains("$fixture:")
+                || (text.contains("$fixture:") || text.contains("$tmp:"))
                 || text.starts_with("$$") =>
         {
             fill(value, doc, state, at)?
@@ -303,17 +303,41 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
 /// absolute path of `fixtures/rel/path`.
 fn with_fixtures(text: &str) -> String {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures");
+    let out = with_root(text, "$fixture:", &root);
+    if out.contains("$tmp:") {
+        with_root(&out, "$tmp:", &tmp_folder())
+    } else {
+        out
+    }
+}
+
+/// `text` with every `marker` path (up to a space) made `root`'s.
+fn with_root(text: &str, marker: &str, root: &std::path::Path) -> String {
     let mut out = String::new();
     let mut rest = text;
-    while let Some(start) = rest.find("$fixture:") {
+    while let Some(start) = rest.find(marker) {
         out.push_str(&rest[..start]);
-        let after = &rest[start + "$fixture:".len()..];
+        let after = &rest[start + marker.len()..];
         let end = after.find(char::is_whitespace).unwrap_or(after.len());
         out.push_str(&root.join(&after[..end]).display().to_string());
         rest = &after[end..];
     }
     out.push_str(rest);
     out
+}
+
+/// The folder `$tmp:name` files are written in (a command that writes a file, docs/adr/0517): the test run's own,
+/// made empty once.
+fn tmp_folder() -> PathBuf {
+    static FOLDER: std::sync::OnceLock<PathBuf> = std::sync::OnceLock::new();
+    FOLDER
+        .get_or_init(|| {
+            let dir = std::env::temp_dir().join(format!("kentos-cases-{}", std::process::id()));
+            let _ = std::fs::remove_dir_all(&dir);
+            let _ = std::fs::create_dir_all(&dir);
+            dir
+        })
+        .clone()
 }
 
 /// `text` with every `$uid:name` replaced by the persistent id `captureUid` took as `name`.
@@ -847,6 +871,12 @@ impl Input for kentos_domain::contracts::AssetsCheck {
 }
 
 impl Input for kentos_domain::contracts::ImagesEdit {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::RastersMosaic {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2932,6 +2962,9 @@ fn run_op(
         kentos_domain::contracts::CAD_IMAGES_EDIT => {
             run!(images_edit, kentos_domain::contracts::ImagesEdit)
         }
+        kentos_domain::contracts::CAD_RASTERS_MOSAIC => {
+            run!(rasters_mosaic, kentos_domain::contracts::RastersMosaic)
+        }
         kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
             run!(schedules_create, kentos_domain::contracts::SchedulesCreate)
         }
@@ -3584,7 +3617,7 @@ fn check(
 /// `value` with every `$fixture:` path in its texts made absolute (a bound layer's file, docs/adr/0503).
 fn setup_paths(value: &Value) -> Value {
     match value {
-        Value::String(text) if text.contains("$fixture:") => Value::String(with_fixtures(text)),
+        Value::String(text) if (text.contains("$fixture:") || text.contains("$tmp:")) => Value::String(with_fixtures(text)),
         Value::Array(items) => Value::Array(items.iter().map(setup_paths).collect()),
         Value::Object(fields) => Value::Object(fields.iter().map(|(k, v)| (k.clone(), setup_paths(v))).collect()),
         other => other.clone(),

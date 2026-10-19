@@ -1324,6 +1324,24 @@ codes! {
     /// Göm with no linked image to embed.
     NOTHING_TO_EMBED = "nothing_to_embed", Failed, false, "Gömülecek bağlı resim yok; verilen resimler zaten gömülü.";
 
+    // ── Virtual mosaic (docs/adr/0517) ──────────────────────────────────
+    /// No file given for the mosaic.
+    MOSAIC_EMPTY = "mosaic_empty", Failed, false, "Mozaiğe konacak dosya verilmedi.";
+    /// More files than a mosaic takes, or a mosaic larger than a raster may be.
+    MOSAIC_TOO_LARGE = "mosaic_too_large", Failed, false, "Mozaik çok büyük: 10 000'den çok dosya ya da bir kenarında 2 milyardan çok piksel.";
+    /// A file that its own GeoTIFF tags do not place.
+    MOSAIC_UNPLACED = "mosaic_unplaced", Failed, false, "Bir dosyanın yerini GeoTIFF etiketleri söylemiyor; önce Raster oturt ile yerine koyup GeoTIFF olarak yazın.";
+    /// A file turned or not north up.
+    MOSAIC_ROTATED = "mosaic_rotated", Failed, false, "Bir dosya dönük ya da kuzeyi yukarıda değil; mozaik yalnız kuzeyi yukarıda dosyaları yan yana koyar.";
+    /// Files of different systems, band counts or data types, or with a palette.
+    MOSAIC_MISMATCH = "mosaic_mismatch", Failed, false, "Dosyaların koordinat sistemi, bant sayısı ya da veri türü aynı değil (ya da paletli); mozaiğe birlikte konmaz.";
+    /// A pixel size not finite or not above 0.
+    INVALID_PIXEL_SIZE = "invalid_pixel_size", Failed, false, "Piksel boyu sıfırdan büyük, sonlu bir sayı olmalı.";
+    /// Files whose pixel is not the mosaic's: read at the nearest pixel.
+    MOSAIC_RESAMPLED = "mosaic_resampled", Warning, false, "Bazı dosyaların pikseli mozaiğinkinden başka; en yakın pikselden okunur.";
+    /// Order by date with files that have no date: they lie at the bottom.
+    MOSAIC_UNDATED = "mosaic_undated", Warning, false, "Bazı dosyaların tarihi (TIFF DateTime) yok; tarih sırasında en alta kondular.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

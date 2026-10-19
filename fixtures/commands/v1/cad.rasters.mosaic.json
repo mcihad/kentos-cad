@@ -1,0 +1,6237 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.rasters.mosaic",
+ "commandVersion": 1,
+ "title": "Sanal mozaik",
+ "note": "Written by scripts/fixtures/raster_mosaic_cases.py from docs/adr/0517 §3 with GDAL; do not edit by hand.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Mozaik",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "deg",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 487200.0,
+   "y": 4420600.0
+  },
+  "layers": [
+   {
+    "id": "altlik",
+    "name": "Altlık",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "altlik",
+  "entities": [],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "Verilen sıra: ilk dosya üstte, en ince piksel (5 m), VRT yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:dem.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:dem.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan: dosya yazılmadan mozaik söylenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:plan.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:plan.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Önce plan, sonra aynı mozaik yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:iki.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:iki.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:iki.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:iki.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "İnce çözünürlük üstte: 5 m'lik dosya en üstte",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:ince.vrt",
+      "order": "finest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:ince.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 1,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 3,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tarih üstte: 2023, 2021, 2019",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:yeni.vrt",
+      "order": "newest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:yeni.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 2,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 3,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yeni tarih üstte, tarihsiz dosya en altta ve söylenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-d.tif",
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:tarihsiz.vrt",
+      "order": "newest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:tarihsiz.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 2,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 3,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-d.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-d.tif",
+         "rank": 4,
+         "width": 20,
+         "height": 20,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "src": [
+          0.0,
+          0.0,
+          20.0,
+          20.0
+         ],
+         "dst": [
+          20.0,
+          40.0,
+          40.0,
+          40.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-d.tif, dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       },
+       {
+        "code": "mosaic_undated",
+        "message": "dem-d.tif dosyasının tarihi (TIFF DateTime) yok; en alta kondu.",
+        "path": "order"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "En kaba çözünürlük: 10 m",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:kaba.vrt",
+      "resolution": "lowest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:kaba.vrt",
+       "width": 65,
+       "height": 40,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        10.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -10.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          25.0,
+          10.0,
+          40.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          20.0,
+          5.0,
+          15.0,
+          15.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-c.tif dosyasının pikseli mozaiğinkinden (10 × 10) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortalama çözünürlük: 10 m ile 5 m'den 7,5 m",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:ortalama.vrt",
+      "resolution": "average"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:ortalama.vrt",
+       "width": 53,
+       "height": 40,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        7.5,
+        0.0,
+        4420600.0,
+        0.0,
+        -7.5
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          39.75,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          53.0,
+          40.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 2,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          26.666666666666668,
+          6.666666666666667,
+          20.0,
+          20.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-c.tif dosyalarının pikseli mozaiğinkinden (7.5 × 7.5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortalama çözünürlük: 7,5 m'lik dosya da",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-e.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:ortalama3.vrt",
+      "resolution": "average"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:ortalama3.vrt",
+       "width": 60,
+       "height": 53,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        7.5,
+        0.0,
+        4420600.0,
+        0.0,
+        -7.5
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          53.33333333333333,
+          40.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-e.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-e.tif",
+         "rank": 2,
+         "width": 20,
+         "height": 20,
+         "pixel": [
+          7.5,
+          7.5
+         ],
+         "date": "2020-01-15T08:30:00",
+         "src": [
+          0.0,
+          0.0,
+          20.0,
+          19.666666666666664
+         ],
+         "dst": [
+          40.0,
+          33.333333333333336,
+          20.0,
+          19.666666666666664
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          26.666666666666668,
+          6.666666666666667,
+          20.0,
+          20.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-c.tif dosyalarının pikseli mozaiğinkinden (7.5 × 7.5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Verilen piksel boyu 2,5 m",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:piksel.vrt",
+      "pixelSize": 2.5
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:piksel.vrt",
+       "width": 260,
+       "height": 160,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        2.5,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.5
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          160.0,
+          120.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          100.0,
+          40.0,
+          160.0,
+          120.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          80.0,
+          20.0,
+          60.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif, dem-c.tif dosyalarının pikseli mozaiğinkinden (2.5 × 2.5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Mozaiğin nodata'sı verilen",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:nodata.vrt",
+      "nodata": 0.0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:nodata.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": 0.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Tek dosya: mozaik o dosyanın kendisi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-b.tif"
+      ],
+      "path": "$tmp:tek.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:tek.vrt",
+       "width": 40,
+       "height": 30,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487450.0,
+        10.0,
+        0.0,
+        4420500.0,
+        0.0,
+        -10.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ortofotolar: RGB, nodata'sız, aynı piksel",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/orto-2019.tif",
+       "$fixture:raster/v1/mosaic/orto-2021.tif",
+       "$fixture:raster/v1/mosaic/orto-2023.tif"
+      ],
+      "path": "$tmp:orto.vrt",
+      "order": "newest"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:orto.vrt",
+       "width": 350,
+       "height": 260,
+       "bands": 3,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2023.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2023.tif",
+         "rank": 1,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2023-06-14T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          65.0,
+          100.0,
+          220.0,
+          160.0
+         ]
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2021.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2021.tif",
+         "rank": 2,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2021-06-12T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          130.0,
+          45.0,
+          220.0,
+          160.0
+         ]
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2019.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2019.tif",
+         "rank": 3,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2019-06-10T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ]
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Katmana eklenir: tek geri alma adımı, rasterin dosyası VRT",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/orto-2019.tif",
+       "$fixture:raster/v1/mosaic/orto-2021.tif",
+       "$fixture:raster/v1/mosaic/orto-2023.tif"
+      ],
+      "path": "$tmp:katman.vrt",
+      "order": "newest",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:katman.vrt",
+       "width": 350,
+       "height": 260,
+       "bands": 3,
+       "sample": "u8",
+       "affine": [
+        487200.0,
+        2.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -2.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2023.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2023.tif",
+         "rank": 1,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2023-06-14T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          65.0,
+          100.0,
+          220.0,
+          160.0
+         ]
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2021.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2021.tif",
+         "rank": 2,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2021-06-12T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          130.0,
+          45.0,
+          220.0,
+          160.0
+         ]
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/orto-2019.tif",
+         "read": "$fixture:raster/v1/mosaic/orto-2019.tif",
+         "rank": 3,
+         "width": 220,
+         "height": 160,
+         "pixel": [
+          2.0,
+          2.0
+         ],
+         "date": "2019-06-10T11:00:00",
+         "src": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          220.0,
+          160.0
+         ]
+        }
+       ],
+       "bytes": "$any",
+       "uid": "$uidOf:1",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "layerId": "altlik",
+        "file": "$tmp:katman.vrt",
+        "width": 350,
+        "height": 260,
+        "bands": 3,
+        "sample": "u8",
+        "affine": [
+         487200.0,
+         2.0,
+         0.0,
+         4420600.0,
+         0.0,
+         -2.0
+        ],
+        "srid": 5256
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Gizli katmana eklenir ve söylenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:gizli.vrt",
+      "layer": "gizli"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:gizli.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "nodata": -9999.0,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "uid": "$uidOf:1",
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       },
+       {
+        "code": "layer_hidden",
+        "message": "“Gizli” katmanı gizli; çizilen nesne görünmeyecek.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "layerId": "gizli",
+        "file": "$tmp:gizli.vrt",
+        "width": 130,
+        "height": 80,
+        "bands": 1,
+        "sample": "f32",
+        "affine": [
+         487200.0,
+         5.0,
+         0.0,
+         4420600.0,
+         0.0,
+         -5.0
+        ],
+        "srid": 5256
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yollar: dosyalar VRT'nin klasöründen adlarıyla (plan)",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "sources": [
+       "dem-a.tif",
+       "dem-b.tif"
+      ],
+      "path": "goreli.vrt",
+      "drawing": "$fixture:raster/v1/mosaic/proje.kcad"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$fixture:raster/v1/mosaic/goreli.vrt",
+       "width": 65,
+       "height": 40,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        10.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -10.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          25.0,
+          10.0,
+          40.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": 858,
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistemsiz dosyalar sistemli projeye sistemsiz eklenir",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/yerel-a.tif",
+       "$fixture:raster/v1/mosaic/yerel-b.tif"
+      ],
+      "path": "$tmp:yerel.vrt",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:yerel.vrt",
+       "width": 20,
+       "height": 10,
+       "bands": 1,
+       "sample": "u8",
+       "affine": [
+        0.0,
+        10.0,
+        0.0,
+        100.0,
+        0.0,
+        -10.0
+       ],
+       "srid": 0,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/yerel-a.tif",
+         "read": "$fixture:raster/v1/mosaic/yerel-a.tif",
+         "rank": 1,
+         "width": 10,
+         "height": 10,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "src": [
+          0.0,
+          0.0,
+          10.0,
+          10.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          10.0,
+          10.0
+         ]
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/yerel-b.tif",
+         "read": "$fixture:raster/v1/mosaic/yerel-b.tif",
+         "rank": 2,
+         "width": 10,
+         "height": 10,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "src": [
+          0.0,
+          0.0,
+          10.0,
+          10.0
+         ],
+         "dst": [
+          10.0,
+          0.0,
+          10.0,
+          10.0
+         ]
+        }
+       ],
+       "bytes": "$any",
+       "uid": "$uidOf:1",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "kind": "raster",
+        "layerId": "altlik",
+        "file": "$tmp:yerel.vrt",
+        "width": 20,
+        "height": 10,
+        "bands": 1,
+        "sample": "u8",
+        "affine": [
+         0.0,
+         10.0,
+         0.0,
+         100.0,
+         0.0,
+         -10.0
+        ],
+        "srid": 0
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan dosya: overwrite'sız reddedilir, overwrite ile yazılır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:var.vrt"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:var.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 2,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 3,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:var.vrt",
+      "order": "newest"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_exists",
+       "message": "$tmp:var.vrt var; üzerine yazmak için overwrite verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:var.vrt",
+      "order": "newest",
+      "overwrite": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "path": "$tmp:var.vrt",
+       "width": 130,
+       "height": 80,
+       "bands": 1,
+       "sample": "f32",
+       "affine": [
+        487200.0,
+        5.0,
+        0.0,
+        4420600.0,
+        0.0,
+        -5.0
+       ],
+       "srid": 5256,
+       "sources": [
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-b.tif",
+         "rank": 1,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2023-06-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          50.0,
+          20.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-c.tif",
+         "rank": 2,
+         "width": 30,
+         "height": 30,
+         "pixel": [
+          5.0,
+          5.0
+         ],
+         "date": "2021-07-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          30.0,
+          30.0
+         ],
+         "dst": [
+          40.0,
+          10.0,
+          30.0,
+          30.0
+         ],
+         "nodata": -9999.0
+        },
+        {
+         "file": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "read": "$fixture:raster/v1/mosaic/dem-a.tif",
+         "rank": 3,
+         "width": 40,
+         "height": 30,
+         "pixel": [
+          10.0,
+          10.0
+         ],
+         "date": "2019-05-01T10:00:00",
+         "src": [
+          0.0,
+          0.0,
+          40.0,
+          30.0
+         ],
+         "dst": [
+          0.0,
+          0.0,
+          80.0,
+          60.0
+         ],
+         "nodata": -9999.0
+        }
+       ],
+       "bytes": "$any",
+       "revision": "$current",
+       "nodata": -9999.0
+      },
+      "warnings": [
+       {
+        "code": "mosaic_resampled",
+        "message": "dem-a.tif, dem-b.tif dosyalarının pikseli mozaiğinkinden (5 × 5) başka; en yakın pikselden okunur.",
+        "path": "sources"
+       }
+      ]
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dosya verilmedi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [],
+      "path": "$tmp:bos.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_empty",
+       "message": "Mozaiğe konacak GeoTIFF dosyası verilmedi.",
+       "path": "sources"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yol .vrt değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:mozaik.tif"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“mozaik.tif” bir .vrt dosyası değil; mozaik GDAL'ın VRT dosyası olarak yazılır.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: göreli yol, çizimin dosyası yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "mozaik.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“mozaik.vrt” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: göreli kaynak, çizimin dosyası yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "dem-a.tif"
+      ],
+      "path": "$tmp:k.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“dem-a.tif” göreli bir yol, ama çizimin dosyası yok; mutlak yolu verin ya da çizimi önce kaydedin.",
+       "path": "sources[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: piksel boyu sıfır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:p.vrt",
+      "pixelSize": 0.0
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_pixel_size",
+       "message": "Piksel boyu sıfırdan büyük, sonlu bir sayı olmalı.",
+       "path": "pixelSize"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dosya yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/yok.tif"
+      ],
+      "path": "$tmp:y.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "yok.tif bulunamadı. Bakılan yerler: $fixture:raster/v1/mosaic/yok.tif.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: PNG GeoTIFF değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/resim.png"
+      ],
+      "path": "$tmp:r.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "resim.png okunamadı (GeoTIFF değil); mozaiğe yalnız GeoTIFF konur.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: yeri belli olmayan TIFF",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/yersiz.tif"
+      ],
+      "path": "$tmp:ys.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_unplaced",
+       "message": "yersiz.tif dosyasının yerini GeoTIFF etiketleri söylemiyor; önce Raster oturt ile yerine koyup GeoTIFF olarak yazın.",
+       "path": "sources[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: dönük dosya",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/donuk.tif"
+      ],
+      "path": "$tmp:d.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_rotated",
+       "message": "donuk.tif dönük ya da kuzeyi yukarıda değil; mozaik yalnız kuzeyi yukarıda dosyaları yan yana koyar.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: başka koordinat sistemi",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/baska-sistem.tif"
+      ],
+      "path": "$tmp:s.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_mismatch",
+       "message": "Dosyalar mozaiğe birlikte konmaz: baska-sistem.tif EPSG:5255, dem-a.tif EPSG:5256. Hepsi aynı sistemde, bant sayısında ve veri türünde olmalı.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: başka bant sayısı",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/iki-bant.tif"
+      ],
+      "path": "$tmp:b.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_mismatch",
+       "message": "Dosyalar mozaiğe birlikte konmaz: iki-bant.tif 2 bantlı, dem-a.tif 1 bantlı. Hepsi aynı sistemde, bant sayısında ve veri türünde olmalı.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: başka veri türü",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/tam-sayi.tif"
+      ],
+      "path": "$tmp:t.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_mismatch",
+       "message": "Dosyalar mozaiğe birlikte konmaz: tam-sayi.tif Int16, dem-a.tif Float32. Hepsi aynı sistemde, bant sayısında ve veri türünde olmalı.",
+       "path": "sources[1]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: paletli dosya",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/paletli.tif"
+      ],
+      "path": "$tmp:pl.vrt"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_mismatch",
+       "message": "paletli.tif paletli; paletli raster mozaiğe konmaz (önce RGB'ye çevirin).",
+       "path": "sources[0]"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: mozaik çok büyük",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:buyuk.vrt",
+      "pixelSize": 3e-07
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "mosaic_too_large",
+       "message": "Mozaik 2166666667 × 1333333334 piksel olurdu; bir kenarı en çok 2 milyar piksel olabilir. Daha büyük bir piksel boyu verin.",
+       "path": "pixelSize"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman yok",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:kl.vrt",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman kilitli",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:kk.vrt",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli. Kilidi Katmanlar panelinden açın ya da başka bir katmanı etkinleştirin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: katman grubu",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:kg.vrt",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; nesne yalnız katmana eklenir. Grubun içinden bir katman seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: beklenen sürüm sayı değil",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:rs.vrt",
+      "expectedRevision": "yedi"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “yedi” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: mozaiğin sistemi projeninkinden başka",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "cad"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:ks.vrt",
+      "layer": "altlik"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "Mozaiğin sistemi EPSG:5256, projeninki yerel; raster çevrilmeden eklenmez. Dosyayı yazmak için layer'ı vermeyin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Ret: çizim değişti",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Mozaik",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "deg",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 487200.0,
+     "y": 4420600.0
+    },
+    "layers": [
+     {
+      "id": "altlik",
+      "name": "Altlık",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "altlik",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "sources": [
+       "$fixture:raster/v1/mosaic/dem-a.tif",
+       "$fixture:raster/v1/mosaic/dem-b.tif",
+       "$fixture:raster/v1/mosaic/dem-c.tif"
+      ],
+      "path": "$tmp:rv.vrt",
+      "layer": "altlik",
+      "expectedRevision": "7"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

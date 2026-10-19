@@ -196,6 +196,11 @@ pub fn inspect_origin(origin: &super::tiles::Origin) -> Result<Read, String> {
     })
 }
 
+/// A virtual mosaic (a VRT, docs/adr/0517): its files are read where they are, so it is never embedded.
+fn is_mosaic(r: &Read) -> bool {
+    r.info.placed_by == "vrt" || r.info.compression == "VRT"
+}
+
 /// The file's size as the window says it.
 fn size_words(bytes: u64) -> String {
     if bytes >= 1 << 20 {
@@ -226,6 +231,9 @@ fn colour_words(info: &RasterInfo) -> String {
 
 /// How a TIFF is stored.
 fn storage_words(info: &RasterInfo) -> String {
+    if info.placed_by == "vrt" {
+        return "Sanal mozaik (VRT): dosyalar yerinde okunur".to_owned();
+    }
     if info.compression.is_empty() {
         return "Tek parça resim".to_owned();
     }
@@ -294,8 +302,8 @@ impl App {
                 rfd::AsyncFileDialog::new()
                     .set_title(TITLE)
                     .add_filter(
-                        "Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF)",
-                        &["tif", "tiff", "png", "jpg", "jpeg", "nc"],
+                        "Raster (GeoTIFF, TIFF, PNG, JPEG, NetCDF, VRT)",
+                        &["tif", "tiff", "png", "jpg", "jpeg", "nc", "vrt"],
                     )
                     .pick_file()
                     .await
@@ -368,7 +376,7 @@ impl App {
                 {
                     if read
                         .as_ref()
-                        .is_ok_and(|r| r.bytes > super::MOST_EMBEDDED as u64)
+                        .is_ok_and(|r| r.bytes > super::MOST_EMBEDDED as u64 || is_mosaic(r))
                     {
                         s.keep = Keep::Linked;
                     }
@@ -694,6 +702,7 @@ impl App {
         };
         let placed = match (i.placed_by.as_str(), &r.world) {
             ("geotiff", _) => "GeoTIFF etiketleri".to_owned(),
+            ("vrt", _) => "Mozaiğin VRT dosyası".to_owned(),
             ("world", Some(w)) => format!("Dünya dosyası ({w})"),
             ("world", None) => "Dünya dosyası".to_owned(),
             _ => "Yok (oturtulmamış)".to_owned(),
@@ -765,7 +774,7 @@ impl App {
     }
 
     fn raster_add_options<'a>(&self, s: &'a State, r: &'a Read) -> Element<'a, Message> {
-        let large = r.bytes > super::MOST_EMBEDDED as u64;
+        let large = r.bytes > super::MOST_EMBEDDED as u64 || is_mosaic(r);
         // An address is kept as it is: read by ranges each time, never embedded (docs/adr/0207 §1).
         let keep: Element<'a, Message> = if s.from == From::Address {
             words::field(
@@ -783,7 +792,9 @@ impl App {
                 |k| msg(Event::Keep(k)),
                 move |k| k == Keep::Linked || !large,
             );
-            let hint = if large {
+            let hint = if is_mosaic(r) {
+                "Sanal mozaik (VRT) dosyalarını yerinde okur; bağlı kalır, dosyalarıyla birlikte taşınır.".to_owned()
+            } else if large {
                 format!(
                     "Dosya {}; gömülü raster en çok {} MB olabilir, bağlı kalır.",
                     size_words(r.bytes),

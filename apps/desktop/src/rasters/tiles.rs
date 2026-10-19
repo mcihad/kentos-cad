@@ -162,6 +162,23 @@ pub(super) struct Opened {
     /// The pyramid file once made (blocks of file 1).
     pub(super) pyramid: Mutex<Option<File>>,
     stats: Mutex<Option<Stats>>,
+    /// A virtual mosaic's files (docs/adr/0517 §2), whose blocks a need's `member` names.
+    members: Vec<PathBuf>,
+}
+
+/// A mosaic's file's block (docs/adr/0517 §2): the file opened for the read and closed after, so that a mosaic of
+/// thousands of files holds no handle of its own.
+pub(crate) fn read_member(members: &[PathBuf], need: &BlockNeed) -> Result<Vec<u8>, String> {
+    let path = need
+        .member
+        .checked_sub(1)
+        .and_then(|m| members.get(m as usize))
+        .ok_or_else(|| "Mozaiğin böyle bir dosyası yok.".to_owned())?;
+    if need.file != 0 {
+        return Err("Mozaiğin dosyalarının önizleme piramidi okunmaz.".into());
+    }
+    let file = File::open(path).map_err(|e| format!("“{}” açılamadı: {e}.", path.display()))?;
+    read_at(&file, need.offset, need.len)
 }
 
 impl Opened {
@@ -169,6 +186,9 @@ impl Opened {
     fn read(&self, need: &BlockNeed) -> Result<Vec<u8>, String> {
         if need.len > 64 * 1024 * 1024 {
             return Err("Rasterin bir bloğu 64 MB'tan büyük.".into());
+        }
+        if need.member > 0 {
+            return read_member(&self.members, need);
         }
         if need.file == 1 {
             let pyramid = self.pyramid.lock().unwrap_or_else(PoisonError::into_inner);
@@ -310,6 +330,7 @@ pub(super) fn open(origin: &Origin, part: Option<&Part>) -> Result<Opened, Strin
         identity: read.identity,
         pyramid: Mutex::new(None),
         stats: Mutex::new(None),
+        members: read.members,
     })
 }
 
@@ -322,6 +343,55 @@ pub(crate) struct ReaderOpen {
     pub(crate) size: u64,
     /// What names its pyramid file (a TIFF's only).
     pub(crate) identity: Option<String>,
+    /// A virtual mosaic's files, which a block's `member` (from 1) names (docs/adr/0517 §2).
+    pub(crate) members: Vec<PathBuf>,
+}
+
+/// Where an opened raster's blocks are read: its own file, or a mosaic's files.
+pub(crate) struct BlockSource {
+    source: Option<Bytes>,
+    members: Vec<PathBuf>,
+}
+
+impl BlockSource {
+    /// A block's bytes: of the raster's own file, or of a mosaic's file.
+    pub(crate) fn read(&self, need: &BlockNeed) -> Result<Vec<u8>, String> {
+        match (&self.source, need.member) {
+            (_, m) if m > 0 => read_member(&self.members, need),
+            (Some(b), _) if need.file == 0 => b.read(need.offset, need.len),
+            _ => Err("Rasterin bu bloğu okunamadı.".to_owned()),
+        }
+    }
+}
+
+impl ReaderOpen {
+    /// The reader, and where its blocks are read.
+    pub(crate) fn split(self) -> (Reader, BlockSource) {
+        (self.reader, BlockSource { source: self.source, members: self.members })
+    }
+}
+
+/// A virtual mosaic's reader from its VRT file (docs/adr/0517 §2): each of its files opened as a raster of its own
+/// (a GeoTIFF read in pieces), its blocks read where they are; a VRT in a mosaic is refused.
+fn open_mosaic(path: &std::path::Path, source: &Bytes, size: u64, budget: usize) -> Result<ReaderOpen, String> {
+    use kentos_formats::raster::vrt;
+    if size > vrt::MAX_TEXT as u64 {
+        return Err("VRT dosyası 16 MB'tan büyük.".into());
+    }
+    let text = String::from_utf8(source.read(0, size)?).map_err(|_| "VRT dosyası UTF-8 değil.".to_owned())?;
+    let folder = path.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+    let (reader, members) = vrt::open_mosaic(&text, &folder, budget, |p, each| {
+        let head = File::open(p).ok().and_then(|f| {
+            let n = f.metadata().ok()?.len().min(64);
+            read_at(&f, 0, n).ok()
+        });
+        if head.as_deref().is_some_and(vrt::sniff) {
+            return Err("mozaiğin içinde mozaik açılmaz".into());
+        }
+        open_reader_part(&Origin::File(p.to_path_buf()), None, each).map(|r| r.reader)
+    })
+    .map_err(|e| e.0)?;
+    Ok(ReaderOpen { reader, source: None, size, identity: None, members })
 }
 
 /// The NetCDF files opened lately (docs/adr/0243 §5): a slice's reader is made
@@ -492,7 +562,13 @@ pub(crate) fn open_reader_part(
         }
     };
     let size = source.size();
-    let head = source.read(0, size.min(16))?;
+    let head = source.read(0, size.min(64))?;
+    if kentos_formats::raster::vrt::sniff(&head) {
+        let Origin::File(path) = origin else {
+            return Err("Mozaik (VRT) yalnız dosyadan açılır; dosyaları yanında olmalı.".into());
+        };
+        return open_mosaic(path, &source, size, budget);
+    }
     match netcdf::sniff(&head) {
         netcdf::Sniff::Classic(_) => {
             let Some(part) = part else {
@@ -508,6 +584,7 @@ pub(crate) fn open_reader_part(
                 source: Some(source),
                 size,
                 identity,
+                members: Vec::new(),
             });
         }
         netcdf::Sniff::Hdf5 => return Err(netcdf::HDF5_REFUSED.into()),
@@ -575,6 +652,7 @@ pub(crate) fn open_reader_part(
         source: tiled.then_some(source),
         size,
         identity: identity.filter(|_| tiled),
+        members: Vec::new(),
     })
 }
 

@@ -23,6 +23,7 @@ use super::layout::{compression_name, layout};
 use super::stats::{self, STATS_SIDE, Stats};
 use super::style::{self, Look};
 use super::tiff::{Ifd, Tiff};
+use super::vrt::{self, Member, Vrt};
 use super::{RasterError, Samples, TILE, TILE_APRON, geotiff};
 use crate::math;
 use crate::multidim::mesh::{Data, Mesh};
@@ -41,11 +42,19 @@ pub struct BlockKey {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockNeed {
+    /// 0 the raster's own files; k a mosaic's k-th file (docs/adr/0517 §2), whose
+    /// `file` is then that file's (0 the file, 1 its pyramid).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub member: u32,
     pub file: u8,
     pub ifd: u16,
     pub index: u32,
     pub offset: u64,
     pub len: u64,
+}
+
+fn is_zero(v: &u32) -> bool {
+    *v == 0
 }
 
 /// What a handed-over block gave.
@@ -93,6 +102,69 @@ pub enum LevelFrom {
     Computed,
     /// A mesh's slice drawn at the level, in 256 × 256 tiles (docs/adr/0243 §5).
     Mesh(Arc<MeshLevels>),
+    /// A virtual mosaic's files laid over each other at the level (docs/adr/0517 §2).
+    Mosaic,
+}
+
+/// A file of a virtual mosaic as the reader takes it (docs/adr/0517 §2): its
+/// own reader, where it lies on the mosaic and which of its bands each band
+/// of the mosaic is.
+#[derive(Debug)]
+pub struct MosaicPart {
+    pub reader: Reader,
+    /// The mosaic's level-0 pixel coordinate x lies at the file's sx·x + ox (y the same with sy, oy).
+    sx: f64,
+    ox: f64,
+    sy: f64,
+    oy: f64,
+    /// The mosaic's level-0 rectangle it covers, `[x₀, y₀, x₁, y₁]`.
+    dst: [f64; 4],
+    /// The file's samples that let the files below show.
+    nodata: Option<f64>,
+    /// The file's band (from 0) of each band of the mosaic.
+    bands: Vec<u32>,
+}
+
+impl MosaicPart {
+    /// The file's level a mosaic level `level` reads: the coarsest whose pixel is no larger than the mosaic's.
+    fn level_for(&self, level: usize) -> usize {
+        let ratio = self.sx.min(self.sy) * f64::from(1u32 << level.min(31));
+        let mut k = 0usize;
+        while k + 1 < self.reader.levels.len() && f64::from(1u32 << (k + 1).min(31)) <= ratio * (1.0 + 1e-9) {
+            k += 1;
+        }
+        k
+    }
+
+    /// The mosaic level pixels `[i₀, i₁) × [j₀, j₁)` of the clamped rectangle whose centres lie on the file
+    /// (`f` the level's pixel in level-0 pixels).
+    fn covered(&self, f: f64, x0: u32, y0: u32, x1: u32, y1: u32) -> Option<(u32, u32, u32, u32)> {
+        let lo = |s: f64| (s / f - 0.5).ceil();
+        let (fw, fh) = (f64::from(self.reader.info.width), f64::from(self.reader.info.height));
+        // The file's own extent as mosaic level-0 pixels.
+        let (sx0, sx1) = (-self.ox / self.sx, (fw - self.ox) / self.sx);
+        let (sy0, sy1) = (-self.oy / self.sy, (fh - self.oy) / self.sy);
+        let a = |v: f64, lo_: u32, hi: u32| v.clamp(f64::from(lo_), f64::from(hi)) as u32;
+        let i0 = a(lo(self.dst[0].max(sx0)), x0, x1);
+        let i1 = a(lo(self.dst[2].min(sx1)), x0, x1);
+        let j0 = a(lo(self.dst[1].max(sy0)), y0, y1);
+        let j1 = a(lo(self.dst[3].min(sy1)), y0, y1);
+        (i0 < i1 && j0 < j1).then_some((i0, j0, i1, j1))
+    }
+
+    /// The file's level-`k` pixel under the mosaic's level-0 coordinate (x, y).
+    fn pixel(&self, k: usize, x: f64, y: f64) -> (i64, i64) {
+        let g = f64::from(1u32 << k.min(31));
+        (((self.sx * x + self.ox) / g).floor() as i64, ((self.sy * y + self.oy) / g).floor() as i64)
+    }
+
+    /// The file's level-`k` rectangle the mosaic's level-`level` pixels `[i₀, i₁) × [j₀, j₁)` read.
+    fn source_rect(&self, level: usize, k: usize, (i0, j0, i1, j1): (u32, u32, u32, u32)) -> (i64, i64, u32, u32) {
+        let f = f64::from(1u32 << level.min(31));
+        let (ax, ay) = self.pixel(k, (f64::from(i0) + 0.5) * f, (f64::from(j0) + 0.5) * f);
+        let (bx, by) = self.pixel(k, (f64::from(i1) - 0.5) * f, (f64::from(j1) - 0.5) * f);
+        (ax, ay, (bx - ax + 1).max(1) as u32, (by - ay + 1).max(1) as u32)
+    }
 }
 
 /// A mesh's slice as a raster's levels (docs/adr/0243 §5): the mesh, where
@@ -240,6 +312,8 @@ pub struct Reader {
     jpeg_waiting: Vec<BlockKey>,
     /// A mesh slice's values, kept outside the blocks' budget (every tile needs them).
     mesh_values: MeshValues,
+    /// A virtual mosaic's files, bottom first (docs/adr/0517 §2).
+    mosaic: Vec<MosaicPart>,
 }
 
 /// The level-0 block of a TIFF directory's palette, by its colour map (r…, g…, b…).
@@ -357,6 +431,7 @@ impl Reader {
             },
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
+            mosaic: Vec::new(),
         })
     }
 
@@ -395,6 +470,7 @@ impl Reader {
             },
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
+            mosaic: Vec::new(),
         })
     }
 
@@ -431,6 +507,7 @@ impl Reader {
             },
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
+            mosaic: Vec::new(),
         })
     }
 
@@ -527,7 +604,105 @@ impl Reader {
             },
             jpeg_waiting: Vec::new(),
             mesh_values: MeshValues::default(),
+            mosaic: Vec::new(),
         })
+    }
+
+    /// A virtual mosaic's reader (docs/adr/0517 §2): `vrt`'s files, each with
+    /// its own reader the host opened, bottom first as [`vrt::members`] gives
+    /// them; every level is the files laid over each other at that level, so
+    /// a coarse view reads each file's own overviews. Why not when a file
+    /// does not fit the VRT (another data type, a band it has not, a mosaic).
+    pub fn mosaic(vrt: &Vrt, files: Vec<(Member, Reader)>, budget: usize) -> Result<Reader, RasterError> {
+        let bands = u32::try_from(vrt.bands.len()).unwrap_or(u32::MAX);
+        let sample = vrt.bands[0].sample;
+        let mut parts = Vec::with_capacity(files.len());
+        for (m, r) in files {
+            let name = &m.file;
+            if !r.mosaic.is_empty() {
+                return Err(RasterError::new(format!("“{name}” kendisi bir mozaik; mozaiğin içinde mozaik açılmaz.")));
+            }
+            if r.mesh_levels().is_some() {
+                return Err(RasterError::new(format!("“{name}” bir mesh; mozaiğe konmaz.")));
+            }
+            if r.info.sample != sample {
+                return Err(RasterError::new(format!(
+                    "“{name}” {} örnekli; mozaik {} (VRT'nin veri türü dosyanınkine uymuyor).",
+                    vrt::type_name(r.info.sample),
+                    vrt::type_name(sample)
+                )));
+            }
+            if let Some(&b) = m.bands.iter().find(|&&b| b == 0 || b > r.info.bands) {
+                return Err(RasterError::new(format!("“{name}” dosyasında {b}. band yok.")));
+            }
+            let sx = m.src[2] / m.dst[2];
+            let sy = m.src[3] / m.dst[3];
+            parts.push(MosaicPart {
+                sx,
+                ox: m.src[0] - m.dst[0] * sx,
+                sy,
+                oy: m.src[1] - m.dst[1] * sy,
+                dst: [m.dst[0], m.dst[1], m.dst[0] + m.dst[2], m.dst[1] + m.dst[3]],
+                nodata: m.nodata,
+                bands: m.bands.iter().map(|b| b - 1).collect(),
+                reader: r,
+            });
+        }
+        let first = parts
+            .first()
+            .ok_or_else(|| RasterError::new("Mozaikte dosya yok."))?;
+        let levels: Vec<Level> = level_sizes(vrt.width, vrt.height)
+            .into_iter()
+            .map(|(width, height)| Level { width, height, from: LevelFrom::Mosaic })
+            .collect();
+        let palette = (bands == 1).then(|| first.reader.palette.clone()).flatten();
+        let color = match (bands, &palette) {
+            (1, Some(_)) => "palette",
+            (b, _) if b >= 3 => "rgb",
+            _ => "gray",
+        };
+        let alpha = vrt.bands.len() > 1
+            && vrt.bands.last().and_then(|b| b.color.as_deref()).is_some_and(|c| c.eq_ignore_ascii_case("alpha"));
+        let geographic = first.reader.info.geographic && first.reader.info.epsg == vrt.epsg;
+        let nodata = vrt.bands[0].nodata;
+        let info = RasterInfo {
+            width: vrt.width,
+            height: vrt.height,
+            bands,
+            sample,
+            color: color.to_owned(),
+            alpha,
+            compression: "VRT".to_owned(),
+            tiled: true,
+            big: false,
+            overviews: 0,
+            levels: levels.len() as u32,
+            affine: vrt.affine,
+            placed_by: if vrt.affine.is_some() { "vrt" } else { "none" }.to_owned(),
+            epsg: vrt.epsg,
+            geographic,
+            nodata,
+            needs_pyramid: false,
+        };
+        Ok(Reader {
+            info,
+            levels,
+            palette,
+            nodata,
+            image: None,
+            blocks: Lru {
+                budget,
+                ..Lru::default()
+            },
+            jpeg_waiting: Vec::new(),
+            mesh_values: MeshValues::default(),
+            mosaic: parts,
+        })
+    }
+
+    /// A mosaic's files' count (0 for any other raster).
+    pub fn mosaic_files(&self) -> usize {
+        self.mosaic.len()
     }
 
     /// Takes a pyramid file's levels (docs/adr/0204 §3): each of its
@@ -553,7 +728,7 @@ impl Reader {
     pub fn needs(&mut self, level: usize, x: i64, y: i64, w: u32, h: u32) -> Vec<BlockNeed> {
         let mut out = Vec::new();
         self.collect_needs(level, x, y, w, h, &mut out);
-        out.sort_by_key(|n| (n.file, n.ifd, n.index));
+        out.sort_by_key(|n| (n.member, n.file, n.ifd, n.index));
         out.dedup();
         out
     }
@@ -576,6 +751,20 @@ impl Reader {
         }
         match &lv.from {
             LevelFrom::Image => {}
+            LevelFrom::Mosaic => {
+                let f = f64::from(1u32 << level.min(31));
+                for (m, part) in self.mosaic.iter_mut().enumerate() {
+                    let Some(cov) = part.covered(f, x0, y0, x1, y1) else {
+                        continue;
+                    };
+                    let k = part.level_for(level);
+                    let (sx, sy, sw, sh) = part.source_rect(level, k, cov);
+                    for mut n in part.reader.needs(k, sx, sy, sw, sh) {
+                        n.member = m as u32 + 1;
+                        out.push(n);
+                    }
+                }
+            }
             LevelFrom::File(l) => {
                 let l = l.clone();
                 for by in y0 / l.block_h..=(y1 - 1) / l.block_h {
@@ -590,6 +779,7 @@ impl Reader {
                             if !self.blocks.contains(&key) && !self.jpeg_waiting.contains(&key) {
                                 let i = index as usize;
                                 out.push(BlockNeed {
+                                    member: 0,
                                     file: l.file,
                                     ifd: l.ifd,
                                     index,
@@ -611,6 +801,7 @@ impl Reader {
                     };
                     if slot.is_none() {
                         out.push(BlockNeed {
+                            member: 0,
                             file: l.file,
                             ifd: l.ifd,
                             index: 0,
@@ -643,6 +834,9 @@ impl Reader {
 
     /// Takes a block's bytes: decoded and kept, or its JPEG stream for the host.
     pub fn put_block(&mut self, need: &BlockNeed, bytes: &[u8]) -> Result<Put, RasterError> {
+        if let Some((part, inner)) = self.part_of(need) {
+            return part.reader.put_block(&inner, bytes);
+        }
         let Some(l) = self.layout_of(need.file, need.ifd) else {
             return Err(RasterError::new("Bu raster'in böyle bir bloğu yok."));
         };
@@ -667,12 +861,19 @@ impl Reader {
     /// The layout a block's bytes decode by, so that a host's threads decode
     /// off the reader (`layout::decode_block`) and hand the result to [`Reader::keep`].
     pub fn layout_for(&self, need: &BlockNeed) -> Option<Layout> {
+        if need.member > 0 {
+            let part = self.mosaic.get(need.member as usize - 1)?;
+            return part.reader.layout_for(&BlockNeed { member: 0, ..*need });
+        }
         self.layout_of(need.file, need.ifd)
     }
 
     /// Keeps a block decoded off the reader: its samples, or its JPEG stream
     /// waiting for the host's pixels ([`Reader::put_pixels`]).
     pub fn keep(&mut self, need: &BlockNeed, decoded: Put2) -> Put {
+        if let Some((part, inner)) = self.part_of(need) {
+            return part.reader.keep(&inner, decoded);
+        }
         let key = BlockKey {
             file: need.file,
             ifd: need.ifd,
@@ -698,6 +899,9 @@ impl Reader {
         pixels: Vec<u8>,
         components: u32,
     ) -> Result<(), RasterError> {
+        if let Some((part, inner)) = self.part_of(need) {
+            return part.reader.put_pixels(&inner, pixels, components);
+        }
         let key = BlockKey {
             file: need.file,
             ifd: need.ifd,
@@ -728,6 +932,13 @@ impl Reader {
         samples.resize(want * l.per_block as usize, 0);
         self.blocks.put(key, Samples::U8(samples));
         Ok(())
+    }
+
+    /// A mosaic's file a block is of, and the block as that file's reader names it.
+    fn part_of(&mut self, need: &BlockNeed) -> Option<(&mut MosaicPart, BlockNeed)> {
+        let m = need.member.checked_sub(1)?;
+        let part = self.mosaic.get_mut(m as usize)?;
+        Some((part, BlockNeed { member: 0, ..*need }))
     }
 
     fn layout_of(&self, file: u8, ifd: u16) -> Option<Layout> {
@@ -773,6 +984,7 @@ impl Reader {
         let (x0, y0, x1, y1) = clamp_rect(lv.width, lv.height, x, y, w, h);
         if x0 < x1 && y0 < y1 {
             match &lv.from {
+                LevelFrom::Mosaic => self.mosaic_region(level, x0, y0, x1, y1, &mut out)?,
                 LevelFrom::Image => {
                     let img = self.image.as_ref()?;
                     copy_rows(img, 0, 0, lv.width, bands, x0, y0, x1, y1, &mut out);
@@ -825,6 +1037,58 @@ impl Reader {
             replicate_edges(&mut out, lv.width, lv.height);
         }
         Some(out)
+    }
+
+    /// A mosaic level's pixels `[x₀, x₁) × [y₀, y₁)` into `out`: the files bottom first, each pixel's centre
+    /// looked up in the file's level nearest the mosaic's (nearest neighbour, as GDAL reads a VRT's sources),
+    /// a file's nodata or NaN leaving what is below; what no file covers the mosaic's nodata (or 0).
+    fn mosaic_region(&mut self, level: usize, x0: u32, y0: u32, x1: u32, y1: u32, out: &mut Region) -> Option<()> {
+        let bands = out.bands as usize;
+        let fill = self.nodata.unwrap_or(0.0);
+        let index = |out: &Region, i: u32, j: u32| {
+            (((i64::from(j) - out.y) * i64::from(out.width) + (i64::from(i) - out.x)) as usize) * bands
+        };
+        for j in y0..y1 {
+            for i in x0..x1 {
+                let at = index(out, i, j);
+                for b in 0..bands {
+                    out.samples.set(at + b, fill);
+                }
+            }
+        }
+        let f = f64::from(1u32 << level.min(31));
+        for part in &mut self.mosaic {
+            let Some(cov) = part.covered(f, x0, y0, x1, y1) else {
+                continue;
+            };
+            let k = part.level_for(level);
+            let (rx, ry, rw, rh) = part.source_rect(level, k, cov);
+            let src = part.reader.region(k, rx, ry, rw, rh)?;
+            let (lw, lh) = {
+                let lv = part.reader.levels.get(k)?;
+                (i64::from(lv.width), i64::from(lv.height))
+            };
+            let (i0, j0, i1, j1) = cov;
+            for j in j0..j1 {
+                let y = (f64::from(j) + 0.5) * f;
+                for i in i0..i1 {
+                    let x = (f64::from(i) + 0.5) * f;
+                    let (px, py) = part.pixel(k, x, y);
+                    let (px, py) = (px.clamp(0, lw - 1), py.clamp(0, lh - 1));
+                    let si = (px - rx).clamp(0, i64::from(rw) - 1) as u32;
+                    let sj = (py - ry).clamp(0, i64::from(rh) - 1) as u32;
+                    let at = index(out, i, j);
+                    for (b, &fb) in part.bands.iter().enumerate() {
+                        let v = src.at(si, sj, fb);
+                        if v.is_nan() || part.nodata.is_some_and(|d| v == d) {
+                            continue;
+                        }
+                        out.samples.set(at + b, v);
+                    }
+                }
+            }
+        }
+        Some(())
     }
 
     /// Level `level`'s tile (`tx`, `ty`) of a mesh slice: each pixel's centre

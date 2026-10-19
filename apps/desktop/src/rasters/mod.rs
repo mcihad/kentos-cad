@@ -16,6 +16,7 @@ use serde_json::{Value, json};
 pub mod add;
 pub mod jobs;
 pub mod look;
+pub mod mosaic;
 pub mod multidim;
 pub mod pyramid;
 #[cfg(test)]
@@ -196,6 +197,8 @@ pub struct Windows {
     pub look: Option<look::State>,
     /// Mesh ekle, and Raster ekle's NetCDF (docs/adr/0243 §11).
     pub multidim: Option<multidim::State>,
+    /// Sanal mozaik (docs/adr/0517 §5).
+    pub mosaic: Option<mosaic::State>,
 }
 
 /// What the raster windows and the pyramids' panel ask for.
@@ -204,6 +207,7 @@ pub enum Event {
     Add(add::Event),
     Look(look::Event),
     Multidim(multidim::Event),
+    Mosaic(mosaic::Event),
     /// Durdur on a pyramid's line, by its raster's key.
     StopPyramid(String),
     /// Durdur on Raster oturt's resampling.
@@ -231,6 +235,7 @@ impl crate::app::App {
             Event::Add(e) => self.raster_add_event(e),
             Event::Look(e) => self.raster_look_event(e),
             Event::Multidim(e) => self.multidim_event(e),
+            Event::Mosaic(e) => self.raster_mosaic_event(e),
             Event::StopPyramid(key) => {
                 pyramid::stop(&key);
                 Task::none()

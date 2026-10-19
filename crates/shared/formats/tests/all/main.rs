@@ -22,6 +22,7 @@ mod pat;
 mod multidim;
 mod raster;
 mod raster_georef;
+mod raster_mosaic;
 mod raster_pyramid;
 mod raster_timing;
 mod table_file;

@@ -531177,6 +531177,609 @@
       ]
     },
     {
+      "id": "cad.rasters.mosaic",
+      "version": 1,
+      "title": "Sanal mozaik",
+      "summary": "Birçok GeoTIFF dosyasını tek raster gibi gösterilen ve çözümlenen sanal mozaik yapar: path'e GDAL'ın VRT dosyası yazılır (piksel kopyalanmaz; GDAL ve QGIS de açar). sources kuzeyi yukarıda, GeoTIFF etiketleriyle yerinde, aynı koordinat sisteminde, bant sayısında ve veri türünde dosyalardır (mutlak ya da drawing'in klasöründen göreli). Örtüşen yerde üstteki: order given (sources'un sırası, ilki üstte), finest (küçük piksel üstte) ya da newest (TIFF DateTime'ı yeni olan üstte; tarihsizler en altta, mosaic_undated). Bir dosyanın nodata'sı alttakini gösterir; hiçbir dosyanın örtmediği yer mozaiğin nodata'sıdır (nodata, yoksa sırayla ilk nodata'lı dosyanınki). Mozaiğin pikseli resolution highest (en ince), lowest (en kaba) ya da average (ortalama), ya da pixelSize; kapsamı dosyaların birleşimi (gdalbuildvrt'nin kuralı). Pikseli başka olan dosya en yakın pikselden okunur (mosaic_resampled). Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir, sonra yerine konur; var olan path overwrite verilmezse reddedilir (file_exists). layer verilirse mozaik o katmana path'e bağlı raster olarak eklenir (tek geri alma adımı “Sanal mozaik”; sistemi projeninkinden başkaysa crs_mismatch); verilmezse çizim değişmez. plan yazmadan mozaiği söyler.",
+      "aliases": [
+        "sanalmozaik",
+        "vrt",
+        "buildvrt"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "MosaicOrder": {
+            "description": "Which file lies on top where files overlap.",
+            "oneOf": [
+              {
+                "const": "given",
+                "description": "The order of `sources`: the first on top.",
+                "type": "string"
+              },
+              {
+                "const": "finest",
+                "description": "The smaller pixel on top; equal ones in the order given.",
+                "type": "string"
+              },
+              {
+                "const": "newest",
+                "description": "The newer date (a TIFF's DateTime) on top; files without one at the bottom; equal ones in the order given.",
+                "type": "string"
+              }
+            ]
+          },
+          "MosaicResolution": {
+            "description": "The mosaic's pixel from the files' (each axis on its own, as gdalbuildvrt's `-resolution`).",
+            "oneOf": [
+              {
+                "const": "highest",
+                "description": "The finest file's: no detail lost.",
+                "type": "string"
+              },
+              {
+                "const": "lowest",
+                "description": "The coarsest file's.",
+                "type": "string"
+              },
+              {
+                "const": "average",
+                "description": "The files' mean.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.rasters.mosaic` v1. Refusals, in this order: `mosaic_empty`, `mosaic_too_large` (more than\n10 000 files), `invalid_file_path` (a source or the mosaic's path), `invalid_pixel_size`, `file_not_found`,\n`import_unreadable`, `mosaic_unplaced`, `mosaic_rotated`, `mosaic_mismatch`, `mosaic_too_large` (the mosaic's\nsize), `file_exists`, then with `layer`: `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, and\n`invalid_revision`, `revision_conflict`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer the mosaic is added to as a raster (linked to `path`); none: only the file is written.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nodata": {
+            "description": "The mosaic's nodata (what no file covers); none: the first file's (in the order given) that has one.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "order": {
+            "$ref": "#/$defs/MosaicOrder",
+            "default": "given"
+          },
+          "overwrite": {
+            "description": "An existing `path` is written over.",
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The VRT file written (`.vrt`), absolute or from the drawing's folder.",
+            "type": "string"
+          },
+          "pixelSize": {
+            "description": "A square pixel of this size, in the files' system's units, instead of `resolution`'s.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "system"
+          },
+          "resolution": {
+            "$ref": "#/$defs/MosaicResolution",
+            "default": "highest"
+          },
+          "sources": {
+            "description": "The GeoTIFF files, absolute or from the drawing's folder; with `order` `given` the first lies on top.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "sources",
+          "path"
+        ],
+        "title": "RastersMosaic",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MosaicSource": {
+            "description": "A file of the mosaic.",
+            "properties": {
+              "date": {
+                "description": "Its TIFF's DateTime, `YYYY-MM-DDTHH:MM:SS`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dst": {
+                "description": "Its rectangle on the mosaic, `[x, y, width, height]` in the mosaic's pixels (the VRT's DstRect).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "px"
+              },
+              "file": {
+                "description": "As the VRT holds it: from the VRT's folder when the file is under it, else absolute.",
+                "type": "string"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "Its nodata, which lets the files below show.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "pixel": {
+                "description": "Its pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "rank": {
+                "description": "1 on top.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "read": {
+                "description": "Where it was read from.",
+                "type": "string"
+              },
+              "src": {
+                "description": "The rectangle of its pixels taken, `[x, y, width, height]` (the VRT's SrcRect): all of it, or cut where the\nmosaic's rounded size ends.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "px"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "file",
+              "read",
+              "rank",
+              "width",
+              "height",
+              "pixel",
+              "src",
+              "dst"
+            ],
+            "type": "object"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.mosaic` v1 (its plan's too: what it would write, nothing written).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "description": "The VRT's size.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "nodata": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "path": {
+            "description": "The VRT file, as written.",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "sources": {
+            "description": "The files, top first.",
+            "items": {
+              "$ref": "#/$defs/MosaicSource"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The files' coordinate system; 0: they name none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "uid": {
+            "description": "The raster added, when `layer` was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "affine",
+          "srid",
+          "sources",
+          "bytes",
+          "revision"
+        ],
+        "title": "RastersMosaicked",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MosaicSource": {
+            "description": "A file of the mosaic.",
+            "properties": {
+              "date": {
+                "description": "Its TIFF's DateTime, `YYYY-MM-DDTHH:MM:SS`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "dst": {
+                "description": "Its rectangle on the mosaic, `[x, y, width, height]` in the mosaic's pixels (the VRT's DstRect).",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "px"
+              },
+              "file": {
+                "description": "As the VRT holds it: from the VRT's folder when the file is under it, else absolute.",
+                "type": "string"
+              },
+              "height": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "nodata": {
+                "description": "Its nodata, which lets the files below show.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "pixel": {
+                "description": "Its pixel's width and height, in the system's units.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 2,
+                "minItems": 2,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "rank": {
+                "description": "1 on top.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "read": {
+                "description": "Where it was read from.",
+                "type": "string"
+              },
+              "src": {
+                "description": "The rectangle of its pixels taken, `[x, y, width, height]` (the VRT's SrcRect): all of it, or cut where the\nmosaic's rounded size ends.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "px"
+              },
+              "width": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "file",
+              "read",
+              "rank",
+              "width",
+              "height",
+              "pixel",
+              "src",
+              "dst"
+            ],
+            "type": "object"
+          },
+          "RasterSample": {
+            "description": "A band's samples.",
+            "enum": [
+              "u8",
+              "i8",
+              "u16",
+              "i16",
+              "u32",
+              "i32",
+              "f32",
+              "f64"
+            ],
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.rasters.mosaic` v1 (its plan's too: what it would write, nothing written).",
+        "properties": {
+          "affine": {
+            "description": "`[x₀, a, 0, y₀, 0, d]`: north up, GDAL's geotransform.",
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 6,
+            "minItems": 6,
+            "type": "array",
+            "x-unit": "system"
+          },
+          "bands": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "bytes": {
+            "description": "The VRT's size.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "height": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "nodata": {
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "path": {
+            "description": "The VRT file, as written.",
+            "type": "string"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "sample": {
+            "$ref": "#/$defs/RasterSample"
+          },
+          "sources": {
+            "description": "The files, top first.",
+            "items": {
+              "$ref": "#/$defs/MosaicSource"
+            },
+            "type": "array"
+          },
+          "srid": {
+            "description": "The files' coordinate system; 0: they name none.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "epsg"
+          },
+          "uid": {
+            "description": "The raster added, when `layer` was given.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "width": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "path",
+          "width",
+          "height",
+          "bands",
+          "sample",
+          "affine",
+          "srid",
+          "sources",
+          "bytes",
+          "revision"
+        ],
+        "title": "RastersMosaicked",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "mosaic_empty",
+          "mosaic_too_large",
+          "invalid_file_path",
+          "invalid_pixel_size",
+          "file_not_found",
+          "import_unreadable",
+          "mosaic_unplaced",
+          "mosaic_rotated",
+          "mosaic_mismatch",
+          "file_exists",
+          "crs_mismatch",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "mosaic_resampled",
+          "mosaic_undated",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Üç ortofotoyu yeni tarihli üstte mozaik yap ve katmana ekle",
+          "input": {
+            "drawing": "/proje/imar.kcad",
+            "layer": "altlik",
+            "order": "newest",
+            "path": "orto/mozaik.vrt",
+            "sources": [
+              "orto/2019.tif",
+              "orto/2021.tif",
+              "orto/2023.tif"
+            ]
+          }
+        },
+        {
+          "title": "Yükseklik paftalarını 5 m pikselle birleştir",
+          "input": {
+            "nodata": -9999.0,
+            "path": "/veri/dem/dem.vrt",
+            "pixelSize": 5.0,
+            "sources": [
+              "/veri/dem/a.tif",
+              "/veri/dem/b.tif"
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.images.edit",
       "version": 1,
       "title": "Resmin kaynağı",
@@ -1001931,6 +1002534,54 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Gömülecek bağlı resim yok; verilen resimler zaten gömülü."
+    },
+    {
+      "code": "mosaic_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mozaiğe konacak dosya verilmedi."
+    },
+    {
+      "code": "mosaic_too_large",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Mozaik çok büyük: 10 000'den çok dosya ya da bir kenarında 2 milyardan çok piksel."
+    },
+    {
+      "code": "mosaic_unplaced",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir dosyanın yerini GeoTIFF etiketleri söylemiyor; önce Raster oturt ile yerine koyup GeoTIFF olarak yazın."
+    },
+    {
+      "code": "mosaic_rotated",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bir dosya dönük ya da kuzeyi yukarıda değil; mozaik yalnız kuzeyi yukarıda dosyaları yan yana koyar."
+    },
+    {
+      "code": "mosaic_mismatch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyaların koordinat sistemi, bant sayısı ya da veri türü aynı değil (ya da paletli); mozaiğe birlikte konmaz."
+    },
+    {
+      "code": "invalid_pixel_size",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Piksel boyu sıfırdan büyük, sonlu bir sayı olmalı."
+    },
+    {
+      "code": "mosaic_resampled",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı dosyaların pikseli mozaiğinkinden başka; en yakın pikselden okunur."
+    },
+    {
+      "code": "mosaic_undated",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bazı dosyaların tarihi (TIFF DateTime) yok; tarih sırasında en alta kondular."
     },
     {
       "code": "already_committed",
