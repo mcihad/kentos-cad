@@ -160,6 +160,45 @@ fn pointed_scenes() -> Vec<Pointed> {
                 press_caption(s, app, "Kadastro", true, false);
             },
         ),
+        // The layer menu's Sıra ▸ (docs/adr/0248 §1): the steps of a layer in its group.
+        (
+            "katman-menu-sira",
+            |_| {},
+            |s, app| {
+                press_caption(s, app, "Parsel", true, false);
+                let at = caption_at(s, app, "Sıra", false);
+                let mut update = |app: &mut App, message: Message| {
+                    let _ = app.update(message);
+                };
+                s.input(app, App::view, &mut update, Input::Move(at));
+            },
+        ),
+        // Çizim dragged over the Kadastro group: dropped into it, its mark on the row.
+        (
+            "katman-surukle",
+            |_| {},
+            |s, app| {
+                let from = caption_at(s, app, "Çizim", false);
+                let to = caption_at(s, app, "Kadastro", false);
+                let mut update = |app: &mut App, message: Message| {
+                    let _ = app.update(message);
+                };
+                s.input(app, App::view, &mut update, Input::Press(from));
+                s.input(app, App::view, &mut update, Input::Move(Point::new(from.x, from.y - 8.0)));
+                s.input(app, App::view, &mut update, Input::Move(to));
+            },
+        ),
+        // Parsel taken out of Kadastro by Sıra ▸ Gruptan çıkar, the command line saying it.
+        (
+            "katman-tasindi",
+            |app| {
+                let _ = app.update(Message::Layer(crate::layering::Event::Order(
+                    "parsel".into(),
+                    crate::layer_order::Step::Out,
+                )));
+            },
+            |_, _| {},
+        ),
         (
             "secim-ailesi",
             |app| app.tab = "home",

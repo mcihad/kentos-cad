@@ -97,6 +97,10 @@ pub enum Event {
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
     /// layer_snap.rs, docs/adr/0163 §4); none for the general kinds.
     Snap(String, Option<kentos_contracts::LayerSnap>),
+    /// A row dragged onto another (layer_order.rs): the rows' places as the tree shows them, and where.
+    Move(usize, usize, kentos_ui::widget::tree_view::Place),
+    /// Sıra ▸ (layer_order.rs).
+    Order(String, crate::layer_order::Step),
 }
 
 impl App {
@@ -189,6 +193,14 @@ impl App {
         }
         if let Event::Duplicate(id) = event {
             self.duplicate_layer(Some(id));
+            return Task::none();
+        }
+        if let Event::Move(from, to, place) = event {
+            self.layer_dropped(from, to, place);
+            return Task::none();
+        }
+        if let Event::Order(id, step) = event {
+            self.layer_step(id, step);
             return Task::none();
         }
         if let Event::MergeInto(id) = event {
@@ -336,6 +348,8 @@ impl App {
             | Event::AddBeside(_) => {}
             // Handled above, before the drawing is borrowed.
             Event::Duplicate(_)
+            | Event::Move(..)
+            | Event::Order(..)
             | Event::MergeInto(_)
             | Event::Fields(_)
             | Event::Forms(_)
@@ -499,11 +513,14 @@ impl App {
         })
     }
 
-    /// A row's context menu, the web's `LayersPanel.menuFor` item by item.
+    /// A row's context menu: what is done most at its top (make active, hide, lock, isolate, select, zoom), the rest
+    /// in submenus by what it is about (Görünürlük, Görünüş, Veri, Kenet, Senaryo, Sıra), then the node itself
+    /// (rename, add, copy, merge) and Sil.
     pub(crate) fn layer_menu(&self, node: &LayerNode, active: bool) -> Menu<Message> {
         let id = node.id.clone();
         let event = |e: Event| Message::Layer(e);
         let is_layer = node.kind == LayerNodeType::Layer;
+        let icon = |name: &str| crate::icons::from_web(Some(name));
         let mut menu = Menu::new();
         if is_layer {
             menu = menu
@@ -519,58 +536,82 @@ impl App {
                 if node.visible { "Gizle" } else { "Göster" },
                 Message::LayerVisible(id.clone()),
             )
-            .icon(if node.visible {
-                Icon::EyeOff
-            } else {
-                Icon::Eye
-            })
+            .icon(if node.visible { Icon::EyeOff } else { Icon::Eye })
             .shortcut("Boşluk")
             .item(
                 if node.locked { "Kilidi aç" } else { "Kilitle" },
                 Message::LayerLocked(id.clone()),
             )
-            .icon(if node.locked {
-                Icon::Unlock
-            } else {
-                Icon::Lock
-            })
-            // Yazdır (docs/adr/0260 §4): drawn on screen, left off sheets when off.
+            .icon(if node.locked { Icon::Unlock } else { Icon::Lock })
+            .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
+            .icon(icon("layerIsolate"))
+            .separator();
+        // Görünürlük ▸: the whole tree's visibility, the freeze and printing (docs/adr/0311 §1, 0260 §4).
+        let visibility = Menu::new()
+            .item("Tüm katmanları göster", Message::Run("layer.showAll"))
+            .icon(icon("layersShowAll"))
+            .separator()
             .item(
-                if node.plot == Some(false) {
-                    "Yazdır"
-                } else {
-                    "Yazdırma"
-                },
-                Message::LayerPlot(id.clone()),
-            )
-            .icon(Icon::Print)
-            // Dondur / Çöz (docs/adr/0311 §1): the active layer is never frozen.
-            .item(
-                if node.frozen == Some(true) {
-                    "Çöz"
-                } else {
-                    "Dondur"
-                },
+                if node.frozen == Some(true) { "Çöz" } else { "Dondur" },
+                // The active layer is never frozen.
                 (node.frozen == Some(true) || !self.holds_active(node))
                     .then(|| Message::LayerFrozen(id.clone())),
             )
-            .icon(crate::icons::from_web(Some(if node.frozen == Some(true) {
-                "sun"
-            } else {
-                "freeze"
-            })));
+            .icon(icon(if node.frozen == Some(true) { "sun" } else { "freeze" }))
+            .item("Bütün katmanları çöz", Message::Run("layer.thawAll"))
+            .icon(icon("layersThawAll"))
+            .separator()
+            .item(
+                if node.plot == Some(false) { "Yazdır" } else { "Yazdırma" },
+                Message::LayerPlot(id.clone()),
+            )
+            .icon(Icon::Print);
+        // Sıra ▸ (layer_order.rs): the node among its siblings, or out of its group.
+        let in_group = self
+            .document
+            .as_ref()
+            .and_then(|d| d.model.layers().place_of(&id))
+            .is_some_and(|(parent, _)| parent.is_some());
+        let order = |step| event(Event::Order(id.clone(), step));
+        use crate::layer_order::Step;
+        let order_menu = Menu::new()
+            .item("Yukarı taşı", order(Step::Up))
+            .icon(icon("moveUp"))
+            .item("Aşağı taşı", order(Step::Down))
+            .icon(icon("moveDown"))
+            .item("En üste taşı", order(Step::Top))
+            .icon(icon("bringToFront"))
+            .item("En alta taşı", order(Step::Bottom))
+            .icon(icon("sendToBack"))
+            .separator()
+            .item("Gruptan çıkar", in_group.then(|| order(Step::Out)))
+            .icon(icon("layerOut"));
         // A layer drawn from a map service: its service's items, none of the objects' (docs/adr/0208 §14).
         if node.service.is_some() {
             return self
-                .service_menu(node, menu.separator())
+                .service_menu(node, menu)
+                .separator()
+                .submenu("Görünürlük", visibility)
+                .icon(Icon::Eye)
+                .submenu("Sıra", order_menu)
+                .icon(icon("layerOrder"))
+                .separator()
                 .item("Yeniden adlandır", event(Event::Rename(id.clone())))
-                .icon(crate::icons::from_web(Some("edit")))
+                .icon(icon("edit"))
                 .shortcut("F2")
                 .separator()
                 .item("Sil", event(Event::Remove(id)))
-                .icon(crate::icons::from_web(Some("trash")))
+                .icon(icon("trash"))
                 .shortcut("Del");
         }
+        menu = menu
+            .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
+            .icon(icon("select"))
+            .item(
+                if is_layer { "Katmana yakınlaştır" } else { "Gruba yakınlaştır" },
+                (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
+            )
+            .icon(icon("zoomSelection"));
         // A layer whose objects came from a service: taken again (docs/adr/0208 §10).
         if node.feed.is_some() {
             menu = menu
@@ -578,7 +619,18 @@ impl App {
                     "Yenile",
                     Message::Services(crate::services::app::Event::FeedRefresh(id.clone())),
                 )
-                .icon(crate::icons::from_web(Some("feedRefresh")));
+                .icon(icon("feedRefresh"));
+        }
+        menu = menu
+            .separator()
+            .submenu("Görünürlük", visibility)
+            .icon(Icon::Eye);
+        if is_layer {
+            menu = menu
+                .submenu("Görünüş", self.layer_look_menu(node))
+                .icon(icon("layerStyle"))
+                .submenu("Veri", self.layer_data_menu(node))
+                .icon(icon("layerFields"));
         }
         // Kaynak ▸ on a bound layer (bound.rs, docs/adr/0503).
         if self.bound_link(&id).is_some() {
@@ -587,266 +639,236 @@ impl App {
                 .submenu(
                     "Kaynak",
                     Menu::new()
-                        .item(
-                            "Kaynağa yaz",
-                            bound(crate::bound::Event::Write(Some(id.clone()))),
-                        )
-                        .icon(crate::icons::from_web(Some("sourceWrite")))
-                        .item(
-                            "Kaynaktan oku",
-                            bound(crate::bound::Event::Read(Some(id.clone()))),
-                        )
-                        .icon(crate::icons::from_web(Some("sourceRead")))
+                        .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
+                        .icon(icon("sourceWrite"))
+                        .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
+                        .icon(icon("sourceRead"))
                         .item("Kaynak durumu", bound(crate::bound::Event::Status))
-                        .icon(crate::icons::from_web(Some("sourceLinked")))
+                        .icon(icon("sourceLinked"))
                         .item(
                             "Yeniden bağla…",
                             bound(crate::bound::Event::Relink(Some(id.clone()))),
                         )
                         .separator()
-                        .item(
-                            "Bağı çöz",
-                            bound(crate::bound::Event::Unlink(Some(id.clone()))),
-                        )
-                        .icon(crate::icons::from_web(Some("sourceUnlink"))),
+                        .item("Bağı çöz", bound(crate::bound::Event::Unlink(Some(id.clone()))))
+                        .icon(icon("sourceUnlink")),
                 )
-                .icon(crate::icons::from_web(Some("sourceLinked")));
+                .icon(icon("sourceLinked"));
         }
         // Kenet ▸ (layer_snap.rs, docs/adr/0163 §4).
         if let Some(doc) = &self.document {
             menu = menu
                 .submenu("Kenet", self.layer_snap_menu(doc.model.layers(), node))
-                .icon(crate::icons::from_web(Some("magnet")));
+                .icon(icon("magnet"));
         }
-        menu = menu
-            .item("Yalnızca bunu göster", event(Event::Isolate(id.clone())))
-            .icon(crate::icons::from_web(Some("layerIsolate")))
-            .item("Tüm katmanları göster", Message::Run("layer.showAll"))
-            .icon(crate::icons::from_web(Some("layersShowAll")))
-            .item("Bütün katmanları çöz", Message::Run("layer.thawAll"))
-            .icon(crate::icons::from_web(Some("layersThawAll")))
-            .separator()
-            .item("Nesnelerini seç", event(Event::SelectObjects(id.clone())))
-            .icon(crate::icons::from_web(Some("select")))
-            .item(
-                if is_layer {
-                    "Katmana yakınlaştır"
-                } else {
-                    "Gruba yakınlaştır"
-                },
-                (self.objects_below(node) > 0).then(|| event(Event::ZoomTo(id.clone()))),
-            )
-            .icon(crate::icons::from_web(Some("zoomSelection")))
-            .separator();
-        if is_layer {
-            let style = &node.style;
-            // One of each group, as the web's radio items.
-            let types = LINE_TYPES.iter().fold(Menu::new(), |menu, (t, name)| {
-                menu.radio(
-                    *name,
-                    style.line_pattern.is_none() && style.line_type == *t,
-                    event(Event::LineType(id.clone(), *t)),
-                )
-            });
-            // The project's types with patterns (docs/adr/0313 §7).
-            let patterns = self
-                .document
-                .as_ref()
-                .map(|d| d.model.settings().line_types.clone())
-                .unwrap_or_default();
-            let types = if patterns.is_empty() {
-                types
-            } else {
-                patterns.iter().fold(types.separator(), |menu, t| {
-                    menu.radio(
-                        t.name.clone(),
-                        style
-                            .line_pattern
-                            .as_deref()
-                            .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
-                        event(Event::LinePattern(id.clone(), t.name.clone())),
-                    )
-                })
-            }
-            .separator()
-            .item("Çizgi tipleri…", Some(Message::Run("lineTypes.manage")));
-            let weights = LINE_WEIGHTS.iter().fold(Menu::new(), |menu, w| {
-                menu.radio(
-                    weight_text(*w),
-                    (style.line_weight - w).abs() < 1e-9,
-                    event(Event::LineWeight(id.clone(), *w)),
-                )
-            });
-            menu = menu
-                .submenu("Renk", self.layer_colors(node))
-                .icon(crate::icons::from_web(Some("color")))
-                .submenu("Çizgi tipi", types)
-                .icon(crate::icons::from_web(Some("lineType")))
-                .submenu("Kalınlık", weights)
-                .icon(crate::icons::from_web(Some("lineWeight")))
-                .item(
-                    if style.renderer.is_some() {
-                        "Katman stili… (özel)"
-                    } else {
-                        "Katman stili…"
-                    },
-                    Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
-                )
-                .icon(crate::icons::from_web(Some("layerStyle")))
-                // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
-                .item(
-                    "Görünüşü SLD olarak kaydet…",
-                    event(Event::SldExport(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("sldExport")))
-                .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
-                .icon(crate::icons::from_web(Some("sldImport")))
-                // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
-                .item(
-                    "Değişikliğin etkisi…",
-                    Message::StyleImpact(crate::style_impact::Event::Open(
-                        kentos_contracts::ImpactTarget::Layer,
-                        id.clone(),
-                    )),
-                )
-                .icon(crate::icons::from_web(Some("styleImpact")))
-                // Etiketler (docs/adr/0212 §4): how its objects are labelled.
-                .item(
-                    match node.style.labels.as_ref().map(|l| l.mode) {
-                        Some(kentos_contracts::LabelsMode::Rules) => "Etiketler… (kurallı)",
-                        Some(kentos_contracts::LabelsMode::Off) => "Etiketler… (etiketsiz)",
-                        _ => "Etiketler…",
-                    },
-                    event(Event::Labels(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("layerLabels")))
-                // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
-                .item(
-                    if node.fields.is_empty() {
-                        "Alanlar…".to_owned()
-                    } else {
-                        format!("Alanlar… ({})", node.fields.len())
-                    },
-                    event(Event::Fields(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("layerFields")))
-                // Formlar (docs/adr/0401): the layer's data entry screen.
-                .item("Formlar…", event(Event::Forms(id.clone())))
-                .icon(crate::icons::from_web(Some("forms")))
-                // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
-                .item(
-                    "İstatistik",
-                    Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
-                )
-                .icon(crate::icons::from_web(Some("fieldStatistics")))
-                .item(
-                    "Grafik",
-                    Message::Charts(crate::charts::Event::Open {
-                        layer: Some(id.clone()),
-                        kind: None,
-                        spec: None,
-                    }),
-                )
-                .icon(crate::icons::from_web(Some("chart")))
-                // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
-                .item(
-                    if node.time.is_some() {
-                        "Zaman ayarları… (zamansal)"
-                    } else {
-                        "Zaman ayarları…"
-                    },
-                    Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("timeLayer")))
-                // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
-                .item(
-                    if node.filter.is_some() {
-                        "Süzgeç… (süzgeçli)"
-                    } else {
-                        "Süzgeç…"
-                    },
-                    event(Event::Filter(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("layerFilter")))
-                .item(
-                    "Seçimden süzgeç",
-                    self.selected_on_layer(&id)
-                        .then(|| event(Event::FilterFromSelection(id.clone()))),
-                )
-                .icon(crate::icons::from_web(Some("layerFilterSelection")))
-                .item(
-                    "Süzgeci kaldır",
-                    node.filter
-                        .is_some()
-                        .then(|| event(Event::FilterClear(id.clone()))),
-                )
-                .icon(crate::icons::from_web(Some("layerFilterClear")))
-                // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5): what Bilgi shows of its objects, and what they open.
-                .item(
-                    if node.card.is_some() || !node.actions.is_empty() {
-                        format!("Bilgi kartı ve eylemler… ({} eylem)", node.actions.len())
-                    } else {
-                        "Bilgi kartı ve eylemler…".to_owned()
-                    },
-                    event(Event::Info(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("layerInfo")))
-                .separator();
-        }
-        // A scenario group (docs/adr/0210 §10): shown, compared, applied.
+        // Senaryo ▸ on a scenario group (docs/adr/0210 §10): shown, compared, applied.
         if node.scenario.is_some() {
             let time = |e: crate::temporal::Event| Message::Time(e);
             menu = menu
-                .item(
-                    "Senaryoyu göster",
-                    time(crate::temporal::Event::Show(id.clone())),
+                .submenu(
+                    "Senaryo",
+                    Menu::new()
+                        .item("Senaryoyu göster", time(crate::temporal::Event::Show(id.clone())))
+                        .icon(icon("scenarioShow"))
+                        .item("Mevcut durum", time(crate::temporal::Event::Base))
+                        .icon(icon("scenarioBase"))
+                        .item(
+                            "Senaryoyu karşılaştır…",
+                            time(crate::temporal::Event::Compare(id.clone())),
+                        )
+                        .icon(icon("scenarioCompare"))
+                        .item(
+                            "Senaryoyu uygula…",
+                            time(crate::temporal::Event::AskApply(id.clone())),
+                        )
+                        .icon(icon("scenarioApply")),
                 )
-                .icon(crate::icons::from_web(Some("scenarioShow")))
-                .item("Mevcut durum", time(crate::temporal::Event::Base))
-                .icon(crate::icons::from_web(Some("scenarioBase")))
-                .item(
-                    "Senaryoyu karşılaştır…",
-                    time(crate::temporal::Event::Compare(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("scenarioCompare")))
-                .item(
-                    "Senaryoyu uygula…",
-                    time(crate::temporal::Event::AskApply(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("scenarioApply")))
-                .separator();
+                .icon(icon("scenario"));
         }
-        let menu = menu
+        menu = menu
+            .submenu("Sıra", order_menu)
+            .icon(icon("layerOrder"))
+            .separator()
             .item("Yeniden adlandır", event(Event::Rename(id.clone())))
-            .icon(crate::icons::from_web(Some("edit")))
+            .icon(icon("edit"))
             .shortcut("F2")
             .item(
-                if is_layer {
-                    "Yanına yeni katman"
-                } else {
-                    "İçine yeni katman"
-                },
+                if is_layer { "Yanına yeni katman" } else { "İçine yeni katman" },
                 event(Event::AddBeside(id.clone())),
             )
-            .icon(crate::icons::from_web(Some("layerAdd")));
+            .icon(icon("layerAdd"));
         // Kopyasını oluştur and Başka katmanlarla birleştir… (docs/adr/0177 §3).
-        let menu = if is_layer {
-            menu.item("Kopyasını oluştur", event(Event::Duplicate(id.clone())))
-                .icon(crate::icons::from_web(Some("layerDuplicate")))
-                .item(
-                    "Başka katmanlarla birleştir…",
-                    event(Event::MergeInto(id.clone())),
-                )
-                .icon(crate::icons::from_web(Some("layerMerge")))
-        } else {
-            menu
-        };
+        if is_layer {
+            menu = menu
+                .item("Kopyasını oluştur", event(Event::Duplicate(id.clone())))
+                .icon(icon("layerDuplicate"))
+                .item("Başka katmanlarla birleştir…", event(Event::MergeInto(id.clone())))
+                .icon(icon("layerMerge"));
+        }
         menu.separator()
             // Always offered: what cannot go says why (the web's).
             .item("Sil", event(Event::Remove(id)))
-            .icon(crate::icons::from_web(Some("trash")))
+            .icon(icon("trash"))
             // The web's `formatChord`: Delete is “Del”, Space “Boşluk”.
             .shortcut("Del")
+    }
+
+    /// Görünüş ▸: the layer's colour, line type and weight, its style, labels, SLD and what a change would reach.
+    fn layer_look_menu(&self, node: &LayerNode) -> Menu<Message> {
+        let id = node.id.clone();
+        let event = |e: Event| Message::Layer(e);
+        let icon = |name: &str| crate::icons::from_web(Some(name));
+        let style = &node.style;
+        // One of each group, as the web's radio items.
+        let types = LINE_TYPES.iter().fold(Menu::new(), |menu, (t, name)| {
+            menu.radio(
+                *name,
+                style.line_pattern.is_none() && style.line_type == *t,
+                event(Event::LineType(id.clone(), *t)),
+            )
+        });
+        // The project's types with patterns (docs/adr/0313 §7).
+        let patterns = self
+            .document
+            .as_ref()
+            .map(|d| d.model.settings().line_types.clone())
+            .unwrap_or_default();
+        let types = if patterns.is_empty() {
+            types
+        } else {
+            patterns.iter().fold(types.separator(), |menu, t| {
+                menu.radio(
+                    t.name.clone(),
+                    style
+                        .line_pattern
+                        .as_deref()
+                        .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
+                    event(Event::LinePattern(id.clone(), t.name.clone())),
+                )
+            })
+        }
+        .separator()
+        .item("Çizgi tipleri…", Some(Message::Run("lineTypes.manage")));
+        let weights = LINE_WEIGHTS.iter().fold(Menu::new(), |menu, w| {
+            menu.radio(
+                weight_text(*w),
+                (style.line_weight - w).abs() < 1e-9,
+                event(Event::LineWeight(id.clone(), *w)),
+            )
+        });
+        Menu::new()
+            .submenu("Renk", self.layer_colors(node))
+            .icon(icon("color"))
+            .submenu("Çizgi tipi", types)
+            .icon(icon("lineType"))
+            .submenu("Kalınlık", weights)
+            .icon(icon("lineWeight"))
+            .separator()
+            .item(
+                if style.renderer.is_some() { "Katman stili… (özel)" } else { "Katman stili…" },
+                Message::LayerStyle(crate::style::layer_style::Event::Open(Some(id.clone()))),
+            )
+            .icon(icon("layerStyle"))
+            // Etiketler (docs/adr/0212 §4): how its objects are labelled.
+            .item(
+                match node.style.labels.as_ref().map(|l| l.mode) {
+                    Some(kentos_contracts::LabelsMode::Rules) => "Etiketler… (kurallı)",
+                    Some(kentos_contracts::LabelsMode::Off) => "Etiketler… (etiketsiz)",
+                    _ => "Etiketler…",
+                },
+                event(Event::Labels(id.clone())),
+            )
+            .icon(icon("layerLabels"))
+            .separator()
+            // SLD (docs/adr/0516): the look out to QGIS, GeoServer, MapServer, and theirs in.
+            .item("Görünüşü SLD olarak kaydet…", event(Event::SldExport(id.clone())))
+            .icon(icon("sldExport"))
+            .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
+            .icon(icon("sldImport"))
+            .separator()
+            // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
+            .item(
+                "Değişikliğin etkisi…",
+                Message::StyleImpact(crate::style_impact::Event::Open(
+                    kentos_contracts::ImpactTarget::Layer,
+                    id,
+                )),
+            )
+            .icon(icon("styleImpact"))
+    }
+
+    /// Veri ▸: the layer's fields, forms and card, its filter, its time, its statistics and chart.
+    fn layer_data_menu(&self, node: &LayerNode) -> Menu<Message> {
+        let id = node.id.clone();
+        let event = |e: Event| Message::Layer(e);
+        let icon = |name: &str| crate::icons::from_web(Some(name));
+        Menu::new()
+            // Alanlar (docs/adr/0199 §3): the schema of its objects' attributes.
+            .item(
+                if node.fields.is_empty() {
+                    "Alanlar…".to_owned()
+                } else {
+                    format!("Alanlar… ({})", node.fields.len())
+                },
+                event(Event::Fields(id.clone())),
+            )
+            .icon(icon("layerFields"))
+            // Formlar (docs/adr/0401): the layer's data entry screen.
+            .item("Formlar…", event(Event::Forms(id.clone())))
+            .icon(icon("forms"))
+            // Bilgi kartı ve eylemler (docs/adr/0225 §4, §5): what Bilgi shows of its objects, and what they open.
+            .item(
+                if node.card.is_some() || !node.actions.is_empty() {
+                    format!("Bilgi kartı ve eylemler… ({} eylem)", node.actions.len())
+                } else {
+                    "Bilgi kartı ve eylemler…".to_owned()
+                },
+                event(Event::Info(id.clone())),
+            )
+            .icon(icon("layerInfo"))
+            .separator()
+            // Katman süzgeci (docs/adr/0211 §4): the window, the selection's objects, taken away.
+            .item(
+                if node.filter.is_some() { "Süzgeç… (süzgeçli)" } else { "Süzgeç…" },
+                event(Event::Filter(id.clone())),
+            )
+            .icon(icon("layerFilter"))
+            .item(
+                "Seçimden süzgeç",
+                self.selected_on_layer(&id)
+                    .then(|| event(Event::FilterFromSelection(id.clone()))),
+            )
+            .icon(icon("layerFilterSelection"))
+            .item(
+                "Süzgeci kaldır",
+                node.filter
+                    .is_some()
+                    .then(|| event(Event::FilterClear(id.clone()))),
+            )
+            .icon(icon("layerFilterClear"))
+            .separator()
+            // Zaman ayarları (docs/adr/0210 §10): its objects' start, end and key fields.
+            .item(
+                if node.time.is_some() { "Zaman ayarları… (zamansal)" } else { "Zaman ayarları…" },
+                Message::Time(crate::temporal::Event::OpenLayer(id.clone())),
+            )
+            .icon(icon("timeLayer"))
+            .separator()
+            // İstatistik and Grafik (docs/adr/0227 §8): its fields summed up, its chart.
+            .item(
+                "İstatistik",
+                Message::Charts(crate::charts::Event::OpenStatistics(Some(id.clone()))),
+            )
+            .icon(icon("fieldStatistics"))
+            .item(
+                "Grafik",
+                Message::Charts(crate::charts::Event::Open {
+                    layer: Some(id),
+                    kind: None,
+                    spec: None,
+                }),
+            )
+            .icon(icon("chart"))
     }
 
     /// Whether a selected object is on the layer (Seçimden süzgeç's item).

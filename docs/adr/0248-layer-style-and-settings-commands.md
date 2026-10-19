@@ -233,3 +233,19 @@ aynı yazmayı yapar; çizim değişmez. Ağır olan yalnız birleştirme ve kop
   cihaz ayarlarının ayrı bir komutu ve tanımlı sistem, datum seçimleri, Ölçme, Değişkenler, topoloji ve açıklama yükseklikleri
   anahtarları (`CAD-PY-06`'nın kalanı); Proje ayarları penceresinin anahtar anahtar komuttan yazması.
 - Web dönüşte beş komutun işleyicilerini, iki koşucunun yeni beklentilerini ve temizlik kuralının düzeltmesini alır (TODOS.md §0.2).
+
+## Ek (19 Ekim 2026): katmanların sırası ve sağ tık menüsü
+
+Sahibin bildirimi: katmanın sağ tık menüsü çok uzamıştı ve katmanlar taşınamıyordu.
+
+- **Menü ilgisine göre alt menülerde:** üstte sık işler (Etkin katman yap, Gizle, Kilitle, Yalnızca bunu göster, Nesnelerini
+  seç, Katmana yakınlaştır), sonra **Görünürlük ▸** (Tüm katmanları göster, Dondur, Bütün katmanları çöz, Yazdır), **Görünüş ▸**
+  (renk, çizgi tipi, kalınlık, Katman stili, Etiketler, SLD, Değişikliğin etkisi), **Veri ▸** (Alanlar, Formlar, Bilgi kartı,
+  Süzgeç, Zaman ayarları, İstatistik, Grafik), Kaynak ▸, Kenet ▸, Senaryo ▸, **Sıra ▸**; altta Yeniden adlandır, yeni katman,
+  Kopyasını oluştur, birleştir, Sil.
+- **Sıra ▸:** Yukarı taşı, Aşağı taşı, En üste taşı, En alta taşı, Gruptan çıkar (grubun hemen ardına). Her biri
+  `cad.layers.edit`'in `move`'u, tek geri alma adımı; kilitli düğüm komutun sözüyle reddedilir (`layer_order.rs`).
+- **Sürükleme:** Katmanlar ağacında satır bir satırın önüne, ardına ya da (grupsa) içine bırakılır; sanal satırlı ağaçta da
+  (KentOS UI `TreeView`'in tembel satırları, kenarda kendiliğinden kaydırma). Bırakılan yer `move`'un dizinine çevrilir.
+- Doğrulama: `cargo test -p kentos-desktop layer_order`; resimler `KENTOS_SHOTS_ONLY=katman-menu-sira,katman-surukle,katman-tasindi
+  cargo test -p kentos-desktop tools_screens -- --ignored --nocapture`.

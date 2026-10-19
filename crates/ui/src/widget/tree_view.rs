@@ -409,8 +409,8 @@ impl<'a, Message: Clone + 'a> TreeView<'a, Message> {
 
     /// Sanal ağaç: `count` görünür satırdan (açık düğümlerin düzleştirilmiş
     /// sırası) yalnızca görünenler `view` ile kurulur; `view` satırın
-    /// derinliğini ve düğümünü verir. Sürükleyerek taşıma sanal ağaçta
-    /// yoktur.
+    /// derinliğini ve düğümünü verir. [`TreeView::on_move`] sanal ağaçta da
+    /// çalışır: sürüklerken kenara yaklaşmak listeyi kaydırır.
     pub fn virtualized(
         mut self,
         count: usize,
@@ -467,6 +467,43 @@ struct Slot {
     open: bool,
     /// Satır yerinde adlandırılıyor: basılınca sürükleme başlamaz.
     editing: bool,
+}
+
+/// Bir düğümün taşımadaki bilgisi.
+fn slot_of<Message>(depth: usize, node: &Node<'_, Message>) -> Slot {
+    Slot {
+        id: node.id,
+        depth,
+        group: node.folder,
+        open: node.expanded.as_ref().is_none_or(|(open, _)| *open),
+        editing: node.editor.is_some(),
+    }
+}
+
+/// Taşınabilen satırların bilgisi: kurulmuş ağacın satırları ya da sanal ağacın
+/// istendikçe kurulan satırları.
+enum Slots<'a> {
+    Built(Vec<Slot>),
+    Lazy {
+        count: usize,
+        slot: Box<dyn Fn(usize) -> Slot + 'a>,
+    },
+}
+
+impl Slots<'_> {
+    fn get(&self, row: usize) -> Option<Slot> {
+        match self {
+            Slots::Built(slots) => slots.get(row).copied(),
+            Slots::Lazy { count, slot } => (row < *count).then(|| slot(row)),
+        }
+    }
+
+    fn len(&self) -> usize {
+        match self {
+            Slots::Built(slots) => slots.len(),
+            Slots::Lazy { count, .. } => *count,
+        }
+    }
 }
 
 /// Düğümleri derinlik sırasıyla satırlara açar; kapalı düğümlerin çocukları
@@ -848,18 +885,43 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
         if let Some((count, view, reveal)) = tree.lazy {
             let row_layout = layout.clone();
             let flat = tree.flat;
+            let view: std::rc::Rc<dyn Fn(usize) -> (usize, Node<'a, Message>) + 'a> =
+                std::rc::Rc::from(view);
+            let rows_view = std::rc::Rc::clone(&view);
             let body: Element<'a, Message> = match (count, tree.empty) {
                 (0, Some(message)) => container(label::muted(message))
                     .padding([8.0, table::PADDING_X])
                     .width(Fill)
                     .into(),
-                _ => VirtualList::new(count, row_height(), move |index| {
-                    let (depth, node) = view(index);
-                    node_row(node, depth, &row_layout, flat)
-                })
-                .reveal(reveal)
-                .height(tree.height.unwrap_or(Length::Fill))
-                .into(),
+                _ => {
+                    let list: Element<'a, Message> =
+                        VirtualList::new(count, row_height(), move |index| {
+                            let (depth, node) = rows_view(index);
+                            node_row(node, depth, &row_layout, flat)
+                        })
+                        .reveal(reveal)
+                        .height(tree.height.unwrap_or(Length::Fill))
+                        .into();
+                    // Dragging to move goes over the list: the rows asked for as they are passed over.
+                    if tree.on_move.is_some() || tree.on_carry.is_some() {
+                        Reorder {
+                            content: list,
+                            slots: Slots::Lazy {
+                                count,
+                                slot: Box::new(move |row| {
+                                    let (depth, node) = view(row);
+                                    slot_of(depth, &node)
+                                }),
+                            },
+                            on_move: tree.on_move,
+                            on_carry: tree.on_carry,
+                            scrolled: true,
+                        }
+                        .into()
+                    } else {
+                        list
+                    }
+                }
             };
 
             let mut content = Rows::new().width(Fill);
@@ -886,9 +948,10 @@ impl<'a, Message: Clone + 'a> From<TreeView<'a, Message>> for Element<'a, Messag
                 if tree.on_move.is_some() || tree.on_carry.is_some() {
                     Reorder {
                         content: rows.into(),
-                        slots,
+                        slots: Slots::Built(slots),
                         on_move: tree.on_move,
                         on_carry: tree.on_carry,
+                        scrolled: false,
                     }
                     .into()
                 } else {
@@ -923,15 +986,31 @@ const DRAG: f32 = 4.0;
 /// satırların sütunu, her satırın bilgisi, taşıma ve götürme mesajları.
 struct Reorder<'a, Message> {
     content: Element<'a, Message>,
-    slots: Vec<Slot>,
+    slots: Slots<'a>,
     on_move: Option<OnMove<'a, Message>>,
     on_carry: Option<OnCarry<'a, Message>>,
+    /// The content is the virtual list: its rows are scrolled by its offset.
+    scrolled: bool,
+}
+
+/// How near the list's edge a dragged row scrolls it, and by how much a move there.
+const EDGE: f32 = 18.0;
+
+impl<Message> Reorder<'_, Message> {
+    /// The content's scroll: the virtual list's, else none.
+    fn offset(&self, tree: &Tree) -> f32 {
+        if self.scrolled {
+            crate::widget::virtual_list::offset_of(&tree.children[0])
+        } else {
+            0.0
+        }
+    }
 }
 
 /// Sürüklenen `source` satırı, satır yüksekliği `height` olan listede `y`
 /// (listenin üstüne göre) yüksekliğine bırakılırsa hedef satır ve yer.
 /// Kimliksiz satıra, kaynağın kendisine ve altına bırakılamaz.
-fn target(slots: &[Slot], source: usize, height: f32, y: f32) -> Option<(usize, Place)> {
+fn target(slots: &Slots<'_>, source: usize, height: f32, y: f32) -> Option<(usize, Place)> {
     let row = (y / height).floor();
 
     if row < 0.0 {
@@ -945,9 +1024,8 @@ fn target(slots: &[Slot], source: usize, height: f32, y: f32) -> Option<(usize, 
     slot.id?;
 
     // Kaynağın altındaki satırlar: derinliği kaynaktan büyük olanlar.
-    let below = slots[source + 1..]
-        .iter()
-        .take_while(|other| other.depth > origin.depth)
+    let below = (source + 1..slots.len())
+        .take_while(|&other| slots.get(other).is_some_and(|o| o.depth > origin.depth))
         .count();
 
     if row >= source && row <= source + below {
@@ -978,6 +1056,98 @@ struct Drag {
     /// Sürüklenen satır ve bırakılacağı yer.
     dragging: Option<usize>,
     target: Option<(usize, Place)>,
+}
+
+impl<Message> Reorder<'_, Message> {
+    /// The dragged row's tint and where it would go.
+    fn draw_marks(
+        &self,
+        tree: &Tree,
+        renderer: &mut Renderer,
+        theme: &Theme,
+        bounds: Rectangle,
+        source: usize,
+    ) {
+        let state = tree.state.downcast_ref::<Drag>();
+        let height = row_height();
+        let offset = self.offset(tree);
+        let t = Tokens::of(theme);
+        let row_rect = |row: usize| {
+            Rectangle::new(
+                Point::new(bounds.x, bounds.y + row as f32 * height - offset),
+                Size::new(bounds.width, height),
+            )
+        };
+
+        // Sürüklenen satır hafifçe işaretlenir; hedef çizgiyle ya da
+        // çerçeveyle gösterilir.
+        renderer.fill_quad(
+            Quad {
+                bounds: row_rect(source),
+                ..Quad::default()
+            },
+            Background::Color(t.accent.scale_alpha(0.08)),
+        );
+
+        let Some((row, place)) = state.target else {
+            return;
+        };
+        let rect = row_rect(row);
+        let depth = self.slots.get(row).map_or(0, |slot| slot.depth);
+        let indent = table::PADDING_X + depth as f32 * INDENT;
+
+        match place {
+            Place::Into => renderer.fill_quad(
+                Quad {
+                    bounds: rect,
+                    border: Border {
+                        color: t.accent,
+                        width: 1.0,
+                        radius: crate::theme::shape::radius(2.0).into(),
+                    },
+                    ..Quad::default()
+                },
+                Background::Color(t.accent.scale_alpha(0.14)),
+            ),
+            Place::Before | Place::After => {
+                let y = if place == Place::Before {
+                    rect.y
+                } else {
+                    rect.y + rect.height
+                };
+
+                renderer.fill_quad(
+                    Quad {
+                        bounds: Rectangle::new(
+                            Point::new(rect.x + indent, y - 1.0),
+                            Size::new(rect.width - indent, 2.0),
+                        ),
+                        border: Border {
+                            radius: 1.0.into(),
+                            ..Border::default()
+                        },
+                        ..Quad::default()
+                    },
+                    Background::Color(t.accent),
+                );
+                renderer.fill_quad(
+                    Quad {
+                        bounds: Rectangle::new(
+                            Point::new(rect.x + indent - 3.0, y - 3.0),
+                            Size::new(6.0, 6.0),
+                        ),
+                        border: Border {
+                            color: t.accent,
+                            width: 2.0,
+                            radius: crate::theme::shape::radius(3.0).into(),
+                        },
+                        ..Quad::default()
+                    },
+                    Background::Color(t.surface),
+                );
+            }
+        }
+    }
 }
 
 impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, Message> {
@@ -1028,6 +1198,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
     ) {
         let bounds = layout.bounds();
         let height = row_height();
+        let offset = self.offset(tree);
         let state = tree.state.downcast_mut::<Drag>();
         let Some(content) = layout.children().next() else {
             return;
@@ -1036,7 +1207,7 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
         match event {
             Event::Mouse(mouse::Event::ButtonPressed(mouse::Button::Left)) => {
                 if let Some(point) = cursor.position_over(bounds) {
-                    let row = ((point.y - bounds.y) / height).floor() as usize;
+                    let row = ((point.y - bounds.y + offset) / height).floor() as usize;
 
                     state.press = self
                         .slots
@@ -1067,7 +1238,30 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                 }
 
                 if let Some(source) = state.dragging {
-                    state.target = target(&self.slots, source, height, position.y - bounds.y);
+                    // Near the virtual list's top or bottom edge the list scrolls under the row.
+                    let mut offset = offset;
+                    if self.scrolled {
+                        let step = if position.y < bounds.y + EDGE {
+                            -height
+                        } else if position.y > bounds.y + bounds.height - EDGE {
+                            height
+                        } else {
+                            0.0
+                        };
+                        if step != 0.0 {
+                            let max = (self.slots.len() as f32 * height - bounds.height).max(0.0);
+                            let next = (offset + step).clamp(0.0, max);
+                            crate::widget::virtual_list::scroll_by(
+                                &mut tree.children[0],
+                                next - offset,
+                            );
+                            offset = next;
+                            shell.invalidate_layout();
+                        }
+                    }
+                    let state = tree.state.downcast_mut::<Drag>();
+                    state.target =
+                        target(&self.slots, source, height, position.y - bounds.y + offset);
                     shell.request_redraw();
                     shell.capture_event();
                     return;
@@ -1077,9 +1271,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
                 state.press = None;
 
                 if let Some(source) = state.dragging.take() {
-                    if let (Some((row, place)), Some(from)) =
-                        (state.target.take(), self.slots[source].id)
-                        && let Some(to) = self.slots[row].id
+                    if let (Some((row, place)), Some(from)) = (
+                        state.target.take(),
+                        self.slots.get(source).and_then(|slot| slot.id),
+                    ) && let Some(to) = self.slots.get(row).and_then(|slot| slot.id)
                         && let Some(on_move) = &self.on_move
                     {
                         shell.publish(on_move(from, to, place));
@@ -1163,7 +1358,6 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
     ) {
         let state = tree.state.downcast_ref::<Drag>();
         let bounds = layout.bounds();
-        let height = row_height();
 
         if let Some(content) = layout.children().next() {
             self.content.as_widget().draw(
@@ -1184,82 +1378,10 @@ impl<'a, Message: Clone + 'a> Widget<Message, Theme, Renderer> for Reorder<'a, M
         let Some(source) = state.dragging else {
             return;
         };
-        let t = Tokens::of(theme);
-        let row_rect = |row: usize| {
-            Rectangle::new(
-                Point::new(bounds.x, bounds.y + row as f32 * height),
-                Size::new(bounds.width, height),
-            )
-        };
-
-        // Sürüklenen satır hafifçe işaretlenir; hedef çizgiyle ya da
-        // çerçeveyle gösterilir.
-        renderer.fill_quad(
-            Quad {
-                bounds: row_rect(source),
-                ..Quad::default()
-            },
-            Background::Color(t.accent.scale_alpha(0.08)),
-        );
-
-        let Some((row, place)) = state.target else {
-            return;
-        };
-        let rect = row_rect(row);
-        let depth = self.slots.get(row).map_or(0, |slot| slot.depth);
-        let indent = table::PADDING_X + depth as f32 * INDENT;
-
-        match place {
-            Place::Into => renderer.fill_quad(
-                Quad {
-                    bounds: rect,
-                    border: Border {
-                        color: t.accent,
-                        width: 1.0,
-                        radius: crate::theme::shape::radius(2.0).into(),
-                    },
-                    ..Quad::default()
-                },
-                Background::Color(t.accent.scale_alpha(0.14)),
-            ),
-            Place::Before | Place::After => {
-                let y = if place == Place::Before {
-                    rect.y
-                } else {
-                    rect.y + rect.height
-                };
-
-                renderer.fill_quad(
-                    Quad {
-                        bounds: Rectangle::new(
-                            Point::new(rect.x + indent, y - 1.0),
-                            Size::new(rect.width - indent, 2.0),
-                        ),
-                        border: Border {
-                            radius: 1.0.into(),
-                            ..Border::default()
-                        },
-                        ..Quad::default()
-                    },
-                    Background::Color(t.accent),
-                );
-                renderer.fill_quad(
-                    Quad {
-                        bounds: Rectangle::new(
-                            Point::new(rect.x + indent - 3.0, y - 3.0),
-                            Size::new(6.0, 6.0),
-                        ),
-                        border: Border {
-                            color: t.accent,
-                            width: 2.0,
-                            radius: crate::theme::shape::radius(3.0).into(),
-                        },
-                        ..Quad::default()
-                    },
-                    Background::Color(t.surface),
-                );
-            }
-        }
+        // The marks are clipped to the list: a scrolled-away row's lies out of it.
+        renderer.with_layer(bounds, |renderer| {
+            self.draw_marks(tree, renderer, theme, bounds, source)
+        });
     }
 
     fn operate(
@@ -1354,12 +1476,12 @@ mod tests {
     #[test]
     fn drops_land_before_after_or_into_rows() {
         // 0 grup, 1 onun çocuğu, 2 grup, 3 onun çocuğu; satırlar 20 piksel.
-        let slots = [
+        let slots = Slots::Built(vec![
             slot(10, 0, true),
             slot(11, 1, false),
             slot(12, 0, true),
             slot(13, 1, false),
-        ];
+        ]);
 
         // Yaprak satır: üst yarısı önüne, alt yarısı ardına.
         assert_eq!(target(&slots, 3, 20.0, 22.0), Some((1, Place::Before)));

@@ -107,6 +107,18 @@ fn reveal(offset: f32, height: f32, row_height: f32, index: usize) -> f32 {
     }
 }
 
+/// The list's scroll, read by a widget wrapping it (the tree's drag to move): how far its rows are scrolled up.
+pub(crate) fn offset_of(tree: &Tree) -> f32 {
+    tree.state.downcast_ref::<State>().offset
+}
+
+/// Scrolls the list by `dy` (positive: further down), as a widget wrapping it asks while it drags a row near an
+/// edge; the layout clamps it.
+pub(crate) fn scroll_by(tree: &mut Tree, dy: f32) {
+    let state = tree.state.downcast_mut::<State>();
+    state.offset = (state.offset + dy).max(0.0);
+}
+
 #[derive(Default)]
 struct State {
     offset: f32,

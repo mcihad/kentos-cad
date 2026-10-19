@@ -986,8 +986,13 @@ impl App {
                     let row = &rows[index];
                     (
                         row.depth,
-                        self.layer_node(doc, row.node, row.parent_visible),
+                        // The row's place is its id for dragging (layer_order.rs).
+                        self.layer_node(doc, row.node, row.parent_visible).id(index),
                     )
+                })
+                // A row dragged before, after or into another (layer_order.rs).
+                .on_move(|from, to, place| {
+                    Message::Layer(crate::layering::Event::Move(from, to, place))
                 })
                 .reveal(reveal)
                 .empty(empty)

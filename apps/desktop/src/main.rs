@@ -177,6 +177,7 @@ mod font_report;
 mod text_tools;
 mod leader_tools;
 mod layer_merge;
+mod layer_order;
 mod layer_purge;
 mod layer_sld;
 mod layer_snap;
