@@ -29,11 +29,22 @@ pub enum Aggregate {
     StdDev,
     Concat,
     Array,
+    // docs/adr/0602.
+    Q1,
+    Q3,
+    Iqr,
+    Range,
+    Majority,
+    Minority,
+    Missing,
+    MinLength,
+    MaxLength,
+    ConcatUnique,
 }
 
 impl Aggregate {
     /// The names `katman_toplamı` takes, for its message.
-    pub const NAMES: &'static str = "topla, ortalama, say, say_benzersiz, en_düşük, en_yüksek, orta_değer, std_sapma, değerleri_birleştir ya da değerleri_dizi";
+    pub const NAMES: &'static str = "topla, ortalama, say, say_benzersiz, en_düşük, en_yüksek, orta_değer, std_sapma, çeyrek1, çeyrek3, çeyrekler_arası, değer_aralığı, en_sık, en_seyrek, boş_say, en_kısa, en_uzun, değerleri_birleştir, benzersizleri_birleştir ya da değerleri_dizi";
 
     /// The operation of an aggregate function.
     pub fn of(f: Func) -> Option<Aggregate> {
@@ -48,6 +59,16 @@ impl Aggregate {
             Func::StdDev => Aggregate::StdDev,
             Func::ConcatValues => Aggregate::Concat,
             Func::ArrayAgg => Aggregate::Array,
+            Func::Quartile1 => Aggregate::Q1,
+            Func::Quartile3 => Aggregate::Q3,
+            Func::Iqr => Aggregate::Iqr,
+            Func::Range => Aggregate::Range,
+            Func::Majority => Aggregate::Majority,
+            Func::Minority => Aggregate::Minority,
+            Func::CountMissing => Aggregate::Missing,
+            Func::MinLength => Aggregate::MinLength,
+            Func::MaxLength => Aggregate::MaxLength,
+            Func::ConcatUnique => Aggregate::ConcatUnique,
             _ => return None,
         })
     }
@@ -83,6 +104,51 @@ fn median(mut nums: Vec<Dec>) -> Option<f64> {
             .map_or((a.to_f64() + b.to_f64()) / 2.0, Dec::to_f64),
         None => (a.to_f64() + b.to_f64()) / 2.0,
     })
+}
+
+/// Tukey's hinges, as QGIS's first and third quartiles (docs/adr/0602 §2): the sorted numbers' lower and upper halves,
+/// each of ⌈n/2⌉ (an odd count's middle one is in both), and their medians.
+fn hinges(mut nums: Vec<Dec>) -> Option<(f64, f64)> {
+    if nums.is_empty() {
+        return None;
+    }
+    nums.sort_by(|a, b| statistics::compare(*a, *b));
+    let half = nums.len().div_ceil(2);
+    let upper = nums[nums.len() - half..].to_vec();
+    nums.truncate(half);
+    Some((median(nums)?, median(upper)?))
+}
+
+/// The value seen most (or least) often, by key; at equal counts the least in the language's order, as QGIS.
+fn frequent(given: &[&Item], most: bool) -> Item {
+    let mut at: HashMap<Key, usize> = HashMap::new();
+    let mut seen: Vec<(&Item, usize)> = Vec::new();
+    for it in given {
+        let Some(k) = Key::of(it.view()) else {
+            continue;
+        };
+        match at.get(&k) {
+            Some(&j) => seen[j].1 += 1,
+            None => {
+                at.insert(k, seen.len());
+                seen.push((it, 1));
+            }
+        }
+    }
+    let better = |a: &(&Item, usize), b: &(&Item, usize)| {
+        let by_count = if most { b.1.cmp(&a.1) } else { a.1.cmp(&b.1) };
+        by_count.then_with(|| arrays::sort_order(a.0, b.0))
+    };
+    seen.iter()
+        .min_by(|a, b| better(a, b))
+        .map_or(Item::Null, |(it, _)| (*it).clone())
+}
+
+/// A value's length as `uzunluk` gives it: its text's UTF-16 units.
+fn text_length(it: &Item) -> usize {
+    let mut s = String::new();
+    push_text(&mut s, it);
+    s.encode_utf16().count()
 }
 
 /// The sample standard deviation of the numbers, two passes in their order.
@@ -148,13 +214,56 @@ pub fn over(op: Aggregate, items: &[&Item], separator: &str) -> Item {
             compound::push_array(&mut out, items.iter().copied());
             Item::Nested(out)
         }
+        Aggregate::Q1 => num(hinges(nums()).map(|h| h.0)),
+        Aggregate::Q3 => num(hinges(nums()).map(|h| h.1)),
+        Aggregate::Iqr => num(hinges(nums()).map(|(a, b)| b - a)),
+        Aggregate::Range => {
+            let mut n = nums();
+            n.sort_by(|a, b| statistics::compare(*a, *b));
+            num(match (n.first(), n.last()) {
+                (Some(lo), Some(hi)) => {
+                    let low = lo.m.checked_neg().map(|m| Dec { m, scale: lo.scale });
+                    match low.and_then(|low| arrays::exact_sum(&[*hi, low])) {
+                        Some(d) => Some(d.to_f64()),
+                        None => Some(hi.to_f64() - lo.to_f64()),
+                    }
+                }
+                _ => None,
+            })
+        }
+        Aggregate::Majority | Aggregate::Minority => {
+            let list: Vec<&Item> = given().copied().collect();
+            frequent(&list, op == Aggregate::Majority)
+        }
+        Aggregate::Missing => Item::Num((items.len() - given().count()) as f64),
+        Aggregate::MinLength => num(given().map(|it| text_length(it)).min().map(|n| n as f64)),
+        Aggregate::MaxLength => num(given().map(|it| text_length(it)).max().map(|n| n as f64)),
+        Aggregate::ConcatUnique => {
+            let mut out = String::new();
+            let mut seen: HashSet<String> = HashSet::new();
+            for it in given() {
+                let mut t = String::new();
+                push_text(&mut t, it);
+                if seen.insert(t.clone()) {
+                    if seen.len() > 1 {
+                        out.push_str(separator);
+                    }
+                    out.push_str(&t);
+                }
+            }
+            if seen.is_empty() {
+                Item::Null
+            } else {
+                Item::Text(out)
+            }
+        }
     }
 }
 
 /// `değerleri_birleştir`'s separator: its own, else ", " (`katman_toplamı`'s text is its operation).
 pub(super) fn separator(c: &WorldCall) -> &str {
     match (c.func, c.text.as_deref()) {
-        (Func::ConcatValues, Some(t)) => t,
+        (Func::ConcatValues | Func::ConcatUnique, Some(t)) => t,
         _ => SEPARATOR,
     }
 }

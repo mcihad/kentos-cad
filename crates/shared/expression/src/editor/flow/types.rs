@@ -222,7 +222,8 @@ pub(crate) fn gives(f: Func) -> Type {
         | Func::RegexReplace
         | Func::ArrayToText
         | Func::ToJson
-        | Func::ConcatValues => Type::Text,
+        | Func::ConcatValues
+        | Func::ConcatUnique => Type::Text,
         Func::Matches
         | Func::ArrayContains
         | Func::MapHas

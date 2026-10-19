@@ -205,6 +205,16 @@ impl Ord for Turkish<'_> {
     }
 }
 
+/// Two items in the language's sort order (`dizi_sırala`): numbers, then Turkish text, true/false, arrays and maps; empty last.
+pub(crate) fn sort_order(a: &Item, b: &Item) -> Ordering {
+    match (sort_rank(a), sort_rank(b)) {
+        (Some(x), Some(y)) => x.cmp(&y),
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (None, None) => Ordering::Equal,
+    }
+}
+
 fn sort_rank(it: &Item) -> Option<Rank<'_>> {
     Some(match it {
         Item::Null => return None,

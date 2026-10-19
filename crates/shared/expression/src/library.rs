@@ -738,6 +738,17 @@ pub enum Func {
     Epoch,
     FromEpoch,
     MakeTime,
+    // Aggregates (docs/adr/0602).
+    Quartile1,
+    Quartile3,
+    Iqr,
+    Range,
+    Majority,
+    Minority,
+    CountMissing,
+    MinLength,
+    MaxLength,
+    ConcatUnique,
     // Inner expressions (docs/adr/0601).
     ArrayForeach,
     ArrayFilter,
@@ -793,6 +804,8 @@ impl Func {
             | ArrayMedian | Series | MapConcat | MapPrefixKeys | UrlEncode | Epoch | FromEpoch
             | MakeTime => Family::More,
             ArrayForeach | ArrayFilter | WithVariable | Try => Family::Lambda,
+            Quartile1 | Quartile3 | Iqr | Range | Majority | Minority | CountMissing
+            | MinLength | MaxLength | ConcatUnique => Family::World,
             _ => Family::Base,
         }
     }

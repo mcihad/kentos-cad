@@ -232,6 +232,8 @@ Liste:
   (`language.test.ts`, `builder` e2e) yeni tabloyla yeniden koşmalı.
 - [ ] `EXPR-0601` iç içe ifadeler (ADR 0601, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İfade oluşturucusu `@öğe`, `@sayaç`
   ve `değişkenle`'nin adını çekirdeğin tamamlamasından alır; web'in dil testleri yeniden koşmalı.
+- [ ] `EXPR-0602` toplamanın ekleri (ADR 0602, 19 Ekim): web'de gerekenler: çekirdek ortak; web'in İşlemler'i ve ifade
+  testleri yeni işlevlerle yeniden koşmalı.
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (ADR 0513, 18 Ekim): web'de gerekenler: feed işçisinde
   bağlandıktan sonra `conformance_request` ve `read_conformance` (yoksa OGC API'ye süzgeçli veri kaynağı reddedilir), alma
   döngüsü `Taking::ending` ve WASM `takenWords`'ün bitişi (bugün bağlayıcı `capped`'i `Capped`/`Complete`'e çevirir), pencerede
