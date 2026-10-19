@@ -97,6 +97,23 @@ impl Store {
         options: PlaceOptions,
         shown: Option<&dyn Fn(&str) -> bool>,
     ) -> Shown {
+        self.labels_shown_after(view, scale, editing, size, options, shown, None)
+            .0
+    }
+
+    /// [`Store::labels_shown_in`] for a view that moved a little since `prior` (docs/adr/0533 §3), with where
+    /// these labels went.
+    #[allow(clippy::too_many_arguments)]
+    pub fn labels_shown_after(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        editing: Option<f64>,
+        size: LabelSize,
+        options: PlaceOptions,
+        shown: Option<&dyn Fn(&str) -> bool>,
+        prior: Option<&super::placing::Prior>,
+    ) -> (Shown, super::placing::Prior) {
         let mask: Option<Vec<bool>> =
             shown.map(|f| self.layer_names().into_iter().map(f).collect());
         let max_px = match size {
@@ -154,15 +171,18 @@ impl Store {
                 );
             }
         }
-        let placed = self.place_labels(view, scale, &fixed, options);
+        let (placed, next) = self.place_labels_after(view, scale, &fixed, options, prior);
         for r in placed.records.chunks_exact(LABEL_STRIDE) {
             out.extend_from_slice(r);
             out.extend([1.0, r[2], r[3]]);
         }
-        Shown {
-            records: out,
-            texts: placed.texts,
-        }
+        (
+            Shown {
+                records: out,
+                texts: placed.texts,
+            },
+            next,
+        )
     }
 
     /// Which text a record belongs to: its object, and a block's piece (−1

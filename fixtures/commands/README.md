@@ -34,6 +34,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.layers.filter.json` | `cad.layers.filter` v1 (ADR 0211 §5: katman süzgeci; masaüstünün) | 30 |
 | `v1/cad.layers.labels.json` | `cad.layers.labels` v1 (ADR 0212 §5: katmanın etiketlemesi; masaüstünün) | 31 |
 | `v1/cad.labels.pin.json` | `cad.labels.pin` v1 (ADR 0212 §5: etiket iğneleri; masaüstünün) | 26 |
+| `v1/cad.labels.report.json` | `cad.labels.report` v1 (ADR 0533 §6: bir pencerenin etiketlerinin yerleşimi sayılarla; masaüstünün) | 32 |
 | `v1/cad.layers.renderer.json` | `cad.layers.renderer` v1 (ADR 0213 §5: Katman stili'nin işleyicileri; masaüstünün) | 45 |
 | `v1/cad.layers.info.json` | `cad.layers.info` v1 (ADR 0225 §4, §5: eylemler ve bilgi kartı; masaüstünün) | 35 |
 | `v1/cad.layers.compose.json` | `cad.layers.compose` v1 (ADR 0226 §3: Katman çizimi; masaüstünün) | 31 |

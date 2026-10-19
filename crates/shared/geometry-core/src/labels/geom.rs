@@ -389,6 +389,27 @@ impl Walk {
         Vec2::new(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
     }
 
+    /// How far along the path its point nearest `p` is (the first of equals).
+    pub fn nearest(&self, p: Vec2) -> f64 {
+        let mut best = (f64::INFINITY, 0.0);
+        for (i, w) in self.pts.windows(2).enumerate() {
+            let (a, b) = (w[0], w[1]);
+            let (dx, dy) = (b.x - a.x, b.y - a.y);
+            let len2 = dx * dx + dy * dy;
+            let t = if len2 > 0.0 {
+                (((p.x - a.x) * dx + (p.y - a.y) * dy) / len2).clamp(0.0, 1.0)
+            } else {
+                0.0
+            };
+            let q = Vec2::new(a.x + dx * t, a.y + dy * t);
+            let d = norm(p.x - q.x, p.y - q.y);
+            if d < best.0 {
+                best = (d, self.at[i] + t * (self.at[i + 1] - self.at[i]));
+            }
+        }
+        best.1
+    }
+
     /// The path's direction `s` along, radians.
     pub fn angle(&self, s: f64) -> f64 {
         self.angle_at(s)

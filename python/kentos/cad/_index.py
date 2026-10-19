@@ -94,6 +94,7 @@ COMMANDS: dict[str, Any] = {
     "cad.joins.edit": joins.edit,
     "cad.joins.query": joins.query,
     "cad.labels.pin": labels.pin,
+    "cad.labels.report": labels.report,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
     "cad.layers.edit": layers.edit,

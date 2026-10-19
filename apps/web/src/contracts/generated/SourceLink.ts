@@ -48,6 +48,13 @@ srid?: number,
  */
 extent?: [number, number, number, number], 
 /**
+ * The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique
+ * among the rows and not empty. A reload follows a label pin to the row of the same value when the table was
+ * written again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule
+ * of every bound layer before.
+ */
+key?: string, 
+/**
  * Whether the table can be written: a feature or attribute table of a file KentOS may write.
  */
 writable: boolean, };

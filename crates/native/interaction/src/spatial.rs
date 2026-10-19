@@ -97,6 +97,9 @@ pub struct Spatial {
     label_keys: std::collections::HashMap<String, String>,
     /// The main view's last labels (`label_at`): their records, stride and scale.
     kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
+    /// Where the main view's labels went last (docs/adr/0533 §3): the next placing of a view that moved a little
+    /// puts a label back where it was when that is free. Only the main view keeps one.
+    prior: std::cell::RefCell<kentos_geometry_core::store::placing::Prior>,
     /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
     /// and snapped to; none, the drawing's.
     theme: Option<kentos_contracts::LayerState>,
@@ -183,6 +186,8 @@ impl Spatial {
         self.sync_filters(doc, &[], false);
         self.label_layers.clear();
         self.label_keys.clear();
+        // Another drawing's labels were somewhere else.
+        *self.prior.borrow_mut() = Default::default();
         let all: Vec<&Entity> = doc.entities().collect();
         self.sync_labels(doc, &all, true);
         self.sync_phases(doc);
@@ -1073,14 +1078,29 @@ impl Spatial {
             max_x: max.x,
             max_y: max.y,
         };
-        let shown = match tree {
+        // The main view (`keep`) places where its labels last were when that is free: a pan of a few pixels moves
+        // the labels with the ground (docs/adr/0533 §3).
+        let before = keep.then(|| self.prior.borrow().clone());
+        let (shown, next) = match tree {
             Some(tree) => {
                 let visible = |id: &str| tree.is_visible(id);
-                self.store
-                    .labels_shown_in(&view, scale, None, size, options, Some(&visible))
+                self.store.labels_shown_after(
+                    &view,
+                    scale,
+                    None,
+                    size,
+                    options,
+                    Some(&visible),
+                    before.as_ref(),
+                )
             }
-            None => self.store.labels_shown(&view, scale, None, size, options),
+            None => self
+                .store
+                .labels_shown_after(&view, scale, None, size, options, None, before.as_ref()),
         };
+        if keep {
+            *self.prior.borrow_mut() = next;
+        }
         let out = shown
             .records
             .chunks_exact(LABEL_SHOWN_STRIDE)

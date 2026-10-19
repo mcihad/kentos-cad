@@ -6,6 +6,9 @@ import type { SourcesEditOp } from "./SourcesEditOp";
  * `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
  * the table is bound already), `source_differs` (the layer given does not hold the table's objects),
  * `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
- * that is not one, on a table without geometry, onto a layer given, or of a database).
+ * that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
+ * not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
+ * layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved` (an area change that took objects with label
+ * pins out of the layer).
  */
 export type SourcesEdit = { edit: SourcesEditOp, };

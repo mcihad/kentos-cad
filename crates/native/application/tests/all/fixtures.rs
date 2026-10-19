@@ -35,8 +35,8 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
-use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
@@ -45,7 +45,7 @@ use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
     circle, curves_construct, delete, dimensions_edit, dimensions_query, dimensions_reassociate, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit,
     edit, entities_chamfer, entities_extend, entities_fillet, entities_order, entities_pick, entities_relate, crs_transform,
-    entities_select, entities_trim, entities_vertex, labels_pin, layers_compose, layers_edit,
+    entities_select, entities_trim, entities_vertex, labels_pin, labels_report, layers_compose, layers_edit,
     layers_filter, fields_usage, layers_find, layers_info, layers_labels, layers_renderer, layers_service,
     layers_contingents, layers_rules, layers_subtypes, layers_table, layers_set, layers_states, layers_time, layers_translate, line, network_define, nurbs, offset, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities,
     point, points_construct, polygon, polygon_regular, polyline, rectangle_create, scenarios_edit,
@@ -1949,6 +1949,12 @@ impl Input for LabelsPin {
     }
 }
 
+impl Input for kentos_domain::contracts::LabelsReport {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for LayersRenderer {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -3127,6 +3133,9 @@ fn run_op(
         kentos_domain::contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
         kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
         kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
+        kentos_domain::contracts::CAD_LABELS_REPORT => {
+            run!(labels_report, kentos_domain::contracts::LabelsReport)
+        }
         kentos_domain::contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
         kentos_domain::contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
         kentos_domain::contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),

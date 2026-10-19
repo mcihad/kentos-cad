@@ -2255,6 +2255,12 @@ const ENTRIES: &[Entry] = &[
         targets: || vec![target(None, &["*"], &[], None, None)],
     },
     Entry {
+        id: "cad.labels.report",
+        refusals: &[&["invalid_scale", "invalid_window", "layer_not_found", "not_a_layer", "service_layer"]],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
         id: "cad.layers.renderer",
         refusals: &[
             &[
@@ -2856,9 +2862,10 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable", "table_not_found", "invalid_address", "source_unreachable"],
             LAYER,
-            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "derived_dataset"],
+            &["crs_mismatch", "entity_exists", "source_bound", "source_differs", "source_not_found", "source_changed", "too_many_sources", "invalid_extent", "invalid_key", "derived_dataset"],
+            &["pending_changes"],
         ],
-        warnings: &["crs_undeclared", "import_losses"],
+        warnings: &["crs_undeclared", "import_losses", "label_pins_lost", "label_pins_moved", "key_not_unique"],
         targets: none,
     },
     Entry {
@@ -2912,7 +2919,7 @@ const ENTRIES: &[Entry] = &[
             // docs/adr/0531: the neighbours outside a part's area.
             &["topology_on_read", "outside_neighbour_invalid"],
         ],
-        warnings: &["export_losses", "neighbours_left"],
+        warnings: &["export_losses", "neighbours_left", "label_pins_lost", "label_pins_moved", "key_not_unique"],
         targets: none,
     },
     Entry {

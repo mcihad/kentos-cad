@@ -32,6 +32,7 @@ mod golden;
 mod hatch;
 mod image;
 mod label_engine;
+mod label_stability;
 mod leader;
 mod line_parts;
 mod locks;

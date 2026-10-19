@@ -2764,6 +2764,24 @@ PhaseViewName = Literal["all", "existing", "demolition", "proposed"]
 """The names of :class:`PhaseView`, for a plain string."""
 
 
+class PinLoss(_StrEnum):
+    """Why a label pin went with no object to hold it (docs/adr/0533 §1).
+
+    - ``deleted``: The table has no such row any more.
+    - ``outside``: The row is there but outside the area the layer holds.
+    - ``rebound``: The row id is another record now (the key's value differs) and no row of the old value is left.
+    - ``taken``: The row it would follow already has pins of its own.
+    """
+    DELETED = "deleted"
+    OUTSIDE = "outside"
+    REBOUND = "rebound"
+    TAKEN = "taken"
+
+
+PinLossName = Literal["deleted", "outside", "rebound", "taken"]
+"""The names of :class:`PinLoss`, for a plain string."""
+
+
 class PointLabelMode(_StrEnum):
     """Where a point's label goes (docs/adr/0212 §3.3).
 
@@ -5540,6 +5558,8 @@ class SourcesEditOp(_Union):
     One of:
 
     - :class:`LinkSourcesEditOp` (``kind: link``)
+    - :class:`KeySourcesEditOp` (``kind: key``)
+    - :class:`ExtentSourcesEditOp` (``kind: extent``)
     - :class:`UnlinkSourcesEditOp` (``kind: unlink``)
     - :class:`RelinkSourcesEditOp` (``kind: relink``)
     """
@@ -21819,6 +21839,52 @@ class LabelClass(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LabelCounts(_Model):
+    """What a placing came to, in labels.
+    Attributes:
+        placed: Labels with a place. Unit: count.
+        unplaced: Labels no free place was found for (they are not drawn). Unit: count.
+        hidden: Labels hidden by hand (a pin's `hidden`). Unit: count.
+        pinned: Of the placed, those a pin put where they are. Unit: count.
+        forced: Of the placed, those a class that may overlap put over another. Unit: count.
+        collisions: Of the placed, those whose box crosses another placed label's, read back from the labels as drawn (a curved
+            label is not boxed): with no class that may overlap, none. Unit: count.
+        repeats: Of the placed, those repeating the text of a label of the same layer and class placed before them (a
+            street's name along its length is such). Unit: count.
+    """
+    placed: int
+    unplaced: int
+    hidden: int
+    pinned: int
+    forced: int
+    collisions: int
+    repeats: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["placed"] = self.placed
+        out["unplaced"] = self.unplaced
+        out["hidden"] = self.hidden
+        out["pinned"] = self.pinned
+        out["forced"] = self.forced
+        out["collisions"] = self.collisions
+        out["repeats"] = self.repeats
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelCounts:
+        return cls(
+            placed=data["placed"],
+            unplaced=data["unplaced"],
+            hidden=data["hidden"],
+            pinned=data["pinned"],
+            forced=data["forced"],
+            collisions=data["collisions"],
+            repeats=data["repeats"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LabelHalo(_Model):
     """The halo round a label's letters.
     Attributes:
@@ -22292,6 +22358,85 @@ class LabelsPinned(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LabelsReport(_Model):
+    """Input of `cad.labels.report` v1: how the labels of a window fall at a scale, counted; the drawing is not changed.
+    The scale is `pxPerMetre` (the view's: screen pixels per metre of ground) or `paperScale` (1:N, labels as a
+    sheet's map at that scale places them: the paper's CSS pixels, `1000 ÷ (PX_MM × N)` of them to a metre), one of
+    the two. The window is the ground's `[min east, min north, max east, max north]`, the drawing's extent when
+    absent; `layers` limits the count to those layers.
+
+    Refusals, in this order: `invalid_scale` (neither or both of the two scales, one that is not above zero, or a
+    paper scale over 1:1 000 000), `invalid_window` (not four finite numbers with the minimum below the maximum, or
+    a window with more than 100 million pixels), `layer_not_found`, `not_a_layer` (a group), `service_layer` (a layer
+    drawn from a service has no labels of its own).
+    Attributes:
+        layers: Only these layers' labels are counted (their objects and the others' still hold the room); absent: all.
+        paper_scale: The denominator of a sheet map's scale, 1:N. Unit: scale.
+        px_per_metre: Screen pixels per metre of ground. Unit: px/length.
+        window: The ground's window; absent: the drawing's extent. Unit: length.
+    """
+    layers: list[str] | None | Unset = UNSET
+    paper_scale: int | None | Unset = UNSET
+    px_per_metre: float | None | Unset = UNSET
+    window: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.layers is not UNSET:
+            out["layers"] = None if self.layers is None else list(self.layers)
+        if self.paper_scale is not UNSET:
+            out["paperScale"] = self.paper_scale
+        if self.px_per_metre is not UNSET:
+            out["pxPerMetre"] = None if self.px_per_metre is None else float(self.px_per_metre)
+        if self.window is not UNSET:
+            out["window"] = None if self.window is None else [float(e0) for e0 in self.window]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsReport:
+        return cls(
+            layers=UNSET if "layers" not in data else None if data["layers"] is None else list(data["layers"]),
+            paper_scale=data.get("paperScale", UNSET),
+            px_per_metre=UNSET if "pxPerMetre" not in data else None if data["pxPerMetre"] is None else float(data["pxPerMetre"]),
+            window=UNSET if "window" not in data else None if data["window"] is None else [float(e0) for e0 in data["window"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LabelsReported(_Model):
+    """Output of `cad.labels.report` v1, and its plan.
+    Attributes:
+        window: The window as used. Unit: length.
+        px_per_metre: The scale as used, screen pixels per metre. Unit: px/length.
+        layers: The layers that have labels, in the layer tree's order.
+    """
+    window: list[float]
+    px_per_metre: float
+    totals: LabelCounts
+    layers: list[LayerLabelReport]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["window"] = [float(e0) for e0 in self.window]
+        out["pxPerMetre"] = float(self.px_per_metre)
+        out["totals"] = self.totals.to_json()
+        out["layers"] = [e0.to_json() for e0 in self.layers]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LabelsReported:
+        return cls(
+            window=[float(e0) for e0 in data["window"]],
+            px_per_metre=float(data["pxPerMetre"]),
+            totals=LabelCounts.from_json(data["totals"]),
+            layers=[LayerLabelReport.from_json(e0) for e0 in data["layers"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class LayerAction(_Model):
     """An action of a layer's objects (docs/adr/0225 §4): its name and the
     address or file it opens, a template.
@@ -22540,6 +22685,44 @@ class LayerFound(_Model):
             frozen=data["frozen"],
             locked=data["locked"],
             plot=data["plot"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class LayerLabelReport(_Model):
+    """One layer's counts, and what its labelling is made of when it is a bound layer (docs/adr/0533 §4).
+    Attributes:
+        part: The area of a part's working copy: only its rows are the layer's labels and obstacles, the table's other
+            rows hold no room and have no label here. Absent: the whole table (or no source). Unit: length.
+        partial: Of the window, how much a part's area leaves out: true when the window reaches past the part.
+        source: The source the layer is bound to; absent for any other layer.
+    """
+    layer: str
+    counts: LabelCounts
+    part: list[float] | None | Unset = UNSET
+    partial: bool | Unset = UNSET
+    source: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["counts"] = self.counts.to_json()
+        if self.part is not UNSET:
+            out["part"] = None if self.part is None else [float(e0) for e0 in self.part]
+        if self.partial is not UNSET:
+            out["partial"] = self.partial
+        if self.source is not UNSET:
+            out["source"] = self.source
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LayerLabelReport:
+        return cls(
+            layer=data["layer"],
+            counts=LabelCounts.from_json(data["counts"]),
+            part=UNSET if "part" not in data else None if data["part"] is None else [float(e0) for e0 in data["part"]],
+            partial=data.get("partial", UNSET),
+            source=data.get("source", UNSET),
         )
 
 
@@ -25701,6 +25884,29 @@ class LookupSpatial(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class LostPin(_Model):
+    """The pins of an object a reload took out of the layer, or could not keep.
+    Attributes:
+        uid: The object's lasting id.
+    """
+    uid: str
+    reason: PinLoss | PinLossName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["reason"] = _enum_out(self.reason)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> LostPin:
+        return cls(
+            uid=data["uid"],
+            reason=_enum_in(PinLoss, data["reason"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MarkReference(_Model):
     """A mark as `cad.viewmarks.references` lists it.
     Attributes:
@@ -28564,6 +28770,32 @@ class PickedEntity(_Model):
             uid=data["uid"],
             path=list(data["path"]) if "path" in data else UNSET,
             place=UNSET if "place" not in data else None if data["place"] is None else SubPlace.from_json(data["place"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PinMove(_Model):
+    """A label pin followed from one object to the row of the same key (docs/adr/0533 §1).
+    Attributes:
+        key: The key's value that tied them.
+    """
+    from_: str
+    to: str
+    key: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = self.from_
+        out["to"] = self.to
+        out["key"] = self.key
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PinMove:
+        return cls(
+            from_=data["from"],
+            to=data["to"],
+            key=data["key"],
         )
 
 
@@ -34738,6 +34970,10 @@ class SourceLink(_Model):
         extent: The area the working copy holds (minimum east, north, maximum east, north, in the project's system; docs/adr/0510):
             only the table's rows whose box meets it are read, and a write leaves the rows outside as they are. None: the
             whole table. Unit: length.
+        key: The attribute that names a row the same whatever its place in the table (docs/adr/0533 §1): its value is unique
+            among the rows and not empty. A reload follows a label pin to the row of the same value when the table was
+            written again with other row ids, and says the pins whose row is gone. None: a row is its row id, the rule
+            of every bound layer before.
         relative: The file's path from the project file's folder, `/` between its parts (docs/adr/0506): written on saving when
             the file lies on the same disk, so a project moved with its data (or packed with Paketle) finds it again; read
             only when `path` is not there and the file it names has the same content. A database has none.
@@ -34752,6 +34988,7 @@ class SourceLink(_Model):
     digest: str
     writable: bool
     extent: list[float] | None | Unset = UNSET
+    key: str | None | Unset = UNSET
     relative: str | None | Unset = UNSET
     srid: int | None | Unset = UNSET
 
@@ -34767,6 +35004,8 @@ class SourceLink(_Model):
         out["writable"] = self.writable
         if self.extent is not UNSET:
             out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.key is not UNSET:
+            out["key"] = self.key
         if self.relative is not UNSET:
             out["relative"] = self.relative
         if self.srid is not UNSET:
@@ -34785,6 +35024,7 @@ class SourceLink(_Model):
             digest=data["digest"],
             writable=data["writable"],
             extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            key=data.get("key", UNSET),
             relative=data.get("relative", UNSET),
             srid=data.get("srid", UNSET),
         )
@@ -34959,7 +35199,10 @@ class SourcesEdit(_Model):
     `table_not_found`, `layer_not_found`, `not_a_layer`, `layer_locked`, `crs_mismatch`, `source_bound` (the layer or
     the table is bound already), `source_differs` (the layer given does not hold the table's objects),
     `source_not_found` (an id), `source_changed` (relink to another file), `too_many_sources`, `invalid_extent` (an area
-    that is not one, on a table without geometry, onto a layer given, or of a database).
+    that is not one, on a table without geometry, onto a layer given, or of a database), `invalid_key` (a key that is
+    not a column of the objects, is empty on one or repeats); conflicts: `pending_changes` (an area changed over the
+    layer's own edits). Warnings: `label_pins_lost`, `label_pins_moved` (an area change that took objects with label
+    pins out of the layer).
     """
     edit: SourcesEditOp
 
@@ -34981,11 +35224,13 @@ class SourcesEdited(_Model):
     Attributes:
         objects: The objects taken in, and the layers made (linking onto a new layer). Unit: count.
         link: The binding as it is now; none after unlinking.
+        pins: What an area change did to the label pins (docs/adr/0533 §2).
     """
     objects: int
     revision: str
     layers: list[ImportedLayer] | Unset = UNSET
     link: SourceLink | None | Unset = UNSET
+    pins: SyncedPins | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -34995,6 +35240,8 @@ class SourcesEdited(_Model):
             out["layers"] = [e0.to_json() for e0 in self.layers]
         if self.link is not UNSET:
             out["link"] = None if self.link is None else self.link.to_json()
+        if self.pins is not UNSET:
+            out["pins"] = None if self.pins is None else self.pins.to_json()
         return out
 
     @classmethod
@@ -35004,6 +35251,7 @@ class SourcesEdited(_Model):
             revision=data["revision"],
             layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             link=UNSET if "link" not in data else None if data["link"] is None else SourceLink.from_json(data["link"]),
+            pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
         )
 
 
@@ -35013,7 +35261,9 @@ class SourcesSync(_Model):
     `source_gone` (the file is gone), `source_readonly`, `geometry_mismatch`, `file_unwritable`; conflicts:
     `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
     the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
-    for stay in the drawing only).
+    for stay in the drawing only), `label_pins_lost` (a read that took objects with label pins out, or could not keep
+    their pins), `label_pins_moved` (pins that followed their key to another row), `key_not_unique` (a read whose
+    table repeats the layer's key: the pins of those rows are not followed).
     Attributes:
         layer: The bound layer, by id.
         discard: Reading: take the table's rows though the layer differs (one undo step brings the layer back).
@@ -35056,6 +35306,7 @@ class SourcesSynced(_Model):
         source: The file's SHA-256 after (plan: before).
         followed: The rows outside the part's area that followed the written objects' shared corners and edges (docs/adr/0531). Unit: count.
         left: Those that would have been left invalid and kept their shape (`loose`). Unit: count.
+        pins: What reading did to the label pins of the layer's objects (docs/adr/0533 §1); only a read of a layer with pins.
     """
     added: int
     modified: int
@@ -35065,6 +35316,7 @@ class SourcesSynced(_Model):
     columns: list[str] | Unset = UNSET
     followed: int | Unset = UNSET
     left: int | Unset = UNSET
+    pins: SyncedPins | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -35079,6 +35331,8 @@ class SourcesSynced(_Model):
             out["followed"] = self.followed
         if self.left is not UNSET:
             out["left"] = self.left
+        if self.pins is not UNSET:
+            out["pins"] = None if self.pins is None else self.pins.to_json()
         return out
 
     @classmethod
@@ -35092,6 +35346,7 @@ class SourcesSynced(_Model):
             columns=list(data["columns"]) if "columns" in data else UNSET,
             followed=data.get("followed", UNSET),
             left=data.get("left", UNSET),
+            pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
         )
 
 
@@ -37665,6 +37920,36 @@ class SurveySettings(_Model):
             traverse_angle=UNSET if "traverseAngle" not in data else None if data["traverseAngle"] is None else float(data["traverseAngle"]),
             traverse_coord=UNSET if "traverseCoord" not in data else None if data["traverseCoord"] is None else float(data["traverseCoord"]),
             two_way=UNSET if "twoWay" not in data else None if data["twoWay"] is None else float(data["twoWay"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SyncedPins(_Model):
+    """What a reload (or an area change) did to the label pins of the layer's objects (docs/adr/0533 §1): how many
+    objects kept theirs, which followed their key to another row, which could not be kept. A layer with no pins
+    has none of this.
+    Attributes:
+        kept: Unit: count.
+    """
+    kept: int
+    lost: list[LostPin] | Unset = UNSET
+    moved: list[PinMove] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kept"] = self.kept
+        if self.lost is not UNSET:
+            out["lost"] = [e0.to_json() for e0 in self.lost]
+        if self.moved is not UNSET:
+            out["moved"] = [e0.to_json() for e0 in self.moved]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SyncedPins:
+        return cls(
+            kept=data["kept"],
+            lost=[LostPin.from_json(e0) for e0 in data["lost"]] if "lost" in data else UNSET,
+            moved=[PinMove.from_json(e0) for e0 in data["moved"]] if "moved" in data else UNSET,
         )
 
 
@@ -49526,11 +49811,14 @@ class LinkSourcesEditOp(SourcesEditOp):
     Attributes:
         extent: Onto a new layer from a file, only the rows whose box meets this area (minimum east, north, maximum east,
             north, in the project's system; docs/adr/0510): the working copy of a part of a large table. Unit: length.
+        key: The attribute that names a row whatever its place in the table (docs/adr/0533 §1): unique and not empty
+            among the rows taken in.
     """
     TAG_VALUE: ClassVar[str] = "link"
     path: str
     table: str
     extent: list[float] | None | Unset = UNSET
+    key: str | None | Unset = UNSET
     layer: str | None | Unset = UNSET
     reproject: bool | Unset = UNSET
 
@@ -49540,6 +49828,8 @@ class LinkSourcesEditOp(SourcesEditOp):
         out["table"] = self.table
         if self.extent is not UNSET:
             out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        if self.key is not UNSET:
+            out["key"] = self.key
         if self.layer is not UNSET:
             out["layer"] = self.layer
         if self.reproject is not UNSET:
@@ -49552,8 +49842,62 @@ class LinkSourcesEditOp(SourcesEditOp):
             path=data["path"],
             table=data["table"],
             extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
+            key=data.get("key", UNSET),
             layer=data.get("layer", UNSET),
             reproject=data.get("reproject", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class KeySourcesEditOp(SourcesEditOp):
+    """Sets or clears (`key` absent) a bound layer's key (docs/adr/0533 §1): the layer's objects must hold the
+    attribute with a value each, no two alike. Nothing else changes; the next reload follows the pins by it.
+    """
+    TAG_VALUE: ClassVar[str] = "key"
+    id: str
+    key: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "key"}
+        out["id"] = self.id
+        if self.key is not UNSET:
+            out["key"] = self.key
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> KeySourcesEditOp:
+        return cls(
+            id=data["id"],
+            key=data.get("key", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExtentSourcesEditOp(SourcesEditOp):
+    """Changes the area a part's working copy holds (docs/adr/0533 §2), or takes the whole table (`extent`
+    absent): the table is read again in the new area as one undo step, the rows that left it removed from
+    the layer and the ones that came in added. The layer must match its table (no pending changes); the pins
+    of an object that left the area are said. Undoing brings the objects back; the binding's area, like any
+    setting, is not an undo step.
+    Attributes:
+        extent: Unit: length.
+    """
+    TAG_VALUE: ClassVar[str] = "extent"
+    id: str
+    extent: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "extent"}
+        out["id"] = self.id
+        if self.extent is not UNSET:
+            out["extent"] = None if self.extent is None else [float(e0) for e0 in self.extent]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExtentSourcesEditOp:
+        return cls(
+            id=data["id"],
+            extent=UNSET if "extent" not in data else None if data["extent"] is None else [float(e0) for e0 in data["extent"]],
         )
 
 
@@ -52130,7 +52474,7 @@ _SCHEDULE_OPERATION: dict[str, type[ScheduleOperation]] = {"cell": CellScheduleO
 _SELECT_REGION: dict[str, type[SelectRegion]] = {"window": WindowSelectRegion, "crossing": CrossingSelectRegion, "fence": FenceSelectRegion, "polygon": PolygonSelectRegion, "circle": CircleSelectRegion, "containing": ContainingSelectRegion, "point": PointSelectRegion, "all": AllSelectRegion, "objects": ObjectsSelectRegion, "invert": InvertSelectRegion, "similar": SimilarSelectRegion}
 
 
-_SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
+_SOURCES_EDIT_OP: dict[str, type[SourcesEditOp]] = {"link": LinkSourcesEditOp, "key": KeySourcesEditOp, "extent": ExtentSourcesEditOp, "unlink": UnlinkSourcesEditOp, "relink": RelinkSourcesEditOp}
 
 
 _SPACES_OPERATION: dict[str, type[SpacesOperation]] = {"set": SetSpacesOperation, "merge": MergeSpacesOperation, "split": SplitSpacesOperation, "rebound": ReboundSpacesOperation}
@@ -52693,6 +53037,7 @@ __all__ = [
     "ExportSld",
     "ExtendWallsOperation",
     "ExtensionPointConstruction",
+    "ExtentSourcesEditOp",
     "FeatureChange",
     "FeatureFeed",
     "FeedKind",
@@ -52944,12 +53289,14 @@ __all__ = [
     "JunctionLayer",
     "JunctionRole",
     "JunctionRoleName",
+    "KeySourcesEditOp",
     "LabelAbbreviate",
     "LabelAlign",
     "LabelAlignName",
     "LabelBackground",
     "LabelCallout",
     "LabelClass",
+    "LabelCounts",
     "LabelHalo",
     "LabelInk",
     "LabelInkName",
@@ -52973,6 +53320,8 @@ __all__ = [
     "LabelsPin",
     "LabelsPinPlan",
     "LabelsPinned",
+    "LabelsReport",
+    "LabelsReported",
     "LayerAction",
     "LayerCompose",
     "LayerEditOperation",
@@ -52982,6 +53331,7 @@ __all__ = [
     "LayerFieldKindName",
     "LayerFilter",
     "LayerFound",
+    "LayerLabelReport",
     "LayerLabels",
     "LayerMask",
     "LayerNode",
@@ -53100,6 +53450,7 @@ __all__ = [
     "LookupRow",
     "LookupSort",
     "LookupSpatial",
+    "LostPin",
     "MarkReference",
     "MatchProperty",
     "MatchPropertyName",
@@ -53261,6 +53612,9 @@ __all__ = [
     "PhaseView",
     "PhaseViewName",
     "PickedEntity",
+    "PinLoss",
+    "PinLossName",
+    "PinMove",
     "PinnedObject",
     "PlaceMeasuredPoint",
     "PlaceOn",
@@ -53672,6 +54026,7 @@ __all__ = [
     "SyncDirectionName",
     "SyncTopology",
     "SyncTopologyName",
+    "SyncedPins",
     "TabFormItem",
     "TableAlign",
     "TableAlignName",
