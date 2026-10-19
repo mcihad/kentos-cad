@@ -296,10 +296,10 @@ fn screens() {
             kentos_headless::package::write(&planned).expect("packed");
             send(
                 &mut app,
-                Event::Package(super::package::Event::Done(Ok((
+                Event::Package(super::package::Event::Done(Ok(Box::new((
                     planned.output,
                     planned.warnings,
-                )))),
+                ))))),
             );
             picture(&mut app, &format!("gpkg-{mode}-7-paket"));
             // A part of the table (docs/adr/0510): Yalnız görünen alanın satırları over the first parcel's view.
@@ -415,6 +415,9 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
             why: kentos_contracts::LeftWhy::Missing,
             at: String::new(),
         }],
+        manifest: "/teslim/paket/paket.json".into(),
+        manifest_sha256: "0".repeat(64),
+        faces: Vec::new(),
         bytes: 10,
     };
     let warning = kentos_contracts::CommandWarning {
@@ -424,7 +427,7 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
     };
     send(
         &mut app,
-        Event::Package(super::package::Event::Done(Ok((out, vec![warning])))),
+        Event::Package(super::package::Event::Done(Ok(Box::new((out, vec![warning]))))),
     );
     assert!(says(&app, "Paket yapıldı: /teslim/paket/proje.kcad"));
     assert!(says(&app, "1 bağ pakete kopyalanmadı"));

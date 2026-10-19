@@ -1492,6 +1492,24 @@ const ENTRIES: &[Entry] = &[
         warnings: &[],
         targets: none,
     },
+    // Resmin kaynağı (docs/adr/0350 §1).
+    Entry {
+        id: "cad.images.edit",
+        refusals: &[
+            &["no_entities", "invalid_uid", "entity_not_found", "not_an_image", "layer_locked", "nothing_to_embed"],
+            &["invalid_file_path", "file_not_found", "import_unreadable"],
+            REVISION,
+        ],
+        warnings: &["layer_locked"],
+        targets: || vec![target(None, &["image"], &[], Some("not_an_image"), None)],
+    },
+    // Bağlı dosyaların durumu (docs/adr/0349 §2).
+    Entry {
+        id: "cad.assets.check",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
     // Pafta seti (docs/adr/0347 §1).
     Entry {
         id: "cad.sheets.set",

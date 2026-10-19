@@ -25,6 +25,7 @@ mod tags_check;
 mod viewmark_refs;
 mod sheet_set;
 mod xrefs_window;
+mod xrefs_watch;
 mod arch_project;
 mod quantities;
 mod wall_styles;

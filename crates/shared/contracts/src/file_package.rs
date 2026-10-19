@@ -7,6 +7,11 @@
 //! folder is made whole or not at all: written under a temporary name, every copy read back and its SHA-256
 //! compared, the project file verified, then renamed into place. Passwords and tokens are never in the project, so
 //! none is packed.
+//!
+//! The package also carries the external references' sources (docs/adr/0350 §4), byte for byte so their digests
+//! hold, and `paket.json` (`kentos.package/1`): the project file, every copy and every link left out, the typefaces
+//! drawn; a text style drawn in a substitute face is said as left out (KentOS draws only its own faces, which come with
+//! it).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -57,6 +62,10 @@ pub enum PackagedKind {
     Table,
     /// An object's attachment.
     Attachment,
+    /// An external reference's source drawing (docs/adr/0350 §4).
+    Xref,
+    /// A text style's typeface (left out only: KentOS's own faces come with it).
+    Font,
 }
 
 /// A file copied into the package.
@@ -92,6 +101,8 @@ pub enum LeftWhy {
     Database,
     /// An address (http, https): read where the package opens, not copied.
     Address,
+    /// A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
+    Substituted,
 }
 
 /// A link left as it was.
@@ -105,7 +116,8 @@ pub struct PackageLeft {
     /// The path or address as the project keeps it.
     pub path: String,
     pub why: LeftWhy,
-    /// The object (its lasting id) or bound layer (its id) that keeps it.
+    /// The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
+    /// (`stil:` and its name) that keeps it.
     pub at: String,
 }
 
@@ -127,7 +139,14 @@ pub struct ProjectPackaged {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<PackageLeft>>", optional))]
     pub left: Vec<PackageLeft>,
-    /// Every byte written: the project file and the copies.
+    /// The manifest, `paket.json` in the folder, and its SHA-256.
+    pub manifest: String,
+    pub manifest_sha256: String,
+    /// The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<crate::DrawingFont>>", optional))]
+    pub faces: Vec<crate::DrawingFont>,
+    /// Every byte written: the project file, the manifest and the copies.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "bytes")))]
     pub bytes: u64,
 }

@@ -344,6 +344,8 @@ def settings(s):
                 "domains": (opaque, False),
                 # Schema 71 (docs/adr/0331 §1): the project's own hatch patterns, as their JSON.
                 "hatchPatterns": (opaque, False),
+                # Schema 84 (docs/adr/0349 §1): the external references' search paths, in order.
+                "xrefPaths": (lambda ps: array([text(p) for p in ps]), False),
             },
             "settings",
         )
@@ -2087,6 +2089,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 84 (docs/adr/0349 §1): the external references' search paths.
+    if (settings or {}).get("xrefPaths"):
+        return 84
     # Schema 83 (docs/adr/0348): an external reference.
     if any("xref" in b for b in blocks or []):
         return 83
@@ -2610,7 +2615,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-84.kcad"] = container(root(cmap(parts), version=uint(84)))
+    files["schema-version-85.kcad"] = container(root(cmap(parts), version=uint(85)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4258,6 +4263,22 @@ def build():
     out["broken/xref-kind-attach-written.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(kind="attach"))
     out["broken/xref-relative-empty.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(relative=""))
     out["broken/xref-objects-count.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"]["objects"].pop())
+    # Search paths (docs/adr/0349 §1): schema 84's; in schema 83 an unknown field (an empty list is schema 83 too); a repeated, an
+    # untrimmed and a blank path refused.
+    out["xref-paths.kcad"] = container(document(load("xref-paths.json")))
+    paths_payload = document(load("xref-paths.json"))
+    assert paths_payload.count(b"\x67version\x18\x54") == 1, "the search paths are schema 84"
+    out["broken/xref-paths-in-schema-83.kcad"] = container(paths_payload.replace(b"\x67version\x18\x54", b"\x67version\x18\x53"))
+
+    def paths_broken(change):
+        d = copy.deepcopy(load("xref-paths.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/xref-paths-empty.kcad"] = paths_broken(lambda d: d["settings"].update(xrefPaths=[]))
+    out["broken/xref-paths-twice.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(d["settings"]["xrefPaths"][0]))
+    out["broken/xref-paths-untrimmed.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(" mimari"))
+    out["broken/xref-paths-blank.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(""))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

@@ -1,22 +1,25 @@
-//! The nine tools of Mekânsal istatistik (the web's `builtin/stats/tools.ts`;
-//! docs/adr/0238): the same names, parameters, defaults and texts.
+//! The ten tools of Mekânsal istatistik (the web's `builtin/stats/tools.ts`;
+//! docs/adr/0238): the same names, parameters, defaults and texts; Moran I and
+//! Sıcak nokta's permutations and correction and Yerel Moran (docs/adr/0520)
+//! are the desktop's only while the web pauses (ADR 0228).
 
 use kentos_geometry_core::entity::Shape;
-use kentos_geometry_core::ops::spatial_stats::autocorrelation::{
-    Neighbourhood, hot_spots, morans_i,
-};
+use kentos_geometry_core::ops::sampling::random::seed_of;
+use kentos_geometry_core::ops::spatial_stats::autocorrelation::{Neighbourhood, morans_i_with};
 use kentos_geometry_core::ops::spatial_stats::centers::{CenterInput, CenterKind, centers};
 use kentos_geometry_core::ops::spatial_stats::clusters::{dbscan, k_means};
+use kentos_geometry_core::ops::spatial_stats::inference::{Correction, Inference};
+use kentos_geometry_core::ops::spatial_stats::local::{hot_spots_with, local_morans};
 use kentos_geometry_core::ops::spatial_stats::nearest::nearest;
 use kentos_geometry_core::ops::spatial_stats::weights::Concept;
 use serde_json::{Value, json};
 
-use super::{GEOGRAPHIC, geographic, result_of};
+use super::{GEOGRAPHIC, geographic, result_of, scope_of, tested_result_of};
 use crate::builtin::geometry::{GEO_KINDS, features_param, geo_scopes, layer_param, shapes};
 use crate::builtin::queries::attr;
 use crate::types::{
     EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
-    RunResult, Target, Tool,
+    RunResult, Target, Tool, Values,
 };
 use kentos_contracts::{PointStyle, PointSymbol};
 
@@ -144,6 +147,85 @@ fn neighbors() -> ParamDef {
     .describe("Her nesnenin en yakın kaç komşusu; eşit uzaklıkta önce gelen.")
 }
 
+fn permuting(v: &Values) -> bool {
+    v.get("inference").and_then(Value::as_str) == Some("permutation")
+}
+
+/// Çıkarım (docs/adr/0520 §2): the normal distribution's p, or the permutations'.
+fn inference_param(conditional: bool) -> ParamDef {
+    ParamDef::new(
+        "inference",
+        "Çıkarım",
+        ParamKind::Choice {
+            options: vec![
+                EnumOption::new("analytic", "Normal dağılım")
+                    .hint("z ve p rastgele dağıtım varsayımıyla, formülden"),
+                EnumOption::new("permutation", "Permütasyon").hint(if conditional {
+                    "Her nesnenin değeri yerinde kalır, komşularınınkiler rastgele dağıtılır; p dağılımdan"
+                } else {
+                    "Değerler yerlere rastgele dağıtılır; p dağılımdan, tohumla tekrarlanır"
+                }),
+            ],
+        },
+    )
+    .default_value(json!("analytic"))
+    .describe("p değerinin nasıl bulunacağı; permütasyon dağılım varsayımı istemez.")
+}
+
+fn permutations_param(always: bool) -> ParamDef {
+    let p = number(
+        "permutations",
+        "Permütasyon sayısı",
+        Some(9.0),
+        Some(99_999.0),
+        true,
+        "",
+    )
+    .default_value(json!(999))
+    .describe("p'nin en küçüğü 1 / (sayı + 1): 999 permütasyonla 0,001.");
+    if always { p } else { p.shown_when(permuting) }
+}
+
+fn seed_param(always: bool) -> ParamDef {
+    let p = number("seed", "Tohum", Some(0.0), None, true, "")
+        .default_value(json!(1))
+        .describe("Aynı tohum aynı permütasyonları, dolayısıyla aynı p değerlerini verir.");
+    if always { p } else { p.shown_when(permuting) }
+}
+
+/// Çoklu test düzeltmesi (docs/adr/0520 §4): a local statistic tests every object.
+fn correction_param() -> ParamDef {
+    ParamDef::new(
+        "correction",
+        "Çoklu test düzeltmesi",
+        ParamKind::Choice {
+            options: vec![
+                EnumOption::new("none", "Yok").hint("Her nesnenin p'si kendi başına"),
+                EnumOption::new("fdr", "FDR")
+                    .hint("Benjamini–Hochberg: anlamlı sayılanlarda yanlışların beklenen oranı sınırlı"),
+                EnumOption::new("bonferroni", "Bonferroni")
+                    .hint("Her p sınama sayısıyla çarpılır; en tutucu"),
+            ],
+        },
+    )
+    .default_value(json!("none"))
+    .describe("Çok sayıda nesne sınandığında rastlantıyla anlamlı çıkanları ayıklar; sınıf düzeltilmiş p'den.")
+}
+
+/// The inference the values ask for; `always`: the permutations whatever Çıkarım says (Yerel Moran).
+fn inference_of(v: &Resolved<'_>, always: bool) -> Inference {
+    let permuted = always || v.text("inference") == "permutation";
+    Inference {
+        permutations: if permuted {
+            v.number("permutations").unwrap_or(999.0).max(0.0) as usize
+        } else {
+            0
+        },
+        seed: seed_of(v.number("seed").unwrap_or(1.0)),
+        correction: Correction::from_key(v.text("correction")).unwrap_or(Correction::None),
+    }
+}
+
 /// An output layer, right above the input's layer: the results over the objects they come from.
 fn output_layer(name: &str, color: &str) -> ParamDef {
     let mut p = layer_param(name, color);
@@ -176,6 +258,18 @@ fn hot_layer() -> ParamDef {
     } = &mut p.kind
     {
         new_layer_style.renderer = Some(super::hot_renderer());
+    }
+    p
+}
+
+/// Yerel Moran's output layer: its cluster types' look (`lisa_renderer`).
+fn lisa_layer() -> ParamDef {
+    let mut p = output_layer("Yerel Moran", "#D7191C");
+    if let ParamKind::Layer {
+        new_layer_style, ..
+    } = &mut p.kind
+    {
+        new_layer_style.renderer = Some(super::lisa_renderer());
     }
     p
 }
@@ -479,6 +573,7 @@ pub fn morans() -> Tool {
         [
             "Moran I artıysa benzer değerler yan yana (kümelenme), eksiyse farklılar yan yana (dağınıklık); beklenen değer −1 / (n − 1). z ve p, rastgele dağıtım varsayımıyla bulunur (Cliff ve Ord); p 0,05’ten küçükse desen anlamlıdır.",
             "Komşuluk: sabit uzaklık bandı, bant içinde ters uzaklık ya da k en yakın komşu. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır. Satır standartlaştırma her nesnenin komşularının ağırlıklarını toplamına böler. Çizim değişmez.",
+            "Çıkarım Permütasyon ise değerler yerlere tohumdan gelen sırayla rastgele dağıtılır ve her dağıtımın I'sı bulunur; p, gözlenen I kadar uç olanların payıdır ((sayı + 1) / (permütasyon + 1)), z gözlenenin dağılımın ortalamasından standart sapma cinsinden uzaklığıdır. Desen permütasyonun z ve p'sinden; aynı tohum ve permütasyon sayısı aynı sonucu verir. Deney profili tohumu, permütasyon sayısını, komşuluğu ve girdinin SHA-256 özetini yazar; seçili ya da görünen nesnelerle yapılan sınama alt küme diye söylenir.",
         ]
         .join("\n\n"),
         &["moran", "otokorelasyon", "mekânsal otokorelasyon", "spatial autocorrelation", "global moran", "kümelenme", "istatistik"],
@@ -492,15 +587,33 @@ pub fn morans() -> Tool {
             ParamDef::new("standardize", "Satır standartlaştırma", ParamKind::Boolean)
                 .default_value(json!(true))
                 .describe("Her nesnenin komşu ağırlıkları toplamına bölünür (önerilen)."),
+            inference_param(false),
+            permutations_param(false),
+            seed_param(false),
         ],
-        table_outputs("moransI", "Moran I"),
+        {
+            let mut out = table_outputs("moransI", "Moran I");
+            out.push(OutputDef::new("zPermutation", "Permütasyon z", OutputKind::Number));
+            out.push(OutputDef::new("pPermutation", "Permütasyon p", OutputKind::Number));
+            out.push(OutputDef::new("profile", "Deney profili", OutputKind::Table));
+            out.push(OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text));
+            out
+        },
         |v, ctx, f| {
             if geographic(ctx) {
                 return RunResult::refused(GEOGRAPHIC.into());
             }
             let field = v.text("valueField");
-            match morans_i(&shape_list(v), &texts(v, field), field, hood(v), v.flag("standardize")) {
-                Ok(run) => result_of(run, f, &v.features("input").entities, None),
+            let scope = scope_of(v, ctx);
+            match morans_i_with(
+                &shape_list(v),
+                &texts(v, field),
+                field,
+                hood(v),
+                v.flag("standardize"),
+                inference_of(v, false),
+            ) {
+                Ok(run) => tested_result_of(run, f, &v.features("input").entities, None, &scope),
                 Err(why) => RunResult::refused(why),
             }
         },
@@ -516,6 +629,8 @@ pub fn hot_spot() -> Tool {
         [
             "Her nesnenin ve komşularının değer toplamı, bütün nesnelerden beklenenle karşılaştırılır (Ord ve Getis 1995); sonuç bir z puanıdır. Büyük artı z sıcak nokta (yüksek değerler kümesi), büyük eksi z soğuk noktadır.",
             "Güven sınıfı z’nin işaretiyle 3 (%99), 2 (%95), 1 (%90) ya da 0’dır; kopyalar sınıflarının rengini alır (kırmızılar sıcak, maviler soğuk). Komşuluk sabit uzaklık bandı ya da k en yakın komşu; nesne kendi komşusudur. Bant boş bırakılırsa her nesnenin en az bir komşusu olacak en küçük uzaklık alınır.",
+            "Çıkarım Permütasyon ise her nesnenin değeri yerinde kalır, komşularının değerleri öbür nesnelerinkilerden tohumdan gelen sırayla rastgele çekilir (koşullu permütasyon); Permütasyon p ve z yazılır, sınıf onlardan. Her nesne ayrı sınandığından rastlantıyla anlamlı çıkanlar olur: Çoklu test düzeltmesi FDR (Benjamini–Hochberg) ya da Bonferroni ile düzeltilmiş p yazılır ve sınıf ondandır.",
+            "Isı haritası noktaların yoğunluğunu gösterir, hiçbir şeyi sınamaz; sıcak nokta bir değerin komşuluğunda beklenenden yüksek olup olmadığını istatistikle sınar. Deney profili çıkarımı, tohumu, düzeltmeyi, komşuluğu ve girdinin SHA-256 özetini yazar; seçili ya da görünen nesnelerle yapılan sınama alt küme diye söylenir.",
         ]
         .join("\n\n"),
         &["sıcak nokta", "soğuk nokta", "getis", "gi*", "hot spot", "hotspot analysis", "kümelenme", "istatistik"],
@@ -526,6 +641,10 @@ pub fn hot_spot() -> Tool {
             concepts(false),
             band(),
             neighbors(),
+            inference_param(true),
+            permutations_param(false),
+            seed_param(false),
+            correction_param(),
             hot_layer(),
         ],
         vec![
@@ -533,14 +652,112 @@ pub fn hot_spot() -> Tool {
             OutputDef::new("count", "Nesne sayısı", OutputKind::Number),
             OutputDef::new("hot", "Sıcak nokta", OutputKind::Number),
             OutputDef::new("cold", "Soğuk nokta", OutputKind::Number),
+            OutputDef::new("profile", "Deney profili", OutputKind::Table),
+            OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text),
         ],
         |v, ctx, f| {
             if geographic(ctx) {
                 return RunResult::refused(GEOGRAPHIC.into());
             }
             let field = v.text("valueField");
-            match hot_spots(&shape_list(v), &texts(v, field), field, hood(v)) {
-                Ok(run) => result_of(run, f, &v.features("input").entities, Some(&v.layer("layer").id)),
+            let scope = scope_of(v, ctx);
+            match hot_spots_with(&shape_list(v), &texts(v, field), field, hood(v), inference_of(v, false)) {
+                Ok(run) => tested_result_of(
+                    run,
+                    f,
+                    &v.features("input").entities,
+                    Some(&v.layer("layer").id),
+                    &scope,
+                ),
+                Err(why) => RunResult::refused(why),
+            }
+        },
+    )
+}
+
+pub fn local_moran() -> Tool {
+    tool(
+        "stats.localMoran",
+        "Yerel Moran (LISA)",
+        "statsLocalMoran",
+        "Her nesnenin değerinin komşularınınkine benzeyip benzemediğini yerel Moran ile sınar: yüksek ve düşük değer kümeleri ile aykırılar. Her nesnenin kopyasını küme türünün rengiyle yazar.",
+        [
+            "Bir nesnenin yerel Moran I'sı z / m₂ ile komşularının ağırlıklı z toplamının çarpımıdır; z değerin ortalamadan farkı, m₂ = Σ z² / n (Anselin 1995). Artı I, nesnenin komşularına benzediğini (Yüksek-Yüksek ya da Düşük-Düşük küme), eksi I farklı olduğunu (Yüksek-Düşük ya da Düşük-Yüksek aykırı) söyler; Çeyrek nesnenin ve komşularının ortalamaya göre yeridir.",
+            "Anlamlılık koşullu permütasyonla sınanır: nesnenin değeri yerinde kalır, komşularınınkiler öbür nesnelerinkilerden tohumdan gelen sırayla rastgele çekilir; p, gözlenen I kadar uç olanların payıdır. Küme türü, p (ya da düzeltilmiş p) anlamlılık düzeyinden küçükse çeyrektir, değilse “Anlamlı değil”; komşusu olmayan ya da permütasyonları yayılmayan nesne “Sınanamadı”dır.",
+            "Her nesne ayrı sınandığından Çoklu test düzeltmesi önerilir (FDR: Benjamini–Hochberg). Aynı tohum ve permütasyon sayısı aynı sonucu verir; Deney profili onları, komşuluğu ve girdinin SHA-256 özetini yazar. Seçili ya da görünen nesnelerle yapılan sınama alt küme diye söylenir.",
+        ]
+        .join("\n\n"),
+        &[
+            "yerel moran",
+            "lisa",
+            "local moran",
+            "küme ve aykırı",
+            "cluster and outlier",
+            "anselin",
+            "permütasyon",
+            "istatistik",
+        ],
+        &["YERELMORAN", "LISA", "LOCALMORAN"],
+        vec![
+            input("Değeri sınanacak noktalar, çizgiler ve alanlar."),
+            value_field(),
+            concepts(true),
+            band(),
+            neighbors(),
+            ParamDef::new("standardize", "Satır standartlaştırma", ParamKind::Boolean)
+                .default_value(json!(true))
+                .describe("Her nesnenin komşu ağırlıkları toplamına bölünür: gecikme komşuların ortalaması olur."),
+            permutations_param(true),
+            seed_param(true),
+            correction_param(),
+            ParamDef::new(
+                "significance",
+                "Anlamlılık düzeyi",
+                ParamKind::Choice {
+                    options: vec![
+                        EnumOption::new("0.10", "%10").hint("p < 0,10"),
+                        EnumOption::new("0.05", "%5").hint("p < 0,05"),
+                        EnumOption::new("0.01", "%1").hint("p < 0,01"),
+                    ],
+                },
+            )
+            .default_value(json!("0.05"))
+            .describe("Küme türünün yazılacağı en büyük p."),
+            lisa_layer(),
+        ],
+        vec![
+            OutputDef::new("spots", "Nesneler", OutputKind::Features),
+            OutputDef::new("count", "Nesne sayısı", OutputKind::Number),
+            OutputDef::new("profile", "Deney profili", OutputKind::Table),
+            OutputDef::new("experiment", "Deney profili (JSON)", OutputKind::Text),
+            OutputDef::new("highHigh", "Yüksek-Yüksek", OutputKind::Number),
+            OutputDef::new("lowLow", "Düşük-Düşük", OutputKind::Number),
+            OutputDef::new("highLow", "Yüksek-Düşük", OutputKind::Number),
+            OutputDef::new("lowHigh", "Düşük-Yüksek", OutputKind::Number),
+        ],
+        |v, ctx, f| {
+            if geographic(ctx) {
+                return RunResult::refused(GEOGRAPHIC.into());
+            }
+            let field = v.text("valueField");
+            let scope = scope_of(v, ctx);
+            let alpha = v.text("significance").parse().unwrap_or(0.05);
+            match local_morans(
+                &shape_list(v),
+                &texts(v, field),
+                field,
+                hood(v),
+                v.flag("standardize"),
+                inference_of(v, true),
+                alpha,
+            ) {
+                Ok(run) => tested_result_of(
+                    run,
+                    f,
+                    &v.features("input").entities,
+                    Some(&v.layer("layer").id),
+                    &scope,
+                ),
                 Err(why) => RunResult::refused(why),
             }
         },

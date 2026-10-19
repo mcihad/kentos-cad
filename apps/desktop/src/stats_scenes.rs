@@ -10,7 +10,7 @@
 //! and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=ist-serit,ist-elips,ist-elips-cizim,ist-moran,ist-komsu,ist-sicak-cizim,ist-dbscan-cizim,ist-moran-permutasyon,ist-sicak-fdr,ist-sicak-fdr-cizim,ist-lisa,ist-lisa-profil,ist-lisa-cizim cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -109,6 +109,32 @@ pub(crate) fn hot() -> Vec<(&'static str, Value)> {
     ]
 }
 
+/// Moran I of the blocks' values with 999 permutations (docs/adr/0520).
+pub(crate) fn moran_permuted() -> Vec<(&'static str, Value)> {
+    let mut v = moran();
+    v.push(("inference", json!("permutation")));
+    v
+}
+
+/// Gi* of the blocks' values over their 4 nearest, 999 conditional permutations, FDR (docs/adr/0520).
+pub(crate) fn hot_fdr() -> Vec<(&'static str, Value)> {
+    let mut v = hot();
+    v.push(("inference", json!("permutation")));
+    v.push(("correction", json!("fdr")));
+    v
+}
+
+/// Yerel Moran of the blocks' values over their 4 nearest, FDR (docs/adr/0520).
+pub(crate) fn lisa() -> Vec<(&'static str, Value)> {
+    vec![
+        ("input", layer("ada")),
+        ("valueField", json!("Değer")),
+        ("concept", json!("nearest")),
+        ("neighbors", json!(4)),
+        ("correction", json!("fdr")),
+    ]
+}
+
 /// DBSCAN of the accidents: 30 m and 5 places.
 pub(crate) fn clusters() -> Vec<(&'static str, Value)> {
     vec![
@@ -188,6 +214,65 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             |app| {
                 opened(app);
                 ran(app, "processing.run.stats.dbscan", &clusters(), true);
+            },
+            view,
+        ),
+        // Moran I with 999 permutations: the table's permutation rows (docs/adr/0520).
+        (
+            "ist-moran-permutasyon",
+            |app| {
+                opened(app);
+                ran(
+                    app,
+                    "processing.run.stats.moransI",
+                    &moran_permuted(),
+                    false,
+                );
+            },
+            view_end,
+        ),
+        // Sıcak nokta's window with Permütasyon and FDR chosen.
+        (
+            "ist-sicak-fdr",
+            |app| {
+                opened(app);
+                window(app, "processing.run.stats.hotSpot", &hot_fdr());
+            },
+            view_end,
+        ),
+        // The blocks' hot and cold spots by permutation and FDR: fewer than by the normal distribution.
+        (
+            "ist-sicak-fdr-cizim",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.hotSpot", &hot_fdr(), true);
+            },
+            view,
+        ),
+        // Yerel Moran's window.
+        (
+            "ist-lisa",
+            |app| {
+                opened(app);
+                window(app, "processing.run.stats.localMoran", &lisa());
+            },
+            view_end,
+        ),
+        // Yerel Moran's run: the experiment profile under the window.
+        (
+            "ist-lisa-profil",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.localMoran", &lisa(), false);
+            },
+            view_end,
+        ),
+        // The blocks' cluster types: Yüksek-Yüksek, Düşük-Düşük and the outliers.
+        (
+            "ist-lisa-cizim",
+            |app| {
+                opened(app);
+                ran(app, "processing.run.stats.localMoran", &lisa(), true);
             },
             view,
         ),

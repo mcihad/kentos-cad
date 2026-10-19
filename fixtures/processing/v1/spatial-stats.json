@@ -76,7 +76,10 @@
      "concept": "band",
      "band": null,
      "neighbors": 8,
-     "standardize": true
+     "standardize": true,
+     "inference": "analytic",
+     "permutations": 999,
+     "seed": 1
     },
     "stats.hotSpot": {
      "input": {
@@ -87,6 +90,10 @@
      "concept": "band",
      "band": null,
      "neighbors": 8,
+     "inference": "analytic",
+     "permutations": 999,
+     "seed": 1,
+     "correction": "none",
      "layer": {
       "newName": "Sıcak noktalar"
      }

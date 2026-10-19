@@ -19,12 +19,12 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 |---|---|---|---|---|---|
 | semantic | 126 | 140 | 40 | 53 | 359 |
 | geometry | 16 | 59 | 0 | 8 | 83 |
-| processing | 0 | 11 | 2 | 140 | 153 |
+| processing | 0 | 11 | 2 | 141 | 154 |
 | none | 0 | 20 | 0 | 6 | 26 |
 | query | 7 | 23 | 2 | 4 | 36 |
 | session | 0 | 82 | 57 | 5 | 144 |
 | host | 0 | 15 | 14 | 4 | 33 |
-| **toplam** | 149 | 350 | 115 | 220 | 834 |
+| **toplam** | 149 | 350 | 115 | 221 | 835 |
 
 Kapsam: `cad` yalnız CAD şeridinde, `gis` yalnız CBS şeridinde, `shared` ikisinde, `none` hiçbir şeritte (kısayol, menü,
 komut satırı).

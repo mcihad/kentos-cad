@@ -2,7 +2,9 @@
 //! values sit among their neighbours. Centres and spreads (`centers`), the
 //! nearest neighbour index (`nearest`), Moran's I and Getis-Ord Gi\*
 //! (`autocorrelation`, over `weights`), DBSCAN and k-means (`clusters`), the
-//! neighbours from a k-d tree (`kdtree`).
+//! neighbours from a k-d tree (`kdtree`); permutation inference, multiple
+//! testing correction and the run's profile (`inference`, docs/adr/0520),
+//! Yerel Moran and Gi\* by conditional permutation (`local`).
 //!
 //! An object's place is its `shape_centroid` (the expressions' `$merkez_y`,
 //! `$merkez_x`); places are worked as differences from the first one. Values
@@ -16,7 +18,9 @@ pub mod autocorrelation;
 mod calls;
 pub mod centers;
 pub mod clusters;
+pub mod inference;
 pub mod kdtree;
+pub mod local;
 pub mod nearest;
 pub mod weights;
 
@@ -67,6 +71,8 @@ pub struct StatsRun {
     pub numbers: Vec<Number>,
     pub objects: Vec<NewObject>,
     pub copies: Vec<ObjectCopy>,
+    /// The reproducible profile of a run with permutations or a correction (docs/adr/0520 §5).
+    pub profile: Option<inference::Profile>,
 }
 
 impl StatsRun {

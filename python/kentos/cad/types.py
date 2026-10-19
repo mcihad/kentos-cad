@@ -307,6 +307,74 @@ ArrangeModeName = Literal["left", "center", "right", "top", "middle", "bottom", 
 """The names of :class:`ArrangeMode`, for a plain string."""
 
 
+class AssetKind(_StrEnum):
+    """What a linked file is.
+
+    - ``xref``: An external reference's source drawing (docs/adr/0348).
+    - ``image``: A linked image.
+    - ``raster``: A linked raster.
+    - ``pointCloud``: A point cloud's file.
+    - ``table``: A linked table's file.
+    - ``attachment``: An object's attachment.
+    - ``source``: A bound layer's source (docs/adr/0503).
+    """
+    XREF = "xref"
+    IMAGE = "image"
+    RASTER = "raster"
+    POINT_CLOUD = "pointCloud"
+    TABLE = "table"
+    ATTACHMENT = "attachment"
+    SOURCE = "source"
+
+
+AssetKindName = Literal["xref", "image", "raster", "pointCloud", "table", "attachment", "source"]
+"""The names of :class:`AssetKind`, for a plain string."""
+
+
+class AssetState(_StrEnum):
+    """A linked file's state.
+
+    - ``ok``: Found, and the same as when read (or nothing kept to compare with).
+    - ``changed``: Found, and its SHA-256 is not the one kept.
+    - ``missing``: Not found.
+    - ``unloaded``: An external reference unloaded: its file is not looked at.
+    - ``remote``: An address.
+    - ``database``: A database's table.
+    """
+    OK = "ok"
+    CHANGED = "changed"
+    MISSING = "missing"
+    UNLOADED = "unloaded"
+    REMOTE = "remote"
+    DATABASE = "database"
+
+
+AssetStateName = Literal["ok", "changed", "missing", "unloaded", "remote", "database"]
+"""The names of :class:`AssetState`, for a plain string."""
+
+
+class AssetVia(_StrEnum):
+    """Where a linked file was found.
+
+    - ``path``: At its path as kept.
+    - ``relative``: At its relative path, from the open drawing's folder.
+    - ``searchPath``: In one of the project's search paths (an external reference only, docs/adr/0349 §1).
+    - ``none``: Nowhere.
+    - ``address``: An address: not looked at.
+    - ``database``: A database's table: not looked at.
+    """
+    PATH = "path"
+    RELATIVE = "relative"
+    SEARCH_PATH = "searchPath"
+    NONE = "none"
+    ADDRESS = "address"
+    DATABASE = "database"
+
+
+AssetViaName = Literal["path", "relative", "searchPath", "none", "address", "database"]
+"""The names of :class:`AssetVia`, for a plain string."""
+
+
 class AttachmentAccept(_StrEnum):
     """What an attachments item counts and adds.
 
@@ -1878,13 +1946,15 @@ class LeftWhy(_StrEnum):
     - ``missing``: The file is not there.
     - ``database``: A database's table: the link stays, the computer that opens the package reaches the database itself.
     - ``address``: An address (http, https): read where the package opens, not copied.
+    - ``substituted``: A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
     """
     MISSING = "missing"
     DATABASE = "database"
     ADDRESS = "address"
+    SUBSTITUTED = "substituted"
 
 
-LeftWhyName = Literal["missing", "database", "address"]
+LeftWhyName = Literal["missing", "database", "address", "substituted"]
 """The names of :class:`LeftWhy`, for a plain string."""
 
 
@@ -2379,15 +2449,19 @@ class PackagedKind(_StrEnum):
     - ``sidecar``: A raster's world file or auxiliary file beside it.
     - ``table``: A linked table's file.
     - ``attachment``: An object's attachment.
+    - ``xref``: An external reference's source drawing (docs/adr/0350 §4).
+    - ``font``: A text style's typeface (left out only: KentOS's own faces come with it).
     """
     SOURCE = "source"
     PICTURE = "picture"
     SIDECAR = "sidecar"
     TABLE = "table"
     ATTACHMENT = "attachment"
+    XREF = "xref"
+    FONT = "font"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 
@@ -4708,6 +4782,27 @@ class HatchRegion(_Union):
         return _variant(_HATCH_REGION, "HatchRegion", "kind", data).from_json(data)
 
 
+class ImagesOperation(_Union):
+    """What `cad.images.edit` does.
+
+    One of:
+
+    - :class:`EmbedImagesOperation` (``kind: embed``)
+    - :class:`RelinkImagesOperation` (``kind: relink``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesOperation:
+        return _variant(_IMAGES_OPERATION, "ImagesOperation", "kind", data).from_json(data)
+
+
 class LeaderEdit(_Union):
     """One edit of `cad.leaders.edit`.
 
@@ -5407,6 +5502,7 @@ class XrefsOperation(_Union):
     - :class:`UnloadXrefsOperation` (``kind: unload``)
     - :class:`RepathXrefsOperation` (``kind: repath``)
     - :class:`DetachXrefsOperation` (``kind: detach``)
+    - :class:`PathsXrefsOperation` (``kind: paths``)
     - :class:`BindXrefsOperation` (``kind: bind``)
     """
     __slots__ = ()
@@ -6424,6 +6520,171 @@ class ArraysEdit(_Model):
             array=data["array"],
             edit=ArrayEdit.from_json(data["edit"]),
             expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssetCounts(_Model):
+    """How many of each state.
+    Attributes:
+        ok: Unit: count.
+        changed: Unit: count.
+        missing: Unit: count.
+        other: Unloaded, remote and database ones. Unit: count.
+    """
+    ok: int
+    changed: int
+    missing: int
+    other: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ok"] = self.ok
+        out["changed"] = self.changed
+        out["missing"] = self.missing
+        out["other"] = self.other
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssetCounts:
+        return cls(
+            ok=data["ok"],
+            changed=data["changed"],
+            missing=data["missing"],
+            other=data["other"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssetStatus(_Model):
+    """One linked file.
+    Attributes:
+        name: What it is called: an external reference's name, else the file's name.
+        path: The path as kept (or the address).
+        block: The block definition it is (an external reference) or in (an object of a block's).
+        current: The file's SHA-256 now, when it is not the one kept.
+        digest: The SHA-256 kept, when one is.
+        found: Where it was found.
+        source: The bound layer's source id (`kaynak-N`).
+        tried: The places looked in, in order, when it was not found.
+        uid: The object it belongs to (an image, raster, point cloud, table or an object with the attachment), by its
+            lasting id.
+    """
+    kind: AssetKind | AssetKindName
+    name: str
+    path: str
+    via: AssetVia | AssetViaName
+    state: AssetState | AssetStateName
+    block: str | None | Unset = UNSET
+    current: str | None | Unset = UNSET
+    digest: str | None | Unset = UNSET
+    found: str | None | Unset = UNSET
+    relative: str | None | Unset = UNSET
+    source: str | None | Unset = UNSET
+    tried: list[str] | Unset = UNSET
+    uid: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["name"] = self.name
+        out["path"] = self.path
+        out["via"] = _enum_out(self.via)
+        out["state"] = _enum_out(self.state)
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.current is not UNSET:
+            out["current"] = self.current
+        if self.digest is not UNSET:
+            out["digest"] = self.digest
+        if self.found is not UNSET:
+            out["found"] = self.found
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
+        if self.source is not UNSET:
+            out["source"] = self.source
+        if self.tried is not UNSET:
+            out["tried"] = list(self.tried)
+        if self.uid is not UNSET:
+            out["uid"] = self.uid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssetStatus:
+        return cls(
+            kind=_enum_in(AssetKind, data["kind"]),
+            name=data["name"],
+            path=data["path"],
+            via=_enum_in(AssetVia, data["via"]),
+            state=_enum_in(AssetState, data["state"]),
+            block=data.get("block", UNSET),
+            current=data.get("current", UNSET),
+            digest=data.get("digest", UNSET),
+            found=data.get("found", UNSET),
+            relative=data.get("relative", UNSET),
+            source=data.get("source", UNSET),
+            tried=list(data["tried"]) if "tried" in data else UNSET,
+            uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssetsCheck(_Model):
+    """Input of `cad.assets.check` v1. No refusals: an unreadable file is `missing`, an unknown kind none listed.
+    Attributes:
+        digests: Whether a file whose SHA-256 is kept is read to compare it (default yes); no: `changed` is never said, a large
+            file is not read.
+        drawing: The open drawing's file, an absolute path: relative paths and search paths are read from its folder. None: a
+            relative path is not looked for.
+        kinds: Only these kinds; none: every kind.
+    """
+    digests: bool | None | Unset = UNSET
+    drawing: str | None | Unset = UNSET
+    kinds: list[AssetKind | AssetKindName] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.digests is not UNSET:
+            out["digests"] = self.digests
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.kinds is not UNSET:
+            out["kinds"] = None if self.kinds is None else [_enum_out(e0) for e0 in self.kinds]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssetsCheck:
+        return cls(
+            digests=data.get("digests", UNSET),
+            drawing=data.get("drawing", UNSET),
+            kinds=UNSET if "kinds" not in data else None if data["kinds"] is None else [_enum_in(AssetKind, e0) for e0 in data["kinds"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AssetsChecked(_Model):
+    """Output of `cad.assets.check` v1.
+    Attributes:
+        assets: External references in the drawing's block order, then the objects' links in the drawing's order (an object's
+            own file, then its attachments), then the blocks' objects' by block, then the bound layers' sources.
+    """
+    assets: list[AssetStatus]
+    counts: AssetCounts
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["assets"] = [e0.to_json() for e0 in self.assets]
+        out["counts"] = self.counts.to_json()
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AssetsChecked:
+        return cls(
+            assets=[AssetStatus.from_json(e0) for e0 in data["assets"]],
+            counts=AssetCounts.from_json(data["counts"]),
+            revision=data["revision"],
         )
 
 
@@ -18589,6 +18850,105 @@ class ImageFields(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ImageSourced(_Model):
+    """An image's new source.
+    Attributes:
+        read: Where the file was read from.
+        width: Unit: px.
+        height: Unit: px.
+        asset: The library's image it now is (embedded).
+        file: The file it now shows (linked), as kept.
+    """
+    uid: str
+    read: str
+    width: int
+    height: int
+    asset: str | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["read"] = self.read
+        out["width"] = self.width
+        out["height"] = self.height
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.file is not UNSET:
+            out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImageSourced:
+        return cls(
+            uid=data["uid"],
+            read=data["read"],
+            width=data["width"],
+            height=data["height"],
+            asset=data.get("asset", UNSET),
+            file=data.get("file", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesEdit(_Model):
+    """Input of `cad.images.edit` v1. Refusals, in this order: `entity_not_found`, `not_an_image`, `layer_locked`,
+    `nothing_to_embed`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `invalid_revision`,
+    `revision_conflict`.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one: relative paths are read from its folder.
+    """
+    operation: ImagesOperation
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesEdit:
+        return cls(
+            operation=ImagesOperation.from_json(data["operation"]),
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImagesEdited(_Model):
+    """Output of `cad.images.edit` v1 (its plan's too: what it would do, nothing written).
+    Attributes:
+        images: The images changed, in the drawing's order.
+        assets: The library's images added (embedding a picture the library has adds none), by id.
+    """
+    images: list[ImageSourced]
+    revision: str
+    assets: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["images"] = [e0.to_json() for e0 in self.images]
+        out["revision"] = self.revision
+        if self.assets is not UNSET:
+            out["assets"] = list(self.assets)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImagesEdited:
+        return cls(
+            images=[ImageSourced.from_json(e0) for e0 in data["images"]],
+            revision=data["revision"],
+            assets=list(data["assets"]) if "assets" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ImpactOwn(_Model):
     """Objects keeping one property of their own.
     Attributes:
@@ -24962,7 +25322,8 @@ class PackageLeft(_Model):
     """A link left as it was.
     Attributes:
         path: The path or address as the project keeps it.
-        at: The object (its lasting id) or bound layer (its id) that keeps it.
+        at: The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
+            (`stil:` and its name) that keeps it.
     """
     kind: PackagedKind | PackagedKindName
     path: str
@@ -27511,14 +27872,19 @@ class ProjectPackaged(_Model):
         path: The folder.
         project: The project file, its bytes and their SHA-256.
         project_bytes: Unit: bytes.
-        bytes: Every byte written: the project file and the copies. Unit: bytes.
+        manifest: The manifest, `paket.json` in the folder, and its SHA-256.
+        bytes: Every byte written: the project file, the manifest and the copies. Unit: bytes.
+        faces: The faces the drawing's texts are drawn in (KentOS's own, which come with it; nothing copied).
     """
     path: str
     project: str
     project_bytes: int
     project_sha256: str
     files: list[PackagedFile]
+    manifest: str
+    manifest_sha256: str
     bytes: int
+    faces: list[DrawingFont | DrawingFontName] | Unset = UNSET
     left: list[PackageLeft] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -27528,7 +27894,11 @@ class ProjectPackaged(_Model):
         out["projectBytes"] = self.project_bytes
         out["projectSha256"] = self.project_sha256
         out["files"] = [e0.to_json() for e0 in self.files]
+        out["manifest"] = self.manifest
+        out["manifestSha256"] = self.manifest_sha256
         out["bytes"] = self.bytes
+        if self.faces is not UNSET:
+            out["faces"] = [_enum_out(e0) for e0 in self.faces]
         if self.left is not UNSET:
             out["left"] = [e0.to_json() for e0 in self.left]
         return out
@@ -27541,7 +27911,10 @@ class ProjectPackaged(_Model):
             project_bytes=data["projectBytes"],
             project_sha256=data["projectSha256"],
             files=[PackagedFile.from_json(e0) for e0 in data["files"]],
+            manifest=data["manifest"],
+            manifest_sha256=data["manifestSha256"],
             bytes=data["bytes"],
+            faces=[_enum_in(DrawingFont, e0) for e0 in data["faces"]] if "faces" in data else UNSET,
             left=[PackageLeft.from_json(e0) for e0 in data["left"]] if "left" in data else UNSET,
         )
 
@@ -27759,6 +28132,8 @@ class ProjectSettings(_Model):
         workspace: The project's type; none while it is not asked (files written before
             types). The former Hibrit mode reads as written and means the same
             (see [`ProjectSettings::project_type`]).
+        xref_paths: The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
+            to the project file's folder with `/` between their parts.
     """
     srid: int
     length_decimals: int
@@ -27797,6 +28172,7 @@ class ProjectSettings(_Model):
     variables: list[ProjectVariable] | Unset = UNSET
     wall_styles: list[WallStyleDef] | Unset = UNSET
     workspace: Workspace | WorkspaceName | None | Unset = UNSET
+    xref_paths: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -27868,6 +28244,8 @@ class ProjectSettings(_Model):
             out["wallStyles"] = [e0.to_json() for e0 in self.wall_styles]
         if self.workspace is not UNSET:
             out["workspace"] = None if self.workspace is None else _enum_out(self.workspace)
+        if self.xref_paths is not UNSET:
+            out["xrefPaths"] = list(self.xref_paths)
         return out
 
     @classmethod
@@ -27910,6 +28288,7 @@ class ProjectSettings(_Model):
             variables=[ProjectVariable.from_json(e0) for e0 in data["variables"]] if "variables" in data else UNSET,
             wall_styles=[WallStyleDef.from_json(e0) for e0 in data["wallStyles"]] if "wallStyles" in data else UNSET,
             workspace=UNSET if "workspace" not in data else None if data["workspace"] is None else _enum_in(Workspace, data["workspace"]),
+            xref_paths=list(data["xrefPaths"]) if "xrefPaths" in data else UNSET,
         )
 
 
@@ -37025,8 +37404,12 @@ class XrefInfo(_Model):
         path: The file as it is found: its own path, else its relative path's.
         inserts: Unit: count.
         objects: Unit: count.
+        via: Where its source was found (docs/adr/0349 §1).
         group: Its layer group's name.
         parent: The reference that brought it, by name.
+        sheets: The sheets whose map frames show its inserts, by name (`affected`).
+        tried: The places looked in, in order, when it was not found.
+        views: The named views whose window meets its inserts, by name (`affected`).
     """
     name: str
     block: str
@@ -37035,9 +37418,13 @@ class XrefInfo(_Model):
     state: XrefState | XrefStateName
     inserts: int
     objects: int
+    via: AssetVia | AssetViaName
     group: str | None | Unset = UNSET
     parent: str | None | Unset = UNSET
     relative: str | None | Unset = UNSET
+    sheets: list[str] | Unset = UNSET
+    tried: list[str] | Unset = UNSET
+    views: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -37048,12 +37435,19 @@ class XrefInfo(_Model):
         out["state"] = _enum_out(self.state)
         out["inserts"] = self.inserts
         out["objects"] = self.objects
+        out["via"] = _enum_out(self.via)
         if self.group is not UNSET:
             out["group"] = self.group
         if self.parent is not UNSET:
             out["parent"] = self.parent
         if self.relative is not UNSET:
             out["relative"] = self.relative
+        if self.sheets is not UNSET:
+            out["sheets"] = list(self.sheets)
+        if self.tried is not UNSET:
+            out["tried"] = list(self.tried)
+        if self.views is not UNSET:
+            out["views"] = list(self.views)
         return out
 
     @classmethod
@@ -37066,9 +37460,13 @@ class XrefInfo(_Model):
             state=_enum_in(XrefState, data["state"]),
             inserts=data["inserts"],
             objects=data["objects"],
+            via=_enum_in(AssetVia, data["via"]),
             group=data.get("group", UNSET),
             parent=data.get("parent", UNSET),
             relative=data.get("relative", UNSET),
+            sheets=list(data["sheets"]) if "sheets" in data else UNSET,
+            tried=list(data["tried"]) if "tried" in data else UNSET,
+            views=list(data["views"]) if "views" in data else UNSET,
         )
 
 
@@ -37171,6 +37569,7 @@ class XrefsEdited(_Model):
         layers: The layers made, by name.
         merged: `bind`: the layers that joined the drawing's own of the same path, by name.
         nested: The references nested in it, by name.
+        paths: `paths`: the project's search paths as kept.
     """
     name: str
     objects: int
@@ -37181,6 +37580,7 @@ class XrefsEdited(_Model):
     layers: list[str] | Unset = UNSET
     merged: list[str] | Unset = UNSET
     nested: list[str] | Unset = UNSET
+    paths: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -37198,6 +37598,8 @@ class XrefsEdited(_Model):
             out["merged"] = list(self.merged)
         if self.nested is not UNSET:
             out["nested"] = list(self.nested)
+        if self.paths is not UNSET:
+            out["paths"] = list(self.paths)
         return out
 
     @classmethod
@@ -37212,6 +37614,7 @@ class XrefsEdited(_Model):
             layers=list(data["layers"]) if "layers" in data else UNSET,
             merged=list(data["merged"]) if "merged" in data else UNSET,
             nested=list(data["nested"]) if "nested" in data else UNSET,
+            paths=list(data["paths"]) if "paths" in data else UNSET,
         )
 
 
@@ -37219,12 +37622,16 @@ class XrefsEdited(_Model):
 class XrefsList(_Model):
     """Input of `cad.xrefs.list` v1 (“Dış başvurular”): read-only.
     Attributes:
+        affected: Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
         drawing: The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.
     """
+    affected: bool | Unset = UNSET
     drawing: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
+        if self.affected is not UNSET:
+            out["affected"] = self.affected
         if self.drawing is not UNSET:
             out["drawing"] = self.drawing
         return out
@@ -37232,6 +37639,7 @@ class XrefsList(_Model):
     @classmethod
     def from_json(cls, data: Mapping[str, Any]) -> XrefsList:
         return cls(
+            affected=data.get("affected", UNSET),
             drawing=data.get("drawing", UNSET),
         )
 
@@ -43124,6 +43532,48 @@ class ObjectsHatchRegion(HatchRegion):
 
 
 @dataclass(kw_only=True, slots=True)
+class EmbedImagesOperation(ImagesOperation):
+    """Göm: the images' files read into the project's library, the images made embedded; none given: every linked
+    image of the drawing.
+    """
+    TAG_VALUE: ClassVar[str] = "embed"
+    uids: list[str] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "embed"}
+        if self.uids is not UNSET:
+            out["uids"] = None if self.uids is None else list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> EmbedImagesOperation:
+        return cls(
+            uids=UNSET if "uids" not in data else None if data["uids"] is None else list(data["uids"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RelinkImagesOperation(ImagesOperation):
+    """Yeniden bağla: the images show `file` (absolute, or relative to the drawing's folder), linked."""
+    TAG_VALUE: ClassVar[str] = "relink"
+    uids: list[str]
+    file: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "relink"}
+        out["uids"] = list(self.uids)
+        out["file"] = self.file
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RelinkImagesOperation:
+        return cls(
+            uids=list(data["uids"]),
+            file=data["file"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class AddArmLeaderEdit(LeaderEdit):
     """Kol ekle: an arm whose tip is `pts[0]` (its bends after it) to the leader's last vertex; `tip` what the tip
     follows.
@@ -47100,6 +47550,24 @@ class DetachXrefsOperation(XrefsOperation):
 
 
 @dataclass(kw_only=True, slots=True)
+class PathsXrefsOperation(XrefsOperation):
+    """The project's search paths (docs/adr/0349 §1), all of them in order: a setting, not an undo step."""
+    TAG_VALUE: ClassVar[str] = "paths"
+    paths: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "paths"}
+        out["paths"] = list(self.paths)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PathsXrefsOperation:
+        return cls(
+            paths=list(data["paths"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class BindXrefsOperation(XrefsOperation):
     """Made an ordinary block, with those it brought."""
     TAG_VALUE: ClassVar[str] = "bind"
@@ -47225,6 +47693,9 @@ _HATCH_ORIGIN: dict[str, type[HatchOrigin]] = {"world": WorldHatchOrigin, "point
 _HATCH_REGION: dict[str, type[HatchRegion]] = {"point": PointHatchRegion, "objects": ObjectsHatchRegion}
 
 
+_IMAGES_OPERATION: dict[str, type[ImagesOperation]] = {"embed": EmbedImagesOperation, "relink": RelinkImagesOperation}
+
+
 _LEADER_EDIT: dict[str, type[LeaderEdit]] = {"addArm": AddArmLeaderEdit, "removeArm": RemoveArmLeaderEdit, "align": AlignLeaderEdit, "collect": CollectLeaderEdit, "content": ContentLeaderEdit, "blocks": BlocksLeaderEdit, "look": LookLeaderEdit, "style": StyleLeaderEdit, "bind": BindLeaderEdit}
 
 
@@ -47309,7 +47780,7 @@ _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameView
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation}
 
 
-_XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "bind": BindXrefsOperation}
+_XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "paths": PathsXrefsOperation, "bind": BindXrefsOperation}
 
 
 __all__ = [
@@ -47410,6 +47881,16 @@ __all__ = [
     "ArrayItem",
     "ArrayLayout",
     "ArraysEdit",
+    "AssetCounts",
+    "AssetKind",
+    "AssetKindName",
+    "AssetState",
+    "AssetStateName",
+    "AssetStatus",
+    "AssetVia",
+    "AssetViaName",
+    "AssetsCheck",
+    "AssetsChecked",
     "AssocArray",
     "AtMeasuredPoint",
     "AttachArchOperation",
@@ -47711,6 +48192,7 @@ __all__ = [
     "EllipseEntityGeometry",
     "EllipseHatchCurve",
     "Ellipsoid",
+    "EmbedImagesOperation",
     "EmptyCell",
     "EmptyInput",
     "EmptyResult",
@@ -47956,6 +48438,10 @@ __all__ = [
     "ImageEntity",
     "ImageEntityGeometry",
     "ImageFields",
+    "ImageSourced",
+    "ImagesEdit",
+    "ImagesEdited",
+    "ImagesOperation",
     "ImpactOwn",
     "ImpactTarget",
     "ImpactTargetName",
@@ -48272,6 +48758,7 @@ __all__ = [
     "PatLineProblem",
     "PathArrayLayout",
     "PathEntity",
+    "PathsXrefsOperation",
     "PatternElement",
     "PatternHatchEdit",
     "PatternLine",
@@ -48441,6 +48928,7 @@ __all__ = [
     "RelationsEdit",
     "RelationsEdited",
     "RelationsOp",
+    "RelinkImagesOperation",
     "RelinkSourcesEditOp",
     "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",

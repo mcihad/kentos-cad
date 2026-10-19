@@ -388,7 +388,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   fotoğrafları ve belgeleri, en az ve en çok), renk öğesi ve katmanın değerlerinden öneri (`suggest`); çok değerli alan
   (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶; çoktan çoğa
   ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
-  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0516 SLD alışverişi (`kentos_formats::sld`, SLD 1.1 / SE 1.1 iki yönde;
+  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0520 permütasyon çıkarımı (`kentos.spatial-inference/1`, katlanmış sözde
+  p, koşullu permütasyon), Gi*'ın FDR ve Bonferroni'si, Yerel Moran `stats.localMoran`, deney profili; 0516 SLD alışverişi (`kentos_formats::sld`, SLD 1.1 / SE 1.1 iki yönde;
   `file.export.sld` ve `file.import.sld`, kayıplar söylenir; Katmanlar'ın sağ tıkında; QGIS 4.2'yle denetlenir); 0515 COG (`kentos_formats::raster::cog`: dizinler başta, küçük katlar
   önce, karolar bayt bayt; bütün raster sonuçları COG, `Sink::finish_cog`; COG olarak kaydet `raster.cog`; başsız raster dosyaları
   `local_files::LocalFiles`, raster araçları Python ve MCP'den); 0514 Shapefile dışa aktarma (`file.export.shp`: arşiv, klasör ya da tek
@@ -720,6 +721,17 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   reload, unload, repath, detach, bind; yeniden yüklemede nesne yerel kimliğini korur, bağlar onunla gider; döngü `xref_cycle`) ve
   salt okunur `cad.xrefs.list` (yüklü, boşaltılmış, bulunamadı, değişti); kayıtta göreli yol; CAD › Ekle › Dış başvuru (Dış başvuru
   ekle, Dış başvurular), açılışta değişen ve bulunamayan söylenir; kurallar `kentos_domain::xref`; Python ve MCP (ADR 0348);
+  bağlı dosyalar ve arama yolları: projenin `xrefPaths`'i (`.kcad` şema 84, `FORMATS_VERSION` 91; `cad.xrefs.edit`'in `paths`'i), kaynak
+  kayıtlı yolda, göreli yolda, sonra arama yollarında aranır, denenen yollar söylenir (`links::find`); salt okunur `cad.assets.check`
+  (dış başvurular, bağlı resim, raster, nokta bulutu, tablo, ek ve kaynaklar: bulunduğu yer, `via`, `ok`/`changed`/`missing`/…,
+  denenenler); `cad.xrefs.list`'in `affected`'i (etkilenen paftalar ve adlı görünümler); masaüstü yüklü dış başvuruların dosyalarına beş
+  saniyede bir bakar, değişen kaynağı çizimin üstünde kartla söyler (Yeniden yükle, Dış başvurular), kendiliğinden yüklemez; Dış
+  başvurular penceresinde Arama yolları ve Diğer bağlı dosyalar (ADR 0349);
+  resim altlığı ve taşınabilir paket: `cad.images.edit` (Göm: bağlı resimlerin dosyası kitaplığa, PNG ve JPEG başlıktan; Yeniden bağla;
+  kilitli katmandakiler sayılarak atlanır), resim ve rasterler arama yollarıyla aranır (`links::find_in`), bulunamayan resim çizimde
+  kesikli çerçeve ve uyarı üçgeniyle, dosyası değişen resim izleyiciyle yeniden okunur (çizim hattında resmin dokusu pikselleri
+  değişince yeniden yapılır); Paketle dış başvuruların kaynaklarını bayt bayt (özetleri tutar) ve `paket.json`'u (`kentos.package/1`:
+  proje, kopyalar, kalanlar, yazı yüzleri; yerine başka yüzle çizilen yazı stili `left`'te) yazar (ADR 0350);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);
@@ -1219,6 +1231,8 @@ python3 scripts/fixtures/overlay_cases.py --check   # bindirmenin doğruluk korp
 /usr/bin/python3 scripts/fixtures/geopackage_cases.py --check   # GeoPackage crate'inin okuduğunu QGIS 4.2.3'ün yazdığı qgis.gpkg'nin GDAL/OGR okuyuşuyla, KentOS'un yazdığı kentos.gpkg ve kentos-export.gpkg'yi OGR, QGIS 4.2 ve GDAL'ın validate_gpkg.py'siyle denetle; yazmak için KENTOS_WRITE_GPKG=1 cargo test -p kentos-geopackage ve -p kentos-headless --test headless geopackage (ADR 0502)
 /usr/bin/python3 scripts/fixtures/gpkg_import_cases.py --check   # file.import.gpkg durumlarını OGR'ın okuduğundan ADR'nin kuralıyla kurulan nesnelerle denetle; --files küçük GeoPackage'ları GDAL'la yeniden yazar (ADR 0502)
 /usr/bin/python3 scripts/fixtures/wide_values_cases.py --check   # bağlı katmanın gidiş-dönüşünü (2⁵³ üstü ve en küçük 64 bitlik tam sayı, 0, false, boş metin ve NULL, dilimli zaman) OGR'ın yazdığı genis.gpkg ile uygulamanın geri yazdığı kentos-genis.gpkg'yi sqlite3'le hücre hücre karşılaştırarak denetle; yazmak için KENTOS_WRITE_GPKG=1 cargo test -p kentos-native-application --test all wide_values (ADR 0512)
+python3 scripts/fixtures/spatial_inference_cases.py --check   # Moran I, Gi* ve Yerel Moran'ın permütasyon, FDR, Bonferroni ve deney profili durumlarını kesirlerle ve kuralın sayı üreteciyle, KentOS kodu olmadan denetle; durumlar fixtures/processing/v1/spatial-inference.json (ADR 0520)
+cargo test --release -p kentos-geometry-core --test all spatial_inference_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktada 999 permütasyonla Moran I, Gi* (FDR) ve Yerel Moran süreleri (ADR 0520 §8)
 python3 scripts/fixtures/sld_cases.py --check; KENTOS_WRITE_SLD=1 cargo test -p kentos-headless --test headless layer_looks   # SLD'den görünüş al'ın 24 ortak durumunu xml.etree'yle yazılmış bağımsız okuyucudan ve KentOS'un yazdığı SLD'leri QGIS 4.2'de denetle; --files QGIS'in SLD'lerini yeniden yazar (ADR 0516)
 KENTOS_WRITE_COG=1 cargo test -p kentos-native-application --test all cog; python3 scripts/fixtures/cog_cases.py --check   # COG olarak kaydet başsız sunucunun dosyalarıyla; betik KentOS'un COG'larını GDAL'ın validate_cloud_optimized_geotiff.py'siyle (hata ve uyarı olmadan) ve numpy'la (0. kat bit bit, önizleme katları ADR 0231 §2'nin kuralıyla) denetler; --files kaynakları GDAL'la yazar (ADR 0515)
 cargo test -p kentos-headless --test headless shapefiles_go_out; python3 scripts/fixtures/shp_export_cases.py --check   # Shapefile dışa aktarmayı uçtan uca, KENTOS_WRITE_SHP=1 çıktıyı fixtures/shapefile/v1/out'a yazar; betik onu KentOS kodu olmadan OGR'la ve QGIS 4.2'nin Python'uyla denetler (adlar, .dbf, halkalar, Z ve M, kirişlerin sapması, .prj'nin EPSG'si, Windows-1254); esri_prj.py --check .prj tablosunu GDAL'la (ADR 0514)

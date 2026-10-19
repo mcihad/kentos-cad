@@ -732,6 +732,7 @@ impl StyledGpu {
                     &self.pictures.sampler,
                 );
                 view.pictures.insert(key.clone(), (texture, bind));
+                view.pictures_rev += 1;
             }
         }
         view.pictures.retain(|k, _| drawn.contains(k));
@@ -1451,6 +1452,9 @@ pub struct ViewStyled {
     lens_view: Option<([f64; 4], f64, f64)>,
     /// Each drawn picture bound with the frame uniform, and with the lens's.
     pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
+    /// Counts the pictures' textures made again (a linked picture read again, docs/adr/0350 §3): in the key, so a kept
+    /// picture is drawn again with them.
+    pictures_rev: u64,
     lens_pictures: HashMap<String, (Arc<wgpu::TextureView>, wgpu::BindGroup)>,
     /// The rasters' quads this frame and their buffer; the raster atlas bound
     /// with the frame uniform and with the lens's (docs/adr/0204 §5).
@@ -1485,6 +1489,7 @@ impl ViewStyled {
             lens: None,
             lens_view: None,
             pictures: HashMap::new(),
+            pictures_rev: 0,
             lens_pictures: HashMap::new(),
             quads: Default::default(),
             quad_buffer: None,
@@ -1504,6 +1509,7 @@ impl ViewStyled {
     pub(crate) fn key(&self, hasher: &mut impl Hasher) {
         self.under.hash(hasher);
         self.order.as_deref().hash(hasher);
+        self.pictures_rev.hash(hasher);
         // The compositions and their masks' labels (docs/adr/0226 §3, §4).
         for (range, c) in &self.compose {
             range.hash(hasher);

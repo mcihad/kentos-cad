@@ -104,6 +104,7 @@ fn drawing(n: usize) -> DocumentSnapshotV2 {
             line_type_scale: None,
             line_types: Vec::new(),
             length_style: None,
+            xref_paths: Vec::new(),
             named_ucs: Vec::new(),
             named_views: Vec::new(),
             forms: Vec::new(),

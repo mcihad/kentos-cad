@@ -3,4 +3,4 @@
 /**
  * Why a link was not packed.
  */
-export type LeftWhy = "missing" | "database" | "address";
+export type LeftWhy = "missing" | "database" | "address" | "substituted";

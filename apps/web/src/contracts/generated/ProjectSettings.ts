@@ -172,4 +172,9 @@ relations?: Array<ProjectRelation>,
  * How lengths are written (docs/adr/0262 §2): none, decimal; the others
  * only in an inch or foot drawing.
  */
-lengthStyle?: LengthStyle, };
+lengthStyle?: LengthStyle, 
+/**
+ * The folders external references' sources are looked for in, in order (docs/adr/0349 §1): absolute, or relative
+ * to the project file's folder with `/` between their parts.
+ */
+xrefPaths?: Array<string>, };

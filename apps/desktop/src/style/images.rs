@@ -261,6 +261,26 @@ impl Images {
             .insert(key, bitmap);
     }
 
+    /// Whether the drawing asked for a linked picture's file.
+    pub fn has_files(&self) -> bool {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .keys()
+            .any(|k| k.starts_with("file:"))
+    }
+
+    /// The linked pictures' files the drawing asked for (`file:` keys, docs/adr/0192 §3), each with whether it
+    /// was read.
+    pub fn files(&self) -> Vec<(String, bool)> {
+        self.bitmaps
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .iter()
+            .filter_map(|(k, b)| Some((k.strip_prefix("file:")?.to_owned(), b.is_some())))
+            .collect()
+    }
+
     /// Hands in the pictures a layer's build made (heat maps, docs/adr/0213 §2.6), each once.
     pub fn put_made(&self, layer: &kentos_native_style::batches::StyledLayer) {
         for p in &layer.pictures {

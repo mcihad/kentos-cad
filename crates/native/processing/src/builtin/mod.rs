@@ -193,6 +193,7 @@ pub fn tools() -> Vec<Tool> {
         stats::tools::nearest_neighbor(),
         stats::tools::morans(),
         stats::tools::hot_spot(),
+        stats::tools::local_moran(),
         stats::tools::dbscan_tool(),
         stats::tools::k_means_tool(),
         // Uzaktan algılama (docs/adr/0242): both platforms.

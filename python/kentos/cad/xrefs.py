@@ -33,10 +33,11 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
     silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve
     yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu
     siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla
-    birleşir) sıradan bloğa çevirir. Kaynağın attach dış başvuruları iç içe gelir,
-    overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli
-    yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez
-    (nested_xref). Plan yazmadan ne olacağını söyler.
+    birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak
+    yolunda ve göreli yolunda yoksa bu klasörlerde aranır). Kaynağın attach dış
+    başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
+    çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına
+    değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.
     """
     __slots__ = ()
     id = "cad.xrefs.edit"
@@ -68,10 +69,11 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler;
         detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind
         (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir)
-        sıradan bloğa çevirir. Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar
-        gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için.
-        İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne
-        olacağını söyler.
+        sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve
+        göreli yolunda yoksa bu klasörlerde aranır). Kaynağın attach dış başvuruları iç içe
+        gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu:
+        göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez
+        (nested_xref). Plan yazmadan ne olacağını söyler.
 
         Args:
             doc: The drawing it works on.
@@ -165,7 +167,9 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
     listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol
     (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded,
     missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır),
-    onu getiren, yerleştirme ve nesne sayısı, katman grubu.
+    onu getiren, yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path,
+    relative, searchPath, none) ve bulunamadıysa denenen yollar; affected: true her
+    birinin yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.
     """
     __slots__ = ()
     id = "cad.xrefs.list"
@@ -181,6 +185,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         doc: Document,
         /,
         *,
+        affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -189,10 +194,13 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa
         drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok,
         changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren,
-        yerleştirme ve nesne sayısı, katman grubu.
+        yerleştirme ve nesne sayısı, katman grubu, nasıl bulunduğu (path, relative,
+        searchPath, none) ve bulunamadıysa denenen yollar; affected: true her birinin
+        yerleştirmelerini gösteren paftaları ve adlı görünümleri de verir.
 
         Args:
             doc: The drawing it works on.
+            affected: Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
             drawing: The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
@@ -207,6 +215,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
                 nothing was written. Warnings go to :mod:`warnings` as CommandWarning.
         """
         return self.execute_input(doc, XrefsList(
+            affected=affected,
             drawing=drawing,
         ), request_id=request_id, expected=expected)
 
@@ -215,12 +224,14 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         doc: Document,
         /,
         *,
+        affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
     ) -> XrefsListed:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
         """
         return self.plan_input(doc, XrefsList(
+            affected=affected,
             drawing=drawing,
         ))
 
@@ -229,12 +240,14 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         doc: Document,
         /,
         *,
+        affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
         """
         return self.validate_input(doc, XrefsList(
+            affected=affected,
             drawing=drawing,
         ))
 
@@ -243,6 +256,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         doc: Document,
         /,
         *,
+        affected: bool | Unset = UNSET,
         drawing: str | None | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
@@ -254,6 +268,7 @@ class _XrefsList(LocalCommand[XrefsList, XrefsListed, XrefsListed]):
         before (``replayed``) and its journal row (``call``).
         """
         return self.answer_input(doc, XrefsList(
+            affected=affected,
             drawing=drawing,
         ), op=op, request_id=request_id, expected=expected)
 

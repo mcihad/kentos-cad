@@ -117,7 +117,8 @@ fn texture(device: &wgpu::Device, queue: &wgpu::Queue, bitmap: &Bitmap) -> wgpu:
 
 /// The device's pictures: a texture per key, kept while a view draws it.
 pub struct PictureTextures {
-    views: HashMap<String, (Arc<wgpu::TextureView>, bool)>,
+    /// Each picture's texture and the host's pixels it was made from (none: the grey stand-in).
+    views: HashMap<String, (Arc<wgpu::TextureView>, Option<Arc<Bitmap>>)>,
     grey: Option<Arc<wgpu::TextureView>>,
     pub(crate) sampler: wgpu::Sampler,
 }
@@ -148,7 +149,9 @@ impl PictureTextures {
     }
 
     /// The texture of the picture `key`: made on first use from the host's
-    /// pixels; light grey while the host has none (looked for again next frame).
+    /// pixels; light grey while the host has none (looked for again next frame);
+    /// made again when the host hands other pixels (a linked file read again,
+    /// docs/adr/0350 §3).
     pub fn view(
         &mut self,
         device: &wgpu::Device,
@@ -156,15 +159,16 @@ impl PictureTextures {
         key: &str,
         images: &dyn ImageSource,
     ) -> Arc<wgpu::TextureView> {
-        if let Some((view, real)) = self.views.get(key)
-            && *real
+        let now = images.bitmap(key);
+        if let Some((view, Some(made))) = self.views.get(key)
+            && now.as_ref().is_some_and(|b| Arc::ptr_eq(b, made))
         {
             return view.clone();
         }
-        match images.bitmap(key) {
+        match now {
             Some(bitmap) if bitmap.width > 0 && bitmap.height > 0 => {
                 let view = Arc::new(texture(device, queue, &bitmap));
-                self.views.insert(key.to_owned(), (view.clone(), true));
+                self.views.insert(key.to_owned(), (view.clone(), Some(bitmap)));
                 view
             }
             _ => {
@@ -182,7 +186,7 @@ impl PictureTextures {
                         ))
                     })
                     .clone();
-                self.views.insert(key.to_owned(), (grey.clone(), false));
+                self.views.insert(key.to_owned(), (grey.clone(), None));
                 grey
             }
         }

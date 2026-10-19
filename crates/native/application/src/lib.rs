@@ -201,6 +201,9 @@ pub mod spaces_finish;
 pub mod sheets_set;
 pub mod xrefs;
 mod xrefs_bind;
+pub mod links;
+pub mod assets_check;
+pub mod images_edit;
 pub mod templates_apply;
 pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
@@ -530,6 +533,16 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_XREFS_LIST,
         kentos_contracts::CAD_XREFS_LIST_VERSION,
+    ),
+    // Bağlı dosyaların durumu ([`assets_check`], docs/adr/0349 §2).
+    (
+        kentos_contracts::CAD_ASSETS_CHECK,
+        kentos_contracts::CAD_ASSETS_CHECK_VERSION,
+    ),
+    // Resmin kaynağı ([`images_edit`], docs/adr/0350 §1).
+    (
+        kentos_contracts::CAD_IMAGES_EDIT,
+        kentos_contracts::CAD_IMAGES_EDIT_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

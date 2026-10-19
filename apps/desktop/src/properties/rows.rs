@@ -1898,23 +1898,34 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let (source, linked) = match (&i.asset, &i.file) {
                 (Some(a), _) => (crate::pictures::asset_words(&doc.model, a), false),
                 (None, Some(path)) => {
-                    (crate::pictures::file_words(path, doc.path.as_deref()), true)
+                    let search = &doc.model.settings().xref_paths;
+                    (crate::pictures::file_words(path, doc.path.as_deref(), search), true)
                 }
                 _ => ("—".to_owned(), false),
             };
-            let embed = (linked && !locked).then(|| Editor::Select {
+            // Göm and Yeniden bağla… (docs/adr/0350 §1), both by `cad.images.edit`.
+            let pick = |label: &str, message: Message| Choice::Pick {
+                label: label.to_owned(),
+                swatch: None,
+                icon: None,
+                wide: false,
+                chosen: false,
+                enabled: true,
+                message,
+            };
+            let mut choices = Vec::new();
+            if linked {
+                choices.push(pick("Göm", Message::Properties(Event::EmbedImage(slot))));
+            }
+            choices.push(pick(
+                "Yeniden bağla…",
+                Message::Xrefs(crate::xrefs_window::Event::RelinkImage(slot)),
+            ));
+            let embed = (!locked).then(|| Editor::Select {
                 text: source.clone(),
                 swatch: None,
                 icon: None,
-                items: vec![Choice::Pick {
-                    label: "Göm".to_owned(),
-                    swatch: None,
-                    icon: None,
-                    wide: false,
-                    chosen: false,
-                    enabled: true,
-                    message: Message::Properties(Event::EmbedImage(slot)),
-                }],
+                items: choices,
             });
             let yes_no = |m: bool| if m { "Evet" } else { "Hayır" };
             geo.extend([

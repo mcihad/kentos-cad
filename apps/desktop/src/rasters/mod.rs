@@ -123,7 +123,7 @@ pub fn embed(model: &mut Model, slot: Slot, folder: Option<&Path>) -> Vec<String
     let Some(file) = r.raster.file.clone() else {
         return Vec::new();
     };
-    let path = crate::pictures::resolve(&file, folder);
+    let path = crate::pictures::locate(&file, folder, &model.settings().xref_paths);
     let name = path
         .file_name()
         .map_or_else(|| file.clone(), |n| n.to_string_lossy().into_owned());
@@ -172,7 +172,7 @@ pub fn part_of(r: &RasterFields) -> Option<kentos_formats::multidim::cube::Part>
 pub fn origin_of(key: &str, model: &Model, folder: Option<&Path>) -> Option<tiles::Origin> {
     let (key, _) = split_key(key);
     if let Some(file) = key.strip_prefix("file:") {
-        Some(tiles::Origin::File(crate::pictures::resolve(file, folder)))
+        Some(tiles::Origin::File(crate::pictures::locate(file, folder, &model.settings().xref_paths)))
     } else if let Some(id) = key.strip_prefix("asset:") {
         asset_bytes(model, id).map(|b| tiles::Origin::Bytes(Arc::new(b)))
     } else {

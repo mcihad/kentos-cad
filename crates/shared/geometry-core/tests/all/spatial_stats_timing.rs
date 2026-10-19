@@ -129,3 +129,45 @@ fn spatial_stats_timing() {
     });
     println!("  {}", r.summary);
 }
+
+/// The budgets of docs/adr/0520 §8: the same 100 000 points with 999 permutations (Moran I's global ones, Gi\* and
+/// Yerel Moran's conditional ones, FDR).
+///
+/// ```text
+/// cargo test --release -p kentos-geometry-core --test all spatial_inference_timing -- --ignored --nocapture --test-threads=1
+/// ```
+#[test]
+#[ignore = "timing, release build"]
+fn spatial_inference_timing() {
+    use kentos_geometry_core::ops::spatial_stats::autocorrelation::morans_i_with;
+    use kentos_geometry_core::ops::spatial_stats::inference::{Correction, Inference};
+    use kentos_geometry_core::ops::spatial_stats::local::{hot_spots_with, local_morans};
+    let (shapes, values) = scene(100_000);
+    let band = (10.0 / (std::f64::consts::PI * 1e-3)).sqrt();
+    let hood = Neighbourhood {
+        concept: Concept::Band,
+        band: Some(band),
+        k: 8,
+    };
+    let permuted = Inference {
+        permutations: 999,
+        seed: 1,
+        correction: Correction::None,
+    };
+    let fdr = Inference {
+        correction: Correction::Fdr,
+        ..permuted
+    };
+    let r = time("Moran I, 999 permütasyon", 3.0, || {
+        morans_i_with(&shapes, &values, "Değer", hood, true, permuted).expect("ran")
+    });
+    println!("  {}", r.summary);
+    let r = time("Sıcak nokta, 999 koşullu permütasyon, FDR", 3.0, || {
+        hot_spots_with(&shapes, &values, "Değer", hood, fdr).expect("ran")
+    });
+    println!("  {}", r.summary);
+    let r = time("Yerel Moran, 999 koşullu permütasyon, FDR", 3.0, || {
+        local_morans(&shapes, &values, "Değer", hood, true, fdr, 0.05).expect("ran")
+    });
+    println!("  {}", r.summary);
+}

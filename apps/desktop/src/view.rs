@@ -728,6 +728,7 @@ impl App {
                     found: self.address_mark_label().or_else(|| self.data_mark_label()),
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
+                    missing: self.missing_pictures(),
                     bonds: self.bond_marks(),
                     constraints: self.constraint_marks(),
                     constraint_pointer: self.constraint_view.pointer,
@@ -834,6 +835,8 @@ impl App {
                         .extend(self.hover_card_view())
                         // Bilgi's card beside the object clicked (info_card.rs, docs/adr/0225 §5).
                         .extend(self.info_card_view())
+                        // A changed external reference's card (xrefs_watch.rs, docs/adr/0349 §3).
+                        .extend(self.xref_notice_view())
                         // Sıradakini seç's chip beside the click (selection_chip.rs, docs/adr/0187 §1).
                         .extend(self.selection_chip())
                         .extend(typing)
@@ -889,6 +892,7 @@ impl App {
                 .topology_problem()
                 .or_else(|| self.networks.mark.clone()),
             broken: self.broken_marks(),
+            missing: self.missing_pictures(),
             bonds: self.bond_marks(),
             constraints: self.constraint_marks(),
             constraint_pointer: self.constraint_view.pointer,

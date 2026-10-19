@@ -36,4 +36,8 @@ removed: number,
 /**
  * `bind`: the layers that joined the drawing's own of the same path, by name.
  */
-merged?: Array<string>, revision: string, };
+merged?: Array<string>, 
+/**
+ * `paths`: the project's search paths as kept.
+ */
+paths?: Array<string>, revision: string, };

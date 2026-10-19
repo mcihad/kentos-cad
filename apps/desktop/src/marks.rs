@@ -96,6 +96,8 @@ pub struct Marks {
     pub problem: Option<crate::topology::ProblemMark>,
     /// The points of associative dimensions whose reference broke (docs/adr/0249 §3).
     pub broken: Vec<Vec2>,
+    /// The frames of linked pictures whose file is not read (docs/adr/0350 §3), corners in order.
+    pub missing: Vec<[Vec2; 4]>,
     /// What the selected associative dimensions are bound to (docs/adr/0320 §4).
     pub bonds: Vec<kentos_interaction::dimension_bonds::Bond>,
     /// The constraints' marks (constraint_view.rs, docs/adr/0338 §1).
@@ -205,6 +207,7 @@ impl Marks {
             && self.found.is_none()
             && self.problem.is_none()
             && self.broken.is_empty()
+            && self.missing.is_empty()
             && self.bonds.is_empty()
             && self.constraints.is_none()
             && self.tracking.is_none()
@@ -250,6 +253,7 @@ impl<Message> canvas::Program<Message> for Marks {
         if let Some((p, words)) = &self.found {
             found(&mut frame, *p, words, &self.camera, &self.colors, accent);
         }
+        missing(&mut frame, &self.missing, &self.camera, &self.colors, Tokens::of(theme).danger);
         broken(
             &mut frame,
             &self.broken,
@@ -805,6 +809,56 @@ fn broken(
         let tick = Path::circle(Point::new(x, y), 2.5);
         frame.fill(&tick, danger);
     }
+}
+
+/// A linked picture whose file is not read (docs/adr/0350 §3): its frame dashed in the danger colour with its
+/// diagonals, on a halo, and the warning triangle at its middle; only those in the view.
+fn missing(
+    frame: &mut canvas::Frame,
+    frames: &[[Vec2; 4]],
+    camera: &Camera,
+    colors: &MarkColors,
+    danger: iced::Color,
+) {
+    let size = frame.size();
+    let mut middles = Vec::new();
+    for f in frames {
+        let at: Vec<Point> = f
+            .iter()
+            .map(|p| {
+                let [x, y] = camera.world_to_screen(*p);
+                Point::new(x as f32, y as f32)
+            })
+            .collect();
+        let (lo_x, hi_x) = at.iter().fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.x), b.max(p.x)));
+        let (lo_y, hi_y) = at.iter().fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(p.y), b.max(p.y)));
+        if hi_x < 0.0 || hi_y < 0.0 || lo_x > size.width || lo_y > size.height {
+            continue;
+        }
+        let path = Path::new(|b| {
+            b.move_to(at[0]);
+            for p in &at[1..] {
+                b.line_to(*p);
+            }
+            b.close();
+            b.move_to(at[0]);
+            b.line_to(at[2]);
+            b.move_to(at[1]);
+            b.line_to(at[3]);
+        });
+        frame.stroke(&path, Stroke::default().with_color(colors.halo).with_width(3.0));
+        frame.stroke(
+            &path,
+            Stroke {
+                line_dash: canvas::LineDash { segments: &[6.0, 4.0], offset: 0 },
+                ..Stroke::default().with_color(danger).with_width(1.25)
+            },
+        );
+        let (mx, my) = (f.iter().map(|p| p.x).sum::<f64>() / 4.0, f.iter().map(|p| p.y).sum::<f64>() / 4.0);
+        middles.push(Vec2::new(mx, my));
+    }
+    // The triangle's tip a little above the middle, so it stands over it.
+    broken(frame, &middles, camera, colors, danger);
 }
 
 /// The web's `drawCrosshair`: the drawing's ink at 85 %, 1 px on the

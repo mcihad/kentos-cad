@@ -330,6 +330,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-25 — Mevcut istatistiklere permutation/FDR ve tekrarlanabilir deney profili ekle — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0520](../docs/adr/0520-permutation-and-fdr.md)): Moran I, Gi* ve yeni Yerel Moran'da tohumlu permütasyon, FDR ve Bonferroni, deney profili ve alt küme etiketi masaüstünde. Kalan: DBSCAN ve k-ortalamaların kararlılık sınaması, En yakın komşu'nun permütasyonu, PySAL/esda ile çapraz sınama.*
+
   **Mevcut:** Moran's I, Getis-Ord Gi*, en yakın komşu, merkez/dağılım, DBSCAN/k-means ve k-d tree kaynakta var [K09]. Bu çekirdeklerin bulunması bütün istatistiksel geçerlilik seçeneklerinin tamamlandığını göstermez.
 
   **Yapılacak kalan iş:** Mevcut Moran I, Gi*, DBSCAN/k-means ve ağırlık matrisi araçlarını yeniden açma. Mevcut analitik p-değerine ek olarak permutation testi, seed kaydı ve çoklu test/FDR düzeltmesi ekle; gerekirse yerel Moran ayrı destek profili olsun. Yeni seçeneklerin sparse komşuluk/bellek sınırı ve sıfır komşu davranışı tanımlansın. Kaynak adapter'ı centroid/mesafe/CRS ve tam veri kapsamını korusun. Heatmap ile istatistiksel hot spot farkı, yeni test profili ve belirsizlik çıktısında açıklansın. [A04]

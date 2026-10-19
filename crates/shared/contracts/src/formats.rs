@@ -210,7 +210,8 @@ use crate::layer::LineType;
 /// 89 (docs/adr/0346): the settings' `arch.phaseView`: `.kcad` document schema 82. The web's copy stays 53.
 /// 90 (docs/adr/0348): a block definition's `xref` (an external reference's source): `.kcad` document schema 83; not in
 ///    the typed columns (definitions are not). The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 90;
+/// 91 (docs/adr/0349 §1): the settings' `xrefPaths`: `.kcad` document schema 84. The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 91;
 
 // ── Every import ────────────────────────────────────────────────────────
 

@@ -165,6 +165,8 @@ pub enum XrefsOperation {
     Repath { name: String, path: String },
     /// Its definition, those it brought, its inserts and its emptied layer group removed.
     Detach { name: String },
+    /// The project's search paths (docs/adr/0349 §1), all of them in order: a setting, not an undo step.
+    Paths { paths: Vec<String> },
     /// Made an ordinary block, with those it brought.
     Bind {
         name: String,
@@ -228,6 +230,9 @@ pub struct XrefsEdited {
     /// `bind`: the layers that joined the drawing's own of the same path, by name.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub merged: Vec<String>,
+    /// `paths`: the project's search paths as kept.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub paths: Vec<String>,
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,
 }
@@ -243,6 +248,10 @@ pub struct XrefsList {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub drawing: Option<String>,
+    /// Whether to say each reference's sheets and named views its inserts show (docs/adr/0349 §3).
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub affected: bool,
 }
 
 /// A reference's state.
@@ -290,6 +299,17 @@ pub struct XrefInfo {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub group: Option<String>,
+    /// Where its source was found (docs/adr/0349 §1).
+    pub via: crate::AssetVia,
+    /// The places looked in, in order, when it was not found.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tried: Vec<String>,
+    /// The sheets whose map frames show its inserts, by name (`affected`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub sheets: Vec<String>,
+    /// The named views whose window meets its inserts, by name (`affected`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub views: Vec<String>,
 }
 
 /// Output of `cad.xrefs.list` v1.

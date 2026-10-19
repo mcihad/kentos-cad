@@ -362,6 +362,7 @@ impl<'d> Encoder<'d> {
     fn settings(&mut self, s: &'d ProjectSettings) -> Result<(), KcadError> {
         let n = 6
             + usize::from(s.workspace.is_some())
+            + usize::from(!s.xref_paths.is_empty())
             + usize::from(s.drawing_font.is_some())
             + usize::from(s.drawing_unit.is_some())
             + usize::from(s.length_style.is_some())
@@ -503,6 +504,23 @@ impl<'d> Encoder<'d> {
         if let Some(w) = s.workspace {
             self.key("workspace");
             self.w.text(workspace(w));
+        }
+        // Schema 84 (docs/adr/0349 §1): the external references' search paths, as kept.
+        if !s.xref_paths.is_empty() {
+            self.key("xrefPaths");
+            self.at(Seg::Name("xrefPaths"), |e| {
+                if kentos_contracts::sanitized_xref_paths(s.xref_paths.clone()) != s.xref_paths {
+                    return Err(e.fail(
+                        Code::BadValue,
+                        "arama yolları kırpılmış, boş olmayan ve yinelenmeyen en çok 64 yol olmalı",
+                    ));
+                }
+                e.w.array(s.xref_paths.len());
+                for p in &s.xref_paths {
+                    e.text(p)?;
+                }
+                Ok(())
+            })?;
         }
         if let Some(a) = s.annotation.as_ref().filter(|_| has_heights(s)) {
             self.key("annotation");
@@ -1685,6 +1703,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         nodes
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
+    }
+    // Schema 84 (docs/adr/0349 §1): the external references' search paths.
+    if !doc.settings.xref_paths.is_empty() {
+        return crate::SCHEMA_WITH_XREF_PATHS;
     }
     // Schema 83 (docs/adr/0348 §1): an external reference.
     if doc.blocks.iter().any(|b| b.xref.is_some()) {

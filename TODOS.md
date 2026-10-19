@@ -203,6 +203,9 @@ Liste:
 - [ ] `CBS-04` PostGIS bağlı katmanı (ADR 0505, 17 Ekim): web'de gerekenler: tarayıcı PostgreSQL'e bağlanamaz; `kentosd`
   üzerinden sağlayıcı (yetki ve kimlik kararı), PostGIS'e bağlan penceresi, `invalid_address` ve `source_unreachable`
   iletileri; TS türleri üretildi.
+- [ ] `CBS-25` (ADR 0520, 19 Ekim): web'in Moran I ve Sıcak nokta araçlarına Çıkarım, Permütasyon sayısı, Tohum, Çoklu test
+  düzeltmesi; Yerel Moran aracı (çekirdek çağrıları `statsMoranWith`, `statsHotSpotsWith`, `statsLocalMoran`); deney profili tablosu
+  ve `experiment`; Analiz panelinde Yerel Moran; WASM süreleri.
 - [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
@@ -444,6 +447,13 @@ Liste:
   ikizi ya da WASM bağlayıcısıyla; dosya yolu yerine tarayıcıda dosya tutamacı ya da proje varlığı), Ekle › Dış başvuru paneli
   (Dış başvuru ekle penceresi, Dış başvurular penceresi, ikonları `xrefAttach`, `xrefManager`), açılışta değişen ve bulunamayan
   dış başvurunun uyarısı; bilinen bozulmalar: şema 83 ve `FORMATS_VERSION` 90.
+- [ ] `CAD-REF-08`, `09`, `19` bağlı dosyalar ve arama yolları (ADR 0349, 19 Ekim): web'de gerekenler: `cad.assets.check` ve
+  `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
+  proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
+  bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
+- [ ] `CAD-REF-16`, `20` resim altlığı ve taşınabilir paket (ADR 0350, 19 Ekim): web'de gerekenler: `cad.images.edit` (`product/`;
+  tarayıcıda dosya tutamacıyla), Öznitelikler'in Kaynak satırında Göm ve Yeniden bağla…, resim ve rasterlerde arama yolları,
+  bulunamayan resmin işareti, dosyası değişen resmin yeniden okunması; Paketle web'de yok (masaüstü ve başsız sunucu).
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`
@@ -1940,6 +1950,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Katmanlar'ın sağ tıkında; Python ve MCP; 24 ortak durum `sld_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin SLD'leri ve
   KentOS'unkiler QGIS'te. Kalan: QML, MapLibre, etiketler, tematik işleyiciler, alan kimliklerine bağ. — **19 Ekim,
   [ADR 0516](docs/adr/0516-sld-style-exchange.md).**
+- [x] `CBS-25` permütasyon/FDR ve deney profili: Moran I ve Gi*'a tohumlu permütasyon (`kentos.spatial-inference/1`: SplitMix64 +
+  xoshiro256**, katlanmış sözde p, yerelde koşullu permütasyon), Gi*'a FDR (Benjamini–Hochberg) ve Bonferroni, yeni Yerel Moran
+  (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);
+  alt küme ve alan sınırlı kaynak söylenir; bağımsız başvuru `spatial_inference_cases.py`, 13 ortak durum. — **19 Ekim,
+  [ADR 0520](docs/adr/0520-permutation-and-fdr.md).**
 
 ## 17. Arazi, yol ve altyapı projeleri — P2/P3
 
