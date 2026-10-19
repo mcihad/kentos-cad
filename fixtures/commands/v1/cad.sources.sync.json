@@ -4662,6 +4662,1291 @@
      "command": "cad.sources.sync"
     }
    ]
+  },
+  {
+   "name": "alanın dışındaki komşular izlenmeden yazılırsa yalnız değişen nesne yazılacak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487011.5,
+        "y": 4420004.5
+       },
+       "max": {
+        "x": 487012.5,
+        "y": 4420005.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "strict: ortak köşesi taşınan alanın dışındaki iki komşu da yazılacak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487011.5,
+        "y": 4420004.5
+       },
+       "max": {
+        "x": 487012.5,
+        "y": 4420005.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "strict"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current",
+       "followed": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "loose: ortak köşesi taşınan alanın dışındaki iki komşu da yazılacak",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487011.5,
+        "y": 4420004.5
+       },
+       "max": {
+        "x": 487012.5,
+        "y": 4420005.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "loose"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current",
+       "followed": 2
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "loose: köşe silinince geçersiz kalacak üçgen olduğu gibi kalır, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+      "action": "remove",
+      "place": {
+       "kind": "vertex",
+       "part": 0,
+       "ring": 0,
+       "index": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.vertex"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "loose"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current",
+       "followed": 1,
+       "left": 1
+      },
+      "warnings": [
+       {
+        "code": "neighbours_left",
+        "message": "Alanın dışındaki 1 komşu kayıt ortak köşeyi izleyince geçersiz kalacağı için olduğu gibi kaldı.",
+        "path": "topology"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "strict: köşe silinince geçersiz kalacak komşu varsa hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uid": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+      "action": "remove",
+      "place": {
+       "kind": "vertex",
+       "part": 0,
+       "ring": 0,
+       "index": 2
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.vertex"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "strict"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "outside_neighbour_invalid",
+       "message": "Alanın dışındaki 1 komşu kayıt ortak köşeyi izleyince geçersiz kalırdı; hiçbir şey yazılmadı. Alanı genişletip komşuları da çalışma kopyasına alın ya da gevşek kipte (loose) yazın.",
+       "path": "topology"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "strict: hiçbir şey değişmediyse izlenen komşu da yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "strict"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 0,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "okumada komşuların izlenmesi istenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel",
+       "extent": [
+        486990.0,
+        4419990.0,
+        487009.0,
+        4420030.0
+       ]
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "extent": [
+         486990.0,
+         4419990.0,
+         487009.0,
+         4420030.0
+        ],
+        "writable": true
+       },
+       "objects": 1,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "extent": [
+          486990.0,
+          4419990.0,
+          487009.0,
+          4420030.0
+         ],
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "read",
+      "topology": "strict"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "topology_on_read",
+       "message": "Komşuların izlenmesi (topology) yalnız yazarken olur; okumada tablonun satırları olduğu gibi gelir.",
+       "path": "topology"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
+  },
+  {
+   "name": "bütün tablo bağlıyken alanın dışında komşu yoktur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:geopackage/v1/komsu.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "link": {
+        "id": "kaynak-1",
+        "kind": "geopackage",
+        "path": "$fixture:geopackage/v1/komsu.gpkg",
+        "table": "parsel",
+        "layer": "import-parsel",
+        "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+        "digest": "$any",
+        "srid": 5256,
+        "writable": true
+       },
+       "objects": 3,
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "A"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "B"
+        },
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ad": "C"
+        },
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487012.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "settings": {
+       "sources": [
+        {
+         "id": "kaynak-1",
+         "kind": "geopackage",
+         "path": "$fixture:geopackage/v1/komsu.gpkg",
+         "table": "parsel",
+         "layer": "import-parsel",
+         "revision": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+         "digest": "$any",
+         "srid": 5256,
+         "writable": true
+        }
+       ]
+      }
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "window": {
+       "min": {
+        "x": 487011.5,
+        "y": 4420004.5
+       },
+       "max": {
+        "x": 487012.5,
+        "y": 4420005.5
+       }
+      },
+      "dx": 1,
+      "dy": 0,
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.stretch"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "direction": "write",
+      "topology": "strict"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "added": 0,
+       "modified": 1,
+       "removed": 0,
+       "source": "f23f4339773552ef8869982525496229d9ead6a7d2eebbe988d039867615d924",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "command": "cad.sources.sync"
+    }
+   ]
   }
  ]
 }

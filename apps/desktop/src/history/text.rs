@@ -11,7 +11,7 @@ const INPUT_WIDTH: usize = 240;
 
 /// The product commands' Turkish titles, the catalog's (`commandCatalog.json`;
 /// a test holds them to it).
-pub(crate) const TITLES: [(&str, &str); 176] = [
+pub(crate) const TITLES: [(&str, &str); 179] = [
     ("cad.polygon.create", "Kapalı alan oluştur"),
     ("cad.line.create", "Çizgi oluştur"),
     ("cad.polyline.create", "Çoklu çizgi oluştur"),
@@ -62,6 +62,8 @@ pub(crate) const TITLES: [(&str, &str); 176] = [
     ("cad.xrefs.list", "Dış başvurular"),
     ("cad.rasters.georef", "Raster oturt"),
     ("cad.rasters.mosaic", "Sanal mozaik"),
+    ("cad.stac.search", "STAC'ta ara"),
+    ("cad.stac.prepare", "STAC verisini hazırla"),
     ("cad.images.edit", "Resmin kaynağı"),
     ("cad.inserts.clip", "Kırp"),
     ("cad.assets.check", "Bağlı dosyalar"),
@@ -156,11 +158,13 @@ pub(crate) const TITLES: [(&str, &str); 176] = [
     ("cad.joins.query", "Birleşik görünümü oku"),
     ("cad.forms.fill", "Formla toplu yaz"),
     ("cad.units.change", "Birimi değiştir"),
+    ("cad.gis.derivation", "GIS türevini denetle"),
     ("cad.sources.describe", "Kaynakları tanı"),
     ("cad.sources.edit", "Kaynağa bağla"),
     ("cad.fields.write", "Alanlara toplu yaz"),
     ("cad.processing.tools", "İşlem araçları"),
     ("cad.processing.run", "İşlem aracını çalıştır"),
+    ("cad.processing.batch", "İşlem aracını toplu çalıştır"),
     ("cad.sources.sync", "Kaynakla eşitle"),
     ("file.import.pdf", "PDF içe aktar"),
     ("file.import.gpkg", "GeoPackage içe aktar"),
@@ -183,6 +187,7 @@ pub(crate) const TITLES: [(&str, &str); 176] = [
     ("file.export.csv", "CSV dışa aktar"),
     ("file.export.atlas", "Atlası PDF yap"),
     ("file.import.csv", "CSV içe aktar"),
+    ("file.export.gis", "GIS türevi dışa aktar"),
     ("file.export.sld", "Görünüşü SLD olarak dışa aktar"),
     ("file.import.sld", "SLD'den görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),

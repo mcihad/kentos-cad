@@ -2942,6 +2942,83 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_STAC_SEARCH.into(),
+            version: crate::CAD_STAC_SEARCH_VERSION,
+            title: "STAC'ta ara".into(),
+            summary: "Bir STAC API'sinde (endpoint: kökü, örneğin https://earth-search.aws.element84.com/v1) alanı ve zamanı kaplayan görüntü öğelerini arar; çizimi değiştirmez. bbox [batı, güney, doğu, kuzey] derece (WGS 84), datetime RFC 3339 an ya da aralık (başlangıç/bitiş, açık uç ..; 2024-07-01 gibi bir gün kendi günüdür), collections koleksiyonlar, ids öğe kimlikleri, maxCloudCover en çok bulut yüzdesi (eo:cloud_cover; sunucudan istenir ve gelende yeniden denetlenir, bulut oranı olmayan öğe kalır), limit sayfa boyu (1–100, varsayılan 10). \
+                      Cevap: gönderilen istek (request: POST /search, gövde anahtarları alfabetik), öğeler (kataloğun adresi, koleksiyon, kimlik, çekim zamanı, kutu, bulut oranı, platform, gsd, EPSG, lisans ve varlıkları: anahtar, imzasız adres, roller, bantlar, rasterın veri türü, nodata, ölçek ve öteleme, proj:shape ve proj:transform), sunucunun gönderdiği sayı (returned), süzülenler (dropped), toplam (matched) ve sonraki sayfa (next: sunucunun next bağlantısı; verilirse o sayfa alınır, adresi uç noktanın sunucusunda olmalı). \
+                      Bir varlığın kalıcı kimliği kataloğun adresi + koleksiyon + öğe + varlık anahtarıdır; imzalı (geçici) adresin sorgusu hiçbir yerde gösterilmez ya da yazılmaz (signed: true). Ağ ev sahibinindir: masaüstü ve MCP ağa gider; ağı olmayan ev sahibi stac_unavailable der."
+                .into(),
+            aliases: vec!["stac".into(), "stacara".into(), "uydugoruntusu".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StacSearch>(),
+            output: schema::<crate::StacSearched>(),
+            plan: Some(schema::<crate::StacSearched>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Sentinel-2 L2A'da bir alan için temmuzdaki en çok %20 bulutlu görüntüler".into(),
+                    input: json!({
+                        "endpoint": "https://earth-search.aws.element84.com/v1",
+                        "bbox": [36.9, 39.7, 37.1, 39.8],
+                        "datetime": "2024-07-01/2024-07-20",
+                        "collections": ["sentinel-2-l2a"],
+                        "maxCloudCover": 20,
+                        "limit": 2
+                    }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Aynı aramanın sonraki sayfası".into(),
+                    input: json!({
+                        "endpoint": "https://earth-search.aws.element84.com/v1",
+                        "collections": ["sentinel-2-l2a"],
+                        "maxCloudCover": 20,
+                        "next": { "method": "POST", "href": "https://earth-search.aws.element84.com/v1/search", "body": { "next": "2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a" }, "merge": true }
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_STAC_PREPARE.into(),
+            version: crate::CAD_STAC_PREPARE_VERSION,
+            title: "STAC verisini hazırla".into(),
+            summary: "Aramanın döndürdüğü bir öğenin (item) seçilen varlıklarını (assets: red, nir, swir16 …; her biri tek bantlı COG) çizime adresleriyle bağlı raster olarak ekler: tek yeni grup (group; yoksa “STAC: öğenin kimliği”) ve her varlık için anahtarının adını taşıyan bir katman; tek geri alma adımı “STAC verisini hazırla”. Raster ızgarasını katalogdan alır (proj:shape, proj:transform, proj:epsg; varlıkta ya da öğede) ve dosya açılmaz; sistemi projeninkinden başkaysa crs_mismatch (dönüşüm yok). nodata ve veri türü kataloğundur. \
+                      qa kalite bandıdır (asset + isteğe bağlı mask: values ya da bits; verilmezse platformun kuralı: Sentinel-2 scl sınıfları 0, 1, 3, 8, 9, 10; Landsat qa_pixel bitleri 0–4): ayrıca eklenir ve veri bantlarından değildir; maske bu komutta uygulanmaz, kaydedilir. search aramanın kaydıdır (endpoint, bbox, datetime, collections, maxCloudCover). \
+                      Cevaptaki hazırlama kaydı (kentos.stac-preparation 1) aramayı, öğeyi, çekim zamanını, bulut oranını, her bandın adını, adresini (imzasız), veri türünü, nodata'sını, ölçeğini ve ötelemesini, ızgarasını, kalite bandını ve maske kuralını, katman ve nesne kimliklerini taşır; reflectance bantların ortak ölçek ve ötelemesidir (Spektral indis'in Ölçek ve Öteleme'si). Aynı kayıt her rasterin özniteliklerinde de durur (stac.catalog, stac.collection, stac.item, stac.asset, stac.href, stac.scale, stac.offset …). \
+                      Adresi s3:// olan varlık stac_href_not_http ile reddedilir; imzalı adresin imzası yazılmaz (stac_signed_href_stripped): imza gerektiren dosya açılmaz. plan yazmadan kaydı söyler."
+                .into(),
+            aliases: vec!["stachazirla".into(), "uydugoruntusuhazirla".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::StacPrepare>(),
+            output: schema::<crate::StacPrepared>(),
+            plan: Some(schema::<crate::StacPrepared>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir Sentinel-2 öğesinin kırmızı ve yakın kızılötesi bantlarını, SCL kalite bandıyla ekle".into(),
+                input: json!({
+                    "item": { "catalog": "https://earth-search.aws.element84.com/v1", "collection": "sentinel-2-l2a", "id": "S2A_37SCD_20240713_0_L2A", "assets": [] },
+                    "assets": ["red", "nir"],
+                    "qa": { "asset": "scl" },
+                    "group": "STAC: S2A_37SCD_20240713"
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_IMAGES_EDIT.into(),
             version: crate::CAD_IMAGES_EDIT_VERSION,
             title: "Resmin kaynağı".into(),
@@ -6536,6 +6613,35 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A derived GIS dataset against the drawing it was made from (docs/adr/0530), fixtures/commands/v1/cad.gis.derivation.json.
+        CommandDescriptor {
+            id: crate::CAD_GIS_DERIVATION.into(),
+            version: crate::CAD_GIS_DERIVATION_VERSION,
+            title: "GIS türevini denetle".into(),
+            summary: "path'teki, file.export.gis'in yazdığı GeoPackage'ın her satırını açık çizimde kaynağı olan nesneyle karşılaştırır; hiçbir şey yazmaz. \
+                      Satırın kalıcı kimliği (kentos_uids, yoksa kentos_uid sütunu) çizimdeki nesneyi bulur. Nesnenin türev özeti (kentos_digest: bakışı dışında bütün alanlarının SHA-256'sı, blokta tanımın öznitelikleri de) satırınkinden başkaysa satır stale'dir: kaynak dışa aktarmadan sonra değişti, türev eski. \
+                      Özet aynıysa satırın geometrisi ve öznitelik sütunları tablonun kaydındaki algoritma ve toleransla yeniden türetilen satırla karşılaştırılır (koordinatlar 1e-9 m içinde); farklıysa satır edited'dır: GIS'te değiştirilmiş, kaynak nesne değişmemiş; hangi alanların (geometry, öznitelik adları) farklı olduğu fields'tadır. \
+                      Kimliği çizimde olmayan satır source_gone, tablonun katmanında olup satırı olmayan nesne not_exported'tur. Bir tablonun kaydındaki sapma kaydındaki toleransın üstündeyse over_tolerance sayılır. \
+                      Cevap her tablonun sayılarını, toplamları, dosyanın kaydettiği kaynağı (proje, ad, sürüm) ve eşleşmeyen satırlar önce olmak üzere en çok limit satırı listeler. Türev, kaynağın yerine geçmez: stale ve edited satırlar çizimi değiştirmez ve GIS'teki değişiklik çizime geri yazılmaz."
+                .into(),
+            aliases: vec!["turevdenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::GisDerivation>(),
+            output: schema::<crate::GisDerived>(),
+            plan: Some(schema::<crate::GisDerived>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dışa aktarılan türev hâlâ güncel mi".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg" }),
+                output: None,
+            }],
+        },
         // Bound layers (docs/adr/0503), held together by fixtures/commands/v1/cad.sources.*.json.
         CommandDescriptor {
             id: crate::CAD_SOURCES_DESCRIBE.into(),
@@ -6649,7 +6755,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_PROCESSING_TOOLS_VERSION,
             title: "İşlem araçları".into(),
             summary: "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. \
-                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez."
+                      query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. models: true modelleri de listeler (kimliği model: ile başlar, parametreleri girdileridir). Çizimi değiştirmez."
                 .into(),
             aliases: vec!["islemler".into(), "araclar".into()],
             effect: CommandEffect::Query,
@@ -6677,7 +6783,9 @@ pub fn catalog() -> CommandCatalog {
                       Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. \
                       Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). \
                       Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. \
-                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman)."
+                      sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). \
+                      tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. \
+                      Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz."
                 .into(),
             aliases: vec!["islem".into(), "process".into()],
             effect: CommandEffect::Document,
@@ -6705,6 +6813,48 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir katmanın nesnelerine tampon".into(),
                     input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" }, "distance": 5 } }),
+                    output: None,
+                },
+            ],
+        },
+        // Toplu çalıştırma (docs/adr/0529).
+        CommandDescriptor {
+            id: crate::CAD_PROCESSING_BATCH.into(),
+            version: crate::CAD_PROCESSING_BATCH_VERSION,
+            title: "İşlem aracını toplu çalıştır".into(),
+            summary: "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. \
+                      Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. \
+                      Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler). \
+                      Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur."
+                .into(),
+            aliases: vec!["topluislem".into(), "batch".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProcessingBatch>(),
+            output: schema::<crate::ProcessingBatched>(),
+            plan: Some(schema::<crate::ProcessingBatched>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Aynı aracı üç tampon uzaklığıyla çalıştır".into(),
+                    input: json!({ "tool": "geometry.buffer", "parameters": { "input": { "scope": "layer", "layerId": "parsel" } }, "rows": [
+                        { "label": "5 m", "parameters": { "distance": 5 } },
+                        { "label": "10 m", "parameters": { "distance": 10 } },
+                        { "label": "20 m", "parameters": { "distance": 20 } }
+                    ] }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel ölçü yazıları modelini iki ön ekle çalıştır".into(),
+                    input: json!({ "tool": "model:builtin.parcelSheet", "selection": ["0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"], "rows": [
+                        { "parameters": { "prefix": "A" } },
+                        { "parameters": { "prefix": "B" } }
+                    ] }),
                     output: None,
                 },
             ],
@@ -7481,6 +7631,36 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // The drawing as a traceable GIS dataset (docs/adr/0530).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_GIS.into(),
+            version: crate::FILE_EXPORT_GIS_VERSION,
+            title: "GIS türevi dışa aktar".into(),
+            summary: "Katmanları (layers boşsa nesnesi olan bütün katmanları) GeoPackage'a türev olarak yazar: çizim kaynak kalır, dosyadaki geometri onun bir türevidir. \
+                      Her katman bir özellik tablosudur; her satır kaynak nesnenin kalıcı kimliğini (kentos_uid sütunu ve kentos_uids uzantısı) ve türünü (kentos_kind), türev sapmasını metrede (kentos_deviation) ve kaynağın özetini (kentos_digest) taşır, katmanın alanları ve öteki öznitelikler sütun olur; Z ve M köşelerde taşınır. \
+                      Yaylar, daireler, çoklu çizgilerin yaylı kenarları ve elipsler, eğriler, NURBS düz kirişlerdir (GeoPackage'ın düz geometri türleri; eğri uzantısı yok): kirişler kaynağın eğrisinden en çok tolerance (metre, varsayılan 0,0001) uzakta kalır. Yay, daire ve yaylı kenarlarda algoritma kentos.chords/1'dir (eşit açılı kirişler, uçlar yayın üzerinde, sapma 2·r·sin²(φ/4) ile kesin); elips ve eğride sapma algoritmanın tuttuğu sınırdır, NURBS'ta örnek noktalarında denenen toleranstır. \
+                      Her tablonun türetim kaydı (https://kentos.app/derivation/1: algoritma, tolerans, kaynak proje, ad ve sürüm, en büyük sapma, kaynak türlerine göre sapmanın nasıl bilindiği, zaman) GeoPackage'ın metadata uzantısındadır. \
+                      Yazı ve bloklar tolerance'ın yanında annotations'a bağlıdır: table (varsayılan) onları katman tablolarına katmaz, ayrı tablolara yazar (her blok tanımının yerleştirmeleri blok adıyla nokta olarak, bloğun öznitelikleri sütun; yazılar kentos_annotations'ta nokta olarak, sözleri sütunda), skip onları sayar. Ölçü, tarama, kılavuz, tablo, resim, raster, nokta bulutu, yardımcı çizgi ve mimari nesneler yazılmaz; türlerine göre nedeniyle left'te ve export_losses uyarısındadır. \
+                      Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir. Türevi çizime bağlamak ya da geri yazmak olmaz (derived_dataset); gerçeği cad.gis.derivation sınar."
+                .into(),
+            aliases: vec!["gisturev".into(), "gisexport".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportGis>(),
+            output: schema::<crate::GisExported>(),
+            plan: Some(schema::<crate::GisExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller 1 mm toleransla".into(),
+                input: json!({ "path": "/veri/parsel-turev.gpkg", "layers": ["parsel"], "tolerance": 0.001, "overwrite": true }),
+                output: None,
+            }],
+        },
         // A layer's look as OGC SLD 1.1 / SE 1.1, out and in (docs/adr/0516).
         CommandDescriptor {
             id: crate::FILE_EXPORT_SLD.into(),
@@ -8021,6 +8201,12 @@ mod tests {
                     crate::CAD_ASSETS_CHECK => {
                         serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_STAC_SEARCH => {
+                        serde_json::from_value::<crate::StacSearch>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_STAC_PREPARE => {
+                        serde_json::from_value::<crate::StacPrepare>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())
                     }
@@ -8330,6 +8516,12 @@ mod tests {
                     crate::FILE_IMPORT_GPKG => {
                         serde_json::from_value::<crate::ImportGpkg>(e.input.clone()).map(|_| ())
                     }
+                    crate::CAD_GIS_DERIVATION => {
+                        serde_json::from_value::<crate::GisDerivation>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_GIS => {
+                        serde_json::from_value::<crate::ExportGis>(e.input.clone()).map(|_| ())
+                    }
                     crate::CAD_SOURCES_DESCRIBE => {
                         serde_json::from_value::<crate::SourcesDescribe>(e.input.clone()).map(|_| ())
                     }
@@ -8347,6 +8539,9 @@ mod tests {
                     }
                     crate::CAD_PROCESSING_RUN => {
                         serde_json::from_value::<crate::ProcessingRun>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROCESSING_BATCH => {
+                        serde_json::from_value::<crate::ProcessingBatch>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_CHANGESET_APPLY => {
                         serde_json::from_value::<crate::ChangesetApply>(e.input.clone()).map(|_| ())

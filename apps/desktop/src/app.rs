@@ -276,6 +276,8 @@ pub enum Dialog {
     RasterAdd,
     /// Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5); the window is `App::rasters.mosaic`.
     RasterMosaic,
+    /// STAC'ta ara (rasters/stac.rs, docs/adr/0528 §7); the window is `App::rasters.stac`.
+    RasterStac,
     /// Raster stili (rasters/look.rs, docs/adr/0204 §8); the window is `App::rasters.look`.
     RasterStyle,
     /// Mesh ekle and Raster ekle's NetCDF (rasters/multidim.rs, docs/adr/0243 §11); the window
@@ -1484,6 +1486,12 @@ impl App {
             window::close_requests().map(Message::CloseRequested),
             if unsaved {
                 Subscription::run(recovery::ticks)
+            } else {
+                Subscription::none()
+            },
+            // Toplu çalıştır: a running batch job is looked at every tick (processing/batch.rs).
+            if self.processing.batch_running() {
+                Subscription::run(crate::processing::batch::ticks)
             } else {
                 Subscription::none()
             },
@@ -2770,6 +2778,8 @@ impl App {
             "raster.add" => return self.raster_add_command(),
             // Sanal mozaik (rasters/mosaic.rs, docs/adr/0517 §5).
             "raster.mosaic" => return self.raster_mosaic_command(),
+            // STAC'ta ara (rasters/stac.rs, docs/adr/0528 §7).
+            "raster.stac" => return self.raster_stac_command(),
             "raster.style" => return self.raster_look_command(),
             // Mesh ekle (rasters/multidim.rs, docs/adr/0243 §11).
             "mesh.add" => return self.mesh_add_command(),

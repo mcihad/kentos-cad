@@ -368,6 +368,7 @@
         }
        ],
        "step": "Öznitelik hesapla",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -456,6 +457,7 @@
         }
        ],
        "step": "Öznitelik hesapla",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -536,6 +538,7 @@
         }
        ],
        "step": "Öznitelik hesapla",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -628,6 +631,7 @@
         }
        ],
        "step": "Öznitelik hesapla",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -686,6 +690,7 @@
          "$uidOf:2"
         ]
        },
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -730,6 +735,7 @@
          "$uidOf:4"
         ]
        },
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -777,6 +783,7 @@
          "$uidOf:3"
         ]
        },
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -1055,6 +1062,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -1731,6 +1739,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -2407,6 +2416,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -3083,6 +3093,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -3756,6 +3767,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -4434,6 +4446,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -5113,6 +5126,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -6445,6 +6459,7 @@
         }
        ],
        "step": "İçindekinden bilgi al",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -7178,6 +7193,7 @@
         }
        ],
        "step": "İçindekinden bilgi al",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -14401,6 +14417,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current",
        "sink": {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
@@ -15144,6 +15161,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current",
        "sink": {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
@@ -15887,6 +15905,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current",
        "sink": {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
@@ -16289,6 +16308,7 @@
          "digest": "$any"
         }
        ],
+       "record": "$any",
        "revision": "$current",
        "sink": {
         "path": "$fixture:processing/v1/sonuc-plan.gpkg",
@@ -16506,6 +16526,7 @@
         }
        ],
        "step": "Öznitelik hesapla",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -16524,6 +16545,134 @@
         "label": "1"
        }
       }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kayıt: İşlemler: Öznitelik hesapla, varsayılanlarla: hesaplanan alan projenin alan ondalığıyla yeni alana (calculate-area)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "attributes.calculate",
+      "selection": [
+       "$uidOf:1",
+       "$uidOf:2",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "attributes.calculate",
+       "summary": "3 nesnede “Hesap alanı” yazıldı.",
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3"
+       ],
+       "outputs": {
+        "count": 3,
+        "changed": [
+         "$uidOf:1",
+         "$uidOf:2",
+         "$uidOf:3"
+        ]
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "digest": "$any"
+        }
+       ],
+       "step": "Öznitelik hesapla",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "tool",
+        "tool": "attributes.calculate",
+        "label": "Öznitelik hesapla",
+        "toolVersion": 1,
+        "parameters": "$any",
+        "selection": [
+         "$uidOf:1",
+         "$uidOf:2",
+         "$uidOf:3"
+        ],
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "attributes.calculate",
+          "tool": "attributes.calculate",
+          "label": "Öznitelik hesapla",
+          "recordsIn": 3,
+          "recordsOut": 3,
+          "ms": "$any",
+          "summary": "3 nesnede “Hesap alanı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 3,
+         "recordsOut": 3
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Nitelik": "Arsa",
+         "Hesap alanı": "600.00"
+        },
+        "label": "1"
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Nitelik": "Arsa",
+         "Hesap alanı": "750.00"
+        },
+        "label": "2"
+       },
+       "3": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "3",
+         "Nitelik": "Tarla",
+         "Hesap alanı": "450.00"
+        },
+        "label": "3"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Öznitelik hesapla",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed"
      }
     }
    ]
@@ -16566,6 +16715,7 @@
         }
        ],
        "step": "Köşe noktalarını numarala",
+       "record": "$any",
        "revision": "$current"
       },
       "warnings": []
@@ -16610,6 +16760,879 @@
      "expect": {
       "canUndo": false,
       "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Model: İşlemler: Parsel ölçü yazıları modeli: köşe numaraları, kenar uzunlukları ve hesap alanı tek geri alma adımında (model-parcel-sheet)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "model:builtin.parcelSheet",
+      "selection": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "model:builtin.parcelSheet",
+       "summary": "3 adım çalıştı. 2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı. 2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı. 2 nesnede “Hesap alanı” yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "layers": [
+        "islem-kenar-olculeri",
+        "islem-kose-noktalari"
+       ],
+       "outputs": {
+        "points": [
+         "$uidOf:11",
+         "$uidOf:12",
+         "$uidOf:13",
+         "$uidOf:14",
+         "$uidOf:15",
+         "$uidOf:16"
+        ]
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "digest": "$any"
+        }
+       ],
+       "step": "Parsel ölçü yazıları",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "model",
+        "tool": "model:builtin.parcelSheet",
+        "label": "Parsel ölçü yazıları",
+        "toolVersion": 1,
+        "definition": "$any",
+        "parameters": "$any",
+        "selection": [
+         "$uidOf:1",
+         "$uidOf:2"
+        ],
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "corners",
+          "tool": "points.numberVertices",
+          "label": "Köşe noktalarını numarala",
+          "recordsIn": 2,
+          "recordsOut": 6,
+          "ms": "$any",
+          "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı."
+         },
+         {
+          "id": "edges",
+          "tool": "annotation.edgeLengths",
+          "label": "Kenar uzunluklarını yaz",
+          "recordsIn": 2,
+          "recordsOut": 7,
+          "ms": "$any",
+          "summary": "2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı."
+         },
+         {
+          "id": "area",
+          "tool": "attributes.calculate",
+          "label": "Öznitelik hesapla",
+          "recordsIn": 2,
+          "recordsOut": 2,
+          "ms": "$any",
+          "summary": "2 nesnede “Hesap alanı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 6,
+         "recordsOut": 15
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": true,
+      "revision": "changed",
+      "fields": {
+       "1": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "1",
+         "Nitelik": "Arsa",
+         "Hesap alanı": "600.00"
+        },
+        "label": "1"
+       },
+       "2": {
+        "attrs": {
+         "Ada": "101",
+         "Parsel": "2",
+         "Nitelik": "Arsa",
+         "Hesap alanı": "750.00"
+        },
+        "label": "2"
+       },
+       "11": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487000,
+         "y": 4420030
+        },
+        "label": "P00001",
+        "attrs": {
+         "Nokta": "P00001",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "12": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487020,
+         "y": 4420030
+        },
+        "label": "P00002",
+        "attrs": {
+         "Nokta": "P00002",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "13": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487020,
+         "y": 4420000
+        },
+        "label": "P00003",
+        "attrs": {
+         "Nokta": "P00003",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "14": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487000,
+         "y": 4420000
+        },
+        "label": "P00004",
+        "attrs": {
+         "Nokta": "P00004",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "15": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487045,
+         "y": 4420030
+        },
+        "label": "P00005",
+        "attrs": {
+         "Nokta": "P00005",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "16": {
+        "kind": "point",
+        "layerId": "islem-kose-noktalari",
+        "p": {
+         "x": 487045,
+         "y": 4420000
+        },
+        "label": "P00006",
+        "attrs": {
+         "Nokta": "P00006",
+         "Tür": "Köşe noktası"
+        }
+       },
+       "17": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487010,
+         "y": 4419997.2
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "20.000"
+        }
+       },
+       "18": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487022.8,
+         "y": 4420015
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "30.000"
+        }
+       },
+       "19": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487010,
+         "y": 4420030.8
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "20.000"
+        }
+       },
+       "20": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 486999.2,
+         "y": 4420015
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "30.000"
+        }
+       },
+       "21": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487032.5,
+         "y": 4419997.2
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "25.000"
+        }
+       },
+       "22": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487047.8,
+         "y": 4420015
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "30.000"
+        }
+       },
+       "23": {
+        "kind": "text",
+        "layerId": "islem-kenar-olculeri",
+        "p": {
+         "x": 487032.5,
+         "y": 4420030.8
+        },
+        "attrs": {
+         "Tür": "Kenar ölçüsü",
+         "Uzunluk (m)": "25.000"
+        }
+       }
+      },
+      "nodes": {
+       "islem-kose-noktalari": {
+        "name": "Köşe noktaları"
+       },
+       "islem-kenar-olculeri": {
+        "name": "Kenar ölçüleri"
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Parsel ölçü yazıları",
+     "expect": {
+      "canUndo": false,
+      "canRedo": true,
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bilinmeyen model: unknown_tool, aracın yolu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "model:builtin.yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "unknown_tool",
+       "message": "“model:builtin.yok” bir işlem aracı değil. Araçların listesi cad.processing.tools'ta.",
+       "path": "tool"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Model, plan: aynı sonuç bir kopyada, çizim değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "tool": "model:builtin.parcelSheet",
+      "selection": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "tool": "model:builtin.parcelSheet",
+       "summary": "3 adım çalıştı. 2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı. 2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı. 2 nesnede “Hesap alanı” yazıldı.",
+       "added": [
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any",
+        "$any"
+       ],
+       "changed": [
+        "$uidOf:1",
+        "$uidOf:2"
+       ],
+       "layers": [
+        "islem-kenar-olculeri",
+        "islem-kose-noktalari"
+       ],
+       "outputs": {
+        "points": [
+         "$any",
+         "$any",
+         "$any",
+         "$any",
+         "$any",
+         "$any"
+        ]
+       },
+       "inputs": [
+        {
+         "layer": "parsel",
+         "digest": "$any"
+        }
+       ],
+       "step": "Parsel ölçü yazıları",
+       "record": {
+        "format": "kentos.run-record",
+        "version": 1,
+        "kind": "model",
+        "tool": "model:builtin.parcelSheet",
+        "label": "Parsel ölçü yazıları",
+        "toolVersion": 1,
+        "definition": "$any",
+        "parameters": "$any",
+        "selection": [
+         "$uidOf:1",
+         "$uidOf:2"
+        ],
+        "inputs": [
+         {
+          "layer": "parsel",
+          "digest": "$any"
+         }
+        ],
+        "documentRevision": "$any",
+        "engine": "$any",
+        "host": "headless",
+        "startedAt": "$any",
+        "ms": "$any",
+        "srid": 5256,
+        "steps": [
+         {
+          "id": "corners",
+          "tool": "points.numberVertices",
+          "label": "Köşe noktalarını numarala",
+          "recordsIn": 2,
+          "recordsOut": 6,
+          "ms": "$any",
+          "summary": "2 nesnede 6 köşe numaralandı: P00001 – P00006; 2 ortak köşe komşularıyla tek numara aldı."
+         },
+         {
+          "id": "edges",
+          "tool": "annotation.edgeLengths",
+          "label": "Kenar uzunluklarını yaz",
+          "recordsIn": 2,
+          "recordsOut": 7,
+          "ms": "$any",
+          "summary": "2 nesneye 7 kenar uzunluğu yazıldı; 1 ortak kenar bir kez yazıldı."
+         },
+         {
+          "id": "area",
+          "tool": "attributes.calculate",
+          "label": "Öznitelik hesapla",
+          "recordsIn": 2,
+          "recordsOut": 2,
+          "ms": "$any",
+          "summary": "2 nesnede “Hesap alanı” yazıldı."
+         }
+        ],
+        "total": {
+         "recordsIn": 6,
+         "recordsOut": 15
+        }
+       },
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "Model: ortadaki adım çalışmaz (katmanın tam sayı alanı kenar uzunluğunu reddeder), ilk adım geri alınır",
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İşlem durumları: parseller",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "hybrid",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000,
+     "y": 4420000
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#E5484D",
+       "lineType": "continuous",
+       "lineWeight": 0.35,
+       "fill": "#E5484D1F"
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli katman",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "gizli",
+      "name": "Gizli katman",
+      "type": "layer",
+      "visible": false,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "mevcut",
+      "name": "Mevcut noktalar",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "#3E9BF0",
+       "lineType": "continuous",
+       "lineWeight": 0.25,
+       "point": {
+        "symbol": "cross",
+        "size": 7
+       }
+      },
+      "children": []
+     },
+     {
+      "id": "islem-kenar-olculeri",
+      "name": "Kenar ölçüleri",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg-dim",
+       "lineType": "continuous",
+       "lineWeight": 0.18
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "Uzunluk (m)",
+        "kind": "integer"
+       }
+      ]
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "label": "1",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       },
+       {
+        "x": 487000,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "label": "2",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487020,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       },
+       {
+        "x": 487020,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "parsel",
+      "label": "3",
+      "attrs": {
+       "Ada": "101",
+       "Parsel": "3",
+       "Nitelik": "Tarla"
+      },
+      "pts": [
+       {
+        "x": 487045,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420000
+       },
+       {
+        "x": 487060,
+        "y": 4420030
+       },
+       {
+        "x": 487045,
+        "y": 4420030
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "kilitli",
+      "label": "1",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "1",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419960
+       },
+       {
+        "x": 487020,
+        "y": 4419980
+       },
+       {
+        "x": 487000,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "gizli",
+      "label": "2",
+      "attrs": {
+       "Ada": "102",
+       "Parsel": "2",
+       "Nitelik": "Arsa"
+      },
+      "pts": [
+       {
+        "x": 487030,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419960
+       },
+       {
+        "x": 487050,
+        "y": 4419980
+       },
+       {
+        "x": 487030,
+        "y": 4419980
+       }
+      ]
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "cizim",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487000,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420040
+       },
+       {
+        "x": 487030,
+        "y": 4420055
+       }
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "cizim",
+      "attrs": {},
+      "a": {
+       "x": 487040,
+       "y": 4420040
+      },
+      "b": {
+       "x": 487060,
+       "y": 4420040
+      }
+     },
+     {
+      "kind": "point",
+      "id": 8,
+      "layerId": "mevcut",
+      "label": "P00001",
+      "attrs": {
+       "Nokta": "P00001",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487000,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 9,
+      "layerId": "mevcut",
+      "label": "P00002",
+      "attrs": {
+       "Nokta": "P00002",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420030
+      }
+     },
+     {
+      "kind": "point",
+      "id": 10,
+      "layerId": "mevcut",
+      "label": "P00003",
+      "attrs": {
+       "Nokta": "P00003",
+       "Tür": "Köşe noktası"
+      },
+      "p": {
+       "x": 487020,
+       "y": 4420000
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   },
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "tool": "model:builtin.parcelSheet",
+      "selection": [
+       "$uidOf:1",
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "tool_failed",
+       "message": "2. adım (Kenar uzunluklarını yaz) çalışmadı: Öznitelik yazılamadı (yeni nesne): “Uzunluk (m)” alanı tam sayı ister; “20.000” verildi. Rakamlarla, ondalıksız yazın. Önceki adımların sonuçları geri alındı.",
+       "path": "tool"
+      }
+     },
+     "expect": {
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same",
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10
+      ]
      }
     }
    ]

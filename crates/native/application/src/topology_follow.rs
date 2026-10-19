@@ -104,7 +104,7 @@ pub fn put_right(doc: &Document, points: bool, found: &Found, changes: &[Change]
 
 /// A path whose bulges are all zero as the drawing keeps it: without them
 /// (the core's `apply` gives every edge's).
-fn straight(shape: Shape) -> Shape {
+pub(crate) fn straight(shape: Shape) -> Shape {
     match shape {
         Shape::Polyline {
             pts,

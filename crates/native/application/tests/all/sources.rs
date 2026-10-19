@@ -533,3 +533,93 @@ fn wide_values_keep_their_meaning_through_a_bound_layer() {
     assert_eq!(ok(&planned)["modified"], 1, "{planned}");
     let _ = std::fs::remove_file(&tmp);
 }
+
+// docs/adr/0531: a part of a table written with its neighbours outside the area. The bump of parcel A moves; B (its
+// shared edges) and C (a triangle on the bump) lie outside the area and follow in the same transaction. With
+// KENTOS_WRITE_GPKG the written copy is kept as fixtures/geopackage/v1/kentos-komsu.gpkg, which
+// scripts/fixtures/bound_sources_cases.py reads with GDAL's OGR.
+#[test]
+fn a_part_writes_its_neighbours_outside_the_area() {
+    let tmp =
+        std::env::temp_dir().join(format!("kentos-sources-komsu-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("komsu.gpkg"), &tmp).expect("copied");
+    let path = tmp.display().to_string();
+    let mut d = doc();
+    let linked = run(
+        &mut d,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "parsel",
+                          "extent": [486990.0, 4419990.0, 487009.0, 4420030.0] } }),
+    );
+    assert_eq!(ok(&linked)["objects"], 1);
+    let layer = link_of(&d).layer;
+    let a = d
+        .by_layer_with_uids(&layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("A");
+    ok(&run(
+        &mut d,
+        "cad.entities.stretch",
+        CallOp::Execute,
+        json!({ "window": { "min": { "x": 487011.5, "y": 4420004.5 }, "max": { "x": 487012.5, "y": 4420005.5 } },
+                "dx": 1.0, "dy": 0.0, "uids": [a] }),
+    ));
+    let input = json!({ "layer": layer, "direction": "write", "topology": "strict" });
+    let untouched = std::fs::read(&tmp).expect("read");
+    let plan = ok(&run(
+        &mut d,
+        "cad.sources.sync",
+        CallOp::Plan,
+        input.clone(),
+    ))
+    .clone();
+    assert_eq!(
+        (plan["modified"].clone(), plan["followed"].clone()),
+        (json!(1), json!(2)),
+        "{plan}"
+    );
+    assert_eq!(
+        std::fs::read(&tmp).expect("read"),
+        untouched,
+        "a plan writes nothing"
+    );
+    let written = ok(&run(&mut d, "cad.sources.sync", CallOp::Execute, input)).clone();
+    assert_eq!(
+        (written["modified"].clone(), written["followed"].clone()),
+        (json!(1), json!(2)),
+        "{written}"
+    );
+    let after = state(&mut d);
+    assert_eq!(
+        (after["edited"].clone(), after["found"].clone()),
+        (json!(false), json!(true)),
+        "{after}"
+    );
+    // The whole table read back: every parcel has the bump where A put it, none where it was.
+    let mut whole = doc();
+    ok(&run(
+        &mut whole,
+        "cad.sources.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "link", "path": path, "table": "parsel" } }),
+    ));
+    let wl = link_of(&whole).layer;
+    let mut seen = 0;
+    for (_, e) in whole.by_layer_with_uids(&wl) {
+        let v = serde_json::to_value(e).expect("entity");
+        let pts = v["pts"].as_array().expect("ring");
+        let has = |x: f64| {
+            pts.iter()
+                .any(|p| p["x"] == json!(x) && p["y"] == json!(4420005.0))
+        };
+        assert!(has(487013.0) && !has(487012.0), "{v}");
+        seen += 1;
+    }
+    assert_eq!(seen, 3);
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-komsu.gpkg")).expect("copied");
+    }
+    let _ = std::fs::remove_file(&tmp);
+}

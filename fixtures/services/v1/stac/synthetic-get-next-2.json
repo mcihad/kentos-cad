@@ -1,0 +1,31 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: the page after.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberReturned": 1,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "PAGE_2",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-01-02T00:00:00Z"
+   },
+   "assets": {},
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/PAGE_2"
+    }
+   ]
+  }
+ ],
+ "links": []
+}

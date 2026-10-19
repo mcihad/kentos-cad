@@ -1,0 +1,571 @@
+{
+ "format": "kentos.gis-derivation-chords",
+ "version": 1,
+ "note": "ADR 0530 §2. Zinciri sayısı ve sapma mpmath ile 50 basamakta (scripts/fixtures/cad_gis_derivation_cases.py), KentOS kodu olmadan.",
+ "arcs": [
+  {
+   "name": "daire r=0.01 tolerans=1e-06",
+   "r": 0.01,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 223,
+   "capped": false,
+   "deviation": 9.923225048724275e-07
+  },
+  {
+   "name": "daire r=0.01 tolerans=0.0001",
+   "r": 0.01,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 23,
+   "capped": false,
+   "deviation": 9.314053963669247e-05
+  },
+  {
+   "name": "daire r=0.01 tolerans=0.001",
+   "r": 0.01,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 7,
+   "capped": false,
+   "deviation": 0.0009903113209758087
+  },
+  {
+   "name": "daire r=0.01 tolerans=0.05",
+   "r": 0.01,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 4,
+   "capped": false,
+   "deviation": 0.0029289321881345244
+  },
+  {
+   "name": "daire r=0.5 tolerans=1e-06",
+   "r": 0.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 1571,
+   "capped": false,
+   "deviation": 9.99740392488885e-07
+  },
+  {
+   "name": "daire r=0.5 tolerans=0.0001",
+   "r": 0.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 158,
+   "capped": false,
+   "deviation": 9.883511496721767e-05
+  },
+  {
+   "name": "daire r=0.5 tolerans=0.001",
+   "r": 0.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 50,
+   "capped": false,
+   "deviation": 0.000986635785864219
+  },
+  {
+   "name": "daire r=0.5 tolerans=0.05",
+   "r": 0.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 7,
+   "capped": false,
+   "deviation": 0.049515566048790434
+  },
+  {
+   "name": "daire r=2.5 tolerans=1e-06",
+   "r": 2.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 3513,
+   "capped": false,
+   "deviation": 9.99662566744865e-07
+  },
+  {
+   "name": "daire r=2.5 tolerans=0.0001",
+   "r": 2.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 352,
+   "capped": false,
+   "deviation": 9.956840464638066e-05
+  },
+  {
+   "name": "daire r=2.5 tolerans=0.001",
+   "r": 2.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 112,
+   "capped": false,
+   "deviation": 0.0009834340423677862
+  },
+  {
+   "name": "daire r=2.5 tolerans=0.05",
+   "r": 2.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 16,
+   "capped": false,
+   "deviation": 0.048036798991923875
+  },
+  {
+   "name": "daire r=18.75 tolerans=1e-06",
+   "r": 18.75,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 9620,
+   "capped": false,
+   "deviation": 9.99817821909219e-07
+  },
+  {
+   "name": "daire r=18.75 tolerans=0.0001",
+   "r": 18.75,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 962,
+   "capped": false,
+   "deviation": 9.998169422301235e-05
+  },
+  {
+   "name": "daire r=18.75 tolerans=0.001",
+   "r": 18.75,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 305,
+   "capped": false,
+   "deviation": 0.0009946436247705635
+  },
+  {
+   "name": "daire r=18.75 tolerans=0.05",
+   "r": 18.75,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 44,
+   "capped": false,
+   "deviation": 0.0477728510577461
+  },
+  {
+   "name": "daire r=60.0 tolerans=1e-06",
+   "r": 60.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 17208,
+   "capped": false,
+   "deviation": 9.999083708507815e-07
+  },
+  {
+   "name": "daire r=60.0 tolerans=0.0001",
+   "r": 60.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 1721,
+   "capped": false,
+   "deviation": 9.996757078203579e-05
+  },
+  {
+   "name": "daire r=60.0 tolerans=0.001",
+   "r": 60.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 545,
+   "capped": false,
+   "deviation": 0.0009968430676231225
+  },
+  {
+   "name": "daire r=60.0 tolerans=0.05",
+   "r": 60.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 77,
+   "capped": false,
+   "deviation": 0.04993203932502748
+  },
+  {
+   "name": "daire r=1000.0 tolerans=1e-06",
+   "r": 1000.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 1e-06,
+   "chords": 65536,
+   "capped": true,
+   "deviation": 1.1489731724373265e-06
+  },
+  {
+   "name": "daire r=1000.0 tolerans=0.0001",
+   "r": 1000.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.0001,
+   "chords": 7025,
+   "capped": false,
+   "deviation": 9.999472384194353e-05
+  },
+  {
+   "name": "daire r=1000.0 tolerans=0.001",
+   "r": 1000.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.001,
+   "chords": 2222,
+   "capped": false,
+   "deviation": 0.000999497168583198
+  },
+  {
+   "name": "daire r=1000.0 tolerans=0.05",
+   "r": 1000.0,
+   "sweep": 6.283185307179586,
+   "tolerance": 0.05,
+   "chords": 315,
+   "capped": false,
+   "deviation": 0.04973304405696186
+  },
+  {
+   "name": "yay r=60.0 süpürme=1.2",
+   "r": 60.0,
+   "sweep": 1.2,
+   "tolerance": 0.0001,
+   "chords": 329,
+   "capped": false,
+   "deviation": 9.97773210399005e-05
+  },
+  {
+   "name": "yay r=5.0 süpürme=3.141592653589793",
+   "r": 5.0,
+   "sweep": 3.141592653589793,
+   "tolerance": 0.0001,
+   "chords": 249,
+   "capped": false,
+   "deviation": 9.949004522216668e-05
+  },
+  {
+   "name": "yay r=100.0 süpürme=0.001",
+   "r": 100.0,
+   "sweep": 0.001,
+   "tolerance": 0.0001,
+   "chords": 1,
+   "capped": false,
+   "deviation": 1.2499999739583336e-05
+  },
+  {
+   "name": "yay r=3.0 süpürme=4.71238898038469",
+   "r": 3.0,
+   "sweep": 4.71238898038469,
+   "tolerance": 0.0001,
+   "chords": 289,
+   "capped": false,
+   "deviation": 9.970465614794379e-05
+  },
+  {
+   "name": "tolerans yarıçaptan büyük: dörde kesilir",
+   "r": 0.5,
+   "sweep": 6.283185307179586,
+   "tolerance": 1.0,
+   "chords": 4,
+   "capped": false,
+   "deviation": 0.1464466094067262
+  }
+ ],
+ "bulges": [
+  {
+   "name": "kenar kabarık=0.5",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": 0.5,
+   "tolerance": 0.0001,
+   "chords": 284,
+   "deviation": 9.994711228061452e-05,
+   "r": 18.75,
+   "center": [
+    487015.0,
+    4420011.25
+   ],
+   "sweep": 1.8545904360032244
+  },
+  {
+   "name": "kenar kabarık=-0.5",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": -0.5,
+   "tolerance": 0.0001,
+   "chords": 284,
+   "deviation": 9.994711228061452e-05,
+   "r": 18.75,
+   "center": [
+    487015.0,
+    4419988.75
+   ],
+   "sweep": -1.8545904360032244
+  },
+  {
+   "name": "kenar kabarık=1.0",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": 1.0,
+   "tolerance": 0.0001,
+   "chords": 431,
+   "deviation": 9.961987590782237e-05,
+   "r": 15.0,
+   "center": [
+    487015.0,
+    4420000.0
+   ],
+   "sweep": 3.141592653589793
+  },
+  {
+   "name": "kenar kabarık=0.3",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": 0.3,
+   "tolerance": 0.0001,
+   "chords": 216,
+   "deviation": 9.922865497149279e-05,
+   "r": 27.25,
+   "center": [
+    487015.0,
+    4420022.75
+   ],
+   "sweep": 1.1658271779114684
+  },
+  {
+   "name": "kenar kabarık=-0.4",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": -0.4,
+   "tolerance": 0.0001,
+   "chords": 251,
+   "deviation": 9.996900298141079e-05,
+   "r": 21.75,
+   "center": [
+    487015.0,
+    4419984.25
+   ],
+   "sweep": -1.5220255084494596
+  },
+  {
+   "name": "kenar kabarık=0.2",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": 0.2,
+   "tolerance": 0.0001,
+   "chords": 175,
+   "deviation": 9.924144525052736e-05,
+   "r": 39.0,
+   "center": [
+    487015.0,
+    4420036.0
+   ],
+   "sweep": 0.7895822393995231
+  },
+  {
+   "name": "kenar kabarık=2.0",
+   "a": [
+    487000.0,
+    4420000.0
+   ],
+   "b": [
+    487030.0,
+    4420000.0
+   ],
+   "bulge": 2.0,
+   "tolerance": 0.0001,
+   "chords": 678,
+   "deviation": 9.999618165196842e-05,
+   "r": 18.75,
+   "center": [
+    487015.0,
+    4419988.75
+   ],
+   "sweep": 4.428594871176362
+  },
+  {
+   "name": "küçük kenar ince tolerans",
+   "a": [
+    0.0,
+    0.0
+   ],
+   "b": [
+    0.4,
+    0.3
+   ],
+   "bulge": 0.7,
+   "tolerance": 1e-06,
+   "chords": 446,
+   "deviation": 9.978172695512684e-07,
+   "r": 0.26607142857142857,
+   "center": [
+    0.14535714285714285,
+    0.22285714285714286
+   ],
+   "sweep": 2.4429038575568343
+  }
+ ],
+ "paths": [
+  {
+   "name": "düz yol",
+   "pts": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ]
+   ],
+   "bulges": null,
+   "closed": false,
+   "tolerance": 0.001,
+   "count": 3,
+   "deviation": 0.0
+  },
+  {
+   "name": "düz halka",
+   "pts": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     4.0,
+     0.0
+    ],
+    [
+     4.0,
+     4.0
+    ]
+   ],
+   "bulges": null,
+   "closed": true,
+   "tolerance": 0.001,
+   "count": 3,
+   "deviation": 0.0
+  },
+  {
+   "name": "iki yaylı açık yol",
+   "pts": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     20.0,
+     0.0
+    ],
+    [
+     40.0,
+     10.0
+    ],
+    [
+     60.0,
+     10.0
+    ]
+   ],
+   "bulges": [
+    0.3,
+    0,
+    -0.4
+   ],
+   "closed": false,
+   "tolerance": 0.0001,
+   "count": 383,
+   "deviation": 9.991108068507113e-05
+  },
+  {
+   "name": "yaylı kapalı halka",
+   "pts": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     20.0,
+     0.0
+    ],
+    [
+     20.0,
+     20.0
+    ]
+   ],
+   "bulges": [
+    0.2,
+    0,
+    0
+   ],
+   "closed": true,
+   "tolerance": 0.0001,
+   "count": 145,
+   "deviation": 9.908450680111315e-05
+  },
+  {
+   "name": "kapanış kenarı yaylı",
+   "pts": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     10.0,
+     0.0
+    ],
+    [
+     10.0,
+     10.0
+    ],
+    [
+     0.0,
+     10.0
+    ]
+   ],
+   "bulges": [
+    0,
+    0,
+    0,
+    0.5
+   ],
+   "closed": true,
+   "tolerance": 0.0001,
+   "count": 167,
+   "deviation": 9.990729690833335e-05
+  }
+ ]
+}

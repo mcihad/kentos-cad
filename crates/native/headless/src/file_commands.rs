@@ -36,7 +36,7 @@ pub fn is_file_command(command: &str) -> bool {
 /// (`failed`). Boxed: a call is refused at most once.
 pub type Refused = Box<CommandError>;
 
-fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
+pub(crate) fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
     Box::new(CommandError {
         code: code.to_owned(),
         message: message.into(),
@@ -47,7 +47,7 @@ fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
 
 /// The file's path: absolute, not a folder, in a folder that is there;
 /// a file there only with `overwrite`. Whether one is there.
-fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Refused> {
+pub(crate) fn target(path: &str, overwrite: bool) -> Result<(PathBuf, bool), Refused> {
     let p = Path::new(path);
     if path.trim().is_empty() || !p.is_absolute() {
         return Err(refuse(
@@ -624,7 +624,7 @@ pub fn export_gpkg(
 }
 
 /// Writes `bytes` to `path` whole (`files::write_bytes`), or the refusal.
-fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
+pub(crate) fn write(path: &Path, bytes: &[u8]) -> Result<(), Refused> {
     files::write_bytes(bytes, path)
         .map(|_| ())
         .map_err(|e| refuse(codes::FILE_UNWRITABLE, e.message, "path"))
@@ -873,6 +873,39 @@ fn run_typed(
             }
         });
     }
+    if command == kentos_contracts::FILE_EXPORT_GIS {
+        let typed: kentos_contracts::ExportGis = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, bytes, output, warnings) = match crate::gis_export::make(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
     if command == FILE_EXPORT_SLD {
         let typed: kentos_contracts::ExportSld = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -1017,6 +1050,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
+        kentos_contracts::FILE_EXPORT_GIS => kentos_contracts::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
@@ -1046,6 +1080,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         FILE_EXPORT_CSV => serde_json::from_value::<kentos_contracts::ExportCsv>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_contracts::FILE_EXPORT_GIS => {
+            serde_json::from_value::<kentos_contracts::ExportGis>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         FILE_EXPORT_SLD => serde_json::from_value::<kentos_contracts::ExportSld>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),

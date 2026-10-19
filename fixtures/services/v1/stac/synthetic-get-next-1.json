@@ -1,0 +1,37 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: a page whose next link is a GET with a relative address.",
+ "type": "FeatureCollection",
+ "stac_version": "1.0.0",
+ "numberReturned": 1,
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "PAGE_1",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-01-01T00:00:00Z"
+   },
+   "assets": {},
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/PAGE_1"
+    }
+   ]
+  }
+ ],
+ "links": [
+  {
+   "rel": "next",
+   "href": "/v1/search?token=next%3Apage2",
+   "method": "GET"
+  }
+ ]
+}

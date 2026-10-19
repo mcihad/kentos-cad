@@ -3023,6 +3023,22 @@
    "tests": 2
   },
   {
+   "id": "file.export.gis",
+   "kind": "command",
+   "title": "GIS türevi dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.gis"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.gis",
+   "mcp": "file.export.gis",
+   "note": "Pencerede tolerans, yazı ve blokların akıbeti seçilir; tablolar, sapmalar ve yazılmayanlar önizlenir, Dışa aktar… komutla türevi bütün yazar (ADR 0530).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.gpkg",
    "kind": "command",
    "title": "GeoPackage dışa aktar…",
@@ -3444,6 +3460,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 1
+  },
+  {
+   "id": "gis.derivation",
+   "kind": "command",
+   "title": "GIS türevini denetle…",
+   "level": "query",
+   "via": [
+    "cad.gis.derivation"
+   ],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "hatchPatterns.manage",
@@ -6303,6 +6335,23 @@
    "tests": 0
   },
   {
+   "id": "raster.stac",
+   "kind": "command",
+   "title": "STAC'ta ara",
+   "level": "semantic",
+   "via": [
+    "cad.stac.search",
+    "cad.stac.prepare"
+   ],
+   "operation": null,
+   "python": "kentos.cad.stac.search, kentos.cad.stac.prepare",
+   "mcp": "cad.stac.search, cad.stac.prepare",
+   "note": "Aramayı cad.stac.search, hazırlamayı cad.stac.prepare yapar; pencere seçimleri ve planı gösterir (ADR 0528 §7).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.style",
    "kind": "command",
    "title": "Raster stili…",
@@ -6617,7 +6666,7 @@
    "mcp": "cad.sheets.edit",
    "note": "Pafta çekirdeğinin işlemi cad.sheets.edit'le (ADR 0252 §2).",
    "scope": "none",
-   "desktop": "pending",
+   "desktop": "implemented",
    "tests": 0
   },
   {

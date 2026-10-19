@@ -15,14 +15,14 @@ use kentos_contracts::{
     EntitiesFillet, EntitiesHatch, EntitiesJoin, EntitiesLengthen, EntitiesMatch, EntitiesOffset,
     EntitiesOrder, EntitiesPaste, EntitiesPick, EntitiesRelate, EntitiesReverse, CrsTransform, EntitiesSelect,
     EntitiesSetProperties, EntitiesStretch, EntitiesTransform, EntitiesTrim, EntitiesVertex,
-    FieldsUsage, ImportCsv, ImportDxf, ImportGpkg, ImportSld, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable, ImportPdf,
+    FieldsUsage, GisDerivation, ImportCsv, ImportDxf, ImportGpkg, ImportSld, LabelsPin, LayersCompose, LayersEdit, LayersFilter, LayersFind, LayersInfo, LayersContingents, LayersRules, LayersSubtypes, LayersTable, ImportPdf,
     LayersLabels, LayersRenderer, LayersService, LayersSet, LayersStates, LayersTime,
     LayersTranslate, LibraryEdit, LineCreate, LineTypesEdit, HatchPatternsEdit, NetworkDefine, NurbsCreate, WallsCreate, WallsEdit, WallsFromLines,
     PointCreate, PointsConstruct, PolygonCreate, PolylineCreate, RectangleCreate,
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
+use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingBatch, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -33,7 +33,9 @@ use crate::blocks_insert;
 use crate::{joins_edit, joins_query};
 use kentos_contracts::{JoinsEdit, JoinsQuery};
 use crate::fields_write;
-use crate::{processing_run, processing_tools};
+use crate::{processing_batch, processing_run, processing_tools};
+use crate::{stac_prepare, stac_search};
+use kentos_contracts::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
@@ -42,7 +44,7 @@ use crate::{
     dimensions_create, dimensions_edit, dimensions_query, dimensions_reassociate, divide, fields_edit, hatches_edit, leaders_edit, tables_edit, fonts_report, texts_check, texts_edit, drawing_audit, edit, entities_boundary,
     entities_break, entities_chamfer, entities_cleanup, entities_copy, entities_explode,
     entities_extend, entities_fillet, entities_hatch, entities_join, entities_lengthen,
-    entities_match, entities_order, entities_paste, entities_pick, entities_relate, entities_reverse, crs_transform, entities_select, entities_trim, entities_vertex, file_import, file_import_csv, file_import_gpkg, sld, labels_pin, layers_compose, fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table, layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line, hatch_patterns_edit, line_types_edit, network_define, nurbs, offset, point, points_construct, polygon, assets_check, images_edit, rasters_mosaic, rasters_georef, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities, grids_create, columns_create, stairs_create, ramps_create, arch_edit, tags_create, tags_check, tags_edit, viewmarks_create, viewmarks_edit, viewmarks_references, spaces_finish, templates_apply, sheets_set, xrefs_edit, xrefs_list, schedules_create, schedules_edit, file_import_pdf, inserts_clip,
+    entities_match, entities_order, entities_paste, entities_pick, entities_relate, entities_reverse, crs_transform, entities_select, entities_trim, entities_vertex, file_import, file_import_csv, file_import_gpkg, gis_derivation, sld, labels_pin, layers_compose, fields_usage, layers_edit, layers_filter, layers_find, layers_info, layers_labels, layers_renderer, layers_contingents, layers_rules, layers_subtypes, layers_table, layers_service, layers_set, layers_states, layers_time, layers_translate, library_edit, line, hatch_patterns_edit, line_types_edit, network_define, nurbs, offset, point, points_construct, polygon, assets_check, images_edit, rasters_mosaic, rasters_georef, walls_create, walls_edit, walls_from_lines, walls_joins, openings_create, openings_edit, spaces_create, spaces_edit, spaces_quantities, grids_create, columns_create, stairs_create, ramps_create, arch_edit, tags_create, tags_check, tags_edit, viewmarks_create, viewmarks_edit, viewmarks_references, spaces_finish, templates_apply, sheets_set, xrefs_edit, xrefs_list, schedules_create, schedules_edit, file_import_pdf, inserts_clip,
     polygon_regular, polyline, rectangle_create, scenarios_edit, set, settings_set, sheets_edit,
     snap_find, stretch, styles_edit, styles_impact, transform, ucs_set, units_change, views_edit,
 };
@@ -126,6 +128,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
             kentos_contracts::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
             kentos_contracts::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
+            kentos_contracts::CAD_PROCESSING_BATCH => $then!(processing_batch, ProcessingBatch),
             kentos_contracts::CAD_ENTITIES_VERTEX => $then!(entities_vertex, EntitiesVertex),
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),
@@ -156,6 +159,8 @@ macro_rules! by_command {
             kentos_contracts::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_contracts::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
             kentos_contracts::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
+            kentos_contracts::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),
+            kentos_contracts::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_contracts::CAD_INSERTS_CLIP => $then!(inserts_clip, InsertsClip),
             kentos_contracts::CAD_RASTERS_GEOREF => $then!(rasters_georef, RastersGeoref),
             kentos_contracts::CAD_SCHEDULES_CREATE => $then!(schedules_create, SchedulesCreate),
@@ -264,6 +269,7 @@ macro_rules! by_command {
             kentos_contracts::FILE_IMPORT_GPKG => $then!(file_import_gpkg, ImportGpkg),
             kentos_contracts::FILE_IMPORT_SLD => $then!(sld, ImportSld),
             kentos_contracts::FILE_IMPORT_CSV => $then!(file_import_csv, ImportCsv),
+            kentos_contracts::CAD_GIS_DERIVATION => $then!(gis_derivation, GisDerivation),
             kentos_contracts::FILE_IMPORT_PDF => $then!(file_import_pdf, ImportPdf),
             kentos_contracts::CAD_SHEETS_EDIT => $then!(sheets_edit, SheetsEdit),
             kentos_contracts::CAD_CHANGESET_APPLY => $then!(changeset, ChangesetApply),

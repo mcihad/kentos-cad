@@ -427,7 +427,9 @@ fn main() -> iced::Result {
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
     kentos_postgis::register();
-    kentos_processing::command::register();
+    kentos_processing::command::register_as("desktop");
+    // STAC searches (docs/adr/0528 §2): over the cloud client's HTTP.
+    kentos_native_application::stac_host::register(Box::new(kentos_cloud::stac::HttpFetch));
 
     // `kentos-cad snapshot çıktı.png [çizim.kcad]`: the window without a window.
     let mut args = std::env::args().skip(1).peekable();

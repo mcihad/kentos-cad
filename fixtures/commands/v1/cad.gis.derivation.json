@@ -1,0 +1,5957 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.gis.derivation",
+ "commandVersion": 1,
+ "title": "GIS türevini denetle: dışa aktarılan GeoPackage'ın satırları kaynağı olan nesnelerle",
+ "note": "ADR 0530. Çizim fixtures/gis-derivation/v1/drawing.json; türev ada.gpkg ve GIS'te değiştirilmiş kopyaları (ada-duzenli, ada-eksik, ada-yabanci: scripts/fixtures/gis_derivation_files.py OGR'la yapar ve denetler). Dosyanın boyu ve SHA-256'sı hashlib'in; her tablonun en büyük sapması yayların kesin sagitta'sı (mpmath, 50 basamak); satırın ve tablonun özetleri KentOS'un, durumlar anlamıyla denetlenir. Bağımsız başvuru: scripts/fixtures/cad_gis_derivation_cases.py.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Ada 101 türevi",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis",
+   "drawingFont": "barlow"
+  },
+  "origin": {
+   "x": 487000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "text"
+     },
+     {
+      "name": "parsel_no",
+      "kind": "integer"
+     }
+    ]
+   },
+   {
+    "id": "bina",
+    "name": "Bina",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "yol",
+    "name": "Yol",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "fields": [
+     {
+      "name": "ad",
+      "kind": "text"
+     }
+    ]
+   },
+   {
+    "id": "yazi",
+    "name": "Yazı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "101",
+     "parsel_no": "7"
+    },
+    "pts": [
+     {
+      "x": 487000.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487040.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487000.0,
+      "y": 4420030.0
+     }
+    ],
+    "bulges": [
+     0,
+     0.5,
+     0,
+     0
+    ],
+    "zs": [
+     10.0,
+     11.0,
+     12.0,
+     13.0
+    ],
+    "holes": [
+     {
+      "pts": [
+       {
+        "x": 487010.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487016.0,
+        "y": 4420010.0
+       },
+       {
+        "x": 487016.0,
+        "y": 4420016.0
+       },
+       {
+        "x": 487010.0,
+        "y": 4420016.0
+       }
+      ],
+      "bulges": [
+       0,
+       0,
+       0,
+       0.4
+      ]
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "101",
+     "parsel_no": "8"
+    },
+    "pts": [
+     {
+      "x": 487050.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487080.0,
+      "y": 4420030.0
+     },
+     {
+      "x": 487050.0,
+      "y": 4420030.0
+     }
+    ]
+   },
+   {
+    "kind": "record",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "102"
+    }
+   },
+   {
+    "kind": "circle",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "ada": "kuyu"
+    },
+    "c": {
+     "x": 487020.0,
+     "y": 4420040.0
+    },
+    "r": 2.5
+   },
+   {
+    "kind": "arc",
+    "id": 5,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-100"
+    },
+    "c": {
+     "x": 487000.0,
+     "y": 4419950.0
+    },
+    "r": 60.0,
+    "a0": 0.2,
+    "a1": 1.4
+   },
+   {
+    "kind": "polyline",
+    "id": 6,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-200"
+    },
+    "pts": [
+     {
+      "x": 487100.0,
+      "y": 4419950.0
+     },
+     {
+      "x": 487120.0,
+      "y": 4419950.0
+     },
+     {
+      "x": 487140.0,
+      "y": 4419960.0
+     },
+     {
+      "x": 487160.0,
+      "y": 4419960.0
+     }
+    ],
+    "bulges": [
+     0.3,
+     0,
+     -0.4,
+     0
+    ],
+    "zs": [
+     100.0,
+     101.0,
+     102.0,
+     103.0
+    ],
+    "ms": [
+     0.0,
+     100.0,
+     200.0,
+     300.0
+    ]
+   },
+   {
+    "kind": "line",
+    "id": 7,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-300"
+    },
+    "a": {
+     "x": 487100.0,
+     "y": 4419930.0
+    },
+    "b": {
+     "x": 487120.0,
+     "y": 4419940.0
+    },
+    "za": 5.0,
+    "zb": 6.0
+   },
+   {
+    "kind": "polyline",
+    "id": 8,
+    "layerId": "yol",
+    "attrs": {
+     "ad": "D-400"
+    },
+    "pts": [
+     {
+      "x": 487200.0,
+      "y": 4419940.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4419940.0
+     },
+     {
+      "x": 487220.0,
+      "y": 4419960.0
+     }
+    ],
+    "bulges": [
+     0.2,
+     0,
+     0
+    ],
+    "closed": true
+   },
+   {
+    "kind": "ellipse",
+    "id": 9,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "gölet"
+    },
+    "c": {
+     "x": 487200.0,
+     "y": 4420000.0
+    },
+    "major": {
+     "x": 12.0,
+     "y": 0.0
+    },
+    "ratio": 0.5,
+    "t0": 0,
+    "t1": 6.283185307179586
+   },
+   {
+    "kind": "ellipse",
+    "id": 10,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "yay"
+    },
+    "c": {
+     "x": 487240.0,
+     "y": 4420000.0
+    },
+    "major": {
+     "x": 10.0,
+     "y": 5.0
+    },
+    "ratio": 0.4,
+    "t0": 0.5,
+    "t1": 2.5
+   },
+   {
+    "kind": "spline",
+    "id": 11,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "dere"
+    },
+    "pts": [
+     {
+      "x": 487260.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487265.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487270.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487275.0,
+      "y": 4420004.0
+     },
+     {
+      "x": 487280.0,
+      "y": 4420000.0
+     }
+    ],
+    "closed": false
+   },
+   {
+    "kind": "nurbs",
+    "id": 12,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "kıvrım"
+    },
+    "degree": 2,
+    "ctrl": [
+     {
+      "x": 487308.0,
+      "y": 4420000.0
+     },
+     {
+      "x": 487308.0,
+      "y": 4420008.0
+     },
+     {
+      "x": 487300.0,
+      "y": 4420008.0
+     }
+    ],
+    "knots": [
+     0,
+     0,
+     0,
+     1,
+     1,
+     1
+    ],
+    "weights": [
+     1.0,
+     0.7071067811865476,
+     1.0
+    ]
+   },
+   {
+    "kind": "point",
+    "id": 13,
+    "layerId": "cizim",
+    "attrs": {
+     "ad": "P-1"
+    },
+    "p": {
+     "x": 487320.0,
+     "y": 4420000.0
+    },
+    "z": 7.5
+   },
+   {
+    "kind": "text",
+    "id": 14,
+    "layerId": "yazi",
+    "attrs": {},
+    "p": {
+     "x": 487005.0,
+     "y": 4420035.0
+    },
+    "text": "Ada 101",
+    "height": 2.0,
+    "rotation": 15.0
+   },
+   {
+    "kind": "insert",
+    "id": 15,
+    "layerId": "bina",
+    "attrs": {
+     "NO": "B-1",
+     "KAT": "3"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "p": {
+     "x": 487005.0,
+     "y": 4420020.0
+    },
+    "scale": 1,
+    "rotation": 0
+   },
+   {
+    "kind": "insert",
+    "id": 16,
+    "layerId": "bina",
+    "attrs": {
+     "NO": "B-2"
+    },
+    "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "p": {
+     "x": 487055.0,
+     "y": 4420005.0
+    },
+    "scale": 1,
+    "rotation": 0.5
+   },
+   {
+    "kind": "polygon",
+    "id": 17,
+    "layerId": "bina",
+    "attrs": {},
+    "pts": [
+     {
+      "x": 487060.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487070.0,
+      "y": 4420015.0
+     },
+     {
+      "x": 487070.0,
+      "y": 4420025.0
+     },
+     {
+      "x": 487060.0,
+      "y": 4420025.0
+     }
+    ]
+   },
+   {
+    "kind": "xline",
+    "id": 18,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "dir": {
+     "x": 1.0,
+     "y": 0.0
+    }
+   },
+   {
+    "kind": "ray",
+    "id": 19,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "dir": {
+     "x": 0.0,
+     "y": 1.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  },
+  "blocks": [
+   {
+    "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+    "name": "Bina",
+    "base": {
+     "x": 0,
+     "y": 0
+    },
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "0",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 0,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 0
+       },
+       {
+        "x": 10,
+        "y": 8
+       },
+       {
+        "x": 0,
+        "y": 8
+       }
+      ]
+     }
+    ],
+    "attributes": [
+     {
+      "tag": "NO",
+      "prompt": "Bina no",
+      "value": "B-?",
+      "p": {
+       "x": 1,
+       "y": 1
+      },
+      "height": 0.5,
+      "rotation": 0
+     },
+     {
+      "tag": "KAT",
+      "prompt": "Kat",
+      "value": "1",
+      "p": {
+       "x": 1,
+       "y": 2
+      },
+      "height": 0.5,
+      "rotation": 0
+     }
+    ]
+   }
+  ]
+ },
+ "cases": [
+  {
+   "name": "güncel türev: bütün satırlar kaynağıyla aynı, listelenecek bir şey yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "doğrulama aynı denetimi yazmadan yapar",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan ile yürütme aynı cevabı verir, çizim değişmez",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "öznitelik değişen kaynak: satırı eski",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "parsel_no": "9"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 2,
+         "uid": "$uidOf:2",
+         "status": "stale",
+         "kind": "polygon",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "taşınan kaynak: satırı eski",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.transform",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "transform": {
+       "kind": "move",
+       "dx": 5.0,
+       "dy": 0.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 2,
+         "uid": "$uidOf:2",
+         "status": "stale",
+         "kind": "polygon",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yarıçapı değişen daire: satırı eski, öbürleri güncel",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.edit",
+     "input": {
+      "operation": "properties",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "$uidOf:4",
+        "geometry": {
+         "kind": "circle",
+         "c": {
+          "x": 487020.0,
+          "y": 4420040.0
+         },
+         "r": 3.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 4,
+         "uid": "$uidOf:4",
+         "status": "stale",
+         "kind": "circle",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "silinen kaynak: satırının kaynağı çizimde yok",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 17,
+     "as": "bina"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uid:bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 1,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 1,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Bina",
+         "fid": 1,
+         "uid": "$uid:bina",
+         "status": "source_gone",
+         "kind": "polygon",
+         "reason": "kaynak nesne çizimde yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 1 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "silinen yazı: ek tablosunun satırının kaynağı yok",
+   "steps": [
+    {
+     "op": "captureUid",
+     "id": 14,
+     "as": "yazi"
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.delete",
+     "input": {
+      "uids": [
+       "$uid:yazi"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 1,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 1,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "kentos_annotations",
+         "fid": 1,
+         "uid": "$uid:yazi",
+         "status": "source_gone",
+         "kind": "text",
+         "reason": "kaynak nesne çizimde yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 1 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dışa aktarmadan sonra yapılan alan: türevde satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.polygon.create",
+     "input": {
+      "layerId": "parsel",
+      "pts": [
+       {
+        "x": 487090.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487100.0,
+        "y": 4420010.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "Parsel",
+         "uid": "$uidOf:20",
+         "status": "not_exported",
+         "kind": "polygon",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dışa aktarmadan sonra yazılan yazı: yazı tablosunda satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.create",
+     "input": {
+      "layerId": "yazi",
+      "objects": [
+       {
+        "geometry": {
+         "kind": "text",
+         "p": {
+          "x": 487006.0,
+          "y": 4420038.0
+         },
+         "text": "Yeni",
+         "height": 2.0,
+         "rotation": 0.0
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "kentos_annotations",
+         "uid": "$uidOf:20",
+         "status": "not_exported",
+         "kind": "text",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dışa aktarmadan sonra yerleştirilen blok: blok tablosunda satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.blocks.insert",
+     "input": {
+      "name": "Bina",
+      "at": {
+       "x": 487070.0,
+       "y": 4420005.0
+      },
+      "layerId": "bina",
+      "attributes": {
+       "NO": "B-3"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "blok_Bina",
+         "uid": "$uidOf:20",
+         "status": "not_exported",
+         "kind": "insert",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bloğun öznitelik tanımı değişince yerleştirmeleri eski",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.blocks.edit",
+     "input": {
+      "operation": "attributes",
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "attributes": [
+       {
+        "tag": "NO",
+        "prompt": "Bina no",
+        "value": "B-?",
+        "p": {
+         "x": 1,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "KAT",
+        "prompt": "Kat",
+        "value": "2",
+        "p": {
+         "x": 1,
+         "y": 2
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 0,
+         "stale": 2,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 15,
+       "stale": 2,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "blok_Bina",
+         "fid": 1,
+         "uid": "$uidOf:15",
+         "status": "stale",
+         "kind": "insert",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        },
+        {
+         "table": "blok_Bina",
+         "fid": 2,
+         "uid": "$uidOf:16",
+         "status": "stale",
+         "kind": "insert",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 2 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yerleştirmenin özniteliği değişince yalnız o yerleştirme eski",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:16"
+      ],
+      "attrs": {
+       "KAT": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 1,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "blok_Bina",
+         "fid": 2,
+         "uid": "$uidOf:16",
+         "status": "stale",
+         "kind": "insert",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bakışı değişen nesne güncel kalır: renk, kalınlık, etiket, çizgi tipi",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "color": "#E5484D",
+      "operation": "color"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ],
+      "lineWeight": 0.35,
+      "operation": "lineWeight"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "label": "P8",
+      "operation": "label"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ],
+      "lineType": "dashed",
+      "operation": "lineType"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 17,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka katmana taşınan nesne: eski tablosunda eski, yeni katmanın türevinde satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:17"
+      ],
+      "layerId": "parsel",
+      "operation": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 0,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "Bina",
+         "fid": 1,
+         "uid": "$uidOf:17",
+         "status": "stale",
+         "kind": "polygon",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        },
+        {
+         "table": "Parsel",
+         "uid": "$uidOf:17",
+         "status": "not_exported",
+         "kind": "polygon",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "limit: listelenmeyenler sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "parsel_no": "70"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "parsel_no": "80"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "limit": 1
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 2,
+         "stale": 2,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 15,
+       "stale": 2,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 1,
+         "uid": "$uidOf:1",
+         "status": "stale",
+         "kind": "polygon",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        }
+       ],
+       "unlisted": 1,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 2 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "limit 0: hiçbir satır listelenmez",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ],
+      "attrs": {
+       "parsel_no": "70"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "limit": 0
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 1,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [],
+       "unlisted": 1,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GIS'te değişen satırlar: öznitelik, geometri ve yazı; kaynak değişmedi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-duzenli.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada-duzenli.gpkg",
+       "bytes": 270336,
+       "sha256": "809ef3c19f63d7765189b86ce6f838b8444ebb81412b34e989ee637e9279229a",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 0,
+         "edited": 1,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 3,
+         "stale": 0,
+         "edited": 1,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 1,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 14,
+       "stale": 0,
+       "edited": 3,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 2,
+         "uid": "$uidOf:2",
+         "status": "edited",
+         "kind": "polygon",
+         "fields": [
+          "ada"
+         ],
+         "reason": "satır GIS'te değiştirilmiş: ada; kaynak nesne değişmedi"
+        },
+        {
+         "table": "Yol",
+         "fid": 1,
+         "uid": "$uidOf:5",
+         "status": "edited",
+         "kind": "arc",
+         "fields": [
+          "geometry"
+         ],
+         "reason": "satır GIS'te değiştirilmiş: geometry; kaynak nesne değişmedi"
+        },
+        {
+         "table": "kentos_annotations",
+         "fid": 1,
+         "uid": "$uidOf:14",
+         "status": "edited",
+         "kind": "text",
+         "fields": [
+          "text"
+         ],
+         "reason": "satır GIS'te değiştirilmiş: text; kaynak nesne değişmedi"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_edited",
+        "message": "3 satır GIS'te değiştirilmiş. Kaynak olan çizimdeki nesneler değişmedi; türevin değişikliği çizime geri yazılmaz, kaynağı çizimde düzenleyin.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GIS'te değişen satırın kaynağı da değişmişse satır eski sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.entities.set",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ],
+      "attrs": {
+       "parsel_no": "9"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-duzenli.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada-duzenli.gpkg",
+       "bytes": 270336,
+       "sha256": "809ef3c19f63d7765189b86ce6f838b8444ebb81412b34e989ee637e9279229a",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 3,
+         "stale": 1,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 3,
+         "stale": 0,
+         "edited": 1,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 1,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 14,
+       "stale": 1,
+       "edited": 2,
+       "sourceGone": 0,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 2,
+         "uid": "$uidOf:2",
+         "status": "stale",
+         "kind": "polygon",
+         "reason": "kaynak nesne dışa aktarmadan sonra değişti"
+        },
+        {
+         "table": "Yol",
+         "fid": 1,
+         "uid": "$uidOf:5",
+         "status": "edited",
+         "kind": "arc",
+         "fields": [
+          "geometry"
+         ],
+         "reason": "satır GIS'te değiştirilmiş: geometry; kaynak nesne değişmedi"
+        },
+        {
+         "table": "kentos_annotations",
+         "fid": 1,
+         "uid": "$uidOf:14",
+         "status": "edited",
+         "kind": "text",
+         "fields": [
+          "text"
+         ],
+         "reason": "satır GIS'te değiştirilmiş: text; kaynak nesne değişmedi"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 1 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       },
+       {
+        "code": "derivation_edited",
+        "message": "2 satır GIS'te değiştirilmiş. Kaynak olan çizimdeki nesneler değişmedi; türevin değişikliği çizime geri yazılmaz, kaynağı çizimde düzenleyin.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GIS'te silinen satır: kaynağın satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-eksik.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada-eksik.gpkg",
+       "bytes": 270336,
+       "sha256": "695f605d3f73fb35ded81931af3e17266f4b4aea2a946c660860409830b92d5c",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 3,
+         "current": 3,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 0,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "Parsel",
+         "uid": "$uidOf:3",
+         "status": "not_exported",
+         "kind": "record",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 0 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kimliği değişen satır: kaynağı yok, nesnenin satırı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada-yabanci.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada-yabanci.gpkg",
+       "bytes": 270336,
+       "sha256": "27ec57381f2e04b5d26f0c7532ba08caad47bca4a0d9aa0bcd057fc64cc684cf",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": true,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 4,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 2,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 3,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 1,
+         "notExported": 1,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 1,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 5,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 0,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 16,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 1,
+       "notExported": 1,
+       "entries": [
+        {
+         "table": "Yol",
+         "fid": 4,
+         "uid": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999",
+         "status": "source_gone",
+         "kind": "polyline",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Yol",
+         "uid": "$uidOf:8",
+         "status": "not_exported",
+         "kind": "polyline",
+         "reason": "nesne dışa aktarmadan sonra yapıldı ya da bu katmana taşındı; türevde satırı yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 1 satırın kaynağı silindi, 1 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka çizim: hiçbir satırın kaynağı yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ada.gpkg",
+       "bytes": 270336,
+       "sha256": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "algorithm": "kentos.chords/1",
+       "tolerance": 0.0001,
+       "source": {
+        "name": "Ada 101 türevi",
+        "project": "$any",
+        "revision": "0",
+        "srid": 5256
+       },
+       "sameProject": false,
+       "tables": [
+        {
+         "table": "Parsel",
+         "role": "layer",
+         "layer": "parsel",
+         "rows": 4,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 4,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.994711228061452e-05
+        },
+        {
+         "table": "blok_Bina",
+         "role": "blocks",
+         "rows": 2,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 2,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Bina",
+         "role": "layer",
+         "layer": "bina",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 1,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Yol",
+         "role": "layer",
+         "layer": "yol",
+         "rows": 4,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 4,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 9.991108068507113e-05
+        },
+        {
+         "table": "kentos_annotations",
+         "role": "annotations",
+         "rows": 1,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 1,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0
+        },
+        {
+         "table": "Çizim",
+         "role": "layer",
+         "layer": "cizim",
+         "rows": 5,
+         "current": 0,
+         "stale": 0,
+         "edited": 0,
+         "sourceGone": 5,
+         "notExported": 0,
+         "overTolerance": 0,
+         "tolerance": 0.0001,
+         "maxDeviation": 0.0001
+        }
+       ],
+       "current": 0,
+       "stale": 0,
+       "edited": 0,
+       "sourceGone": 17,
+       "notExported": 0,
+       "entries": [
+        {
+         "table": "Parsel",
+         "fid": 1,
+         "uid": "d3f4635a-b894-5e05-9217-14e453989f11",
+         "status": "source_gone",
+         "kind": "polygon",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Parsel",
+         "fid": 2,
+         "uid": "02d61eb9-9b26-5590-8e25-78d790a6b927",
+         "status": "source_gone",
+         "kind": "polygon",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Parsel",
+         "fid": 3,
+         "uid": "9c2008a2-976e-54ff-9f5d-c77b4692686d",
+         "status": "source_gone",
+         "kind": "record",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Parsel",
+         "fid": 4,
+         "uid": "1ddaff72-4c8f-5d5b-9449-208d3ba68571",
+         "status": "source_gone",
+         "kind": "circle",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "blok_Bina",
+         "fid": 1,
+         "uid": "b330e1a2-f339-548f-a6f0-c306e91083c9",
+         "status": "source_gone",
+         "kind": "insert",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "blok_Bina",
+         "fid": 2,
+         "uid": "814caad6-d55b-51ac-8ff2-d966cdc4d15c",
+         "status": "source_gone",
+         "kind": "insert",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Bina",
+         "fid": 1,
+         "uid": "8ee07773-20aa-572c-a9e0-092e8017bfc0",
+         "status": "source_gone",
+         "kind": "polygon",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Yol",
+         "fid": 1,
+         "uid": "34b0eb6a-a06f-5d07-b589-21d886633e63",
+         "status": "source_gone",
+         "kind": "arc",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Yol",
+         "fid": 2,
+         "uid": "0faf191e-1ed2-592f-9912-ebf17aa5c57f",
+         "status": "source_gone",
+         "kind": "polyline",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Yol",
+         "fid": 3,
+         "uid": "ba097657-adb4-57b9-b3aa-4ee9b51d211e",
+         "status": "source_gone",
+         "kind": "line",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Yol",
+         "fid": 4,
+         "uid": "60c04192-53d9-5567-ada8-52d6fa5d7d62",
+         "status": "source_gone",
+         "kind": "polyline",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "kentos_annotations",
+         "fid": 1,
+         "uid": "07aee471-e4f7-5478-bf46-e18a4946f0a9",
+         "status": "source_gone",
+         "kind": "text",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Çizim",
+         "fid": 1,
+         "uid": "4307aee7-970f-50fa-af31-49cd720852ae",
+         "status": "source_gone",
+         "kind": "ellipse",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Çizim",
+         "fid": 2,
+         "uid": "63c82975-b8d2-59e9-9346-0ea51519483a",
+         "status": "source_gone",
+         "kind": "ellipse",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Çizim",
+         "fid": 3,
+         "uid": "b9783577-2606-50e9-acba-8df574887fcd",
+         "status": "source_gone",
+         "kind": "spline",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Çizim",
+         "fid": 4,
+         "uid": "3adc6c6d-1a0f-5d98-b255-e55d5c07a449",
+         "status": "source_gone",
+         "kind": "nurbs",
+         "reason": "kaynak nesne çizimde yok"
+        },
+        {
+         "table": "Çizim",
+         "fid": 5,
+         "uid": "ddcaee06-3129-5bfd-a509-804eb32f6cdc",
+         "status": "source_gone",
+         "kind": "point",
+         "reason": "kaynak nesne çizimde yok"
+        }
+       ],
+       "unlisted": 0,
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "derivation_stale",
+        "message": "Türev eski: 0 satırın kaynağı dışa aktarmadan sonra değişti, 17 satırın kaynağı silindi, 0 nesnenin satırı yok. file.export.gis ile yeniden dışa aktarın.",
+        "path": "path"
+       }
+      ]
+     },
+     "within": 1e-12,
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Başka çizim",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "text"
+       },
+       {
+        "name": "parsel_no",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "name": "Bina",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 8
+         },
+         {
+          "x": 0,
+          "y": 8
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "NO",
+        "prompt": "Bina no",
+        "value": "B-?",
+        "p": {
+         "x": 1,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "KAT",
+        "prompt": "Kat",
+        "value": "1",
+        "p": {
+         "x": 1,
+         "y": 2
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "yol mutlak değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "ada.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yol klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "dosya yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/yok.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "GeoPackage olmayan dosya okunamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/drawing.json"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türetim kaydı olmayan GeoPackage",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:geopackage/v1/qgis.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_derivation",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türevin tablosu yeni katmana bağlanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.sources.edit",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:gis-derivation/v1/ada.gpkg",
+       "table": "Parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derived_dataset",
+       "message": "$any",
+       "path": "edit.table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türevin tablosu var olan katmana bağlanmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.sources.edit",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$fixture:gis-derivation/v1/ada.gpkg",
+       "table": "Parsel",
+       "layer": "parsel"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derived_dataset",
+       "message": "$any",
+       "path": "edit.table"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "önceden bağlı türev tablosuna yazılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "parsel",
+      "direction": "write"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derived_dataset",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ada 101 türevi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:gis-derivation/v1/ada.gpkg",
+       "table": "Parsel",
+       "layer": "parsel",
+       "revision": "0000000000000000000000000000000000000000000000000000000000000000",
+       "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "text"
+       },
+       {
+        "name": "parsel_no",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "101",
+       "parsel_no": "7"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ],
+      "bulges": [
+       0,
+       0.5,
+       0,
+       0
+      ],
+      "zs": [
+       10.0,
+       11.0,
+       12.0,
+       13.0
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487016.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487016.0,
+          "y": 4420016.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420016.0
+         }
+        ],
+        "bulges": [
+         0,
+         0,
+         0,
+         0.4
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "101",
+       "parsel_no": "8"
+      },
+      "pts": [
+       {
+        "x": 487050.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487080.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487080.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "record",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "102"
+      }
+     },
+     {
+      "kind": "circle",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "kuyu"
+      },
+      "c": {
+       "x": 487020.0,
+       "y": 4420040.0
+      },
+      "r": 2.5
+     },
+     {
+      "kind": "arc",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-100"
+      },
+      "c": {
+       "x": 487000.0,
+       "y": 4419950.0
+      },
+      "r": 60.0,
+      "a0": 0.2,
+      "a1": 1.4
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-200"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4419950.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4419950.0
+       },
+       {
+        "x": 487140.0,
+        "y": 4419960.0
+       },
+       {
+        "x": 487160.0,
+        "y": 4419960.0
+       }
+      ],
+      "bulges": [
+       0.3,
+       0,
+       -0.4,
+       0
+      ],
+      "zs": [
+       100.0,
+       101.0,
+       102.0,
+       103.0
+      ],
+      "ms": [
+       0.0,
+       100.0,
+       200.0,
+       300.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-300"
+      },
+      "a": {
+       "x": 487100.0,
+       "y": 4419930.0
+      },
+      "b": {
+       "x": 487120.0,
+       "y": 4419940.0
+      },
+      "za": 5.0,
+      "zb": 6.0
+     },
+     {
+      "kind": "polyline",
+      "id": 8,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-400"
+      },
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4419940.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4419940.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4419960.0
+       }
+      ],
+      "bulges": [
+       0.2,
+       0,
+       0
+      ],
+      "closed": true
+     },
+     {
+      "kind": "ellipse",
+      "id": 9,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "gölet"
+      },
+      "c": {
+       "x": 487200.0,
+       "y": 4420000.0
+      },
+      "major": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "ratio": 0.5,
+      "t0": 0,
+      "t1": 6.283185307179586
+     },
+     {
+      "kind": "ellipse",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "yay"
+      },
+      "c": {
+       "x": 487240.0,
+       "y": 4420000.0
+      },
+      "major": {
+       "x": 10.0,
+       "y": 5.0
+      },
+      "ratio": 0.4,
+      "t0": 0.5,
+      "t1": 2.5
+     },
+     {
+      "kind": "spline",
+      "id": 11,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "dere"
+      },
+      "pts": [
+       {
+        "x": 487260.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487265.0,
+        "y": 4420004.0
+       },
+       {
+        "x": 487270.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487275.0,
+        "y": 4420004.0
+       },
+       {
+        "x": 487280.0,
+        "y": 4420000.0
+       }
+      ],
+      "closed": false
+     },
+     {
+      "kind": "nurbs",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "kıvrım"
+      },
+      "degree": 2,
+      "ctrl": [
+       {
+        "x": 487308.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487308.0,
+        "y": 4420008.0
+       },
+       {
+        "x": 487300.0,
+        "y": 4420008.0
+       }
+      ],
+      "knots": [
+       0,
+       0,
+       0,
+       1,
+       1,
+       1
+      ],
+      "weights": [
+       1.0,
+       0.7071067811865476,
+       1.0
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "P-1"
+      },
+      "p": {
+       "x": 487320.0,
+       "y": 4420000.0
+      },
+      "z": 7.5
+     },
+     {
+      "kind": "text",
+      "id": 14,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+       "x": 487005.0,
+       "y": 4420035.0
+      },
+      "text": "Ada 101",
+      "height": 2.0,
+      "rotation": 15.0
+     },
+     {
+      "kind": "insert",
+      "id": 15,
+      "layerId": "bina",
+      "attrs": {
+       "NO": "B-1",
+       "KAT": "3"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "p": {
+       "x": 487005.0,
+       "y": 4420020.0
+      },
+      "scale": 1,
+      "rotation": 0
+     },
+     {
+      "kind": "insert",
+      "id": 16,
+      "layerId": "bina",
+      "attrs": {
+       "NO": "B-2"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "p": {
+       "x": 487055.0,
+       "y": 4420005.0
+      },
+      "scale": 1,
+      "rotation": 0.5
+     },
+     {
+      "kind": "polygon",
+      "id": 17,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487060.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420025.0
+       }
+      ]
+     },
+     {
+      "kind": "xline",
+      "id": 18,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "dir": {
+       "x": 1.0,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "ray",
+      "id": 19,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "dir": {
+       "x": 0.0,
+       "y": 1.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "name": "Bina",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 8
+         },
+         {
+          "x": 0,
+          "y": 8
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "NO",
+        "prompt": "Bina no",
+        "value": "B-?",
+        "p": {
+         "x": 1,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "KAT",
+        "prompt": "Kat",
+        "value": "1",
+        "p": {
+         "x": 1,
+         "y": 2
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "önceden bağlı türev tablosuna okunmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "cad.sources.sync",
+     "input": {
+      "layer": "parsel",
+      "direction": "read"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derived_dataset",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ada 101 türevi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:gis-derivation/v1/ada.gpkg",
+       "table": "Parsel",
+       "layer": "parsel",
+       "revision": "0000000000000000000000000000000000000000000000000000000000000000",
+       "digest": "0000000000000000000000000000000000000000000000000000000000000000",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "text"
+       },
+       {
+        "name": "parsel_no",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+     {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "101",
+       "parsel_no": "7"
+      },
+      "pts": [
+       {
+        "x": 487000.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487040.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487000.0,
+        "y": 4420030.0
+       }
+      ],
+      "bulges": [
+       0,
+       0.5,
+       0,
+       0
+      ],
+      "zs": [
+       10.0,
+       11.0,
+       12.0,
+       13.0
+      ],
+      "holes": [
+       {
+        "pts": [
+         {
+          "x": 487010.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487016.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487016.0,
+          "y": 4420016.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420016.0
+         }
+        ],
+        "bulges": [
+         0,
+         0,
+         0,
+         0.4
+        ]
+       }
+      ]
+     },
+     {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "101",
+       "parsel_no": "8"
+      },
+      "pts": [
+       {
+        "x": 487050.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487080.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487080.0,
+        "y": 4420030.0
+       },
+       {
+        "x": 487050.0,
+        "y": 4420030.0
+       }
+      ]
+     },
+     {
+      "kind": "record",
+      "id": 3,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "102"
+      }
+     },
+     {
+      "kind": "circle",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+       "ada": "kuyu"
+      },
+      "c": {
+       "x": 487020.0,
+       "y": 4420040.0
+      },
+      "r": 2.5
+     },
+     {
+      "kind": "arc",
+      "id": 5,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-100"
+      },
+      "c": {
+       "x": 487000.0,
+       "y": 4419950.0
+      },
+      "r": 60.0,
+      "a0": 0.2,
+      "a1": 1.4
+     },
+     {
+      "kind": "polyline",
+      "id": 6,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-200"
+      },
+      "pts": [
+       {
+        "x": 487100.0,
+        "y": 4419950.0
+       },
+       {
+        "x": 487120.0,
+        "y": 4419950.0
+       },
+       {
+        "x": 487140.0,
+        "y": 4419960.0
+       },
+       {
+        "x": 487160.0,
+        "y": 4419960.0
+       }
+      ],
+      "bulges": [
+       0.3,
+       0,
+       -0.4,
+       0
+      ],
+      "zs": [
+       100.0,
+       101.0,
+       102.0,
+       103.0
+      ],
+      "ms": [
+       0.0,
+       100.0,
+       200.0,
+       300.0
+      ]
+     },
+     {
+      "kind": "line",
+      "id": 7,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-300"
+      },
+      "a": {
+       "x": 487100.0,
+       "y": 4419930.0
+      },
+      "b": {
+       "x": 487120.0,
+       "y": 4419940.0
+      },
+      "za": 5.0,
+      "zb": 6.0
+     },
+     {
+      "kind": "polyline",
+      "id": 8,
+      "layerId": "yol",
+      "attrs": {
+       "ad": "D-400"
+      },
+      "pts": [
+       {
+        "x": 487200.0,
+        "y": 4419940.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4419940.0
+       },
+       {
+        "x": 487220.0,
+        "y": 4419960.0
+       }
+      ],
+      "bulges": [
+       0.2,
+       0,
+       0
+      ],
+      "closed": true
+     },
+     {
+      "kind": "ellipse",
+      "id": 9,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "gölet"
+      },
+      "c": {
+       "x": 487200.0,
+       "y": 4420000.0
+      },
+      "major": {
+       "x": 12.0,
+       "y": 0.0
+      },
+      "ratio": 0.5,
+      "t0": 0,
+      "t1": 6.283185307179586
+     },
+     {
+      "kind": "ellipse",
+      "id": 10,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "yay"
+      },
+      "c": {
+       "x": 487240.0,
+       "y": 4420000.0
+      },
+      "major": {
+       "x": 10.0,
+       "y": 5.0
+      },
+      "ratio": 0.4,
+      "t0": 0.5,
+      "t1": 2.5
+     },
+     {
+      "kind": "spline",
+      "id": 11,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "dere"
+      },
+      "pts": [
+       {
+        "x": 487260.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487265.0,
+        "y": 4420004.0
+       },
+       {
+        "x": 487270.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487275.0,
+        "y": 4420004.0
+       },
+       {
+        "x": 487280.0,
+        "y": 4420000.0
+       }
+      ],
+      "closed": false
+     },
+     {
+      "kind": "nurbs",
+      "id": 12,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "kıvrım"
+      },
+      "degree": 2,
+      "ctrl": [
+       {
+        "x": 487308.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487308.0,
+        "y": 4420008.0
+       },
+       {
+        "x": 487300.0,
+        "y": 4420008.0
+       }
+      ],
+      "knots": [
+       0,
+       0,
+       0,
+       1,
+       1,
+       1
+      ],
+      "weights": [
+       1.0,
+       0.7071067811865476,
+       1.0
+      ]
+     },
+     {
+      "kind": "point",
+      "id": 13,
+      "layerId": "cizim",
+      "attrs": {
+       "ad": "P-1"
+      },
+      "p": {
+       "x": 487320.0,
+       "y": 4420000.0
+      },
+      "z": 7.5
+     },
+     {
+      "kind": "text",
+      "id": 14,
+      "layerId": "yazi",
+      "attrs": {},
+      "p": {
+       "x": 487005.0,
+       "y": 4420035.0
+      },
+      "text": "Ada 101",
+      "height": 2.0,
+      "rotation": 15.0
+     },
+     {
+      "kind": "insert",
+      "id": 15,
+      "layerId": "bina",
+      "attrs": {
+       "NO": "B-1",
+       "KAT": "3"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "p": {
+       "x": 487005.0,
+       "y": 4420020.0
+      },
+      "scale": 1,
+      "rotation": 0
+     },
+     {
+      "kind": "insert",
+      "id": 16,
+      "layerId": "bina",
+      "attrs": {
+       "NO": "B-2"
+      },
+      "block": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "p": {
+       "x": 487055.0,
+       "y": 4420005.0
+      },
+      "scale": 1,
+      "rotation": 0.5
+     },
+     {
+      "kind": "polygon",
+      "id": 17,
+      "layerId": "bina",
+      "attrs": {},
+      "pts": [
+       {
+        "x": 487060.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420015.0
+       },
+       {
+        "x": 487070.0,
+        "y": 4420025.0
+       },
+       {
+        "x": 487060.0,
+        "y": 4420025.0
+       }
+      ]
+     },
+     {
+      "kind": "xline",
+      "id": 18,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "dir": {
+       "x": 1.0,
+       "y": 0.0
+      }
+     },
+     {
+      "kind": "ray",
+      "id": 19,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487000.0,
+       "y": 4420000.0
+      },
+      "dir": {
+       "x": 0.0,
+       "y": 1.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "name": "Bina",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 8
+         },
+         {
+          "x": 0,
+          "y": 8
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "NO",
+        "prompt": "Bina no",
+        "value": "B-?",
+        "p": {
+         "x": 1,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "KAT",
+        "prompt": "Kat",
+        "value": "1",
+        "p": {
+         "x": 1,
+         "y": 2
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "name": "türev aynı çizime alınamaz: nesnelerin kimlikleri çizimde",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_exists",
+       "message": "$any",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "türev başka çizime alınınca ne olduğunu söyler: yaylar kirişlerdir",
+   "steps": [
+    {
+     "op": "execute",
+     "command": "file.import.gpkg",
+     "input": {
+      "path": "$fixture:gis-derivation/v1/ada.gpkg",
+      "tables": [
+       "Yol"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": [
+       {
+        "code": "derived_import",
+        "message": "Alınan tablolar çizimden türetilmiş GIS verisi: “Yol” (kaynak “Ada 101 türevi”, 0 sürümü, tolerans 0.0001 m). Geometrileri kaynak yayların kirişleridir; yay olarak değil çoklu çizgi ve alan olarak alındı. Kaynak nesneler hâlâ onların çizimindedir.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "changed"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Ada 101 türevi",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "drawingFont": "barlow"
+    },
+    "origin": {
+     "x": 487000.0,
+     "y": 4420000.0
+    },
+    "layers": [
+     {
+      "id": "parsel",
+      "name": "Parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ada",
+        "kind": "text"
+       },
+       {
+        "name": "parsel_no",
+        "kind": "integer"
+       }
+      ]
+     },
+     {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "yol",
+      "name": "Yol",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+       {
+        "name": "ad",
+        "kind": "text"
+       }
+      ]
+     },
+     {
+      "id": "yazi",
+      "name": "Yazı",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "ink",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "parsel",
+    "entities": [],
+    "styles": {
+     "items": [],
+     "categories": []
+    },
+    "blocks": [
+     {
+      "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001",
+      "name": "Bina",
+      "base": {
+       "x": 0,
+       "y": 0
+      },
+      "entities": [
+       {
+        "kind": "polygon",
+        "id": 1,
+        "layerId": "0",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 0,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 0
+         },
+         {
+          "x": 10,
+          "y": 8
+         },
+         {
+          "x": 0,
+          "y": 8
+         }
+        ]
+       }
+      ],
+      "attributes": [
+       {
+        "tag": "NO",
+        "prompt": "Bina no",
+        "value": "B-?",
+        "p": {
+         "x": 1,
+         "y": 1
+        },
+        "height": 0.5,
+        "rotation": 0
+       },
+       {
+        "tag": "KAT",
+        "prompt": "Kat",
+        "value": "1",
+        "p": {
+         "x": 1,
+         "y": 2
+        },
+        "height": 0.5,
+        "rotation": 0
+       }
+      ]
+     }
+    ]
+   }
+  }
+ ]
+}

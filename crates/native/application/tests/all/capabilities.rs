@@ -333,6 +333,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
     ),
     (
+        "cad.processing.batch",
+        "tools_unavailable",
+        "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",
+    ),
+    (
         "cad.sources.sync",
         "invalid_extent",
         "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510)",
@@ -351,6 +356,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "cad.sheets.edit",
         "*",
         "pafta çekirdeğinin kendi retleri; çekirdeğin testleri (crates/shared/sheet) ve cad.sheets.edit'in ilk ikisi",
+    ),
+    (
+        "cad.stac.search",
+        "stac_unavailable",
+        "ortak durumların koşucusu kayıtlı cevaplı bir ağ kaydeder; ağsız ev sahibi stac_search.rs'in birim testinde (ADR 0528 §2)",
     ),
 ];
 

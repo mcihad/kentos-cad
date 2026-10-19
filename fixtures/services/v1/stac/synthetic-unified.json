@@ -1,0 +1,77 @@
+{
+ "kentos:note": "Written by scripts/fixtures/stac_cases.py: STAC 1.1's unified `bands` array and a license given by the item.",
+ "type": "FeatureCollection",
+ "stac_version": "1.1.0",
+ "context": {
+  "matched": 1,
+  "returned": 1
+ },
+ "features": [
+  {
+   "type": "Feature",
+   "stac_version": "1.0.0",
+   "id": "UNIFIED_1",
+   "collection": "c",
+   "bbox": [
+    36.0,
+    39.0,
+    37.0,
+    40.0
+   ],
+   "properties": {
+    "datetime": "2026-06-01T09:00:00Z",
+    "eo:cloud_cover": 0.0,
+    "proj:epsg": 32637,
+    "license": "CC-BY-4.0",
+    "gsd": 30,
+    "platform": "landsat-9",
+    "instruments": [
+     "oli2",
+     "tirs2"
+    ]
+   },
+   "assets": {
+    "red": {
+     "href": "https://h.example/red.tif",
+     "roles": [
+      "data",
+      "reflectance"
+     ],
+     "proj:shape": [
+      100,
+      100
+     ],
+     "proj:transform": [
+      30,
+      0,
+      300000,
+      0,
+      -30,
+      4400000,
+      0,
+      0,
+      1
+     ],
+     "bands": [
+      {
+       "name": "SR_B4",
+       "eo:common_name": "red",
+       "eo:center_wavelength": 0.65,
+       "data_type": "uint16",
+       "nodata": 0,
+       "scale": 2.75e-05,
+       "offset": -0.2
+      }
+     ]
+    }
+   },
+   "links": [
+    {
+     "rel": "self",
+     "href": "https://earth-search.aws.element84.com/v1/collections/c/items/UNIFIED_1"
+    }
+   ]
+  }
+ ],
+ "links": []
+}

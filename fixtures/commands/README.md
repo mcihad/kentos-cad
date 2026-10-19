@@ -27,7 +27,7 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.settings.set.json` | `cad.settings.set` v1 (ADR 0248: proje ayarları anahtarla; masaüstünün) | 28 |
 | `v1/cad.sheets.edit.json` | `cad.sheets.edit` v1 (ADR 0252: pafta çekirdeğinin işlemleri; masaüstünün) | 20 |
 | `v1/cad.addresses.define.json` | `cad.addresses.define` v1 (ADR 0229: adres verisinin tanımı; masaüstünün) | 22 |
-| `v1/cad.layers.service.json` | `cad.layers.service` v1 (ADR 0208 §15: servis katmanı ve veri kaynağı; masaüstünün) | 36 |
+| `v1/cad.layers.service.json` | `cad.layers.service` v1 (ADR 0208 §15: servis katmanı ve veri kaynağı; masaüstünün) | 38 |
 | `v1/cad.network.define.json` | `cad.network.define` v1 (ADR 0209 §11: projenin ağları; masaüstünün) | 21 |
 | `v1/cad.layers.time.json` | `cad.layers.time` v1 (ADR 0210 §11: katmanın zaman ayarı; masaüstünün) | 29 |
 | `v1/cad.scenarios.edit.json` | `cad.scenarios.edit` v1 (ADR 0210 §11: senaryolar; masaüstünün) | 39 |
@@ -52,6 +52,8 @@ Aynı dosyaları iki uygulama koşar: web `apps/web/src/product/fixtures.test.ts
 | `v1/cad.entities.hatch.json` | `cad.entities.hatch` v1 (ADR 0254 §7: Tarama ve Çoklu tara; masaüstünün) | 34 |
 | `v1/cad.dimensions.create.json` | `cad.dimensions.create` v1 (ADR 0255: Ölçülendirme'nin on türü; masaüstünün) | 49 |
 | `v1/cad.units.change.json` | `cad.units.change` v1 (ADR 0256 §1: birim değiştirme, boylar ya da sayılar korunur; masaüstünün) | 23 |
+| `v1/cad.stac.search.json` | `cad.stac.search` v1 (ADR 0528 §3: STAC araması, kayıtlı cevaplarla `fixtures/services/v1/stac`; Python'da `KENTOS_STAC_RECORDED`; masaüstünün) | 35 |
+| `v1/cad.stac.prepare.json` | `cad.stac.prepare` v1 (ADR 0528 §6: STAC varlıklarını adresli raster olarak hazırla; masaüstünün) | 38 |
 
 Masaüstüne özgü dosyaların durumlarını KentOS kodu olmadan sözleşmenin ve işlemlerin tanımından şu betikler yazar (`--check` farkı arar): `edge_command_cases.py` (Buda, Uzat, Köşe yuvarla, Pah), `offset_command_cases.py`, `reshape_command_cases.py` (Esnet, Kır, Birleştir, Böl), `region_command_cases.py` (Alan oluştur, Tarama), `dimension_create_cases.py` (Ölçü ekle), `units_change_cases.py` (Birimi değiştir), `changeset_command_cases.py` (değişiklik kümesi) ve öbürlerinin kendi betikleri (`scripts/fixtures/`).
 

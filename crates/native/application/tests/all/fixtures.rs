@@ -35,7 +35,8 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
-use kentos_native_application::{processing_run, processing_tools};
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
+use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
@@ -55,7 +56,7 @@ use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_csv, file_import_gpkg, file_import_pdf, sld, stretch,
+    entities_reverse, file_import, file_import_csv, file_import_gpkg, file_import_pdf, gis_derivation, sld, stretch,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -897,6 +898,18 @@ impl Input for kentos_domain::contracts::ImagesEdit {
 }
 
 impl Input for kentos_domain::contracts::RastersMosaic {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::StacSearch {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::StacPrepare {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2121,6 +2134,13 @@ impl Input for ImportDxf {
     }
 }
 
+// No number: a path and a count (docs/adr/0530).
+impl Input for kentos_domain::contracts::GisDerivation {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::ImportCsv {
     /// No number: a path, a layer and column names.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -2170,6 +2190,12 @@ impl Input for kentos_domain::contracts::ProcessingTools {
 }
 
 impl Input for kentos_domain::contracts::ProcessingRun {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::ProcessingBatch {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3040,6 +3066,12 @@ fn run_op(
         kentos_domain::contracts::CAD_RASTERS_MOSAIC => {
             run!(rasters_mosaic, kentos_domain::contracts::RastersMosaic)
         }
+        kentos_domain::contracts::CAD_STAC_SEARCH => {
+            run!(stac_search, kentos_domain::contracts::StacSearch)
+        }
+        kentos_domain::contracts::CAD_STAC_PREPARE => {
+            run!(stac_prepare, kentos_domain::contracts::StacPrepare)
+        }
         kentos_domain::contracts::CAD_RASTERS_GEOREF => {
             run!(rasters_georef, kentos_domain::contracts::RastersGeoref)
         }
@@ -3139,6 +3171,9 @@ fn run_op(
         kentos_domain::contracts::FILE_IMPORT_CSV => {
             run!(file_import_csv, kentos_domain::contracts::ImportCsv)
         }
+        kentos_domain::contracts::CAD_GIS_DERIVATION => {
+            run!(gis_derivation, kentos_domain::contracts::GisDerivation)
+        }
         kentos_domain::contracts::FILE_IMPORT_SLD => {
             run!(sld, kentos_domain::contracts::ImportSld)
         }
@@ -3149,6 +3184,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
         kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
         kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),
+        kentos_domain::contracts::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_domain::contracts::ProcessingBatch),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
@@ -3735,6 +3771,10 @@ fn setup_paths(value: &Value) -> Value {
 fn run_case(command: &str, setup: &Value, case: &Value, at: &str) -> Outcome<()> {
     // İşlemler's tools, as every host that has them registers them (docs/adr/0508).
     kentos_processing::command::register();
+    // STAC searches are answered from the recorded folder (docs/adr/0528 §2): no network in a shared case.
+    stac_host::register(Box::new(stac_host::Recorded::open(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/services/v1/stac"),
+    )));
     let setup = &setup_paths(setup);
     let snapshot = DocumentSnapshotV1::from_json(&setup.to_string())
         .map_err(|e| format!("{at}: kurulum: {e}"))?;

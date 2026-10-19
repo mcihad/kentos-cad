@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -85,6 +85,7 @@ COMMANDS: dict[str, Any] = {
     "cad.forms.test": forms.test,
     "cad.forms.transition": forms.transition,
     "cad.forms.validate": forms.validate,
+    "cad.gis.derivation": gis.derivation,
     "cad.grids.create": grids.create,
     "cad.hatches.edit": hatches.edit,
     "cad.hatchpatterns.edit": hatchpatterns.edit,
@@ -123,6 +124,7 @@ COMMANDS: dict[str, Any] = {
     "cad.polygon.create": polygon.create,
     "cad.polygon.regular": polygon.regular,
     "cad.polyline.create": polyline.create,
+    "cad.processing.batch": processing.batch,
     "cad.processing.run": processing.run,
     "cad.processing.tools": processing.tools,
     "cad.ramps.create": ramps.create,
@@ -147,6 +149,8 @@ COMMANDS: dict[str, Any] = {
     "cad.spaces.edit": spaces.edit,
     "cad.spaces.finish": spaces.finish,
     "cad.spaces.quantities": spaces.quantities,
+    "cad.stac.prepare": stac.prepare,
+    "cad.stac.search": stac.search,
     "cad.stairs.create": stairs.create,
     "cad.standards.apply": standards.apply,
     "cad.standards.check": standards.check,
@@ -175,6 +179,7 @@ COMMANDS: dict[str, Any] = {
     "file.export.block": file.export.block,
     "file.export.csv": file.export.csv,
     "file.export.dxf": file.export.dxf,
+    "file.export.gis": file.export.gis,
     "file.export.gpkg": file.export.gpkg,
     "file.export.pdf": file.export.pdf,
     "file.export.shp": file.export.shp,
@@ -210,4 +215,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "rasters", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "crs", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "gis", "grids", "hatches", "hatchpatterns", "images", "inserts", "joins", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "rasters", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stac", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)

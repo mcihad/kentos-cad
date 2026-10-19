@@ -1,0 +1,92 @@
+{
+ "note": "Written by scripts/fixtures/stac_cases.py from docs/adr/0528 and the STAC specification; do not edit by hand.",
+ "requests": [
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-20T23:59:59Z\",\"limit\":2,\"query\":{\"eo:cloud_cover\":{\"lte\":20}}}",
+   "file": "earth-search-s2-page1.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-20T23:59:59Z\",\"limit\":2,\"next\":\"2024-07-08T08:29:15.791000Z,S2B_37SCD_20240708_0_L2A,sentinel-2-l2a\",\"query\":{\"eo:cloud_cover\":{\"lte\":20}}}",
+   "file": "earth-search-s2-page2.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"bbox\":[36.9,39.7,37.1,39.8],\"collections\":[\"landsat-c2-l2\"],\"datetime\":\"2024-07-01T00:00:00Z/2024-07-31T23:59:59Z\",\"limit\":1,\"query\":{\"eo:cloud_cover\":{\"lte\":30}}}",
+   "file": "earth-search-landsat.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"c\"],\"limit\":5,\"query\":{\"eo:cloud_cover\":{\"lte\":10}}}",
+   "file": "synthetic-cloudy.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"sentinel-2-l2a\"],\"datetime\":\"2026-07-13T00:00:00Z/2026-07-13T23:59:59Z\",\"ids\":[\"S2B_MSIL2A_20260713_R121_T36SUD\"],\"limit\":3}",
+   "file": "synthetic-signed.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"c\"],\"datetime\":\"2026-06-01T00:00:00Z/..\",\"limit\":1}",
+   "file": "synthetic-unified.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"c\"],\"limit\":1}",
+   "file": "synthetic-get-next-1.json"
+  },
+  {
+   "method": "GET",
+   "url": "https://earth-search.aws.element84.com/v1/search?token=next%3Apage2",
+   "file": "synthetic-get-next-2.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"bbox\":[0,0,1,1],\"collections\":[\"c\"],\"limit\":1}",
+   "file": "synthetic-empty.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"down\"],\"limit\":10}",
+   "error": "Sunucu HTTP 503 dedi."
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"html\"],\"limit\":10}",
+   "file": "not-json.txt"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"collections\":[\"error\"],\"limit\":10}",
+   "file": "synthetic-no-features.json"
+  },
+  {
+   "method": "POST",
+   "url": "https://earth-search.aws.element84.com/v1/search",
+   "body": "{\"bbox\":[36,39,37,40],\"datetime\":\"2024-07-13T00:00:00Z/2024-07-13T23:59:59Z\",\"ids\":[\"A\"],\"limit\":100,\"query\":{\"eo:cloud_cover\":{\"lte\":12.5}}}",
+   "file": "synthetic-empty.json"
+  },
+  {
+   "method": "GET",
+   "url": "https://earth-search.aws.element84.com/v1",
+   "file": "earth-search-root.json"
+  },
+  {
+   "method": "GET",
+   "url": "https://earth-search.aws.element84.com/v1/collections",
+   "file": "earth-search-collections.json"
+  }
+ ]
+}

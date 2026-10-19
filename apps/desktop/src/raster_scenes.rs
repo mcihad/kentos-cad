@@ -91,6 +91,72 @@ fn mosaic_run(app: &mut App, name: &str) {
     send(app, crate::rasters::mosaic::Event::Run);
 }
 
+/// Draws until the view stops changing, without waiting for tiles (STAC's rasters are read by address: none here).
+fn settled(s: &mut Snapshot, app: &mut App) {
+    let mut update = |app: &mut App, message: Message| {
+        let _ = app.update(message);
+    };
+    s.settle(app, App::view, &mut update);
+}
+
+/// STAC'ta ara over the valley's drawing (docs/adr/0528 §7): the recorded Earth Search answers, the first search made
+/// (Sentinel-2 over Sivas, July 2024); with `choose` the first item chosen, in a project of its system (UTM 37N) or
+/// `utm` false in the drawing's own (TUREF / TM36), and with `prepare` Hazırla pressed.
+fn stac_scene(app: &mut App, choose: bool, utm: bool, prepare: bool) {
+    use crate::rasters::stac::{Event, State};
+    opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
+    kentos_native_application::stac_host::register(Box::new(
+        kentos_native_application::stac_host::Recorded::open(
+            PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/services/v1/stac"),
+        ),
+    ));
+    if utm && let Some(doc) = app.document.as_mut() {
+        let mut settings = doc.settings().clone();
+        settings.srid = 32637;
+        doc.model.set_settings(settings);
+        for layer in ["dem", "orto", "tarama"] {
+            doc.model.set_layer_visible(layer, false);
+        }
+    }
+    app.raster_stac_with(State {
+        bbox: Some([36.9, 39.7, 37.1, 39.8]),
+        from: "2024-07-01".into(),
+        to: "2024-07-20".into(),
+        limit: "2".into(),
+        ..State::default()
+    });
+    let send = |app: &mut App, e: Event| {
+        let task = app.update(Message::Rasters(crate::rasters::Event::Stac(e)));
+        crate::files_testing::drive(app, task);
+    };
+    send(app, Event::Search);
+    // The addresses lead nowhere (a closed port on this computer): a picture never reads the network, and the
+    // rasters' pyramids fail at once instead of lingering in the panel of the pictures after it.
+    if let Some(stac) = app.rasters.stac.as_mut() {
+        for item in &mut stac.items {
+            for asset in &mut item.assets {
+                asset.href = asset.href.replacen("https://", "http://127.0.0.1:9/", 1);
+            }
+        }
+    }
+    if choose {
+        send(app, Event::Choose(0));
+    }
+    if prepare {
+        send(app, Event::Prepare);
+        // The rasters are read by address: their pyramids are not made for a picture.
+        for pass in crate::rasters::pyramid::progress() {
+            crate::rasters::pyramid::stop(&pass.key);
+        }
+        for _ in 0..100 {
+            if crate::rasters::pyramid::progress().is_empty() {
+                break;
+            }
+            std::thread::sleep(std::time::Duration::from_millis(50));
+        }
+    }
+}
+
 /// The raster of `layer` selected.
 fn select(app: &mut App, layer: &str) {
     let doc = app.document.as_ref().expect("a drawing");
@@ -273,6 +339,14 @@ pub(crate) fn pointed() -> Vec<Pointed> {
             },
             tiles_made,
         ),
+        // STAC'ta ara (docs/adr/0528 §7): the search made, the items found, none chosen yet.
+        ("stac-pencere", |app| stac_scene(app, false, true, false), settled),
+        // The first item chosen: red, near infrared and the scene classification marked, the plan's record and warning.
+        ("stac-hazirla", |app| stac_scene(app, true, true, false), settled),
+        // A project in another system: the plan says why, Hazırla is not offered.
+        ("stac-sistem", |app| stac_scene(app, true, false, false), settled),
+        // Hazırla pressed: the group and its layers in the layer panel (the rasters are read by address, offline here).
+        ("stac-hazir", |app| stac_scene(app, true, true, true), settled),
         // The elevation model alone: the photograph's layer hidden.
         (
             "raster-dem",

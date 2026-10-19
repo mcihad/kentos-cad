@@ -729,6 +729,30 @@ impl GeoPackage {
         Ok(id)
     }
 
+    /// The metadata documents `table` carries (docs/adr/0511, 0530): each one's standard URI and its text, in id
+    /// order; none when the file has no metadata extension.
+    pub fn metadata(&self, table: &str) -> Result<Vec<(String, String)>> {
+        let n: i64 = self.conn.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name IN ('gpkg_metadata', 'gpkg_metadata_reference')",
+            [],
+            |r| r.get(0),
+        )?;
+        if n < 2 {
+            return Ok(Vec::new());
+        }
+        let mut st = self.conn.prepare(
+            "SELECT m.md_standard_uri, m.metadata FROM gpkg_metadata m
+               JOIN gpkg_metadata_reference r ON r.md_file_id = m.id
+              WHERE r.table_name = ?1 ORDER BY m.id",
+        )?;
+        let rows = st
+            .query_map([table], |r| {
+                Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?))
+            })?
+            .collect::<rusqlite::Result<_>>()?;
+        Ok(rows)
+    }
+
     /// Adds a spatial reference system, unless one with its id is there.
     pub fn add_srs(&self, s: &Srs) -> Result<()> {
         self.conn.execute(
