@@ -61,7 +61,7 @@ impl PlotError {
 }
 
 /// The project's system as the sheet's title block names it; none for a local project.
-fn crs_name(settings: &ProjectSettings) -> Option<String> {
+pub(crate) fn crs_name(settings: &ProjectSettings) -> Option<String> {
     if !settings.has_system() {
         return None;
     }
@@ -82,7 +82,7 @@ pub fn library_of(doc: &Document) -> StyleLibrary {
 
 /// What every sheet is drawn with besides its own data: the project, its system, the date and
 /// the user the title block writes (`date` as `2026-10-13`).
-fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
+pub(crate) fn base_inputs(doc: &Document, user: &str, date: &str) -> RenderInputs {
     let settings = doc.settings();
     let name = crs_name(settings);
     RenderInputs {
@@ -133,6 +133,152 @@ pub fn today() -> String {
     format!("{y:04}-{m:02}-{d:02}")
 }
 
+/// The drawing area's own local origin (`scene_origin`): the anchor, else the middle of the drawing.
+fn origin_of(doc: &Document, spatial: &Spatial) -> kentos_geometry_core::Vec2 {
+    let anchor = doc.origin();
+    if anchor.x.is_finite() && anchor.y.is_finite() {
+        kentos_geometry_core::Vec2::new(anchor.x, anchor.y)
+    } else {
+        spatial
+            .extent()
+            .map_or(kentos_geometry_core::Vec2::new(0.0, 0.0), |b| {
+                kentos_geometry_core::Vec2::new(
+                    (b.min_x + b.max_x) / 2.0,
+                    (b.min_y + b.max_y) / 2.0,
+                )
+            })
+    }
+}
+
+/// Draws the maps of a book's pages as vectors (the book PDF's and the atlas's): each map of a display
+/// list its content at its scale, what could not be said told in `finish`.
+pub(crate) struct MapDrawer<'a> {
+    doc: &'a Document,
+    spatial: &'a Spatial,
+    library: &'a StyleLibrary,
+    origin: kentos_geometry_core::Vec2,
+    /// The moment the temporal layers show at (docs/adr/0534 §3); none: no time cut.
+    window: Option<kentos_geometry_core::time::Window>,
+    /// The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
+    /// object draws otherwise there.
+    annotative: bool,
+    scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>>,
+    notes: Vec<String>,
+    texts_left: bool,
+}
+
+impl<'a> MapDrawer<'a> {
+    pub(crate) fn new(
+        doc: &'a Document,
+        spatial: &'a Spatial,
+        library: &'a StyleLibrary,
+        window: Option<kentos_geometry_core::time::Window>,
+    ) -> Self {
+        Self {
+            doc,
+            spatial,
+            library,
+            origin: origin_of(doc, spatial),
+            window,
+            annotative: doc.has_annotative(),
+            scaled: std::collections::HashMap::new(),
+            notes: Vec::new(),
+            texts_left: false,
+        }
+    }
+
+    /// One map's content, or none for a map with no ground (an unplaced one).
+    pub(crate) fn draw(
+        &mut self,
+        book: &SheetBook,
+        m: &kentos_sheet::display::MapPrim,
+    ) -> Option<PdfMap> {
+        let doc = self.doc;
+        let extent = m.extent?;
+        self.texts_left |= doc.entities().any(|e| {
+            matches!(
+                e,
+                kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
+            ) || e.base().label.is_some()
+        });
+        let at = m.view.scale.max(1);
+        // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
+        let walls = Spatial::walls_differ_at(doc, f64::from(at));
+        if (self.annotative || walls) && !self.scaled.contains_key(&at) {
+            let copy = self
+                .annotative
+                .then(|| doc.at_scale(f64::from(at)))
+                .flatten()
+                .or_else(|| walls.then(|| doc.reading_copy()));
+            let window = self.window;
+            let copy = copy.map(|copy| {
+                let mut spatial = Spatial::new();
+                spatial.set_wall_scale(Some(f64::from(at)));
+                spatial.reload(&copy);
+                spatial.set_time_window(window);
+                (copy, spatial)
+            });
+            self.scaled.insert(at, copy);
+        }
+        let own;
+        let src = match self.scaled.get(&at) {
+            Some(Some((copy, spatial))) => {
+                own = MapSource {
+                    doc: copy,
+                    store: spatial.store(),
+                    library: self.library,
+                    origin: self.origin,
+                };
+                &own
+            }
+            _ => &MapSource {
+                doc,
+                store: self.spatial.store(),
+                library: self.library,
+                origin: self.origin,
+            },
+        };
+        match vector_content(
+            src,
+            &m.layers,
+            &m.layer_overrides,
+            m.view.scale,
+            extent,
+            &[],
+        ) {
+            Ok(content) => Some(PdfMap {
+                item: m.item.clone(),
+                content,
+                corners: None,
+            }),
+            Err(unsupported) => {
+                let named: Vec<String> = unsupported
+                    .iter()
+                    .map(|(layer, what)| format!("{layer} ({})", what.join(", ")))
+                    .collect();
+                self.notes.push(format!(
+                    "“{}” haritası vektörle yazılamadı: {}. Başsız çıktıda boş harita kutusu basıldı; masaüstünün PDF'i onu resim olarak yazar.",
+                    book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str()),
+                    named.join("; ")
+                ));
+                None
+            }
+        }
+    }
+
+    /// What the headless host leaves out, said once.
+    pub(crate) fn finish(mut self) -> Vec<String> {
+        if self.texts_left {
+            self.notes.push(
+                "Haritaların yazıları (ölçü değerleri, yazılar, etiketler) başsız çıktıda henüz basılmaz: \
+                 çizgiler, alanlar ve taramalar basılır. Yazılarıyla PDF için masaüstünün Dışa aktar › PDF'ini kullanın."
+                    .to_owned(),
+            );
+        }
+        self.notes
+    }
+}
+
 /// The book's chosen sheets (none: all, in the book's order) as a PDF of the drawing `doc`.
 pub fn book_pdf(
     doc: &Document,
@@ -168,34 +314,8 @@ pub fn book_pdf(
         render.coordinates.extend(data.coordinates);
         render.legends.extend(data.legends);
     }
-    // The drawing area's own local origin (`scene_origin`): the anchor, else the middle of the drawing.
-    let anchor = doc.origin();
-    let origin = if anchor.x.is_finite() && anchor.y.is_finite() {
-        kentos_geometry_core::Vec2::new(anchor.x, anchor.y)
-    } else {
-        spatial
-            .extent()
-            .map_or(kentos_geometry_core::Vec2::new(0.0, 0.0), |b| {
-                kentos_geometry_core::Vec2::new(
-                    (b.min_x + b.max_x) / 2.0,
-                    (b.min_y + b.max_y) / 2.0,
-                )
-            })
-    };
-    let src = MapSource {
-        doc,
-        store: spatial.store(),
-        library: &library,
-        origin,
-    };
-    // The drawing as the maps at a scale draw it (docs/adr/0323 §2): a copy per scale where an annotative
-    // object draws otherwise there.
-    let annotative = doc.has_annotative();
-    let mut scaled: std::collections::HashMap<u32, Option<(Document, Spatial)>> =
-        std::collections::HashMap::new();
+    let mut drawer = MapDrawer::new(doc, &spatial, &library, None);
     let mut maps: Vec<PdfMap> = Vec::new();
-    let mut notes = Vec::new();
-    let mut texts_left = false;
     for id in &chosen {
         let list = display::display_list(&book, id, &render)
             .map_err(|e| PlotError::new(&e.code, e.message))?;
@@ -206,78 +326,12 @@ pub fn book_pdf(
             if m.view.center.is_none() || maps.iter().any(|x| x.item == m.item) {
                 continue;
             }
-            let Some(extent) = m.extent else {
-                continue;
-            };
-            texts_left |= doc.entities().any(|e| {
-                matches!(
-                    e,
-                    kentos_contracts::Entity::Text(_) | kentos_contracts::Entity::Dimension(_)
-                ) || e.base().label.is_some()
-            });
-            let at = m.view.scale.max(1);
-            // Walls at a detail other than the drawing's (docs/adr/0339 §4) want a copy of their own too.
-            let walls = Spatial::walls_differ_at(doc, f64::from(at));
-            if (annotative || walls) && !scaled.contains_key(&at) {
-                let copy = annotative
-                    .then(|| doc.at_scale(f64::from(at)))
-                    .flatten()
-                    .or_else(|| walls.then(|| doc.reading_copy()));
-                let copy = copy.map(|copy| {
-                    let mut spatial = Spatial::new();
-                    spatial.set_wall_scale(Some(f64::from(at)));
-                    spatial.reload(&copy);
-                    (copy, spatial)
-                });
-                scaled.insert(at, copy);
-            }
-            let own;
-            let src = match scaled.get(&at) {
-                Some(Some((copy, spatial))) => {
-                    own = MapSource {
-                        doc: copy,
-                        store: spatial.store(),
-                        library: &library,
-                        origin,
-                    };
-                    &own
-                }
-                _ => &src,
-            };
-            match vector_content(
-                src,
-                &m.layers,
-                &m.layer_overrides,
-                m.view.scale,
-                extent,
-                &[],
-            ) {
-                Ok(content) => maps.push(PdfMap {
-                    item: m.item.clone(),
-                    content,
-                    corners: None,
-                }),
-                Err(unsupported) => {
-                    let named: Vec<String> = unsupported
-                        .iter()
-                        .map(|(layer, what)| format!("{layer} ({})", what.join(", ")))
-                        .collect();
-                    notes.push(format!(
-                        "“{}” haritası vektörle yazılamadı: {}. Başsız çıktıda boş harita kutusu basıldı; masaüstünün PDF'i onu resim olarak yazar.",
-                        book.item(&m.item).map_or(m.item.as_str(), |i| i.name.as_str()),
-                        named.join("; ")
-                    ));
-                }
+            if let Some(map) = drawer.draw(&book, m) {
+                maps.push(map);
             }
         }
     }
-    if texts_left {
-        notes.push(
-            "Haritaların yazıları (ölçü değerleri, yazılar, etiketler) başsız çıktıda henüz basılmaz: \
-             çizgiler, alanlar ve taramalar basılır. Yazılarıyla PDF için masaüstünün Dışa aktar › PDF'ini kullanın."
-                .to_owned(),
-        );
-    }
+    let notes = drawer.finish();
     let assets = pictures
         .into_iter()
         .map(|(sha256, data)| PdfAsset {
@@ -293,6 +347,8 @@ pub fn book_pdf(
         assets,
         maps,
         crs: pdf_crs(srid),
+        atlas: None,
+        keywords: None,
     };
     let options = PdfOptions {
         sheets: chosen.clone(),

@@ -379,6 +379,20 @@ AssetViaName = Literal["path", "relative", "searchPath", "none", "address", "dat
 """The names of :class:`AssetVia`, for a plain string."""
 
 
+class AtlasLayerRole(_StrEnum):
+    """What a layer is to an atlas run.
+
+    - ``coverage``: The layer whose objects are the pages.
+    - ``map``: A layer the sheet's maps draw.
+    """
+    COVERAGE = "coverage"
+    MAP = "map"
+
+
+AtlasLayerRoleName = Literal["coverage", "map"]
+"""The names of :class:`AtlasLayerRole`, for a plain string."""
+
+
 class AttachmentAccept(_StrEnum):
     """What an attachments item counts and adds.
 
@@ -7250,6 +7264,256 @@ class AssocArray(_Model):
             layout=ArrayLayout.from_json(data["layout"]),
             items=[ArrayItem.from_json(e0) for e0 in data["items"]],
             mirror=data.get("mirror", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasBindings(_Model):
+    """What a run was bound to, written into the output (`Keywords`) and given back.
+    Attributes:
+        srid: The project's coordinate system. Unit: epsg.
+        geo: Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.
+        theme: The theme the atlas maps were drawn in; none: the layers each map shows.
+        time: The moment, as given; none: no time cut.
+    """
+    srid: int
+    crs_name: str
+    geo: bool
+    theme: str | None | Unset = UNSET
+    time: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["srid"] = self.srid
+        out["crsName"] = self.crs_name
+        out["geo"] = self.geo
+        if self.theme is not UNSET:
+            out["theme"] = self.theme
+        if self.time is not UNSET:
+            out["time"] = self.time
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasBindings:
+        return cls(
+            srid=data["srid"],
+            crs_name=data["crsName"],
+            geo=data["geo"],
+            theme=data.get("theme", UNSET),
+            time=data.get("time", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasExported(_Model):
+    """What `file.export.atlas` wrote, or with `plan` would write.
+    Attributes:
+        bytes: Unit: bytes.
+        pin: The state the pages are made from.
+        fields: The attributes the pages carry (what the sheet's expressions, tables and legends can read).
+        withheld: The coverage layer's attribute names the pages do not carry: a form's `redact`, or not in `fields`.
+        filtered_out: The coverage layer's objects the layer's filter or the time left out, counted. Unit: count.
+        findings: The sheet core's findings (an SVG picture drawn as a box …).
+        notes: What a host without a window cannot draw, said in words.
+    """
+    path: str
+    bytes: int
+    sha256: str
+    replaced: bool
+    sheet: str
+    pages: list[AtlasPageInfo]
+    pin: AtlasPin
+    bindings: AtlasBindings
+    fields: list[str]
+    withheld: list[str]
+    filtered_out: int
+    findings: Any
+    notes: list[str]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        out["replaced"] = self.replaced
+        out["sheet"] = self.sheet
+        out["pages"] = [e0.to_json() for e0 in self.pages]
+        out["pin"] = self.pin.to_json()
+        out["bindings"] = self.bindings.to_json()
+        out["fields"] = list(self.fields)
+        out["withheld"] = list(self.withheld)
+        out["filteredOut"] = self.filtered_out
+        out["findings"] = self.findings
+        out["notes"] = list(self.notes)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasExported:
+        return cls(
+            path=data["path"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            replaced=data["replaced"],
+            sheet=data["sheet"],
+            pages=[AtlasPageInfo.from_json(e0) for e0 in data["pages"]],
+            pin=AtlasPin.from_json(data["pin"]),
+            bindings=AtlasBindings.from_json(data["bindings"]),
+            fields=list(data["fields"]),
+            withheld=list(data["withheld"]),
+            filtered_out=data["filteredOut"],
+            findings=data["findings"],
+            notes=list(data["notes"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasPageInfo(_Model):
+    """One page of the atlas as it was made.
+    Attributes:
+        index: From 1, the page's place in the file. Unit: index.
+        name: The page's name (the atlas's page-name expression; a repeated one is numbered).
+        feature: The object, by lasting id.
+        scale: The first atlas map's scale, the denominator (1000 is 1/1000). Unit: scale.
+        center: The map's centre: the middle of the object's box. Unit: length.
+        bbox: The object's box: minimum east, north, maximum east, north. Unit: length.
+    """
+    index: int
+    name: str
+    feature: str
+    scale: int
+    center: Vec2
+    bbox: list[float]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["name"] = self.name
+        out["feature"] = self.feature
+        out["scale"] = self.scale
+        out["center"] = _vec2_out(self.center)
+        out["bbox"] = [float(e0) for e0 in self.bbox]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasPageInfo:
+        return cls(
+            index=data["index"],
+            name=data["name"],
+            feature=data["feature"],
+            scale=data["scale"],
+            center=Vec2.from_json(data["center"]),
+            bbox=[float(e0) for e0 in data["bbox"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasPin(_Model):
+    """The state of the drawing an atlas is made from (docs/adr/0534 §2): the project's parts' stamps, each layer's
+    digest and each bound file's SHA-256. A run given a pin refuses (`pin_mismatch`) when what it reads is not it.
+    Attributes:
+        revision: The document's revision counter, decimal text: told, not compared (an undo and a redo change it, the content
+            not).
+        digest: The SHA-256 of all the above but the revision: one word for the state.
+    """
+    revision: str
+    settings: str
+    layers: str
+    styles: str
+    sheets: str
+    data: list[AtlasPinLayer]
+    digest: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["revision"] = self.revision
+        out["settings"] = self.settings
+        out["layers"] = self.layers
+        out["styles"] = self.styles
+        out["sheets"] = self.sheets
+        out["data"] = [e0.to_json() for e0 in self.data]
+        out["digest"] = self.digest
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasPin:
+        return cls(
+            revision=data["revision"],
+            settings=data["settings"],
+            layers=data["layers"],
+            styles=data["styles"],
+            sheets=data["sheets"],
+            data=[AtlasPinLayer.from_json(e0) for e0 in data["data"]],
+            digest=data["digest"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasPinLayer(_Model):
+    """One layer's state in a pin.
+    Attributes:
+        objects: Unit: count.
+        digest: The SHA-256 of the layer's objects' kinds, geometries and attributes by lasting id (`sources::layer_digest`).
+        source: The file the layer is the working copy of, when it is bound.
+    """
+    layer: str
+    name: str
+    role: AtlasLayerRole | AtlasLayerRoleName
+    objects: int
+    digest: str
+    source: AtlasPinSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["name"] = self.name
+        out["role"] = _enum_out(self.role)
+        out["objects"] = self.objects
+        out["digest"] = self.digest
+        if self.source is not UNSET:
+            out["source"] = None if self.source is None else self.source.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasPinLayer:
+        return cls(
+            layer=data["layer"],
+            name=data["name"],
+            role=_enum_in(AtlasLayerRole, data["role"]),
+            objects=data["objects"],
+            digest=data["digest"],
+            source=UNSET if "source" not in data else None if data["source"] is None else AtlasPinSource.from_json(data["source"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class AtlasPinSource(_Model):
+    """A bound layer's source file, as the run pinned it (docs/adr/0503).
+    Attributes:
+        id: The link's id, `kaynak-N`.
+        revision: The file's SHA-256 when the layer last matched it: the revision the layer's objects are the copy of.
+        current: The file's SHA-256 when the run looked; none when it could not be read.
+    """
+    id: str
+    path: str
+    revision: str
+    current: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["path"] = self.path
+        out["revision"] = self.revision
+        if self.current is not UNSET:
+            out["current"] = self.current
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AtlasPinSource:
+        return cls(
+            id=data["id"],
+            path=data["path"],
+            revision=data["revision"],
+            current=data.get("current", UNSET),
         )
 
 
@@ -15713,6 +15977,67 @@ class EntitiesVertexed(_Model):
             changed=list(data["changed"]),
             ids=list(data["ids"]),
             revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ExportAtlas(_Model):
+    """Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,
+    `unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,
+    `field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan
+    again), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),
+    `pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:
+    the pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written
+    to its file).
+    Attributes:
+        path: The file to write, an absolute path.
+        sheet: The sheet that has the atlas, by id.
+        crs: The coordinate system the pages are written in: the project's only (the EPSG code, or absent). Unit: epsg.
+        fields: The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an
+            undeclared layer's). A field a form marks `redact` is never carried, named or not.
+        overwrite: Write over a file that is there.
+        pin: The state a plan pinned; the run refuses when the drawing or a bound file is not it.
+        theme: A layer state of the project (a theme) that the atlas maps draw instead of the layers they would show.
+        time: The moment the temporal layers are shown at (`2024-06-30` or `2024-06-30T12:00`): the coverage layer's objects and the
+            maps' drawing are cut by it.
+    """
+    path: str
+    sheet: str
+    crs: int | None | Unset = UNSET
+    fields: list[str] | None | Unset = UNSET
+    overwrite: bool = False
+    pin: AtlasPin | None | Unset = UNSET
+    theme: str | None | Unset = UNSET
+    time: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["sheet"] = self.sheet
+        if self.crs is not UNSET:
+            out["crs"] = self.crs
+        if self.fields is not UNSET:
+            out["fields"] = None if self.fields is None else list(self.fields)
+        out["overwrite"] = self.overwrite
+        if self.pin is not UNSET:
+            out["pin"] = None if self.pin is None else self.pin.to_json()
+        if self.theme is not UNSET:
+            out["theme"] = self.theme
+        if self.time is not UNSET:
+            out["time"] = self.time
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportAtlas:
+        return cls(
+            path=data["path"],
+            sheet=data["sheet"],
+            crs=data.get("crs", UNSET),
+            fields=UNSET if "fields" not in data else None if data["fields"] is None else list(data["fields"]),
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+            pin=UNSET if "pin" not in data else None if data["pin"] is None else AtlasPin.from_json(data["pin"]),
+            theme=data.get("theme", UNSET),
+            time=data.get("time", UNSET),
         )
 
 
@@ -52631,6 +52956,14 @@ __all__ = [
     "AssetsChecked",
     "AssocArray",
     "AtMeasuredPoint",
+    "AtlasBindings",
+    "AtlasExported",
+    "AtlasLayerRole",
+    "AtlasLayerRoleName",
+    "AtlasPageInfo",
+    "AtlasPin",
+    "AtlasPinLayer",
+    "AtlasPinSource",
     "AttachArchOperation",
     "AttachXrefsOperation",
     "Attachment",
@@ -53026,6 +53359,7 @@ __all__ = [
     "EntityGeometry",
     "EqualConstraintRule",
     "ExplodeDensity",
+    "ExportAtlas",
     "ExportBlock",
     "ExportCsv",
     "ExportDxf",

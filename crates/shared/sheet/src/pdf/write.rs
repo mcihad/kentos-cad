@@ -39,36 +39,82 @@ impl Doc {
     }
 }
 
-/// Each chosen sheet's display list, for export (printable items only).
+/// A page's display list and, for an atlas page, which of the atlas's pages it is.
+pub(super) struct Listed {
+    pub list: DisplayList,
+    pub page: Option<usize>,
+}
+
+impl std::ops::Deref for Listed {
+    type Target = DisplayList;
+
+    fn deref(&self) -> &DisplayList {
+        &self.list
+    }
+}
+
+/// Each chosen sheet's display list, for export (printable items only); the atlas's sheet one for each of the
+/// atlas's pages (docs/adr/0534), drawn with that page's object, tables, coordinate lists and legends.
 pub(super) fn lists(
     book: &SheetBook,
     inputs: &PdfInputs,
     sheets: &[SheetId],
-) -> Result<Vec<DisplayList>> {
+) -> Result<Vec<Listed>> {
     let mut render = inputs.render.clone();
     render.mode = RenderMode::Export;
-    sheets
-        .iter()
-        .map(|id| display::build(book, id, &render).map(|(l, _)| l))
-        .collect()
+    let mut out = Vec::new();
+    for id in sheets {
+        match inputs
+            .atlas
+            .as_ref()
+            .filter(|a| a.sheet == *id && !a.pages.is_empty())
+        {
+            Some(atlas) => {
+                for (k, page) in atlas.pages.iter().enumerate() {
+                    let mut r = render.clone();
+                    r.atlas = Some(page.atlas.clone());
+                    r.tables = page.tables.clone();
+                    r.coordinates = page.coordinates.clone();
+                    r.legends = page.legends.clone();
+                    let (list, _) = display::build(book, id, &r)?;
+                    out.push(Listed {
+                        list,
+                        page: Some(k),
+                    });
+                }
+            }
+            None => {
+                let (list, _) = display::build(book, id, &render)?;
+                out.push(Listed { list, page: None });
+            }
+        }
+    }
+    Ok(out)
 }
 
-fn content_of<'a>(inputs: &'a PdfInputs, item: &str) -> Option<&'a MapContent> {
-    inputs
-        .maps
-        .iter()
-        .find(|m| m.item == item)
-        .map(|m| &m.content)
+/// The map items' content for one page: the atlas page's own first, then the file's.
+fn map_of<'a>(inputs: &'a PdfInputs, page: Option<usize>, item: &str) -> Option<&'a super::PdfMap> {
+    page.and_then(|k| inputs.atlas.as_ref().and_then(|a| a.pages.get(k)))
+        .and_then(|p| p.maps.iter().find(|m| m.item == item))
+        .or_else(|| inputs.maps.iter().find(|m| m.item == item))
+}
+
+fn content_of<'a>(
+    inputs: &'a PdfInputs,
+    page: Option<usize>,
+    item: &str,
+) -> Option<&'a MapContent> {
+    map_of(inputs, page, item).map(|m| &m.content)
 }
 
 /// The text every page writes, by face: the sheets', the maps' and the empty maps' “harita”.
-fn usage_of(lists: &[DisplayList], inputs: &PdfInputs) -> Usage {
+fn usage_of(lists: &[Listed], inputs: &PdfInputs) -> Usage {
     let mut u = Usage::default();
     for l in lists {
         for p in &l.prims {
             match p {
                 Prim::Text(t) => u.add(&t.font, t.weight, t.italic, &t.text),
-                Prim::Map(m) => match content_of(inputs, &m.item) {
+                Prim::Map(m) => match content_of(inputs, l.page, &m.item) {
                     Some(MapContent::Vector(v)) if m.view.center.is_some() => {
                         for layer in &v.layers {
                             for t in &layer.texts {
@@ -206,7 +252,7 @@ pub(super) fn document(
 
     // The pictures, each once, in the order the pages first show them.
     let mut images: BTreeMap<String, Option<(String, Ref)>> = BTreeMap::new();
-    let mut rasters: BTreeMap<String, (String, Ref)> = BTreeMap::new();
+    let mut rasters: BTreeMap<(Option<usize>, String), (String, Ref)> = BTreeMap::new();
     let mut layers: BTreeMap<String, (String, Ref)> = BTreeMap::new();
     let mut layer_order: Vec<(Ref, String)> = Vec::new();
     for l in &lists {
@@ -232,8 +278,10 @@ pub(super) fn document(
                     });
                     images.insert(i.asset.clone(), named);
                 }
-                Prim::Map(m) => match content_of(inputs, &m.item) {
-                    Some(MapContent::Raster(r)) if !rasters.contains_key(&m.item) => {
+                Prim::Map(m) => match content_of(inputs, l.page, &m.item) {
+                    Some(MapContent::Raster(r))
+                        if !rasters.contains_key(&(l.page, m.item.clone())) =>
+                    {
                         let pic = picture(&r.png).ok_or_else(|| {
                             SheetError::at(
                                 "pdf_map_bad",
@@ -243,7 +291,7 @@ pub(super) fn document(
                         })?;
                         let id = write_picture(&mut doc, &pic);
                         rasters.insert(
-                            m.item.clone(),
+                            (l.page, m.item.clone()),
                             (format!("Im{}", images.len() + rasters.len() + 1), id),
                         );
                     }
@@ -299,22 +347,19 @@ pub(super) fn document(
                     page.image(i, named.map(|(n, r)| (n.as_str(), *r)));
                 }
                 Prim::Map(m) => {
-                    match content_of(inputs, &m.item) {
+                    match content_of(inputs, l.page, &m.item) {
                         Some(MapContent::Vector(v)) => {
                             maps::vector(&mut page, m, v, options.layers.then_some(&layers));
                         }
-                        Some(MapContent::Raster(_)) => match rasters.get(&m.item) {
+                        Some(MapContent::Raster(_)) => match rasters.get(&(l.page, m.item.clone()))
+                        {
                             Some((n, r)) => maps::raster(&mut page, m, (n.as_str(), *r)),
                             None => maps::placeholder(&mut page, m),
                         },
                         None => maps::placeholder(&mut page, m),
                     }
                     if options.geo && inputs.crs.is_some() {
-                        let host = inputs
-                            .maps
-                            .iter()
-                            .find(|x| x.item == m.item)
-                            .and_then(|x| x.corners.as_ref());
+                        let host = map_of(inputs, l.page, &m.item).and_then(|x| x.corners.as_ref());
                         if let Some(v) = geo::viewport(l.size.height, m, tm, host) {
                             viewports.push(v);
                         }
@@ -478,6 +523,9 @@ pub(super) fn document(
         }
         if !meta.subject.is_empty() {
             di.subject(TextStr(&meta.subject));
+        }
+        if let Some(k) = inputs.keywords.as_deref().filter(|k| !k.is_empty()) {
+            di.keywords(TextStr(k));
         }
         di.creator(TextStr("KentOS pafta düzeni"));
         di.producer(TextStr("KentOS"));

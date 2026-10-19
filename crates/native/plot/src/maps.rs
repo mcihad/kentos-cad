@@ -180,7 +180,13 @@ pub fn vector_content(
         if only.is_some_and(|l| !l.contains(&node.id)) {
             continue;
         }
-        let objects: Vec<&kentos_contracts::Entity> = in_order(doc.by_layer(&node.id).collect());
+        // Only what the view shows (docs/adr/0534 §4): an object its layer's filter or the time leaves out is on
+        // no map and no paper, and a layer with none of them has no content group in the file.
+        let objects: Vec<&kentos_contracts::Entity> = in_order(
+            doc.by_layer(&node.id)
+                .filter(|e| src.store.view_shown(f64::from(e.base().id)))
+                .collect(),
+        );
         if objects.is_empty() {
             continue;
         }

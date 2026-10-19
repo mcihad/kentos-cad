@@ -7610,6 +7610,35 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // The atlas of a sheet as a PDF with a page for each object (docs/adr/0534).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_ATLAS.into(),
+            version: crate::FILE_EXPORT_ATLAS_VERSION,
+            title: "Atlası PDF yap".into(),
+            summary: "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. \
+                      Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. \
+                      Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). \
+                      Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. \
+                      plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["atlaspdf".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportAtlas>(),
+            output: schema::<crate::AtlasExported>(),
+            plan: Some(schema::<crate::AtlasExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel atlası, bugünün durumundan".into(),
+                input: json!({ "path": "/veri/parsel-atlasi.pdf", "sheet": "atlas-paftasi", "overwrite": true }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_IMPORT_CSV.into(),
             version: crate::FILE_IMPORT_CSV_VERSION,
@@ -8566,6 +8595,9 @@ mod tests {
                     }
                     crate::FILE_EXPORT_CSV => {
                         serde_json::from_value::<crate::ExportCsv>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_ATLAS => {
+                        serde_json::from_value::<crate::ExportAtlas>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_IMPORT_CSV => {
                         serde_json::from_value::<crate::ImportCsv>(e.input.clone()).map(|_| ())

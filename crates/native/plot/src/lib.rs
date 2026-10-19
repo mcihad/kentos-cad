@@ -18,6 +18,7 @@
     deny(clippy::unwrap_used, clippy::expect_used, clippy::panic)
 )]
 
+pub mod atlas;
 pub mod book;
 pub mod fonts;
 pub mod inputs;

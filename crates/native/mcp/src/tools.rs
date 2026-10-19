@@ -652,6 +652,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.sld"
             | "file.import.sld"
             | "file.export.csv"
+            | "file.export.atlas"
             | "file.import.csv"
             // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
             | "file.export.gis"
