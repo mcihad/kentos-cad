@@ -641,6 +641,11 @@ impl App {
                     Menu::new()
                         .item("Kaynağa yaz", bound(crate::bound::Event::Write(Some(id.clone()))))
                         .icon(icon("sourceWrite"))
+                        .item(
+                            "Kaynağa birlikte yaz",
+                            bound(crate::bound::Event::WriteTogether(Some(id.clone()))),
+                        )
+                        .icon(icon("sourceWrite"))
                         .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
                         .icon(icon("sourceRead"))
                         .item("Kaynak durumu", bound(crate::bound::Event::Status))

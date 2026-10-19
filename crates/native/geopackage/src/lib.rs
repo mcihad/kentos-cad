@@ -9,6 +9,7 @@
 //! are not touched. SQLite is compiled in (rusqlite's `bundled`).
 
 pub mod geom;
+pub mod relations;
 pub mod wkt;
 
 use std::collections::HashMap;
@@ -902,6 +903,37 @@ impl GeoPackage {
     /// extensions are not touched. Returns the inserted rows' fids. Nothing is written when any step fails.
     pub fn edit(&mut self, layer: &Layer, edits: &Edits) -> Result<Vec<i64>> {
         let tx = self.conn.transaction()?;
+        let fids = edit_in(&tx, layer, edits)?;
+        tx.commit()?;
+        Ok(fids)
+    }
+
+    /// Edits several tables, and the mapping tables of their relations, in one transaction (docs/adr/0532 §1): all of
+    /// it or none of it. Returns each table's inserted rows' fids in the jobs' order.
+    pub fn edit_many(
+        &mut self,
+        jobs: &[(&Layer, &Edits)],
+        maps: &[relations::MapEdit],
+    ) -> Result<Vec<Vec<i64>>> {
+        let tx = self.conn.transaction()?;
+        let mut fids = Vec::with_capacity(jobs.len());
+        for (layer, edits) in jobs {
+            fids.push(edit_in(&tx, layer, edits)?);
+        }
+        for m in maps {
+            relations::write_mapping(&tx, m, &fids)?;
+        }
+        tx.commit()?;
+        Ok(fids)
+    }
+
+    /// Closes the file, writing everything out.
+    pub fn close(self) -> Result<()> {
+        self.conn.close().map_err(|(_, e)| e.into())
+    }
+}
+
+fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Result<Vec<i64>> {
         let t = quote(&layer.name);
         for c in &edits.add_columns {
             let decl = if c.decl.trim().is_empty() {
@@ -1003,19 +1035,18 @@ impl GeoPackage {
                 gone.execute(params![layer.name, fid])?;
             }
         }
-        // The contents' box and time: what changed is said where other programs look.
-        tx.execute(
-            "UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
-            [&layer.name],
-        )?;
-        tx.commit()?;
+        // The contents' time: what changed is said where other programs look (a table left as it is keeps its time).
+        let changed = !edits.add_columns.is_empty()
+            || !edits.update.is_empty()
+            || !edits.insert.is_empty()
+            || !edits.delete.is_empty();
+        if changed {
+            tx.execute(
+                "UPDATE gpkg_contents SET last_change = strftime('%Y-%m-%dT%H:%M:%fZ','now') WHERE table_name = ?1",
+                [&layer.name],
+            )?;
+        }
         Ok(fids)
-    }
-
-    /// Closes the file, writing everything out.
-    pub fn close(self) -> Result<()> {
-        self.conn.close().map_err(|(_, e)| e.into())
-    }
 }
 
 /// The spatial index of a table's geometry column (§F.3, GeoPackage 1.3's triggers).

@@ -2757,6 +2757,9 @@ impl App {
             "service.connections" => self.open_connections(None),
             // Bağlı katmanlar (bound.rs, docs/adr/0503): the layer selected in the tree, else the active one.
             "source.write" => return self.bound_event(crate::bound::Event::Write(None)),
+            "source.writeTogether" => {
+                return self.bound_event(crate::bound::Event::WriteTogether(None));
+            }
             "source.read" => return self.bound_event(crate::bound::Event::Read(None)),
             "source.status" => return self.bound_event(crate::bound::Event::Status),
             "source.unlink" => return self.bound_event(crate::bound::Event::Unlink(None)),

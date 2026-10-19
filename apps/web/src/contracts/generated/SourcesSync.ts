@@ -7,6 +7,14 @@ import type { SyncDirection } from "./SyncDirection";
  * `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
  * the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
  * for stay in the drawing only).
+ *
+ * `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
+ * together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,
+ * `source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file
+ * (`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and
+ * `with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with
+ * its layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table
+ * does not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).
  */
 export type SourcesSync = { 
 /**
@@ -16,4 +24,8 @@ layer: string, direction: SyncDirection,
 /**
  * Reading: take the table's rows though the layer differs (one undo step brings the layer back).
  */
-discard?: boolean, };
+discard?: boolean, 
+/**
+ * Writing: more bound layers (by id) written in the same transaction.
+ */
+with?: Array<string>, };

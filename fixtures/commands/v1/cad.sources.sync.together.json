@@ -1,0 +1,6044 @@
+{
+  "format": "kentos.command-cases",
+  "version": 1,
+  "command": "cad.sources.sync",
+  "commandVersion": 1,
+  "title": "Kaynakla eşitle: katmanlar tek işlemde, eşli çoktan çoğa ilişki",
+  "note": "with'le birlikte yazılan katmanlar ve cad.sources.relate'le eşlenen ilişkinin eşleme satırları (docs/adr/0532 §1, §2). Dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); onu geçici kopyada tests/all/source_relations.rs sınar ve yazdığı dosyayı --verify okur.",
+  "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "İlişkili kayıtlar",
+    "settings": {
+      "srid": 5256,
+      "lengthDecimals": 3,
+      "areaDecimals": 2,
+      "areaUnit": "m2",
+      "angleUnit": "grad",
+      "plotScale": 1000,
+      "workspace": "gis"
+    },
+    "origin": {
+      "x": 0.0,
+      "y": 0.0
+    },
+    "layers": [
+      {
+        "id": "cizim",
+        "name": "Çizim",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+          "color": "fg",
+          "lineType": "continuous",
+          "lineWeight": 0.25
+        },
+        "children": []
+      }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+      {
+        "kind": "point",
+        "id": 1,
+        "layerId": "cizim",
+        "attrs": {},
+        "p": {
+          "x": 487500.0,
+          "y": 4420500.0
+        }
+      }
+    ],
+    "styles": {
+      "items": [],
+      "categories": []
+    }
+  },
+  "cases": [
+    {
+      "name": "metin sütunu: üst ve alt katman aynı işlemde; her katmanın payı, ilişki eşli değilse uyarı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:2"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "tur": "Tüzel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 2,
+              "removed": 0,
+              "source": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "revision": "$current",
+              "layers": [
+                {
+                  "layer": "import-parsel",
+                  "added": 0,
+                  "modified": 1,
+                  "removed": 0
+                },
+                {
+                  "layer": "import-malik",
+                  "added": 0,
+                  "modified": 1,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": [
+              {
+                "code": "relation_unmapped",
+                "message": "“parsel-malik” ilişkisinin ‘malikler’ alanı parsel tablosunda “; ” ile birleşmiş metin sütunu olarak kaldı (cad.sources.relate map ile ilişki profiline taşınır).",
+                "path": "layer"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "tek katman yazılırken de eşlenmemiş çoktan çoğa başvuru metin olarak kaldığı söylenir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 0,
+              "source": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "relation_unmapped",
+                "message": "“parsel-malik” ilişkisinin ‘malikler’ alanı parsel tablosunda “; ” ile birleşmiş metin sütunu olarak kaldı (cad.sources.relate map ile ilişki profiline taşınır).",
+                "path": "layer"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: yazılacak bir şey yok, eşleme tablosu da aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "layers": [
+                {
+                  "layer": "import-parsel",
+                  "added": 0,
+                  "modified": 0,
+                  "removed": 0
+                },
+                {
+                  "layer": "import-malik",
+                  "added": 0,
+                  "modified": 0,
+                  "removed": 0
+                }
+              ],
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 0,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: parsele eklenen malik eşleme satırı olarak yazılır, sütun yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001; 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 2,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: parselden çıkarılan malikin satırı kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 0,
+                  "removed": 1
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: boşaltılan parselin iki satırı da kalkar",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": ""
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 0,
+                  "removed": 2
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: silinen malik ve eşleme satırı birlikte gider, parselin satırı değişmez",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:4"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.delete"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 0,
+              "removed": 1,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "layers": [
+                {
+                  "layer": "import-parsel",
+                  "added": 0,
+                  "modified": 0,
+                  "removed": 0
+                },
+                {
+                  "layer": "import-malik",
+                  "added": 0,
+                  "modified": 0,
+                  "removed": 1
+                }
+              ],
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 0,
+                  "removed": 1
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: yeni malik ve onu tutan yeni parsel tek işlemde",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-malik",
+            "rows": [
+              {
+                "attrs": {
+                  "ad": "Zeynep Kaya",
+                  "tur": "Gerçek"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.records.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "yeni"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-parsel",
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420010.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.polygon.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 11,
+          "as": "yeniparsel"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "$uid:yeni"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 2,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "layers": [
+                {
+                  "layer": "import-parsel",
+                  "added": 1,
+                  "modified": 0,
+                  "removed": 0
+                },
+                {
+                  "layer": "import-malik",
+                  "added": 1,
+                  "modified": 0,
+                  "removed": 0
+                }
+              ],
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 1,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: yeni parsel var olan maliki tutar, parsel tek başına yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-malik",
+            "rows": [
+              {
+                "attrs": {
+                  "ad": "Zeynep Kaya",
+                  "tur": "Gerçek"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.records.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "yeni"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-parsel",
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420010.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.polygon.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 11,
+          "as": "yeniparsel"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 1,
+              "modified": 0,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 1,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: yalnız malikler yazılırken de ilişki sayılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:3"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "tur": "Tüzel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-malik",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 1,
+              "removed": 0,
+              "source": "50e440e11e858a04744ec2b5c4007e9d7ba8e93bc43005dc5b9264d36b1c9694",
+              "revision": "$current",
+              "relations": [
+                {
+                  "relation": "parsel-malik",
+                  "added": 0,
+                  "removed": 0
+                }
+              ]
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: tabloda olmayan yeni malike başvuran parsel tek başına yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-malik",
+            "rows": [
+              {
+                "attrs": {
+                  "ad": "Zeynep Kaya",
+                  "tur": "Gerçek"
+                }
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.records.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 10,
+          "as": "yeni"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-parsel",
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420010.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.polygon.create"
+        },
+        {
+          "op": "captureUid",
+          "id": 11,
+          "as": "yeniparsel"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:11"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "$uid:yeni"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "relation_dangling",
+              "message": "$uid:yeniparsel kayıtlı import-parsel katmanı nesnesi $uid:yeni kimlikli import-malik nesnesini tutuyor; o malik tablosunda yok. Üst katmanı da birlikte yazın (with).",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişki: olmayan kimliğe giden başvuru yazmayı reddettirir",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:7"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "relation_dangling",
+              "message": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2003 kayıtlı import-parsel katmanı nesnesinin ‘malikler’ alanı 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d9999 kimliğini tutuyor; import-malik katmanında bu kimlikte nesne yok, eşleme satırı kurulamaz. Başvuruyu düzeltin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "başka temsilli ilişki: parsel metin sütunu olarak yazılır, eşleme satırlarına dokunulmaz, uyarılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-yabanci.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-yabanci.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-yabanci.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 1,
+              "removed": 0,
+              "source": "aed241f2773070d1ba8f1706e3cee52fc97170858799ec224810bda599ec89fa",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "relation_unmapped",
+                "message": "“parsel-malik” ilişkisi: “attributes” ilişkisi KentOS'un “kentos_references” temsili değil; ‘malikler’ alanı yalnız metin sütunu olarak yazıldı, dosyadaki ilişkinin eşleme satırlarına dokunulmadı.",
+                "path": "layer"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "bozuk ilişki de uyarılır, yazılır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-bozuk.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-bozuk.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-bozuk.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 1,
+              "removed": 0,
+              "source": "45b06174d9ab07729da94a29dab767d0c34c1d2cff328f8de6ea0c8babe8ac40",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "relation_unmapped",
+                "message": "“parsel-malik” ilişkisi: “parsel_malik” eşleme tablosunda related_id sütunu yok; ‘malikler’ alanı yalnız metin sütunu olarak yazıldı, dosyadaki ilişkinin eşleme satırlarına dokunulmadı.",
+                "path": "layer"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "ters yönde yazılmış ilişki yabancıdır",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-ters.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-ters.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-ters.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 1,
+              "removed": 0,
+              "source": "c4abd01cd61f7c7e929102f76075c37e693ddc47177ef99dfc7cae57d227b86d",
+              "revision": "$current"
+            },
+            "warnings": [
+              {
+                "code": "relation_unmapped",
+                "message": "“parsel-malik” ilişkisi: “kentos_references” ilişkisi ters yönde (taban malik, ilgili parsel); KentOS tabanı alt katman yazar; ‘malikler’ alanı yalnız metin sütunu olarak yazıldı, dosyadaki ilişkinin eşleme satırlarına dokunulmadı.",
+                "path": "layer"
+              }
+            ]
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "katmanlardan biri tabloya yazılamazsa hiçbiri yazılmaz",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layerId": "import-malik",
+            "pts": [
+              {
+                "x": 487200.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420000.0
+              },
+              {
+                "x": 487210.0,
+                "y": 4420010.0
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.polygon.create"
+        },
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "geometry_mismatch",
+              "message": "$any",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "eşli ilişkinin katmanı okunurken alan eşleme satırlarından dolar (sütun yokken de)",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis-sutunsuz.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis-sutunsuz.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili-eslenmis-sutunsuz.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "read"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "added": 0,
+              "modified": 2,
+              "removed": 0,
+              "source": "e74f1f2ae122f3a4ba3fda549854e6e77b3668dd2d6baacdf1d37722fab28b67",
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "revision": "changed",
+            "fields": {
+              "5": {
+                "kind": "polygon",
+                "layerId": "import-parsel",
+                "attrs": {
+                  "ada": "101",
+                  "parsel_no": "5",
+                  "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3001; 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002"
+                },
+                "pts": "$any"
+              },
+              "6": {
+                "kind": "polygon",
+                "layerId": "import-parsel",
+                "attrs": {
+                  "ada": "101",
+                  "parsel_no": "6",
+                  "malikler": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3002; 0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3003"
+                },
+                "pts": "$any"
+              }
+            }
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "katmanlar ayrı dosyalarda: birlikte yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "transaction_split",
+              "message": "“import-malik” katmanı $fixture:geopackage/v1/malikler.gpkg kaynağında, “import-parsel” katmanı $fixture:geopackage/v1/iliskili.gpkg dosyasında; birlikte yazılacak katmanlar tek GeoPackage dosyasında olmalı. Katmanları ayrı ayrı yazın.",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/malikler.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "afc8cbc3e732c4613c70dd62c1d6befa3a8654d4327aad7b907f25e564517ceb",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "aynı katman iki kez verilemez",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-parsel"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "“import-parsel” katmanı birden çok kez verildi; her katman bir kez yazılır.",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "with'teki katman bağlı olmalı",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "cizim"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_not_found",
+              "message": "“cizim” katmanı bir kaynağa bağlı değil; önce cad.sources.edit ile bağlayın.",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "with yalnız yazma içindir",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "read",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_input",
+              "message": "with yalnız yazma (direction write) içindir: okuma her katmanı ayrı alır.",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "with'teki katmanın tablosu salt okunursa hiçbiri yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_readonly",
+              "message": "$fixture:geopackage/v1/iliskili.gpkg dosyasının “malik” tablosuna yazılamaz (salt okunur).",
+              "path": "with"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": false
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "26d12a64f6f35fb6bf219124f8809af778fddf7abf60dd1a8fb987b0bca35824",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "dosya katmanlar onunla son eşleştiğinden beri değiştiyse birlikte yazılmaz",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "conflict",
+            "error": {
+              "code": "source_changed",
+              "message": "$fixture:geopackage/v1/iliskili.gpkg katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "dosya yerinde yoksa",
+      "steps": [
+        {
+          "op": "plan",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "source_gone",
+              "message": "$fixture:geopackage/v1/yok.gpkg yerinde yok; dosyanın yeni yerini cad.sources.edit relink ile verin.",
+              "path": "layer"
+            }
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "relations": [
+            {
+              "id": "parsel-malik",
+              "name": "Parselin malikleri",
+              "parent": "import-malik",
+              "child": "import-parsel",
+              "field": "malikler"
+            },
+            {
+              "id": "bina-parsel",
+              "name": "Parselin binaları",
+              "parent": "import-parsel",
+              "child": "import-bina",
+              "field": "parsel"
+            }
+          ],
+          "sources": [
+            {
+              "id": "kaynak-1",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/yok.gpkg",
+              "table": "malik",
+              "layer": "import-malik",
+              "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-2",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/yok.gpkg",
+              "table": "parsel",
+              "layer": "import-parsel",
+              "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            },
+            {
+              "id": "kaynak-3",
+              "kind": "geopackage",
+              "path": "$fixture:geopackage/v1/yok.gpkg",
+              "table": "bina",
+              "layer": "import-bina",
+              "revision": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+              "srid": 5256,
+              "writable": true
+            }
+          ]
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "import-malik",
+            "name": "Malik",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ad",
+                "kind": "text"
+              },
+              {
+                "name": "tur",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "import-parsel",
+            "name": "Parsel",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          {
+            "id": "import-bina",
+            "name": "Bina",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "parsel",
+                "kind": "text"
+              },
+              {
+                "name": "kat",
+                "kind": "text"
+              }
+            ]
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    },
+    {
+      "name": "plan hiçbir şey yazmaz: katmanlar dosyayla eşleşmiş kalır, denetim yalnız denetler",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "malik"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "parsel"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "link",
+              "path": "$fixture:geopackage/v1/iliskili.gpkg",
+              "table": "bina"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.sources.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "operation": "fields",
+            "layer": "import-parsel",
+            "fields": [
+              {
+                "name": "ada",
+                "kind": "text"
+              },
+              {
+                "name": "parsel_no",
+                "kind": "text"
+              },
+              {
+                "name": "malikler",
+                "kind": "text",
+                "multiple": true
+              }
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.layers.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "parsel-malik",
+                "name": "Parselin malikleri",
+                "parent": "import-malik",
+                "child": "import-parsel",
+                "field": "malikler"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "edit": {
+              "kind": "create",
+              "relation": {
+                "id": "bina-parsel",
+                "name": "Parselin binaları",
+                "parent": "import-parsel",
+                "child": "import-bina",
+                "field": "parsel"
+              }
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.relations.edit"
+        },
+        {
+          "op": "execute",
+          "input": {
+            "uids": [
+              "$uidOf:5"
+            ],
+            "operation": "attributes",
+            "attrs": {
+              "ada": "999"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": "$any",
+            "warnings": "$any"
+          },
+          "expect": {
+            "revision": "changed"
+          },
+          "command": "cad.entities.set"
+        },
+        {
+          "op": "validate",
+          "input": {
+            "layer": "import-parsel",
+            "direction": "write",
+            "with": [
+              "import-malik"
+            ]
+          },
+          "result": {
+            "status": "completed",
+            "output": null,
+            "warnings": []
+          },
+          "expect": {
+            "revision": "same"
+          }
+        }
+      ],
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "İlişkili kayıtlar",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis"
+        },
+        "origin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "layers": [
+          {
+            "id": "cizim",
+            "name": "Çizim",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "fg",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "cizim",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "cizim",
+            "attrs": {},
+            "p": {
+              "x": 487500.0,
+              "y": 4420500.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      }
+    }
+  ]
+}

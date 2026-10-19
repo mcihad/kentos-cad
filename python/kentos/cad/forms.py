@@ -1045,7 +1045,11 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
     Uyarı denetimi bozulursa kayıt yine yazılır, uyarı form_check_warning'dir.
     Varsayılan olarak son yayın kullanılır; draft: taslak (yayınlanmamış form). Tek geri
     alma adımı: “Form: <ad>”. expectedRevision verilmişse ve çizim o sürümde değilse
-    hiçbir şey yazılmaz, sonuç conflict olur.
+    hiçbir şey yazılmaz, sonuç conflict olur. commit: kaydın ve alt kayıtlarının
+    katmanları tek GeoPackage dosyasına bağlıysa (cad.sources.edit) aynı adımın ardından
+    dosyaya tek SQLite işleminde yazılır (cad.sources.sync'in with'i, docs/adr/0532);
+    dosyanın reddi gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey
+    yazılır. Cevabın committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz.
     """
     __slots__ = ()
     id = "cad.forms.submit"
@@ -1064,6 +1068,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         form: str,
         uid: str,
         children: Sequence[FormChild] | Unset = UNSET,
+        commit: bool | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1088,7 +1093,11 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         yazılır, uyarı form_check_warning'dir. Varsayılan olarak son yayın kullanılır;
         draft: taslak (yayınlanmamış form). Tek geri alma adımı: “Form: <ad>”.
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-        conflict olur.
+        conflict olur. commit: kaydın ve alt kayıtlarının katmanları tek GeoPackage
+        dosyasına bağlıysa (cad.sources.edit) aynı adımın ardından dosyaya tek SQLite
+        işleminde yazılır (cad.sources.sync'in with'i, docs/adr/0532); dosyanın reddi
+        gönderimin reddidir: plan söyler, ne çizimde ne dosyada bir şey yazılır. Cevabın
+        committed'ı dosyaya yazılanı verir; bağlı olmayan katman yazılmaz.
 
         Args:
             doc: The drawing it works on.
@@ -1096,6 +1105,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             uid: The object (lowercase UUID text with hyphens).
             children: The record's children written in the same step (docs/adr/0440 §2): linked, unlinked, changed or
                 made, each through its relation; the record and its children go in together or not at all.
+            commit: Write the layers' sources too, in one transaction (docs/adr/0532 §1); written only as `true`.
             defaults: The form's defaults in the record's empty fields first (a new record).
             draft: Through its draft instead of its latest release (a form not yet published).
             expected_revision: The document revision the input was prepared against, as decimal text.
@@ -1126,6 +1136,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             form=form,
             uid=uid,
             children=_opt(children, lambda x: list(x)),
+            commit=commit,
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1144,6 +1155,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         form: str,
         uid: str,
         children: Sequence[FormChild] | Unset = UNSET,
+        commit: bool | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1160,6 +1172,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             form=form,
             uid=uid,
             children=_opt(children, lambda x: list(x)),
+            commit=commit,
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1178,6 +1191,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         form: str,
         uid: str,
         children: Sequence[FormChild] | Unset = UNSET,
+        commit: bool | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1194,6 +1208,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             form=form,
             uid=uid,
             children=_opt(children, lambda x: list(x)),
+            commit=commit,
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,
@@ -1212,6 +1227,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
         form: str,
         uid: str,
         children: Sequence[FormChild] | Unset = UNSET,
+        commit: bool | Unset = UNSET,
         defaults: bool | Unset = UNSET,
         draft: bool | Unset = UNSET,
         expected_revision: str | None | Unset = UNSET,
@@ -1233,6 +1249,7 @@ class _FormsSubmit(LocalCommand[FormsSubmit, FormsSubmitted, FormsSubmitted]):
             form=form,
             uid=uid,
             children=_opt(children, lambda x: list(x)),
+            commit=commit,
             defaults=defaults,
             draft=draft,
             expected_revision=expected_revision,

@@ -297,6 +297,12 @@ pub struct FormsValidated {
 /// `entity_not_found`, `form_layer_mismatch`, `layer_locked`, `record_changed` (status `conflict`),
 /// `form_invalid` (the first issue, `path` its field's value); a layer's rules and unique fields refuse
 /// as every write's (`rule_broken`, `not_unique`).
+///
+/// `commit` (docs/adr/0532 §1) carries the step to the sources: the layers the record and its children are on, when
+/// bound to tables of one GeoPackage file, are written to it in one transaction right after, as
+/// `cad.sources.sync` with `with`. Any refusal of that write (`source_readonly`, `geometry_mismatch`,
+/// `source_changed`, `relation_dangling`, `transaction_split` …) is the submission's: the plan says it, and nothing is
+/// written, neither in the drawing nor in the file. A layer that is not bound is not written.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -348,6 +354,10 @@ pub struct FormsSubmit {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<FormChild>>", optional))]
     pub children: Vec<FormChild>,
+    /// Write the layers' sources too, in one transaction (docs/adr/0532 §1); written only as `true`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub commit: bool,
     /// The document revision the input was prepared against, as decimal text.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
@@ -444,6 +454,10 @@ pub struct FormsSubmitted {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub undo: Option<String>,
+    /// With `commit`: what the one transaction wrote to the sources (plan: what it would).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub committed: Option<crate::cad_sources::SourcesSynced>,
     /// The document's revision afterwards (plan: the one it was made against).
     #[cfg_attr(feature = "schema", schemars(regex(pattern = REVISION_TEXT)))]
     pub revision: String,

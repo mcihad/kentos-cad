@@ -837,6 +837,13 @@
       ],
       "note": "Katmanın değişiklikleri cad.sources.sync write ile tabloya (ADR 0503)."
     },
+    "source.writeTogether": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.sync"
+      ],
+      "note": "Katmanı ve ilişkiyle bağlı katmanları cad.sources.sync write'ın with'iyle tek işlemde yazar (ADR 0532)."
+    },
     "source.read": {
       "level": "semantic",
       "via": [

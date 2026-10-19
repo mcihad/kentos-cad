@@ -64,6 +64,13 @@ impl<'a> ExecutionContext<'a> {
         self.job.is_some_and(Progress::stopped)
     }
 
+    /// Whether the command runs only to say what it would do: the protocol's plan executes it on a reading copy to find
+    /// its summary and its plan's id (docs/adr/0253 §5), so a command that writes a file the document does not hold
+    /// (a bound layer's table, a mapping, a sink) leaves the file alone then (docs/adr/0532 §4).
+    pub fn dry(&self) -> bool {
+        self.call.as_ref().is_some_and(|s| s.dry)
+    }
+
     /// Says how far the job this command runs as has come: `done` of `total`.
     pub fn progress(&self, done: u64, total: u64) {
         if let Some(job) = self.job {

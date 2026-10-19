@@ -34,6 +34,7 @@ mod protocol_cases;
 mod provider_timing;
 mod python_calls;
 mod reassociate;
+mod source_relations;
 mod sources;
 mod standards_cmd;
 mod rasters_georef;

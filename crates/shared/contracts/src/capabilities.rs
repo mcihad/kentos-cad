@@ -2548,8 +2548,10 @@ const ENTRIES: &[Entry] = &[
                 "relation_mismatch",
                 "relation_field_unknown",
             ],
+            // docs/adr/0532 §1: commit carries the step to the sources.
+            &["source_not_found", "source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["form_check_warning", "form_required", "form_layer_rule"],
+        warnings: &["form_check_warning", "form_required", "form_layer_rule", "relation_unmapped"],
         targets: none,
     },
     Entry {
@@ -2857,8 +2859,30 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
             &["source_readonly", "source_changed", "geometry_mismatch", "file_unwritable", "pending_changes", "invalid_extent"],
+            // docs/adr/0532 §1: layers written together, and the mapped relations' rows.
+            &["invalid_input", "transaction_split", "relation_dangling"],
         ],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "relation_unmapped"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.sources.relate",
+        refusals: &[
+            &["unknown_relation", "relation_unbound", "source_gone", "transaction_split"],
+            &["source_readonly", "source_changed", "file_unwritable"],
+            &["relation_not_multiple", "relation_mapped", "relation_not_mapped", "relation_unsupported", "invalid_mapping", "relation_dangling"],
+        ],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.records.page",
+        refusals: &[
+            &["invalid_count", "invalid_cursor", "invalid_input", "layer_not_found"],
+            &["unknown_relation", "entity_not_found", "form_layer_mismatch", "field_not_found"],
+            &["invalid_revision", "revision_conflict", "source_changed"],
+        ],
+        warnings: &[],
         targets: none,
     },
     Entry {

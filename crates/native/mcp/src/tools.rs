@@ -657,6 +657,8 @@ fn command_tool(c: &Value) -> Value {
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
             | "cad.sources.edit"
             | "cad.sources.sync"
+            // It writes a many-to-many reference's mapping table into the file or takes it out (docs/adr/0532 §2).
+            | "cad.sources.relate"
             // It writes over the attributes of many objects (docs/adr/0507).
             | "cad.fields.write"
             // A processing tool writes what it computes (docs/adr/0508).
@@ -681,7 +683,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.crs.transform"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform"), destructive),
     })
 }
 

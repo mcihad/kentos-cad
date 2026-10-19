@@ -27,6 +27,10 @@ use crate::codes;
 use crate::geopackage as gp;
 use crate::provider;
 
+pub mod relate;
+mod relations;
+mod together;
+
 /// Coordinates of an object and its row agree within this (m): the geometry kernel's tolerance.
 const SAME: f64 = 1e-6;
 /// The same in degrees, for a table in a geographic system (about a millimetre).
@@ -605,6 +609,19 @@ fn same_value(a: &Value, b: &Value, kind: Option<&gpkg::ColumnKind>) -> bool {
 }
 
 fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff {
+    diff_skipping(doc, layer, s, mover, &[])
+}
+
+/// How the layer differs from its table, leaving the fields in `skip` out: the many-to-many references a mapping table
+/// holds (docs/adr/0532 §2), which are neither columns to add nor cells to compare nor attributes lost. A column of the
+/// table by the name keeps what it holds.
+fn diff_skipping(
+    doc: &Document,
+    layer: &str,
+    s: &Stored,
+    mover: Option<&Mover>,
+    skip: &[String],
+) -> Diff {
     let mut d = Diff::default();
     let fields = doc
         .layers()
@@ -619,14 +636,21 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
                 .is_some_and(|g| g.name.eq_ignore_ascii_case(name))
             || cols.iter().any(|c| c.name.eq_ignore_ascii_case(name))
     };
+    let skipped = |name: &str| skip.iter().any(|k| k.eq_ignore_ascii_case(name));
     let mut columns = s.layer.columns.clone();
     for f in &fields {
-        if !taken(&f.name, &columns) {
+        if !taken(&f.name, &columns) && !skipped(&f.name) {
             let c = gp::column_of(f);
             columns.push(c.clone());
             d.added_columns.push(c);
         }
     }
+    let kept_cells: Vec<usize> = columns
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| skipped(&c.name))
+        .map(|(i, _)| i)
+        .collect();
     let width = s.layer.columns.len();
     let geometry = s.layer.geometry.as_ref().map(|g| g.type_name.as_str());
     let tol = if mover.is_some_and(|m| m.source.is_geographic()) {
@@ -637,7 +661,7 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
     let mut seen = HashSet::new();
     for (uid, e) in doc.by_layer_with_uids(layer) {
         for k in e.base().attrs.keys() {
-            if !columns.iter().any(|c| c.name.eq_ignore_ascii_case(k)) {
+            if !columns.iter().any(|c| c.name.eq_ignore_ascii_case(k)) && !skipped(k) {
                 d.lost.insert(k.clone());
             }
         }
@@ -657,7 +681,7 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
             }
             None => e,
         };
-        let row = match gp::row_for(e, &columns, geometry) {
+        let mut row = match gp::row_for(e, &columns, geometry) {
             Ok(Some(r)) => r,
             Ok(None) => {
                 d.left += 1;
@@ -670,6 +694,15 @@ fn diff(doc: &Document, layer: &str, s: &Stored, mover: Option<&Mover>) -> Diff 
                 continue;
             }
         };
+        // A mapped reference's column keeps what the table holds (nothing, in a new row).
+        for &i in &kept_cells {
+            if let Some(cell) = row.values.get_mut(i) {
+                *cell = match s.rows.get(&uid) {
+                    Some((_, _, values)) if i < width => values[i].clone(),
+                    _ => Value::Null,
+                };
+            }
+        }
         match s.rows.get(&uid) {
             // Moved out of a part's area (docs/adr/0510): its row is written, not a new one.
             None if s.outside.contains_key(&uid) => d.update.push((s.outside[&uid], row)),
@@ -759,6 +792,7 @@ fn table_of(
             m: g.is_some_and(|g| g.m != 0),
             curves: true,
         },
+        relations: Vec::new(),
         name: l.name,
     })
 }
@@ -767,7 +801,8 @@ fn describe_file(path: &Path) -> Result<Vec<SourceTable>, String> {
     let file = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let writable = !readonly(path);
     let mut out = Vec::new();
-    for l in file.layers().map_err(|e| e.0)? {
+    let all = file.layers().map_err(|e| e.0)?;
+    for l in all.iter().cloned() {
         if !matches!(l.data_type, DataType::Features | DataType::Attributes) {
             continue;
         }
@@ -781,7 +816,9 @@ fn describe_file(path: &Path) -> Result<Vec<SourceTable>, String> {
                 .and_then(|s| u32::try_from(s.organization_id).ok()),
             None => None,
         };
-        out.push(table_of(&file, l, srid, writable)?);
+        let mut table = table_of(&file, l, srid, writable)?;
+        table.relations = relations::listed(&file, &all, &table.name);
+        out.push(table);
     }
     Ok(out)
 }
@@ -819,11 +856,12 @@ fn describe_database(address: &str) -> Result<Vec<SourceTable>, Stop> {
             rows: t.rows,
             geometry: t.geometry,
             srid: t.srid,
+            relations: Vec::new(),
         })
         .collect())
 }
 
-fn state_of(doc: &Document, link: &SourceLink) -> SourceState {
+fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> SourceState {
     let edited = layer_digest(doc, &link.layer) != link.digest;
     let mut state = SourceState {
         link: link.clone(),
@@ -853,7 +891,12 @@ fn state_of(doc: &Document, link: &SourceLink) -> SourceState {
     if let (Some(mut s), Ok(mover)) = (loaded, mover_for(doc, link.srid)) {
         state.changed = s.sha256 != link.revision;
         s.reachable(mover.as_ref());
-        let d = diff(doc, &link.layer, &s, mover.as_ref());
+        let skip: Vec<String> = ties
+            .iter()
+            .filter(|t| matches!(t.kept, relations::Kept::Mapped(_)) && t.child_layer == link.layer)
+            .map(|t| t.field.clone())
+            .collect();
+        let d = diff_skipping(doc, &link.layer, &s, mover.as_ref(), &skip);
         state.added = d.insert.len() as u32;
         state.modified = d.update.len() as u32;
         state.removed = d.delete.len() as u32;
@@ -887,19 +930,22 @@ fn describe_run(
                 Vec::new(),
             ))
         }
-        None => Ok((
+        None => {
+            let ties = relations::ties(doc);
+            Ok((
             SourcesDescribed {
                 tables: Vec::new(),
                 links: doc
                     .settings()
                     .sources
                     .iter()
-                    .map(|l| state_of(doc, l))
+                    .map(|l| state_of(doc, l, &ties))
                     .collect(),
                 revision,
             },
             Vec::new(),
-        )),
+        ))
+        }
     }
 }
 
@@ -1349,6 +1395,32 @@ fn sync_run(
     input: &SourcesSync,
     write: bool,
 ) -> Result<(SourcesSynced, Vec<CommandWarning>), Stop> {
+    if !input.with.is_empty() && input.direction == SyncDirection::Read {
+        return Err(refuse(
+            codes::INVALID_INPUT,
+            "with yalnız yazma (direction write) içindir: okuma her katmanı ayrı alır.",
+            "with",
+        ));
+    }
+    let primary = doc
+        .settings()
+        .sources
+        .iter()
+        .find(|s| s.layer == input.layer)
+        .map(|s| s.kind);
+    // A GeoPackage is written through `together`, one layer or several, one transaction (docs/adr/0532 §1).
+    if input.direction == SyncDirection::Write && primary != Some(SourceKind::Postgis) {
+        let mut ids = vec![input.layer.clone()];
+        ids.extend(input.with.iter().cloned());
+        return together::write(doc, &ids, write);
+    }
+    if !input.with.is_empty() {
+        return Err(refuse(
+            codes::TRANSACTION_SPLIT,
+            "PostGIS kaynağı bir işlemde bir tablo yazar; birden çok katman birlikte yazılamaz. Katmanları ayrı ayrı yazın.",
+            "with",
+        ));
+    }
     let Some(mut link) = doc
         .settings()
         .sources
@@ -1466,6 +1538,8 @@ fn sync_run(
                 columns: d.added_columns.iter().map(|c| c.name.clone()).collect(),
                 source: stored.sha256.clone(),
                 revision: doc.revision().to_string(),
+                layers: Vec::new(),
+                relations: Vec::new(),
             };
             if !write {
                 return Ok((out, warnings));
@@ -1478,29 +1552,8 @@ fn sync_run(
                     delete: d.delete,
                 };
                 match source {
-                    Origin::File(path) => {
-                        let mut file = GeoPackage::open(path, true).map_err(|e| {
-                            refuse(
-                                codes::FILE_UNWRITABLE,
-                                format!("{} yazmak için açılamadı: {}", link.path, e.0),
-                                "layer",
-                            )
-                        })?;
-                        file.edit(&stored.layer, &edits).map_err(|e| {
-                            refuse(
-                                codes::FILE_UNWRITABLE,
-                                format!("{} yazılamadı, dosya değişmedi: {}", link.path, e.0),
-                                "layer",
-                            )
-                        })?;
-                        file.close().map_err(|e| {
-                            refuse(
-                                codes::FILE_UNWRITABLE,
-                                format!("{} kapatılamadı: {}", link.path, e.0),
-                                "layer",
-                            )
-                        })?;
-                    }
+                    // A GeoPackage was written by `together` above.
+                    Origin::File(_) => {}
                     // In one transaction, after checking under a lock that the table is still at the revision.
                     Origin::Database(address) => {
                         let p = database_provider("layer")?;
@@ -1542,6 +1595,8 @@ fn sync_run(
                     "layer",
                 ));
             }
+            // A mapped many-to-many reference is read from its mapping table, not from a column (docs/adr/0532 §2).
+            together::patch_read(doc, &link, &mut stored)?;
             let objects = stored.in_project(mover.as_ref());
             let wanted: HashSet<Uuid> = objects.iter().map(|(u, _)| *u).collect();
             let mut updates: Vec<(Slot, kentos_contracts::Entity)> = Vec::new();
@@ -1578,6 +1633,8 @@ fn sync_run(
                 columns: Vec::new(),
                 source: stored.sha256.clone(),
                 revision: doc.revision().to_string(),
+                layers: Vec::new(),
+                relations: Vec::new(),
             };
             if !write {
                 return Ok((out, Vec::new()));
@@ -1610,6 +1667,35 @@ fn sync_run(
     }
 }
 
+/// Writes the bound layers among `layers` to their sources in one transaction (docs/adr/0532 §1), as
+/// `cad.sources.sync` with `with` does, `write` false saying only what it would do. `source_not_found` when none of
+/// them is bound; layers that are not bound are left out.
+pub(crate) fn commit(
+    doc: &mut Document,
+    layers: &[String],
+    write: bool,
+) -> Result<(SourcesSynced, Vec<CommandWarning>), Stop> {
+    let bound: Vec<String> = layers
+        .iter()
+        .filter(|l| doc.settings().sources.iter().any(|s| s.layer == **l))
+        .cloned()
+        .collect();
+    let Some(first) = bound.first() else {
+        return Err(refuse(
+            codes::SOURCE_NOT_FOUND,
+            "Kaynağa yazma istendi ama kaydın ve alt kayıtlarının katmanlarından hiçbiri bir kaynağa bağlı değil; önce cad.sources.edit ile bağlayın.",
+            "commit",
+        ));
+    };
+    let input = SourcesSync {
+        layer: first.clone(),
+        direction: SyncDirection::Write,
+        discard: false,
+        with: bound[1..].to_vec(),
+    };
+    sync_run(doc, &input, write)
+}
+
 pub fn sync_validate(cx: &ExecutionContext<'_>, input: &SourcesSync) -> CommandResult<()> {
     let mut copy = cx.doc.clone();
     match sync_run(&mut copy, input, false) {
@@ -1630,7 +1716,9 @@ pub fn sync_execute(
     cx: &mut ExecutionContext<'_>,
     input: SourcesSync,
 ) -> CommandResult<SourcesSynced> {
-    completed(sync_run(cx.doc, &input, true))
+    // A plan through the protocol runs this on a reading copy: it writes no file then (docs/adr/0532 §4).
+    let write = !(cx.dry() && input.direction == SyncDirection::Write);
+    completed(sync_run(cx.doc, &input, write))
 }
 
 /// `cad.sources.describe` as the registry calls it.

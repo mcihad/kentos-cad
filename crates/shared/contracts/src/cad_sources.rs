@@ -74,6 +74,51 @@ pub struct SourceTable {
     pub srid: Option<u32>,
     pub columns: Vec<SourceColumn>,
     pub capabilities: SourceCapabilities,
+    /// The relations of the file this table is a side of (GeoPackage related tables, docs/adr/0532 §2), each with
+    /// whether KentOS reads and writes its representation.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SourceRelation>>", optional))]
+    pub relations: Vec<SourceRelation>,
+}
+
+/// How a relation of a file is held (docs/adr/0532 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SourceRelationKind {
+    /// KentOS's representation (`kentos_references`): a mapping table of base and related rows.
+    Kentos,
+    /// A well-formed relation of another kind: read and listed, never rewritten.
+    Foreign,
+    /// A relation whose mapping table or tables are not as the profile says; `why` says how.
+    Broken,
+}
+
+/// A relation of a file's table (a row of `gpkgext_relations`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SourceRelation {
+    /// The relation's name as the file writes it (`kentos_references`, `media`, …).
+    pub name: String,
+    /// The base table (for KentOS's: the child, which holds the references).
+    pub base: String,
+    /// The related table (for KentOS's: the parent).
+    pub related: String,
+    /// The mapping table.
+    pub mapping: String,
+    /// How many rows the mapping table holds.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: u64,
+    pub kind: SourceRelationKind,
+    /// Why a broken relation is (none otherwise).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub why: Option<String>,
 }
 
 /// A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
@@ -216,6 +261,14 @@ pub enum SyncDirection {
 /// `source_changed` (writing, and the file changed since the layer last matched it), `pending_changes` (reading, and
 /// the layer differs from the table, without `discard`). Warnings: `export_losses` (objects a table has no geometry
 /// for stay in the drawing only).
+///
+/// `with` (docs/adr/0532 §1) writes more bound layers in the same transaction: a parent and its children go in
+/// together or not at all. Every layer is checked first; one refused (`source_readonly`, `geometry_mismatch`,
+/// `source_changed`, `relation_dangling` …) and nothing is written. The layers must lie in one GeoPackage file
+/// (`transaction_split`: another file, or a database, which writes one table a transaction), must not repeat, and
+/// `with` is for writing (`invalid_input` with `read`). A relation KentOS maps (`cad.sources.relate`) is written with
+/// its layers: its mapping rows follow the child's field (`relation_dangling`: a reference to an object the table
+/// does not hold, not even after this write; `relation_unmapped`, a warning: a multi-valued reference that stays text).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -229,6 +282,41 @@ pub struct SourcesSync {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub discard: bool,
+    /// Writing: more bound layers (by id) written in the same transaction.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub with: Vec<String>,
+}
+
+/// What a write did to one layer's table.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SyncedLayer {
+    pub layer: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub modified: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub removed: u32,
+}
+
+/// What a write did to a mapped relation's mapping table: rows added and removed.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SyncedRelation {
+    /// The project relation's id.
+    pub relation: String,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub added: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub removed: u32,
 }
 
 /// Output of `cad.sources.sync` v1, and its plan: what was (or would be) added, changed and removed on the other side,
@@ -251,4 +339,12 @@ pub struct SourcesSynced {
     /// The file's SHA-256 after (plan: before).
     pub source: String,
     pub revision: String,
+    /// A write with `with`: each layer's share, the first being `layer`; the counts above are their sums.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SyncedLayer>>", optional))]
+    pub layers: Vec<SyncedLayer>,
+    /// The mapped relations' mapping rows written.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<SyncedRelation>>", optional))]
+    pub relations: Vec<SyncedRelation>,
 }

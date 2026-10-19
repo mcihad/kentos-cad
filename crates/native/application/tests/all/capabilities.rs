@@ -298,6 +298,31 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "ilişkili dizinin ve kopyalanmayan nesneyi anan kısıtın uyarısı; Kopyala'nın durumları (cad.constraints.edit.follow.json) aynı constraint_copy'den geçer (ADR 0337 §3)",
     ),
     (
+        "cad.forms.submit",
+        "source_readonly",
+        "commit'in dosyası cad.sources.sync'in with'iyle aynı yoldan yazılır (sources::commit); salt okunur tablonun reddi cad.sources.sync.together.json'da, dosyanın izni fixture'ın yazılabilirliğine bağlı (ADR 0532 §1)",
+    ),
+    (
+        "cad.forms.submit",
+        "source_changed",
+        "commit'in dosyası cad.sources.sync'in with'iyle aynı yoldan yazılır; dosyanın katman onunla eşleştikten sonra değişmesi cad.sources.sync.together.json'da, bağın sürümü kurulumda dosyanın kendi özetidir (ADR 0532 §1)",
+    ),
+    (
+        "cad.forms.submit",
+        "geometry_mismatch",
+        "commit'in dosyası cad.sources.sync'in with'iyle aynı yoldan yazılır; tablonun tutamadığı geometri cad.sources.sync.together.json'da (ADR 0532 §1)",
+    ),
+    (
+        "cad.forms.submit",
+        "file_unwritable",
+        "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada source_relations.rs sınar (ADR 0532 §1)",
+    ),
+    (
+        "cad.sources.relate",
+        "file_unwritable",
+        "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada source_relations.rs sınar (ADR 0532 §2)",
+    ),
+    (
         "cad.sources.sync",
         "file_unwritable",
         "dosyaya yazan execute ortak durumlarda yok (fixture dosyası değişirdi); geçici kopyada sources.rs sınar",
