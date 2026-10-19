@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Literal
 
 from . import _native
@@ -166,7 +166,10 @@ class Valve:
 @dataclass(frozen=True, slots=True)
 class Trace:
     """Şebeke izleme: the objects reached and their length, their stretches; with ``isolation`` the valves to close
-    and what no source feeds once they are (its objects, length and stretches)."""
+    and what no source feeds once they are (its objects, length and stretches). ``junctions`` are the junction objects
+    reached; ``related`` the records the project's relations tie to what was reached or cut off (a pipe's
+    subscribers, a valve's chamber); ``unverified`` Denetle's connection problems the trace went through: a trace
+    over them is not one to rely on (docs/adr/0525)."""
 
     objects: list[int]
     valves: list[Valve]
@@ -175,6 +178,20 @@ class Trace:
     unfed_length: float
     lines: list[Line]
     unfed_lines: list[Line]
+    junctions: list[int] = field(default_factory=list)
+    related: list[Related] = field(default_factory=list)
+    unverified: list[Problem] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class Related:
+    """Records a relation ties to a trace: the relation's id and name, ``attached`` (children of what was reached)
+    or ``container`` (the parents that hold it), and the records' ids."""
+
+    relation: str
+    name: str
+    tie: str
+    ids: list[int]
 
 
 @dataclass(frozen=True, slots=True)
@@ -426,6 +443,8 @@ class Network:
         """Şebeke izleme from ``starts``: what is ``connected``, ``downstream`` or ``upstream`` (the edges'
         directions), or with ``isolation`` the nearest open valves to close and what no source feeds once they are."""
         t = json.loads(_call(self._native.trace, _points(starts, "başlangıçlar"), _points(barriers, "engeller"), float(reach), kind))
+        reached = [_id(i) for i in [*t["objects"], *t["junctions"], *t["unfed"]]]
+        related = [Related(relation=r["relation"], name=r["name"], tie=r["tie"], ids=r["ids"]) for r in json.loads(self._native.related(reached))]
         return Trace(
             objects=[_id(i) for i in t["objects"]],
             valves=[Valve(id=_id(v["id"]), x=v["x"], y=v["y"]) for v in t["valves"]],
@@ -434,6 +453,10 @@ class Network:
             unfed_length=t["unfedLength"],
             lines=[Line._of(x) for x in t["lines"]],
             unfed_lines=[Line._of(x) for x in t["unfedLines"]],
+            junctions=[_id(i) for i in t["junctions"]],
+            related=related,
+            unverified=[Problem(kind=p["kind"], x=p["x"], y=p["y"], ids=[_id(i) for i in p["ids"]], value=None, cost=None)
+                        for p in t["unverified"]],
         )
 
     def check(self) -> Check:

@@ -43,6 +43,8 @@ pub struct PyNetwork {
     def: NetworkDef,
     inner: NetworkSession,
     problems: Vec<String>,
+    /// The drawing it was built from: the records the project's relations tie to a trace (docs/adr/0525 §1).
+    session: Py<PySession>,
 }
 
 #[pymethods]
@@ -52,14 +54,16 @@ impl PyNetwork {
     fn build(session: PyRef<'_, PySession>, id: &str) -> PyResult<Self> {
         let FromDocument {
             def,
-            session,
+            session: built,
             problems,
         } = from_document(session.inner.document(), id)
             .map_err(|e| refused("network_missing", e))?;
+        let drawing: Py<PySession> = session.into();
         Ok(Self {
             def,
-            inner: session,
+            inner: built,
             problems,
+            session: drawing,
         })
     }
 
@@ -203,6 +207,31 @@ impl PyNetwork {
             }
         };
         answer(self.inner.trace_of(&starts, &barriers, reach, kind), reach)
+    }
+
+    /// The records the project's relations tie to the objects `ids` (`[id, …]`; a trace's objects, junctions and
+    /// what it cut off): `[{relation, name, tie: attached|container, ids}]` (docs/adr/0525 §1).
+    fn related(&self, py: Python<'_>, ids: Vec<u32>) -> PyResult<String> {
+        let session = self.session.borrow(py);
+        let slots: Vec<kentos_domain::Slot> = ids.into_iter().map(kentos_domain::Slot).collect();
+        let groups: Vec<serde_json::Value> = session
+            .inner
+            .document()
+            .related_of(&slots)
+            .into_iter()
+            .map(|r| {
+                serde_json::json!({
+                    "relation": r.relation,
+                    "name": r.name,
+                    "tie": match r.tie {
+                        kentos_domain::Tie::Attached => "attached",
+                        kentos_domain::Tie::Container => "container",
+                    },
+                    "ids": r.slots.iter().map(|s| s.0).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        text(&groups)
     }
 
     /// Denetle: `{nodes, pieces, length, parts, deadEnds, counts, problems}`.

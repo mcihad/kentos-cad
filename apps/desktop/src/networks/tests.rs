@@ -159,6 +159,7 @@ fn screens() {
         "alanlar-cizim",
         "serit",
         "donusler",
+        "iz-abone",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -169,7 +170,11 @@ fn screens() {
                 {
                     continue;
                 }
-                let mut app = app();
+                let mut app = if name == "iz-abone" {
+                    subscribers_app()
+                } else {
+                    app()
+                };
                 let _ = app
                     .settings
                     .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
@@ -201,6 +206,13 @@ fn screens() {
                         window(&mut app, Event::TurnField(0, "gecikme".into()));
                         window(&mut app, Event::LevelField(0, "z_bas".into()));
                         window(&mut app, Event::LevelField(1, "z_son".into()));
+                    }
+                    // docs/adr/0525: Yalıtım on the branch, its subscribers ringed, the short service pipe crossed.
+                    "iz-abone" => {
+                        app.memory.network_trace =
+                            kentos_geometry_core::ops::network::TraceKind::Isolation;
+                        send(&mut app, Message::Run("tool.netTrace"));
+                        click_at(&mut app, [150.0, 50.0]);
                     }
                     "en-yakin" | "en-yakin-cizim" => {
                         send(
@@ -287,4 +299,136 @@ fn screens() {
             }
         }
     }
+}
+
+/// A pipe network whose subscribers are tied to their pipes by the project's relation, with a service pipe that ends
+/// 0.5 m short of its branch (docs/adr/0525): a main from the depot east, valves at 100 and 220 m, a branch north at
+/// 150 m with three subscribers, two on the main past the second valve.
+pub(crate) fn subscribers_app() -> App {
+    let (mut app, _) = App::boot(None);
+    let (e, n) = (487_000.0, 4_420_000.0);
+    let layer = |id: &str, name: &str, color: &str, fields: serde_json::Value| {
+        json!({ "id": id, "name": name, "type": "layer", "visible": true, "locked": false, "expanded": true,
+            "style": { "color": color, "lineType": "continuous", "lineWeight": 0.5 }, "children": [], "fields": fields })
+    };
+    let line = |id: u32, a: [f64; 2], b: [f64; 2]| {
+        json!({ "kind": "line", "id": id, "layerId": "su", "attrs": {},
+            "a": { "x": e + a[0], "y": n + a[1] }, "b": { "x": e + b[0], "y": n + b[1] } })
+    };
+    let point = |id: u32, layer: &str, p: [f64; 2], ad: &str| json!({ "kind": "point", "id": id, "layerId": layer, "attrs": { "Ad": ad }, "p": { "x": e + p[0], "y": n + p[1] } });
+    let net = json!({ "id": "su", "name": "İçme suyu", "kind": "utility", "edges": [{ "layer": "su" }],
+        "junctions": [{ "layer": "vana", "role": "valve" }, { "layer": "depo", "role": "source" }],
+        "connect": "ends", "tolerance": 0.01, "direction": { "kind": "digitized" } });
+    let doc = json!({
+        "format": "kentos.document", "version": 1, "name": "Aboneler",
+        "settings": { "srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+            "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow", "networks": [net] },
+        "origin": { "x": e, "y": n },
+        "layers": [
+            layer("su", "Su hattı", "#3E63DD", json!([{ "name": "Ad", "kind": "text" }])),
+            layer("vana", "Vana", "#E5484D", json!([{ "name": "Ad", "kind": "text" }])),
+            layer("depo", "Depo", "#30A46C", json!([{ "name": "Ad", "kind": "text" }])),
+            layer("abone", "Abone", "#F76B15", json!([{ "name": "Ad", "kind": "text" }, { "name": "hat", "kind": "text" }])),
+        ],
+        "activeLayer": "su",
+        "entities": [
+            line(1, [0.0, 0.0], [100.0, 0.0]),
+            line(2, [100.0, 0.0], [150.0, 0.0]),
+            line(3, [150.0, 0.0], [220.0, 0.0]),
+            line(4, [220.0, 0.0], [320.0, 0.0]),
+            line(5, [150.0, 0.0], [150.0, 100.0]),
+            line(6, [150.0, 100.5], [150.0, 150.0]),
+            point(7, "depo", [0.0, 0.0], "Depo"),
+            point(8, "vana", [100.0, 0.0], "V-1"),
+            point(9, "vana", [220.0, 0.0], "V-2"),
+            point(10, "abone", [160.0, 30.0], "A-1"),
+            point(11, "abone", [140.0, 55.0], "A-2"),
+            point(12, "abone", [160.0, 85.0], "A-3"),
+            point(13, "abone", [260.0, 12.0], "A-4"),
+            point(14, "abone", [300.0, -12.0], "A-5"),
+        ],
+        "styles": { "items": [], "categories": [] },
+    });
+    let first = Document::new(
+        DocumentSnapshotV1::from_json(&doc.to_string()).expect("reads"),
+        None,
+    )
+    .expect("opens");
+    // The subscribers' field holds their pipe's persistent id; the relation ties them.
+    let mut v2 = first.model.to_snapshot_v2();
+    let uid = |slot: usize| kentos_domain::Uuid::from_bytes(v2.uids[slot - 1].0).to_string();
+    let ties = [(10, 5), (11, 5), (12, 5), (13, 4), (14, 4)];
+    let ids: Vec<(usize, String)> = ties.iter().map(|&(s, p)| (s, uid(p))).collect();
+    for (s, pipe) in ids {
+        v2.entities[s - 1]
+            .base_mut()
+            .attrs
+            .insert("hat".into(), pipe);
+    }
+    v2.settings.relations = vec![kentos_contracts::ProjectRelation {
+        id: "aboneler".into(),
+        name: "Aboneler".into(),
+        parent: "su".into(),
+        child: "abone".into(),
+        field: "hat".into(),
+        on_delete: kentos_contracts::RelationDelete::default(),
+    }];
+    let doc = Document::from_v2(v2, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    send(&mut app, Message::Run("view.zoomExtents"));
+    app
+}
+
+/// A click at a scene point, its tasks (the network thread's answers) driven to their end.
+pub(crate) fn click_at(app: &mut App, p: [f64; 2]) {
+    use crate::viewport::Event as View;
+    let [x, y] = app
+        .viewport
+        .camera
+        .world_to_screen(kentos_interaction::Vec2::new(
+            487_000.0 + p[0],
+            4_420_000.0 + p[1],
+        ));
+    let at = iced::Point::new(x as f32, y as f32);
+    for e in [View::Moved(at), View::Pressed(at), View::Released(at)] {
+        send(app, Message::Viewport(e));
+    }
+}
+
+/// Yalıtım on the branch: the valves V-1 and V-2 close; the three subscribers on the branch and the two past V-2 are
+/// cut off and said by the relation's name; the service pipe that ends short is a connection not made: said, and the
+/// trace is not one to rely on (docs/adr/0525).
+#[test]
+fn a_trace_names_the_subscribers_it_cuts_off_and_the_connection_not_made() {
+    let mut app = subscribers_app();
+    app.memory.network_trace = kentos_geometry_core::ops::network::TraceKind::Isolation;
+    send(&mut app, Message::Run("tool.netTrace"));
+    click_at(&mut app, [150.0, 50.0]);
+    let prompt = app.session.prompt().text();
+    assert!(
+        prompt.contains("V-1") || prompt.contains("2 vana kapatılır"),
+        "{prompt}"
+    );
+    assert!(prompt.contains("5 bağlı kayıt (Aboneler)"), "{prompt}");
+    assert!(
+        prompt.contains("doğrulanmamış 1 bağlantıdan geçti"),
+        "{prompt}"
+    );
+    let task = app.submit_line("");
+    drive(&mut app, task);
+    let said = crate::files_testing::last_said(&app);
+    assert!(
+        said.contains("Denetle'nin bulduğu bağlantı sorunlarından"),
+        "{said}"
+    );
+    // The selection: the pipes, the valves, the branch's three subscribers and the two cut off past V-2.
+    let names: Vec<String> = app
+        .selection
+        .ids()
+        .iter()
+        .filter_map(|s| app.document.as_ref()?.model.get(*s))
+        .filter(|e| e.base().layer_id == "abone")
+        .filter_map(|e| e.base().attrs.get("Ad").cloned())
+        .collect();
+    assert_eq!(names, ["A-1", "A-2", "A-3", "A-4", "A-5"]);
 }

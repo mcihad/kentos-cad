@@ -4,10 +4,14 @@
 //! Akış yukarı), or what closing the nearest open valves isolates (Yalıtım:
 //! the valves to close, and what no source feeds once they are). The trace
 //! shows at once; Enter selects its objects (and the valves) and says their
-//! length, counts and the valves' names.
+//! length, counts and the valves' names. The records the project's relations
+//! tie to what it reached (a pipe's subscribers, a valve's chamber) are shown
+//! and selected with it, by their relation's name; the connection problems it
+//! went through (Denetle's) are crossed and said: such a trace is not one to
+//! rely on (docs/adr/0525).
 
 use kentos_contracts::{NetworkDef, NetworkKind};
-use kentos_domain::Slot;
+use kentos_domain::{Related, Slot, Tie};
 use kentos_geometry_core::ops::network::{TraceAnswer, TraceKind};
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -56,6 +60,9 @@ type Traced = (TraceAnswer, Vec<Vec<Vec2>>, Vec<Vec<Vec2>>);
 pub struct NetTrace {
     base: Base,
     traced: Option<Traced>,
+    /// The records the project's relations tie to what was reached, and where the point ones are.
+    related: Vec<Related>,
+    related_at: Vec<Vec2>,
     refusal: Option<String>,
     waiting: Option<u64>,
     seen: Seen,
@@ -82,6 +89,8 @@ impl NetTrace {
     fn changed(&mut self, cx: &mut Context<'_>) {
         self.look(cx);
         self.traced = None;
+        self.related.clear();
+        self.related_at.clear();
         self.refusal = None;
         self.waiting = None;
         self.base.problem = None;
@@ -132,7 +141,41 @@ impl NetTrace {
                 ));
             }
         }
+        for r in &self.related {
+            words.push(match r.tie {
+                Tie::Attached => format!("{} bağlı kayıt ({})", r.slots.len(), r.name),
+                Tie::Container => format!("{} içeren kayıt ({})", r.slots.len(), r.name),
+            });
+        }
+        if !t.unverified.is_empty() {
+            words.push(format!(
+                "doğrulanmamış {} bağlantıdan geçti (Denetle)",
+                t.unverified.len()
+            ));
+        }
         words.join("; ")
+    }
+
+    /// The records the project's relations tie to the trace's objects and junctions (Yalıtım: what is cut off too).
+    fn relate(&mut self, t: &TraceAnswer, cx: &Context<'_>) {
+        let slots: Vec<Slot> = t
+            .objects
+            .iter()
+            .chain(&t.junctions)
+            .chain(&t.unfed)
+            .copied()
+            .filter_map(super::base::slot_of)
+            .collect();
+        self.related = cx.doc.related_of(&slots);
+        self.related_at = self
+            .related
+            .iter()
+            .flat_map(|r| &r.slots)
+            .filter_map(|s| match cx.doc.get(*s) {
+                Some(kentos_contracts::Entity::Point(p)) => Some(Vec2::new(p.p.x, p.p.y)),
+                _ => None,
+            })
+            .collect();
     }
 
     fn option(&mut self, key: &str, cx: &mut Context<'_>) -> Option<Changed> {
@@ -301,7 +344,7 @@ impl Tool for NetTrace {
             return Flow::Stay;
         };
         let isolation = self.kind() == TraceKind::Isolation;
-        let ids: Vec<Slot> = t
+        let mut ids: Vec<Slot> = t
             .objects
             .iter()
             .copied()
@@ -309,6 +352,7 @@ impl Tool for NetTrace {
             .filter_map(super::base::slot_of)
             .filter(|s| cx.doc.get(*s).is_some())
             .collect();
+        ids.extend(self.related.iter().flat_map(|r| r.slots.iter().copied()));
         cx.selection.set(ids);
         let mut said = format!("{LABEL} ({}): {}", kind_name(self.kind()), self.summary(t));
         if isolation && !t.valves.is_empty() {
@@ -319,7 +363,14 @@ impl Tool for NetTrace {
                 .collect();
             said.push_str(&format!("; kapatılacak vanalar: {}", names.join(", ")));
         }
-        cx.say(Level::Success, format!("{said}."));
+        if t.unverified.is_empty() {
+            cx.say(Level::Success, format!("{said}."));
+        } else {
+            cx.say(
+                Level::Warn,
+                format!("{said}. İzleme Denetle'nin bulduğu bağlantı sorunlarından geçiyor; sonuca güvenmeden önce ağı Ağlar › Denetle ile düzeltin."),
+            );
+        }
         Flow::Exit
     }
 
@@ -350,6 +401,7 @@ impl Tool for NetTrace {
                     Ok(t) => {
                         let lines = t.lines.iter().map(outline).collect();
                         let unfed = t.unfed_lines.iter().map(outline).collect();
+                        self.relate(&t, cx);
                         self.traced = Some((t, lines, unfed));
                     }
                     Err(why) => {
@@ -384,6 +436,20 @@ impl Tool for NetTrace {
                 out.markers.push(Marker {
                     at: Vec2::new(v.x, v.y),
                     shape: MarkerShape::Square(5.0),
+                    tone: Tone::Danger,
+                });
+            }
+            for at in &self.related_at {
+                out.markers.push(Marker {
+                    at: *at,
+                    shape: MarkerShape::Ring(6.0),
+                    tone: Tone::Accent,
+                });
+            }
+            for u in &t.unverified {
+                out.markers.push(Marker {
+                    at: Vec2::new(u.x, u.y),
+                    shape: MarkerShape::Cross(7.0),
                     tone: Tone::Danger,
                 });
             }

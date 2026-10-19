@@ -394,7 +394,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   ağacın kopyasında: `layer_states::themed`, `StyledCache::scene_themed`, `Spatial::set_theme`, `Store::labels_shown_in`; Görünümleri bağla, Kaydırmalı
   karşılaştır, çizim değişmez); 0522 CSV tablolar (`file.export.csv` ve `file.import.csv`: GDAL'ın CSV'si, geometri ISO WKT
   ya da X ve Y, yaylar kesin, `.csvt` türleri ve OGC WKT1 `.prj`; okuma GeoPackage içe aktarmasının yolundan, `kentos_geopackage::wkt`; Veri › Dosya alışverişi'nde
-  CSV içe ve dışa aktar); 0518 raster oturtmanın kaydı (rasterin `georef`'i: yöntem, kontrol ve denetim noktaları piksel
+  CSV içe ve dışa aktar); 0525 şebeke izlemede ilişkili kayıtlar (`Document::related_of`: borunun aboneleri, vananın haznesi)
+  ve doğrulanmamış bağlantılar (`TraceAnswer.junctions`, `.unverified`; araçta sayılır ve seçilir, Python'da `related`); 0518 raster oturtmanın kaydı (rasterin `georef`'i: yöntem, kontrol ve denetim noktaları piksel
   köşeleriyle, hedeflerin sistemi, kaynak ve SHA-256, m0, denetim hataları, çıktı ızgarası; `.kcad` şema 88, `FORMATS_VERSION` 94;
   anlamsal `cad.rasters.georef`, `rasters_georef::prepare` ve `made`, `kentos_formats::raster::gcp`'nin `.points`'i; Raster oturt'ta
   Denetim, Python ve MCP); 0521 ağın dönüşleri, seviyeleri ve zaman profili (`turns`: geri dönüş kuralı, kavşak gecikmeleri,

@@ -30,6 +30,9 @@ pub struct Traced {
     pub edges: Vec<u32>,
     /// Yalıtım: the valves to close (indices into the graph's junctions), ascending.
     pub valves: Vec<u32>,
+    /// The junctions at a node the trace reached, a start's too (indices into the graph's junctions), ascending
+    /// (docs/adr/0525 §1).
+    pub junctions: Vec<u32>,
     /// Yalıtım with sources: the pieces no source reaches once the valves are closed, and their edges.
     pub unfed: Vec<u32>,
     pub unfed_edges: Vec<u32>,
@@ -93,6 +96,8 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
     let mut valves: HashSet<u32> = HashSet::new();
     let mut edge_seen = vec![false; g.edges.len()];
     let mut next_nodes: Vec<(u32, u32, bool)> = Vec::new();
+    // Every node a stretch reached (a closed junction and a barrier too, reached but not passed).
+    let mut touched: HashSet<u32> = start_nodes.iter().copied().collect();
     while let Some(n) = queue.pop_front() {
         next_nodes.clear();
         places.steps(g, n, |next, piece, forward, _| {
@@ -109,6 +114,7 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
             } else {
                 taken.insert((piece, lo.to_bits(), hi.to_bits()))
             };
+            touched.insert(next);
             if fresh {
                 out.spans.push(Span { piece, a, b });
                 out.length += hi - lo;
@@ -131,6 +137,13 @@ pub fn trace(g: &Graph, starts: &[Location], barriers: &[Location], kind: TraceK
     }
     out.edges = (0..g.edges.len() as u32)
         .filter(|&e| edge_seen[e as usize])
+        .collect();
+    out.junctions = g
+        .junctions
+        .iter()
+        .enumerate()
+        .filter(|(_, j)| j.node.is_some_and(|n| touched.contains(&n)))
+        .map(|(k, _)| k as u32)
         .collect();
     if kind == TraceKind::Isolation {
         // The valves' junctions: every open valve at a stopping node.
@@ -238,5 +251,39 @@ mod tests {
         // Upstream from the branch's end: back along it and the main to the tank.
         let up = trace(&g, &[at(150.0, 80.0)], &[], TraceKind::Upstream);
         assert!((up.length - 230.0).abs() < 1e-9, "{up:?}");
+        // The junctions reached (docs/adr/0525 §1): Yalıtım stops at the two valves, they are reached; downstream
+        // from just past the tank the valves, not the tank behind; all that is connected every one.
+        assert_eq!(t.junctions, vec![1, 2]);
+        assert_eq!(down.junctions, vec![1, 2]);
+        let all = trace(&g, &[at(1.0, 0.0)], &[], TraceKind::Connected);
+        assert_eq!(all.junctions, vec![0, 1, 2]);
+    }
+
+    /// A trace over a near miss says it (docs/adr/0525 §2): a service pipe ends 0.5 m short of the main.
+    #[test]
+    fn a_trace_through_a_connection_not_made_is_not_one_to_rely_on() {
+        let rules = Rules::from_json(
+            &Json::parse(r#"{"connect":"ends","tolerance":0.01,"direction":{"kind":"digitized"}}"#)
+                .expect("JSON"),
+        )
+        .expect("rules");
+        let edges = [
+            pipe(1.0, (0.0, 0.0), (300.0, 0.0)),
+            pipe(2.0, (100.0, 0.5), (100.0, 60.0)),
+            pipe(3.0, (500.0, 0.0), (600.0, 0.0)),
+        ];
+        let (g, report) = Graph::build(rules, &edges, &[]);
+        let s = super::super::session::NetworkSession::new(g, report, Vec::new());
+        let main = s
+            .trace_of(&[Vec2::new(50.0, 0.0)], &[], 1.0, TraceKind::Connected)
+            .expect("traced");
+        assert_eq!(main.objects, vec![1.0]);
+        assert_eq!(main.unverified.len(), 1, "{:?}", main.unverified);
+        assert_eq!(main.unverified[0].kind, "nearMiss");
+        // A pipe far from any problem: nothing unverified.
+        let far = s
+            .trace_of(&[Vec2::new(550.0, 0.0)], &[], 1.0, TraceKind::Connected)
+            .expect("traced");
+        assert!(far.unverified.is_empty(), "{:?}", far.unverified);
     }
 }

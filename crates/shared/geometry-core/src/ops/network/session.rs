@@ -36,6 +36,8 @@ pub struct NetworkSession {
     pub time: Option<f64>,
     searcher: Searcher,
     tree: Option<Tree>,
+    /// Denetle's answer, found once (a trace says the connection problems it went through, docs/adr/0525 §2).
+    checked: std::sync::OnceLock<Checked>,
 }
 
 /// A way along the network: its points and one bulge a segment (arcs exact).
@@ -214,6 +216,11 @@ crate::json_struct!(out Valve { id, x, y });
 pub struct TraceAnswer {
     pub objects: Vec<f64>,
     pub valves: Vec<Valve>,
+    /// The junction objects at a node reached (docs/adr/0525 §1).
+    pub junctions: Vec<f64>,
+    /// Denetle's problems of the connections the trace went through or stopped at (docs/adr/0525 §2): a trace over
+    /// them is not one to rely on.
+    pub unverified: Vec<Unverified>,
     pub unfed: Vec<f64>,
     pub length: f64,
     pub unfed_length: f64,
@@ -221,7 +228,29 @@ pub struct TraceAnswer {
     pub unfed_lines: Vec<Line>,
 }
 
-crate::json_struct!(out TraceAnswer { objects, valves, unfed, length, unfed_length => "unfedLength", lines, unfed_lines => "unfedLines" });
+crate::json_struct!(out TraceAnswer { objects, valves, junctions, unverified, unfed, length, unfed_length => "unfedLength", lines, unfed_lines => "unfedLines" });
+
+/// Whether a Denetle problem leaves a connection unverified: pieces near but not joined, a crossing not joined, a
+/// junction off the network, a piece dropped as too short, a turn line not on its pieces, a level not read.
+fn unverifies(p: &super::check::Problem) -> bool {
+    use super::check::ProblemKind as K;
+    match p.kind {
+        K::NearMiss | K::Crossing | K::OffNetwork | K::Short | K::Turn => true,
+        K::Unread => p.cost.is_none(),
+        K::Detached => false,
+    }
+}
+
+/// A connection problem a trace went through (docs/adr/0525 §2): its kind's name (`problem_name`), where, its objects.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Unverified {
+    pub kind: String,
+    pub x: f64,
+    pub y: f64,
+    pub ids: Vec<f64>,
+}
+
+crate::json_struct!(out Unverified { kind, x, y, ids });
 
 static NULL: Json = Json::Null;
 
@@ -335,6 +364,7 @@ impl NetworkSession {
             time: None,
             searcher: Searcher::new(),
             tree: None,
+            checked: std::sync::OnceLock::new(),
         }
     }
 
@@ -803,8 +833,36 @@ impl NetworkSession {
                 b: g.pieces[p as usize].len,
             })
             .collect();
+        let mut junctions: Vec<f64> = t
+            .junctions
+            .iter()
+            .map(|&j| g.junctions[j as usize].id)
+            .collect();
+        junctions.sort_by(f64::total_cmp);
+        junctions.dedup();
+        let objects = ids(&t.edges);
+        let reached: std::collections::HashSet<u64> = objects
+            .iter()
+            .chain(&junctions)
+            .map(|v| v.to_bits())
+            .collect();
+        let unverified = self
+            .checked
+            .get_or_init(|| check(&self.graph, &self.report))
+            .problems
+            .iter()
+            .filter(|p| unverifies(p) && p.ids.iter().any(|i| reached.contains(&i.to_bits())))
+            .map(|p| Unverified {
+                kind: problem_name(p.kind).to_owned(),
+                x: p.at.x,
+                y: p.at.y,
+                ids: p.ids.clone(),
+            })
+            .collect();
         Ok(TraceAnswer {
-            objects: ids(&t.edges),
+            objects,
+            junctions,
+            unverified,
             valves: t
                 .valves
                 .iter()
