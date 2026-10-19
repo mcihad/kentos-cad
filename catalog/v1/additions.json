@@ -2144,6 +2144,35 @@
       "shortcuts": [],
       "category": "Mimari",
       "status": "implemented"
+    },
+    {
+      "id": "xref.attach",
+      "title": "Dış başvuru ekle",
+      "icon": "xrefAttach",
+      "description": "Başka bir KentOS çizimini kaynağına bağlı bir blok olarak ekler: katmanları “Dış başvuru: ad” grubunda gelir, içeriği çizimde kalır. Ekle türü bu çizimi alan çizimlerde de görünür, Bindir yalnız bu çizimde. Kaynak değişince Dış başvurular söyler; Yeniden yükle yenisini alır.",
+      "aliases": [
+        "DISBASVURUEKLE",
+        "DIŞBAŞVURUEKLE",
+        "XATTACH"
+      ],
+      "shortcuts": [],
+      "category": "Ekle",
+      "status": "implemented"
+    },
+    {
+      "id": "xref.manager",
+      "title": "Dış başvurular",
+      "icon": "xrefManager",
+      "description": "Çizimin dış başvurularını durumlarıyla listeler (Yüklü, Boşaltıldı, Bulunamadı, Değişti): Yeniden yükle, Boşalt, Yolu değiştir…, Kaldır ve Bağla ▾ (sıradan blok yap, katmanları birleştir). Her işlem tek adımda geri alınır.",
+      "aliases": [
+        "DISBASVURULAR",
+        "DIŞBAŞVURULAR",
+        "XREF",
+        "XREFS"
+      ],
+      "shortcuts": [],
+      "category": "Ekle",
+      "status": "implemented"
     }
   ],
   "icons": {
@@ -2369,7 +2398,9 @@
     "phaseAll": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"1\"/><path d=\"M7.5 4v12\" stroke-width=\"1\"/>",
     "phaseExisting": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h9\" stroke-width=\"2\"/>",
     "phaseDemolition": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"2\" stroke-dasharray=\"2.5 1.8\"/>",
-    "phaseProposed": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\" opacity=\"0.45\"/><path d=\"M10 6.5v7M6.5 10h7\" stroke-width=\"1.8\"/>"
+    "phaseProposed": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\" opacity=\"0.45\"/><path d=\"M10 6.5v7M6.5 10h7\" stroke-width=\"1.8\"/>",
+    "xrefAttach": "<path d=\"M4.5 2.5h7l4 4v4\"/><path d=\"M11.5 2.5v4h4\" stroke-width=\"1\"/><path d=\"M4.5 2.5v15h5\"/><path d=\"M12.6 12.6l-1.3 1.3a1.9 1.9 0 0 0 2.7 2.7l1.3-1.3\" stroke-width=\"1.2\"/><path d=\"M15.4 15.4l1.3-1.3a1.9 1.9 0 0 0-2.7-2.7l-1.3 1.3\" stroke-width=\"1.2\"/><path d=\"M13.3 15.1l1.8-1.8\" stroke-width=\"1.2\"/>",
+    "xrefManager": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15\" stroke-width=\"1\"/><path d=\"M9 10.5h6M9 13.5h6\" stroke-width=\"1\"/><path d=\"M4.6 10.8l.7-.7a.9.9 0 0 1 1.3 1.3l-.7.7M5.9 13.2l-.7.7a.9.9 0 0 1-1.3-1.3l.7-.7M5 12.6l1-1\" stroke-width=\"0.9\"/>"
   },
   "tabs": [
     {
@@ -3544,6 +3575,25 @@
         },
         {
           "command": "arch.template",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "insert",
+      "label": "Dış başvuru",
+      "icon": "xrefAttach",
+      "after": "Blok",
+      "items": [
+        {
+          "command": "xref.attach",
+          "size": "large"
+        },
+        {
+          "command": "xref.manager",
           "size": "small"
         }
       ]

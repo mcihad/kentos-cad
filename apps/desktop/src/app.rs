@@ -245,6 +245,10 @@ pub enum Dialog {
     ViewRefs,
     /// Pafta seti (sheet_set.rs, docs/adr/0347 §1); the window is `App::sheet_set`.
     SheetSet,
+    /// Dış başvurular (xrefs_window.rs, docs/adr/0348 §5); its state is `App::xrefs`.
+    Xrefs,
+    /// Dış başvuru ekle (xrefs_window.rs); its choices are `App::xrefs.attach`.
+    XrefAttach,
     /// Metraj (quantities.rs, docs/adr/0342 §5); the window is `App::quantities`.
     Quantities,
     /// Kullanılmayanları temizle (layer_purge.rs, docs/adr/0177 §5); the window is `App::layer_purge`.
@@ -518,6 +522,7 @@ pub enum Message {
     TagsCheck(crate::tags_check::Event),
     ViewRefs(crate::viewmark_refs::Event),
     SheetSet(crate::sheet_set::Event),
+    Xrefs(crate::xrefs_window::Event),
     Quantities(crate::quantities::Event),
     LayerPurge(crate::layer_purge::Event),
     LayerList(crate::layer_list::Event),
@@ -996,6 +1001,8 @@ pub struct App {
     /// Başvurular' window (viewmark_refs.rs, docs/adr/0345 §3).
     pub(crate) view_refs: Option<crate::viewmark_refs::Window>,
     pub(crate) sheet_set: Option<crate::sheet_set::Window>,
+    /// Dış başvurular and Dış başvuru ekle (xrefs_window.rs, docs/adr/0348 §5).
+    pub(crate) xrefs: crate::xrefs_window::State,
     /// Metraj's window (quantities.rs, docs/adr/0342 §5).
     pub(crate) quantities: Option<crate::quantities::Window>,
     /// Kullanılmayanları temizle's window (layer_purge.rs, docs/adr/0177 §5).
@@ -1319,6 +1326,7 @@ impl App {
             tags_check: None,
             view_refs: None,
             sheet_set: None,
+            xrefs: Default::default(),
             quantities: None,
             layer_purge: None,
             take_from: None,
@@ -1864,6 +1872,7 @@ impl App {
             Message::TagsCheck(event) => return self.tags_check_event(event),
             Message::ViewRefs(event) => return self.view_refs_event(event),
             Message::SheetSet(event) => return self.sheet_set_event(event),
+            Message::Xrefs(event) => return self.xrefs_event(event),
             Message::Quantities(event) => return self.quantities_event(event),
             Message::LayerPurge(event) => return self.layer_purge_event(event),
             Message::DrawingExchange(event) => return self.drawing_exchange_event(event),
@@ -2287,7 +2296,10 @@ impl App {
         // İstatistik and Grafik start again on another drawing (docs/adr/0227 §8).
         self.charts = Default::default();
         self.followed = Some((doc.session, doc.model.generation()));
+        self.xrefs = Default::default();
         self.document = Some(doc);
+        // A reference whose source changed or went is said, never loaded silently (docs/adr/0348 §5).
+        self.xrefs_opened();
     }
 
     /// Runs a web command id: the desktop's handler, or a note that it is not here yet.
@@ -2503,6 +2515,8 @@ impl App {
             "arch.tagsCheck" => self.open_tags_check(),
             "arch.viewRefs" => self.open_view_refs(),
             "arch.sheetSet" => self.open_sheet_set(),
+            "xref.manager" => self.open_xrefs(),
+            "xref.attach" => return self.start_xref_attach(),
             "arch.template" => self.apply_arch_template(),
             id if id.starts_with("arch.phase.") => self.set_phase_view(&id["arch.phase.".len()..]),
             // Metraj and Mahalleri birleştir (docs/adr/0342 §5).

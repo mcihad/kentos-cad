@@ -33,6 +33,7 @@ mod provider_timing;
 mod python_calls;
 mod reassociate;
 mod sources;
+mod xrefs;
 mod standards_cmd;
 mod stretch_ties;
 mod tables_cmd;

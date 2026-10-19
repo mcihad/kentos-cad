@@ -233,6 +233,7 @@ pub(super) struct Features {
     pub(super) viewmarks: bool,
     /// Schema 82: the architectural settings' phase view (docs/adr/0346).
     pub(super) phases: bool,
+    pub(super) xrefs: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
     subref_extras: bool,
     /// Schema 54: an object's `wipeout` (docs/adr/0310).
@@ -378,6 +379,7 @@ impl Features {
             tags: schema >= crate::SCHEMA_WITH_TAGS,
             viewmarks: schema >= crate::SCHEMA_WITH_VIEWMARKS,
             phases: schema >= crate::SCHEMA_WITH_PHASES,
+            xrefs: schema >= crate::SCHEMA_WITH_XREFS,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,
             annotation: schema >= SCHEMA_WITH_ANNOTATION,

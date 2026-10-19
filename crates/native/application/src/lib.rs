@@ -197,7 +197,10 @@ pub use schedules::{create as schedules_create, edit as schedules_edit};
 pub mod viewmarks;
 pub mod spaces_finish;
 pub mod sheets_set;
+pub mod xrefs;
+mod xrefs_bind;
 pub mod templates_apply;
+pub use xrefs::{edit as xrefs_edit, list as xrefs_list};
 pub use viewmarks::{create as viewmarks_create, edit as viewmarks_edit, references as viewmarks_references};
 pub mod spaces_edit;
 pub mod spaces_quantities;
@@ -516,6 +519,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_SHEETS_SET,
         kentos_contracts::CAD_SHEETS_SET_VERSION,
+    ),
+    // Dış başvurular ([`xrefs`], docs/adr/0348).
+    (
+        kentos_contracts::CAD_XREFS_EDIT,
+        kentos_contracts::CAD_XREFS_EDIT_VERSION,
+    ),
+    (
+        kentos_contracts::CAD_XREFS_LIST,
+        kentos_contracts::CAD_XREFS_LIST_VERSION,
     ),
     // Mahal, Mahali düzenle and Metraj ([`spaces_create`], [`spaces_edit`], [`spaces_quantities`], docs/adr/0342).
     (

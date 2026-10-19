@@ -36,7 +36,8 @@ impl<'d> Encoder<'d> {
                 + usize::from(block.description.is_some())
                 + usize::from(block.units.is_some())
                 + usize::from(block.card.is_some())
-                + usize::from(block.dynamic.is_some());
+                + usize::from(block.dynamic.is_some())
+                + usize::from(block.xref.is_some());
             self.open(n, true)?;
             // id (2), base card name (4), units (5), entities (8), attributes (10), description (11).
             self.key("id");
@@ -50,6 +51,18 @@ impl<'d> Encoder<'d> {
             }
             self.key("name");
             self.at(Seg::Name("name"), |e| e.text(&block.name))?;
+            // Its external reference source (docs/adr/0348 §1), as its JSON.
+            if let Some(x) = &block.xref {
+                if let Some(why) = x.problem() {
+                    return Err(self.fail(Code::BadValue, &why));
+                }
+                let value = serde_json::to_value(x)
+                    .map_err(|e| self.fail(Code::BadValue, &format!("dış başvuru yazılamadı: {e}")))?;
+                self.key("xref");
+                self.path.push(Seg::Name("xref"));
+                self.json(&value)?;
+                self.path.pop();
+            }
             // The unit it is drawn in (docs/adr/0315 §4).
             if let Some(u) = block.units {
                 self.key("units");

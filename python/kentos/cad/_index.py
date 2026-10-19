@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls
+from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -161,6 +161,8 @@ COMMANDS: dict[str, Any] = {
     "cad.walls.create": walls.create,
     "cad.walls.edit": walls.edit,
     "cad.walls.joins": walls.joins,
+    "cad.xrefs.edit": xrefs.edit,
+    "cad.xrefs.list": xrefs.list,
     "file.export.block": file.export.block,
     "file.export.dxf": file.export.dxf,
     "file.export.gpkg": file.export.gpkg,
@@ -193,4 +195,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)

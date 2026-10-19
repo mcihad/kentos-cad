@@ -553,6 +553,8 @@ fn command_tool(c: &Value) -> Value {
             // A view mark's number, target and words changed; a finish replaces the space's earlier one (docs/adr/0345).
             | "cad.viewmarks.edit"
             | "cad.spaces.finish"
+            // A reload replaces a reference's content; detach, unload and bind remove or change it (docs/adr/0348).
+            | "cad.xrefs.edit"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).

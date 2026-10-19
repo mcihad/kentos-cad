@@ -1170,6 +1170,7 @@ mod tests {
         let id = |n: u8| BlockId([n; 16]);
         let block = |n: u8, base: (f64, f64), entities: Vec<Entity>| BlockDefinition {
             dynamic: None,
+            xref: None,
             card: None,
             id: id(n),
             name: format!("B{n}"),

@@ -198,6 +198,7 @@ impl App {
                     if !self.processing_picked(p)
                         && !self.leader_tools_picked(p)
                         && !self.blocks_picked(p)
+                        && !self.xrefs_picked(p)
                         && !self.service_info_picked(p)
                     {
                         self.calc_picked(p);

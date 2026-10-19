@@ -1902,6 +1902,8 @@ def definition(b):
         "card": (card, False),
         # Schema 59 (docs/adr/0318): its parameters and actions, as their JSON.
         "dynamic": (opaque, False),
+        # Schema 83 (docs/adr/0348 §1): its external reference source, as its JSON.
+        "xref": (opaque, False),
     }
     return cmap(fields(b, table, f"blok {b.get('name')}"))
 
@@ -2085,6 +2087,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 83 (docs/adr/0348): an external reference.
+    if any("xref" in b for b in blocks or []):
+        return 83
     # Schema 82 (docs/adr/0346): the project's phase view.
     if "phaseView" in (settings or {}).get("arch", {}):
         return 82
@@ -2605,7 +2610,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-83.kcad"] = container(root(cmap(parts), version=uint(83)))
+    files["schema-version-84.kcad"] = container(root(cmap(parts), version=uint(84)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4236,6 +4241,23 @@ def build():
     out["broken/phase-view-in-schema-81.kcad"] = container(phases_payload.replace(b"\x67version\x18\x52", b"\x67version\x18\x51"))
     assert phases_payload.count(b"jdemolition") == 1
     out["broken/phase-view-unknown.kcad"] = container(phases_payload.replace(b"jdemolition", b"jdemolished"))
+    # External references (docs/adr/0348 §1): schema 83's; in schema 82 an unknown field; a short digest, an unknown
+    # field, a default written and a relative path that is empty refused.
+    out["xrefs.kcad"] = container(document(load("xrefs.json")))
+    xrefs_payload = document(load("xrefs.json"))
+    assert xrefs_payload.count(b"\x67version\x18\x53") == 1, "an external reference is schema 83"
+    out["broken/xref-in-schema-82.kcad"] = container(xrefs_payload.replace(b"\x67version\x18\x53", b"\x67version\x18\x52"))
+
+    def xref_broken(change):
+        d = copy.deepcopy(load("xrefs.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/xref-digest-short.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(digest="9f2c"))
+    out["broken/xref-unknown-field.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(loadedAt="dün"))
+    out["broken/xref-kind-attach-written.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(kind="attach"))
+    out["broken/xref-relative-empty.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"].update(relative=""))
+    out["broken/xref-objects-count.kcad"] = xref_broken(lambda d: d["blocks"][0]["xref"]["objects"].pop())
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

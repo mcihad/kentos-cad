@@ -1614,6 +1614,7 @@ fn insert(layer: &str, block: u8, p: Vec2, scale: f64, rotation: f64, mirror: bo
 fn definition(n: u8, name: &str, base_point: Vec2, entities: Vec<Entity>) -> BlockDefinition {
     BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: block_id(n),
         name: name.into(),

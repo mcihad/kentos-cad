@@ -84,6 +84,7 @@ pub(crate) fn write(
         .unwrap_or_default();
     let block = BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: BlockId(*Uuid::now_v7().as_bytes()),
         name: free_name(doc),

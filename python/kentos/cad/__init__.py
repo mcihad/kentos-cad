@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -134,6 +134,7 @@ __all__ = [
     "AssocArray",
     "AtMeasuredPoint",
     "AttachArchOperation",
+    "AttachXrefsOperation",
     "Attachment",
     "AttachmentAccept",
     "AttachmentAcceptName",
@@ -161,6 +162,7 @@ __all__ = [
     "BaselineDimensionMeasure",
     "Basis",
     "BindLeaderEdit",
+    "BindXrefsOperation",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -359,6 +361,7 @@ __all__ = [
     "DeltaLengthenChange",
     "DetachArchOperation",
     "DetachViewMarksOperation",
+    "DetachXrefsOperation",
     "DeviationExplodeDensity",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
@@ -1198,6 +1201,7 @@ __all__ = [
     "RelationsEdited",
     "RelationsOp",
     "RelinkSourcesEditOp",
+    "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveConstraintEdit",
@@ -1216,6 +1220,7 @@ __all__ = [
     "RenamedBlock",
     "RenumberArchOperation",
     "RenumberOpeningsOperation",
+    "RepathXrefsOperation",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ReplaceStyleWallsOperation",
@@ -1523,6 +1528,7 @@ __all__ = [
     "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
+    "UnloadXrefsOperation",
     "UnmergeTableEdit",
     "Unreachable",
     "Unset",
@@ -1617,6 +1623,19 @@ __all__ = [
     "WritePolicyName",
     "XlineEntity",
     "XlineEntityGeometry",
+    "XrefBindMode",
+    "XrefBindModeName",
+    "XrefInfo",
+    "XrefKind",
+    "XrefKindName",
+    "XrefSource",
+    "XrefState",
+    "XrefStateName",
+    "XrefsEdit",
+    "XrefsEdited",
+    "XrefsList",
+    "XrefsListed",
+    "XrefsOperation",
     "addresses",
     "annotations",
     "arc",
@@ -1686,4 +1705,5 @@ __all__ = [
     "viewmarks",
     "views",
     "walls",
+    "xrefs",
 ]

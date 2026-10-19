@@ -1828,6 +1828,8 @@ impl App {
             Asking::TagsCheck => self.tags_check_view(),
             Asking::ViewRefs => self.view_refs_view(),
             Asking::SheetSet => self.sheet_set_view(),
+            Asking::Xrefs => self.xrefs_view(),
+            Asking::XrefAttach => self.xref_attach_view(),
             Asking::Quantities => self.quantities_view(),
             Asking::LayerPurge => self.layer_purge_view(),
             Asking::TakeFrom => self.take_from_view(),

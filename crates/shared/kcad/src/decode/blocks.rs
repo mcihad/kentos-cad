@@ -92,6 +92,7 @@ fn definition(
     let (mut id, mut base, mut name, mut entities) = (None, None, None, None);
     let (mut attributes, mut description, mut units, mut card) = (None, None, None, None);
     let mut dynamic = None;
+    let mut xref = None;
     let inner = has.without_uids();
     map(r, |r, key| {
         match key {
@@ -152,6 +153,31 @@ fn definition(
                 }
                 dynamic = Some(read);
             }
+            // Schema 83 (docs/adr/0348 §1): its JSON, read back exactly as the writer writes it.
+            "xref" if has.xrefs => {
+                let at = r.position();
+                let value = r.opaque()?;
+                const KEYS: &[&str] = &["path", "relative", "kind", "digest", "unloaded", "group", "parent", "objects"];
+                if let Some(key) = value.as_object().and_then(|m| m.keys().find(|k| !KEYS.contains(&k.as_str()))) {
+                    return Err(r.fail_at(Code::UnknownField, at, &format!("dış başvuruda bilinmeyen alan: {key}")));
+                }
+                let read: kentos_contracts::XrefSource = serde_json::from_value(value.clone()).map_err(|e| {
+                    let words = e.to_string();
+                    let code = if words.contains("unknown field") { Code::UnknownField } else { Code::BadValue };
+                    r.fail_at(code, at, &format!("dış başvuru okunamadı: {words}"))
+                })?;
+                if serde_json::to_value(&read).ok().as_ref() != Some(&value) {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "dış başvuru yazıcının biçiminde değil (varsayılan değer yazılmış)",
+                    ));
+                }
+                if let Some(why) = read.problem() {
+                    return Err(r.fail_at(Code::BadValue, at, &why));
+                }
+                xref = Some(read);
+            }
             // Schema 57 (docs/adr/0315 §4).
             "units" if has.block_extras => {
                 let at = r.position();
@@ -177,8 +203,25 @@ fn definition(
         }
         Ok(())
     })?;
+    // An external reference names one source object for each of its own (docs/adr/0348 §1).
+    if let (Some(x), Some(es)) = (&xref, &entities)
+        && !x.objects.is_empty()
+        && x.objects.len() != es.len()
+    {
+        let x: &kentos_contracts::XrefSource = x;
+        return Err(r.fail_at(
+            Code::BadValue,
+            r.position(),
+            &format!(
+                "dış başvurunun {} nesne kimliği var, tanımının {} nesnesi",
+                x.objects.len(),
+                es.len()
+            ),
+        ));
+    }
     Ok(BlockDefinition {
         dynamic,
+        xref,
         id: required(r, id, "id")?,
         name: required(r, name, "name")?,
         base: required(r, base, "base")?,

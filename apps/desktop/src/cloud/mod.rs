@@ -999,6 +999,7 @@ impl App {
             Some(Dialog::TagsCheck) => self.tags_check = None,
             Some(Dialog::ViewRefs) => self.view_refs = None,
             Some(Dialog::SheetSet) => self.sheet_set = None,
+            Some(Dialog::Xrefs | Dialog::XrefAttach) => self.xrefs = Default::default(),
             Some(Dialog::Quantities) => self.quantities = None,
             Some(Dialog::LayerPurge) => self.layer_purge = None,
             Some(Dialog::TakeFrom) => self.take_from = None,

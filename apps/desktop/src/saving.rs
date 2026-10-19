@@ -392,12 +392,13 @@ impl App {
             };
             let mut snapshot = model.to_snapshot_v2();
             drop(model);
-            // Bound GeoPackages get their path from the file's folder (docs/adr/0506).
+            // Bound GeoPackages and external references get their path from the file's folder (docs/adr/0506, 0348).
             if let Target::File(path) = &target {
                 kentos_native_application::source_places::with_relative(
                     &mut snapshot.settings,
                     path,
                 );
+                kentos_native_application::xrefs::with_relative(&mut snapshot.blocks, path);
             }
             let done = match &target {
                 Target::File(path) => Event::Done {

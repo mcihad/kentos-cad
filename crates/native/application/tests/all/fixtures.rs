@@ -38,7 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
-use kentos_native_application::{sheets_set, spaces_finish, templates_apply, viewmarks_create, viewmarks_edit, viewmarks_references};
+use kentos_native_application::{sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -277,6 +277,8 @@ fn block_ids(value: &Value, doc: &Document, state: &State, at: &str) -> Outcome<
                 // A captured object's id: a relation's parent the child refers to (docs/adr/0405).
                 || text.starts_with("$uid:")
                 || text.starts_with("$layer:")
+                // An external reference's source file (docs/adr/0348).
+                || text.contains("$fixture:")
                 || text.starts_with("$$") =>
         {
             fill(value, doc, state, at)?
@@ -814,6 +816,25 @@ impl Input for kentos_domain::contracts::ViewMarksEdit {
 }
 
 impl Input for kentos_domain::contracts::ViewMarksReferences {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::XrefsEdit {
+    fn number(&mut self, path: &str) -> Option<&mut f64> {
+        use kentos_domain::contracts::XrefsOperation as O;
+        match (&mut self.operation, path) {
+            (O::Attach { at: Some(p), .. }, "operation.at.x") => Some(&mut p.x),
+            (O::Attach { at: Some(p), .. }, "operation.at.y") => Some(&mut p.y),
+            (O::Attach { scale: Some(s), .. }, "operation.scale") => Some(s),
+            (O::Attach { rotation: Some(r), .. }, "operation.rotation") => Some(r),
+            _ => None,
+        }
+    }
+}
+
+impl Input for kentos_domain::contracts::XrefsList {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2886,6 +2907,12 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_SHEETS_SET => {
             run!(sheets_set, kentos_domain::contracts::SheetsSet)
+        }
+        kentos_domain::contracts::CAD_XREFS_EDIT => {
+            run!(xrefs_edit, kentos_domain::contracts::XrefsEdit)
+        }
+        kentos_domain::contracts::CAD_XREFS_LIST => {
+            run!(xrefs_list, kentos_domain::contracts::XrefsList)
         }
         kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
             run!(schedules_create, kentos_domain::contracts::SchedulesCreate)

@@ -709,6 +709,12 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   Paftaya git); mimari nesneler DXF'e parçalarının adsız bloğu ve nesneyi ve kalıcı kimliğini KENTOS verisinde taşıyan INSERT'le
   (`Writer::arch_whole`), geri okumada kendileri, aralarındaki bağlar yer tutucularla (`Emitter::tie_arch`, `tie_placeholders`);
   otomatik kesit ve görünüşün modeli yalnız tasarım (ADR 0347);
+  dış başvuru: blok tanımının `xref`'i (mutlak ve göreli yol, Ekle ya da Bindir, SHA-256 özeti, boşaltılmış, katman grubu, getiren,
+  kaynak nesnelerin kimlikleri; `.kcad` şema 83, `FORMATS_VERSION` 90), içerik çizimde son yüklenen hâliyle, kaynağın katmanları
+  “Dış başvuru: ad” grubunda, Ekle türündeki iç içe dış başvurular getirenle, Bindir olanlar gelmez; `cad.xrefs.edit` (attach,
+  reload, unload, repath, detach, bind; yeniden yüklemede nesne yerel kimliğini korur, bağlar onunla gider; döngü `xref_cycle`) ve
+  salt okunur `cad.xrefs.list` (yüklü, boşaltılmış, bulunamadı, değişti); kayıtta göreli yol; CAD › Ekle › Dış başvuru (Dış başvuru
+  ekle, Dış başvurular), açılışta değişen ve bulunamayan söylenir; kurallar `kentos_domain::xref`; Python ve MCP (ADR 0348);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

@@ -143,7 +143,7 @@ fn the_readers_errors_name_their_places() {
             "namedViews/0/note",
         ),
         ("broken/named-views-no-twist.kcad", Code::MissingField, "twist"),
-        ("broken/schema-version-83.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-84.kcad", Code::SchemaVersion, ""),
     ] {
         let err = kentos_kcad::decode(&read(file)).expect_err(file);
         assert_eq!(err.code, code, "{file}: {err}");

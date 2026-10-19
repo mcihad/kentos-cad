@@ -6,6 +6,7 @@ import type { BlockUnits } from "./BlockUnits";
 import type { DynamicBlock } from "./DynamicBlock";
 import type { Entity } from "./Entity";
 import type { Vec2 } from "./Vec2";
+import type { XrefSource } from "./XrefSource";
 
 /**
  * A block definition (docs/adr/0144): objects drawn once, placed many
@@ -43,4 +44,8 @@ card?: BlockCard,
 /**
  * Its parameters and actions (docs/adr/0318): one definition at many sizes and looks.
  */
-dynamic?: DynamicBlock, };
+dynamic?: DynamicBlock, 
+/**
+ * An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded.
+ */
+xref?: XrefSource, };

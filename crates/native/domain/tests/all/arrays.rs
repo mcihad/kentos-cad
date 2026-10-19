@@ -53,6 +53,7 @@ fn arrayed() -> (Document, Vec<Slot>, AssocArray) {
     let mut doc = empty();
     let block = BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: BLOCK,
         name: "Dizi 1".into(),

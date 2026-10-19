@@ -208,7 +208,9 @@ use crate::layer::LineType;
 /// 88 (docs/adr/0345): the view mark: `.kcad` document schema 81's `viewmark` kind and a named view's `id`; in the typed
 ///    columns kind 29, its fields as one JSON text. The web's copy stays 53.
 /// 89 (docs/adr/0346): the settings' `arch.phaseView`: `.kcad` document schema 82. The web's copy stays 53.
-pub const FORMATS_VERSION: u32 = 89;
+/// 90 (docs/adr/0348): a block definition's `xref` (an external reference's source): `.kcad` document schema 83; not in
+///    the typed columns (definitions are not). The web's copy stays 53.
+pub const FORMATS_VERSION: u32 = 90;
 
 // ── Every import ────────────────────────────────────────────────────────
 

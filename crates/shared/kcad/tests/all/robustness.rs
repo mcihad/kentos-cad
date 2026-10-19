@@ -659,6 +659,7 @@ fn with_blocks(doc: &mut DocumentSnapshotV2, rng: &mut Rng) {
             .collect();
         blocks.push(BlockDefinition {
             dynamic: None,
+            xref: None,
             card: None,
             id: BlockId(rng.uid()),
             // Distinct however the text folds: the last characters differ.
@@ -798,6 +799,7 @@ fn the_writer_refuses_what_a_reader_would_refuse() {
     let layer = good.active_layer.clone();
     let block = |rng: &mut Rng, name: &str, inside: Vec<Entity>| BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: BlockId(rng.uid()),
         name: name.to_owned(),

@@ -166,6 +166,7 @@ pub fn plain_for_export(
                     )),
                     card: source.card.clone(),
                     dynamic: None,
+                    xref: None,
                 };
                 made.push((source.id, ins.parameters.clone(), def));
                 id
@@ -435,6 +436,7 @@ fn frozen(
             description: source.description.clone(),
             card: source.card.clone(),
             dynamic: None,
+            xref: None,
         });
         let shown = source
             .dynamic

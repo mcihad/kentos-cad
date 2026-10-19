@@ -432,6 +432,11 @@ Liste:
   (`product/`; çerçevenin zemini pafta çekirdeğinin `fixed_corners`'ı, WASM'a bağlayıcı), Pafta seti penceresi ve ikonu (Mimari ›
   Görünüm); DXF'in yazıcısı ve okuyucusu ortak çekirdekte (`formats`), web'in içe aktarmasında bağların yer tutucuları
   (`io/apply.ts`'te `tie_placeholders`'ın mimari bağları).
+- [ ] `CAD-REF-05`…`08`, `10`, `11`, `13`, `14` dış başvurular (ADR 0348, 19 Ekim): web'de gerekenler: `cad.xrefs.edit` ve
+  `cad.xrefs.list` (`product/`; kaynağın okunması ve katmanların, nesnelerin, iç blokların alınması `kentos_domain::xref`'in
+  ikizi ya da WASM bağlayıcısıyla; dosya yolu yerine tarayıcıda dosya tutamacı ya da proje varlığı), Ekle › Dış başvuru paneli
+  (Dış başvuru ekle penceresi, Dış başvurular penceresi, ikonları `xrefAttach`, `xrefManager`), açılışta değişen ve bulunamayan
+  dış başvurunun uyarısı; bilinen bozulmalar: şema 83 ve `FORMATS_VERSION` 90.
 - [ ] `CAD-PARAM-11`, `14`, `15` kısıt işaretleri, Parametreler, otorite ve DXF sınırı (ADR 0338, 18 Ekim): web'de gerekenler:
   çizimde kısıt işaretleri ve üzerine gelince bağlı parçalar (`constraint_marks.rs`'in ikizi: `glyphs`, `bound`), Kısıtları göster
   (`constraint.show`), Parametreler penceresi (`constraint.parameters`: parametre tablosu, kısıt listesi, çelişenler), `constraint_governed`

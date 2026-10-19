@@ -38,6 +38,7 @@ mod document;
 mod edit;
 pub mod etag;
 pub mod exchange;
+pub mod xref;
 mod external;
 mod followers;
 mod form_follow;

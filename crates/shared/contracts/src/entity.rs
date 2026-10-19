@@ -1113,6 +1113,10 @@ pub struct BlockDefinition {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub dynamic: Option<crate::block_dynamic::DynamicBlock>,
+    /// An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub xref: Option<crate::xref::XrefSource>,
 }
 
 /// A block's library card (docs/adr/0317 §4): what the Bloklar panel's cards and search show beside its name, its

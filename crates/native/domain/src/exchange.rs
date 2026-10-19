@@ -110,17 +110,17 @@ pub fn block_key(name: &str) -> String {
         .collect()
 }
 
-fn str_of<'a>(v: &'a Value, key: &str) -> &'a str {
+pub(crate) fn str_of<'a>(v: &'a Value, key: &str) -> &'a str {
     v.get(key).and_then(Value::as_str).unwrap_or("")
 }
 
-fn arr<'a>(v: &'a Value, key: &str) -> &'a [Value] {
+pub(crate) fn arr<'a>(v: &'a Value, key: &str) -> &'a [Value] {
     v.get(key)
         .and_then(Value::as_array)
         .map_or(&[], Vec::as_slice)
 }
 
-fn arr_mut<'a>(v: &'a mut Value, key: &str) -> &'a mut Vec<Value> {
+pub(crate) fn arr_mut<'a>(v: &'a mut Value, key: &str) -> &'a mut Vec<Value> {
     let slot = &mut v[key];
     if !slot.is_array() {
         *slot = Value::Array(Vec::new());
@@ -142,20 +142,20 @@ fn walk(nodes: &[Value], above: &[String], out: &mut Vec<(Value, Vec<String>)>) 
     }
 }
 
-fn walked(tree: &[Value]) -> Vec<(Value, Vec<String>)> {
+pub(crate) fn walked(tree: &[Value]) -> Vec<(Value, Vec<String>)> {
     let mut out = Vec::new();
     walk(tree, &[], &mut out);
     out
 }
 
-fn all_ids(tree: &[Value]) -> HashSet<String> {
+pub(crate) fn all_ids(tree: &[Value]) -> HashSet<String> {
     walked(tree)
         .into_iter()
         .map(|(n, _)| str_of(&n, "id").to_owned())
         .collect()
 }
 
-fn free_id(id: &str, taken: &mut HashSet<String>) -> String {
+pub(crate) fn free_id(id: &str, taken: &mut HashSet<String>) -> String {
     let (mut out, mut k) = (id.to_owned(), 2);
     while taken.contains(&out) {
         out = format!("{id}-{k}");
@@ -200,7 +200,7 @@ fn strings_at(value: &Value, key: &str, out: &mut BTreeSet<String>) {
 }
 
 /// The definitions these objects place, and those they place in turn.
-fn placed_blocks(entities: &[Value], by_id: &HashMap<String, Value>) -> HashSet<String> {
+pub(crate) fn placed_blocks(entities: &[Value], by_id: &HashMap<String, Value>) -> HashSet<String> {
     let mut out = HashSet::new();
     let mut todo: Vec<String> = entities
         .iter()
@@ -222,18 +222,18 @@ fn placed_blocks(entities: &[Value], by_id: &HashMap<String, Value>) -> HashSet<
     out
 }
 
-fn blocks_by_id(doc: &Value) -> HashMap<String, Value> {
+pub(crate) fn blocks_by_id(doc: &Value) -> HashMap<String, Value> {
     arr(doc, "blocks")
         .iter()
         .map(|b| (str_of(b, "id").to_owned(), b.clone()))
         .collect()
 }
 
-fn to_json(doc: &DocumentSnapshotV2) -> Result<Value, String> {
+pub(crate) fn to_json(doc: &DocumentSnapshotV2) -> Result<Value, String> {
     serde_json::to_value(doc).map_err(|e| format!("Çizim okunamadı: {e}."))
 }
 
-fn from_json(v: Value) -> Result<DocumentSnapshotV2, String> {
+pub(crate) fn from_json(v: Value) -> Result<DocumentSnapshotV2, String> {
     serde_json::from_value(v).map_err(|e| format!("Alışverişin sonucu çizime uymuyor: {e}."))
 }
 
@@ -457,7 +457,7 @@ fn find_path<'a>(tree: &'a [Value], names: &[String]) -> Option<&'a Value> {
 }
 
 /// Their node ids → their paths.
-fn path_of(tree: &[Value]) -> HashMap<String, Vec<String>> {
+pub(crate) fn path_of(tree: &[Value]) -> HashMap<String, Vec<String>> {
     walked(tree)
         .into_iter()
         .map(|(n, here)| (str_of(&n, "id").to_owned(), here))
@@ -498,7 +498,7 @@ fn keep_masks(nodes: &mut [Value], kept: &HashSet<String>) {
     }
 }
 
-fn our_node_for(
+pub(crate) fn our_node_for(
     ours: &Value,
     their_paths: &HashMap<String, Vec<String>>,
     their: &str,
@@ -510,7 +510,7 @@ fn our_node_for(
 }
 
 /// The layers of `theirs` at `paths` into `ours` (§2): missing paths made with their groups, a met layer's style replaced.
-fn take_layers(
+pub(crate) fn take_layers(
     ours: &mut Value,
     theirs: &Value,
     paths: &HashSet<String>,
@@ -614,7 +614,7 @@ fn take_styles(ours: &mut Value, theirs: &Value, key: &str, names: &HashSet<Stri
     }
 }
 
-fn take_items(ours: &mut Value, theirs: &Value, ids: &[String], same: Same) {
+pub(crate) fn take_items(ours: &mut Value, theirs: &Value, ids: &[String], same: Same) {
     let theirs_items = arr(&theirs["styles"], "items");
     let by_id: HashMap<&str, &Value> = theirs_items
         .iter()
@@ -671,7 +671,7 @@ fn style_ids(ours: &Value, theirs: &Value) -> HashMap<String, Option<String>> {
 }
 
 /// One of their objects as one of ours: its layer, its block, its styles; no link, no tie (a block's object has no id).
-fn map_object(
+pub(crate) fn map_object(
     e: &Value,
     layer_of: &dyn Fn(&str) -> String,
     block_of: &HashMap<String, String>,

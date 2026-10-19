@@ -24,6 +24,7 @@ mod wall_joins;
 mod tags_check;
 mod viewmark_refs;
 mod sheet_set;
+mod xrefs_window;
 mod arch_project;
 mod quantities;
 mod wall_styles;
@@ -408,6 +409,8 @@ mod tag_scenes;
 mod viewmark_scenes;
 #[cfg(test)]
 mod arch_project_scenes;
+#[cfg(test)]
+mod xref_scenes;
 
 use kentos_ui::theme::typography;
 

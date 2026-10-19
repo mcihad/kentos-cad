@@ -1764,6 +1764,21 @@
       ],
       "note": "Pencere cad.sheets.set'in cevabını gösterir; etkilenen paftalar seçili nesnelerin kimlikleriyle (ADR 0347 §1)."
     },
+    "xref.attach": {
+      "level": "semantic",
+      "via": [
+        "cad.xrefs.edit"
+      ],
+      "note": "Dosya, tür, ölçek, dönüş ve nokta pencereden; ekleme cad.xrefs.edit'in attach'ıyla tek adımda (ADR 0348 §3)."
+    },
+    "xref.manager": {
+      "level": "semantic",
+      "via": [
+        "cad.xrefs.list",
+        "cad.xrefs.edit"
+      ],
+      "note": "Liste ve durumlar cad.xrefs.list'ten; Yeniden yükle, Boşalt, Yolu değiştir, Kaldır ve Bağla cad.xrefs.edit ile (ADR 0348 §3, §5)."
+    },
     "arch.viewRefs": {
       "level": "semantic",
       "via": [

@@ -331,9 +331,11 @@ class Case:
     def block_ids(self, value: Any, at: str) -> Any:
         """An expected object with its block ids (`$blockOf:Ad`, `$block:name`) and the persistent ids of the objects it
         names (`$uidOf:12`: a linked text's object, docs/adr/0175 §4; `$uid:name`: a captured one, a relation's
-        parent, docs/adr/0405) filled in; nothing else is a placeholder."""
+        parent, docs/adr/0405) and an external reference's source file (`$fixture:`, docs/adr/0348) filled in; nothing else
+        is a placeholder."""
         if isinstance(value, str):
-            return self.fill(value, at) if value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) else value
+            placeholder = value.startswith(("$blockOf:", "$block:", "$uidOf:", "$uid:", "$layer:", "$$")) or "$fixture:" in value
+            return self.fill(value, at) if placeholder else value
         if isinstance(value, list):
             return [self.block_ids(v, at) for v in value]
         if isinstance(value, dict):

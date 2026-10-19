@@ -671,6 +671,7 @@ mod tests {
     fn block(n: u8, name: &str, inside: &[u8]) -> BlockDefinition {
         BlockDefinition {
             dynamic: None,
+            xref: None,
             card: None,
             id: id(n),
             name: name.into(),

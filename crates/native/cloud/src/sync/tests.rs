@@ -1726,6 +1726,7 @@ fn arrayed(doc: &mut Document, array: bool) -> kentos_contracts::AssocArray {
     let layer = point(0.0).base().layer_id.clone();
     let block = BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: BlockId([7; 16]),
         name: "Dizi 1".into(),

@@ -1579,6 +1579,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -18156,6 +18167,72 @@
                 "type": "string"
               }
             ]
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -28436,6 +28513,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -45084,6 +45172,72 @@
                 "type": "string"
               }
             ]
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -223986,6 +224140,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -236221,6 +236386,72 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
             ],
             "type": "object"
           }
@@ -237196,6 +237427,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -249431,6 +249673,72 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
             ],
             "type": "object"
           }
@@ -250450,6 +250758,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -262767,6 +263086,72 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
             ],
             "type": "object"
           }
@@ -529841,6 +530226,764 @@
             "uids": [
               "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e81"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.xrefs.edit",
+      "version": 1,
+      "title": "Dış başvuru",
+      "summary": "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir. Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.",
+      "aliases": [],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          },
+          "XrefBindMode": {
+            "description": "How `bind` turns a reference into a block.",
+            "oneOf": [
+              {
+                "const": "bind",
+                "description": "Its layers stay in their group, now an ordinary one.",
+                "type": "string"
+              },
+              {
+                "const": "insert",
+                "description": "Its layers join the drawing's layers of the same path outside the group (made where missing).",
+                "type": "string"
+              }
+            ]
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefsOperation": {
+            "description": "What `cad.xrefs.edit` does.",
+            "oneOf": [
+              {
+                "description": "A drawing file attached (or overlaid) and placed once.",
+                "properties": {
+                  "at": {
+                    "anyOf": [
+                      {
+                        "$ref": "#/$defs/Vec2"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ],
+                    "description": "Where its origin goes; absent: the drawing's 0, 0.",
+                    "x-unit": "length"
+                  },
+                  "kind": {
+                    "const": "attach",
+                    "type": "string"
+                  },
+                  "layerId": {
+                    "description": "The insert's layer.",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "$ref": "#/$defs/XrefKind",
+                    "default": "attach",
+                    "description": "`attach` or `overlay`; absent: `attach`."
+                  },
+                  "name": {
+                    "description": "Its name; absent: the file's name without its extension (made unique).",
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "path": {
+                    "description": "The source drawing, an absolute path.",
+                    "type": "string"
+                  },
+                  "rotation": {
+                    "description": "Its turn, degrees counter-clockwise; absent: 0.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "deg"
+                  },
+                  "scale": {
+                    "description": "Its scale; absent: 1.",
+                    "format": "double",
+                    "type": [
+                      "number",
+                      "null"
+                    ],
+                    "x-unit": "scale"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "path",
+                  "layerId"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its source read again.",
+                "properties": {
+                  "kind": {
+                    "const": "reload",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its content let go; its inserts stay.",
+                "properties": {
+                  "kind": {
+                    "const": "unload",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Bound to another file, which is loaded.",
+                "properties": {
+                  "kind": {
+                    "const": "repath",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "path": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "path"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Its definition, those it brought, its inserts and its emptied layer group removed.",
+                "properties": {
+                  "kind": {
+                    "const": "detach",
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              },
+              {
+                "description": "Made an ordinary block, with those it brought.",
+                "properties": {
+                  "kind": {
+                    "const": "bind",
+                    "type": "string"
+                  },
+                  "mode": {
+                    "$ref": "#/$defs/XrefBindMode",
+                    "default": "bind"
+                  },
+                  "name": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ],
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.\n\nRefusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,\n`layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `xref_cycle`, `xref_empty`,\n`invalid_revision`, `revision_conflict`. Warnings: `objects_left_out`, `layer_hidden`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "operation": {
+            "$ref": "#/$defs/XrefsOperation"
+          }
+        },
+        "required": [
+          "operation"
+        ],
+        "title": "XrefsEdit",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.xrefs.edit` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its definition, by id (none once detached or bound)."
+          },
+          "insert": {
+            "description": "`attach`: the insert placed, by persistent id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "`bind`: the layers that joined the drawing's own of the same path, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "The reference's name.",
+            "type": "string"
+          },
+          "nested": {
+            "description": "The references nested in it, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects its content holds.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removed": {
+            "description": "`detach`: the inserts removed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "objects",
+          "removed",
+          "revision"
+        ],
+        "title": "XrefsEdited",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.xrefs.edit` v1 (its plan's too: what it would do, nothing written).",
+        "properties": {
+          "block": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/BlockId"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Its definition, by id (none once detached or bound)."
+          },
+          "insert": {
+            "description": "`attach`: the insert placed, by persistent id.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layers": {
+            "description": "The layers made, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "`bind`: the layers that joined the drawing's own of the same path, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "name": {
+            "description": "The reference's name.",
+            "type": "string"
+          },
+          "nested": {
+            "description": "The references nested in it, by name.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "objects": {
+            "description": "The objects its content holds.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "removed": {
+            "description": "`detach`: the inserts removed.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "objects",
+          "removed",
+          "revision"
+        ],
+        "title": "XrefsEdited",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "xref_not_found",
+          "nested_xref",
+          "not_finite",
+          "invalid_scale",
+          "layer_not_found",
+          "not_a_layer",
+          "layer_locked",
+          "invalid_file_path",
+          "file_not_found",
+          "import_unreadable",
+          "xref_cycle",
+          "xref_empty",
+          "block_refused",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "objects_left_out",
+          "layer_hidden"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Mimari planı dış başvuru olarak ekle",
+          "input": {
+            "operation": {
+              "kind": "attach",
+              "layerId": "0",
+              "path": "/proje/mimari/plan.kcad"
+            }
+          }
+        },
+        {
+          "title": "Yeniden yükle",
+          "input": {
+            "operation": {
+              "kind": "reload",
+              "name": "plan"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.xrefs.list",
+      "version": 1,
+      "title": "Dış başvurular",
+      "summary": "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu.",
+      "aliases": [],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.xrefs.list` v1 (“Dış başvurular”): read-only.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "title": "XrefsList",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "XrefInfo": {
+            "description": "A reference as `cad.xrefs.list` lists it.",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "group": {
+                "description": "Its layer group's name.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "inserts": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "parent": {
+                "description": "The reference that brought it, by name.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file as it is found: its own path, else its relative path's.",
+                "type": "string"
+              },
+              "relative": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "state": {
+                "$ref": "#/$defs/XrefState"
+              }
+            },
+            "required": [
+              "name",
+              "block",
+              "kind",
+              "path",
+              "state",
+              "inserts",
+              "objects"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefState": {
+            "description": "A reference's state.",
+            "oneOf": [
+              {
+                "const": "loaded",
+                "description": "Its content is its file's.",
+                "type": "string"
+              },
+              {
+                "const": "unloaded",
+                "description": "Let go (Boşalt).",
+                "type": "string"
+              },
+              {
+                "const": "missing",
+                "description": "Its file is not there (nor at its relative path).",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Its file's content is not what was loaded: Yeniden yükle takes it.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.xrefs.list` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "xrefs": {
+            "description": "In the drawing's block order.",
+            "items": {
+              "$ref": "#/$defs/XrefInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "xrefs",
+          "revision"
+        ],
+        "title": "XrefsListed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BlockId": {
+            "format": "uuid",
+            "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+            "type": "string"
+          },
+          "XrefInfo": {
+            "description": "A reference as `cad.xrefs.list` lists it.",
+            "properties": {
+              "block": {
+                "$ref": "#/$defs/BlockId"
+              },
+              "group": {
+                "description": "Its layer group's name.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "inserts": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "parent": {
+                "description": "The reference that brought it, by name.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "path": {
+                "description": "The file as it is found: its own path, else its relative path's.",
+                "type": "string"
+              },
+              "relative": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "state": {
+                "$ref": "#/$defs/XrefState"
+              }
+            },
+            "required": [
+              "name",
+              "block",
+              "kind",
+              "path",
+              "state",
+              "inserts",
+              "objects"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefState": {
+            "description": "A reference's state.",
+            "oneOf": [
+              {
+                "const": "loaded",
+                "description": "Its content is its file's.",
+                "type": "string"
+              },
+              {
+                "const": "unloaded",
+                "description": "Let go (Boşalt).",
+                "type": "string"
+              },
+              {
+                "const": "missing",
+                "description": "Its file is not there (nor at its relative path).",
+                "type": "string"
+              },
+              {
+                "const": "changed",
+                "description": "Its file's content is not what was loaded: Yeniden yükle takes it.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.xrefs.list` v1.",
+        "properties": {
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "xrefs": {
+            "description": "In the drawing's block order.",
+            "items": {
+              "$ref": "#/$defs/XrefInfo"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "xrefs",
+          "revision"
+        ],
+        "title": "XrefsListed",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": []
+      },
+      "examples": [
+        {
+          "title": "Dış başvurular ve durumları",
+          "input": {
+            "drawing": "/proje/ofis.kcad"
           }
         }
       ]
@@ -824940,6 +826083,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -834672,6 +835826,72 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
             ],
             "type": "object"
           }
@@ -846578,6 +847798,17 @@
                   }
                 ],
                 "description": "The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert\nkeeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's\nunit). Absent: a real-size block of an unknown unit."
+              },
+              "xref": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/XrefSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded."
               }
             },
             "required": [
@@ -856310,6 +857541,72 @@
             },
             "required": [
               "frame"
+            ],
+            "type": "object"
+          },
+          "XrefKind": {
+            "description": "How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only\nhere.",
+            "enum": [
+              "attach",
+              "overlay"
+            ],
+            "type": "string"
+          },
+          "XrefSource": {
+            "additionalProperties": false,
+            "description": "Where an external reference's content comes from (docs/adr/0348 §1).",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the file's content as loaded, lowercase hex.",
+                "type": "string"
+              },
+              "group": {
+                "description": "The layer group its layers are under, by id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/XrefKind"
+              },
+              "objects": {
+                "description": "The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds\neach object again by it and moves the references to its pieces (a definition's objects are numbered by their\norder in a file).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "parent": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/BlockId"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The reference that brought it, for one nested in another."
+              },
+              "path": {
+                "description": "The source drawing's absolute path, as attached or last found.",
+                "type": "string"
+              },
+              "relative": {
+                "description": "Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "unloaded": {
+                "description": "Its content let go (Boşalt): its inserts stay and draw nothing.",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "path",
+              "digest"
             ],
             "type": "object"
           }
@@ -999363,6 +1000660,30 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin."
+    },
+    {
+      "code": "xref_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adda dış başvuru yok."
+    },
+    {
+      "code": "nested_xref",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "İç içe gelen dış başvuru kendi başına değiştirilemez; onu getireni değiştirin."
+    },
+    {
+      "code": "xref_cycle",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dış başvuru zinciri kendine dönüyor."
+    },
+    {
+      "code": "xref_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Kaynakta dış başvuruya konacak nesne yok; resimler, rasterler ve tablolar bloğa konamaz."
     },
     {
       "code": "already_committed",

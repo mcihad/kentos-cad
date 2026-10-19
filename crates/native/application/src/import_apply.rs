@@ -1265,6 +1265,7 @@ mod tests {
         }
         BlockDefinition {
             dynamic: None,
+            xref: None,
             card: None,
             id: BlockId((u128::from(n)).to_be_bytes()),
             name: name.into(),

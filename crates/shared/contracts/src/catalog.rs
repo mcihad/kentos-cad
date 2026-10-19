@@ -2775,6 +2775,62 @@ pub fn catalog() -> CommandCatalog {
             ],
         },
         CommandDescriptor {
+            id: crate::CAD_XREFS_EDIT.into(),
+            version: crate::CAD_XREFS_EDIT_VERSION,
+            title: "Dış başvuru".into(),
+            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir. \
+                      Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::XrefsEdit>(),
+            output: schema::<crate::XrefsEdited>(),
+            plan: Some(schema::<crate::XrefsEdited>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Mimari planı dış başvuru olarak ekle".into(),
+                    input: json!({ "operation": { "kind": "attach", "path": "/proje/mimari/plan.kcad", "layerId": "0" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Yeniden yükle".into(),
+                    input: json!({ "operation": { "kind": "reload", "name": "plan" } }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_XREFS_LIST.into(),
+            version: crate::CAD_XREFS_LIST_VERSION,
+            title: "Dış başvurular".into(),
+            summary: "Çizimin dış başvurularını blok sırasıyla listeler; çizimi değiştirmez. Her biri: adı, blok kimliği, türü, bulunduğu yol (yolunda yoksa drawing'in klasöründen göreli yolu), durumu (loaded, unloaded, missing: dosya yok, changed: dosyanın özeti yüklenenden başka, Yeniden yükle alır), onu getiren, yerleştirme ve nesne sayısı, katman grubu."
+                .into(),
+            aliases: vec![],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::XrefsList>(),
+            output: schema::<crate::XrefsListed>(),
+            plan: Some(schema::<crate::XrefsListed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Dış başvurular ve durumları".into(),
+                input: json!({ "drawing": "/proje/ofis.kcad" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
             id: crate::CAD_SCHEDULES_CREATE.into(),
             version: crate::CAD_SCHEDULES_CREATE_VERSION,
             title: "Çizelge".into(),
@@ -7438,6 +7494,12 @@ mod tests {
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_XREFS_EDIT => {
+                        serde_json::from_value::<crate::XrefsEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_XREFS_LIST => {
+                        serde_json::from_value::<crate::XrefsList>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())

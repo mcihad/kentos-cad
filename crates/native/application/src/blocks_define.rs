@@ -134,6 +134,7 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
     no_tables(&named)?;
     let mut block = BlockDefinition {
         dynamic: None,
+        xref: None,
         card: None,
         id: BlockId([0; 16]),
         name: input.name.clone(),

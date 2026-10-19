@@ -789,6 +789,7 @@ impl<'l> Emitter<'l> {
             self.pending = pending;
             defs.push(BlockDefinition {
                 dynamic: None,
+                xref: None,
                 card: None,
                 id: self.kept[n],
                 name: block.name.clone(),

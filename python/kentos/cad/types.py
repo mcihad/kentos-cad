@@ -3679,6 +3679,50 @@ WritePolicyName = Literal["all", "valid"]
 """The names of :class:`WritePolicy`, for a plain string."""
 
 
+class XrefBindMode(_StrEnum):
+    """How `bind` turns a reference into a block.
+
+    - ``bind``: Its layers stay in their group, now an ordinary one.
+    - ``insert``: Its layers join the drawing's layers of the same path outside the group (made where missing).
+    """
+    BIND = "bind"
+    INSERT = "insert"
+
+
+XrefBindModeName = Literal["bind", "insert"]
+"""The names of :class:`XrefBindMode`, for a plain string."""
+
+
+class XrefKind(_StrEnum):
+    """How a reference goes on: `attach` (Ekle) is seen in a drawing that references this one too, `overlay` (Bindir) only
+    here.
+    """
+    ATTACH = "attach"
+    OVERLAY = "overlay"
+
+
+XrefKindName = Literal["attach", "overlay"]
+"""The names of :class:`XrefKind`, for a plain string."""
+
+
+class XrefState(_StrEnum):
+    """A reference's state.
+
+    - ``loaded``: Its content is its file's.
+    - ``unloaded``: Let go (Boşalt).
+    - ``missing``: Its file is not there (nor at its relative path).
+    - ``changed``: Its file's content is not what was loaded: Yeniden yükle takes it.
+    """
+    LOADED = "loaded"
+    UNLOADED = "unloaded"
+    MISSING = "missing"
+    CHANGED = "changed"
+
+
+XrefStateName = Literal["loaded", "unloaded", "missing", "changed"]
+"""The names of :class:`XrefState`, for a plain string."""
+
+
 #: A parameter's value: a number (a length, an angle in radians), a point of the definition's coordinates, a flip
 #: or a name (a visibility state, a lookup row).
 ParamValue = Union[bool, float, str, dict[str, float]]
@@ -5339,6 +5383,31 @@ class WallsOperation(_Union):
         return _variant(_WALLS_OPERATION, "WallsOperation", "kind", data).from_json(data)
 
 
+class XrefsOperation(_Union):
+    """What `cad.xrefs.edit` does.
+
+    One of:
+
+    - :class:`AttachXrefsOperation` (``kind: attach``)
+    - :class:`ReloadXrefsOperation` (``kind: reload``)
+    - :class:`UnloadXrefsOperation` (``kind: unload``)
+    - :class:`RepathXrefsOperation` (``kind: repath``)
+    - :class:`DetachXrefsOperation` (``kind: detach``)
+    - :class:`BindXrefsOperation` (``kind: bind``)
+    """
+    __slots__ = ()
+    TAG: ClassVar[str] = "kind"
+
+    @property
+    def kind(self) -> str:
+        """The name of the variant (``kind`` on the wire)."""
+        return self.TAG_VALUE
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefsOperation:
+        return _variant(_XREFS_OPERATION, "XrefsOperation", "kind", data).from_json(data)
+
+
 _ConstructionEntityT = TypeVar("_ConstructionEntityT", bound="ConstructionEntity")
 
 
@@ -6891,6 +6960,7 @@ class BlockDefinition(_Model):
         units: The unit it was drawn in (docs/adr/0315 §4): a unit, its geometry being metres as the drawing's (an insert
             keeps its size anywhere); `unitless`, its numbers being drawing units (an insert is scaled by the drawing's
             unit). Absent: a real-size block of an unknown unit.
+        xref: An external reference's source (docs/adr/0348 §1): its objects are that drawing's as last loaded.
     """
     id: str
     name: str
@@ -6901,6 +6971,7 @@ class BlockDefinition(_Model):
     description: str | None | Unset = UNSET
     dynamic: DynamicBlock | None | Unset = UNSET
     units: BlockUnits | BlockUnitsName | None | Unset = UNSET
+    xref: XrefSource | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -6918,6 +6989,8 @@ class BlockDefinition(_Model):
             out["dynamic"] = None if self.dynamic is None else self.dynamic.to_json()
         if self.units is not UNSET:
             out["units"] = None if self.units is None else _enum_out(self.units)
+        if self.xref is not UNSET:
+            out["xref"] = None if self.xref is None else self.xref.to_json()
         return out
 
     @classmethod
@@ -6932,6 +7005,7 @@ class BlockDefinition(_Model):
             description=data.get("description", UNSET),
             dynamic=UNSET if "dynamic" not in data else None if data["dynamic"] is None else DynamicBlock.from_json(data["dynamic"]),
             units=UNSET if "units" not in data else None if data["units"] is None else _enum_in(BlockUnits, data["units"]),
+            xref=UNSET if "xref" not in data else None if data["xref"] is None else XrefSource.from_json(data["xref"]),
         )
 
 
@@ -36509,6 +36583,247 @@ class WorkflowStep(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class XrefInfo(_Model):
+    """A reference as `cad.xrefs.list` lists it.
+    Attributes:
+        path: The file as it is found: its own path, else its relative path's.
+        inserts: Unit: count.
+        objects: Unit: count.
+        group: Its layer group's name.
+        parent: The reference that brought it, by name.
+    """
+    name: str
+    block: str
+    kind: XrefKind | XrefKindName
+    path: str
+    state: XrefState | XrefStateName
+    inserts: int
+    objects: int
+    group: str | None | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    relative: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["block"] = self.block
+        out["kind"] = _enum_out(self.kind)
+        out["path"] = self.path
+        out["state"] = _enum_out(self.state)
+        out["inserts"] = self.inserts
+        out["objects"] = self.objects
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefInfo:
+        return cls(
+            name=data["name"],
+            block=data["block"],
+            kind=_enum_in(XrefKind, data["kind"]),
+            path=data["path"],
+            state=_enum_in(XrefState, data["state"]),
+            inserts=data["inserts"],
+            objects=data["objects"],
+            group=data.get("group", UNSET),
+            parent=data.get("parent", UNSET),
+            relative=data.get("relative", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefSource(_Model):
+    """Where an external reference's content comes from (docs/adr/0348 §1).
+    Attributes:
+        path: The source drawing's absolute path, as attached or last found.
+        digest: The SHA-256 of the file's content as loaded, lowercase hex.
+        group: The layer group its layers are under, by id.
+        objects: The source's objects' persistent ids, one for each of the definition's objects in its order: a reload finds
+            each object again by it and moves the references to its pieces (a definition's objects are numbered by their
+            order in a file).
+        parent: The reference that brought it, for one nested in another.
+        relative: Its path from the drawing's folder, `/` between its parts, written when the drawing is saved.
+        unloaded: Its content let go (Boşalt): its inserts stay and draw nothing.
+    """
+    path: str
+    digest: str
+    group: str | None | Unset = UNSET
+    kind: XrefKind | XrefKindName | Unset = UNSET
+    objects: list[str] | Unset = UNSET
+    parent: str | None | Unset = UNSET
+    relative: str | None | Unset = UNSET
+    unloaded: bool | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["digest"] = self.digest
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.kind is not UNSET:
+            out["kind"] = _enum_out(self.kind)
+        if self.objects is not UNSET:
+            out["objects"] = list(self.objects)
+        if self.parent is not UNSET:
+            out["parent"] = self.parent
+        if self.relative is not UNSET:
+            out["relative"] = self.relative
+        if self.unloaded is not UNSET:
+            out["unloaded"] = self.unloaded
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefSource:
+        return cls(
+            path=data["path"],
+            digest=data["digest"],
+            group=data.get("group", UNSET),
+            kind=_enum_in(XrefKind, data["kind"]) if "kind" in data else UNSET,
+            objects=list(data["objects"]) if "objects" in data else UNSET,
+            parent=data.get("parent", UNSET),
+            relative=data.get("relative", UNSET),
+            unloaded=data.get("unloaded", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefsEdit(_Model):
+    """Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.
+
+    Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
+    `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `xref_cycle`, `xref_empty`,
+    `invalid_revision`, `revision_conflict`. Warnings: `objects_left_out`, `layer_hidden`.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one: a reference to it (or through it) is a cycle.
+    """
+    operation: XrefsOperation
+    drawing: str | None | Unset = UNSET
+    expected_revision: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["operation"] = self.operation.to_json()
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefsEdit:
+        return cls(
+            operation=XrefsOperation.from_json(data["operation"]),
+            drawing=data.get("drawing", UNSET),
+            expected_revision=data.get("expectedRevision", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefsEdited(_Model):
+    """Output of `cad.xrefs.edit` v1 (its plan's too: what it would do, nothing written).
+    Attributes:
+        name: The reference's name.
+        objects: The objects its content holds. Unit: count.
+        removed: `detach`: the inserts removed. Unit: count.
+        block: Its definition, by id (none once detached or bound).
+        insert: `attach`: the insert placed, by persistent id.
+        layers: The layers made, by name.
+        merged: `bind`: the layers that joined the drawing's own of the same path, by name.
+        nested: The references nested in it, by name.
+    """
+    name: str
+    objects: int
+    removed: int
+    revision: str
+    block: str | None | Unset = UNSET
+    insert: str | None | Unset = UNSET
+    layers: list[str] | Unset = UNSET
+    merged: list[str] | Unset = UNSET
+    nested: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["objects"] = self.objects
+        out["removed"] = self.removed
+        out["revision"] = self.revision
+        if self.block is not UNSET:
+            out["block"] = self.block
+        if self.insert is not UNSET:
+            out["insert"] = self.insert
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        if self.merged is not UNSET:
+            out["merged"] = list(self.merged)
+        if self.nested is not UNSET:
+            out["nested"] = list(self.nested)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefsEdited:
+        return cls(
+            name=data["name"],
+            objects=data["objects"],
+            removed=data["removed"],
+            revision=data["revision"],
+            block=data.get("block", UNSET),
+            insert=data.get("insert", UNSET),
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            merged=list(data["merged"]) if "merged" in data else UNSET,
+            nested=list(data["nested"]) if "nested" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefsList(_Model):
+    """Input of `cad.xrefs.list` v1 (“Dış başvurular”): read-only.
+    Attributes:
+        drawing: The open drawing's own file, an absolute path, when it has one: a relative path is found from its folder.
+    """
+    drawing: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefsList:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class XrefsListed(_Model):
+    """Output of `cad.xrefs.list` v1.
+    Attributes:
+        xrefs: In the drawing's block order.
+    """
+    xrefs: list[XrefInfo]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["xrefs"] = [e0.to_json() for e0 in self.xrefs]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> XrefsListed:
+        return cls(
+            xrefs=[XrefInfo.from_json(e0) for e0 in data["xrefs"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SetArchOperation(ArchOperation):
     """Değiştir: the fields given, on every object named.
     Attributes:
@@ -46224,6 +46539,151 @@ class ResetJoinsWallsOperation(WallsOperation):
         return cls()
 
 
+@dataclass(kw_only=True, slots=True)
+class AttachXrefsOperation(XrefsOperation):
+    """A drawing file attached (or overlaid) and placed once.
+    Attributes:
+        path: The source drawing, an absolute path.
+        layer_id: The insert's layer.
+        at: Where its origin goes; absent: the drawing's 0, 0. Unit: length.
+        mode: `attach` or `overlay`; absent: `attach`.
+        name: Its name; absent: the file's name without its extension (made unique).
+        rotation: Its turn, degrees counter-clockwise; absent: 0. Unit: deg.
+        scale: Its scale; absent: 1. Unit: scale.
+    """
+    TAG_VALUE: ClassVar[str] = "attach"
+    path: str
+    layer_id: str
+    at: Vec2 | None | Unset = UNSET
+    mode: XrefKind | XrefKindName = XrefKind.ATTACH
+    name: str | None | Unset = UNSET
+    rotation: float | None | Unset = UNSET
+    scale: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "attach"}
+        out["path"] = self.path
+        out["layerId"] = self.layer_id
+        if self.at is not UNSET:
+            out["at"] = None if self.at is None else _vec2_out(self.at)
+        out["mode"] = _enum_out(self.mode)
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.rotation is not UNSET:
+            out["rotation"] = None if self.rotation is None else float(self.rotation)
+        if self.scale is not UNSET:
+            out["scale"] = None if self.scale is None else float(self.scale)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> AttachXrefsOperation:
+        return cls(
+            path=data["path"],
+            layer_id=data["layerId"],
+            at=UNSET if "at" not in data else None if data["at"] is None else Vec2.from_json(data["at"]),
+            mode=_enum_in(XrefKind, data["mode"]) if "mode" in data else XrefKind.ATTACH,
+            name=data.get("name", UNSET),
+            rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
+            scale=UNSET if "scale" not in data else None if data["scale"] is None else float(data["scale"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReloadXrefsOperation(XrefsOperation):
+    """Its source read again."""
+    TAG_VALUE: ClassVar[str] = "reload"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "reload"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReloadXrefsOperation:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class UnloadXrefsOperation(XrefsOperation):
+    """Its content let go; its inserts stay."""
+    TAG_VALUE: ClassVar[str] = "unload"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "unload"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> UnloadXrefsOperation:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RepathXrefsOperation(XrefsOperation):
+    """Bound to another file, which is loaded."""
+    TAG_VALUE: ClassVar[str] = "repath"
+    name: str
+    path: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "repath"}
+        out["name"] = self.name
+        out["path"] = self.path
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RepathXrefsOperation:
+        return cls(
+            name=data["name"],
+            path=data["path"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DetachXrefsOperation(XrefsOperation):
+    """Its definition, those it brought, its inserts and its emptied layer group removed."""
+    TAG_VALUE: ClassVar[str] = "detach"
+    name: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "detach"}
+        out["name"] = self.name
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DetachXrefsOperation:
+        return cls(
+            name=data["name"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BindXrefsOperation(XrefsOperation):
+    """Made an ordinary block, with those it brought."""
+    TAG_VALUE: ClassVar[str] = "bind"
+    name: str
+    mode: XrefBindMode | XrefBindModeName = XrefBindMode.BIND
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {"kind": "bind"}
+        out["name"] = self.name
+        out["mode"] = _enum_out(self.mode)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BindXrefsOperation:
+        return cls(
+            name=data["name"],
+            mode=_enum_in(XrefBindMode, data["mode"]) if "mode" in data else XrefBindMode.BIND,
+        )
+
+
 _ARCH_OPERATION: dict[str, type[ArchOperation]] = {"set": SetArchOperation, "renumber": RenumberArchOperation, "attach": AttachArchOperation, "detach": DetachArchOperation}
 
 
@@ -46413,6 +46873,9 @@ _VIEWS_OP: dict[str, type[ViewsOp]] = {"save": SaveViewsOp, "rename": RenameView
 _WALLS_OPERATION: dict[str, type[WallsOperation]] = {"set": SetWallsOperation, "split": SplitWallsOperation, "join": JoinWallsOperation, "extend": ExtendWallsOperation, "trim": TrimWallsOperation, "flip": FlipWallsOperation, "replaceStyle": ReplaceStyleWallsOperation, "joins": JoinsWallsOperation, "resetJoins": ResetJoinsWallsOperation}
 
 
+_XREFS_OPERATION: dict[str, type[XrefsOperation]] = {"attach": AttachXrefsOperation, "reload": ReloadXrefsOperation, "unload": UnloadXrefsOperation, "repath": RepathXrefsOperation, "detach": DetachXrefsOperation, "bind": BindXrefsOperation}
+
+
 __all__ = [
     "AccessSource",
     "AccessSourceName",
@@ -46514,6 +46977,7 @@ __all__ = [
     "AssocArray",
     "AtMeasuredPoint",
     "AttachArchOperation",
+    "AttachXrefsOperation",
     "Attachment",
     "AttachmentAccept",
     "AttachmentAcceptName",
@@ -46540,6 +47004,7 @@ __all__ = [
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
     "BindLeaderEdit",
+    "BindXrefsOperation",
     "BlendMode",
     "BlendModeName",
     "BlockAction",
@@ -46725,6 +47190,7 @@ __all__ = [
     "DeltaLengthenChange",
     "DetachArchOperation",
     "DetachViewMarksOperation",
+    "DetachXrefsOperation",
     "DeviationExplodeDensity",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
@@ -47536,6 +48002,7 @@ __all__ = [
     "RelationsEdited",
     "RelationsOp",
     "RelinkSourcesEditOp",
+    "ReloadXrefsOperation",
     "RemoveArmLeaderEdit",
     "RemoveArrayEdit",
     "RemoveConstraintEdit",
@@ -47554,6 +48021,7 @@ __all__ = [
     "RenamedBlock",
     "RenumberArchOperation",
     "RenumberOpeningsOperation",
+    "RepathXrefsOperation",
     "ReplaceArrayEdit",
     "ReplaceEntityEdit",
     "ReplaceStyleWallsOperation",
@@ -47846,6 +48314,7 @@ __all__ = [
     "UnlinkSourcesEditOp",
     "UnlinkTableEdit",
     "UnlinkTablesOperation",
+    "UnloadXrefsOperation",
     "UnmergeTableEdit",
     "UntieHatchEdit",
     "UnusedResource",
@@ -47937,4 +48406,17 @@ __all__ = [
     "WritePolicyName",
     "XlineEntity",
     "XlineEntityGeometry",
+    "XrefBindMode",
+    "XrefBindModeName",
+    "XrefInfo",
+    "XrefKind",
+    "XrefKindName",
+    "XrefSource",
+    "XrefState",
+    "XrefStateName",
+    "XrefsEdit",
+    "XrefsEdited",
+    "XrefsList",
+    "XrefsListed",
+    "XrefsOperation",
 ]

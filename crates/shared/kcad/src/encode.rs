@@ -1686,6 +1686,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 83 (docs/adr/0348 §1): an external reference.
+    if doc.blocks.iter().any(|b| b.xref.is_some()) {
+        return crate::SCHEMA_WITH_XREFS;
+    }
     // Schema 82 (docs/adr/0346 §2): the project's phase view.
     if doc.settings.arch.as_ref().is_some_and(|a| a.phase_view.is_some()) {
         return crate::SCHEMA_WITH_PHASES;

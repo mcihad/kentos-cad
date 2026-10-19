@@ -1308,6 +1308,16 @@ codes! {
     /// A drawing with objects keeps its unit.
     TEMPLATE_UNIT_KEPT = "template_unit_kept", Warning, false, "Çizimde nesne var; birimi değişmedi. Birimi Birimi değiştir ile değiştirin.";
 
+    // ── External references (docs/adr/0348) ─────────────────────────────
+    /// No external reference of that name.
+    XREF_NOT_FOUND = "xref_not_found", Failed, false, "Bu adda dış başvuru yok.";
+    /// A reference brought by another, changed alone.
+    NESTED_XREF = "nested_xref", Failed, false, "İç içe gelen dış başvuru kendi başına değiştirilemez; onu getireni değiştirin.";
+    /// A reference to the drawing itself, or through another back to it or to the source.
+    XREF_CYCLE = "xref_cycle", Failed, false, "Dış başvuru zinciri kendine dönüyor.";
+    /// A source with nothing a block may hold.
+    XREF_EMPTY = "xref_empty", Failed, false, "Kaynakta dış başvuruya konacak nesne yok; resimler, rasterler ve tablolar bloğa konamaz.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

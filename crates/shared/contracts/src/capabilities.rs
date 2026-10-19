@@ -1474,6 +1474,24 @@ const ENTRIES: &[Entry] = &[
         warnings: &["finish_replaced", "layer_hidden"],
         targets: || vec![target(None, &["space"], &[], Some("not_a_space"), None)],
     },
+    // External references (docs/adr/0348).
+    Entry {
+        id: "cad.xrefs.edit",
+        refusals: &[
+            &["xref_not_found", "nested_xref", "not_finite", "invalid_scale"],
+            LAYER,
+            &["invalid_file_path", "file_not_found", "import_unreadable", "xref_cycle", "xref_empty", "block_refused"],
+            REVISION,
+        ],
+        warnings: &["objects_left_out", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.xrefs.list",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
     // Pafta seti (docs/adr/0347 §1).
     Entry {
         id: "cad.sheets.set",

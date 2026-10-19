@@ -12579,6 +12579,39 @@
    "scope": "shared",
    "desktop": "pending",
    "tests": 0
+  },
+  {
+   "id": "xref.attach",
+   "kind": "command",
+   "title": "Dış başvuru ekle",
+   "level": "semantic",
+   "via": [
+    "cad.xrefs.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.xrefs.edit",
+   "mcp": "cad.xrefs.edit",
+   "note": "Dosya, tür, ölçek, dönüş ve nokta pencereden; ekleme cad.xrefs.edit'in attach'ıyla tek adımda (ADR 0348 §3).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "xref.manager",
+   "kind": "command",
+   "title": "Dış başvurular",
+   "level": "semantic",
+   "via": [
+    "cad.xrefs.list",
+    "cad.xrefs.edit"
+   ],
+   "operation": null,
+   "python": "kentos.cad.xrefs.list, kentos.cad.xrefs.edit",
+   "mcp": "cad.xrefs.list, cad.xrefs.edit",
+   "note": "Liste ve durumlar cad.xrefs.list'ten; Yeniden yükle, Boşalt, Yolu değiştir, Kaldır ve Bağla cad.xrefs.edit ile (ADR 0348 §3, §5).",
+   "scope": "cad",
+   "desktop": "implemented",
+   "tests": 0
   }
  ]
 }

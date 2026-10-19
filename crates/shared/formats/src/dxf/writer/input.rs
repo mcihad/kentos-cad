@@ -667,6 +667,7 @@ impl<'de> Deserialize<'de> for Definitions {
             list.into_iter()
                 .map(|d| BlockDefinition {
                     dynamic: None,
+                    xref: None,
                     card: None,
                     id: d.id,
                     name: d.name,
