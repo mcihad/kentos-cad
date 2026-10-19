@@ -13,7 +13,7 @@ use std::collections::{HashMap, HashSet};
 use kentos_contracts::{
     BlockId, Clip, CommandResult, CommandWarning, DocumentSnapshotV2, DrawingUnit, EntitiesCopy,
     EntitiesPaste, EntitiesPastePlan, EntitiesPasted, Entity, EntityId, LayerNode, LayerNodeType,
-    PasteReport, TableSource, Vec2 as Wire,
+    PasteConflicts, PasteRenamed, PasteReport, TableSource, Vec2 as Wire,
 };
 use kentos_domain::exchange::{self, block_key, fold};
 use kentos_domain::{Document, Slot, Uuid};
@@ -480,9 +480,103 @@ fn clip_check(clip: &Clip) -> Result<(), Stop> {
 }
 
 /// What the paste of `input` writes into `doc`, checked in the contract's order.
+/// The first of “`name` (2)”, “`name` (3)” … that `taken` (folded by `key`) does not hold.
+fn free_name(name: &str, taken: &HashSet<String>, key: fn(&str) -> String) -> String {
+    (2..)
+        .map(|n| format!("{name} ({n})"))
+        .find(|n| !taken.contains(&key(n)))
+        .unwrap_or_else(|| name.to_owned())
+}
+
+/// Every string of `v` that is `from`, `to`.
+fn swap_text(v: &mut serde_json::Value, from: &str, to: &str) {
+    match v {
+        serde_json::Value::String(s) if s == from => *s = to.to_owned(),
+        serde_json::Value::Array(a) => a.iter_mut().for_each(|x| swap_text(x, from, to)),
+        serde_json::Value::Object(o) => o.values_mut().for_each(|x| swap_text(x, from, to)),
+        _ => {}
+    }
+}
+
+/// The copy with its blocks and styles of a name ours has under a free name (docs/adr/0351 §4): a renamed block
+/// takes a new id, which its inserts (and the blocks placing it) follow; a style keeps its id (the exchange gives a
+/// colliding one a new id and the objects follow it).
+fn renamed(ours: &DocumentSnapshotV2, clip: &Clip) -> Result<(Clip, Vec<PasteRenamed>), Stop> {
+    let mut clip = clip.clone();
+    let mut out = Vec::new();
+    let fold_of: fn(&str) -> String = |s| fold(s);
+    let key_of: fn(&str) -> String = |s| block_key(s);
+    let mut taken: HashSet<String> = ours
+        .blocks
+        .iter()
+        .chain(&clip.blocks)
+        .map(|b| block_key(&b.name))
+        .collect();
+    let ours_blocks: HashSet<String> = ours.blocks.iter().map(|b| block_key(&b.name)).collect();
+    let mut ids: Vec<(String, String)> = Vec::new();
+    for b in &mut clip.blocks {
+        if !ours_blocks.contains(&block_key(&b.name)) {
+            continue;
+        }
+        let to = free_name(&b.name, &taken, key_of);
+        taken.insert(block_key(&to));
+        out.push(PasteRenamed { kind: "block".into(), from: b.name.clone(), to: to.clone() });
+        b.name = to;
+        let id = BlockId(*Uuid::now_v7().as_bytes());
+        ids.push((Uuid::from_bytes(b.id.0).to_string(), Uuid::from_bytes(id.0).to_string()));
+        b.id = id;
+    }
+    if !ids.is_empty() {
+        let bad = |e: serde_json::Error| refuse(codes::INVALID_CLIP, e.to_string(), "clip");
+        let mut objects = serde_json::to_value(&clip.objects).map_err(bad)?;
+        let mut blocks = serde_json::to_value(&clip.blocks).map_err(bad)?;
+        for (from, to) in &ids {
+            swap_text(&mut objects, from, to);
+            if let Some(list) = blocks.as_array_mut() {
+                for b in list {
+                    if let Some(e) = b.get_mut("entities") {
+                        swap_text(e, from, to);
+                    }
+                }
+            }
+        }
+        clip.objects = serde_json::from_value(objects).map_err(bad)?;
+        clip.blocks = serde_json::from_value(blocks).map_err(bad)?;
+    }
+    for (kind, ours_names, theirs) in [
+        (
+            "textStyle",
+            ours.settings.text_styles.iter().map(|s| fold(&s.name)).collect::<HashSet<_>>(),
+            clip.text_styles.iter_mut().map(|s| &mut s.name).collect::<Vec<_>>(),
+        ),
+        (
+            "dimensionStyle",
+            ours.settings.dimension_styles.iter().map(|s| fold(&s.name)).collect::<HashSet<_>>(),
+            clip.dimension_styles.iter_mut().map(|s| &mut s.name).collect::<Vec<_>>(),
+        ),
+    ] {
+        let mut taken: HashSet<String> = ours_names.iter().cloned().chain(theirs.iter().map(|n| fold(n))).collect();
+        for name in theirs {
+            if !ours_names.contains(&fold(name)) {
+                continue;
+            }
+            let to = free_name(name, &taken, fold_of);
+            taken.insert(fold(&to));
+            out.push(PasteRenamed { kind: kind.into(), from: name.clone(), to: to.clone() });
+            *name = to;
+        }
+    }
+    Ok((clip, out))
+}
+
 fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> {
-    let clip = &input.clip;
-    clip_check(clip)?;
+    clip_check(&input.clip)?;
+    let (owned, renames) = if input.conflicts == PasteConflicts::Rename {
+        renamed(&doc.to_snapshot_v2_of(|_| false), &input.clip)?
+    } else {
+        (input.clip.clone(), Vec::new())
+    };
+    let clip = &owned;
     checks::point(clip.base, "Taban noktasının", "clip.base")?;
     if let Some(at) = input.at {
         checks::point(at, "Yapıştırma noktasının", "at")?;
@@ -642,6 +736,16 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
             path: Some("clip".into()),
         });
     }
+    if !renames.is_empty() {
+        warnings.push(CommandWarning {
+            code: codes::NAMES_RENAMED.into(),
+            message: format!(
+                "Bu çizimde aynı adlı olduklarından yeni adla geldi: {}.",
+                renames.iter().map(|r| format!("{} → {}", r.from, r.to)).collect::<Vec<_>>().join(", ")
+            ),
+            path: Some("conflicts".into()),
+        });
+    }
     let (from, to) = (clip.unit, doc.settings().drawing_unit);
     if from.unwrap_or_default() != to.unwrap_or_default() {
         warnings.push(CommandWarning {
@@ -663,6 +767,7 @@ fn paste_check(doc: &Document, input: &EntitiesPaste) -> Result<Prepared, Stop> 
             kept,
             styles,
             block,
+            renamed: renames,
         },
         warnings,
     })

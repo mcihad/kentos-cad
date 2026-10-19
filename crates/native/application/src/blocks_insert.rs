@@ -249,6 +249,7 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         }
     };
     let insert = Entity::Insert(InsertEntity {
+        clipping: None,
         parameters,
         attribute_places: Default::default(),
         base: EntityBase {

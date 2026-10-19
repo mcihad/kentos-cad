@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, grids, hatches, hatchpatterns, images, inserts, labels, layers, leaders, library, line, linetypes, network, nurbs, openings, parameters, point, points, polygon, polyline, processing, project, ramps, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stairs, standards, styles, tables, tags, templates, texts, ucs, units, viewmarks, views, walls, xrefs
 
 COMMANDS: dict[str, Any] = {
     "cad.addresses.define": addresses.define,
@@ -88,6 +88,7 @@ COMMANDS: dict[str, Any] = {
     "cad.hatches.edit": hatches.edit,
     "cad.hatchpatterns.edit": hatchpatterns.edit,
     "cad.images.edit": images.edit,
+    "cad.inserts.clip": inserts.clip,
     "cad.labels.pin": labels.pin,
     "cad.layers.compose": layers.compose,
     "cad.layers.contingents": layers.contingents,
@@ -197,4 +198,4 @@ COMMANDS: dict[str, Any] = {
 }
 """The command id → its wrapper (``kentos.cad.polygon.create`` …)."""
 
-NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "images", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)
+NAMESPACES = ("addresses", "annotations", "arc", "arch", "arrays", "assets", "attachments", "blocks", "changeset", "circle", "columns", "constraints", "curves", "dimensions", "domains", "drawing", "entities", "fields", "file", "fonts", "forms", "grids", "hatches", "hatchpatterns", "images", "inserts", "labels", "layers", "leaders", "library", "line", "linetypes", "network", "nurbs", "openings", "parameters", "point", "points", "polygon", "polyline", "processing", "project", "ramps", "records", "rectangle", "relations", "scenarios", "schedules", "schema", "settings", "sheets", "snap", "sources", "spaces", "stairs", "standards", "styles", "tables", "tags", "templates", "texts", "ucs", "units", "viewmarks", "views", "walls", "xrefs",)

@@ -287,6 +287,7 @@ fn timing() {
         mirror: None,
         attrs: None,
         places: None,
+        clip: None,
     };
     for (what, sy) in [("eşit ölçek", None), ("x 1,5 y 0,5", Some(0.5))] {
         let t = std::time::Instant::now();

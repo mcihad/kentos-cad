@@ -2173,6 +2173,60 @@
       "shortcuts": [],
       "category": "Ekle",
       "status": "implemented"
+    },
+    {
+      "id": "file.openTab",
+      "title": "Yeni sekmede aç",
+      "category": "Dosya",
+      "icon": "docTabOpen",
+      "shortcuts": [],
+      "aliases": [
+        "SEKMEDEAC",
+        "YENISEKME"
+      ],
+      "status": "implemented",
+      "description": "Bir KentOS çizimini yeni bir sekmede açar; ekrandaki çizim sekmesinde geri alması, seçimi ve görünümüyle bekler. Çizimin üstündeki sekmelerden biri basılınca o çizim öne gelir."
+    },
+    {
+      "id": "file.nextTab",
+      "title": "Sonraki çizim",
+      "category": "Dosya",
+      "icon": "docTabNext",
+      "shortcuts": [
+        "Ctrl+Tab"
+      ],
+      "aliases": [
+        "SONRAKICIZIM"
+      ],
+      "status": "implemented",
+      "description": "Sekmelerdeki bir sonraki çizimi öne getirir; her çizim kendi geri alması, seçimi ve görünümüyle döner."
+    },
+    {
+      "id": "file.closeTab",
+      "title": "Çizimi kapat",
+      "category": "Dosya",
+      "icon": "docTabClose",
+      "shortcuts": [],
+      "aliases": [
+        "CIZIMIKAPAT",
+        "CLOSE"
+      ],
+      "status": "implemented",
+      "description": "Öndeki çizimi kapatır; kaydedilmemiş değişikliği varsa önce sorar. Sağındaki (yoksa solundaki) sekmenin çizimi öne gelir."
+    },
+    {
+      "id": "tool.xclip",
+      "title": "Kırp",
+      "category": "Değiştir",
+      "icon": "xclip",
+      "shortcuts": [],
+      "aliases": [
+        "XCLIP",
+        "KIRPBLOK",
+        "BLOKKIRP"
+      ],
+      "status": "implemented",
+      "description": "Bir blok ya da dış başvuru yerleştirmesini dikdörtgen ya da çokgen sınırla kırpar: sınırın dışı (Ters ile içi) çizilmez. Sınır yerleştirmeyle taşınır, döner, ölçeklenir. Çerçeve gizli, yalnız ekranda ya da yazdırılan olabilir; Kaldır kırpmayı kaldırır."
     }
   ],
   "icons": {
@@ -2400,7 +2454,11 @@
     "phaseDemolition": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\"/><path d=\"M2.5 10h15\" stroke-width=\"2\" stroke-dasharray=\"2.5 1.8\"/>",
     "phaseProposed": "<rect x=\"2.5\" y=\"4\" width=\"15\" height=\"12\" rx=\"1\" opacity=\"0.45\"/><path d=\"M10 6.5v7M6.5 10h7\" stroke-width=\"1.8\"/>",
     "xrefAttach": "<path d=\"M4.5 2.5h7l4 4v4\"/><path d=\"M11.5 2.5v4h4\" stroke-width=\"1\"/><path d=\"M4.5 2.5v15h5\"/><path d=\"M12.6 12.6l-1.3 1.3a1.9 1.9 0 0 0 2.7 2.7l1.3-1.3\" stroke-width=\"1.2\"/><path d=\"M15.4 15.4l1.3-1.3a1.9 1.9 0 0 0-2.7-2.7l-1.3 1.3\" stroke-width=\"1.2\"/><path d=\"M13.3 15.1l1.8-1.8\" stroke-width=\"1.2\"/>",
-    "xrefManager": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15\" stroke-width=\"1\"/><path d=\"M9 10.5h6M9 13.5h6\" stroke-width=\"1\"/><path d=\"M4.6 10.8l.7-.7a.9.9 0 0 1 1.3 1.3l-.7.7M5.9 13.2l-.7.7a.9.9 0 0 1-1.3-1.3l.7-.7M5 12.6l1-1\" stroke-width=\"0.9\"/>"
+    "xrefManager": "<rect x=\"2.5\" y=\"3.5\" width=\"15\" height=\"13\" rx=\"1\"/><path d=\"M2.5 7h15\" stroke-width=\"1\"/><path d=\"M9 10.5h6M9 13.5h6\" stroke-width=\"1\"/><path d=\"M4.6 10.8l.7-.7a.9.9 0 0 1 1.3 1.3l-.7.7M5.9 13.2l-.7.7a.9.9 0 0 1-1.3-1.3l.7-.7M5 12.6l1-1\" stroke-width=\"0.9\"/>",
+    "docTabOpen": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M10 9v5M7.5 11.5h5\" stroke-width=\"1.2\"/>",
+    "docTabNext": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M7 11.5h6M11 9.5l2 2-2 2\" stroke-width=\"1.2\"/>",
+    "docTabClose": "<path d=\"M3.5 6.5h13v10h-13z\"/><path d=\"M3.5 6.5v-2.5h5l1 2.5\"/><path d=\"M8 9.5l4 4M12 9.5l-4 4\" stroke-width=\"1.2\"/>",
+    "xclip": "<rect x=\"3.5\" y=\"3.5\" width=\"10\" height=\"10\" rx=\"0.5\" stroke-dasharray=\"2 1.5\"/><path d=\"M7 7h9.5v9.5H7z\"/><path d=\"M3 17l3.2-3.2M6.2 17L3 13.8\" stroke-width=\"1.2\"/>"
   },
   "tabs": [
     {
@@ -3594,6 +3652,53 @@
         },
         {
           "command": "xref.manager",
+          "size": "small"
+        },
+        {
+          "command": "tool.xclip",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "cad"
+      ],
+      "tab": "view",
+      "label": "Çizimler",
+      "icon": "docTabOpen",
+      "items": [
+        {
+          "command": "file.openTab",
+          "size": "large"
+        },
+        {
+          "command": "file.nextTab",
+          "size": "small"
+        },
+        {
+          "command": "file.closeTab",
+          "size": "small"
+        }
+      ]
+    },
+    {
+      "modes": [
+        "gis"
+      ],
+      "tab": "view",
+      "into": "Paneller",
+      "items": [
+        {
+          "command": "file.openTab",
+          "size": "small"
+        },
+        {
+          "command": "file.nextTab",
+          "size": "small"
+        },
+        {
+          "command": "file.closeTab",
           "size": "small"
         }
       ]

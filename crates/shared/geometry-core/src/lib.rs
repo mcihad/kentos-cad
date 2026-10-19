@@ -22,6 +22,7 @@
 
 pub mod api;
 pub mod block;
+pub mod block_clip;
 pub mod block_dynamic;
 pub mod crs;
 pub mod display;

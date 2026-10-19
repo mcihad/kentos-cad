@@ -534,7 +534,7 @@ const ENTRIES: &[Entry] = &[
             ],
             REVISION,
         ],
-        warnings: &["units_differ", "layer_hidden"],
+        warnings: &["units_differ", "layer_hidden", "names_renamed"],
         targets: none,
     },
     Entry {
@@ -843,6 +843,7 @@ const ENTRIES: &[Entry] = &[
             OBJECTS,
             &[
                 "no_block",
+                "xref_read_only",
                 "unknown_block",
                 "empty_name",
                 "duplicate_block",
@@ -1480,10 +1481,11 @@ const ENTRIES: &[Entry] = &[
         refusals: &[
             &["xref_not_found", "nested_xref", "not_finite", "invalid_scale"],
             LAYER,
-            &["invalid_file_path", "file_not_found", "import_unreadable", "xref_cycle", "xref_empty", "block_refused"],
+            &["invalid_file_path", "file_not_found", "import_unreadable", "pdf_page_not_found", "xref_cycle", "xref_empty", "block_refused"],
+            &["not_an_underlay", "invalid_underlay"],
             REVISION,
         ],
-        warnings: &["objects_left_out", "layer_hidden"],
+        warnings: &["objects_left_out", "layer_hidden", "pdf_left_out"],
         targets: none,
     },
     Entry {
@@ -1502,6 +1504,16 @@ const ENTRIES: &[Entry] = &[
         ],
         warnings: &["layer_locked"],
         targets: || vec![target(None, &["image"], &[], Some("not_an_image"), None)],
+    },
+    // Kırp (docs/adr/0351 §1).
+    Entry {
+        id: "cad.inserts.clip",
+        refusals: &[
+            &["no_entities", "invalid_uid", "entity_not_found", "not_an_insert", "layer_locked", "invalid_clipping", "not_clipped"],
+            REVISION,
+        ],
+        warnings: &["layer_locked", "clip_empty"],
+        targets: || vec![target(None, &["insert"], &[], Some("not_an_insert"), None)],
     },
     // Bağlı dosyaların durumu (docs/adr/0349 §2).
     Entry {
@@ -2049,7 +2061,7 @@ const ENTRIES: &[Entry] = &[
             LOOK,
             REVISION,
         ],
-        warnings: &["layer_hidden"],
+        warnings: &["layer_hidden", "underlay_measure"],
         targets: || {
             vec![
                 target(
@@ -3019,7 +3031,7 @@ const ENTRIES: &[Entry] = &[
     Entry {
         id: "cad.snap.find",
         refusals: &[&["not_finite", "invalid_aperture", "no_snap_kinds"]],
-        warnings: &[],
+        warnings: &["underlay_measure"],
         targets: none,
     },
     Entry {

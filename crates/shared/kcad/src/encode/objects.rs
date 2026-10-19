@@ -970,6 +970,15 @@ impl<'d> Encoder<'d> {
                 if e.mirror {
                     f.push(("mirror", Val::Bool(true)));
                 }
+                // Its clipping (docs/adr/0351 §1), checked as the reader checks it.
+                if let Some(c) = &e.clipping {
+                    if let Some(why) = c.problem() {
+                        self.path.push(Seg::Name(kind));
+                        self.path.push(Seg::Name("clipping"));
+                        return Err(self.fail(Code::BadValue, &why));
+                    }
+                    f.push(("clipping", Val::Json(serde_json::to_value(c).unwrap_or_default())));
+                }
             }
             Entity::Table(e) => {
                 let refuse = |this: &mut Self, field: &'static str, words: &str| {

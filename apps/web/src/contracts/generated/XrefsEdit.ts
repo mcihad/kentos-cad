@@ -5,8 +5,9 @@ import type { XrefsOperation } from "./XrefsOperation";
  * Input of `cad.xrefs.edit` v1 (“Dış başvuru”): one undo step.
  *
  * Refusals, in this order: `xref_not_found`, `nested_xref`, `not_finite`, `layer_not_found`, `not_a_layer`,
- * `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `xref_cycle`, `xref_empty`,
- * `invalid_revision`, `revision_conflict`. Warnings: `objects_left_out`, `layer_hidden`.
+ * `layer_locked`, `invalid_file_path`, `file_not_found`, `import_unreadable`, `pdf_page_not_found`, `not_an_underlay`,
+ * `invalid_underlay`, `xref_cycle`, `xref_empty`, `invalid_revision`, `revision_conflict`. Warnings:
+ * `objects_left_out`, `layer_hidden`, `pdf_left_out` (what a PDF page holds that an underlay does not take).
  */
 export type XrefsEdit = { operation: XrefsOperation, 
 /**

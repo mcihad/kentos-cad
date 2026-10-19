@@ -163,6 +163,7 @@ pub mod hatch_selected;
 pub mod holes;
 pub mod identify;
 pub mod image_clip;
+pub mod insert_clip;
 pub mod image_insert;
 mod junctions;
 pub mod label_tools;

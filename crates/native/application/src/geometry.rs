@@ -848,6 +848,7 @@ pub fn shape(entity: &Entity) -> Shape {
         // Its attributes too: what its block's attribute texts show (docs/adr/0144 §7).
         Entity::Insert(i) => Shape::Insert {
             params: kentos_formats::blocks::core_params(&i.parameters),
+            clip: kentos_formats::blocks::core_clip(i.clipping.as_ref()),
             block: i.block.to_text(),
             p: v(&i.p),
             scale: i.scale,
@@ -1616,6 +1617,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             rotation,
             mirror,
         } => Entity::Insert(InsertEntity {
+            clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),
             base,

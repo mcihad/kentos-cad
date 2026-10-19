@@ -45,6 +45,11 @@ impl Phasing {
         self.looks.get(&id).copied().unwrap_or(PhaseLook::Shown)
     }
 
+    /// Object `id` left out (a PDF underlay that is not plotted, docs/adr/0351 §2).
+    pub fn hide(&mut self, id: u32) {
+        self.looks.insert(id, PhaseLook::Hidden);
+    }
+
     /// The hidden objects' numbers.
     pub fn hidden(&self) -> impl Iterator<Item = u32> + '_ {
         self.looks

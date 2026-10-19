@@ -2930,6 +2930,20 @@
    "tests": 1
   },
   {
+   "id": "file.closeTab",
+   "kind": "command",
+   "title": "Çizimi kapat",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Çizimi kapat: masaüstünün sekmesi (ADR 0351 §3).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.dxf",
    "kind": "command",
    "title": "DXF…",
@@ -3174,6 +3188,20 @@
    "tests": 1
   },
   {
+   "id": "file.nextTab",
+   "kind": "command",
+   "title": "Sonraki çizim",
+   "level": "session",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Sonraki çizim: öndeki sekme değişir; ajanlar kendi çizimlerinde kalır (ADR 0351 §3).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.open",
    "kind": "command",
    "title": "Aç…",
@@ -3183,6 +3211,20 @@
    "python": "Document.open",
    "mcp": "drawing.open",
    "note": null,
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "file.openTab",
+   "kind": "command",
+   "title": "Yeni sekmede aç",
+   "level": "host",
+   "via": [],
+   "operation": null,
+   "python": null,
+   "mcp": null,
+   "note": "Yeni sekmede aç: çizim bu masaüstünün kendi sekmesinde; Python ve MCP çizimi kendi tutamacıyla açar (Document.open, drawing.open), masaüstündeki çizim hello'nun document numarasıyla (ADR 0351 §3).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0
@@ -11749,6 +11791,22 @@
    "mcp": "cad.polygon.create, cad.entities.set",
    "note": "Yeni maske cad.polygon.create'in wipeout'uyla, Nesne'nin alanı cad.entities.set'in wipeout'uyla (ADR 0310).",
    "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "tool.xclip",
+   "kind": "command",
+   "title": "Kırp",
+   "level": "semantic",
+   "via": [
+    "cad.inserts.clip"
+   ],
+   "operation": null,
+   "python": "kentos.cad.inserts.clip",
+   "mcp": "cad.inserts.clip",
+   "note": "Kırp: yerleştirme ve sınır çizimden, yazma cad.inserts.clip ile tek adımda (ADR 0351 §1).",
+   "scope": "cad",
    "desktop": "implemented",
    "tests": 0
   },

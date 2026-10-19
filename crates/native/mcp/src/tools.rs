@@ -102,7 +102,10 @@ pub fn list(catalog: &Value) -> Vec<Value> {
              adımıdır, kullanıcı hemen görür. Kullanıcı önce Python sekmesinden “Ajanlara aç” demelidir. \
              Kaydetmek ve geri almak kullanıcınındır.",
             object(
-                json!({ "path": { "type": "string", "description": "Bağlantının yolu; yoksa masaüstünün varsayılanı." } }),
+                json!({
+                    "path": { "type": "string", "description": "Bağlantının yolu; yoksa masaüstünün varsayılanı." },
+                    "document": { "type": "integer", "minimum": 0, "description": "Masaüstünde birden çok çizim açıksa hangisi: hello'nun documents listesindeki numara; yoksa öndeki. Tutamaç bu çizimde kalır, kullanıcı başka sekmeye geçse de." }
+                }),
                 &[],
             ),
             annotations(false, false),
@@ -557,6 +560,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.xrefs.edit"
             // Göm and Yeniden bağla change an image's source (docs/adr/0350 §1).
             | "cad.images.edit"
+            | "cad.inserts.clip"
             // An associative array replaces its source objects by a block's inserts (docs/adr/0300).
             | "cad.entities.array"
             // It moves, replaces and deletes an array's items (docs/adr/0301).
@@ -934,9 +938,12 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                 text(args, "path").map_or_else(desktop::default_path, std::path::PathBuf::from);
             let mut link =
                 Desktop::connect(path).map_err(|(code, message)| refused(&code, message))?;
+            // The drawing asked for by its number, else the one in front: the handle keeps it (docs/adr/0351 §3).
+            let asked = args.get("document").cloned().filter(|v| !v.is_null());
             let hello = link
-                .ask("hello", json!({}))
+                .ask("hello", asked.map_or_else(|| json!({}), |d| json!({ "document": d })))
                 .map_err(|(code, message)| refused(&code, message))?;
+            link.document = hello.get("document").and_then(Value::as_u64);
             let handle = format!("desktop-{}", Uuid::new_v4());
             server.desktops.insert(handle.clone(), link);
             Ok(answer(

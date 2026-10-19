@@ -441,6 +441,11 @@ Liste:
   `cad.xrefs.edit`'in `paths`'i, `cad.xrefs.list`'in `affected`'i (`product/`; tarayıcıda dosya yolu yok: bağlı dosyalar tutamaç ya da
   proje varlığıyla), kaynağın değişmesinin izlenmesi ve kartı, Dış başvurular penceresinin Arama yolları ve Diğer bağlı dosyalar
   bölümleri; bilinen bozulmalar: şema 84 ve `FORMATS_VERSION` 91.
+- [ ] `CAD-REF-01`–`04`, `12`, `15`, `17`, `18` belge sekmeleri, kırpma ve PDF altlığı (ADR 0351, 19 Ekim): web'de gerekenler:
+  `cad.inserts.clip` (`product/`) ve Kırp aracı, çizim hatlarında kırpılmış içerik (çekirdeğin `block_clip`'i WASM'dan) ve ekranda
+  çerçeve, PDF altlığı (okuyucu WASM'a: `kentos_formats::pdf`; `cad.xrefs.edit`'in `page` ve `underlay`'i, Dış başvurular'da Soldur, Tek
+  renk, Yazdır), Yapıştır'ın `conflicts: rename`'i, `xref_read_only`, kenet ve ölçüde `underlay_measure`; web tek sekmeli kalır
+  (tarayıcının sekmesi); bilinen bozulmalar: şema 85 ve `FORMATS_VERSION` 92.
 - [ ] `CAD-REF-16`, `20` resim altlığı ve taşınabilir paket (ADR 0350, 19 Ekim): web'de gerekenler: `cad.images.edit` (`product/`;
   tarayıcıda dosya tutamacıyla), Öznitelikler'in Kaynak satırında Göm ve Yeniden bağla…, resim ve rasterlerde arama yolları,
   bulunamayan resmin işareti, dosyası değişen resmin yeniden okunması; Paketle web'de yok (masaüstü ve başsız sunucu).

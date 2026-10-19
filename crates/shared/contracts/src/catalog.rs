@@ -1735,7 +1735,7 @@ pub fn catalog() -> CommandCatalog {
             summary: "cad.entities.copy'nin verdiği kopyayı bu çizime yapıştırır (AutoCAD'in PASTECLIP, PASTEORIG ve PASTEBLOCK'u); tek geri alma adımı “Yapıştır”. \
                       Kopyanın taban noktası at'a gelir; at verilmezse nesneler kopyalandıkları yerde kalır. \
                       Her nesne bu çizimde kendi katmanının yolundaki katmana gider (adlar büyük küçük harf ve Türkçe harf farkı gözetmeden); olmayan yol kaynağın görünüşüyle ve gruplarıyla açılır. \
-                      Bu çizimde aynı adlı blok varsa bu çizimin tanımı kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı). Nesneler yeni kimlik alır; kopyanın dışına bağlar düşer. \
+                      Bu çizimde aynı adlı blok varsa bu çizimin tanımı kullanılır (report.kept), yoksa eklenir (report.blocks); stiller de adıyla, olmayanlar eklenir (proje ayarı). conflicts: rename ile aynı adlı blok ve stil kopyanınkiyle “Ad (2)” gibi boş bir adla gelir, nesneler onu kullanır (report.renamed, names_renamed uyarısı). Nesneler yeni kimlik alır; kopyanın dışına bağlar düşer. \
                       asBlock ile nesneler o adla (boş bir ad: “Ad (2)” …) tek blok olur, tabanı kopyanın taban noktası, etkin katmanda at'a yerleştirilir. \
                       Uzunluklar her çizimde metre olduğundan başka birimli çizimden gelen nesneler boylarını korur (units_differ uyarısı). Retler: no_entities, invalid_clip, not_finite, empty_name, invalid_revision, revision_conflict, not_a_layer, layer_locked."
                 .into(),
@@ -2778,7 +2778,8 @@ pub fn catalog() -> CommandCatalog {
             id: crate::CAD_XREFS_EDIT.into(),
             version: crate::CAD_XREFS_EDIT_VERSION,
             title: "Dış başvuru".into(),
-            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır). \
+            summary: "Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false yazdırılmaz). \
+                      PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). \
                       Kaynağın attach dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler."
                 .into(),
             aliases: vec![],
@@ -2864,6 +2865,42 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Resmi başka dosyaya bağla".into(),
                     input: json!({ "operation": { "kind": "relink", "uids": ["018f6c1e-0000-7000-8000-000000000001"], "file": "fotograflar/cephe.jpg" }, "drawing": "/proje/ofis.kcad" }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_INSERTS_CLIP.into(),
+            version: crate::CAD_INSERTS_CLIP_VERSION,
+            title: "Kırp".into(),
+            summary: "Blok ve dış başvuru yerleştirmelerini kırpar (AutoCAD'in XCLIP'i); tek geri alma adımı “Kırp”. operation.kind: set (boundary çizimde: rectangle a, b köşeleriyle ya da polygon points; inverted dışını gösterir; frame hide, show: yalnız ekranda çerçeve, plot: çerçeve içerikle çizilir ve yazdırılır), remove (sınır kalkar), frame (çerçevenin görünüşü), invert (içi ve dışı yer değiştirir). Sınır yerleştirmenin tanımında saklanır: yerleştirme taşınınca, döndürülünce, ölçeklenince onunla gider. Dolu alanlar alan olarak, çizgiler ve kapalı eğrilerin sınırları yol olarak kesilir; yazı, nokta ve tarama kutusunun ortasına göre ya bütün ya hiç. Kilitli katmandakiler atlanır ve sayılır. Retler: no_entities, invalid_uid, entity_not_found, not_an_insert, layer_locked, invalid_clipping (en az 3, en çok 10 000 köşe, alanı olan, kendini kesmeyen), not_clipped, invalid_revision, revision_conflict; uyarılar layer_locked, clip_empty. Plan yazmadan ne olacağını söyler."
+                .into(),
+            aliases: vec!["XCLIP".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::InsertsClip>(),
+            output: schema::<crate::InsertsClipped>(),
+            plan: Some(schema::<crate::InsertsClipped>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Dikdörtgenle kırp".into(),
+                    input: json!({ "uids": ["018f6c1e-0000-7000-8000-000000000001"], "operation": { "kind": "set", "boundary": { "kind": "rectangle", "a": { "x": 0, "y": 0 }, "b": { "x": 10, "y": 6 } } } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Çokgenin dışını göster, çerçeveyi yazdır".into(),
+                    input: json!({ "uids": ["018f6c1e-0000-7000-8000-000000000001"], "operation": { "kind": "set", "boundary": { "kind": "polygon", "points": [{ "x": 0, "y": 0 }, { "x": 8, "y": 0 }, { "x": 4, "y": 5 }] }, "inverted": true, "frame": "plot" } }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Kırpmayı kaldır".into(),
+                    input: json!({ "uids": ["018f6c1e-0000-7000-8000-000000000001"], "operation": { "kind": "remove" } }),
                     output: None,
                 },
             ],
@@ -7572,6 +7609,9 @@ mod tests {
                     }
                     crate::CAD_IMAGES_EDIT => {
                         serde_json::from_value::<crate::ImagesEdit>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_INSERTS_CLIP => {
+                        serde_json::from_value::<crate::InsertsClip>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_ASSETS_CHECK => {
                         serde_json::from_value::<crate::AssetsCheck>(e.input.clone()).map(|_| ())

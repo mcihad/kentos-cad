@@ -158,7 +158,10 @@ fn definition(
                 let at = r.position();
                 let value = r.opaque()?;
                 const KEYS: &[&str] = &["path", "relative", "kind", "digest", "unloaded", "group", "parent", "objects"];
-                if let Some(key) = value.as_object().and_then(|m| m.keys().find(|k| !KEYS.contains(&k.as_str()))) {
+                // Schema 85 (docs/adr/0351 §2): a PDF underlay's page and look.
+                const UNDERLAY: &[&str] = &["page", "underlay"];
+                let known = |k: &str| KEYS.contains(&k) || (has.clipping && UNDERLAY.contains(&k));
+                if let Some(key) = value.as_object().and_then(|m| m.keys().find(|k| !known(k.as_str()))) {
                     return Err(r.fail_at(Code::UnknownField, at, &format!("dış başvuruda bilinmeyen alan: {key}")));
                 }
                 let read: kentos_contracts::XrefSource = serde_json::from_value(value.clone()).map_err(|e| {

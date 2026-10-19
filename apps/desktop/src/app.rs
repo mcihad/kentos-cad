@@ -319,6 +319,8 @@ pub enum Then {
     NewProject,
     /// A recent file (start.rs); its path waits in `App::opening_recent`.
     OpenRecent,
+    /// Çizimi kapat: the drawing's tab goes, the next one comes (doc_tabs.rs, docs/adr/0351 §3).
+    CloseTab,
 }
 
 /// Where the open and save dialogs are answered.
@@ -487,6 +489,8 @@ pub enum Message {
     StyleImpact(crate::style_impact::Event),
     /// Blok düzenleyici (block_editor.rs, docs/adr/0316 §1).
     BlockEditor(crate::block_editor::Event),
+    /// The open drawings' tabs (doc_tabs.rs, docs/adr/0351 §3).
+    DocTabs(crate::doc_tabs::Event),
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     LayerFilter(crate::layer_filters::Event),
     /// An object's attachments: their windows, the viewer and the photos decoded (attachments.rs).
@@ -943,6 +947,10 @@ pub struct App {
     pub(crate) style_impact: Option<crate::style_impact::Window>,
     /// Blok düzenleyici, while it is open (block_editor.rs, docs/adr/0316 §1).
     pub(crate) block_editor: Option<crate::block_editor::BlockEditor>,
+    /// The drawings set aside in their tabs (doc_tabs.rs, docs/adr/0351 §3).
+    pub(crate) doc_tabs: crate::doc_tabs::DocTabs,
+    /// Kırp's frames shown on the screen (clip_frames.rs, docs/adr/0351 §1).
+    pub(crate) clip_frames: crate::clip_frames::ClipFrames,
     /// Katman süzgeci's window (layer_filters.rs, docs/adr/0211 §4).
     pub(crate) layer_filter: Option<crate::layer_filters::Window>,
     /// Bilgi's card: the object it shows and the drawing's point it was clicked at (info_card.rs).
@@ -1299,6 +1307,8 @@ impl App {
             hatch_patterns_window: None,
             style_impact: None,
             block_editor: None,
+            doc_tabs: Default::default(),
+            clip_frames: Default::default(),
             layer_filter: None,
             info_card: None,
             photos: crate::photo_view::Photos::default(),
@@ -1859,6 +1869,7 @@ impl App {
             Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
             Message::StyleImpact(event) => return self.style_impact_event(event),
             Message::BlockEditor(event) => return self.block_editor_event(event),
+            Message::DocTabs(event) => return self.doc_tabs_event(event),
             Message::LayerFilter(event) => return self.layer_filter_event(event),
             Message::Attachment(event) => return self.attachment_event(event),
             Message::InfoCard(event) => return self.info_card_event(event),
@@ -2008,6 +2019,12 @@ impl App {
                     self.recovery_saved();
                     self.remember_file();
                 }
+                // Its drawing set aside in its tab meanwhile (doc_tabs.rs, docs/adr/0351 §3): the file is
+                // its file all the same.
+                _ if let Some(doc) = self.doc_tabs.find_mut(written.session) => {
+                    doc.saved(written.path.clone(), written.revision);
+                    self.output(format!("Kaydedildi: {}.", written.path.display()));
+                }
                 // Another drawing was opened meanwhile: the file is written, but it is
                 // not the open drawing's file, which keeps its path and its state.
                 _ => self.output(format!("Kaydedildi: {}.", written.path.display())),
@@ -2020,10 +2037,18 @@ impl App {
                 self.layout.write(Instant::now(), true);
                 // A save stopped by the window closing would leave no file (the previous one
                 // stays): it finishes first.
+                let unsaved = self.doc_tabs.unsaved();
                 if let Some(s) = &self.saving {
                     let name = s.name();
                     self.warn(format!(
                         "{name} kaydediliyor; kayıt bitince pencereyi yeniden kapatın."
+                    ));
+                } else if !unsaved.is_empty() {
+                    // A drawing set aside in its tab is not asked about from here: it is brought in front first.
+                    self.warn(format!(
+                        "Sekmelerdeki {} çizimde kaydedilmemiş değişiklik var ({}): o sekmeye geçip kaydedin ya da Çizimi kapat ile kapatın, sonra pencereyi yeniden kapatın.",
+                        unsaved.len(),
+                        unsaved.join(", ")
                     ));
                 } else {
                     // Unsent cloud work to its draft first, else the question (cloud/leaving.rs).
@@ -2346,6 +2371,10 @@ impl App {
         {
             self.warn(crate::block_editor::OPEN);
             return Task::none();
+        }
+        // Yeni sekmede aç, Çizimi kapat, Sonraki çizim (doc_tabs.rs, docs/adr/0351 §3).
+        if crate::doc_tabs::COMMANDS.contains(&id) {
+            return self.doc_tabs_command(id);
         }
         if let Some(tool) = id.strip_prefix("tool.")
             && Session::tools().contains(&tool)
@@ -3105,9 +3134,14 @@ impl App {
 
     /// Asks for a drawing and opens it in stages, off the UI thread (opening.rs).
     pub(crate) fn open(&mut self) -> Task<Message> {
+        self.open_into(Purpose::File)
+    }
+
+    /// Aç, or Yeni sekmede aç with `Purpose::Tab` (doc_tabs.rs): the file asked for, then opened for `purpose`.
+    pub(crate) fn open_into(&mut self, purpose: Purpose) -> Task<Message> {
         if let Picker::File(path) = &self.picker {
             let path = path.clone();
-            return self.start_opening(path, Purpose::File);
+            return self.start_opening(path, purpose);
         }
         Task::perform(
             async {
@@ -3118,7 +3152,10 @@ impl App {
                     .await?;
                 Some(file.path().to_path_buf())
             },
-            |path| Message::Opening(opening::Event::Picked(path)),
+            move |path| match &purpose {
+                Purpose::Tab => Message::Opening(opening::Event::PickedTab(path)),
+                _ => Message::Opening(opening::Event::Picked(path)),
+            },
         )
     }
 

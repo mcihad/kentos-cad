@@ -38,7 +38,7 @@ use kentos_native_application::fields_write;
 use kentos_native_application::{processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
-use kentos_native_application::{assets_check, images_edit, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
+use kentos_native_application::{assets_check, images_edit, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -841,6 +841,12 @@ impl Input for kentos_domain::contracts::XrefsList {
 }
 
 impl Input for kentos_domain::contracts::AssetsCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::InsertsClip {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2929,6 +2935,9 @@ fn run_op(
         kentos_domain::contracts::CAD_ASSETS_CHECK => {
             run!(assets_check, kentos_domain::contracts::AssetsCheck)
         }
+        kentos_domain::contracts::CAD_INSERTS_CLIP => {
+            run!(inserts_clip, kentos_domain::contracts::InsertsClip)
+        }
         kentos_domain::contracts::CAD_IMAGES_EDIT => {
             run!(images_edit, kentos_domain::contracts::ImagesEdit)
         }
@@ -3456,6 +3465,27 @@ fn check(
                     .collect::<Outcome<_>>()?;
                 let wanted = block_ids(want, doc, state, at)?;
                 expect_same(&json!(got), &wanted, "ilişkili diziler", at)?;
+            }
+            // An external reference's source by its name, without its objects' ids (docs/adr/0351 §2: a PDF's
+            // objects are numbered from their content).
+            "xrefs" => {
+                for (name, want) in want.as_object().unwrap_or(&empty) {
+                    let got = doc
+                        .block_named(name)
+                        .and_then(|b| b.xref.as_ref())
+                        .map(serde_json::to_value)
+                        .transpose()
+                        .map_err(|e| format!("{at}: {e}"))?
+                        .map(|mut v| {
+                            if let Some(m) = v.as_object_mut() {
+                                m.remove("objects");
+                            }
+                            v
+                        })
+                        .unwrap_or(Value::Null);
+                    let want = block_ids(want, doc, state, at)?;
+                    expect_same(&got, &want, &format!("“{name}” dış başvurusu"), at)?;
+                }
             }
             // A definition's id by its name: "new" (none the setup had nor
             // `captureBlock` took), "$block:name" or the id itself.

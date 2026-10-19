@@ -1288,6 +1288,7 @@ mod tests {
             y_scale: None,
             rotation: 0.0,
             mirror: false,
+            clipping: None,
         })
     }
 

@@ -88,6 +88,8 @@ impl App {
             // “Model | Pafta 1 | +” under the drawing (sheets.rs).
             stack![
                 column![
+                    // The open drawings' tabs while there is more than one (doc_tabs.rs, docs/adr/0351 §3).
+                    self.doc_tabs_view(),
                     self.drawing_area(),
                     // Zaman sürgüsü's bar while it is open (temporal/bar.rs, docs/adr/0210 §10).
                     self.time_bar(self.viewport.bounds.width),
@@ -729,6 +731,7 @@ impl App {
                     problem: self.topology_problem().or_else(|| self.networks.mark.clone()),
                     broken: self.broken_marks(),
                     missing: self.missing_pictures(),
+                    clips: self.clip_marks(),
                     bonds: self.bond_marks(),
                     constraints: self.constraint_marks(),
                     constraint_pointer: self.constraint_view.pointer,
@@ -893,6 +896,7 @@ impl App {
                 .or_else(|| self.networks.mark.clone()),
             broken: self.broken_marks(),
             missing: self.missing_pictures(),
+            clips: self.clip_marks(),
             bonds: self.bond_marks(),
             constraints: self.constraint_marks(),
             constraint_pointer: self.constraint_view.pointer,

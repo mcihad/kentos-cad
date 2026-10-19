@@ -43,6 +43,28 @@ pub struct Look {
     pub phasing: std::sync::Arc<kentos_native_style::phases::Phasing>,
 }
 
+/// [`phasing_of`] for paper: the inserts of a PDF underlay set not to plot (Yazdır off, docs/adr/0351 §2) left out
+/// too. The sheet's maps and the headless PDF draw with it; the drawing area with [`phasing_of`].
+pub fn plot_phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
+    let mut out = phasing_of(doc);
+    let unplotted: std::collections::HashSet<kentos_contracts::BlockId> = doc
+        .blocks()
+        .iter()
+        .filter(|b| b.xref.as_ref().and_then(|x| x.underlay.as_ref()).is_some_and(|u| !u.plot))
+        .map(|b| b.id)
+        .collect();
+    if !unplotted.is_empty() {
+        for e in doc.entities() {
+            if let Entity::Insert(i) = e
+                && unplotted.contains(&i.block)
+            {
+                out.hide(e.base().id);
+            }
+        }
+    }
+    out
+}
+
 /// The phase view's looks of `doc`'s objects (docs/adr/0346 §2); nothing to change in Tümü.
 pub fn phasing_of(doc: &kentos_domain::Document) -> kentos_native_style::phases::Phasing {
     let view = doc

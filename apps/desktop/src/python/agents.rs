@@ -3,6 +3,11 @@
 //! console's scripts are; each write is its own undo step and a line of the
 //! command history (“Ajan: …”). While console code runs, or a drawing opens,
 //! agents wait.
+//!
+//! With more than one drawing open (doc_tabs.rs, docs/adr/0351 §3) a call names its drawing by `document`, the
+//! drawing's session as `hello` gives it: the drawing in front changing does not move a program to another drawing,
+//! and a call on a drawing set aside is answered on it, in its tab. A drawing closed is `document_closed`. A call
+//! without `document` is the drawing in front's, as before.
 
 use iced::Task;
 use serde_json::{Value, json};
@@ -91,17 +96,58 @@ impl App {
                 "Masaüstü şu an meşgul (konsolda kod çalışıyor ya da çizim açılıyor): biraz sonra yeniden deneyin.",
             ));
         }
-        let params = request.get("params").cloned().unwrap_or_else(|| json!({}));
-        let Some(doc) = self.document.as_mut() else {
-            return Err(refused("no_document", "Masaüstünde açık çizim yok."));
+        let mut params = request.get("params").cloned().unwrap_or_else(|| json!({}));
+        // The drawing it names, taken off the parameters the host reads.
+        let named = params
+            .as_object_mut()
+            .and_then(|m| m.remove("document"))
+            .filter(|v| !v.is_null());
+        let named = match named {
+            None => None,
+            Some(v) => Some(v.as_u64().or_else(|| v.as_str().and_then(|t| t.parse().ok())).ok_or_else(|| {
+                refused("invalid_request", "document, hello'nun verdiği çizim numarasıdır (document).")
+            })?),
         };
+        let front = self.document.as_ref().map(|d| d.session);
+        let documents: Vec<Value> = self
+            .doc_tabs
+            .parked
+            .iter()
+            .map(|p| &p.document)
+            .chain(self.document.as_ref())
+            .map(|d| {
+                json!({
+                    "document": d.session,
+                    "name": d.model.name(),
+                    "path": d.path.as_ref().map(|p| p.display().to_string()),
+                    "front": Some(d.session) == front,
+                })
+            })
+            .collect();
+        let doc = match named {
+            None => self.document.as_mut(),
+            Some(s) if Some(s) == front => self.document.as_mut(),
+            Some(s) => self.doc_tabs.find_mut(s),
+        };
+        let Some(doc) = doc else {
+            return Err(match named {
+                Some(s) => refused(
+                    "document_closed",
+                    &format!("{s} numaralı çizim kapatıldı ya da hiç açılmadı; hello açık çizimleri sayar."),
+                ),
+                None => refused("no_document", "Masaüstünde açık çizim yok."),
+            });
+        };
+        let in_front = Some(doc.session) == front;
         match method {
             "hello" => Ok(json!({
                 "desktop": env!("CARGO_PKG_VERSION"),
+                "document": doc.session,
                 "name": doc.model.name(),
                 "path": doc.path.as_ref().map(|p| p.display().to_string()),
                 "revision": doc.model.revision().to_string(),
                 "objects": doc.model.len(),
+                "documents": documents,
             })),
             "run" | "summary" | "layers" | "entities" | "entity" | "measure" | "call"
             | "journal" | "replay" | "start" | "job" | "wait" | "cancel" => {
@@ -117,6 +163,7 @@ impl App {
                 if method == "summary"
                     && let Some(fields) = answer.as_object_mut()
                 {
+                    fields.insert("document".into(), json!(doc.session));
                     if let Some(path) = &doc.path {
                         fields.insert("path".into(), json!(path.display().to_string()));
                     }
@@ -139,7 +186,11 @@ impl App {
                     "start" => true,
                     _ => false,
                 };
-                if wrote {
+                if wrote && !in_front {
+                    // Its drawing waits in its tab: the store on screen is another drawing's.
+                    let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
+                    self.output(format!("Ajan: {command} (arka sekmedeki çizimde)"));
+                } else if wrote {
                     let command = params.get("command").and_then(Value::as_str).unwrap_or("?");
                     self.output(format!("Ajan: {command}"));
                 } else if method == "replay" {

@@ -25,17 +25,23 @@ if TYPE_CHECKING:
 class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
     """``cad.xrefs.edit`` v1. Dış başvuru: Başka bir çizim dosyasını dış başvuru olarak
     bağlar ve yönetir; her işlem tek geri alma adımı. operation.kind: attach (path
-    mutlak .kcad yolu; mode attach ya da overlay; name yoksa dosyanın adı; at, scale,
-    rotation derece; layerId yerleştirmenin katmanı): kaynağın nesneleri (resim, raster
-    ve tablo dışında) bir blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına
-    gelir, bir yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı,
-    kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler,
-    silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve
-    yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu
-    siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla
-    birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak
-    yolunda ve göreli yolunda yoksa bu klasörlerde aranır). Kaynağın attach dış
-    başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
+    mutlak .kcad ya da .pdf yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da
+    overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin
+    katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur,
+    katmanları “Dış başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload
+    kaynağı yeniden okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve
+    kılavuz uçları aynı nesneleri izler, silineninki kopar); unload içeriği boşaltır;
+    repath yeni yoldaki dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün
+    yerleştirmelerini ve katman grubunu siler; bind (mode bind: katmanlar grupta kalır;
+    insert: aynı yoldaki katmanlarla birleşir) sıradan bloğa çevirir; paths projenin
+    arama yollarını yazar (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde
+    aranır); underlay PDF altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome
+    tek renk, plot false yazdırılmaz). PDF altlığı: sayfanın çizgileri, dolguları ve
+    yazıları kâğıt metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak
+    okunur, katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler
+    alınmaz (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan
+    okunmuştur, kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach
+    dış başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
     çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına
     değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.
     """
@@ -60,20 +66,26 @@ class _XrefsEdit(LocalCommand[XrefsEdit, XrefsEdited, XrefsEdited]):
         expected: Expected | None = None,
     ) -> XrefsEdited:
         """Dış başvuru: Başka bir çizim dosyasını dış başvuru olarak bağlar ve yönetir; her
-        işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad yolu; mode
-        attach ya da overlay; name yoksa dosyanın adı; at, scale, rotation derece; layerId
-        yerleştirmenin katmanı): kaynağın nesneleri (resim, raster ve tablo dışında) bir
-        blok tanımı olur, katmanları “Dış başvuru: ad” grubunun altına gelir, bir
-        yerleştirme konur; reload kaynağı yeniden okur (yerleştirmeler aynı, kaynağın
-        nesnelerine bağlı ölçüler ve kılavuz uçları aynı nesneleri izler, silineninki
-        kopar); unload içeriği boşaltır; repath yeni yoldaki dosyayı bağlar ve yükler;
-        detach tanımı, getirdiklerini, bütün yerleştirmelerini ve katman grubunu siler; bind
-        (mode bind: katmanlar grupta kalır; insert: aynı yoldaki katmanlarla birleşir)
-        sıradan bloğa çevirir; paths projenin arama yollarını yazar (ayar; kaynak yolunda ve
-        göreli yolunda yoksa bu klasörlerde aranır). Kaynağın attach dış başvuruları iç içe
-        gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık çizimin dosya yolu:
-        göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına değiştirilemez
-        (nested_xref). Plan yazmadan ne olacağını söyler.
+        işlem tek geri alma adımı. operation.kind: attach (path mutlak .kcad ya da .pdf
+        yolu; page PDF'in sayfası, 1'den, yoksa 1; mode attach ya da overlay; name yoksa
+        dosyanın adı; at, scale, rotation derece; layerId yerleştirmenin katmanı): kaynağın
+        nesneleri (resim, raster ve tablo dışında) bir blok tanımı olur, katmanları “Dış
+        başvuru: ad” grubunun altına gelir, bir yerleştirme konur; reload kaynağı yeniden
+        okur (yerleştirmeler aynı, kaynağın nesnelerine bağlı ölçüler ve kılavuz uçları aynı
+        nesneleri izler, silineninki kopar); unload içeriği boşaltır; repath yeni yoldaki
+        dosyayı bağlar ve yükler; detach tanımı, getirdiklerini, bütün yerleştirmelerini ve
+        katman grubunu siler; bind (mode bind: katmanlar grupta kalır; insert: aynı yoldaki
+        katmanlarla birleşir) sıradan bloğa çevirir; paths projenin arama yollarını yazar
+        (ayar; kaynak yolunda ve göreli yolunda yoksa bu klasörlerde aranır); underlay PDF
+        altlığının görünüşünü yazar (fade %0–80 soldurma, monochrome tek renk, plot false
+        yazdırılmaz). PDF altlığı: sayfanın çizgileri, dolguları ve yazıları kâğıt
+        metresinde (1 pt = 0,0254/72 m) sol alt köşesinden bir çizim olarak okunur,
+        katmanları PDF'in isteğe bağlı içerik grupları; resimler ve gölgelemeler alınmaz
+        (pdf_left_out); kenet ve ölçü onun çizgilerine olur ama sonuç kâğıttan okunmuştur,
+        kanıtlanmış CAD geometrisi değildir (underlay_measure). Kaynağın attach dış
+        başvuruları iç içe gelir, overlay olanlar gelmez; döngü xref_cycle. drawing açık
+        çizimin dosya yolu: göreli yol ve döngü için. İç içe gelen dış başvuru kendi başına
+        değiştirilemez (nested_xref). Plan yazmadan ne olacağını söyler.
 
         Args:
             doc: The drawing it works on.

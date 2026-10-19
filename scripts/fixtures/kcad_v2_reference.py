@@ -1588,7 +1588,9 @@ KINDS = {
                # Schema 58 (docs/adr/0317 §1): where it shows its moved attributes, none written empty.
                "attributePlaces": (lambda m: cmap({k: point(v) for k, v in m.items()}), False),
                # Schema 59 (docs/adr/0318 §3): its parameter values, none written empty.
-               "parameters": (lambda m: cmap({k: param_value(v) for k, v in m.items()}), False)},
+               "parameters": (lambda m: cmap({k: param_value(v) for k, v in m.items()}), False),
+               # Schema 85 (docs/adr/0351 §1): its clipping, as its JSON.
+               "clipping": (opaque, False)},
     # Schema 22 (docs/adr/0184): one-line cells row by row, merged ranges, alignments, a heading row only when true, lines
     # by name, a frame's width, a text's face, a source; only in the drawing.
     "table": {
@@ -2089,6 +2091,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 85 (docs/adr/0351): an insert's clipping, a PDF underlay's page or look.
+    clipped = lambda es: any(e["kind"] == "insert" and "clipping" in e for e in es)  # noqa: E731
+    if clipped(entities) or any(clipped(b["entities"]) or "page" in b.get("xref", {}) or "underlay" in b.get("xref", {})
+                                for b in blocks or []):
+        return 85
     # Schema 84 (docs/adr/0349 §1): the external references' search paths.
     if (settings or {}).get("xrefPaths"):
         return 84
@@ -2615,7 +2622,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-85.kcad"] = container(root(cmap(parts), version=uint(85)))
+    files["schema-version-86.kcad"] = container(root(cmap(parts), version=uint(86)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4279,6 +4286,28 @@ def build():
     out["broken/xref-paths-twice.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(d["settings"]["xrefPaths"][0]))
     out["broken/xref-paths-untrimmed.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(" mimari"))
     out["broken/xref-paths-blank.kcad"] = paths_broken(lambda d: d["settings"]["xrefPaths"].append(""))
+    # Clipping and PDF underlays (docs/adr/0351): schema 85's; in schema 84 an unknown field; two corners, no area, a
+    # default frame written, an underlay without a page, a fade past 80, page 0 and a default look written refused.
+    out["clipping.kcad"] = container(document(load("clipping.json")))
+    clip_payload = document(load("clipping.json"))
+    assert clip_payload.count(b"\x67version\x18\x55") == 1, "a clipping is schema 85"
+    out["broken/clipping-in-schema-84.kcad"] = container(clip_payload.replace(b"\x67version\x18\x55", b"\x67version\x18\x54"))
+
+    def clip_broken(change):
+        d = copy.deepcopy(load("clipping.json"))
+        change(d)
+        return container(document(d))
+
+    out["broken/clipping-two-corners.kcad"] = clip_broken(lambda d: d["entities"][1]["clipping"]["boundary"].pop())
+    out["broken/clipping-no-area.kcad"] = clip_broken(lambda d: d["entities"][1]["clipping"].update(
+        boundary=[{"x": 0.0, "y": 0.0}, {"x": 1.0, "y": 1.0}, {"x": 2.0, "y": 2.0}]))
+    out["broken/clipping-frame-hide-written.kcad"] = clip_broken(lambda d: d["entities"][0]["clipping"].update(frame="hide"))
+    out["broken/clipping-inverted-false-written.kcad"] = clip_broken(lambda d: d["entities"][0]["clipping"].update(inverted=False))
+    out["broken/underlay-without-page.kcad"] = clip_broken(lambda d: d["blocks"][2]["xref"].pop("page"))
+    out["broken/underlay-fade-past.kcad"] = clip_broken(lambda d: d["blocks"][2]["xref"]["underlay"].update(fade=90))
+    out["broken/underlay-page-zero.kcad"] = clip_broken(lambda d: d["blocks"][2]["xref"].update(page=0))
+    out["broken/underlay-default-written.kcad"] = clip_broken(lambda d: d["blocks"][2]["xref"].update(
+        underlay={"plot": True}))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

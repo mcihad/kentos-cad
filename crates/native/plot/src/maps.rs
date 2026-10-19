@@ -142,7 +142,7 @@ pub fn vector_content(
         line_types: std::sync::Arc::new(kentos_native_style::line_types::LineTypes::of(
             doc.settings(),
         )),
-        phasing: std::sync::Arc::new(crate::layers::phasing_of(doc)),
+        phasing: std::sync::Arc::new(crate::layers::plot_phasing_of(doc)),
     };
     let clip = Bounds {
         min_x: reach[0],

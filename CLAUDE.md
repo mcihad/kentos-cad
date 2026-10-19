@@ -726,6 +726,14 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   kesikli çerçeve ve uyarı üçgeniyle, dosyası değişen resim izleyiciyle yeniden okunur (çizim hattında resmin dokusu pikselleri
   değişince yeniden yapılır); Paketle dış başvuruların kaynaklarını bayt bayt (özetleri tutar) ve `paket.json`'u (`kentos.package/1`:
   proje, kopyalar, kalanlar, yazı yüzleri; yerine başka yüzle çizilen yazı stili `left`'te) yazar (ADR 0350);
+  belge sekmeleri, kırpma ve PDF altlığı: birden çok çizim açık, arkadaki sekmesinde geri alması, kamerası, seçimi ve görünümleriyle
+  (`doc_tabs.rs`; Yeni sekmede aç, Sonraki çizim Ctrl+Tab, Çizimi kapat; bulut projesi sekmede beklemez), ajan bağlantısının
+  çağrıları çizimini `document` ile adlandırır (MCP'nin `desktop.attach`'ı tutar), Yapıştır'ın `conflicts: rename`'i; `cad.inserts.clip`
+  (Kırp: yerleştirmenin `clipping`'i tanımın koordinatlarında, Ters, Çerçeve gizli/ekranda/yazdır; çekirdeğin `block_clip`'i; `.kcad`
+  şema 85, `FORMATS_VERSION` 92); PDF altlığı: kendi PDF okuyucumuz `kentos_formats::pdf` (xref tablosu ve akışı, nesne akışı, artımlı
+  güncelleme, süzgeçler, formlar, yazılar ve ToUnicode, isteğe bağlı içerik grupları), sayfa `cad.xrefs.edit`'in `page`'iyle dış
+  başvuru olur, görünüşü `underlay` (soldur, tek renk, yazdırma); dış başvuru tanımı `cad.blocks.edit`'te salt okunur
+  (`xref_read_only`), Kaynağı aç onu yeni sekmede açar; altlığın çizgisine kenet ve bağlı ölçü `underlay_measure` der (ADR 0351);
   kenetin başvurusu: salt okunur `cad.snap.find` (tür, nokta, kimlik, yer, blok yolu, sürüm; cevabı ilişkili ölçüye olduğu gibi
   verilir), yazının, bloğun ve tablonun noktası `node` yeri, Koordinat oku kenetin nesnesini ve yerini yazar (ADR 0272);
   kenet basma anında kendi yerinde ve o anki çizimde alınır, Tab'ın adayları çizimin sürümüne bağlı (ADR 0273);

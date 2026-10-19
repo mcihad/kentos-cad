@@ -510,6 +510,142 @@ add(edit_cases, "ekle: doğru sürümle yazılır, geri alınan yinelenir", [
     {"op": "redo", "returns": "Dış başvuru ekle: Plan", "expect": expect(ATTACHED, canRedo=False)},
 ])
 
+# ── PDF underlays (docs/adr/0351 §2) ─────────────────────────────────────
+# The page as the PDF reader's own reference gives it (scripts/fixtures/pdf_cases.py → fixtures/pdf/v1/cases.json),
+# turned into the source drawing by ADR 0351 §2: a part of a fill that is not white with three corners or more an area;
+# a stroke's part (its closing corner the first again dropped and the part closed, repeated corners once) a line when
+# two corners and open, else a polyline; each text a text; the layers “PDF” (when anything is in no group, or the page
+# has no group) and the page's groups in order.
+
+PDF_DIR = ROOT / "fixtures" / "pdf" / "v1"
+PDF_CASES = {c["file"]: c for c in json.loads((PDF_DIR / "cases.json").read_text(encoding="utf-8"))["cases"]}
+
+
+def pdf_objects(page):
+    n = 0
+    for path in page["paths"]:
+        for part in path["parts"]:
+            pts = [q for q in part["points"] if not isinstance(q, dict)]
+            if path["fill"] is not None and path["fill"] != [255, 255, 255]:
+                ring = list(pts)
+                if len(ring) > 1 and ring[0] == ring[-1]:
+                    ring.pop()
+                n += len(ring) >= 3
+            if path["stroke"] is not None:
+                line_ = list(pts)
+                if len(line_) > 2 and line_[0] == line_[-1]:
+                    line_.pop()
+                dedup = [q for k_, q in enumerate(line_) if k_ == 0 or q != line_[k_ - 1]]
+                n += len(dedup) >= 2
+    return n + len(page["texts"])
+
+
+def pdf_layers(page):
+    plain = any(p["layer"] is None for p in page["paths"]) or any(t["layer"] is None for t in page["texts"])
+    return (["PDF"] if plain or not page["layers"] else []) + list(page["layers"])
+
+
+def pdf_op(file, **f):
+    return {"kind": "attach", "path": f"$fixture:pdf/v1/{file}", "layerId": "cizim", **f}
+
+
+def pdf_digest(file):
+    return hashlib.sha256((PDF_DIR / file).read_bytes()).hexdigest()
+
+
+def pdf_left(left):
+    words = []
+    if left["images"]:
+        words.append(f"{left['images']} resim")
+    if left["shadings"]:
+        words.append(f"{left['shadings']} gölgeleme")
+    if left["unreadable"]:
+        words.append(f"{left['unreadable']} okunamayan harf")
+    return [{"code": "pdf_left_out", "message": f"PDF sayfasından altlığa alınmadı: {', '.join(words)}.",
+             "path": "operation.path"}] if words else []
+
+
+def pdf_attached(file, page=1, name=None):
+    pg = PDF_CASES[file]["pages"][str(page)]
+    stem = name or file.rsplit(".", 1)[0]
+    out = edited(stem, block=f"$blockOf:{stem}", insert=True, objects=pdf_objects(pg), layers=pdf_layers(pg))
+    return out, pdf_left(pg["left"])
+
+
+def pdf_source(file, page=1, underlay=None):
+    x_ = {"path": f"$fixture:pdf/v1/{file}", "digest": pdf_digest(file), "group": "$any", "page": page}
+    if underlay:
+        x_["underlay"] = underlay
+    return x_
+
+
+KAT_ANSWER, KAT_LEFT = pdf_attached("katmanlar.pdf")
+assert KAT_LEFT and KAT_ANSWER["objects"] > 5, (KAT_ANSWER, KAT_LEFT)
+add(edit_cases, "PDF altlığı: sayfanın çizgileri, dolguları ve yazıları, katmanları grubun altında; resim ve gölgeleme söylenir", [
+    {"op": "execute", "input": {"operation": pdf_op("katmanlar.pdf")}, "result": done(KAT_ANSWER, KAT_LEFT),
+     "expect": {"canUndo": True, "revision": "changed", "xrefs": {"katmanlar": pdf_source("katmanlar.pdf")}}},
+])
+for file, page in [("cizgiler.pdf", 1), ("donuk.pdf", 2), ("turkce.pdf", 1), ("egri.pdf", 1), ("xref-akisi.pdf", 1)]:
+    answer_, left_ = pdf_attached(file, page)
+    add(edit_cases, f"PDF altlığı: {file} {page}. sayfa", [
+        {"op": "execute", "input": {"operation": pdf_op(file, page=page)}, "result": done(answer_, left_),
+         "expect": {"canUndo": True, "revision": "changed",
+                    "xrefs": {file.rsplit('.', 1)[0]: pdf_source(file, page)}}},
+    ])
+add(edit_cases, "PDF altlığı: olmayan sayfa", [
+    {"op": "execute", "input": {"operation": pdf_op("donuk.pdf", page=5)},
+     "result": failed("pdf_page_not_found", "donuk.pdf dosyasında 5. sayfa yok: 3 sayfası var.", "operation.page"),
+     "expect": NOTHING},
+])
+add(edit_cases, "PDF altlığı: çizime sayfa verilmez", [
+    {"op": "execute", "input": {"operation": {**attach_op(), "page": 2}},
+     "result": failed("pdf_page_not_found", "plan.kcad bir PDF değil; sayfa yalnız PDF altlığında verilir.", "operation.page"),
+     "expect": NOTHING},
+])
+add(edit_cases, "PDF altlığı: şifreli PDF", [
+    {"op": "execute", "input": {"operation": pdf_op("sifreli.pdf")},
+     "result": failed("import_unreadable", "sifreli.pdf PDF olarak okunamadı: PDF şifreli; şifresi açılmış bir kopyasını verin.",
+                      "operation.path"),
+     "expect": NOTHING},
+])
+PDF_ATTACH = {"op": "execute", "input": {"operation": pdf_op("katmanlar.pdf")}, "result": done(KAT_ANSWER, KAT_LEFT)}
+add(edit_cases, "PDF altlığı: görünüşü (soldur, tek renk), tek adımda geri alınır", [
+    PDF_ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "fade": 40, "monochrome": True}},
+     "result": done(edited("katmanlar", block="$blockOf:katmanlar")),
+     "expect": {"canUndo": True, "xrefs": {"katmanlar": pdf_source("katmanlar.pdf", underlay={"fade": 40, "monochrome": True})}}},
+    {"op": "undo", "returns": "PDF altlığının görünüşü: katmanlar",
+     "expect": {"xrefs": {"katmanlar": pdf_source("katmanlar.pdf")}}},
+])
+add(edit_cases, "PDF altlığı: yazdırılmaz; varsayılana dönen görünüş yazılmaz", [
+    PDF_ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "plot": False}},
+     "result": done(edited("katmanlar", block="$blockOf:katmanlar")),
+     "expect": {"xrefs": {"katmanlar": pdf_source("katmanlar.pdf", underlay={"plot": False})}}},
+    {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "plot": True}},
+     "result": done(edited("katmanlar", block="$blockOf:katmanlar")),
+     "expect": {"xrefs": {"katmanlar": pdf_source("katmanlar.pdf")}}},
+])
+add(edit_cases, "PDF altlığı: çizimin dış başvurusunun görünüşü yok", [
+    ATTACH_PLAN := {"op": "execute", "input": {"operation": attach_op(name="Plan")}, "result": done(ANSWER, [LEFT])},
+    {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "Plan", "fade": 20}},
+     "result": failed("not_an_underlay", "“Plan” bir PDF altlığı değil; görünüşü yalnız PDF altlığının değişir.", "operation.name"),
+     "expect": {"revision": "same"}},
+])
+add(edit_cases, "PDF altlığı: en çok %80 soldurulur", [
+    PDF_ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "underlay", "name": "katmanlar", "fade": 90}},
+     "result": failed("invalid_underlay", "Soldurma en çok %80 olabilir.", "operation.fade"),
+     "expect": {"revision": "same"}},
+])
+add(edit_cases, "PDF altlığı: yeniden yükleme sayfasını yeniden okur, nesneler aynı kalır", [
+    PDF_ATTACH,
+    {"op": "execute", "input": {"operation": {"kind": "reload", "name": "katmanlar"}},
+     "result": done(edited("katmanlar", block="$blockOf:katmanlar", objects=KAT_ANSWER["objects"]),
+                    [{**w_, "path": "operation.name"} for w_ in KAT_LEFT]),
+     "expect": {"revision": "same", "xrefs": {"katmanlar": pdf_source("katmanlar.pdf")}}},
+], note="Kaynak değişmediyse yükleme bir şey yazmaz (ADR 0348 §2); sayfa kaynağın yanında kalır.")
+
 # ── reload, repath ───────────────────────────────────────────────────────
 
 ATTACH = {"op": "execute", "input": {"operation": attach_op(name="Plan")}, "result": done(ANSWER, [LEFT])}

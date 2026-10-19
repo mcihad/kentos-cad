@@ -61,6 +61,33 @@ pub struct Places(pub Vec<(String, Vec2)>);
 #[derive(Clone, Debug, PartialEq)]
 pub struct Params(pub Vec<(String, ParamValue)>);
 
+/// An insert's clipping (`clipping`, docs/adr/0351 §1): its boundary in the definition's coordinates, whether the
+/// outside is kept, and whether its frame is drawn and plotted with the content.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Clipping {
+    pub ring: Vec<Vec2>,
+    pub inverted: bool,
+    pub plot_frame: bool,
+}
+
+impl Clipping {
+    /// The insert's `clipping` field, when it reads as one (three corners at least, all finite).
+    fn of(v: &Json) -> Option<Clipping> {
+        let Json::Arr(list) = v.get("boundary") else {
+            return None;
+        };
+        let ring: Vec<Vec2> = list.iter().filter_map(|p| Vec2::from_json(p).ok()).collect();
+        if ring.len() < 3 || ring.len() != list.len() || ring.iter().any(|p| !(p.x.is_finite() && p.y.is_finite())) {
+            return None;
+        }
+        Some(Clipping {
+            ring,
+            inverted: matches!(v.get("inverted"), Json::Bool(true)),
+            plot_frame: matches!(v.get("frame"), Json::Str(f) if f == "plot"),
+        })
+    }
+}
+
 /// A parameter's value: a flip, a number (a length, an angle in radians), a name or a point of the definition.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ParamValue {
@@ -464,6 +491,8 @@ pub enum Shape {
         /// Its dynamic block's parameter values that differ from their defaults (docs/adr/0318 §3). Read from the
         /// entity's `parameters`, which stay among its other fields.
         params: Option<Params>,
+        /// Its clipping (docs/adr/0351 §1). Read from the entity's `clipping`, which stays among its other fields.
+        clip: Option<std::sync::Arc<Clipping>>,
     },
     /// A leader (docs/adr/0146): an arrowhead at `pts[0]`, a line through
     /// `pts` and, with a note, a landing from the last vertex along the
@@ -637,7 +666,7 @@ crate::json_tagged!(Shape, "kind",
     Text => "text" { p, text, height, rotation, align, width_factor => "widthFactor", mask, box_width => "boxWidth", line_spacing => "lineSpacing", runs, flow => "layout", path & face: crate::text::face::Face },
     Dimension => "dimension" { a, b, offset, height, text, style, angle, c, mask, za, zb & look: crate::geom::dimension::Look },
     Hatch => "hatch" { ring, holes, pattern, assoc, boundary },
-    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params },
+    Insert => "insert" { block, p, scale, y_scale => "yScale", rotation, mirror; attrs, places, params, clip },
     Leader => "leader" { pts, text, height, rotation, arrow, arrow_size => "arrowSize", mask, arms, blocks },
     Table => "table" { p, rotation, height, rows, columns, cells, merges, aligns, header, grid, frame, source, styles & face: crate::text::face::Face },
     Image => "image" { p, width, height, rotation, mirror, asset, file, clip, opacity },
@@ -723,6 +752,12 @@ impl FromJson for Entity {
             if !read.is_empty() {
                 *params = Some(Params(read));
             }
+        }
+        // Its clipping (docs/adr/0351 §1).
+        if let Shape::Insert { clip, .. } = &mut shape
+            && let Json::Obj(_) = v.get("clipping")
+        {
+            *clip = Clipping::of(v.get("clipping")).map(std::sync::Arc::new);
         }
         let kind = match v.get("kind") {
             Json::Str(k) => k.as_str(),

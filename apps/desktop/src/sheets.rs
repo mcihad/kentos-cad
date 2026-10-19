@@ -212,7 +212,7 @@ impl SheetMaps {
             view_build: Default::default(),
             view_colors: Default::default(),
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
-            phasing: std::sync::Arc::new(kentos_plot::layers::phasing_of(&doc.model)),
+            phasing: std::sync::Arc::new(kentos_plot::layers::plot_phasing_of(&doc.model)),
         };
         let clip = scene::extents(doc).map_or(
             kentos_render_wgpu::Bounds {

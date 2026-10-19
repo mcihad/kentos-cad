@@ -1324,6 +1324,27 @@ codes! {
     /// Göm with no linked image to embed.
     NOTHING_TO_EMBED = "nothing_to_embed", Failed, false, "Gömülecek bağlı resim yok; verilen resimler zaten gömülü.";
 
+    // ── Clipping, PDF underlays and documents (docs/adr/0351) ───────────
+    /// An insert's clipping boundary that is not one.
+    INVALID_CLIPPING = "invalid_clipping", Failed, false, "Kırpma sınırı geçersiz: üçten az köşe, alanı yok, sonlu olmayan köşe ya da kesişen kenarlar.";
+    /// Remove, Frame or Invert on inserts none of which is clipped.
+    NOT_CLIPPED = "not_clipped", Failed, false, "Verilen yerleştirmelerin hiçbiri kırpılmamış.";
+    /// A boundary that leaves an insert nothing to draw.
+    CLIP_EMPTY = "clip_empty", Warning, false, "Kırpma sınırı yerleştirmenin içeriğinden hiçbir şey bırakmıyor.";
+    /// A PDF page that the file does not have.
+    PDF_PAGE_NOT_FOUND = "pdf_page_not_found", Failed, false, "PDF dosyasında bu sayfa yok.";
+    /// An underlay's look asked of a reference that is not a PDF underlay.
+    NOT_AN_UNDERLAY = "not_an_underlay", Failed, false, "Dış başvuru bir PDF altlığı değil.";
+    /// An underlay's look out of its range.
+    INVALID_UNDERLAY = "invalid_underlay", Failed, false, "Altlık görünüşü aralığı dışında: soldurma en çok %80.";
+    /// What a PDF page holds that an underlay does not take (pictures, shadings, texts it cannot read).
+    PDF_LEFT_OUT = "pdf_left_out", Warning, false, "PDF sayfasındaki bazı içerik altlığa alınmadı (resimler, gölgelemeler, okunamayan yazılar).";
+    /// A point snapped or measured on a PDF underlay: a picture of a drawing, not its geometry.
+    UNDERLAY_MEASURE = "underlay_measure", Warning, false, "Nokta bir PDF altlığından alındı; altlık bir çizimin resmidir, ölçüsü kanıtlanmış CAD geometrisi değildir.";
+    /// A pasted block or style whose name this drawing has, renamed.
+    XREF_READ_ONLY = "xref_read_only", Failed, false, "Dış başvurunun içeriği kaynak dosyasındadır; burada değişmez. Kaynağı açıp düzenleyin, sonra Yeniden yükle.";
+    NAMES_RENAMED = "names_renamed", Warning, false, "Bu çizimde aynı adı taşıyan bloklar ya da stiller yeni adlarla yapıştırıldı.";
+
     // ── Jobs (docs/adr/0253 §9) ─────────────────────────────────────────
     /// A job cancelled after it was written: the write stands.
     ALREADY_COMMITTED = "already_committed", Failed, false, "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır (geri almak için Geri al).";

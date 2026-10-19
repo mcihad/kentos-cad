@@ -153,6 +153,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             mirror,
             attrs,
             places,
+            clip,
         } => inside(*p, r).then(|| Shape::Insert {
             params: params.clone(),
             block: block.clone(),
@@ -163,6 +164,7 @@ pub fn stretch_entity(e: &Entity, r: &Bounds, dx: f64, dy: f64) -> Option<Entity
             mirror: *mirror,
             attrs: attrs.clone(),
             places: places.clone(),
+            clip: clip.clone(),
         })?,
         // Arc segments keep their bulge, so they bend with their moved ends;
         // every part of a multi-part polyline so (docs/adr/0174).

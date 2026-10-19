@@ -158,3 +158,36 @@ fn a_save_writes_the_relative_path() {
     assert_eq!(state(&mut opened, &moved.join("ana.kcad")), "loaded");
     let _ = std::fs::remove_dir_all(&moved);
 }
+
+/// A PDF underlay (docs/adr/0351 §2, §6): a dimension bound to its lines is said to be read off paper; a point of the
+/// drawing's own is not.
+#[test]
+fn a_dimension_on_a_pdf_underlay_is_said_to_be_read_off_paper() {
+    let mut doc = doc();
+    let pdf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../fixtures/pdf/v1/cizgiler.pdf");
+    let attached = run(
+        &mut doc,
+        "cad.xrefs.edit",
+        CallOp::Execute,
+        json!({ "operation": { "kind": "attach", "path": pdf, "page": 1, "layerId": "cizim" } }),
+    );
+    let insert = ok(&attached)["insert"].as_str().expect("the insert").to_owned();
+    // The PDF's first stroke, 10,10 → 110,10 pt: its end at 110 pt from the page's corner, in paper metres.
+    let end = 110.0 * 0.0254 / 72.0;
+    let low = 10.0 * 0.0254 / 72.0;
+    let measure = |a: Value| {
+        json!({ "measure": { "kind": "aligned", "a": a, "b": { "kind": "at", "at": { "x": 0.0, "y": 0.0 } } },
+                "at": { "x": 0.0, "y": -0.01 }, "layerId": "cizim" })
+    };
+    let on_paper = run(
+        &mut doc,
+        "cad.dimensions.create",
+        CallOp::Plan,
+        measure(json!({ "kind": "place", "uid": insert, "place": { "kind": "end" }, "path": [0] })),
+    );
+    let codes: Vec<&str> = on_paper["warnings"].as_array().into_iter().flatten().filter_map(|w| w["code"].as_str()).collect();
+    assert!(codes.contains(&"underlay_measure"), "{on_paper}");
+    let own = run(&mut doc, "cad.dimensions.create", CallOp::Plan, measure(json!({ "kind": "at", "at": { "x": end, "y": low } })));
+    assert_eq!(own["status"], "completed", "{own}");
+    assert!(own["warnings"].as_array().is_none_or(|w| w.iter().all(|w| w["code"] != "underlay_measure")), "{own}");
+}

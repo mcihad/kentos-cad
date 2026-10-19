@@ -175,6 +175,8 @@ pub fn read(
 pub enum Event {
     /// The open dialog answered: which file, or nothing (cancelled).
     Picked(Option<PathBuf>),
+    /// Yeni sekmede aç's dialog answered (doc_tabs.rs).
+    PickedTab(Option<PathBuf>),
     /// How far the open `id` is.
     Progress { id: u64, stage: Stage },
     /// The open `id` ended: the drawing, the reason it could not be read, or
@@ -194,6 +196,8 @@ pub enum Purpose {
     File,
     /// A recovery copy of unsaved work (recovery.rs): unsaved, without a file.
     Recovery { id: String, name: String },
+    /// The file in a tab of its own, the drawing on screen set aside in its tab (doc_tabs.rs, docs/adr/0351 §3).
+    Tab,
 }
 
 /// An open under way.
@@ -263,7 +267,7 @@ impl App {
         let id = next_id();
         let stop = Arc::new(AtomicBool::new(false));
         let name = match &purpose {
-            Purpose::File => path.file_name().map_or_else(
+            Purpose::File | Purpose::Tab => path.file_name().map_or_else(
                 || path.display().to_string(),
                 |n| n.to_string_lossy().into_owned(),
             ),
@@ -315,7 +319,8 @@ impl App {
     pub(crate) fn opening_event(&mut self, event: Event) -> Task<Message> {
         match event {
             Event::Picked(Some(path)) => return self.start_opening(path, Purpose::File),
-            Event::Picked(None) => {}
+            Event::PickedTab(Some(path)) => return self.start_opening(path, Purpose::Tab),
+            Event::Picked(None) | Event::PickedTab(None) => {}
             Event::Progress { id, stage } => {
                 if let Some(o) = self.opening.as_mut().filter(|o| o.id == id) {
                     if let Stage::Project {
@@ -356,6 +361,9 @@ impl App {
                                 "{} açılmadı: açılış sürerken ekrandaki çizim değişti ya da başka bir çizim açıldı; o çizim olduğu gibi duruyor. Dosyayı yeniden açın.",
                                 quoted(&o.name)
                             ));
+                            return Task::none();
+                        }
+                        if o.purpose == Purpose::Tab && !self.park_active() {
                             return Task::none();
                         }
                         if let Purpose::Recovery { id, name } = &o.purpose {

@@ -44,6 +44,7 @@ impl Placing {
                 .iter()
                 .map(|b| Definition {
                     dynamic: b.dynamic.as_ref().and_then(core_dynamic),
+                    underlay: core_underlay(b),
                     id: b.id.to_text(),
                     base: core(b.base),
                     entities: b
@@ -751,6 +752,7 @@ pub(crate) fn shape(e: &Entity) -> Shape {
         // Its attributes show as texts, which these formats leave out of a block.
         Entity::Insert(i) => Shape::Insert {
             params: core_params(&i.parameters),
+            clip: core_clip(i.clipping.as_ref()),
             block: i.block.to_text(),
             p: core(i.p),
             scale: i.scale,
@@ -1101,6 +1103,33 @@ pub fn core_dynamic(
     ))
 }
 
+/// A PDF underlay's look as the core draws its pieces (docs/adr/0351 §2); none for another block or the default look.
+pub fn core_underlay(b: &BlockDefinition) -> Option<kentos_geometry_core::block::Underlay> {
+    let x = b.xref.as_ref().filter(|x| x.page.is_some())?;
+    let u = x.underlay.clone().unwrap_or_default();
+    let fade = f64::from(u.fade.min(kentos_contracts::MAX_UNDERLAY_FADE)) / 100.0;
+    (fade > 0.0 || u.monochrome).then_some(kentos_geometry_core::block::Underlay {
+        fade,
+        monochrome: u.monochrome,
+    })
+}
+
+/// An insert's clipping as the core cuts its pieces (docs/adr/0351 §1); none for an insert without one.
+pub fn core_clip(
+    clip: Option<&kentos_contracts::InsertClip>,
+) -> Option<std::sync::Arc<kentos_geometry_core::entity::Clipping>> {
+    let c = clip?;
+    Some(std::sync::Arc::new(kentos_geometry_core::entity::Clipping {
+        ring: c
+            .boundary
+            .iter()
+            .map(|p| kentos_geometry_core::Vec2::new(p.x, p.y))
+            .collect(),
+        inverted: c.inverted,
+        plot_frame: c.frame == kentos_contracts::ClipFrame::Plot,
+    }))
+}
+
 /// An insert's parameter values as the core draws them (docs/adr/0318 §3); none when it keeps none.
 pub fn core_params(
     values: &std::collections::BTreeMap<String, kentos_contracts::ParamValue>,
@@ -1196,6 +1225,7 @@ mod tests {
             vec![
                 object(r#"{"kind":"point","id":1,"layerId":"","attrs":{},"p":{"x":1,"y":3}}"#),
                 Entity::Insert(InsertEntity {
+                    clipping: None,
                     parameters: Default::default(),
                     attribute_places: Default::default(),
                     base: object(
@@ -1214,6 +1244,7 @@ mod tests {
         );
         let placing = Placing::new(&[outer, inner]);
         let i = InsertEntity {
+            clipping: None,
             parameters: Default::default(),
             attribute_places: Default::default(),
             base: object(r#"{"kind":"point","id":7,"layerId":"a","attrs":{},"p":{"x":0,"y":0}}"#)

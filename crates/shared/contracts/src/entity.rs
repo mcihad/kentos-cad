@@ -1069,6 +1069,11 @@ pub struct InsertEntity {
         )
     )]
     pub parameters: BTreeMap<String, crate::block_dynamic::ParamValue>,
+    /// Its clipping boundary (docs/adr/0351 §1): only the part of its content inside (or outside) the boundary is
+    /// drawn, picked and snapped to.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub clipping: Option<crate::InsertClip>,
 }
 
 /// A block definition (docs/adr/0144): objects drawn once, placed many

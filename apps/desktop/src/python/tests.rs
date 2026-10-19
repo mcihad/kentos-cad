@@ -1126,3 +1126,48 @@ fn a_real_agent_draws_on_the_open_drawing_through_mcp() {
     let _ = app.update(Message::Python(Event::Link));
     let _ = std::fs::remove_dir_all(dir);
 }
+
+/// With two drawings open an agent names its drawing (docs/adr/0351 §3): bringing another drawing in front does not
+/// move its writes, a drawing set aside is written in its tab, and a drawing closed is `document_closed`.
+#[cfg(unix)]
+#[test]
+fn an_agent_stays_on_its_drawing_when_another_comes_in_front() {
+    let mut app = app_with_drawing();
+    let dir = crate::files_testing::scratch("ajan-sekme");
+    let (open, _task) = super::link::Link::open(&dir.join("m.sock"), |heard| {
+        Message::Python(Event::Agent(heard))
+    })
+    .expect("the link");
+    app.python.link = Some(open);
+    let (answerer, answers) = super::link::Answerer::testing();
+    let _ = app.update(Message::Python(Event::Agent(super::link::Heard::Connected(7, answerer))));
+    let hello = ask_agent(&mut app, &answers, "hello", json!({}));
+    let mine = hello["result"]["document"].clone();
+    assert!(mine.is_u64(), "{hello}");
+    let layer = app.document.as_ref().map(|d| d.model.layers().active().to_owned()).expect("a layer");
+    let before = objects(&app);
+
+    // Another drawing in front, the agent's in its tab.
+    assert!(app.park_active());
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(crate::files_testing::drawing(3))))));
+    let front = objects(&app);
+    let listed = ask_agent(&mut app, &answers, "hello", json!({}));
+    assert_eq!(listed["result"]["documents"].as_array().map(Vec::len), Some(2), "{listed}");
+    let input: Value = serde_json::from_str(&format!(r#"{{"layerId": "{layer}", "pts": {SQUARE}}}"#)).expect("input");
+    let written = ask_agent(
+        &mut app,
+        &answers,
+        "run",
+        json!({ "command": "cad.polygon.create", "op": "execute", "input": input, "document": mine }),
+    );
+    assert_eq!(written["result"]["status"], "completed", "{written}");
+    assert_eq!(objects(&app), front, "the drawing in front is not written");
+    assert_eq!(app.doc_tabs.parked[0].document.model.len(), before + 1);
+
+    // The agent's drawing closed: its calls are refused, never moved to the one in front.
+    let _ = app.update(Message::DocTabs(crate::doc_tabs::Event::Show(0)));
+    app.close_tab_now();
+    let gone = ask_agent(&mut app, &answers, "summary", json!({ "document": mine }));
+    assert_eq!(gone["code"], "document_closed", "{gone}");
+    assert_eq!(objects(&app), front);
+}
