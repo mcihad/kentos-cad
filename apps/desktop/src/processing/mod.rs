@@ -16,8 +16,11 @@
 //!   chooses): the window shows how far it is, Durdur stops it.
 //! - Each tool's last values outlive the program in `islemler.json`
 //!   ([`memory`]).
+//! - Toplu çalıştır ([`batch`], docs/adr/0529): the open tool or model over a
+//!   table of rows of parameter values, run as `cad.processing.batch`.
 
 mod background;
+pub(crate) mod batch;
 pub(crate) mod designer;
 pub mod dialog;
 mod fields;
@@ -29,6 +32,8 @@ mod plan;
 pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
     crate::app::Message::Processing(Event::Panel(event))
 }
+#[cfg(test)]
+mod batch_tests;
 #[cfg(test)]
 mod convert_tests;
 #[cfg(test)]
@@ -134,6 +139,8 @@ pub struct Processing {
     pub(crate) designer: Option<Box<designer::Designer>>,
     /// The dock's İşlemler tab.
     pub panel: panel::PanelState,
+    /// Toplu çalıştır, over the open window (batch.rs): its table, and the job while one runs.
+    pub(crate) batch: Option<batch::BatchState>,
     /// Runs going on other threads (background.rs).
     pub(crate) running: Vec<background::Running>,
     /// The last background run's id.
@@ -150,6 +157,7 @@ impl Default for Processing {
             picking: None,
             designer: None,
             panel: panel::PanelState::default(),
+            batch: None,
             running: Vec::new(),
             runs: 0,
         }
@@ -241,6 +249,8 @@ pub enum Event {
     Undo,
     /// The dock's İşlemler tab.
     Panel(panel::Event),
+    /// Toplu çalıştır (batch.rs).
+    Batch(batch::Event),
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -372,6 +382,7 @@ impl App {
             return;
         };
         let explicit = values.is_some();
+        self.processing.batch = None;
         let stored = values.or_else(|| self.processing.memory.last_values(&tool.id).cloned());
         let mut window =
             ToolDialog::new(tool, stored.as_ref(), explicit, &Defaults::of(&doc.model));
@@ -401,9 +412,11 @@ impl App {
         match e {
             Event::Close => {
                 self.processing.dialog = None;
+                self.processing.batch = None;
                 self.dialog = None;
                 return Task::none();
             }
+            Event::Batch(e) => return self.processing_batch_event(e),
             Event::Run => return self.run_processing(),
             Event::Stop => {
                 self.processing_stop();

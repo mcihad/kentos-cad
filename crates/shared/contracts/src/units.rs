@@ -109,6 +109,7 @@ pub const UNITS: &[(&str, &str)] = &[
         "px/length",
         "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
     ),
+    ("ms", "Milisaniye: bir işin süresi."),
 ];
 
 /// Whether `unit` is one of [`UNITS`].

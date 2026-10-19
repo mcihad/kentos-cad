@@ -427,7 +427,7 @@ fn main() -> iced::Result {
     typography::load();
     // Bound layers on PostGIS (docs/adr/0505).
     kentos_postgis::register();
-    kentos_processing::command::register();
+    kentos_processing::command::register_as("desktop");
 
     // `kentos-cad snapshot çıktı.png [çizim.kcad]`: the window without a window.
     let mut args = std::env::args().skip(1).peekable();

@@ -22,7 +22,7 @@ use kentos_contracts::{
     RegularPolygonCreate, ScenariosEdit, SettingsSet, SheetsEdit, SnapFind, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UnitsChange, ViewsEdit, codes,
 };
-use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
+use kentos_contracts::{AssetsCheck, ImagesEdit, RastersMosaic, RastersGeoref, WallsJoins, OpeningsCreate, OpeningsEdit, SpacesCreate, SpacesEdit, SpacesQuantities, GridsCreate, ColumnsCreate, StairsCreate, RampsCreate, ArchEdit, TagsCreate, TagsCheck, TagsEdit, ViewMarksCreate, ViewMarksEdit, ViewMarksReferences, SpacesFinish, TemplatesApply, SheetsSet, XrefsEdit, XrefsList, SchedulesCreate, SchedulesEdit, AttachmentsInspect, ConstraintsEdit, ConstraintsQuery, ParametersEdit, FieldsWrite, ProcessingBatch, ProcessingRun, ProcessingTools, SourcesDescribe, SourcesEdit, SourcesSync, SchemaDescribe, BlocksFreeze, BlocksInsert, BlocksParameters, BlocksProxy, BlocksQuery, BlocksReplace, DomainsEdit, DomainsExport, FieldsMigrate, FormsExport, FormsImport, ImportBlock, InsertsClip};
 use crate::{
     attachments_inspect, schema_describe, domains_edit, domains_export, fields_migrate, forms_export,
     forms_import,
@@ -33,7 +33,7 @@ use crate::blocks_insert;
 use crate::{joins_edit, joins_query};
 use kentos_contracts::{JoinsEdit, JoinsQuery};
 use crate::fields_write;
-use crate::{processing_run, processing_tools};
+use crate::{processing_batch, processing_run, processing_tools};
 use crate::sources::{describe as sources_describe, edit as sources_edit, sync as sources_sync};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
@@ -126,6 +126,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_FIELDS_WRITE => $then!(fields_write, FieldsWrite),
             kentos_contracts::CAD_PROCESSING_TOOLS => $then!(processing_tools, ProcessingTools),
             kentos_contracts::CAD_PROCESSING_RUN => $then!(processing_run, ProcessingRun),
+            kentos_contracts::CAD_PROCESSING_BATCH => $then!(processing_batch, ProcessingBatch),
             kentos_contracts::CAD_ENTITIES_VERTEX => $then!(entities_vertex, EntitiesVertex),
             kentos_contracts::CAD_RECTANGLE_CREATE => $then!(rectangle_create, RectangleCreate),
             kentos_contracts::CAD_POLYGON_REGULAR => $then!(polygon_regular, RegularPolygonCreate),

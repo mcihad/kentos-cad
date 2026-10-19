@@ -75,6 +75,7 @@ UNITS: dict[str, str] = {
     "year": "Ondalık yıl: koordinat epoku (2023.5 yılın ortası).",
     "size-unit": "Birimi yanındaki sizeUnit alanının söylediği: piksel ya da projenin uzunluğu.",
     "px/length": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m).",
+    "ms": "Milisaniye: bir işin süresi.",
 }
 
 
@@ -7518,6 +7519,59 @@ class AuditedRecord(_Model):
         return cls(
             uid=data["uid"],
             issues=[FormIssue.from_json(e0) for e0 in data["issues"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BatchRow(_Model):
+    """The values one row of a batch takes over the batch's (docs/adr/0529 §1).
+    Attributes:
+        label: Its name in the answer (“Satır 3” when not given).
+        parameters: The parameters it gives its own value to; every other parameter takes the batch's, then the default.
+    """
+    label: str | None | Unset = UNSET
+    parameters: dict[str, Any] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.label is not UNSET:
+            out["label"] = self.label
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BatchRow:
+        return cls(
+            label=data.get("label", UNSET),
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class BatchRowRan(_Model):
+    """A row of a batch as it ran.
+    Attributes:
+        index: Unit: index.
+        ran: What the row did, as `cad.processing.run` answers it (its own record included).
+    """
+    index: int
+    label: str
+    ran: ProcessingRan
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["index"] = self.index
+        out["label"] = self.label
+        out["ran"] = self.ran.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> BatchRowRan:
+        return cls(
+            index=data["index"],
+            label=data["label"],
+            ran=ProcessingRan.from_json(data["ran"]),
         )
 
 
@@ -28979,10 +29033,94 @@ class PolylinePlan(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProcessingBatch(_Model):
+    """Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,
+    through the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`
+    and the row's own values over them, with the input's `selection` and `view`. The rows run in order, each seeing
+    what the rows before it wrote; the whole batch is one undo step named “Toplu: <tool>”, written all or not at all:
+    a row that stops (or a stop asked between rows) takes back what the earlier rows did. At most 500 rows. Refusals,
+    in order: `tools_unavailable`, `empty_batch`, `too_many_rows`, then each row's as `cad.processing.run` refuses
+    them (`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters`), the path prefixed `rows[i].`; at run
+    time `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:
+    nothing written).
+    Attributes:
+        parameters: The values every row takes unless it gives its own.
+        selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
+        view: Unit: length.
+    """
+    tool: str
+    rows: list[BatchRow]
+    parameters: dict[str, Any] | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        if self.parameters is not UNSET:
+            out["parameters"] = None if self.parameters is None else dict(self.parameters)
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingBatch:
+        return cls(
+            tool=data["tool"],
+            rows=[BatchRow.from_json(e0) for e0 in data["rows"]],
+            parameters=UNSET if "parameters" not in data else None if data["parameters"] is None else dict(data["parameters"]),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingBatched(_Model):
+    """What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).
+    Attributes:
+        rows: Every row, in order, as it ran.
+        record: The batch's own record: its rows as steps.
+        step: The undo step's name; none when the drawing did not change.
+    """
+    tool: str
+    summary: str
+    rows: list[BatchRowRan]
+    record: ProcessingRecord
+    revision: str
+    step: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["tool"] = self.tool
+        out["summary"] = self.summary
+        out["rows"] = [e0.to_json() for e0 in self.rows]
+        out["record"] = self.record.to_json()
+        out["revision"] = self.revision
+        if self.step is not UNSET:
+            out["step"] = self.step
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingBatched:
+        return cls(
+            tool=data["tool"],
+            summary=data["summary"],
+            rows=[BatchRowRan.from_json(e0) for e0 in data["rows"]],
+            record=ProcessingRecord.from_json(data["record"]),
+            revision=data["revision"],
+            step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProcessingRan(_Model):
     """What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).
     Attributes:
         summary: The tool's sentence of what it did.
+        record: What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again.
         added: The objects it made and changed (persistent ids).
         inputs: The layers the features inputs read, in the inputs' order.
         layers: The layers it made (ids).
@@ -28994,6 +29132,7 @@ class ProcessingRan(_Model):
     """
     tool: str
     summary: str
+    record: ProcessingRecord
     revision: str
     added: list[str] | Unset = UNSET
     changed: list[str] | Unset = UNSET
@@ -29009,6 +29148,7 @@ class ProcessingRan(_Model):
         out: dict[str, Any] = {}
         out["tool"] = self.tool
         out["summary"] = self.summary
+        out["record"] = self.record.to_json()
         out["revision"] = self.revision
         if self.added is not UNSET:
             out["added"] = list(self.added)
@@ -29035,6 +29175,7 @@ class ProcessingRan(_Model):
         return cls(
             tool=data["tool"],
             summary=data["summary"],
+            record=ProcessingRecord.from_json(data["record"]),
             revision=data["revision"],
             added=list(data["added"]) if "added" in data else UNSET,
             changed=list(data["changed"]) if "changed" in data else UNSET,
@@ -29045,6 +29186,114 @@ class ProcessingRan(_Model):
             selected=list(data["selected"]) if "selected" in data else UNSET,
             sink=UNSET if "sink" not in data else None if data["sink"] is None else GpkgExported.from_json(data["sink"]),
             step=data.get("step", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProcessingRecord(_Model):
+    """The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model
+    and its version), with which explicit values and objects, on which state of the data (the revision, each input
+    layer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what
+    flowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON
+    (`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same
+    revision, the same data under another revision, or changed data.
+    Attributes:
+        format: Always `kentos.run-record`.
+        version: Unit: version.
+        kind: `tool`, `model` or `batch`.
+        tool: The tool's id, the model's (`model:…`), or a batch's tool.
+        tool_version: The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a
+            model's, the version of the tool-and-model contract. Unit: version.
+        parameters: The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its
+            name and path, not its rows: giving them to `cad.processing.run` runs it again.
+        document_revision: The drawing's revision when the run began.
+        engine: `KentOS <version>`.
+        host: Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).
+        started_at: When it began, UTC (`2026-10-19T09:30:00.000Z`).
+        ms: How long the whole took, milliseconds. Unit: ms.
+        steps: The tool as one step, a model's steps in order, a batch's rows in order.
+        total: What flowed through the whole, counted when it ended.
+        definition: A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.
+        inputs: The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).
+        seed: The seed a tool with one took (its `seed` parameter). Unit: 1.
+        selection: The input's own `selection` and `view`.
+        srid: The project's coordinate system (EPSG/SRID); none for a local project. Unit: epsg.
+        view: Unit: length.
+    """
+    format: str
+    version: int
+    kind: str
+    tool: str
+    label: str
+    tool_version: int
+    parameters: dict[str, Any]
+    document_revision: str
+    engine: str
+    host: str
+    started_at: str
+    ms: int
+    steps: list[RecordStep]
+    total: RecordTotal
+    definition: str | None | Unset = UNSET
+    inputs: list[RunInput] | Unset = UNSET
+    seed: int | None | Unset = UNSET
+    selection: list[str] | Unset = UNSET
+    srid: int | None | Unset = UNSET
+    view: list[float] | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["kind"] = self.kind
+        out["tool"] = self.tool
+        out["label"] = self.label
+        out["toolVersion"] = self.tool_version
+        out["parameters"] = dict(self.parameters)
+        out["documentRevision"] = self.document_revision
+        out["engine"] = self.engine
+        out["host"] = self.host
+        out["startedAt"] = self.started_at
+        out["ms"] = self.ms
+        out["steps"] = [e0.to_json() for e0 in self.steps]
+        out["total"] = self.total.to_json()
+        if self.definition is not UNSET:
+            out["definition"] = self.definition
+        if self.inputs is not UNSET:
+            out["inputs"] = [e0.to_json() for e0 in self.inputs]
+        if self.seed is not UNSET:
+            out["seed"] = self.seed
+        if self.selection is not UNSET:
+            out["selection"] = list(self.selection)
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        if self.view is not UNSET:
+            out["view"] = None if self.view is None else [float(e0) for e0 in self.view]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProcessingRecord:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            kind=data["kind"],
+            tool=data["tool"],
+            label=data["label"],
+            tool_version=data["toolVersion"],
+            parameters=dict(data["parameters"]),
+            document_revision=data["documentRevision"],
+            engine=data["engine"],
+            host=data["host"],
+            started_at=data["startedAt"],
+            ms=data["ms"],
+            steps=[RecordStep.from_json(e0) for e0 in data["steps"]],
+            total=RecordTotal.from_json(data["total"]),
+            definition=data.get("definition", UNSET),
+            inputs=[RunInput.from_json(e0) for e0 in data["inputs"]] if "inputs" in data else UNSET,
+            seed=data.get("seed", UNSET),
+            selection=list(data["selection"]) if "selection" in data else UNSET,
+            srid=data.get("srid", UNSET),
+            view=UNSET if "view" not in data else None if data["view"] is None else [float(e0) for e0 in data["view"]],
         )
 
 
@@ -29133,15 +29382,19 @@ class ProcessingTool(_Model):
 @dataclass(kw_only=True, slots=True)
 class ProcessingTools(_Model):
     """Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
-    (case and Turkish marks aside), or one category's (`category`, its id).
+    (case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too
+    (docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.
     """
     category: str | None | Unset = UNSET
+    models: bool | Unset = UNSET
     query: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         if self.category is not UNSET:
             out["category"] = self.category
+        if self.models is not UNSET:
+            out["models"] = self.models
         if self.query is not UNSET:
             out["query"] = self.query
         return out
@@ -29150,6 +29403,7 @@ class ProcessingTools(_Model):
     def from_json(cls, data: Mapping[str, Any]) -> ProcessingTools:
         return cls(
             category=data.get("category", UNSET),
+            models=data.get("models", UNSET),
             query=data.get("query", UNSET),
         )
 
@@ -31601,6 +31855,76 @@ class RecordRow(_Model):
         return cls(
             attrs=UNSET if "attrs" not in data else None if data["attrs"] is None else dict(data["attrs"]),
             label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordStep(_Model):
+    """A step of a run (docs/adr/0529 §2).
+    Attributes:
+        id: A model step's id, a batch row's `rows[i]`, a tool's own id.
+        label: A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.
+        records_in: The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when
+            the step ended, so exact. Unit: count.
+        records_out: Unit: count.
+        ms: Unit: ms.
+    """
+    id: str
+    tool: str
+    label: str
+    records_in: int
+    records_out: int
+    ms: int
+    summary: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["tool"] = self.tool
+        out["label"] = self.label
+        out["recordsIn"] = self.records_in
+        out["recordsOut"] = self.records_out
+        out["ms"] = self.ms
+        out["summary"] = self.summary
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordStep:
+        return cls(
+            id=data["id"],
+            tool=data["tool"],
+            label=data["label"],
+            records_in=data["recordsIn"],
+            records_out=data["recordsOut"],
+            ms=data["ms"],
+            summary=data["summary"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RecordTotal(_Model):
+    """What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object
+    several steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.
+    The steps' own counts are exact too; a tool that reports only approximate progress while it runs
+    (`Feedback::progress`) has this last, exact total.
+    Attributes:
+        records_in: Unit: count.
+        records_out: Unit: count.
+    """
+    records_in: int
+    records_out: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["recordsIn"] = self.records_in
+        out["recordsOut"] = self.records_out
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RecordTotal:
+        return cls(
+            records_in=data["recordsIn"],
+            records_out=data["recordsOut"],
         )
 
 
@@ -50714,6 +51038,8 @@ __all__ = [
     "AutoCsvGeometryIn",
     "AzimuthDimensionMeasure",
     "BaselineDimensionMeasure",
+    "BatchRow",
+    "BatchRowRan",
     "BindLeaderEdit",
     "BindXrefsOperation",
     "BlendMode",
@@ -51692,7 +52018,10 @@ __all__ = [
     "PolylineEntity",
     "PolylineEntityGeometry",
     "PolylinePlan",
+    "ProcessingBatch",
+    "ProcessingBatched",
     "ProcessingRan",
+    "ProcessingRecord",
     "ProcessingRun",
     "ProcessingTool",
     "ProcessingTools",
@@ -51776,6 +52105,8 @@ __all__ = [
     "RecordCopy",
     "RecordEntity",
     "RecordRow",
+    "RecordStep",
+    "RecordTotal",
     "RecordsCreate",
     "RecordsCreated",
     "RecordsDuplicate",

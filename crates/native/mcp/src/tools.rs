@@ -662,6 +662,7 @@ fn command_tool(c: &Value) -> Value {
             | "cad.fields.write"
             // A processing tool writes what it computes (docs/adr/0508).
             | "cad.processing.run"
+            | "cad.processing.batch"
     );
     let description = format!(
         "{}\n\nSonuç protokolün cevabıdır (docs/adr/0253): status completed (output, warnings) ya da failed, \

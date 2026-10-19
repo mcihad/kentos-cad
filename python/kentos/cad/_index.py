@@ -123,6 +123,7 @@ COMMANDS: dict[str, Any] = {
     "cad.polygon.create": polygon.create,
     "cad.polygon.regular": polygon.regular,
     "cad.polyline.create": polyline.create,
+    "cad.processing.batch": processing.batch,
     "cad.processing.run": processing.run,
     "cad.processing.tools": processing.tools,
     "cad.ramps.create": ramps.create,

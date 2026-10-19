@@ -990794,7 +990794,7 @@
       "id": "cad.processing.tools",
       "version": 1,
       "title": "İşlem araçları",
-      "summary": "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. Çizimi değiştirmez.",
+      "summary": "İşlemler'in araçlarını parametreleriyle listeler: kimlik, ad, kategori yolu, açıklama, takma adlar; her parametrenin adı, etiketi, türü (features, number, text, boolean, choice, layer, point, expression, field, file, saveFile, network, addressSource, rasterValues, rasterPairs, fieldMap, layers), isteğe bağlılığı, bu çizimdeki varsayılanı ve seçimin değerleri. query adı, açıklaması, anahtar sözcükleri ya da kategorisi bütün sözcükleri tutanları (Türkçe harfler katlanır), kimliği ya da takma adı tam yazılanı bulur; category (kimliği) o kategorinin ve alt kategorilerinin araçlarını. Bilinmeyen kategori invalid_input. models: true modelleri de listeler (kimliği model: ile başlar, parametreleri girdileridir). Çizimi değiştirmez.",
       "aliases": [
         "islemler",
         "araclar"
@@ -990812,13 +990812,16 @@
       "cost": "interactive",
       "input": {
         "$schema": "https://json-schema.org/draft/2020-12/schema",
-        "description": "Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`\n(case and Turkish marks aside), or one category's (`category`, its id).",
+        "description": "Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`\n(case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too\n(docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.",
         "properties": {
           "category": {
             "type": [
               "string",
               "null"
             ]
+          },
+          "models": {
+            "type": "boolean"
           },
           "query": {
             "type": [
@@ -991063,7 +991066,7 @@
       "id": "cad.processing.run",
       "version": 1,
       "title": "İşlem aracını çalıştır",
-      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.",
       "aliases": [
         "islem",
         "process"
@@ -991230,6 +991233,219 @@
             ],
             "type": "object"
           },
+          "ProcessingRecord": {
+            "description": "The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model\nand its version), with which explicit values and objects, on which state of the data (the revision, each input\nlayer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what\nflowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON\n(`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same\nrevision, the same data under another revision, or changed data.",
+            "properties": {
+              "definition": {
+                "description": "A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "documentRevision": {
+                "description": "The drawing's revision when the run began.",
+                "type": "string"
+              },
+              "engine": {
+                "description": "`KentOS <version>`.",
+                "type": "string"
+              },
+              "format": {
+                "description": "Always `kentos.run-record`.",
+                "type": "string"
+              },
+              "host": {
+                "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
+                "type": "string"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "`tool`, `model` or `batch`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ms": {
+                "description": "How long the whole took, milliseconds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "description": "The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its\nname and path, not its rows: giving them to `cad.processing.run` runs it again.",
+                "type": "object"
+              },
+              "seed": {
+                "description": "The seed a tool with one took (its `seed` parameter).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "selection": {
+                "description": "The input's own `selection` and `view`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "startedAt": {
+                "description": "When it began, UTC (`2026-10-19T09:30:00.000Z`).",
+                "type": "string"
+              },
+              "steps": {
+                "description": "The tool as one step, a model's steps in order, a batch's rows in order.",
+                "items": {
+                  "$ref": "#/$defs/RecordStep"
+                },
+                "type": "array"
+              },
+              "tool": {
+                "description": "The tool's id, the model's (`model:…`), or a batch's tool.",
+                "type": "string"
+              },
+              "toolVersion": {
+                "description": "The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a\nmodel's, the version of the tool-and-model contract.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "total": {
+                "$ref": "#/$defs/RecordTotal",
+                "description": "What flowed through the whole, counted when it ended."
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "view": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "kind",
+              "tool",
+              "label",
+              "toolVersion",
+              "parameters",
+              "documentRevision",
+              "engine",
+              "host",
+              "startedAt",
+              "ms",
+              "steps",
+              "total"
+            ],
+            "type": "object"
+          },
+          "RecordStep": {
+            "description": "A step of a run (docs/adr/0529 §2).",
+            "properties": {
+              "id": {
+                "description": "A model step's id, a batch row's `rows[i]`, a tool's own id.",
+                "type": "string"
+              },
+              "label": {
+                "description": "A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.",
+                "type": "string"
+              },
+              "ms": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "recordsIn": {
+                "description": "The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when\nthe step ended, so exact.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tool",
+              "label",
+              "recordsIn",
+              "recordsOut",
+              "ms",
+              "summary"
+            ],
+            "type": "object"
+          },
+          "RecordTotal": {
+            "description": "What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object\nseveral steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.\nThe steps' own counts are exact too; a tool that reports only approximate progress while it runs\n(`Feedback::progress`) has this last, exact total.",
+            "properties": {
+              "recordsIn": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "recordsIn",
+              "recordsOut"
+            ],
+            "type": "object"
+          },
           "RunInput": {
             "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
             "properties": {
@@ -991322,6 +991538,10 @@
               "null"
             ]
           },
+          "record": {
+            "$ref": "#/$defs/ProcessingRecord",
+            "description": "What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again."
+          },
           "revision": {
             "type": "string"
           },
@@ -991361,6 +991581,7 @@
         "required": [
           "tool",
           "summary",
+          "record",
           "revision"
         ],
         "title": "ProcessingRan",
@@ -991446,6 +991667,219 @@
             ],
             "type": "object"
           },
+          "ProcessingRecord": {
+            "description": "The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model\nand its version), with which explicit values and objects, on which state of the data (the revision, each input\nlayer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what\nflowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON\n(`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same\nrevision, the same data under another revision, or changed data.",
+            "properties": {
+              "definition": {
+                "description": "A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "documentRevision": {
+                "description": "The drawing's revision when the run began.",
+                "type": "string"
+              },
+              "engine": {
+                "description": "`KentOS <version>`.",
+                "type": "string"
+              },
+              "format": {
+                "description": "Always `kentos.run-record`.",
+                "type": "string"
+              },
+              "host": {
+                "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
+                "type": "string"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "`tool`, `model` or `batch`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ms": {
+                "description": "How long the whole took, milliseconds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "description": "The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its\nname and path, not its rows: giving them to `cad.processing.run` runs it again.",
+                "type": "object"
+              },
+              "seed": {
+                "description": "The seed a tool with one took (its `seed` parameter).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "selection": {
+                "description": "The input's own `selection` and `view`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "startedAt": {
+                "description": "When it began, UTC (`2026-10-19T09:30:00.000Z`).",
+                "type": "string"
+              },
+              "steps": {
+                "description": "The tool as one step, a model's steps in order, a batch's rows in order.",
+                "items": {
+                  "$ref": "#/$defs/RecordStep"
+                },
+                "type": "array"
+              },
+              "tool": {
+                "description": "The tool's id, the model's (`model:…`), or a batch's tool.",
+                "type": "string"
+              },
+              "toolVersion": {
+                "description": "The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a\nmodel's, the version of the tool-and-model contract.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "total": {
+                "$ref": "#/$defs/RecordTotal",
+                "description": "What flowed through the whole, counted when it ended."
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "view": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "kind",
+              "tool",
+              "label",
+              "toolVersion",
+              "parameters",
+              "documentRevision",
+              "engine",
+              "host",
+              "startedAt",
+              "ms",
+              "steps",
+              "total"
+            ],
+            "type": "object"
+          },
+          "RecordStep": {
+            "description": "A step of a run (docs/adr/0529 §2).",
+            "properties": {
+              "id": {
+                "description": "A model step's id, a batch row's `rows[i]`, a tool's own id.",
+                "type": "string"
+              },
+              "label": {
+                "description": "A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.",
+                "type": "string"
+              },
+              "ms": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "recordsIn": {
+                "description": "The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when\nthe step ended, so exact.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tool",
+              "label",
+              "recordsIn",
+              "recordsOut",
+              "ms",
+              "summary"
+            ],
+            "type": "object"
+          },
+          "RecordTotal": {
+            "description": "What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object\nseveral steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.\nThe steps' own counts are exact too; a tool that reports only approximate progress while it runs\n(`Feedback::progress`) has this last, exact total.",
+            "properties": {
+              "recordsIn": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "recordsIn",
+              "recordsOut"
+            ],
+            "type": "object"
+          },
           "RunInput": {
             "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
             "properties": {
@@ -991538,6 +991972,10 @@
               "null"
             ]
           },
+          "record": {
+            "$ref": "#/$defs/ProcessingRecord",
+            "description": "What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again."
+          },
           "revision": {
             "type": "string"
           },
@@ -991577,6 +992015,7 @@
         "required": [
           "tool",
           "summary",
+          "record",
           "revision"
         ],
         "title": "ProcessingRan",
@@ -991639,6 +992078,1162 @@
               }
             },
             "tool": "geometry.buffer"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.processing.batch",
+      "version": 1,
+      "title": "İşlem aracını toplu çalıştır",
+      "summary": "İşlemler'in bir aracını ya da modelini (tool, model: kimliğiyle) bir parametre tablosunun satırlarıyla sırayla çalıştırır: her satır cad.processing.run'ın aynı aracı, aynı çalıştırıcısı, aynı retleriyle koşar; parameters bütün satırların ortak değerleridir, rows[i].parameters satırın kendi değerleri onların üstüne gelir (örnek: aynı araç birkaç girdi katmanına ya da birkaç tampon uzaklığına); selection ve view her satıra aynen verilir. Satırlar sırayla çalışır, her biri kendinden öncekilerin yazdığını görür. Bütün toplu iş tek geri alma adımıdır (adı “Toplu: <araç>”) ve ya hep ya hiç yazılır: bir satır çalışıp dururlarsa ya da satırlar arasında durdurulursa (iş olarak çalışırken) önceki satırların sonuçları geri alınır, hiçbir şey yazılmaz. En çok 500 satır. Retler sırayla: tools_unavailable, empty_batch, too_many_rows, sonra her satır için cad.processing.run'ın retleri (unknown_tool, invalid_uid, entity_not_found, invalid_parameters), yolu rows[i]. ile başlar; çalışırken batch_row_failed (satır çalıştı ve durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; ileti satırı söyler). Cevap her satırın cad.processing.run cevabı (kendi kaydıyla), toplu işin özeti ve kaydı (kind batch, adımları satırlar) ve adımın adıdır. plan aynısını çizimin okuma kopyasında çalıştırır, çizim değişmez; sink bu komutta yoktur.",
+      "aliases": [
+        "topluislem",
+        "batch"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "BatchRow": {
+            "description": "The values one row of a batch takes over the batch's (docs/adr/0529 §1).",
+            "properties": {
+              "label": {
+                "description": "Its name in the answer (“Satır 3” when not given).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "description": "The parameters it gives its own value to; every other parameter takes the batch's, then the default.",
+                "type": [
+                  "object",
+                  "null"
+                ]
+              }
+            },
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.processing.batch` v1: one tool (or model, `model:…`) run over a table of rows of parameter values,\nthrough the same descriptor and executor as `cad.processing.run`: each row is the run `tool` with `parameters`\nand the row's own values over them, with the input's `selection` and `view`. The rows run in order, each seeing\nwhat the rows before it wrote; the whole batch is one undo step named “Toplu: <tool>”, written all or not at all:\na row that stops (or a stop asked between rows) takes back what the earlier rows did. At most 500 rows. Refusals,\nin order: `tools_unavailable`, `empty_batch`, `too_many_rows`, then each row's as `cad.processing.run` refuses\nthem (`unknown_tool`, `invalid_uid`, `entity_not_found`, `invalid_parameters`), the path prefixed `rows[i].`; at run\ntime `batch_row_failed` (the row ran and stopped, or its values no longer fit what the rows before it wrote:\nnothing written).",
+        "properties": {
+          "parameters": {
+            "additionalProperties": true,
+            "description": "The values every row takes unless it gives its own.",
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/$defs/BatchRow"
+            },
+            "type": "array"
+          },
+          "selection": {
+            "description": "As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "view": {
+            "items": {
+              "format": "double",
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "type": [
+              "array",
+              "null"
+            ],
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "tool",
+          "rows"
+        ],
+        "title": "ProcessingBatch",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "BatchRowRan": {
+            "description": "A row of a batch as it ran.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ran": {
+                "$ref": "#/$defs/ProcessingRan",
+                "description": "What the row did, as `cad.processing.run` answers it (its own record included)."
+              }
+            },
+            "required": [
+              "index",
+              "label",
+              "ran"
+            ],
+            "type": "object"
+          },
+          "GpkgExported": {
+            "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+            "properties": {
+              "approximated": {
+                "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "left": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Objects not written, by kind.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/GpkgTableExported"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "bytes",
+              "sha256",
+              "tables",
+              "approximated"
+            ],
+            "type": "object"
+          },
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "ProcessingRan": {
+            "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
+            "properties": {
+              "added": {
+                "description": "The objects it made and changed (persistent ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "changed": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, in the inputs' order.",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "layers": {
+                "description": "The layers it made (ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "notes": {
+                "description": "Its notes (what resolving left out, what it skipped).",
+                "items": {
+                  "$ref": "#/$defs/ToolNote"
+                },
+                "type": "array"
+              },
+              "outputs": {
+                "additionalProperties": true,
+                "description": "Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).",
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "record": {
+                "$ref": "#/$defs/ProcessingRecord",
+                "description": "What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again."
+              },
+              "revision": {
+                "type": "string"
+              },
+              "selected": {
+                "description": "The objects it chose (a selecting tool's result; persistent ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GpkgExported"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
+              },
+              "step": {
+                "description": "The undo step's name; none when the drawing did not change.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "summary": {
+                "description": "The tool's sentence of what it did.",
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "summary",
+              "record",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "ProcessingRecord": {
+            "description": "The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model\nand its version), with which explicit values and objects, on which state of the data (the revision, each input\nlayer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what\nflowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON\n(`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same\nrevision, the same data under another revision, or changed data.",
+            "properties": {
+              "definition": {
+                "description": "A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "documentRevision": {
+                "description": "The drawing's revision when the run began.",
+                "type": "string"
+              },
+              "engine": {
+                "description": "`KentOS <version>`.",
+                "type": "string"
+              },
+              "format": {
+                "description": "Always `kentos.run-record`.",
+                "type": "string"
+              },
+              "host": {
+                "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
+                "type": "string"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "`tool`, `model` or `batch`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ms": {
+                "description": "How long the whole took, milliseconds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "description": "The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its\nname and path, not its rows: giving them to `cad.processing.run` runs it again.",
+                "type": "object"
+              },
+              "seed": {
+                "description": "The seed a tool with one took (its `seed` parameter).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "selection": {
+                "description": "The input's own `selection` and `view`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "startedAt": {
+                "description": "When it began, UTC (`2026-10-19T09:30:00.000Z`).",
+                "type": "string"
+              },
+              "steps": {
+                "description": "The tool as one step, a model's steps in order, a batch's rows in order.",
+                "items": {
+                  "$ref": "#/$defs/RecordStep"
+                },
+                "type": "array"
+              },
+              "tool": {
+                "description": "The tool's id, the model's (`model:…`), or a batch's tool.",
+                "type": "string"
+              },
+              "toolVersion": {
+                "description": "The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a\nmodel's, the version of the tool-and-model contract.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "total": {
+                "$ref": "#/$defs/RecordTotal",
+                "description": "What flowed through the whole, counted when it ended."
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "view": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "kind",
+              "tool",
+              "label",
+              "toolVersion",
+              "parameters",
+              "documentRevision",
+              "engine",
+              "host",
+              "startedAt",
+              "ms",
+              "steps",
+              "total"
+            ],
+            "type": "object"
+          },
+          "RecordStep": {
+            "description": "A step of a run (docs/adr/0529 §2).",
+            "properties": {
+              "id": {
+                "description": "A model step's id, a batch row's `rows[i]`, a tool's own id.",
+                "type": "string"
+              },
+              "label": {
+                "description": "A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.",
+                "type": "string"
+              },
+              "ms": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "recordsIn": {
+                "description": "The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when\nthe step ended, so exact.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tool",
+              "label",
+              "recordsIn",
+              "recordsOut",
+              "ms",
+              "summary"
+            ],
+            "type": "object"
+          },
+          "RecordTotal": {
+            "description": "What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object\nseveral steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.\nThe steps' own counts are exact too; a tool that reports only approximate progress while it runs\n(`Feedback::progress`) has this last, exact total.",
+            "properties": {
+              "recordsIn": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "recordsIn",
+              "recordsOut"
+            ],
+            "type": "object"
+          },
+          "RunInput": {
+            "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
+            "properties": {
+              "digest": {
+                "description": "The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id\n(`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "ToolNote": {
+            "description": "A note the tool made while it ran.",
+            "properties": {
+              "level": {
+                "description": "`info` or `warn`.",
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "level",
+              "text"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).",
+        "properties": {
+          "record": {
+            "$ref": "#/$defs/ProcessingRecord",
+            "description": "The batch's own record: its rows as steps."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Every row, in order, as it ran.",
+            "items": {
+              "$ref": "#/$defs/BatchRowRan"
+            },
+            "type": "array"
+          },
+          "step": {
+            "description": "The undo step's name; none when the drawing did not change.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "summary",
+          "rows",
+          "record",
+          "revision"
+        ],
+        "title": "ProcessingBatched",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "BatchRowRan": {
+            "description": "A row of a batch as it ran.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ran": {
+                "$ref": "#/$defs/ProcessingRan",
+                "description": "What the row did, as `cad.processing.run` answers it (its own record included)."
+              }
+            },
+            "required": [
+              "index",
+              "label",
+              "ran"
+            ],
+            "type": "object"
+          },
+          "GpkgExported": {
+            "description": "What `file.export.gpkg` wrote, or with `plan` would write.",
+            "properties": {
+              "approximated": {
+                "description": "Curves (ellipses, splines, NURBS) written as chords within 0.1 mm.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "bytes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "bytes"
+              },
+              "left": {
+                "additionalProperties": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Objects not written, by kind.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "path": {
+                "type": "string"
+              },
+              "sha256": {
+                "type": "string"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/GpkgTableExported"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "path",
+              "bytes",
+              "sha256",
+              "tables",
+              "approximated"
+            ],
+            "type": "object"
+          },
+          "GpkgTableExported": {
+            "description": "A table written.",
+            "properties": {
+              "geometry": {
+                "description": "Its geometry column's type (`MULTIPOLYGON` …); none for an attribute table.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows"
+            ],
+            "type": "object"
+          },
+          "ProcessingRan": {
+            "description": "What `cad.processing.run` did, or with `plan` would do (on a copy of the drawing).",
+            "properties": {
+              "added": {
+                "description": "The objects it made and changed (persistent ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "changed": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, in the inputs' order.",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "layers": {
+                "description": "The layers it made (ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "notes": {
+                "description": "Its notes (what resolving left out, what it skipped).",
+                "items": {
+                  "$ref": "#/$defs/ToolNote"
+                },
+                "type": "array"
+              },
+              "outputs": {
+                "additionalProperties": true,
+                "description": "Its outputs by name (a features output as persistent ids, a number, a text, a table as its rows).",
+                "type": [
+                  "object",
+                  "null"
+                ]
+              },
+              "record": {
+                "$ref": "#/$defs/ProcessingRecord",
+                "description": "What the run was made of and how it went (docs/adr/0529 §2): the same record a script keeps to run it again."
+              },
+              "revision": {
+                "type": "string"
+              },
+              "selected": {
+                "description": "The objects it chose (a selecting tool's result; persistent ids).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "sink": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/GpkgExported"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
+              },
+              "step": {
+                "description": "The undo step's name; none when the drawing did not change.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "summary": {
+                "description": "The tool's sentence of what it did.",
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "tool",
+              "summary",
+              "record",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "ProcessingRecord": {
+            "description": "The record of a run (docs/adr/0529 §2), made when it ends and handed back with its answer: what ran (tool or model\nand its version), with which explicit values and objects, on which state of the data (the revision, each input\nlayer's content digest, the project's CRS), the seed where a tool has one, the engine and the host, and what\nflowed through each step and how long it took. It is not kept in the project file: a script keeps it as JSON\n(`kentos.run-record` 1) and `kentos_processing::record::rerun_kind` says whether running it again meets the same\nrevision, the same data under another revision, or changed data.",
+            "properties": {
+              "definition": {
+                "description": "A model's definition as the SHA-256 of its JSON (the steps, their wiring and fixed values); none for a tool.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "documentRevision": {
+                "description": "The drawing's revision when the run began.",
+                "type": "string"
+              },
+              "engine": {
+                "description": "`KentOS <version>`.",
+                "type": "string"
+              },
+              "format": {
+                "description": "Always `kentos.run-record`.",
+                "type": "string"
+              },
+              "host": {
+                "description": "Where it ran: `desktop` or `headless` (Python, MCP, the agent's connection).",
+                "type": "string"
+              },
+              "inputs": {
+                "description": "The layers the features inputs read, each with its content digest when it was read (docs/adr/0511).",
+                "items": {
+                  "$ref": "#/$defs/RunInput"
+                },
+                "type": "array"
+              },
+              "kind": {
+                "description": "`tool`, `model` or `batch`.",
+                "type": "string"
+              },
+              "label": {
+                "type": "string"
+              },
+              "ms": {
+                "description": "How long the whole took, milliseconds.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "parameters": {
+                "additionalProperties": true,
+                "description": "The values the run took, defaults filled in, with objects as persistent ids (`scope: uids`) and a file as its\nname and path, not its rows: giving them to `cad.processing.run` runs it again.",
+                "type": "object"
+              },
+              "seed": {
+                "description": "The seed a tool with one took (its `seed` parameter).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "1"
+              },
+              "selection": {
+                "description": "The input's own `selection` and `view`.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "srid": {
+                "description": "The project's coordinate system (EPSG/SRID); none for a local project.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "startedAt": {
+                "description": "When it began, UTC (`2026-10-19T09:30:00.000Z`).",
+                "type": "string"
+              },
+              "steps": {
+                "description": "The tool as one step, a model's steps in order, a batch's rows in order.",
+                "items": {
+                  "$ref": "#/$defs/RecordStep"
+                },
+                "type": "array"
+              },
+              "tool": {
+                "description": "The tool's id, the model's (`model:…`), or a batch's tool.",
+                "type": "string"
+              },
+              "toolVersion": {
+                "description": "The tool's version: bumped when what it computes from the same values changes (1 for every tool today); a\nmodel's, the version of the tool-and-model contract.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "total": {
+                "$ref": "#/$defs/RecordTotal",
+                "description": "What flowed through the whole, counted when it ended."
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "version"
+              },
+              "view": {
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "kind",
+              "tool",
+              "label",
+              "toolVersion",
+              "parameters",
+              "documentRevision",
+              "engine",
+              "host",
+              "startedAt",
+              "ms",
+              "steps",
+              "total"
+            ],
+            "type": "object"
+          },
+          "RecordStep": {
+            "description": "A step of a run (docs/adr/0529 §2).",
+            "properties": {
+              "id": {
+                "description": "A model step's id, a batch row's `rows[i]`, a tool's own id.",
+                "type": "string"
+              },
+              "label": {
+                "description": "A step's name (“1. adım (Köşe noktalarını numarala)”), a row's label.",
+                "type": "string"
+              },
+              "ms": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "ms"
+              },
+              "recordsIn": {
+                "description": "The objects its features inputs resolved to, and the distinct objects it made, changed or chose; counted when\nthe step ended, so exact.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "summary": {
+                "type": "string"
+              },
+              "tool": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "tool",
+              "label",
+              "recordsIn",
+              "recordsOut",
+              "ms",
+              "summary"
+            ],
+            "type": "object"
+          },
+          "RecordTotal": {
+            "description": "What flowed through a run in all, counted when it ended (docs/adr/0529 §2): `records_in` adds the steps' (an object\nseveral steps read counts once for each), `records_out` counts the distinct objects the run made, changed or chose.\nThe steps' own counts are exact too; a tool that reports only approximate progress while it runs\n(`Feedback::progress`) has this last, exact total.",
+            "properties": {
+              "recordsIn": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "recordsOut": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "recordsIn",
+              "recordsOut"
+            ],
+            "type": "object"
+          },
+          "RunInput": {
+            "description": "A layer the run read: a bound layer gives its source and the revision it read (docs/adr/0503).",
+            "properties": {
+              "digest": {
+                "description": "The layer's content when it was read: the SHA-256 of its objects' kinds, geometries and attributes by lasting id\n(`sources::layer_digest`; docs/adr/0511), so a result tells which state of its input it came from.",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "ToolNote": {
+            "description": "A note the tool made while it ran.",
+            "properties": {
+              "level": {
+                "description": "`info` or `warn`.",
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "level",
+              "text"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.processing.batch` did, or with `plan` would do (on a copy of the drawing).",
+        "properties": {
+          "record": {
+            "$ref": "#/$defs/ProcessingRecord",
+            "description": "The batch's own record: its rows as steps."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "rows": {
+            "description": "Every row, in order, as it ran.",
+            "items": {
+              "$ref": "#/$defs/BatchRowRan"
+            },
+            "type": "array"
+          },
+          "step": {
+            "description": "The undo step's name; none when the drawing did not change.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "summary": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "tool",
+          "summary",
+          "rows",
+          "record",
+          "revision"
+        ],
+        "title": "ProcessingBatched",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "tools_unavailable",
+          "empty_batch",
+          "too_many_rows",
+          "unknown_tool",
+          "invalid_uid",
+          "entity_not_found",
+          "invalid_parameters",
+          "batch_row_failed"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Aynı aracı üç tampon uzaklığıyla çalıştır",
+          "input": {
+            "parameters": {
+              "input": {
+                "layerId": "parsel",
+                "scope": "layer"
+              }
+            },
+            "rows": [
+              {
+                "label": "5 m",
+                "parameters": {
+                  "distance": 5
+                }
+              },
+              {
+                "label": "10 m",
+                "parameters": {
+                  "distance": 10
+                }
+              },
+              {
+                "label": "20 m",
+                "parameters": {
+                  "distance": 20
+                }
+              }
+            ],
+            "tool": "geometry.buffer"
+          }
+        },
+        {
+          "title": "Parsel ölçü yazıları modelini iki ön ekle çalıştır",
+          "input": {
+            "rows": [
+              {
+                "parameters": {
+                  "prefix": "A"
+                }
+              },
+              {
+                "parameters": {
+                  "prefix": "B"
+                }
+              }
+            ],
+            "selection": [
+              "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401"
+            ],
+            "tool": "model:builtin.parcelSheet"
           }
         }
       ]
@@ -1037134,6 +1038729,24 @@
       "meaning": "Bu ortamda işlem araçları yok; masaüstünde, başsız sunucuda, Python'da ya da MCP'de çalışır."
     },
     {
+      "code": "empty_batch",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Toplu çalıştırmanın satırı yok; en az bir satır verin."
+    },
+    {
+      "code": "too_many_rows",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Toplu çalıştırma en çok 500 satır alır; satırları bölüp ayrı çağırın."
+    },
+    {
+      "code": "batch_row_failed",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Toplu çalıştırmanın bir satırı çalışıp durdu ya da değerleri önceki satırların yazdıklarına artık uymuyor; önceki satırların sonuçları geri alındı, hiçbir şey yazılmadı. İleti satırı ve nedenini söyler."
+    },
+    {
       "code": "package_left",
       "kind": "warning",
       "retryable": false,
@@ -1038189,6 +1039802,10 @@
     {
       "unit": "px/length",
       "meaning": "Görünümün ölçeği: ekran pikseli bölü projenin uzunluk birimi (px/m)."
+    },
+    {
+      "unit": "ms",
+      "meaning": "Milisaniye: bir işin süresi."
     }
   ],
   "effects": [

@@ -2,6 +2,7 @@
 
 /**
  * Input of `cad.processing.tools` v1: every tool, or those whose id, name, keywords or aliases hold `query`
- * (case and Turkish marks aside), or one category's (`category`, its id).
+ * (case and Turkish marks aside), or one category's (`category`, its id). `models` lists İşlemler's models too
+ * (docs/adr/0529): a model's id is `model:` and its own id (`model:builtin.parcelSheet`), its parameters its inputs.
  */
-export type ProcessingTools = { query?: string, category?: string, };
+export type ProcessingTools = { query?: string, category?: string, models?: boolean, };

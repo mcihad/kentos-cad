@@ -937,7 +937,10 @@ impl App {
             Some(Dialog::Revision) => self.cloud.question = None,
             Some(Dialog::Exchange) => self.exchange = None,
             Some(Dialog::Project) => self.project_dismissed(),
-            Some(Dialog::Processing) => self.processing.dialog = None,
+            Some(Dialog::Processing) => {
+                self.processing.dialog = None;
+                self.processing.batch = None;
+            }
             // With changes not applied, Katman stili asks first (style/layer_style/).
             Some(Dialog::LayerStyle) if !self.layer_style_may_close() => {
                 self.dialog = Some(Dialog::LayerStyle);

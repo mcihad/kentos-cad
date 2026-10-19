@@ -69,6 +69,7 @@ pub mod file_import_gpkg;
 pub mod file_import_pdf;
 pub mod provider;
 pub mod fields_write;
+pub mod processing_batch;
 pub mod processing_host;
 pub mod processing_run;
 pub mod processing_tools;
@@ -978,6 +979,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_PROCESSING_RUN,
         kentos_contracts::CAD_PROCESSING_RUN_VERSION,
+    ),
+    // İşlemler's tool or model over a table of rows (docs/adr/0529).
+    (
+        kentos_contracts::CAD_PROCESSING_BATCH,
+        kentos_contracts::CAD_PROCESSING_BATCH_VERSION,
     ),
     // Bound layers ([`sources`], docs/adr/0503).
     (

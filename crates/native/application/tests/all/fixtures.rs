@@ -35,7 +35,7 @@ use kentos_domain::contracts::{
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
-use kentos_native_application::{processing_run, processing_tools};
+use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
@@ -2175,6 +2175,12 @@ impl Input for kentos_domain::contracts::ProcessingRun {
     }
 }
 
+impl Input for kentos_domain::contracts::ProcessingBatch {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::FieldsWrite {
     /// No number: a layer, fields and values as text.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3149,6 +3155,7 @@ fn run_op(
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
         kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
         kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),
+        kentos_domain::contracts::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_domain::contracts::ProcessingBatch),
         kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
         kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
