@@ -134,7 +134,7 @@ impl Store {
 
     /// The drawing's own text at true size: texts, dimension values, leaders' notes, tables' cells.
     pub fn texts_only(&self, view: &Bounds, scale: f64, editing: Option<f64>) -> Vec<f64> {
-        self.labels_with(view, scale, editing, TRUE_MIN_PX, TRUE_MAX_PX)
+        self.labels_with(view, scale, editing, TRUE_MIN_PX, TRUE_MAX_PX, None)
     }
 
     /// `labels`, a text, a dimension's value, a leader's note or a table's
@@ -146,11 +146,16 @@ impl Store {
         editing: Option<f64>,
         min_px: f64,
         max_px: f64,
+        shown: Option<&[bool]>,
     ) -> Vec<f64> {
         let mut out = Vec::new();
         for it in self.candidates(&super::padded(*view, 0.0)) {
-            let flags = self.flags(it);
-            if !flags.visible || !self.view_shown(it.id) {
+            // A view of its own shows the layers it says (docs/adr/0523 §2); else the table's.
+            let visible = match shown {
+                Some(mask) => mask.get(it.layer as usize).copied().unwrap_or(true),
+                None => self.flags(it).visible,
+            };
+            if !visible || !self.view_shown(it.id) {
                 continue;
             }
             let b = &it.bounds;

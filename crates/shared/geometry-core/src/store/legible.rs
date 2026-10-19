@@ -82,6 +82,23 @@ impl Store {
         size: LabelSize,
         options: PlaceOptions,
     ) -> Shown {
+        self.labels_shown_in(view, scale, editing, size, options, None)
+    }
+
+    /// [`Store::labels_shown`] with the layers a view of its own shows (docs/adr/0523 §2: a split area's
+    /// view with a theme): `shown` says of each layer id whether its labels are placed, in place of the
+    /// layer table's visibility; none is the table's.
+    pub fn labels_shown_in(
+        &self,
+        view: &Bounds,
+        scale: f64,
+        editing: Option<f64>,
+        size: LabelSize,
+        options: PlaceOptions,
+        shown: Option<&dyn Fn(&str) -> bool>,
+    ) -> Shown {
+        let mask: Option<Vec<bool>> =
+            shown.map(|f| self.layer_names().into_iter().map(f).collect());
         let max_px = match size {
             LabelSize::Screen { .. } => f64::INFINITY,
             _ => TRUE_MAX_PX,
@@ -91,7 +108,7 @@ impl Store {
         } else {
             0.0
         };
-        let records = self.labels_with(view, scale, editing, min_px, max_px);
+        let records = self.labels_with(view, scale, editing, min_px, max_px, mask.as_deref());
         let n = records.len() / LABEL_STRIDE;
         let rec = |i: usize| &records[i * LABEL_STRIDE..(i + 1) * LABEL_STRIDE];
         let mut groups = Vec::new();

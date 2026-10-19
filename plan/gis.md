@@ -276,6 +276,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-19 — Bölünmüş görünümü bağlı tema ve swipe karşılaştırmasıyla genişlet — P1**
 
+  *Kısmen (19 Ekim 2026; [ADR 0523](../docs/adr/0523-linked-views-themes-and-swipe.md)): her görünümün teması projenin bir katman durumu (görünürlük, dondurma, stiller; çizimin kopyasında, belge değişmez), etkin görünümün teması düzenleme hedefi (seçme, kenet), etiketler görünüm görünüm; Görünümleri bağla ve Kaydırmalı karşılaştır. Kalan: görünüm başına zaman ve ölçek bağı, iki revizyonun karşılaştırılması.*
+
   **Mevcut:** İki bağımsız kameralı bölünmüş görünüm, named view ve katman durumları var [K10]. GIS'te görünüm; yalnız kamera değil tema, zaman, ölçek ve filtre bağlamıdır.
 
   **Yapılacak kalan iş:** Mevcut named view, katman durumları ve iki bağımsız görünümü yeniden kurma. Bunların üstüne seçilen kamera/ölçek/CRS/zaman bağlamını birlikte takip eden bağlı görünümler ve swipe karşılaştırması ekle. Aynı veri kaynağının iki tema/revision görünümü yeni veri kopyası oluşturmamalı. Her görünümde hangi kaynağın ve revision'ın gösterildiği, hangisinin düzenleme hedefi olduğu belirli olsun. Mevcut senaryo görünürlüğü bu yeni karşılaştırmada gerçek veri sürümüyle karıştırılmasın.

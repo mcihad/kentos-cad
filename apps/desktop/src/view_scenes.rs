@@ -7,6 +7,9 @@
 //! KENTOS_SHOTS_ONLY=gorunumler,gorunum-dondurulmus,gorunum-bolunmus cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
+//! And docs/adr/0523's: the two views linked, each with a theme of its own (the parcels in blue, thick; the road
+//! alone), and Kaydırmalı karşılaştır over them (`gorunum-tema`, `gorunum-karsilastir`).
+//!
 //! Test code only.
 
 use crate::app::{App, Message};
@@ -122,10 +125,97 @@ fn split(app: &mut App) {
     hover(app, [30.0, 22.0]);
 }
 
+/// Two layer states of the block (docs/adr/0523 §1): Kadastro (the parcels in blue and thick, the road hidden)
+/// and Yol (the road alone).
+pub(crate) fn themes(app: &mut App) {
+    let Some(doc) = app.document.as_mut() else {
+        return;
+    };
+    let parts = kentos_domain::layer_states::LayerStateParts {
+        locks: false,
+        styles: true,
+    };
+    let tree = doc.model.layers().nodes().to_vec();
+    let mut cadastre = kentos_domain::layer_states::capture(&tree, "durum-1", "Kadastro", parts);
+    let mut road = kentos_domain::layer_states::capture(&tree, "durum-2", "Yol", parts);
+    for n in &mut cadastre.nodes {
+        if n.node == "yol" {
+            n.visible = false;
+        }
+        if n.node == "parsel"
+            && let Some(style) = n.style.as_mut()
+        {
+            style.color = "#3B82F6".into();
+            style.line_weight = 0.7;
+        }
+    }
+    for n in &mut road.nodes {
+        if n.node == "parsel" || n.node == "cizim" {
+            n.visible = false;
+        }
+    }
+    let mut settings = doc.model.settings().clone();
+    settings.layer_states = vec![cadastre, road];
+    doc.model.set_settings(settings);
+}
+
+/// Halves the area as the window lays it out, the active view on the left.
+fn halves(app: &mut App) {
+    let bounds = app.viewport.bounds;
+    let half = iced::Size::new((bounds.width - 2.0) / 2.0, bounds.height);
+    let _ = app.update(Message::Viewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(bounds.position(), half),
+    )));
+    let _ = app.update(Message::OtherViewport(crate::viewport::Event::Resized(
+        iced::Rectangle::new(
+            iced::Point::new(bounds.x + half.width + 2.0, bounds.y),
+            half,
+        ),
+    )));
+}
+
+/// Linked views with themes: Kadastro on the left, active; Yol on the right, at the same place.
+fn themed(app: &mut App) {
+    block(app);
+    themes(app);
+    run(app, "view.split");
+    halves(app);
+    run(app, "view.splitLink");
+    let theme = |active, state| {
+        Message::Split(crate::split_view::Event::Theme {
+            active,
+            state: Some(state),
+        })
+    };
+    let _ = app.update(theme(true, 0));
+    let _ = app.update(theme(false, 1));
+}
+
+/// Kaydırmalı karşılaştır: Kadastro left of the divider, Yol right of it, at 45 %.
+fn swiped(app: &mut App) {
+    block(app);
+    themes(app);
+    run(app, "view.swipe");
+    let theme = |active, state| {
+        Message::Split(crate::split_view::Event::Theme {
+            active,
+            state: Some(state),
+        })
+    };
+    let _ = app.update(theme(true, 0));
+    let _ = app.update(theme(false, 1));
+    if let Some(s) = app.split.as_mut() {
+        s.swipe = Some(0.45);
+    }
+    hover(app, [12.0, 8.0]);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("gorunumler", named_views),
         ("gorunum-dondurulmus", twisted),
         ("gorunum-bolunmus", split),
+        ("gorunum-tema", themed),
+        ("gorunum-karsilastir", swiped),
     ]
 }

@@ -215,6 +215,9 @@ Liste:
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
+- [ ] `CBS-19` bağlı görünümler ve tema (ADR 0523, 19 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok; geri dönüşte iki
+  görünüm, görünüm başına tema (katman durumunun ağaç kopyası), Bağla ve kaydırmalı karşılaştırma; depo `labels_shown_in`'i
+  WASM bağlayıcısına açar.
 - [ ] `CBS-05` CSV tablolar (ADR 0522, 19 Ekim): web'de gerekenler: `file.export.csv` ve `file.import.csv`'nin işleyicileri biçim
   işçisinde (`csv_table` ve `kentos_geopackage::wkt`'in WASM bağlayıcısı; `.csvt` ve `.prj` indirmede yanında, okumada
   seçilen dosyalardan), CSV içe ve dışa aktar pencereleri (geometri sütunları, plan, Ayırıcı); TS türleri üretildi.
@@ -1939,6 +1942,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
+- [ ] `CBS-19` bağlı görünümler ve tema (dilim): görünümün teması projenin katman durumu (görünürlük, dondurma, stiller ağacın
+  kopyasında, çizim ve revizyon değişmez; `layer_states::themed`), stilli çizim görünümün önbelleğinde temayla
+  (`scene_themed`), etkin görünümün teması seçme ve kenet (`Spatial::set_theme`), etiketler görünümün temasıyla
+  (`Store::labels_shown_in`); Görünümleri bağla (merkez, ölçek, dönüklük) ve Kaydırmalı karşılaştır (edilgen öbür görünüm,
+  sürüklenen ayırıcı); Görünüm › Görünümler. Kalan: görünüm başına zaman ve ölçek bağı, iki revizyon, ikiden çok görünüm.
+  — **19 Ekim, [ADR 0523](docs/adr/0523-linked-views-themes-and-swipe.md).**
 - [ ] `CBS-05` CSV tablolar (dilim): `file.export.csv` (tek CSV, `katman` sütunu; geometri ISO WKT, X ve Y ya da yok; yaylar
   `CIRCULARSTRING` olarak kesin, elips, eğri ve NURBS kirişle, söylenerek; `.csvt` GDAL'ın türleriyle, `.prj` OGC WKT1; bütün
   ya da hiç) ve `file.import.csv` (geometri sütunu adlarından ya da verilen, `.csvt`'den ya da değerlerden türler, 2⁵³ üstü

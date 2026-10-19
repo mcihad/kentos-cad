@@ -337,7 +337,20 @@ pub struct Viewport {
     /// The second model view of a split area, not the active one (split_view.rs, docs/adr/0285 §3): its
     /// events come as `Message::OtherViewport`.
     pub(crate) other: bool,
+    /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): drawn, but the pointer goes through it to the view under.
+    pub(crate) passive: bool,
+    /// The view's theme (docs/adr/0523 §1): a layer state of the project it shows the drawing with, the drawing
+    /// untouched; none, as the drawing is.
+    pub(crate) theme: Option<kentos_contracts::LayerState>,
+    /// The tree as the theme shows it, by the drawing's session and generation and the theme it was made with.
+    themed: RefCell<Option<KeptTheme>>,
 }
+
+type KeptTheme = (
+    (u64, u64),
+    kentos_contracts::LayerState,
+    std::sync::Arc<kentos_domain::LayerTree>,
+);
 
 /// How long after the wheel's last turn screen-sized symbols are built again (the web's).
 const SYMBOLS_SETTLE: Duration = Duration::from_millis(150);
@@ -438,6 +451,9 @@ impl Viewport {
             phasings: RefCell::new(None),
             zoomed_at: None,
             other: false,
+            passive: false,
+            theme: None,
+            themed: RefCell::new(None),
         }
     }
 
@@ -627,6 +643,7 @@ impl Viewport {
                 })
                 .and_then(|_| self.settling()),
             other: self.other,
+            passive: self.passive,
         })
         .width(Fill)
         .height(Fill)
@@ -644,6 +661,23 @@ impl Viewport {
             ]
             .into(),
         }
+    }
+
+    /// The tree the view shows (docs/adr/0523 §1): the theme's, made again only when the drawing or the theme
+    /// changed; none without a theme.
+    pub(crate) fn themed_tree(&self, doc: &Document) -> Option<std::sync::Arc<kentos_domain::LayerTree>> {
+        let theme = self.theme.as_ref()?;
+        let key = (doc.session, doc.model.generation());
+        let mut kept = self.themed.borrow_mut();
+        if let Some((k, t, tree)) = kept.as_ref()
+            && *k == key
+            && t == theme
+        {
+            return Some(std::sync::Arc::clone(tree));
+        }
+        let tree = std::sync::Arc::new(kentos_domain::layer_states::themed(doc.model.layers(), theme));
+        *kept = Some((key, theme.clone(), std::sync::Arc::clone(&tree)));
+        Some(tree)
     }
 
     /// The drawing's styled layers (docs/adr/0090), from the cache where nothing they depend on changed.
@@ -698,9 +732,16 @@ impl Viewport {
             // What a renderer compares is read in the project's drawing unit, as Katman stili listed it.
             reading_unit: kentos_native_style::reading_unit(doc.model.settings()),
         };
-        let scene = self.styled.borrow_mut().scene(
+        // A view with a theme draws the layers as it shows them (docs/adr/0523 §1).
+        let themed = self.themed_tree(doc);
+        let nodes = themed
+            .as_deref()
+            .map_or(doc.model.layers().nodes(), |t| t.nodes());
+        let scene = self.styled.borrow_mut().scene_themed(
             self.generation,
             &doc.model,
+            nodes,
+            self.theme.as_ref(),
             s.spatial.store(),
             &s.styles.library,
             &look,
@@ -759,7 +800,7 @@ impl Viewport {
         }
         // The map services the scene shows (docs/adr/0208 §3): known to the hub
         // with what they rest on; vector tiles built with the scene's colours.
-        let shown = crate::style::scene::shown_service_layers(doc.model.layers().nodes());
+        let shown = crate::style::scene::shown_service_layers(nodes);
         if !shown.is_empty() || crate::services::in_use() {
             let settings = doc.model.settings();
             let project =
@@ -1220,6 +1261,8 @@ struct Program {
     settle_at: Option<Instant>,
     /// The inactive view of a split area (docs/adr/0285 §3).
     other: bool,
+    /// Kaydırmalı karşılaştır's view (docs/adr/0523 §3): its size told, the pointer let through.
+    passive: bool,
 }
 
 impl Program {
@@ -1289,6 +1332,13 @@ impl shader::Program<Message> for Program {
             return Some(shader::Action::request_redraw());
         }
         let (event, capture) = gesture(state, event, bounds, cursor, Instant::now())?;
+        // Kaydırmalı karşılaştır's view tells its size and nothing else: the view under takes the pointer.
+        if self.passive {
+            return match event {
+                Some(e @ Event::Resized(_)) => Some(shader::Action::publish(self.message(e))),
+                _ => None,
+            };
+        }
         let action = match event {
             Some(event) => shader::Action::publish(self.message(event)),
             None => shader::Action::request_redraw(),
@@ -1322,6 +1372,8 @@ impl shader::Program<Message> for Program {
     ) -> mouse::Interaction {
         if state.pan.is_some() {
             mouse::Interaction::Grabbing
+        } else if self.passive {
+            mouse::Interaction::default()
         } else if self.other && cursor.is_over(bounds) {
             // The other view of a split area: a click makes it the active one.
             mouse::Interaction::Pointer

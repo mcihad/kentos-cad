@@ -89,6 +89,7 @@ pub fn layer<'a>(
     size: LabelSize,
     lift: f32,
     engine: Engine,
+    shows: Option<&kentos_domain::LayerTree>,
 ) -> Element<'a, Message> {
     build(
         doc,
@@ -105,6 +106,7 @@ pub fn layer<'a>(
         mode,
         size,
         engine,
+        shows,
     )
 }
 
@@ -154,6 +156,7 @@ pub fn lens_layer<'a>(
             keep: false,
             ..engine
         },
+        None,
     )
 }
 
@@ -185,6 +188,7 @@ fn build<'a>(
     mode: ColorMode,
     size: LabelSize,
     engine: Engine,
+    shows: Option<&kentos_domain::LayerTree>,
 ) -> Element<'a, Message> {
     let mut key = DefaultHasher::new();
     (
@@ -205,17 +209,24 @@ fn build<'a>(
     format!("{:?}", spatial.store().time_window()).hash(&mut key);
     // A twisted view lays its text out upright and turns it as a picture (docs/adr/0285 §2).
     camera.twist.to_bits().hash(&mut key);
+    // A view with a theme places the labels of the layers it shows (docs/adr/0523 §2).
+    if let Some(tree) = shows {
+        for leaf in tree.leaves() {
+            (leaf.id.as_str(), tree.is_visible(&leaf.id)).hash(&mut key);
+        }
+    }
     let turned = (camera.twist != 0.0).then_some(*camera);
     let camera = &camera.upright();
     let spots = kept.get(key.finish(), || {
         let view = camera.visible_bounds();
-        let mut spots = spatial.labels_shown(
+        let mut spots = spatial.labels_shown_in(
             Vec2::new(view.min_x, view.min_y),
             Vec2::new(view.max_x, view.max_y),
             camera.scale,
             size,
             engine.options,
             engine.keep,
+            shows,
         );
         // A text or a dimension's value being edited in place (the web's `setEditing`).
         if let Some(hidden) = hidden {

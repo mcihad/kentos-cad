@@ -97,6 +97,9 @@ pub struct Spatial {
     label_keys: std::collections::HashMap<String, String>,
     /// The main view's last labels (`label_at`): their records, stride and scale.
     kept: std::cell::RefCell<(Vec<f64>, usize, f64)>,
+    /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
+    /// and snapped to; none, the drawing's.
+    theme: Option<kentos_contracts::LayerState>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled in the
@@ -172,7 +175,7 @@ impl Spatial {
         self.mark = doc.change_mark();
         self.revision = Some(doc.revision());
         self.layers.clear();
-        self.sync_layers(doc.layers());
+        self.sync_layers_of(doc);
         self.rules.clear();
         self.timed = false;
         self.sync_times(doc, &[]);
@@ -287,7 +290,7 @@ impl Spatial {
                 self.sync_text_labelled(doc);
                 self.mark = mark;
                 self.revision = Some(doc.revision());
-                self.sync_layers(doc.layers());
+                self.sync_layers_of(doc);
                 self.sync_times(doc, &changed);
                 self.sync_filters(doc, &changed, !gone.is_empty());
                 self.sync_labels(doc, &changed, false);
@@ -726,6 +729,31 @@ impl Spatial {
         }
     }
 
+    /// The active view's theme (docs/adr/0523 §2): what is picked and snapped to follows its layer state;
+    /// none, the drawing's tree. Sent at once.
+    pub fn set_theme(&mut self, doc: &Document, theme: Option<kentos_contracts::LayerState>) {
+        if self.theme != theme {
+            self.theme = theme;
+            self.sync_layers_of(doc);
+        }
+    }
+
+    /// The active view's theme.
+    pub fn theme(&self) -> Option<&kentos_contracts::LayerState> {
+        self.theme.as_ref()
+    }
+
+    /// The layer table of the drawing, or of the active view's theme.
+    fn sync_layers_of(&mut self, doc: &Document) {
+        match &self.theme {
+            Some(state) => {
+                let tree = kentos_domain::layer_states::themed(doc.layers(), state);
+                self.sync_layers(&tree);
+            }
+            None => self.sync_layers(doc.layers()),
+        }
+    }
+
     /// Sends the layer table when it differs from the one sent last.
     fn sync_layers(&mut self, tree: &LayerTree) {
         let rows = layer_rows(tree);
@@ -1023,13 +1051,36 @@ impl Spatial {
         options: PlaceOptions,
         keep: bool,
     ) -> Vec<(LabelSpot, Grow)> {
+        self.labels_shown_in(min, max, scale, size, options, keep, None)
+    }
+
+    /// [`Spatial::labels_shown`] for a view with a theme (docs/adr/0523 §2): the labels of the layers `tree`
+    /// shows, whatever the active view shows; none, the store's.
+    #[allow(clippy::too_many_arguments)]
+    pub fn labels_shown_in(
+        &self,
+        min: Vec2,
+        max: Vec2,
+        scale: f64,
+        size: LabelSize,
+        options: PlaceOptions,
+        keep: bool,
+        tree: Option<&LayerTree>,
+    ) -> Vec<(LabelSpot, Grow)> {
         let view = Bounds {
             min_x: min.x,
             min_y: min.y,
             max_x: max.x,
             max_y: max.y,
         };
-        let shown = self.store.labels_shown(&view, scale, None, size, options);
+        let shown = match tree {
+            Some(tree) => {
+                let visible = |id: &str| tree.is_visible(id);
+                self.store
+                    .labels_shown_in(&view, scale, None, size, options, Some(&visible))
+            }
+            None => self.store.labels_shown(&view, scale, None, size, options),
+        };
         let out = shown
             .records
             .chunks_exact(LABEL_SHOWN_STRIDE)

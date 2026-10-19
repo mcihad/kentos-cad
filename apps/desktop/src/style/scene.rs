@@ -115,6 +115,8 @@ pub struct StyledCache {
     label_masks: Vec<(usize, usize, String)>,
     /// The view the walls were drawn at (docs/adr/0339 §4): when the store's changes, their parts again.
     wall_view: Option<kentos_geometry_core::geom::wall::View>,
+    /// The view's theme the layers were shown with (docs/adr/0523 §1).
+    theme: Option<kentos_contracts::LayerState>,
 }
 
 /// What a view-dependent layer was built for.
@@ -305,10 +307,43 @@ impl StyledCache {
 
     /// The styled scene of `doc`, from the cache where nothing it depends on changed.
     #[allow(clippy::too_many_arguments)]
+    #[cfg(test)]
     pub fn scene(
         &mut self,
         drawing: u64,
         doc: &kentos_domain::Document,
+        store: &Store,
+        library: &StyleLibrary,
+        look: &Look,
+        view: &Bounds,
+        px_per_m: f64,
+        settled: bool,
+        under: usize,
+    ) -> StyledScene {
+        self.scene_themed(
+            drawing,
+            doc,
+            doc.layers().nodes(),
+            None,
+            store,
+            library,
+            look,
+            view,
+            px_per_m,
+            settled,
+            under,
+        )
+    }
+
+    /// [`StyledCache::scene`] of a view with a theme (docs/adr/0523 §1): the layers shown, frozen and styled as
+    /// `nodes` (the themed tree's) say.
+    #[allow(clippy::too_many_arguments)]
+    pub fn scene_themed(
+        &mut self,
+        drawing: u64,
+        doc: &kentos_domain::Document,
+        nodes: &[LayerNode],
+        theme: Option<&kentos_contracts::LayerState>,
         store: &Store,
         library: &StyleLibrary,
         look: &Look,
@@ -328,12 +363,17 @@ impl StyledCache {
             && self.clip.is_some_and(|c| !clip_stale(view, &c))
             && self.window == store.time_window()
             && self.wall_view == Some(store.wall_view())
+            && self.theme.as_ref() == theme
             && !self.view_built.values().any(|b| b.stale(view, q, settled))
         {
             return self.scene.clone();
         }
         let started = Instant::now();
         let mut all = false;
+        if self.theme.as_ref() != theme {
+            // Another theme: the layers it styles otherwise are seen to by their style below.
+            self.theme = theme.cloned();
+        }
         if self.drawing != Some(drawing) {
             self.layers.clear();
             self.slot_part.clear();
@@ -458,11 +498,11 @@ impl StyledCache {
                 l.stale = true;
             }
         }
-        let shown = shown_layers(doc.layers().nodes());
+        let shown = shown_layers(nodes);
         let mut layer_names = HashMap::new();
-        names(doc.layers().nodes(), &mut layer_names);
+        names(nodes, &mut layer_names);
         let mut layer_styles = HashMap::new();
-        kentos_plot::layers::styles(doc.layers().nodes(), &mut layer_styles);
+        kentos_plot::layers::styles(nodes, &mut layer_styles);
         let shown_ids: HashSet<&str> = shown.iter().map(|n| n.id.as_str()).collect();
         // Changed layers that are hidden wait until they show.
         for id in dirty.keys() {

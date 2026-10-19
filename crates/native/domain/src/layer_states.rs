@@ -271,3 +271,21 @@ pub fn name_refused(states: &[LayerState], name: &str, this: Option<&str>) -> Op
             )
         })
 }
+
+/// The tree as a view with `state` as its theme shows it (docs/adr/0523 §1): the visibility, the freeze and the
+/// styles the state keeps put on a copy, the drawing untouched; the locks stay the drawing's (a theme is a look,
+/// not an editing rule), as do the nodes the state does not name. The active layer is never frozen.
+pub fn themed(tree: &crate::LayerTree, state: &LayerState) -> crate::LayerTree {
+    let changes = changes_keeping(tree.nodes(), state, Some(tree.active()));
+    let mut out = tree.clone();
+    for (id, visible) in &changes.visible {
+        out.set_visible(id, *visible);
+    }
+    for (id, frozen) in &changes.frozen {
+        out.set_frozen(id, *frozen);
+    }
+    for (id, style) in &changes.styles {
+        out.replace_style(id, style);
+    }
+    out
+}

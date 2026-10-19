@@ -802,6 +802,7 @@ impl App {
                     self.label_size(),
                     lift,
                     self.label_engine(),
+                    None,
                 );
                 // This frame's placed labels: the masks' shapes (docs/adr/0226 §3).
                 let spots = self.label_spots.last();
@@ -827,6 +828,8 @@ impl App {
                     stack![area]
                         .extend(service_labels)
                         .push(labels)
+                        // Kaydırmalı karşılaştır: the other view right of the divider (split_view.rs, docs/adr/0523 §3).
+                        .extend(self.swipe_layer())
                         .push(over)
                         .extend(credits)
                         // Genel bakış and Büyüteç over the drawing (navigation_cards.rs, docs/adr/0181).

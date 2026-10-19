@@ -388,7 +388,9 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   fotoğrafları ve belgeleri, en az ve en çok), renk öğesi ve katmanın değerlerinden öneri (`suggest`); çok değerli alan
   (`LayerField.multiple`, kodlar `; ` ile) ve çoklu seçim öğesi, Formla düzenle'de kayıtlar arasında ◀ ▶; çoktan çoğa
   ilişki (çok değerli başvuru, silme politikası öbür bağları korur) ve ilişkili kayıtlarda Yeni;
-  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0522 CSV tablolar (`file.export.csv` ve `file.import.csv`: GDAL'ın CSV'si, geometri ISO WKT
+  CBS planı ([plan/gis.md](plan/gis.md), ADR 0500–; 0523 bağlı görünümler ve tema (görünümün teması projenin bir katman durumu,
+  ağacın kopyasında: `layer_states::themed`, `StyledCache::scene_themed`, `Spatial::set_theme`, `Store::labels_shown_in`; Görünümleri bağla, Kaydırmalı
+  karşılaştır, çizim değişmez); 0522 CSV tablolar (`file.export.csv` ve `file.import.csv`: GDAL'ın CSV'si, geometri ISO WKT
   ya da X ve Y, yaylar kesin, `.csvt` türleri ve OGC WKT1 `.prj`; okuma GeoPackage içe aktarmasının yolundan, `kentos_geopackage::wkt`; Veri › Dosya alışverişi'nde
   CSV içe ve dışa aktar); 0519 düşey sistem ve epok (projenin `heights`'i ve `coordinateEpoch`'u,
   `.kcad` şema 85, `cad.crs.transform` kotlarıyla ve işlemin kaydıyla, Proje ayarları › Kotlar ve epok); 0517 sanal raster mozaiği (GDAL VRT'si `kentos_formats::raster::vrt`,
@@ -1241,6 +1243,7 @@ python3 scripts/fixtures/spatial_inference_cases.py --check   # Moran I, Gi* ve 
 cargo test --release -p kentos-geometry-core --test all spatial_inference_timing -- --ignored --nocapture --test-threads=1   # 100 000 noktada 999 permütasyonla Moran I, Gi* (FDR) ve Yerel Moran süreleri (ADR 0520 §8)
 python3 scripts/fixtures/sld_cases.py --check; KENTOS_WRITE_SLD=1 cargo test -p kentos-headless --test headless layer_looks   # SLD'den görünüş al'ın 24 ortak durumunu xml.etree'yle yazılmış bağımsız okuyucudan ve KentOS'un yazdığı SLD'leri QGIS 4.2'de denetle; --files QGIS'in SLD'lerini yeniden yazar (ADR 0516)
 KENTOS_WRITE_COG=1 cargo test -p kentos-native-application --test all cog; python3 scripts/fixtures/cog_cases.py --check   # COG olarak kaydet başsız sunucunun dosyalarıyla; betik KentOS'un COG'larını GDAL'ın validate_cloud_optimized_geotiff.py'siyle (hata ve uyarı olmadan) ve numpy'la (0. kat bit bit, önizleme katları ADR 0231 §2'nin kuralıyla) denetler; --files kaynakları GDAL'la yazar (ADR 0515)
+cargo test -p kentos-desktop split_view; KENTOS_SHOTS_ONLY=gorunum-tema,gorunum-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture   # bağlı görünümler, görünümün teması ve kaydırmalı karşılaştırma; resimler .run/shots/arac-gorunum-tema-*, arac-gorunum-karsilastir-* (ADR 0523)
 python3 scripts/fixtures/csv_exchange_cases.py --check; KENTOS_WRITE_CSV=1 cargo test -p kentos-headless --test headless csv_tables   # file.import.csv'nin 21 ortak durumunu GDAL'ın yazdığı CSV'lerin OGR okuyuşundan, KentOS'un yazdığı CSV'leri (fixtures/csv/v1/out) OGR'la geri okuyup kaynağın geometrileriyle, KentOS kodu olmadan denetle; --files girdileri GDAL'la yeniden yazar (ADR 0522)
 KENTOS_SHOTS_ONLY=csv cargo test -p kentos-desktop exchange::csv_tests::screens -- --ignored --nocapture   # CSV içe ve dışa aktar pencereleri, .run/shots/csv-* (ADR 0522)
 cargo test -p kentos-headless --test headless shapefiles_go_out; python3 scripts/fixtures/shp_export_cases.py --check   # Shapefile dışa aktarmayı uçtan uca, KENTOS_WRITE_SHP=1 çıktıyı fixtures/shapefile/v1/out'a yazar; betik onu KentOS kodu olmadan OGR'la ve QGIS 4.2'nin Python'uyla denetler (adlar, .dbf, halkalar, Z ve M, kirişlerin sapması, .prj'nin EPSG'si, Windows-1254); esri_prj.py --check .prj tablosunu GDAL'la (ADR 0514)

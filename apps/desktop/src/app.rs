@@ -629,6 +629,8 @@ pub enum Message {
     Viewport(viewport::Event),
     /// The other view of a split drawing area (split_view.rs, docs/adr/0285 §3).
     OtherViewport(viewport::Event),
+    /// A split area's own controls: a view's theme, the comparison's divider (split_view.rs, docs/adr/0523).
+    Split(crate::split_view::Event),
     /// The settings window: a value in its draft, a preset, Kaydet, the file actions.
     Settings(Edit),
     /// A drawing being opened in stages (opening.rs, docs/adr/0030).
@@ -2057,6 +2059,7 @@ impl App {
             Message::Appearance(event) => return self.appearance_event(event),
             Message::Viewport(event) => return self.pointer(event),
             Message::OtherViewport(event) => return self.other_viewport(event),
+            Message::Split(event) => return self.split_event(event),
             Message::Settings(edit) => return self.settings_edit(edit),
             Message::Opening(event) => return self.opening_event(event),
             Message::Saving(event) => return self.saving_event(event),
@@ -2671,6 +2674,9 @@ impl App {
             "view.zoomExtents" => self.navigating(Self::zoom_extents),
             // Görünümü böl (split_view.rs, docs/adr/0285 §3).
             "view.split" => self.toggle_split(),
+            // Görünümleri bağla, Kaydırmalı karşılaştır (split_view.rs, docs/adr/0523).
+            "view.splitLink" => self.toggle_split_link(),
+            "view.swipe" => self.toggle_swipe(),
             "view.zoomSelection" => self.navigating(Self::zoom_selection),
             "commandline.focus" => return operation::focus(COMMAND_INPUT),
             "help.about" => self.dialog = Some(Dialog::About),
@@ -2873,6 +2879,8 @@ impl App {
         Some(match id {
             "draft.ortho" => self.draft.ortho,
             "view.split" => self.split.is_some(),
+            "view.splitLink" => self.split.as_ref().is_some_and(|s| s.linked),
+            "view.swipe" => self.split.as_ref().is_some_and(|s| s.swipe.is_some()),
             "draft.rightAngle" => self.draft.right_angle,
             "draft.polar" => self.draft.polar.is_some(),
             "draft.snap" => self.draft.snap,
