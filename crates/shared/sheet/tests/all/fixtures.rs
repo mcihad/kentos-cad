@@ -476,6 +476,8 @@ fn glyphs() {
         assets: Vec::new(),
         maps: Vec::new(),
         crs: None,
+        atlas: None,
+        keywords: None,
     };
     let faces = fonts_needed(&book, &pdf_inputs, &PdfOptions::default()).unwrap();
     let want: Vec<PdfFace> = serde_json::from_value(fx["expectFaces"].clone()).unwrap();

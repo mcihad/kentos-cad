@@ -1032695,6 +1032695,908 @@
       ]
     },
     {
+      "id": "file.export.atlas",
+      "version": 1,
+      "title": "Atlası PDF yap",
+      "summary": "Atlası olan bir paftayı (sheet), kapsam katmanının her nesnesi için bir sayfayla tek PDF'e yazar. Sayfaları paftanın atlas kuralları seçer: süzgeç, sıralama, sayfa adı, ölçek ilkesi. Çıktı sabitlenmiş bir durumdan yapılır: çizimin parçalarının damgaları, her kullanılan katmanın özeti ve bağlı katmanın kaynak dosyasının SHA-256'sı (pin). plan'ın verdiği pin'i execute'a vermek, plan'dan sonra çizim ya da kaynak değiştiyse pin_mismatch (çatışma) ile reddedilir; sayfalar yapılırken bağlı bir dosya değişirse hiçbir şey yazılmaz (source_changed) ve çıktının yenilenmesi istenir. Çıktının Keywords'ünde kentos.atlas/1, pin'in özeti, tema, zaman ve sistem yazılıdır. Bağlar açıktır: theme (projenin bir katman durumu, atlas haritaları onunla çizilir), time (zamanlı katmanların gösterildiği an: kapsam nesneleri ve harita onunla kesilir), crs (yalnız projenin sistemi; başka sistem crs_unsupported). Sayfaların taşıdığı öznitelikler izinlidir: fields (yoksa kapsam katmanının tanımlı alanları; alanı olmayan katmanda hepsi); bir formda redact işaretli alan hiçbir zaman taşınmaz. Katmanın süzgecinden ya da zamandan geçmeyen nesne ne sayfa olur ne haritada, tabloda, lejantta görünür. GeoPDF'te (TM sistem) her harita çerçevesi coğrafi görüntü penceresi taşır. plan dosyayı yazmaz, sayfaları ve pin'i söyler; çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "atlaspdf"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "AtlasLayerRole": {
+            "description": "What a layer is to an atlas run.",
+            "oneOf": [
+              {
+                "const": "coverage",
+                "description": "The layer whose objects are the pages.",
+                "type": "string"
+              },
+              {
+                "const": "map",
+                "description": "A layer the sheet's maps draw.",
+                "type": "string"
+              }
+            ]
+          },
+          "AtlasPin": {
+            "description": "The state of the drawing an atlas is made from (docs/adr/0534 §2): the project's parts' stamps, each layer's\ndigest and each bound file's SHA-256. A run given a pin refuses (`pin_mismatch`) when what it reads is not it.",
+            "properties": {
+              "data": {
+                "items": {
+                  "$ref": "#/$defs/AtlasPinLayer"
+                },
+                "type": "array"
+              },
+              "digest": {
+                "description": "The SHA-256 of all the above but the revision: one word for the state.",
+                "type": "string"
+              },
+              "layers": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The document's revision counter, decimal text: told, not compared (an undo and a redo change it, the content\nnot).",
+                "type": "string"
+              },
+              "settings": {
+                "type": "string"
+              },
+              "sheets": {
+                "type": "string"
+              },
+              "styles": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "settings",
+              "layers",
+              "styles",
+              "sheets",
+              "data",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinLayer": {
+            "description": "One layer's state in a pin.",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the layer's objects' kinds, geometries and attributes by lasting id (`sources::layer_digest`).",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/AtlasLayerRole"
+              },
+              "source": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AtlasPinSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The file the layer is the working copy of, when it is bound."
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "role",
+              "objects",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinSource": {
+            "description": "A bound layer's source file, as the run pinned it (docs/adr/0503).",
+            "properties": {
+              "current": {
+                "description": "The file's SHA-256 when the run looked; none when it could not be read.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The link's id, `kaynak-N`.",
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 when the layer last matched it: the revision the layer's objects are the copy of.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "revision"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.atlas` v1. Refusals, in order: `invalid_file_path`, `file_exists`, `no_sheets`,\n`unknown_sheet` (`sheet`), `no_atlas`, `atlas_no_layer`, `crs_unsupported` (`crs`), `unknown_theme`, `invalid_time`,\n`field_not_found` (`fields[i]`), `atlas_expression`, `atlas_empty`, `pin_mismatch` (`pin`; a conflict: take the plan\nagain), `source_changed` (a bound file changed while the pages were made: nothing is written, redo it),\n`pdf_unwritable`, `file_unwritable`. Warnings: `source_stale` (a bound file is not the one its layer was read from:\nthe pages are made from the layer, the pinned revision), `source_unsaved` (a bound layer has edits not yet written\nto its file).",
+        "properties": {
+          "crs": {
+            "description": "The coordinate system the pages are written in: the project's only (the EPSG code, or absent).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": [
+              "integer",
+              "null"
+            ],
+            "x-unit": "epsg"
+          },
+          "fields": {
+            "description": "The attributes the pages may carry, by name; the coverage layer's declared fields when absent (all of an\nundeclared layer's). A field a form marks `redact` is never carried, named or not.",
+            "items": {
+              "type": "string"
+            },
+            "type": [
+              "array",
+              "null"
+            ]
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "The file to write, an absolute path.",
+            "type": "string"
+          },
+          "pin": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/AtlasPin"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The state a plan pinned; the run refuses when the drawing or a bound file is not it."
+          },
+          "sheet": {
+            "description": "The sheet that has the atlas, by id.",
+            "type": "string"
+          },
+          "theme": {
+            "description": "A layer state of the project (a theme) that the atlas maps draw instead of the layers they would show.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "time": {
+            "description": "The moment the temporal layers are shown at (`2024`, `2024-06`, `2024-06-30`): the coverage layer's objects and the\nmaps' drawing are cut by it.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "path",
+          "sheet"
+        ],
+        "title": "ExportAtlas",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "AtlasBindings": {
+            "description": "What a run was bound to, written into the output (`Keywords`) and given back.",
+            "properties": {
+              "crsName": {
+                "type": "string"
+              },
+              "geo": {
+                "description": "Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.",
+                "type": "boolean"
+              },
+              "srid": {
+                "description": "The project's coordinate system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "theme": {
+                "description": "The theme the atlas maps were drawn in; none: the layers each map shows.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "time": {
+                "description": "The moment, as given; none: no time cut.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "srid",
+              "crsName",
+              "geo"
+            ],
+            "type": "object"
+          },
+          "AtlasLayerRole": {
+            "description": "What a layer is to an atlas run.",
+            "oneOf": [
+              {
+                "const": "coverage",
+                "description": "The layer whose objects are the pages.",
+                "type": "string"
+              },
+              {
+                "const": "map",
+                "description": "A layer the sheet's maps draw.",
+                "type": "string"
+              }
+            ]
+          },
+          "AtlasPageInfo": {
+            "description": "One page of the atlas as it was made.",
+            "properties": {
+              "bbox": {
+                "description": "The object's box: minimum east, north, maximum east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "length"
+              },
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The map's centre: the middle of the object's box.",
+                "x-unit": "length"
+              },
+              "feature": {
+                "description": "The object, by lasting id.",
+                "type": "string"
+              },
+              "index": {
+                "description": "From 1, the page's place in the file.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "name": {
+                "description": "The page's name (the atlas's page-name expression; a repeated one is numbered).",
+                "type": "string"
+              },
+              "scale": {
+                "description": "The first atlas map's scale, the denominator (1000 is 1/1000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "scale"
+              }
+            },
+            "required": [
+              "index",
+              "name",
+              "feature",
+              "scale",
+              "center",
+              "bbox"
+            ],
+            "type": "object"
+          },
+          "AtlasPin": {
+            "description": "The state of the drawing an atlas is made from (docs/adr/0534 §2): the project's parts' stamps, each layer's\ndigest and each bound file's SHA-256. A run given a pin refuses (`pin_mismatch`) when what it reads is not it.",
+            "properties": {
+              "data": {
+                "items": {
+                  "$ref": "#/$defs/AtlasPinLayer"
+                },
+                "type": "array"
+              },
+              "digest": {
+                "description": "The SHA-256 of all the above but the revision: one word for the state.",
+                "type": "string"
+              },
+              "layers": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The document's revision counter, decimal text: told, not compared (an undo and a redo change it, the content\nnot).",
+                "type": "string"
+              },
+              "settings": {
+                "type": "string"
+              },
+              "sheets": {
+                "type": "string"
+              },
+              "styles": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "settings",
+              "layers",
+              "styles",
+              "sheets",
+              "data",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinLayer": {
+            "description": "One layer's state in a pin.",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the layer's objects' kinds, geometries and attributes by lasting id (`sources::layer_digest`).",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/AtlasLayerRole"
+              },
+              "source": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AtlasPinSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The file the layer is the working copy of, when it is bound."
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "role",
+              "objects",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinSource": {
+            "description": "A bound layer's source file, as the run pinned it (docs/adr/0503).",
+            "properties": {
+              "current": {
+                "description": "The file's SHA-256 when the run looked; none when it could not be read.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The link's id, `kaynak-N`.",
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 when the layer last matched it: the revision the layer's objects are the copy of.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.atlas` wrote, or with `plan` would write.",
+        "properties": {
+          "bindings": {
+            "$ref": "#/$defs/AtlasBindings"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "fields": {
+            "description": "The attributes the pages carry (what the sheet's expressions, tables and legends can read).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "filteredOut": {
+            "description": "The coverage layer's objects the layer's filter or the time left out, counted.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "description": "The sheet core's findings (an SVG picture drawn as a box …)."
+          },
+          "notes": {
+            "description": "What a host without a window cannot draw, said in words.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/$defs/AtlasPageInfo"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "pin": {
+            "$ref": "#/$defs/AtlasPin",
+            "description": "The state the pages are made from."
+          },
+          "replaced": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "string"
+          },
+          "withheld": {
+            "description": "The coverage layer's attribute names the pages do not carry: a form's `redact`, or not in `fields`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "replaced",
+          "sheet",
+          "pages",
+          "pin",
+          "bindings",
+          "fields",
+          "withheld",
+          "filteredOut",
+          "findings",
+          "notes"
+        ],
+        "title": "AtlasExported",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "AtlasBindings": {
+            "description": "What a run was bound to, written into the output (`Keywords`) and given back.",
+            "properties": {
+              "crsName": {
+                "type": "string"
+              },
+              "geo": {
+                "description": "Whether the PDF carries geographic viewports (GeoPDF): a transverse Mercator system.",
+                "type": "boolean"
+              },
+              "srid": {
+                "description": "The project's coordinate system.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "theme": {
+                "description": "The theme the atlas maps were drawn in; none: the layers each map shows.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "time": {
+                "description": "The moment, as given; none: no time cut.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "srid",
+              "crsName",
+              "geo"
+            ],
+            "type": "object"
+          },
+          "AtlasLayerRole": {
+            "description": "What a layer is to an atlas run.",
+            "oneOf": [
+              {
+                "const": "coverage",
+                "description": "The layer whose objects are the pages.",
+                "type": "string"
+              },
+              {
+                "const": "map",
+                "description": "A layer the sheet's maps draw.",
+                "type": "string"
+              }
+            ]
+          },
+          "AtlasPageInfo": {
+            "description": "One page of the atlas as it was made.",
+            "properties": {
+              "bbox": {
+                "description": "The object's box: minimum east, north, maximum east, north.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": "array",
+                "x-unit": "length"
+              },
+              "center": {
+                "$ref": "#/$defs/Vec2",
+                "description": "The map's centre: the middle of the object's box.",
+                "x-unit": "length"
+              },
+              "feature": {
+                "description": "The object, by lasting id.",
+                "type": "string"
+              },
+              "index": {
+                "description": "From 1, the page's place in the file.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "name": {
+                "description": "The page's name (the atlas's page-name expression; a repeated one is numbered).",
+                "type": "string"
+              },
+              "scale": {
+                "description": "The first atlas map's scale, the denominator (1000 is 1/1000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "scale"
+              }
+            },
+            "required": [
+              "index",
+              "name",
+              "feature",
+              "scale",
+              "center",
+              "bbox"
+            ],
+            "type": "object"
+          },
+          "AtlasPin": {
+            "description": "The state of the drawing an atlas is made from (docs/adr/0534 §2): the project's parts' stamps, each layer's\ndigest and each bound file's SHA-256. A run given a pin refuses (`pin_mismatch`) when what it reads is not it.",
+            "properties": {
+              "data": {
+                "items": {
+                  "$ref": "#/$defs/AtlasPinLayer"
+                },
+                "type": "array"
+              },
+              "digest": {
+                "description": "The SHA-256 of all the above but the revision: one word for the state.",
+                "type": "string"
+              },
+              "layers": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The document's revision counter, decimal text: told, not compared (an undo and a redo change it, the content\nnot).",
+                "type": "string"
+              },
+              "settings": {
+                "type": "string"
+              },
+              "sheets": {
+                "type": "string"
+              },
+              "styles": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "revision",
+              "settings",
+              "layers",
+              "styles",
+              "sheets",
+              "data",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinLayer": {
+            "description": "One layer's state in a pin.",
+            "properties": {
+              "digest": {
+                "description": "The SHA-256 of the layer's objects' kinds, geometries and attributes by lasting id (`sources::layer_digest`).",
+                "type": "string"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "role": {
+                "$ref": "#/$defs/AtlasLayerRole"
+              },
+              "source": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/AtlasPinSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The file the layer is the working copy of, when it is bound."
+              }
+            },
+            "required": [
+              "layer",
+              "name",
+              "role",
+              "objects",
+              "digest"
+            ],
+            "type": "object"
+          },
+          "AtlasPinSource": {
+            "description": "A bound layer's source file, as the run pinned it (docs/adr/0503).",
+            "properties": {
+              "current": {
+                "description": "The file's SHA-256 when the run looked; none when it could not be read.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The link's id, `kaynak-N`.",
+                "type": "string"
+              },
+              "path": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 when the layer last matched it: the revision the layer's objects are the copy of.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "revision"
+            ],
+            "type": "object"
+          },
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.atlas` wrote, or with `plan` would write.",
+        "properties": {
+          "bindings": {
+            "$ref": "#/$defs/AtlasBindings"
+          },
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "fields": {
+            "description": "The attributes the pages carry (what the sheet's expressions, tables and legends can read).",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "filteredOut": {
+            "description": "The coverage layer's objects the layer's filter or the time left out, counted.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "findings": {
+            "description": "The sheet core's findings (an SVG picture drawn as a box …)."
+          },
+          "notes": {
+            "description": "What a host without a window cannot draw, said in words.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "pages": {
+            "items": {
+              "$ref": "#/$defs/AtlasPageInfo"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "pin": {
+            "$ref": "#/$defs/AtlasPin",
+            "description": "The state the pages are made from."
+          },
+          "replaced": {
+            "type": "boolean"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "string"
+          },
+          "withheld": {
+            "description": "The coverage layer's attribute names the pages do not carry: a form's `redact`, or not in `fields`.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "path",
+          "bytes",
+          "sha256",
+          "replaced",
+          "sheet",
+          "pages",
+          "pin",
+          "bindings",
+          "fields",
+          "withheld",
+          "filteredOut",
+          "findings",
+          "notes"
+        ],
+        "title": "AtlasExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "no_sheets",
+          "unknown_sheet",
+          "no_atlas",
+          "atlas_no_layer",
+          "crs_unsupported",
+          "unknown_theme",
+          "invalid_time",
+          "field_not_found",
+          "atlas_expression",
+          "atlas_empty",
+          "pin_mismatch",
+          "source_changed",
+          "pdf_unwritable",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "source_stale",
+          "source_unsaved"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel atlası, bugünün durumundan",
+          "input": {
+            "overwrite": true,
+            "path": "/veri/parsel-atlasi.pdf",
+            "sheet": "atlas-paftasi"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.import.csv",
       "version": 1,
       "title": "CSV içe aktar",
@@ -1037087,6 +1037989,60 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "PDF yapılamadı."
+    },
+    {
+      "code": "no_atlas",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Paftanın atlası yok: önce atlasını (kapsam katmanı) tanımlayın."
+    },
+    {
+      "code": "atlas_no_layer",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Atlasın kapsam katmanı seçilmemiş ya da çizimde böyle bir katman yok."
+    },
+    {
+      "code": "atlas_empty",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Atlasın sayfası yok: kapsam katmanında süzgeçlerden geçen nesne kalmadı."
+    },
+    {
+      "code": "atlas_expression",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Atlasın süzgeci, sıralaması ya da sayfa adı çalışmıyor."
+    },
+    {
+      "code": "unknown_theme",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Projede bu adda katman durumu (tema) yok."
+    },
+    {
+      "code": "crs_unsupported",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Çıktı projenin koordinat sisteminde basılır; başka bir sistem istenemez."
+    },
+    {
+      "code": "source_stale",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bağlı katmanın dosyası, katmanın okunduğu dosya değil; sayfalar katmandan, yani sabitlenen sürümden yapıldı."
+    },
+    {
+      "code": "source_unsaved",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bağlı katmanda dosyaya yazılmamış değişiklikler var; sayfalar katmandan, yani değişiklikleriyle yapıldı."
+    },
+    {
+      "code": "pin_mismatch",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Çizim ya da bağlı kaynak, planın sabitlediği hâlden değişti; planı yeniden alıp çıktıyı yenileyin."
     },
     {
       "code": "no_constraints",

@@ -652,6 +652,7 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.sld"
             | "file.import.sld"
             | "file.export.csv"
+            | "file.export.atlas"
             | "file.import.csv"
             // With `replace` it redefines the drawing's blocks of the file's names (docs/adr/0316 §3).
             | "file.import.block"

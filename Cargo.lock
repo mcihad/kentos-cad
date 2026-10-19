@@ -2842,6 +2842,7 @@ dependencies = [
  "kentos-domain",
  "kentos-geometry-core",
  "kentos-interaction",
+ "kentos-native-application",
  "kentos-native-style",
  "kentos-project",
  "kentos-sheet",

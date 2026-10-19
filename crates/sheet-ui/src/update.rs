@@ -393,6 +393,7 @@ impl Designer {
                 }
             }
             Message::Print => self.open_pdf(true),
+            Message::Atlas => return vec![Effect::HostAction("sheet.atlas".to_owned())],
             Message::Pdf(m) => return self.pdf_update(m),
             Message::MapScaleFromDrawing => {
                 if let Some(s) = self.ctx.capabilities.plot_scale.filter(|s| *s >= 1) {

@@ -18,6 +18,9 @@
 //! closed since, carries a generation and is dropped.
 
 pub mod apply;
+mod atlas_export;
+#[cfg(test)]
+mod atlas_tests;
 pub(crate) mod coord_export;
 mod csv_exchange;
 #[cfg(test)]
@@ -123,6 +126,8 @@ pub enum Window {
     /// Shapefile dışa aktar (docs/adr/0514).
     ShpExport(shp_export::State),
     /// CSV dışa aktar and içe aktar (docs/adr/0522).
+    /// Atlası PDF yap (docs/adr/0534); boxed: the plan it holds.
+    AtlasExport(Box<atlas_export::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
     /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
@@ -152,6 +157,7 @@ pub enum Event {
     Package(package::Event),
     ShpExport(shp_export::Event),
     Csv(csv_exchange::Event),
+    Atlas(atlas_export::Event),
     /// An export written: the file's name, or why not; `None` when the save
     /// dialog was cancelled.
     Written(Option<Result<String, String>>),
@@ -159,7 +165,8 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 24] = [
+pub const COMMANDS: [&str; 25] = [
+    "file.export.atlas",
     "file.import.dxf",
     "file.import.ncz",
     "file.import.ncn",
@@ -225,6 +232,7 @@ impl App {
             "file.export.shp" => self.shp_export_open(),
             "file.export.csv" => self.csv_export_open(),
             "file.import.csv" => self.csv_import_pick(),
+            "file.export.atlas" => self.atlas_export_open(),
             "field.send" => self.field_send_selection(),
             "file.export.kml" => {
                 let state = wgs84_export::State::new(self, wgs84_export::Format::Kml);
@@ -410,6 +418,7 @@ impl App {
             Event::Package(e) => self.package_event(e),
             Event::ShpExport(e) => self.shp_export_event(e),
             Event::Csv(e) => self.csv_event(e),
+            Event::Atlas(e) => self.atlas_export_event(e),
             Event::Written(outcome) => self.export_written(outcome),
             Event::Close => {
                 self.close_exchange();
@@ -450,6 +459,7 @@ impl App {
             Some(Window::Postgis(s)) => self.postgis_view(s),
             Some(Window::ShpExport(s)) => self.shp_export_view(s),
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
+            Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
             Some(Window::PdfImport(s)) => self.pdf_import_view(s),
             None => iced::widget::text("").into(),

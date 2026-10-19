@@ -1376,6 +1376,10 @@ impl App {
                 Effect::HostAction(action) if action == "project.crs" => {
                     task = Task::done(Message::Run("crs.set"));
                 }
+                // Atlas: the atlas's window (docs/adr/0534), the preview and the PDF with a page for each object.
+                Effect::HostAction(action) if action == "sheet.atlas" => {
+                    task = Task::done(Message::Run("file.export.atlas"));
+                }
                 Effect::HostAction(action) => self.warn(format!(
                     "Bu düzeltme ({action}) masaüstünde bu sürümde yok."
                 )),
@@ -2124,8 +2128,8 @@ mod tests {
             Some(crate::project::Window::Settings(_))
         ));
         // What the desktop does not have yet is said, not swallowed.
-        let _ = app.sheet_effects(vec![Effect::HostAction("sheet.atlas".into())]);
-        assert!(crate::files_testing::last_said(&app).contains("sheet.atlas"));
+        let _ = app.sheet_effects(vec![Effect::HostAction("sheet.nothing".into())]);
+        assert!(crate::files_testing::last_said(&app).contains("sheet.nothing"));
     }
 
     /// The map's content keeps inside its box, its view turned or not (a turned

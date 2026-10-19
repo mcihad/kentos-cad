@@ -171,6 +171,7 @@ COMMANDS: dict[str, Any] = {
     "cad.walls.joins": walls.joins,
     "cad.xrefs.edit": xrefs.edit,
     "cad.xrefs.list": xrefs.list,
+    "file.export.atlas": file.export.atlas,
     "file.export.block": file.export.block,
     "file.export.csv": file.export.csv,
     "file.export.dxf": file.export.dxf,

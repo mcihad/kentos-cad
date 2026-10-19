@@ -1,0 +1,24 @@
+{
+  "data": [
+    {
+      "digest": "734a040d8932af5e47421dad29bf9a7432b4163ddefabe8462cd521eb1db3477",
+      "layer": "parsel",
+      "name": "Parsel",
+      "objects": 105,
+      "role": "coverage"
+    },
+    {
+      "digest": "68ca5876bce88954dafb89a35edc8000f4338ec4572655dc9bd49deab996bf44",
+      "layer": "yol",
+      "name": "Yol",
+      "objects": 4,
+      "role": "map"
+    }
+  ],
+  "digest": "fb00ebbdd191c350a9acb45f2d93068a29d7d3785392a49d405c652929094d7d",
+  "layers": "dc68588f7c2bb4e5",
+  "revision": "2",
+  "settings": "669b384a57796d2a",
+  "sheets": "47968af2e5058b8e",
+  "styles": "eed4859ea5c8b71c"
+}

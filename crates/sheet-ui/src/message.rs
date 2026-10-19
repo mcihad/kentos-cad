@@ -266,6 +266,8 @@ pub enum Message {
     Export(ExportKind),
     /// Yazdır…: the export window for a PDF, Yazdır first.
     Print,
+    /// Atlas: the host's atlas window (docs/adr/0534): the preview and the PDF with a page for each object.
+    Atlas,
     Pdf(PdfMessage),
     /// “Resim seç…”: the host asks which picture file the chosen picture frames show.
     ChoosePicture,

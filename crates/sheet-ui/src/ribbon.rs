@@ -102,7 +102,7 @@ impl Designer {
                 .on_press_maybe((self.selection.len() > 1).then(|| wrap(Message::Group))),
             // As the web's: the command's own name (a mode's name for it stays in the tooltip).
             "grid" => Button::small(tool_icon(&t.id), "Karelaj"),
-            "atlas" => Button::small(tool_icon(&t.id), "Atlas"),
+            "atlas" => Button::small(tool_icon(&t.id), "Atlas").on_press(wrap(Message::Atlas)),
             _ if t.item.is_some() => {
                 let active = matches!(&self.tool, Tool::Add { tool, .. } if *tool == t.id);
                 let face = if t.shortcut.is_some() {

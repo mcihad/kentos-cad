@@ -3168,6 +3168,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.export.atlas",
+        refusals: &[
+            &["invalid_file_path", "file_exists", "no_sheets", "unknown_sheet", "no_atlas", "atlas_no_layer"],
+            &["crs_unsupported", "unknown_theme", "invalid_time", "field_not_found"],
+            &["atlas_expression", "atlas_empty", "pin_mismatch", "source_changed"],
+            &["pdf_unwritable", "file_unwritable"],
+        ],
+        warnings: &["source_stale", "source_unsaved"],
+        targets: none,
+    },
+    Entry {
         id: "file.import.csv",
         refusals: &[
             &["invalid_file_path", "file_not_found", "import_unreadable"],

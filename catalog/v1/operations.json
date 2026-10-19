@@ -1915,6 +1915,13 @@
         "cad.inserts.clip"
       ],
       "note": "Kırp: yerleştirme ve sınır çizimden, yazma cad.inserts.clip ile tek adımda (ADR 0351 §1)."
+    },
+    "file.export.atlas": {
+      "level": "semantic",
+      "via": [
+        "file.export.atlas"
+      ],
+      "note": "Pencerede sayfalar adları, ölçekleri ve nesneleriyle ile sabitlenen durum önizlenir, Dışa aktar… komutla PDF'i bütün yazar; çizim ya da kaynak değişmişse pin_mismatch ya da source_changed ile yenilenmesi istenir (ADR 0534)."
     }
   },
   "tools": {

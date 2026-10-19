@@ -1158,6 +1158,26 @@ codes! {
     /// The PDF could not be made.
     PDF_UNWRITABLE = "pdf_unwritable", Failed, false, "PDF yapılamadı.";
 
+    // ── The atlas (docs/adr/0534) ───────────────────────────────────────
+    /// A sheet that has no atlas.
+    NO_ATLAS = "no_atlas", Failed, false, "Paftanın atlası yok: önce atlasını (kapsam katmanı) tanımlayın.";
+    /// An atlas whose coverage layer is not chosen, or is not a layer of the drawing.
+    ATLAS_NO_LAYER = "atlas_no_layer", Failed, false, "Atlasın kapsam katmanı seçilmemiş ya da çizimde böyle bir katman yok.";
+    /// An atlas with no page: the layer has no object, or the filter, the time and the layer's filter leave none.
+    ATLAS_EMPTY = "atlas_empty", Failed, false, "Atlasın sayfası yok: kapsam katmanında süzgeçlerden geçen nesne kalmadı.";
+    /// An atlas's filter, sort or page name the sheet core refuses.
+    ATLAS_EXPRESSION = "atlas_expression", Failed, false, "Atlasın süzgeci, sıralaması ya da sayfa adı çalışmıyor.";
+    /// A theme the project has no layer state of.
+    UNKNOWN_THEME = "unknown_theme", Failed, false, "Projede bu adda katman durumu (tema) yok.";
+    /// A coordinate system other than the project's, for output made in the project's.
+    CRS_UNSUPPORTED = "crs_unsupported", Failed, false, "Çıktı projenin koordinat sisteminde basılır; başka bir sistem istenemez.";
+    /// A bound layer's file is not the one the layer was read from (docs/adr/0534 §2).
+    SOURCE_STALE = "source_stale", Warning, false, "Bağlı katmanın dosyası, katmanın okunduğu dosya değil; sayfalar katmandan, yani sabitlenen sürümden yapıldı.";
+    /// A bound layer has edits its file does not (docs/adr/0534 §2).
+    SOURCE_UNSAVED = "source_unsaved", Warning, false, "Bağlı katmanda dosyaya yazılmamış değişiklikler var; sayfalar katmandan, yani değişiklikleriyle yapıldı.";
+    /// The drawing or a bound source is not the state a plan pinned.
+    PIN_MISMATCH = "pin_mismatch", Conflict, true, "Çizim ya da bağlı kaynak, planın sabitlediği hâlden değişti; planı yeniden alıp çıktıyı yenileyin.";
+
     // ── Constraints (docs/adr/0334, 0335) ────────────────────────────────
     /// An edit with nothing in it: no constraint to add, no id to take away.
     NO_CONSTRAINTS = "no_constraints", Failed, false, "Eklenecek ya da kaldırılacak kısıt verilmedi.";
