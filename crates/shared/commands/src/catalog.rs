@@ -8092,6 +8092,60 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // A layer's look as a QGIS layer style file, out and in (docs/adr/0555).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_QML.into(),
+            version: crate::FILE_EXPORT_QML_VERSION,
+            title: "Görünüşü QML olarak dışa aktar".into(),
+            summary: "Katmanın görünüşünü (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) QGIS'in stil dosyası olarak path'e (.qml) yazar; QGIS 4.2 Stil › Stil yükle ile açar. \
+                      Tek simge, kategorili (Diğerleri QGIS'in NULL sınıfı), aralıklı ve kurallı görünüş (iç içe kurallar, ölçek aralıkları, ELSE, kapalı kural) QGIS'in aynı türüyle; kuralların süzgeci QGIS'in ifadesiyle (\"Ad\" = 'x'): alanın sayı ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil. \
+                      Simgeler: basit dolgu, basit çizgi (renk, kalınlık, kesikler, uç, köşe, halkalar), şekil işaretleri (on beş şekil; döndürme QGIS'in saat yönüyle), merkez işareti; birimler mm, piksel ve haritada metre olarak kalır, simgenin saydamlığı ve kapalı katman korunur. \
+                      QML tek geometri türü içindir: alanlar, sonra çizgiler, sonra noktalar; öbürleri, tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer ve efektler yazılmaz, export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["qmlout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportQml>(),
+            output: schema::<crate::QmlExported>(),
+            plan: Some(schema::<crate::QmlExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parsel katmanının görünüşü".into(),
+                input: json!({ "path": "/veri/parsel.qml", "layer": "parsel", "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_QML.into(),
+            version: crate::FILE_IMPORT_QML_VERSION,
+            title: "QML'den görünüş al".into(),
+            summary: "path'teki (ya da text'teki) QGIS stil dosyasının görünüşünü katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): QGIS'in tek simge, kategorili, aralıklı ve kurallı görünüşü KentOS'un aynı türü olur; birden çok değerli sınıf her değer için bir sınıf, NULL sınıfı Diğerleri, kuralların süzgeci KentOS'un ifadesine çevrilir (IN de). \
+                      Basit dolgu (kenarı ayrı çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel kesikler), basit işaret ve merkez dolgusu, simgenin saydamlığı, kapalı katman, mm, nokta, inç, piksel ve harita birimi alınır. \
+                      Başka simge katmanları, fırça desenleri, veriye bağlı değerler, etiketler, katmanın saydamlığı ve çevrilemeyen süzgeç alınmaz, import_losses ile söylenir; aralıkların sınır kuralı farkı da söylenir. QGIS 3 ve 4'ün yazdığı QML okunur. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["qmlin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportQml>(),
+            output: schema::<crate::QmlImported>(),
+            plan: Some(schema::<crate::QmlImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "QGIS'in yazdığı parsel görünüşü".into(),
+                input: json!({ "layer": "parsel", "path": "/veri/parsel.qml" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::FILE_EXPORT_DXF.into(),
             version: crate::FILE_EXPORT_DXF_VERSION,
@@ -9000,6 +9054,12 @@ mod tests {
                     }
                     crate::FILE_IMPORT_SLD => {
                         serde_json::from_value::<crate::ImportSld>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_QML => {
+                        serde_json::from_value::<crate::ExportQml>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_QML => {
+                        serde_json::from_value::<crate::ImportQml>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_PACKAGE => {
                         serde_json::from_value::<crate::PackageProject>(e.input.clone()).map(|_| ())

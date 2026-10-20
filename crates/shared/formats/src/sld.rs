@@ -59,7 +59,7 @@ pub struct Read {
 
 /// A filter as the writer and the reader share it.
 #[derive(Clone, Debug, PartialEq)]
-enum Filter {
+pub(crate) enum Filter {
     Cmp(Op, String, Lit),
     Between(String, f64, f64),
     Null(String),
@@ -70,7 +70,7 @@ enum Filter {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Op {
+pub(crate) enum Op {
     Eq,
     Ne,
     Lt,
@@ -116,7 +116,7 @@ impl Op {
 }
 
 #[derive(Clone, Debug, PartialEq)]
-enum Lit {
+pub(crate) enum Lit {
     Num(f64),
     Text(String),
 }
@@ -151,7 +151,7 @@ fn bare_field(w: &str) -> bool {
 }
 
 /// A field alone: `[Ad Soyad]` or a bare word `Ad`.
-fn field_of(expr: &str) -> Option<String> {
+pub(crate) fn field_of(expr: &str) -> Option<String> {
     let e = expr.trim();
     if let Some(inner) = e.strip_prefix('[').and_then(|r| r.strip_suffix(']')) {
         let inner = inner.trim();
@@ -170,9 +170,10 @@ enum Tok {
     Word(String),
     Open,
     Close,
+    Comma,
 }
 
-fn tokens(src: &str) -> Option<Vec<Tok>> {
+fn tokens(src: &str, qgis: bool) -> Option<Vec<Tok>> {
     let c: Vec<char> = src.chars().collect();
     let mut out = Vec::new();
     let mut i = 0;
@@ -187,7 +188,8 @@ fn tokens(src: &str) -> Option<Vec<Tok>> {
             ));
             i = j + 1;
         } else if ch == '\'' || ch == '"' {
-            // A text in either quote, the quote doubled inside it (as KentOS's lexer reads it).
+            // A text in either quote, the quote doubled inside it (as KentOS's lexer reads it); in QGIS's
+            // expressions a double-quoted word is a field.
             let q = ch;
             let mut s = String::new();
             let mut j = i + 1;
@@ -204,7 +206,11 @@ fn tokens(src: &str) -> Option<Vec<Tok>> {
                 s.push(x);
                 j += 1;
             }
-            out.push(Tok::Text(s));
+            out.push(if qgis && q == '"' {
+                Tok::Field(s)
+            } else {
+                Tok::Text(s)
+            });
             i = j + 1;
         } else if ch.is_ascii_digit()
             || (ch == '-' && c.get(i + 1).is_some_and(char::is_ascii_digit))
@@ -223,6 +229,9 @@ fn tokens(src: &str) -> Option<Vec<Tok>> {
             i += 1;
         } else if ch == ')' {
             out.push(Tok::Close);
+            i += 1;
+        } else if ch == ',' {
+            out.push(Tok::Comma);
             i += 1;
         } else if "<>=!".contains(ch) {
             let two: String = c[i..(i + 2).min(c.len())].iter().collect();
@@ -246,7 +255,10 @@ fn tokens(src: &str) -> Option<Vec<Tok>> {
                 j += 1;
             }
             let w: String = c[i..j].iter().collect();
-            if bare_field(&w) {
+            // QGIS's `IN`, which is no word of KentOS's.
+            if qgis && w.eq_ignore_ascii_case("in") {
+                out.push(Tok::Word("in".into()));
+            } else if bare_field(&w) {
                 out.push(Tok::Field(w));
             } else {
                 out.push(Tok::Word(w.to_lowercase()));
@@ -262,8 +274,17 @@ fn tokens(src: &str) -> Option<Vec<Tok>> {
 /// The expression as a filter, when the grammar can say it: comparisons of a field with a number or a text,
 /// `arasında`/`between`, `boş`/`is null`, `gibi`/`like`, joined by `ve`/`and`, `veya`/`or`, `değil`/`not` and
 /// parentheses.
-fn parse_filter(src: &str) -> Option<Filter> {
-    let toks = tokens(src)?;
+pub(crate) fn parse_filter(src: &str) -> Option<Filter> {
+    let toks = tokens(src, false)?;
+    let mut at = 0;
+    let f = or_of(&toks, &mut at)?;
+    (at == toks.len()).then_some(f)
+}
+
+/// A QGIS expression as a filter, when the grammar can say it: `"field"` and bare words are fields, `'text'`
+/// texts, `AND`, `OR`, `NOT`, `IS NULL`, `LIKE`, `BETWEEN … AND …` and `IN (…)` (one comparison each, joined by OR).
+pub(crate) fn parse_qgis(src: &str) -> Option<Filter> {
+    let toks = tokens(src, true)?;
     let mut at = 0;
     let f = or_of(&toks, &mut at)?;
     (at == toks.len()).then_some(f)
@@ -357,6 +378,36 @@ fn not_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
             *at += 1;
             Some(Filter::Like(name, p.clone()))
         }
+        Some(Tok::Word(w)) if w == "in" => {
+            *at += 1;
+            if t.get(*at) != Some(&Tok::Open) {
+                return None;
+            }
+            *at += 1;
+            let mut parts = Vec::new();
+            loop {
+                let lit = match t.get(*at)? {
+                    Tok::Num(n) => Lit::Num(*n),
+                    Tok::Text(s) => Lit::Text(s.clone()),
+                    _ => return None,
+                };
+                parts.push(Filter::Cmp(Op::Eq, name.clone(), lit));
+                *at += 1;
+                match t.get(*at)? {
+                    Tok::Comma => *at += 1,
+                    Tok::Close => {
+                        *at += 1;
+                        break;
+                    }
+                    _ => return None,
+                }
+            }
+            Some(if parts.len() == 1 {
+                parts.remove(0)
+            } else {
+                Filter::Or(parts)
+            })
+        }
         Some(Tok::Word(w)) if w == "arasında" || w == "between" => {
             *at += 1;
             let Some(Tok::Num(a)) = t.get(*at) else {
@@ -375,7 +426,7 @@ fn not_of(t: &[Tok], at: &mut usize) -> Option<Filter> {
     }
 }
 
-fn esc(s: &str) -> String {
+pub(crate) fn esc(s: &str) -> String {
     s.replace('&', "&amp;")
         .replace('<', "&lt;")
         .replace('>', "&gt;")
@@ -383,7 +434,7 @@ fn esc(s: &str) -> String {
 }
 
 /// A number as the shortest text that reads back to it.
-fn num(v: f64) -> String {
+pub(crate) fn num(v: f64) -> String {
     if v == v.trunc() && v.abs() < 1e15 {
         format!("{}", v as i64)
     } else {
@@ -455,7 +506,7 @@ fn filter_xml(f: &Filter, out: &mut String, pad: &str) {
 }
 
 /// A filter as KentOS's expression.
-fn filter_text(f: &Filter) -> String {
+pub(crate) fn filter_text(f: &Filter) -> String {
     let lit = |l: &Lit| match l {
         Lit::Num(n) => num(*n),
         Lit::Text(s) => format!("'{}'", s.replace('\'', "''")),
@@ -493,7 +544,7 @@ fn wrap(f: &Filter, in_and: bool) -> String {
 // ─── Writing ──────────────────────────────────────────────────────────────────────────────────────────
 
 /// A colour and its opacity: `#rrggbb`, `#rrggbbaa`, `#rgb`; other forms (a theme token) are none.
-fn colour(v: &Value) -> Option<(String, f64)> {
+pub(crate) fn colour(v: &Value) -> Option<(String, f64)> {
     let s = v.as_str()?.trim();
     let h = s.strip_prefix('#')?;
     if !h.chars().all(|c| c.is_ascii_hexdigit()) {
@@ -523,12 +574,17 @@ fn size_of(v: f64, unit: &str) -> (f64, &'static str) {
     }
 }
 
-fn round3(v: f64) -> f64 {
+pub(crate) fn round3(v: f64) -> f64 {
     (v * 1000.0).round() / 1000.0
 }
 
 /// A fixed value of a symbol layer's property, or why not.
-fn fixed<'a>(layer: &'a Value, key: &str, lost: &mut Vec<String>, what: &str) -> Option<&'a Value> {
+pub(crate) fn fixed<'a>(
+    layer: &'a Value,
+    key: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<&'a Value> {
     let v = layer.get(key)?;
     if v.is_object() && v.get("expr").is_some() {
         let fallback = v.get("fallback").filter(|f| !f.is_null());
@@ -1229,7 +1285,7 @@ fn size_in(v: f64, uom: Option<&str>) -> (f64, &'static str) {
     }
 }
 
-fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
+pub(crate) fn colour_with(rgb: &str, opacity: Option<f64>) -> String {
     match opacity.filter(|o| *o < 1.0) {
         Some(o) => format!(
             "{}{:02x}",

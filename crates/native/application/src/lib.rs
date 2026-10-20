@@ -86,6 +86,7 @@ pub mod file_import_csv;
 pub mod file_import_fgb;
 pub mod file_import_gml;
 pub mod shapefile;
+pub mod qml;
 pub mod sld;
 pub mod sources;
 pub mod geopackage;
@@ -1116,6 +1117,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_SLD,
         kentos_commands::FILE_IMPORT_SLD_VERSION,
+    ),
+    // A QML's look made a layer's ([`qml`], docs/adr/0555).
+    (
+        kentos_commands::FILE_IMPORT_QML,
+        kentos_commands::FILE_IMPORT_QML_VERSION,
     ),
     // A PDF page into the drawing ([`file_import_pdf`], docs/adr/0352).
     (

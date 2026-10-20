@@ -17901,6 +17901,28 @@
    "kinds": []
   },
   {
+   "id": "file.export.qml",
+   "title": "Görünüşü QML olarak dışa aktar",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 0,
+   "files": [],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": false
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.export.shp",
    "title": "Shapefile dışa aktar",
    "effect": "query",
@@ -18299,6 +18321,24 @@
      "covered": false
     }
    ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.qml",
+   "title": "QML'den görünüş al",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 28,
+   "files": [
+    "fixtures/commands/v1/file.import.qml.json"
+   ],
+   "options": [],
    "kinds": []
   },
   {
