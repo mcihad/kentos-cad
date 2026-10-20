@@ -7,7 +7,8 @@
 
 use kentos_contracts::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind,
-    NetworkLevels, NetworkPeriod, NetworkTurns, NetworkUTurns, TurnLayer, networks_problem,
+    NetworkLevels, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
+    SubnetworkReach, TerminalDevice, TurnLayer, networks_problem,
 };
 
 use super::Encoder;
@@ -28,6 +29,9 @@ enum V<'d> {
     TurnLayers(&'d [TurnLayer]),
     Levels(&'d NetworkLevels),
     Periods(&'d [NetworkPeriod]),
+    Terminals(&'d NetworkTerminals),
+    Devices(&'d [TerminalDevice]),
+    Subnetworks(&'d NetworkSubnetworks),
 }
 
 fn u_turns_name(u: NetworkUTurns) -> &'static str {
@@ -121,6 +125,68 @@ impl<'d> Encoder<'d> {
                 }
                 self.close();
                 Ok(())
+            }
+            V::Terminals(t) => self.network_map(vec![
+                ("start", V::Text(&t.start)),
+                ("end", V::Text(&t.end)),
+                ("devices", V::Devices(&t.devices)),
+            ]),
+            V::Devices(list) => {
+                self.open(list.len(), false)?;
+                for (i, d) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.open(3, true)?;
+                        let mut keys = [("layer", 0u8), ("paths", 1), ("terminals", 2)];
+                        keys.sort_by(|a, b| key_order(a.0, b.0));
+                        for (key, which) in keys {
+                            e.key(key);
+                            e.at(Seg::Name(key), |e| match which {
+                                0 => e.text(&d.layer),
+                                1 => {
+                                    e.open(d.paths.len(), false)?;
+                                    for (k, path) in d.paths.iter().enumerate() {
+                                        e.at(Seg::Index(k), |e| e.network_value(V::Texts(path)))?;
+                                    }
+                                    e.close();
+                                    Ok(())
+                                }
+                                _ => {
+                                    e.open(d.terminals.len(), false)?;
+                                    for (k, t) in d.terminals.iter().enumerate() {
+                                        e.at(Seg::Index(k), |e| {
+                                            e.network_map(vec![
+                                                ("id", V::Text(&t.id)),
+                                                ("name", V::Text(&t.name)),
+                                            ])
+                                        })?;
+                                    }
+                                    e.close();
+                                    Ok(())
+                                }
+                            })?;
+                        }
+                        e.close();
+                        Ok(())
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Subnetworks(s) => {
+                let mut f = vec![
+                    ("attribute", V::Text(&s.attribute)),
+                    (
+                        "reach",
+                        V::Text(match s.reach {
+                            SubnetworkReach::Downstream => "downstream",
+                            SubnetworkReach::Connected => "connected",
+                        }),
+                    ),
+                ];
+                if let Some(x) = &s.name {
+                    f.push(("name", V::Text(x)));
+                }
+                self.network_map(f)
             }
             V::Levels(l) => {
                 let mut f = vec![("start", V::Text(&l.start)), ("end", V::Text(&l.end))];
@@ -270,6 +336,12 @@ impl<'d> Encoder<'d> {
                 }
                 if let Some(l) = &n.levels {
                     f.push(("levels", V::Levels(l)));
+                }
+                if let Some(t) = &n.terminals {
+                    f.push(("terminals", V::Terminals(t)));
+                }
+                if let Some(s) = &n.subnetworks {
+                    f.push(("subnetworks", V::Subnetworks(s)));
                 }
                 e.network_map(f)
             })?;

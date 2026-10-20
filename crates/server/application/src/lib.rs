@@ -30,6 +30,7 @@ mod journal;
 pub mod lifecycle;
 pub mod listing;
 pub mod people;
+pub mod processing_job;
 pub mod projects;
 pub mod restore;
 pub mod sharing;

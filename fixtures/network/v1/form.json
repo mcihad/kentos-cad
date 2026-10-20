@@ -938,6 +938,433 @@
     "levelStart": "z_bas"
    },
    "problem": "“Yollar” ağının seviyesi için başlangıç ve bitiş alanı birlikte yazılır."
+  },
+  {
+   "name": "terminaller: kimlik ve ad, yollar; boşluklar kırpılır",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "terminalStart": " uc_bas ",
+    "terminalEnd": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": " giris: Giriş ; cikis :Çıkış ;",
+      "paths": " giris , cikis ;; "
+     }
+    ]
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "terminals": {
+     "start": "uc_bas",
+     "end": "uc_son",
+     "devices": [
+      {
+       "layer": "vana",
+       "terminals": [
+        {
+         "id": "giris",
+         "name": "Giriş"
+        },
+        {
+         "id": "cikis",
+         "name": "Çıkış"
+        }
+       ],
+       "paths": [
+        [
+         "giris",
+         "cikis"
+        ]
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "terminaller: yalnız kimlik adı da olur",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "terminalStart": "uc_bas",
+    "terminalEnd": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": "a; b; c",
+      "paths": "a, b; b, c"
+     }
+    ]
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "terminals": {
+     "start": "uc_bas",
+     "end": "uc_son",
+     "devices": [
+      {
+       "layer": "vana",
+       "terminals": [
+        {
+         "id": "a",
+         "name": "a"
+        },
+        {
+         "id": "b",
+         "name": "b"
+        },
+        {
+         "id": "c",
+         "name": "c"
+        }
+       ],
+       "paths": [
+        [
+         "a",
+         "b"
+        ],
+        [
+         "b",
+         "c"
+        ]
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "terminaller: yalnız başlangıç alanı",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "terminalStart": "uc_bas"
+   },
+   "problem": "“İçme suyu” ağının terminalleri için başlangıç ve bitiş alanı birlikte yazılır."
+  },
+  {
+   "name": "terminaller: cihaz var, alanlar yok",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": "a; b",
+      "paths": "a, b"
+     }
+    ]
+   },
+   "problem": "“İçme suyu” ağının terminalleri için başlangıç ve bitiş alanı birlikte yazılır."
+  },
+  {
+   "name": "alt ağlar: akış aşağı, adı alanı, öznitelik kırpılır",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "subnetReach": "downstream",
+    "subnetName": " Ad ",
+    "subnetAttribute": " Alt ağ "
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "subnetworks": {
+     "attribute": "Alt ağ",
+     "reach": "downstream",
+     "name": "Ad"
+    }
+   }
+  },
+  {
+   "name": "alt ağlar: öznitelik boşsa Alt ağ, adı alanı boşsa yok",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "subnetReach": "connected"
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "subnetworks": {
+     "attribute": "Alt ağ",
+     "reach": "connected"
+    }
+   }
   }
  ],
  "retype": [
@@ -1484,6 +1911,173 @@
     "start": "z_bas",
     "end": "z_son",
     "inside": "z_orta"
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "terminals": {
+    "start": "uc_bas",
+    "end": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": [
+       {
+        "id": "giris",
+        "name": "Giriş"
+       },
+       {
+        "id": "cikis",
+        "name": "Çıkış"
+       }
+      ],
+      "paths": [
+       [
+        "giris",
+        "cikis"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "terminals": {
+    "start": "uc_bas",
+    "end": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": [
+       {
+        "id": "a",
+        "name": "a"
+       },
+       {
+        "id": "b",
+        "name": "b"
+       },
+       {
+        "id": "c",
+        "name": "c"
+       }
+      ],
+      "paths": [
+       [
+        "a",
+        "b"
+       ],
+       [
+        "b",
+        "c"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "subnetworks": {
+    "attribute": "Alt ağ",
+    "reach": "downstream",
+    "name": "Ad"
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "subnetworks": {
+    "attribute": "Alt ağ",
+    "reach": "connected"
    }
   }
  ]

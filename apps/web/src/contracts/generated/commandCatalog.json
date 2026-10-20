@@ -3644,6 +3644,22 @@
             ],
             "type": "object"
           },
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
           "DimensionArrow": {
             "description": "A dimension's arrowheads other than the oblique tick, which is no value but\nthe field's absence (docs/adr/0183 §3).",
             "oneOf": [
@@ -11111,6 +11127,28 @@
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
               },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
+              },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
                 "format": "double",
@@ -11292,6 +11330,56 @@
             "required": [
               "from",
               "to"
+            ],
+            "type": "object"
+          },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
             ],
             "type": "object"
           },
@@ -16123,6 +16211,21 @@
             ],
             "type": "object"
           },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
           "Subtype": {
             "additionalProperties": false,
             "description": "One subtype: a code of the subtype field's list, its label, and what it narrows.",
@@ -17103,6 +17206,38 @@
               "none"
             ],
             "type": "string"
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
           },
           "TextAlign": {
             "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
@@ -21075,6 +21210,22 @@
             "required": [
               "from",
               "to",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
               "name"
             ],
             "type": "object"
@@ -25339,6 +25490,28 @@
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
               },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
+              },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
                 "format": "double",
@@ -25520,6 +25693,56 @@
             "required": [
               "from",
               "to"
+            ],
+            "type": "object"
+          },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
             ],
             "type": "object"
           },
@@ -27149,6 +27372,21 @@
               }
             ]
           },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
           "Subtype": {
             "additionalProperties": false,
             "description": "One subtype: a code of the subtype field's list, its label, and what it narrows.",
@@ -27382,6 +27620,38 @@
             },
             "required": [
               "condition"
+            ],
+            "type": "object"
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
             ],
             "type": "object"
           },
@@ -31784,6 +32054,22 @@
             "required": [
               "from",
               "to",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
               "name"
             ],
             "type": "object"
@@ -39193,6 +39479,28 @@
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
               },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
+              },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
                 "format": "double",
@@ -39374,6 +39682,56 @@
             "required": [
               "from",
               "to"
+            ],
+            "type": "object"
+          },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
             ],
             "type": "object"
           },
@@ -44279,6 +44637,21 @@
             ],
             "type": "object"
           },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
           "Subtype": {
             "additionalProperties": false,
             "description": "One subtype: a code of the subtype field's list, its label, and what it narrows.",
@@ -45275,6 +45648,38 @@
                 "type": "string"
               }
             ]
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
           },
           "TextAlign": {
             "description": "Which point of a text its `p` is (docs/adr/0145 §1): horizontally its\nleft, centre or right; vertically on its baseline, at its bottom (0.2 of\nits height under the baseline), its middle (half its height over it) or\nits top (its height over it). The left of the baseline, where a text\nalways stood, is no value but the field's absence: a text has one\nspelling.",
@@ -936898,7 +937303,7 @@
       "id": "cad.network.define",
       "version": 1,
       "title": "Ağ tanımı",
-      "summary": "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "summary": "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi; ayrıca turns (dönüşler), levels (seviyeler), terminals (cihazların terminalleri: kenarların başlangıç ve bitiş terminal alanları, cihaz katmanı, terminalleri ve aralarındaki yollar) ve subnetworks (alt ağlar: ad alanı, yazılacak öznitelik, reach). Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
       "aliases": [],
       "effect": "document",
       "hosts": [
@@ -936914,6 +937319,22 @@
       "cost": "instant",
       "input": {
         "$defs": {
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -937091,6 +937512,28 @@
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
+              },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
               },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
@@ -937291,6 +937734,56 @@
             ],
             "type": "object"
           },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
+            ],
+            "type": "object"
+          },
           "NetworkTurns": {
             "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
             "properties": {
@@ -937350,6 +937843,53 @@
                 "type": "string"
               }
             ]
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
           },
           "TurnLayer": {
             "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
@@ -937415,6 +937955,22 @@
       },
       "output": {
         "$defs": {
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -937592,6 +938148,28 @@
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
+              },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
               },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
@@ -937777,6 +938355,56 @@
             ],
             "type": "object"
           },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
+            ],
+            "type": "object"
+          },
           "NetworkTurns": {
             "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
             "properties": {
@@ -937836,6 +938464,53 @@
                 "type": "string"
               }
             ]
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
           },
           "TurnLayer": {
             "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
@@ -937885,6 +938560,22 @@
       },
       "plan": {
         "$defs": {
+          "DeviceTerminal": {
+            "description": "A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "type": "object"
+          },
           "JunctionLayer": {
             "description": "A junction layer: its points' role and, optionally, which of them it takes and which are closed.",
             "properties": {
@@ -938062,6 +938753,28 @@
               "name": {
                 "description": "Trimmed; one of its kind in the project.",
                 "type": "string"
+              },
+              "subnetworks": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkSubnetworks"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an\nattribute by `cad.subnetworks.update`. None: the network has no subnetworks."
+              },
+              "terminals": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/NetworkTerminals"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which\nof them connect through it; a trace goes through a device only along those paths. None: a device is a point."
               },
               "tolerance": {
                 "description": "Metres, within [`NETWORK_TOLERANCES`].",
@@ -938247,6 +938960,56 @@
             ],
             "type": "object"
           },
+          "NetworkSubnetworks": {
+            "description": "A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a\ncontroller reaches (not past another controller, a closed junction or a closed edge).",
+            "properties": {
+              "attribute": {
+                "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
+                "type": "string"
+              },
+              "name": {
+                "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              }
+            },
+            "required": [
+              "attribute",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "NetworkTerminals": {
+            "description": "The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and\nits end are attached to, and the devices.",
+            "properties": {
+              "devices": {
+                "description": "The devices: 1–16, each a junction layer of the network.",
+                "items": {
+                  "$ref": "#/$defs/TerminalDevice"
+                },
+                "type": "array"
+              },
+              "end": {
+                "description": "The same for its end.",
+                "type": "string"
+              },
+              "start": {
+                "description": "The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "start",
+              "end",
+              "devices"
+            ],
+            "type": "object"
+          },
           "NetworkTurns": {
             "description": "A network's turns (docs/adr/0521 §2): where a way may turn back, what a turn at a crossing of three or more\npieces costs by its angle (seconds, added to the speed costs), and the turn layers' lines, each a turn from the\nedge at its start to the edge at its end through their common node: forbidden, or its own delay.",
             "properties": {
@@ -938306,6 +939069,53 @@
                 "type": "string"
               }
             ]
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "TerminalDevice": {
+            "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
+            "properties": {
+              "layer": {
+                "description": "A junction layer of the network (its id).",
+                "type": "string"
+              },
+              "paths": {
+                "description": "1–16 paths: each the ids of two or more terminals connected to one another through the device.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "layer",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
           },
           "TurnLayer": {
             "description": "A turn layer: its lines are turns; `field`'s number is a turn's delay (seconds), its empty value a forbidden turn;\nwithout a field every turn of the layer is forbidden.",
@@ -938447,6 +939257,907 @@
           "output": {
             "networks": [],
             "revision": "12"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.subnetworks.find",
+      "version": 1,
+      "title": "Alt ağları bul",
+      "summary": "Bir şebekenin (tanımında subnetworks olan ağın) alt ağlarını bulur; hiçbir şeyi değiştirmez, plan aynı cevabı verir. Ağın Kaynak düğüm katmanları alt ağ denetleyicileridir; adı ağın name alanından, yoksa etiketinden, yoksa Ad özniteliğinden, yoksa Kaynak <no>'dan okunur (Türkçe büyük küçük harf ayrımsız aynı ad tek alt ağdır). Alt ağ, denetleyicinin ağın kurallarıyla (yön: reach downstream ise akış aşağı, connected ise her yön; kapalı kenar ve düğümler; cihazların terminal yolları) ulaştığı nesnelerdir; başka bir denetleyicide ve kapalı düğümde durur (o düğüm ulaşılmış sayılır, geçilmez). Cevap: alt ağ başına adı, denetleyicileri, kenar ve düğüm nesnesi sayıları, uzunluğu, (members ile) nesnelerinin kalıcı kimlikleri ve ağın Denetle bulgularından geçtiyse sayısı (unverified: güvenilir sayılmaz); hiçbir denetleyicinin ulaşmadığı nesneler (orphans); farklı adlı iki denetleyicinin ulaştığı nesneler (shared); ağın subnetworks.attribute özniteliğinin söylediğiyle farkı: farklı, eksik ya da artakalan değerli nesneler (stale; hepsi boşsa güncel). Alt ağlar çizimden her seferinde hesaplanır; saklanan bir kopya yoktur, özniteliği Alt ağları güncelle yazar.",
+      "aliases": [
+        "altagbul"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.subnetworks.find` v1.\n\nRefusals (`CommandError.code`): `unknown_network` (the project has no network of that id), `no_subnetworks` (the\nnetwork defines no subnetworks), `no_controllers` (it has no source in the drawing).",
+        "properties": {
+          "members": {
+            "description": "Also name each subnetwork's objects (their persistent ids, at most 1000 each).",
+            "type": "boolean"
+          },
+          "network": {
+            "description": "The network's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "network"
+        ],
+        "title": "SubnetworksFind",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "Subnetwork": {
+            "description": "A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.",
+            "properties": {
+              "controllers": {
+                "description": "The controllers' persistent ids, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "Edge objects reached, and junction objects reached (the controllers included).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "junctions": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "The length of the network's pieces reached.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "members": {
+                "description": "With `members`: the objects' persistent ids (edges, then junctions), at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unverified": {
+                "description": "Connection problems of the network's check (near misses, crossings, …) that touch what it reached: a subnetwork\nover them is not one to rely on (docs/adr/0525 §2).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "controllers",
+              "edges",
+              "junctions",
+              "length",
+              "unverified"
+            ],
+            "type": "object"
+          },
+          "SubnetworkObjects": {
+            "description": "A group of the network's objects: how many, and the first persistent ids (at most 1000).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "count"
+            ],
+            "type": "object"
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "SubnetworkStale": {
+            "description": "What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's\nsubnetworks give it.",
+            "properties": {
+              "changed": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object has a value that is not its subnetworks' names (another name, or one of several)."
+              },
+              "leftOver": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in no subnetwork and has a value."
+              },
+              "missing": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in a subnetwork and has no value."
+              }
+            },
+            "required": [
+              "changed",
+              "missing",
+              "leftOver"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input's answer: the network's subnetworks and what the attribute says of them.",
+        "properties": {
+          "attribute": {
+            "type": "string"
+          },
+          "controllers": {
+            "description": "Controllers in the drawing: the network's source junctions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "network": {
+            "description": "The network's id.",
+            "type": "string"
+          },
+          "orphans": {
+            "$ref": "#/$defs/SubnetworkObjects",
+            "description": "Objects of the network no controller reaches."
+          },
+          "reach": {
+            "$ref": "#/$defs/SubnetworkReach"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "shared": {
+            "$ref": "#/$defs/SubnetworkObjects",
+            "description": "Objects two or more controllers of different names reach (they hold both names)."
+          },
+          "stale": {
+            "$ref": "#/$defs/SubnetworkStale",
+            "description": "The attribute against what the subnetworks say. All empty: it is up to date."
+          },
+          "subnetworks": {
+            "description": "The subnetworks in the order their first controller comes in the drawing.",
+            "items": {
+              "$ref": "#/$defs/Subnetwork"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "attribute",
+          "reach",
+          "controllers",
+          "subnetworks",
+          "orphans",
+          "shared",
+          "stale",
+          "revision"
+        ],
+        "title": "SubnetworksFound",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "Subnetwork": {
+            "description": "A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.",
+            "properties": {
+              "controllers": {
+                "description": "The controllers' persistent ids, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "Edge objects reached, and junction objects reached (the controllers included).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "junctions": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "The length of the network's pieces reached.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "members": {
+                "description": "With `members`: the objects' persistent ids (edges, then junctions), at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unverified": {
+                "description": "Connection problems of the network's check (near misses, crossings, …) that touch what it reached: a subnetwork\nover them is not one to rely on (docs/adr/0525 §2).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "controllers",
+              "edges",
+              "junctions",
+              "length",
+              "unverified"
+            ],
+            "type": "object"
+          },
+          "SubnetworkObjects": {
+            "description": "A group of the network's objects: how many, and the first persistent ids (at most 1000).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "count"
+            ],
+            "type": "object"
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "SubnetworkStale": {
+            "description": "What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's\nsubnetworks give it.",
+            "properties": {
+              "changed": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object has a value that is not its subnetworks' names (another name, or one of several)."
+              },
+              "leftOver": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in no subnetwork and has a value."
+              },
+              "missing": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in a subnetwork and has no value."
+              }
+            },
+            "required": [
+              "changed",
+              "missing",
+              "leftOver"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input's answer: the network's subnetworks and what the attribute says of them.",
+        "properties": {
+          "attribute": {
+            "type": "string"
+          },
+          "controllers": {
+            "description": "Controllers in the drawing: the network's source junctions.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "network": {
+            "description": "The network's id.",
+            "type": "string"
+          },
+          "orphans": {
+            "$ref": "#/$defs/SubnetworkObjects",
+            "description": "Objects of the network no controller reaches."
+          },
+          "reach": {
+            "$ref": "#/$defs/SubnetworkReach"
+          },
+          "revision": {
+            "type": "string"
+          },
+          "shared": {
+            "$ref": "#/$defs/SubnetworkObjects",
+            "description": "Objects two or more controllers of different names reach (they hold both names)."
+          },
+          "stale": {
+            "$ref": "#/$defs/SubnetworkStale",
+            "description": "The attribute against what the subnetworks say. All empty: it is up to date."
+          },
+          "subnetworks": {
+            "description": "The subnetworks in the order their first controller comes in the drawing.",
+            "items": {
+              "$ref": "#/$defs/Subnetwork"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "network",
+          "attribute",
+          "reach",
+          "controllers",
+          "subnetworks",
+          "orphans",
+          "shared",
+          "stale",
+          "revision"
+        ],
+        "title": "SubnetworksFound",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_network",
+          "no_subnetworks",
+          "no_controllers"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Elektrik şebekesinin alt ağları, nesnelerinin kimlikleriyle",
+          "input": {
+            "members": true,
+            "network": "ag-1"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.subnetworks.update",
+      "version": 1,
+      "title": "Alt ağları güncelle",
+      "summary": "Ağın alt ağlarının (Alt ağları bul'un bulduğu) adlarını ağın subnetworks.attribute özniteliğine, ağın her nesnesine yazar: iki alt ağda olan nesnede adlar “; ” ile birleşir, hiçbirinde olmayan nesnenin değeri alınır. Değeri zaten doğru olan nesneye dokunulmaz. Kilitli katmandakiler, alanı olan ve bu alanı taşımayan katmandakiler ve alanın kuralına uymayan değerler yazılmaz, sayılır ve uyarıyla söylenir (subnetwork_layer_skipped, values_skipped). Tek geri alma adımıdır (“Alt ağları güncelle”). Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "altaguncelle"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `cad.subnetworks.update` v1: writes the network's attribute for its subnetworks (what\n`cad.subnetworks.find` reports) on every object of the network, in one undo step “Alt ağları güncelle”.\n\nRefusals, in order: `unknown_network`, `no_subnetworks`, `no_controllers`; then `invalid_revision` and\n`revision_conflict` (status `conflict`). Layers locked, or typed without the attribute's field, are left as they\nare and said (`subnetwork_layer_skipped`); a value the attribute's field refuses is left and said\n(`values_skipped`). With `plan`, nothing is written.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "network": {
+            "description": "The network's id.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "network"
+        ],
+        "title": "SubnetworksUpdate",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "Subnetwork": {
+            "description": "A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.",
+            "properties": {
+              "controllers": {
+                "description": "The controllers' persistent ids, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "Edge objects reached, and junction objects reached (the controllers included).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "junctions": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "The length of the network's pieces reached.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "members": {
+                "description": "With `members`: the objects' persistent ids (edges, then junctions), at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unverified": {
+                "description": "Connection problems of the network's check (near misses, crossings, …) that touch what it reached: a subnetwork\nover them is not one to rely on (docs/adr/0525 §2).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "controllers",
+              "edges",
+              "junctions",
+              "length",
+              "unverified"
+            ],
+            "type": "object"
+          },
+          "SubnetworkObjects": {
+            "description": "A group of the network's objects: how many, and the first persistent ids (at most 1000).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "count"
+            ],
+            "type": "object"
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "SubnetworkStale": {
+            "description": "What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's\nsubnetworks give it.",
+            "properties": {
+              "changed": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object has a value that is not its subnetworks' names (another name, or one of several)."
+              },
+              "leftOver": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in no subnetwork and has a value."
+              },
+              "missing": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in a subnetwork and has no value."
+              }
+            },
+            "required": [
+              "changed",
+              "missing",
+              "leftOver"
+            ],
+            "type": "object"
+          },
+          "SubnetworksFound": {
+            "description": "Input's answer: the network's subnetworks and what the attribute says of them.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "controllers": {
+                "description": "Controllers in the drawing: the network's source junctions.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "network": {
+                "description": "The network's id.",
+                "type": "string"
+              },
+              "orphans": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "Objects of the network no controller reaches."
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "shared": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "Objects two or more controllers of different names reach (they hold both names)."
+              },
+              "stale": {
+                "$ref": "#/$defs/SubnetworkStale",
+                "description": "The attribute against what the subnetworks say. All empty: it is up to date."
+              },
+              "subnetworks": {
+                "description": "The subnetworks in the order their first controller comes in the drawing.",
+                "items": {
+                  "$ref": "#/$defs/Subnetwork"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "network",
+              "attribute",
+              "reach",
+              "controllers",
+              "subnetworks",
+              "orphans",
+              "shared",
+              "stale",
+              "revision"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.subnetworks.update` wrote, or with `plan` would write.",
+        "properties": {
+          "cleared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "found": {
+            "$ref": "#/$defs/SubnetworksFound",
+            "description": "What `cad.subnetworks.find` says before the write (its `stale` says what the write changes); its `revision` is\nthe output's."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "written": {
+            "description": "Objects whose value is written, and objects left as they are (locked layer, a typed layer without the field, a\nvalue its field refuses).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "found",
+          "written",
+          "skipped",
+          "cleared",
+          "revision"
+        ],
+        "title": "SubnetworksUpdated",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "Subnetwork": {
+            "description": "A subnetwork: one name, the controllers that carry it (the same name is one subnetwork), and what they reach.",
+            "properties": {
+              "controllers": {
+                "description": "The controllers' persistent ids, in the drawing's order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "Edge objects reached, and junction objects reached (the controllers included).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "junctions": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "length": {
+                "description": "The length of the network's pieces reached.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "members": {
+                "description": "With `members`: the objects' persistent ids (edges, then junctions), at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unverified": {
+                "description": "Connection problems of the network's check (near misses, crossings, …) that touch what it reached: a subnetwork\nover them is not one to rely on (docs/adr/0525 §2).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "name",
+              "controllers",
+              "edges",
+              "junctions",
+              "length",
+              "unverified"
+            ],
+            "type": "object"
+          },
+          "SubnetworkObjects": {
+            "description": "A group of the network's objects: how many, and the first persistent ids (at most 1000).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uids": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "count"
+            ],
+            "type": "object"
+          },
+          "SubnetworkReach": {
+            "description": "Which way a subnetwork reaches from its controller (docs/adr/0557 §2).",
+            "oneOf": [
+              {
+                "const": "downstream",
+                "description": "Akış aşağı: the way the edges' directions lead.",
+                "type": "string"
+              },
+              {
+                "const": "connected",
+                "description": "Bağlı: along every connection, any way.",
+                "type": "string"
+              }
+            ]
+          },
+          "SubnetworkStale": {
+            "description": "What the attribute holds that the subnetworks do not say: an object's stored value against the one the network's\nsubnetworks give it.",
+            "properties": {
+              "changed": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object has a value that is not its subnetworks' names (another name, or one of several)."
+              },
+              "leftOver": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in no subnetwork and has a value."
+              },
+              "missing": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "The object is in a subnetwork and has no value."
+              }
+            },
+            "required": [
+              "changed",
+              "missing",
+              "leftOver"
+            ],
+            "type": "object"
+          },
+          "SubnetworksFound": {
+            "description": "Input's answer: the network's subnetworks and what the attribute says of them.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "controllers": {
+                "description": "Controllers in the drawing: the network's source junctions.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "network": {
+                "description": "The network's id.",
+                "type": "string"
+              },
+              "orphans": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "Objects of the network no controller reaches."
+              },
+              "reach": {
+                "$ref": "#/$defs/SubnetworkReach"
+              },
+              "revision": {
+                "type": "string"
+              },
+              "shared": {
+                "$ref": "#/$defs/SubnetworkObjects",
+                "description": "Objects two or more controllers of different names reach (they hold both names)."
+              },
+              "stale": {
+                "$ref": "#/$defs/SubnetworkStale",
+                "description": "The attribute against what the subnetworks say. All empty: it is up to date."
+              },
+              "subnetworks": {
+                "description": "The subnetworks in the order their first controller comes in the drawing.",
+                "items": {
+                  "$ref": "#/$defs/Subnetwork"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "network",
+              "attribute",
+              "reach",
+              "controllers",
+              "subnetworks",
+              "orphans",
+              "shared",
+              "stale",
+              "revision"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `cad.subnetworks.update` wrote, or with `plan` would write.",
+        "properties": {
+          "cleared": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "found": {
+            "$ref": "#/$defs/SubnetworksFound",
+            "description": "What `cad.subnetworks.find` says before the write (its `stale` says what the write changes); its `revision` is\nthe output's."
+          },
+          "revision": {
+            "type": "string"
+          },
+          "skipped": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "written": {
+            "description": "Objects whose value is written, and objects left as they are (locked layer, a typed layer without the field, a\nvalue its field refuses).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "found",
+          "written",
+          "skipped",
+          "cleared",
+          "revision"
+        ],
+        "title": "SubnetworksUpdated",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_network",
+          "no_subnetworks",
+          "no_controllers",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "subnetwork_layer_skipped",
+          "values_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Alt ağ adlarını özniteliğe yaz",
+          "input": {
+            "network": "ag-1"
           }
         }
       ]
@@ -1060120,6 +1061831,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projede bu kimlikte ağ yok."
+    },
+    {
+      "code": "no_subnetworks",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağın alt ağları tanımlı değil; Ağlar penceresinde Alt ağlar bölümünü yazın."
+    },
+    {
+      "code": "no_controllers",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Ağın çizimde Kaynak düğümü yok; alt ağ denetleyicisi bulunamadı."
+    },
+    {
+      "code": "subnetwork_layer_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir katmanın nesnelerine alt ağ adı yazılmadı (kilitli ya da özniteliğin alanı yok)."
     },
     {
       "code": "unknown_layer",

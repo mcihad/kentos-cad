@@ -12323,6 +12323,16 @@
      "covered": true
     },
     {
+     "key": "reach",
+     "value": "connected",
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "downstream",
+     "covered": false
+    },
+    {
      "key": "role",
      "value": "junction",
      "covered": true
@@ -16584,6 +16594,48 @@
    "kinds": []
   },
   {
+   "id": "cad.subnetworks.find",
+   "title": "Alt ağları bul",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 26,
+   "files": [
+    "fixtures/commands/v1/cad.subnetworks.find.json"
+   ],
+   "options": [
+    {
+     "key": "members",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.subnetworks.update",
+   "title": "Alt ağları güncelle",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 25,
+   "files": [
+    "fixtures/commands/v1/cad.subnetworks.update.json"
+   ],
+   "options": [],
+   "kinds": []
+  },
+  {
    "id": "cad.tables.edit",
    "title": "Tabloları düzenle",
    "effect": "document",
@@ -20689,6 +20741,16 @@
      "covered": false
     },
     {
+     "key": "reach",
+     "value": "connected",
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "downstream",
+     "covered": false
+    },
+    {
      "key": "readOnly",
      "value": true,
      "covered": false
@@ -22718,6 +22780,16 @@
     {
      "key": "projectType",
      "value": "zoningPlan",
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "connected",
+     "covered": false
+    },
+    {
+     "key": "reach",
+     "value": "downstream",
      "covered": false
     },
     {

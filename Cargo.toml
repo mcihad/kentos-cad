@@ -78,6 +78,8 @@ members = [
     "crates/server/application",
     # Executables.
     "apps/api",
+    # The process that runs an İşlemler tool for a server job (docs/adr/0559 §3).
+    "apps/jobrun",
     # Desktop (docs/adr/0010, 0016): the KentOS UI library and its showcase. Not in
     # default-members, so web and server work never builds Iced and wgpu (TODOS.md UI-04);
     # pnpm rust:test:desktop and make test-desktop build them.
@@ -129,6 +131,7 @@ default-members = [
     "crates/server/postgres",
     "crates/server/application",
     "apps/api",
+    "apps/jobrun",
 ]
 # GeographicLib's Rust port with libm's functions (docs/adr/0171): the release's own code, a path
 # dependency of the geometry core but not a member (its tests run by hand, its lints its authors').

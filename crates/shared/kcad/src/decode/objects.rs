@@ -247,6 +247,8 @@ pub(super) struct Features {
     pub(super) heights: bool,
     /// Schema 87: a network's turns and levels, a speed cost's periods.
     pub(super) network_turns: bool,
+    /// Schema 93: a network's terminals and subnetworks (docs/adr/0557).
+    pub(super) network_terminals: bool,
     /// Schema 88: a raster's georeference record (docs/adr/0518 §1).
     pub(super) georef: bool,
     /// Schema 51: a reference's `along` place and block `path` (docs/adr/0263).
@@ -403,6 +405,7 @@ impl Features {
             clipping: schema >= crate::SCHEMA_WITH_CLIPPING,
             heights: schema >= crate::SCHEMA_WITH_HEIGHTS,
             network_turns: schema >= crate::SCHEMA_WITH_NETWORK_TURNS,
+            network_terminals: schema >= crate::SCHEMA_WITH_NETWORK_TERMINALS,
             georef: schema >= crate::SCHEMA_WITH_GEOREF,
             labels: schema >= SCHEMA_WITH_LABELS,
             variables: schema >= SCHEMA_WITH_VARIABLES,

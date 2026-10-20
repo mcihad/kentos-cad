@@ -50,6 +50,13 @@ pub const NETWORK_FACTOR_LIMIT: f64 = 10.0;
 /// A time profile's day, minutes.
 pub const DAY_MINUTES: u32 = 1440;
 
+/// The most devices (junction layers with terminals) a network names (docs/adr/0557 §1).
+pub const NETWORK_DEVICE_LIMIT: usize = 16;
+
+/// The most terminals a device has, and the most paths through it.
+pub const NETWORK_TERMINAL_LIMIT: usize = 8;
+pub const NETWORK_PATH_LIMIT: usize = 16;
+
 /// The longest id, name, value, field name, unit and expression (characters).
 const ID_LENGTH: usize = 40;
 const NAME_LENGTH: usize = 80;
@@ -98,6 +105,91 @@ pub struct NetworkDef {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub levels: Option<NetworkLevels>,
+    /// Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which
+    /// of them connect through it; a trace goes through a device only along those paths. None: a device is a point.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub terminals: Option<NetworkTerminals>,
+    /// Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an
+    /// attribute by `cad.subnetworks.update`. None: the network has no subnetworks.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub subnetworks: Option<NetworkSubnetworks>,
+}
+
+/// The terminals of a network's devices (docs/adr/0557 §1): the edge fields naming the terminal an edge's start and
+/// its end are attached to, and the devices.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkTerminals {
+    /// The edge attribute whose value (a terminal's id or name) is the terminal its start is attached to.
+    pub start: String,
+    /// The same for its end.
+    pub end: String,
+    /// The devices: 1–16, each a junction layer of the network.
+    pub devices: Vec<TerminalDevice>,
+}
+
+/// A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals
+/// goes on through the device only to a terminal on a path with it; an edge that names none (or one the device does
+/// not have) passes to every terminal and the trace is said to be unverified.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerminalDevice {
+    /// A junction layer of the network (its id).
+    pub layer: String,
+    /// 2–8 terminals.
+    pub terminals: Vec<DeviceTerminal>,
+    /// 1–16 paths: each the ids of two or more terminals connected to one another through the device.
+    pub paths: Vec<Vec<String>>,
+}
+
+/// A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct DeviceTerminal {
+    pub id: String,
+    pub name: String,
+}
+
+/// Which way a subnetwork reaches from its controller (docs/adr/0557 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SubnetworkReach {
+    /// Akış aşağı: the way the edges' directions lead.
+    Downstream,
+    /// Bağlı: along every connection, any way.
+    Connected,
+}
+
+/// A network's subnetworks (docs/adr/0557 §2): its sources are the subnetwork controllers; a subnetwork is what a
+/// controller reaches (not past another controller, a closed junction or a closed edge).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct NetworkSubnetworks {
+    /// The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub name: Option<String>,
+    /// The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined
+    /// with `; ` where it is in more than one; taken away where it is in none.
+    pub attribute: String,
+    pub reach: SubnetworkReach,
 }
 
 /// Where U-turns are made (docs/adr/0521 §2).
@@ -592,7 +684,135 @@ impl NetworkDef {
         {
             return Some(at("seviye alanı boş, kırpılmamış ya da çok uzun"));
         }
+        if let Some(t) = &self.terminals
+            && let Some(p) = self.terminals_problem(t)
+        {
+            return Some(at(&p));
+        }
+        if let Some(s) = &self.subnetworks
+            && let Some(p) = self.subnetworks_problem(s)
+        {
+            return Some(at(&p));
+        }
         None
+    }
+
+    /// What is wrong with the terminals (docs/adr/0557 §1), in words that continue “ağının …”.
+    fn terminals_problem(&self, t: &NetworkTerminals) -> Option<String> {
+        if field_bad(&t.start) || field_bad(&t.end) {
+            return Some("terminal alanı boş, kırpılmamış ya da çok uzun".into());
+        }
+        if t.start == t.end {
+            return Some(
+                "başlangıç ve bitiş terminal alanları aynı; her ucun kendi alanı olmalı".into(),
+            );
+        }
+        if t.devices.is_empty() || t.devices.len() > NETWORK_DEVICE_LIMIT {
+            return Some(format!(
+                "terminalli cihazı yok ya da çok; 1–{NETWORK_DEVICE_LIMIT} cihaz olmalı"
+            ));
+        }
+        for (i, d) in t.devices.iter().enumerate() {
+            let n = i + 1;
+            if !self.junctions.iter().any(|j| j.layer == d.layer) {
+                return Some(format!(
+                    "{n}. cihazın katmanı ağın düğüm katmanlarından biri değil"
+                ));
+            }
+            if t.devices[..i].iter().any(|o| o.layer == d.layer) {
+                return Some(format!("{n}. cihazın katmanı iki kez var"));
+            }
+            if d.terminals.len() < 2 || d.terminals.len() > NETWORK_TERMINAL_LIMIT {
+                return Some(format!(
+                    "{n}. cihazın terminalleri 2–{NETWORK_TERMINAL_LIMIT} olmalı"
+                ));
+            }
+            let mut keys: Vec<String> = Vec::new();
+            for tm in &d.terminals {
+                if !network_id_holds(&tm.id) {
+                    return Some(format!(
+                        "{n}. cihazın terminal kimliği “{}”; 1–{ID_LENGTH} küçük harf, rakam ya da tire olmalı",
+                        tm.id
+                    ));
+                }
+                let name = tm.name.trim();
+                if name.is_empty() || name != tm.name || chars(name) > VALUE_LENGTH {
+                    return Some(format!(
+                        "{n}. cihazın “{}” terminalinin adı boş, kırpılmamış ya da {VALUE_LENGTH} karakterden uzun",
+                        tm.id
+                    ));
+                }
+                let (id_key, name_key) = (network_caseless(&tm.id), network_caseless(name));
+                let mut mine = vec![id_key.clone()];
+                if name_key != id_key {
+                    mine.push(name_key);
+                }
+                for k in mine {
+                    if keys.contains(&k) {
+                        return Some(format!(
+                            "{n}. cihazın terminalleri karışıyor: “{k}” bir terminalin kimliği ya da adı olarak iki kez var"
+                        ));
+                    }
+                    keys.push(k);
+                }
+            }
+            if d.paths.is_empty() || d.paths.len() > NETWORK_PATH_LIMIT {
+                return Some(format!(
+                    "{n}. cihazın yolu yok ya da çok; 1–{NETWORK_PATH_LIMIT} yol olmalı"
+                ));
+            }
+            for (k, path) in d.paths.iter().enumerate() {
+                if path.len() < 2 {
+                    return Some(format!(
+                        "{n}. cihazın {}. yolu en az iki terminal içermeli",
+                        k + 1
+                    ));
+                }
+                for (m, id) in path.iter().enumerate() {
+                    if !d.terminals.iter().any(|tm| tm.id == *id) {
+                        return Some(format!(
+                            "{n}. cihazın {}. yolundaki “{id}” cihazın terminali değil",
+                            k + 1
+                        ));
+                    }
+                    if path[..m].contains(id) {
+                        return Some(format!(
+                            "{n}. cihazın {}. yolunda “{id}” iki kez var",
+                            k + 1
+                        ));
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    /// What is wrong with the subnetworks (docs/adr/0557 §2), in words that continue “ağının …”.
+    fn subnetworks_problem(&self, s: &NetworkSubnetworks) -> Option<String> {
+        if !self.junctions.iter().any(|j| j.role == JunctionRole::Source) {
+            return Some(
+                "alt ağlarının denetleyicisi yok; en az bir Kaynak düğüm katmanı olmalı".into(),
+            );
+        }
+        if field_bad(&s.attribute) {
+            return Some("alt ağ özniteliği boş, kırpılmamış ya da çok uzun".into());
+        }
+        if s.name.as_ref().is_some_and(|n| field_bad(n)) {
+            return Some("alt ağ adı alanı boş, kırpılmamış ya da çok uzun".into());
+        }
+        let reads: Vec<&str> = s
+            .name
+            .iter()
+            .map(String::as_str)
+            .chain(self.terminals.iter().flat_map(|t| [t.start.as_str(), t.end.as_str()]))
+            .chain(match &self.direction {
+                NetworkDirection::Field { field, .. } => Some(field.as_str()),
+                _ => None,
+            })
+            .collect();
+        reads
+            .contains(&s.attribute.as_str())
+            .then(|| "alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin".into())
     }
 
     /// Whether a question about the network may give a time: one of its speed costs has a time profile.
@@ -792,6 +1012,8 @@ mod tests {
             closed: None,
             turns: None,
             levels: None,
+            terminals: None,
+            subnetworks: None,
         }
     }
 
@@ -879,6 +1101,82 @@ mod tests {
         bad.levels.as_mut().unwrap().end = " z_son".into();
         assert!(bad.problem().unwrap().contains("seviye alanı"));
         assert_eq!(clock_text(450), "07:30");
+    }
+
+    fn utility() -> NetworkDef {
+        let mut n = road();
+        n.kind = NetworkKind::Utility;
+        n.direction = NetworkDirection::Digitized;
+        n.costs.clear();
+        n.junctions = vec![
+            JunctionLayer {
+                layer: "trafo".into(),
+                role: JunctionRole::Junction,
+                filter: None,
+                closed: None,
+            },
+            JunctionLayer {
+                layer: "santral".into(),
+                role: JunctionRole::Source,
+                filter: None,
+                closed: None,
+            },
+        ];
+        n.terminals = Some(NetworkTerminals {
+            start: "uc_bas".into(),
+            end: "uc_son".into(),
+            devices: vec![TerminalDevice {
+                layer: "trafo".into(),
+                terminals: vec![
+                    DeviceTerminal {
+                        id: "yg".into(),
+                        name: "Yüksek gerilim".into(),
+                    },
+                    DeviceTerminal {
+                        id: "ag".into(),
+                        name: "Alçak gerilim".into(),
+                    },
+                ],
+                paths: vec![vec!["yg".into(), "ag".into()]],
+            }],
+        });
+        n.subnetworks = Some(NetworkSubnetworks {
+            name: Some("Ad".into()),
+            attribute: "Alt ağ".into(),
+            reach: SubnetworkReach::Downstream,
+        });
+        n
+    }
+
+    #[test]
+    fn terminals_and_subnetworks_say_what_is_wrong() {
+        let n = utility();
+        assert_eq!(n.problem(), None);
+        let bad = |edit: &dyn Fn(&mut NetworkDef)| {
+            let mut m = n.clone();
+            edit(&mut m);
+            m.problem().expect("a problem")
+        };
+        fn dev(m: &mut NetworkDef) -> &mut TerminalDevice {
+            &mut m.terminals.as_mut().unwrap().devices[0]
+        }
+        assert!(bad(&|m| m.terminals.as_mut().unwrap().end = "uc_bas".into()).contains("aynı"));
+        assert!(bad(&|m| dev(m).layer = "yok".into()).contains("düğüm katmanlarından"));
+        assert!(bad(&|m| dev(m).terminals.truncate(1)).contains("2–8"));
+        assert!(bad(&|m| dev(m).terminals[1].id = "YG".into()).contains("kimliği"));
+        assert!(bad(&|m| dev(m).terminals[1].name = "YÜKSEK GERİLİM".into()).contains("karışıyor"));
+        assert!(bad(&|m| dev(m).terminals[1].name = "yg".into()).contains("karışıyor"));
+        assert!(bad(&|m| dev(m).paths.clear()).contains("yolu yok"));
+        assert!(bad(&|m| dev(m).paths[0] = vec!["yg".into()]).contains("en az iki"));
+        assert!(bad(&|m| dev(m).paths[0][1] = "x".into()).contains("terminali değil"));
+        assert!(bad(&|m| dev(m).paths[0][1] = "yg".into()).contains("iki kez"));
+        assert!(bad(&|m| m.subnetworks.as_mut().unwrap().attribute = "uc_bas".into()).contains("üstüne"));
+        assert!(bad(&|m| m.subnetworks.as_mut().unwrap().attribute = " x".into()).contains("özniteliği"));
+        assert!(bad(&|m| m.junctions.retain(|j| j.role != JunctionRole::Source)).contains("Kaynak"));
+        // A name the id folds to is the same terminal's own: allowed.
+        let mut same = n.clone();
+        same.terminals.as_mut().unwrap().devices[0].terminals[0].name = "YG".into();
+        assert_eq!(same.problem(), None);
     }
 
     #[test]

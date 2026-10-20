@@ -92,7 +92,11 @@ const GROUPS = [
   // The forms' guard (docs/adr/0411 §4) reads a project's `@` values as the desktop's document does: the pure
   // project model (`project`, over shared and domain) is the server's to use too.
   { name: 'server', path: 'crates/server/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // The tool of a processing job runs in `jobrun`, a program of its own, so the server carries none of it (docs/adr/0559 §3).
   { name: 'api', path: 'apps/api/', targets: [HOST], uses: ['shared', 'domain', 'project', 'native', 'server'], forbid: [...BROWSER, ...DESKTOP] },
+  // The process that runs one İşlemler tool for a server job (docs/adr/0559 §3): the headless host and the tools over
+  // one project file; no database, no server framework. Listed before `native`'s catch-all like the headless host.
+  { name: 'jobrun', path: 'apps/jobrun/', targets: [HOST], uses: ['shared', 'domain', 'application', 'interaction', 'processing', 'project', 'headless', 'style', 'plot', 'stylelib', 'geopackage'], forbid: ['sqlx*', 'axum*', 'tokio*', ...BROWSER, ...DESKTOP, 'pyo3*', 'gdal*', 'proj', 'proj-sys'] },
   // The UI component library (docs/adr/0016): widgets, theme, icons; no domain, no runtime of its own.
   { name: 'ui', path: 'crates/ui/', targets: [HOST], uses: [], forbid: [...RUNTIMES, ...BROWSER, 'pyo3*'] },
   // Sheet layouts on the desktop (docs/sheet/design.md §11): the UI components over the shared

@@ -4994,7 +4994,7 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_NETWORK_DEFINE_VERSION,
             title: "Ağ tanımı".into(),
             summary: "Projenin ağlarına bir ağ tanımı yazar (set: aynı kimlikli ağın yerini alır, yoksa sona eklenir) ya da birini siler (remove). \
-                      Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi. \
+                      Ağ, katmanlardan her analizde kurulan grafın tanımıdır: kenar katmanları (çizgi, çoklu çizgi ve yaylar; isteğe bağlı süzgeç ifadesi), düğüm katmanları (bağlantı, kaynak ya da vana; süzgeç ve kapalı ifadesi), bağlanma (ends: uçlarda, bir uç başka kenara değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı kenarların ifadesi; ayrıca turns (dönüşler), levels (seviyeler), terminals (cihazların terminalleri: kenarların başlangıç ve bitiş terminal alanları, cihaz katmanı, terminalleri ve aralarındaki yollar) ve subnetworks (alt ağlar: ad alanı, yazılacak öznitelik, reach). \
                       Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla. \
                       Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır. \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
@@ -5055,6 +5055,63 @@ pub fn catalog() -> CommandCatalog {
                     output: Some(json!({ "networks": [], "revision": "12" })),
                 },
             ],
+        },
+        // Alt ağlar (docs/adr/0557 §2), held together by fixtures/commands/v1/cad.subnetworks.{find,update}.json.
+        // The web is paused (docs/adr/0228): the desktop's host alone runs them for now.
+        CommandDescriptor {
+            id: crate::CAD_SUBNETWORKS_FIND.into(),
+            version: crate::CAD_SUBNETWORKS_FIND_VERSION,
+            title: "Alt ağları bul".into(),
+            summary: "Bir şebekenin (tanımında subnetworks olan ağın) alt ağlarını bulur; hiçbir şeyi değiştirmez, plan aynı cevabı verir. \
+                      Ağın Kaynak düğüm katmanları alt ağ denetleyicileridir; adı ağın name alanından, yoksa etiketinden, yoksa Ad özniteliğinden, yoksa Kaynak <no>'dan okunur (Türkçe büyük küçük harf ayrımsız aynı ad tek alt ağdır). \
+                      Alt ağ, denetleyicinin ağın kurallarıyla (yön: reach downstream ise akış aşağı, connected ise her yön; kapalı kenar ve düğümler; cihazların terminal yolları) ulaştığı nesnelerdir; başka bir denetleyicide ve kapalı düğümde durur (o düğüm ulaşılmış sayılır, geçilmez). \
+                      Cevap: alt ağ başına adı, denetleyicileri, kenar ve düğüm nesnesi sayıları, uzunluğu, (members ile) nesnelerinin kalıcı kimlikleri ve ağın Denetle bulgularından geçtiyse sayısı (unverified: güvenilir sayılmaz); hiçbir denetleyicinin ulaşmadığı nesneler (orphans); farklı adlı iki denetleyicinin ulaştığı nesneler (shared); ağın subnetworks.attribute özniteliğinin söylediğiyle farkı: farklı, eksik ya da artakalan değerli nesneler (stale; hepsi boşsa güncel). \
+                      Alt ağlar çizimden her seferinde hesaplanır; saklanan bir kopya yoktur, özniteliği Alt ağları güncelle yazar."
+                .into(),
+            aliases: vec!["altagbul".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SubnetworksFind>(),
+            output: schema::<crate::SubnetworksFound>(),
+            plan: Some(schema::<crate::SubnetworksFound>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Elektrik şebekesinin alt ağları, nesnelerinin kimlikleriyle".into(),
+                input: json!({ "network": "ag-1", "members": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_SUBNETWORKS_UPDATE.into(),
+            version: crate::CAD_SUBNETWORKS_UPDATE_VERSION,
+            title: "Alt ağları güncelle".into(),
+            summary: "Ağın alt ağlarının (Alt ağları bul'un bulduğu) adlarını ağın subnetworks.attribute özniteliğine, ağın her nesnesine yazar: iki alt ağda olan nesnede adlar “; ” ile birleşir, hiçbirinde olmayan nesnenin değeri alınır. \
+                      Değeri zaten doğru olan nesneye dokunulmaz. Kilitli katmandakiler, alanı olan ve bu alanı taşımayan katmandakiler ve alanın kuralına uymayan değerler yazılmaz, sayılır ve uyarıyla söylenir (subnetwork_layer_skipped, values_skipped). \
+                      Tek geri alma adımıdır (“Alt ağları güncelle”). Plan yazmadan aynısını söyler. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["altaguncelle".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::SubnetworksUpdate>(),
+            output: schema::<crate::SubnetworksUpdated>(),
+            plan: Some(schema::<crate::SubnetworksUpdated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Alt ağ adlarını özniteliğe yaz".into(),
+                input: json!({ "network": "ag-1" }),
+                output: None,
+            }],
         },
         // Adres verisi (docs/adr/0229 §14), held together by fixtures/commands/v1/cad.addresses.define.json.
         // The web is paused (docs/adr/0228): the desktop's host alone runs it for now.
@@ -9044,6 +9101,13 @@ mod tests {
                     }
                     crate::CAD_NETWORK_DEFINE => {
                         serde_json::from_value::<crate::NetworkDefine>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SUBNETWORKS_FIND => {
+                        serde_json::from_value::<crate::SubnetworksFind>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SUBNETWORKS_UPDATE => {
+                        serde_json::from_value::<crate::SubnetworksUpdate>(e.input.clone())
+                            .map(|_| ())
                     }
                     crate::CAD_ADDRESSES_DEFINE => {
                         serde_json::from_value::<crate::AddressesDefine>(e.input.clone())

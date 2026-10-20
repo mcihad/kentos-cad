@@ -13,7 +13,8 @@
 //! tools build from it. With turns, levels and time profiles (docs/adr/0521):
 //! the edges' level fields and their costs' periods' speed fields, the
 //! junctions' level (the start field), the turn layers' lines with their
-//! filter and their delay field's value.
+//! filter and their delay field's value. With terminals (docs/adr/0557 §1): the edges' start and end terminal
+//! fields' values and each junction's device.
 
 use std::collections::HashSet;
 
@@ -156,6 +157,10 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
                                 .collect()
                         })
                         .collect(),
+                    terminals: [
+                        def.terminals.as_ref().and_then(|t| value(e, &t.start)),
+                        def.terminals.as_ref().and_then(|t| value(e, &t.end)),
+                    ],
                 },
             )
         })
@@ -196,6 +201,12 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
             JunctionRole::Valve => Role::Valve,
             JunctionRole::Junction => Role::Junction,
         };
+        // The device its layer is, by the terminals' devices (docs/adr/0557 §1).
+        let device = def
+            .terminals
+            .as_ref()
+            .and_then(|t| t.devices.iter().position(|d| d.layer == l.layer))
+            .map(|d| d as u32);
         for (e, closed) in mine.into_iter().zip(shut) {
             taken_j.insert(e.base().id);
             let level = level_of(e, levels.map(|l| &l.start));
@@ -205,6 +216,7 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
                     role,
                     closed,
                     level,
+                    device,
                 },
             ));
         }

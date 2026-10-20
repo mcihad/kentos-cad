@@ -121,6 +121,8 @@ pub(crate) const TITLES: [(&str, &str); 208] = [
     ("cad.blocks.insert", "Blok ekle"),
     ("cad.layers.service", "Servis katmanı"),
     ("cad.network.define", "Ağ tanımı"),
+    ("cad.subnetworks.find", "Alt ağları bul"),
+    ("cad.subnetworks.update", "Alt ağları güncelle"),
     ("cad.addresses.define", "Adres verisi"),
     ("cad.layers.time", "Katmanın zamanı"),
     ("cad.scenarios.edit", "Senaryo"),

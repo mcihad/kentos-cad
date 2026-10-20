@@ -49,7 +49,7 @@
 //! | `words.rs` | the interface's words: roles, lists, states, times |
 
 mod account;
-mod actions;
+pub(crate) mod actions;
 pub mod catalog;
 mod catalog_actions;
 mod catalog_forms;
@@ -276,6 +276,11 @@ pub enum Event {
     },
     /// “İndir” on a succeeded export.
     JobDownload(kentos_commands::ServerJob),
+    /// The server's answer to an İşlemler tool asked as a job from the tool's window (processing/server.rs).
+    ProcessingJobAsked {
+        id: u64,
+        result: Result<kentos_commands::ServerJob, ApiFailure>,
+    },
     // ── Opening ─────────────────────────────────────────────────────────
     OpenProgress {
         id: u64,
@@ -660,6 +665,7 @@ impl App {
             | Event::HistoryFormClose
             | Event::HistoryActed { .. } => self.history_event(event),
             Event::JobDownload(job) => self.jobs_download(job),
+            Event::ProcessingJobAsked { id, result } => self.processing_job_asked(id, result),
             Event::JobsLoaded { .. }
             | Event::JobsRetry
             | Event::JobExport

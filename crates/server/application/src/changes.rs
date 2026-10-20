@@ -61,7 +61,7 @@ use crate::projects::{
 };
 
 /// Most object changes one command may carry; larger sets go in several commands.
-pub const MAX_CHANGES: usize = 5000;
+pub const MAX_CHANGES: usize = kentos_contracts::processing_job::PROJECT_CHANGES_MAX;
 
 fn parse_uuid(text: &str, what: &str) -> AppResult<Uuid> {
     Uuid::parse_str(text).map_err(|_| AppError::invalid(format!("{what} bir UUID değil: {text}")))
@@ -463,6 +463,21 @@ pub async fn commit(
     access: &ProjectAccess,
     envelope: CommandEnvelope,
 ) -> AppResult<CommitResult> {
+    let mut tx = db.scoped(access.scope()).await?;
+    let result = commit_in(&mut tx, access, envelope, None).await?;
+    tx.commit().await?;
+    Ok(result)
+}
+
+/// [`commit`] inside a transaction the caller owns and commits (docs/adr/0559 §2: a server job's commit and its
+/// finish are one transaction, so a lost lease takes the commit back). `at_revision`: the project must be at this data
+/// revision under the lock, else nothing is written and the answer is a conflict with the project's revision.
+pub(crate) async fn commit_in(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    envelope: CommandEnvelope,
+    at_revision: Option<i64>,
+) -> AppResult<CommitResult> {
     if envelope.command_name != PROJECT_CHANGES {
         return Err(AppError::invalid(format!(
             "Bilinmeyen komut: {}",
@@ -486,16 +501,15 @@ pub async fn commit(
         )));
     }
 
-    let mut tx = db.scoped(access.scope()).await?;
     // 1. Lock the project: commits of one project happen one after another.
-    let now = lock(&mut tx, access).await?;
+    let now = lock(tx, access).await?;
     let project = now.project;
     let (srid, layers, meta_version, data_revision, old_name, storage): (i32, Value, i64, i64, String, String) = sqlx::query_as(
         "select srid, layers, meta_version, data_revision, name, storage from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(now.tenant)
     .bind(project)
-    .fetch_one(&mut *tx)
+    .fetch_one(&mut **tx)
     .await?;
     // A file project's content is its revisions (docs/adr/0031): objects are not written one by one.
     if storage == "file" {
@@ -509,9 +523,8 @@ pub async fn commit(
     // 2. The same key again: the stored answer, or a refusal if the request differs.
     let text = idempotency::request_text(&envelope);
     if let Some(mut result) =
-        idempotency::earlier::<CommitResult>(&mut tx, &now, &envelope, &text).await?
+        idempotency::earlier::<CommitResult>(tx, &now, &envelope, &text).await?
     {
-        tx.commit().await?;
         result.replayed = true;
         return Ok(result);
     }
@@ -520,6 +533,17 @@ pub async fn commit(
     }
     if now.archived {
         return Err(access::archived(&now.name));
+    }
+    if let Some(at) = at_revision
+        && data_revision != at
+    {
+        return Err(AppError::Conflict {
+            message: format!(
+                "Proje {at}. revizyonda değil ({data_revision}); değişiklikler yazılmadı."
+            ),
+            conflicts: Vec::new(),
+            revision: Some(data_revision),
+        });
     }
     // 3. The rights, as they are now. Block definitions are the drawing's content, as its objects.
     // A Veri girişi (`forms.use` without `feature.write`) changes existing records' attributes
@@ -548,7 +572,7 @@ pub async fn commit(
     let access = &now;
     // A Veri girişi writes what it reads (docs/adr/0411 §6): the attributes its forms do not show
     // are kept as stored.
-    let reading = crate::projects::reading_for(&mut tx, access).await?;
+    let reading = crate::projects::reading_for(tx, access).await?;
     let input = match &reading {
         Some(reading) if entry => {
             let ids: Vec<Uuid> = input
@@ -559,7 +583,7 @@ pub async fn commit(
                     _ => None,
                 })
                 .collect();
-            let stored = current_copies(&mut tx, access, &ids).await?;
+            let stored = current_copies(tx, access, &ids).await?;
             let mut input = input;
             for change in &mut input.features {
                 if let FeatureChange::Update { id, entity } = change
@@ -596,7 +620,7 @@ pub async fn commit(
                 )
                 .bind(access.tenant)
                 .bind(project)
-                .fetch_one(&mut *tx)
+                .fetch_one(&mut **tx)
                 .await?
             }
         };
@@ -613,7 +637,7 @@ pub async fn commit(
                 )
                 .bind(access.tenant)
                 .bind(project)
-                .fetch_one(&mut *tx)
+                .fetch_one(&mut **tx)
                 .await?;
                 stored
                     .get("connections")
@@ -636,7 +660,7 @@ pub async fn commit(
         )
         .bind(access.tenant)
         .bind(project)
-        .fetch_one(&mut *tx)
+        .fetch_one(&mut **tx)
         .await?;
         serde_json::from_value(stored)
             .map_err(|e| AppError::invalid(format!("Projenin ayarları okunamadı: {e}")))?
@@ -674,7 +698,7 @@ pub async fn commit(
         crate::projects::check_constraints(set, "project.constraints")?;
     }
     if new_srid != srid as u32 {
-        check_srid(&mut tx, new_srid).await?;
+        check_srid(tx, new_srid).await?;
     }
     let mut conflicts = Vec::new();
     if input.project.is_some() {
@@ -697,7 +721,7 @@ pub async fn commit(
     }
 
     // Block definitions (docs/adr/0144 §5): the project's, and as this command leaves them.
-    let block_plan = plan_blocks(&mut tx, access, &envelope, &input.blocks, &mut conflicts).await?;
+    let block_plan = plan_blocks(tx, access, &envelope, &input.blocks, &mut conflicts).await?;
     let placing = Placing::new(&block_plan.after);
 
     let mut plan = Vec::with_capacity(input.features.len());
@@ -748,7 +772,7 @@ pub async fn commit(
     .bind(access.tenant)
     .bind(project)
     .bind(&ids)
-    .fetch_all(&mut *tx)
+    .fetch_all(&mut **tx)
     .await?
     .into_iter()
     .map(|(id, v, l)| (id, (v, l)))
@@ -756,7 +780,7 @@ pub async fn commit(
     // A record out of a Veri girişi's reach is not there for it (docs/adr/0539, 0550 §2): a change to one
     // is a 404 before any version is compared, so neither its version nor its copy is ever told.
     let hidden: HashSet<Uuid> = match &reading {
-        Some(reading) if entry => current_copies(&mut tx, access, &ids)
+        Some(reading) if entry => current_copies(tx, access, &ids)
             .await?
             .into_iter()
             .filter(|(_, r)| !reading.sees(r))
@@ -809,7 +833,7 @@ pub async fn commit(
         }
     }
     if !conflicts.is_empty() {
-        let mut copies = current_copies(&mut tx, access, &conflicting_ids).await?;
+        let mut copies = current_copies(tx, access, &conflicting_ids).await?;
         for c in &mut conflicts {
             if let Ok(id) = Uuid::parse_str(&c.id) {
                 // A Veri girişi sees the server's copy as it reads it (docs/adr/0411 §6).
@@ -821,7 +845,6 @@ pub async fn commit(
                 });
             }
         }
-        drop(tx);
         let n = conflicts.len();
         return Err(AppError::Conflict {
             message: format!(
@@ -846,7 +869,7 @@ pub async fn commit(
         .bind(access.tenant)
         .bind(project)
         .bind(&names)
-        .fetch_all(&mut *tx)
+        .fetch_all(&mut **tx)
         .await?;
         let written: HashSet<Uuid> = plan.iter().map(|p| p.id).collect();
         let left: Vec<String> = placed
@@ -860,7 +883,6 @@ pub async fn commit(
             .find(|(id, _, _)| left.contains(&id.to_string()))
         {
             let n = left.iter().filter(|b| **b == id.to_string()).count();
-            drop(tx);
             let key = block_key(*id);
             return Err(AppError::Conflict {
                 message: format!(
@@ -882,7 +904,7 @@ pub async fn commit(
     // form; anyone's write to a layer whose form enforces its rules, by them.
     let settings_after = patch.settings.as_ref().unwrap_or(&stored_settings);
     guard_forms(
-        &mut tx,
+        tx,
         access,
         &old_name,
         settings_after,
@@ -904,7 +926,7 @@ pub async fn commit(
                     .bind(access.tenant)
                     .bind(project)
                     .bind(p.id)
-                    .execute(&mut *tx)
+                    .execute(&mut **tx)
                     .await?;
                 deleted.push(p.id.to_string());
                 events.push(EventFeature {
@@ -947,7 +969,7 @@ pub async fn commit(
                 .bind(&s.label_pins)
                 .bind(&s.attachments)
                 .bind(&s.look)
-                .fetch_one(&mut *tx)
+                .fetch_one(&mut **tx)
                 .await?;
                 versions.insert(p.id.to_string(), version.to_string());
                 events.push(EventFeature {
@@ -970,7 +992,7 @@ pub async fn commit(
                     .bind(access.tenant)
                     .bind(project)
                     .bind(row)
-                    .execute(&mut *tx)
+                    .execute(&mut **tx)
                     .await?;
                 deleted.push(key);
                 block_events.push(EventBlock {
@@ -995,7 +1017,7 @@ pub async fn commit(
                 .bind(value)
                 .bind(created_version)
                 .bind(actor)
-                .fetch_one(&mut *tx)
+                .fetch_one(&mut **tx)
                 .await?;
                 versions.insert(key, version.to_string());
                 block_events.push(EventBlock {
@@ -1024,10 +1046,9 @@ pub async fn commit(
             .bind(access.tenant)
             .bind(project)
             .bind(&dropped)
-            .fetch_optional(&mut *tx)
+            .fetch_optional(&mut **tx)
             .await?;
             if let Some(layer) = held {
-                drop(tx);
                 let name = find_layer(&current_tree, &layer)
                     .map_or(layer.as_str(), |(n, _)| n.name.as_str());
                 return Err(AppError::Conflict {
@@ -1059,13 +1080,13 @@ pub async fn commit(
             .bind(access.tenant)
             .bind(project)
             .bind(new_srid as i32)
-            .execute(&mut *tx)
+            .execute(&mut **tx)
             .await?;
     }
     // The inserts a changed definition places, which this command does not write itself: their geometry anew.
     let written: HashSet<Uuid> = plan.iter().map(|p| p.id).collect();
     blocks::reproject(
-        &mut tx,
+        tx,
         access.tenant,
         project,
         new_srid,
@@ -1123,7 +1144,7 @@ pub async fn commit(
             .transpose()?
             .flatten(),
     )
-    .fetch_one(&mut *tx)
+    .fetch_one(&mut **tx)
     .await?;
     // The project row has been locked since the revision was read: created objects carry this commit's.
     debug_assert_eq!(new_revision, created_version);
@@ -1158,7 +1179,7 @@ pub async fn commit(
         }
         detail
     })
-    .execute(&mut *tx)
+    .execute(&mut **tx)
     .await?;
     let mut event = EventRecord {
         blocks: block_events,
@@ -1178,7 +1199,7 @@ pub async fn commit(
     .bind(new_revision)
     .bind(PROJECT_CHANGES)
     .bind(serde_json::to_value(&event).expect("event serializes"))
-    .fetch_one(&mut *tx)
+    .fetch_one(&mut **tx)
     .await?;
     event.seq = seq.to_string();
     let result = CommitResult {
@@ -1189,7 +1210,6 @@ pub async fn commit(
         event_seq: seq.to_string(),
         replayed: false,
     };
-    idempotency::record(&mut tx, access, &envelope, &text, &result).await?;
-    tx.commit().await?;
+    idempotency::record(tx, access, &envelope, &text, &result).await?;
     Ok(result)
 }

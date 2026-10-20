@@ -1649,6 +1649,8 @@ fn screens() {
                             Some("single".into())
                         );
                         app.selection.set(Vec::new());
+                        // Katman stili shows the look taken: the fill, its outline and the star.
+                        app.open_layer_style(Some("parsel".into()));
                     }
                     // MapLibre stilinden görünüş al (docs/adr/0560): a third party's categorized style on Parsel.
                     "maplibre" => {

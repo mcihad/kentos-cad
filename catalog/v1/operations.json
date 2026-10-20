@@ -792,6 +792,14 @@
         "cad.network.define"
       ]
     },
+    "network.subnetworks": {
+      "level": "semantic",
+      "via": [
+        "cad.subnetworks.find",
+        "cad.subnetworks.update"
+      ],
+      "note": "Alt ağlar cad.subnetworks.find'ın cevabı, Güncelle'nin önizlemesi cad.subnetworks.update'in planı (ADR 0557)."
+    },
     "scenario.apply": {
       "level": "semantic",
       "via": [

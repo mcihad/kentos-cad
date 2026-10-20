@@ -1,0 +1,1711 @@
+{
+ "format": "kentos.network-terminals",
+ "version": 1,
+ "note": "scripts/fixtures/network_terminals_cases.py yazar; ADR 0557'nin kurallarından, KentOS kodu olmadan. Kenarlar ve düğümler sahnedeki sırasıyla.",
+ "cases": [
+  {
+   "scene": {
+    "name": "Trafo: yüksek ve alçak taraf",
+    "rules": {
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "both"
+     },
+     "terminals": {
+      "start": "uc_bas",
+      "end": "uc_son",
+      "devices": [
+       {
+        "layer": "trafo",
+        "terminals": [
+         {
+          "id": "yg",
+          "name": "Yüksek gerilim"
+         },
+         {
+          "id": "ag",
+          "name": "Alçak gerilim"
+         }
+        ],
+        "paths": [
+         [
+          "yg",
+          "ag"
+         ]
+        ]
+       }
+      ]
+     }
+    },
+    "edges": [
+     {
+      "id": 1,
+      "pts": [
+       [
+        0,
+        0
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       "yg"
+      ]
+     },
+     {
+      "id": 2,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        200,
+        0
+       ]
+      ],
+      "terminals": [
+       "Alçak gerilim",
+       null
+      ]
+     },
+     {
+      "id": 3,
+      "pts": [
+       [
+        200,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 4,
+      "pts": [
+       [
+        200,
+        0
+       ],
+       [
+        200,
+        80
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 5,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        60
+       ]
+      ],
+      "terminals": [
+       "YG",
+       null
+      ]
+     },
+     {
+      "id": 6,
+      "pts": [
+       [
+        500,
+        0
+       ],
+       [
+        600,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": 10,
+      "p": [
+       0,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 11,
+      "p": [
+       100,
+       0
+      ],
+      "role": "junction",
+      "device": 0
+     },
+     {
+      "id": 12,
+      "p": [
+       200,
+       0
+      ],
+      "role": "valve"
+     }
+    ]
+   },
+   "unterminated": [],
+   "traces": [
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 1
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 4
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 5
+     },
+     "edges": [
+      6
+     ],
+     "junctions": []
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "node": [
+       100,
+       0
+      ]
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "downstream",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "upstream",
+      "edge": 2
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    }
+   ],
+   "subnets": [
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        0,
+        1,
+        2
+       ],
+       "length": 440.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        0,
+        1,
+        2
+       ],
+       "length": 440.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        1
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        0,
+        1,
+        2
+       ],
+       "length": 440.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scene": {
+    "name": "Üç terminalli ayırıcı: a ile b bir yolda, c hiçbirinde",
+    "rules": {
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "digitized"
+     },
+     "terminals": {
+      "start": "uc_bas",
+      "end": "uc_son",
+      "devices": [
+       {
+        "layer": "ayirici",
+        "terminals": [
+         {
+          "id": "a",
+          "name": "A"
+         },
+         {
+          "id": "b",
+          "name": "B"
+         },
+         {
+          "id": "c",
+          "name": "C"
+         }
+        ],
+        "paths": [
+         [
+          "a",
+          "b"
+         ]
+        ]
+       }
+      ]
+     }
+    },
+    "edges": [
+     {
+      "id": 1,
+      "pts": [
+       [
+        0,
+        0
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       "a"
+      ]
+     },
+     {
+      "id": 2,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        200,
+        0
+       ]
+      ],
+      "terminals": [
+       "b",
+       null
+      ]
+     },
+     {
+      "id": 3,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        80
+       ]
+      ],
+      "terminals": [
+       "c",
+       null
+      ]
+     },
+     {
+      "id": 4,
+      "pts": [
+       [
+        200,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 5,
+      "pts": [
+       [
+        100,
+        -80
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       "C"
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": 20,
+      "p": [
+       0,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 21,
+      "p": [
+       100,
+       0
+      ],
+      "role": "junction",
+      "device": 0
+     },
+     {
+      "id": 22,
+      "p": [
+       200,
+       0
+      ],
+      "role": "valve"
+     }
+    ]
+   },
+   "unterminated": [],
+   "traces": [
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      4
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 1
+     },
+     "edges": [
+      1,
+      2,
+      4
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 2
+     },
+     "edges": [
+      3,
+      5
+     ],
+     "junctions": [
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 4
+     },
+     "edges": [
+      3,
+      5
+     ],
+     "junctions": [
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "node": [
+       100,
+       0
+      ]
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "downstream",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      4
+     ],
+     "junctions": [
+      1,
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "downstream",
+      "edge": 4
+     },
+     "edges": [
+      3,
+      5
+     ],
+     "junctions": [
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "upstream",
+      "edge": 1
+     },
+     "edges": [
+      1,
+      2
+     ],
+     "junctions": [
+      0,
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "isolation",
+      "edge": 1
+     },
+     "edges": [
+      1,
+      2
+     ],
+     "junctions": [
+      0,
+      1,
+      2
+     ],
+     "valves": [
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "isolation",
+      "edge": 3
+     },
+     "edges": [
+      4
+     ],
+     "junctions": [
+      2
+     ],
+     "valves": [
+      2
+     ]
+    }
+   ],
+   "subnets": [
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        3
+       ],
+       "junctions": [
+        0,
+        1,
+        2
+       ],
+       "length": 300.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        3
+       ],
+       "junctions": [
+        0,
+        1,
+        2
+       ],
+       "length": 300.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        1
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        1,
+        2,
+        3
+       ],
+       "junctions": [
+        1,
+        2
+       ],
+       "length": 280.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scene": {
+    "name": "İki kaynak: ortak düğüm, kaynaksız boru ve kapalı vana",
+    "rules": {
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "digitized"
+     }
+    },
+    "edges": [
+     {
+      "id": 1,
+      "pts": [
+       [
+        0,
+        0
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 2,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        200,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 3,
+      "pts": [
+       [
+        200,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 4,
+      "pts": [
+       [
+        400,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 5,
+      "pts": [
+       [
+        500,
+        0
+       ],
+       [
+        400,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 6,
+      "pts": [
+       [
+        700,
+        0
+       ],
+       [
+        800,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 7,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        90
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": 30,
+      "p": [
+       0,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 31,
+      "p": [
+       500,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 32,
+      "p": [
+       300,
+       0
+      ],
+      "role": "junction"
+     },
+     {
+      "id": 33,
+      "p": [
+       200,
+       0
+      ],
+      "role": "valve",
+      "closed": true
+     },
+     {
+      "id": 34,
+      "p": [
+       100,
+       90
+      ],
+      "role": "valve"
+     }
+    ]
+   },
+   "unterminated": [],
+   "traces": [
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      7
+     ],
+     "junctions": [
+      0,
+      3,
+      4
+     ]
+    },
+    {
+     "query": {
+      "kind": "downstream",
+      "edge": 3
+     },
+     "edges": [
+      4
+     ],
+     "junctions": [
+      2
+     ]
+    },
+    {
+     "query": {
+      "kind": "isolation",
+      "edge": 6
+     },
+     "edges": [
+      1,
+      2,
+      7
+     ],
+     "junctions": [
+      0,
+      3,
+      4
+     ],
+     "valves": [
+      4
+     ]
+    }
+   ],
+   "subnets": [
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        6
+       ],
+       "junctions": [
+        0,
+        3,
+        4
+       ],
+       "length": 290.0
+      },
+      {
+       "edges": [
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2
+       ],
+       "length": 200.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        6
+       ],
+       "junctions": [
+        0,
+        3,
+        4
+       ],
+       "length": 290.0
+      },
+      {
+       "edges": [
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2,
+        3
+       ],
+       "length": 300.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        0,
+        1
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        6
+       ],
+       "junctions": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "length": 590.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        1
+       ],
+       [
+        0
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2
+       ],
+       "length": 200.0
+      },
+      {
+       "edges": [
+        0,
+        1,
+        6
+       ],
+       "junctions": [
+        0,
+        3,
+        4
+       ],
+       "length": 290.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        2
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2,
+        3
+       ],
+       "length": 300.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scene": {
+    "name": "İki kaynak: kapalı kenar",
+    "rules": {
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "digitized"
+     }
+    },
+    "edges": [
+     {
+      "id": 1,
+      "pts": [
+       [
+        0,
+        0
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 2,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        200,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ],
+      "closed": true
+     },
+     {
+      "id": 3,
+      "pts": [
+       [
+        200,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 4,
+      "pts": [
+       [
+        400,
+        0
+       ],
+       [
+        300,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 5,
+      "pts": [
+       [
+        500,
+        0
+       ],
+       [
+        400,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 6,
+      "pts": [
+       [
+        700,
+        0
+       ],
+       [
+        800,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 7,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        90
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": 30,
+      "p": [
+       0,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 31,
+      "p": [
+       500,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 32,
+      "p": [
+       300,
+       0
+      ],
+      "role": "junction"
+     },
+     {
+      "id": 33,
+      "p": [
+       200,
+       0
+      ],
+      "role": "valve",
+      "closed": false
+     },
+     {
+      "id": 34,
+      "p": [
+       100,
+       90
+      ],
+      "role": "valve"
+     }
+    ]
+   },
+   "unterminated": [],
+   "traces": [
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      7
+     ],
+     "junctions": [
+      0,
+      4
+     ]
+    }
+   ],
+   "subnets": [
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        6
+       ],
+       "junctions": [
+        0,
+        4
+       ],
+       "length": 190.0
+      },
+      {
+       "edges": [
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2
+       ],
+       "length": 200.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ],
+       [
+        1
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        6
+       ],
+       "junctions": [
+        0,
+        4
+       ],
+       "length": 190.0
+      },
+      {
+       "edges": [
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        1,
+        2,
+        3
+       ],
+       "length": 300.0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "scene": {
+    "name": "Terminal adı olmayan uç ve cihazda olmayan terminal",
+    "rules": {
+     "connect": "ends",
+     "tolerance": 0.01,
+     "direction": {
+      "kind": "both"
+     },
+     "terminals": {
+      "start": "uc_bas",
+      "end": "uc_son",
+      "devices": [
+       {
+        "layer": "trafo",
+        "terminals": [
+         {
+          "id": "yg",
+          "name": "YG"
+         },
+         {
+          "id": "ag",
+          "name": "AG"
+         }
+        ],
+        "paths": [
+         [
+          "yg",
+          "ag"
+         ]
+        ]
+       }
+      ]
+     }
+    },
+    "edges": [
+     {
+      "id": 1,
+      "pts": [
+       [
+        0,
+        0
+       ],
+       [
+        100,
+        0
+       ]
+      ],
+      "terminals": [
+       null,
+       "yg"
+      ]
+     },
+     {
+      "id": 2,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        200,
+        0
+       ]
+      ],
+      "terminals": [
+       "ag",
+       null
+      ]
+     },
+     {
+      "id": 3,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        80
+       ]
+      ],
+      "terminals": [
+       null,
+       null
+      ]
+     },
+     {
+      "id": 4,
+      "pts": [
+       [
+        100,
+        0
+       ],
+       [
+        100,
+        -80
+       ]
+      ],
+      "terminals": [
+       "orta gerilim",
+       null
+      ]
+     },
+     {
+      "id": 5,
+      "pts": [
+       [
+        100,
+        80
+       ],
+       [
+        200,
+        80
+       ]
+      ],
+      "terminals": [
+       "yg",
+       null
+      ]
+     }
+    ],
+    "junctions": [
+     {
+      "id": 40,
+      "p": [
+       0,
+       0
+      ],
+      "role": "source"
+     },
+     {
+      "id": 41,
+      "p": [
+       100,
+       0
+      ],
+      "role": "junction",
+      "device": 0
+     }
+    ]
+   },
+   "unterminated": [
+    [
+     3,
+     [
+      100,
+      0
+     ]
+    ],
+    [
+     4,
+     [
+      100,
+      0
+     ]
+    ]
+   ],
+   "traces": [
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "connected",
+      "edge": 4
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1
+     ]
+    },
+    {
+     "query": {
+      "kind": "downstream",
+      "edge": 0
+     },
+     "edges": [
+      1,
+      2,
+      3,
+      4,
+      5
+     ],
+     "junctions": [
+      0,
+      1
+     ]
+    }
+   ],
+   "subnets": [
+    {
+     "query": {
+      "groups": [
+       [
+        0
+       ]
+      ],
+      "reach": "connected"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        0,
+        1
+       ],
+       "length": 460.0
+      }
+     ]
+    },
+    {
+     "query": {
+      "groups": [
+       [
+        1
+       ]
+      ],
+      "reach": "downstream"
+     },
+     "reached": [
+      {
+       "edges": [
+        0,
+        1,
+        2,
+        3,
+        4
+       ],
+       "junctions": [
+        0,
+        1
+       ],
+       "length": 460.0
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

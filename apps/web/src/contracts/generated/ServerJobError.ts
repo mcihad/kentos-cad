@@ -6,6 +6,9 @@
 export type ServerJobError = { 
 /**
  * `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
- * not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`.
+ * not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`; a
+ * `project.processing` job also `cpu_limit`, `memory_limit` (stopped at its budget), `memory_estimate` (refused
+ * before it ran), `tool_failed`, `tool_unavailable`, `unsupported_change`, `too_many_changes` and `crashed`
+ * (docs/adr/0559).
  */
 code: string, message: string, };

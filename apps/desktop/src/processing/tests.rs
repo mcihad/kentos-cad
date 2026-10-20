@@ -193,7 +193,10 @@ fn otomatik_sends_two_thousand_objects_to_the_background_with_the_same_answer() 
     );
     let window = app.processing.dialog.as_ref().expect("open");
     let (options, hint, choice) =
-        targets_view(&window.targets(&app.processing.registry), Choice::Auto);
+        targets_view(
+            &window.targets(&app.processing.registry, &Default::default()),
+            Choice::Auto,
+        );
     assert_eq!(options[0].note.as_deref(), Some("şimdi: arka planda"));
     assert_eq!((hint, choice), (Some(AUTO_HINT), Some(Choice::Auto)));
     // Here first, for the answer.

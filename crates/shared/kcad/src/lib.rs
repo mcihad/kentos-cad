@@ -549,11 +549,15 @@ pub const SCHEMA_WITH_SOURCE_BASES: u32 = 91;
 /// Schema 92 (docs/adr/0553 §1): a source base's `fields`, what each object held besides its hashes (the hashes of its
 /// kind and geometry on each side, of each attribute and of its vertices), written only when a base has them.
 pub const SCHEMA_WITH_SOURCE_FIELD_BASES: u32 = 92;
+/// Schema 93 (docs/adr/0557): a network's `terminals` (its devices' terminals and the paths through them, the edge fields
+/// naming the terminals) and `subnetworks` (the attribute the subnetworks' names are written to), written only when a
+/// network has one.
+pub const SCHEMA_WITH_NETWORK_TERMINALS: u32 = 93;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 91] = [
+pub const SCHEMAS: [u32; 92] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -645,6 +649,7 @@ pub const SCHEMAS: [u32; 91] = [
     SCHEMA_WITH_RECORDED_TIME,
     SCHEMA_WITH_SOURCE_BASES,
     SCHEMA_WITH_SOURCE_FIELD_BASES,
+    SCHEMA_WITH_NETWORK_TERMINALS,
 ];
 
 /// The file a drawing is saved as.

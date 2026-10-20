@@ -89,6 +89,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
                         .map(|c| c.as_array().expect("a cost's").iter().map(text).collect())
                         .collect()
                 }),
+                terminals: [None, None],
             }
         })
         .collect();
@@ -106,6 +107,7 @@ fn build(scene: &Value) -> (Graph, kentos_geometry_core::ops::network::BuildRepo
             },
             closed: j["closed"].as_bool().unwrap_or(false),
             level: text(&j["level"]),
+            device: None,
         })
         .collect();
     let turns: Vec<TurnIn> = scene["turns"]
@@ -412,6 +414,7 @@ fn timing() {
             closed: r() < 0.01,
             levels: [None, None, None],
             periods: vec![vec![Some(morning)]],
+            terminals: [None, None],
         });
     };
     for i in 0..N {

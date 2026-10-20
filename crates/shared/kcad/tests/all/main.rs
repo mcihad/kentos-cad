@@ -26,6 +26,7 @@ mod line_parts;
 mod linked_texts;
 mod look;
 mod measures;
+mod network_terminals;
 mod network_turns;
 mod networks;
 mod nurbs;

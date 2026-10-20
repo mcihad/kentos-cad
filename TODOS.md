@@ -228,6 +228,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-27` şebekede terminaller ve alt ağlar (ADR 0557, 20 Ekim): web'de gerekenler: ağın `terminals` ve `subnetworks`'ının
+  TS türleri (üretilir) ve `.kcad` şema 93'ün web kodeğinde okunması, ağın işçisinde terminal yolları (çekirdekten),
+  Ağlar penceresinin Terminaller ve Alt ağlar bölümleri, Alt ağlar penceresi, `cad.subnetworks.*` komutlarının web işleyicisi.
 - [ ] `CBS-37` alan alan birleştirme (ADR 0553, 20 Ekim): web'de gerekenler: `kentos_contracts::merge_entities`'in TS karşılığı
   (nesnenin JSON'unun üst düzey alanları, öznitelikler tek tek) ve web bulut istemcisinin iki çatışma yolunda (dışarıdan gelen değişiklik,
   409) kullanması; Kaynakla uzlaştır web'de yok.
@@ -246,6 +249,9 @@ Liste:
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
+- [ ] `CBS-39` İşlemler araçları sunucu işi olarak (ADR 0559, 20 Ekim): web'de gerekenler: Nerede çalışır'da “KentOS sunucusunda” ve Sonuç
+  seçimi (projeye yaz, dosyaya yaz), isteğin `ProcessingJobInput` olarak kurulması (`cad.processing.run`'ın değerleri, seçim, görünür alan), Sunucu işleri
+  sekmesinde işlem satırları (ilerleme sözcükleri, sonuç satırı, `.gpkg` indirme) ve yeni hata kodlarının önerileri; sunucu, çocuk süreç ve sözleşme ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
   sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da); 0547: Sunucu işleri sekmesi (iş türleri `project.export` ve `project.checkpoint`, durum çipi,
   ilerleme, Durdur, İndir (Range), `quota_exceeded`, `too_large`, `storage`, `archived` iletileri); kurallar `kentos_cloud::server_jobs`'ta (web'e TS karşılığı).
@@ -2090,6 +2096,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-27` şebekede terminaller ve alt ağlar (dilim): ağın cihazları (düğüm katmanı, terminaller, terminal yolları; kenar
+  uçlarının bağlı olduğu terminal alanları), izleme ve Denetle terminal yollarından geçer, terminalsiz uç bütün terminallere
+  geçer ve doğrulanmamıştır; alt ağlar (Kaynak düğümleri denetleyici, Akış aşağı ya da Bağlı, yetim, paylaşılan, eski);
+  `cad.subnetworks.find` ve `.update`, `.kcad` şema 93, Ağlar'da Terminaller ve Alt ağlar, Alt ağlar penceresi, Python, MCP.
+  Kalan: en kısa yol, hizmet alanı ve maliyet matrisinde terminal yolları, alt ağın kendiliğinden güncellenmesi, artımlı graf.
+  — **20 Ekim, [ADR 0557](docs/adr/0557-network-terminals-and-subnetworks.md).**
 - [ ] `CBS-34` TUCBS profili (dilim): veri profilleri veri olarak (`catalog/v1/profiles/tucbs-temel.json`: mahalle, ada, parsel, bina,
   yol, adres, imar; alanlar, kimlikler, kayıtlı alan ve toleransı, değer listeleri, ilişkiler, adres eşlemesi; kolon adı kodda yok),
   `cad.profiles.apply` (eksik grup, katman, alan, değer listesi, ilişki ve adres verisi; var olan korunur, tek geri alma adımı) ve salt
@@ -2130,6 +2142,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (iste, listele, yokla, Durdur, İndir; pencere kapanınca iş kalır); Python `checkpoint_job`. Kalan: başka iş türleri (sunucuda İşlemler
   aracı, büyük içe aktarma, atlas PDF'i), CPU ve bellek kotası, işçinin ilerleme yazması, önbellek anahtarı, yedek ve geri yükleme
   tatbikatı. — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md) ve [ADR 0547](docs/adr/0547-server-jobs-limits-and-desktop.md).**
+- [ ] `CBS-39` İşlemler araçları sunucu işi olarak (dilim 3): üçüncü iş türü `project.processing` (girdi `cad.processing.run`'ın girdisi, yerel dosya yolu
+  reddedilir, sabitlenen revizyon), sonuç **commit** (aracın yaptığı delta tek `project.changes` komutuyla, işin bitirme işleminde: proje aracın okuduğu
+  revizyondaysa, yetki yeniden sorulur, geçmeyen kira commit'i de geri alır) ya da **dosya** (GeoPackage artifact'ı, proje değişmez); araç **ayrı süreçte**
+  (`apps/jobrun`, `kentos-jobrun`: boş ortam, bir klasör) çalışır, işçi çocuğun CPU ve belleğini ölçer, bütçeyi (`KENTOS_JOB_CPU_SECONDS`, `KENTOS_JOB_MEMORY_MB`, istek
+  daha küçük isteyebilir) aşınca öldürür (`cpu_limit`, `memory_limit`) ve dosya boyundan kestirdiği bellek bütçeye sığmıyorsa hiç çalıştırmaz (`memory_estimate`);
+  işçi ilerleme ve sözcüklerini vuruşta yazar (`progress_text`, göç 0031); masaüstünde Nerede çalışır'da KentOS sunucusunda ve Sonuç seçimi, Sunucu işleri
+  sekmesinde işlem satırları; Python `processing_job`. Kalan: MCP'de iş türleri, blok yazan ve 5000'den çok nesne yazan araçlar, dosya alan araçlar, modeller,
+  büyük içe aktarma ve atlas PDF'i türleri, gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
+  — **20 Ekim, [ADR 0559](docs/adr/0559-processing-server-jobs.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik

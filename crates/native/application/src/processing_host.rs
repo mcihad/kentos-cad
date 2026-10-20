@@ -6,8 +6,8 @@
 use std::sync::OnceLock;
 
 use kentos_commands::{
-    CommandError, CommandWarning, ProcessingBatch, ProcessingBatched, ProcessingRan, ProcessingRun,
-    ProcessingTools, ProcessingToolsListed, codes,
+    CommandError, CommandWarning, NetworkDef, ProcessingBatch, ProcessingBatched, ProcessingRan,
+    ProcessingRun, ProcessingTools, ProcessingToolsListed, codes,
 };
 use kentos_domain::Document;
 
@@ -92,6 +92,13 @@ pub trait ToolHost: Send + Sync {
         input: &ProcessingBatch,
         flow: &dyn BatchFlow,
     ) -> Result<BatchEnd, Box<CommandError>>;
+    /// The project's network `id` built from the drawing as it is, with its definition (docs/adr/0557): the
+    /// subnetworks walk it.
+    fn network(
+        &self,
+        doc: &Document,
+        id: &str,
+    ) -> Result<(NetworkDef, kentos_geometry_core::ops::network::NetworkSession), String>;
 }
 
 static TOOLS: OnceLock<Box<dyn ToolHost>> = OnceLock::new();

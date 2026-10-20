@@ -14,4 +14,8 @@ baseRevision: string, state: ServerJobState,
 /**
  * 0–1.
  */
-progress: number, attempts: number, maxAttempts: number, timeoutSeconds: number, cancelRequested: boolean, createdBy: string, createdAt: string, startedAt?: string, finishedAt?: string, result?: unknown, artifact?: ServerJobArtifact, error?: ServerJobError, };
+progress: number, 
+/**
+ * What the worker says it is doing, a few Turkish words, while the job runs (docs/adr/0559 §3).
+ */
+progressText?: string, attempts: number, maxAttempts: number, timeoutSeconds: number, cancelRequested: boolean, createdBy: string, createdAt: string, startedAt?: string, finishedAt?: string, result?: unknown, artifact?: ServerJobArtifact, error?: ServerJobError, };

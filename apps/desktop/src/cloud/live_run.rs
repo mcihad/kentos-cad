@@ -1277,7 +1277,56 @@ fn jobs_live() {
     );
     r.shot("isler-04-durduruldu");
 
-    // 5. The app is closed; a new one finds both jobs where the server kept them.
+    // 4b. İşlemler on the server (docs/adr/0559): the tool's window asks for a job, a worker of `kentosd serve` runs
+    // the tool in a child process, its result is committed to the project in the job's finish and comes back to this
+    // drawing as another editor's change does.
+    r.cloud(Event::Close);
+    let areas: Vec<Slot> = r
+        .app
+        .document
+        .as_ref()
+        .expect("the open project")
+        .model
+        .entities()
+        .filter(|e| matches!(e, Entity::Polygon(_)))
+        .map(|e| Slot(e.base().id))
+        .collect();
+    assert!(!areas.is_empty(), "the sample has parcels");
+    r.app.selection.set(areas.iter().copied());
+    r.send(Message::Run("processing.run.attributes.calculate"));
+    r.send(Message::Processing(crate::processing::Event::Target(
+        "server".into(),
+    )));
+    r.send(Message::Processing(crate::processing::Event::Run));
+    r.until("iş istendi", Duration::from_secs(20), |a| {
+        matches!(
+            a.processing.dialog.as_ref().map(|w| &w.status),
+            Some(crate::processing::RunStatus::Asked(text)) if text.starts_with("Sunucu işi istendi")
+        )
+    });
+    r.shot("isler-05-islem-istendi");
+    r.send(Message::Processing(crate::processing::Event::ServerJobs));
+    r.until("işlem işi", Duration::from_secs(90), |a| {
+        let list = jobs(a);
+        list.len() == 3 && list[0].state.is_over() && list[0].kind == "project.processing"
+    });
+    let ran = jobs(&r.app).remove(0);
+    assert_eq!(ran.state, ServerJobState::Succeeded, "{:?}", ran.error);
+    let result: kentos_commands::ProcessingJobResult =
+        serde_json::from_value(ran.result.clone().expect("a result")).expect("its result");
+    assert_eq!(result.tool, "attributes.calculate");
+    assert!(result.changed >= 1 && result.revision.is_some(), "{result:?}");
+    assert!(result.usage.peak_memory_mb > 1.0, "{:?}", result.usage);
+    r.until("proje değişti", Duration::from_secs(40), |a| {
+        a.document.as_ref().is_some_and(|d| {
+            d.model
+                .entities()
+                .any(|e| e.base().attrs.contains_key("Hesap alanı"))
+        })
+    });
+    r.shot("isler-06-islem-bitti");
+
+    // 5. The app is closed; a new one finds the jobs where the server kept them.
     drop(r);
     let mut r = Runner::new(app(&dir, &api));
     sign_in(&mut r, &password, None);
@@ -1288,13 +1337,13 @@ fn jobs_live() {
     r.cloud(Event::CatalogPick(project.clone()));
     r.cloud(Event::CatalogTab(Tab::Jobs));
     r.until("işler yeniden", Duration::from_secs(15), |a| {
-        jobs(a).len() == 2
+        jobs(a).len() == 3
     });
     assert_eq!(
         jobs(&r.app).iter().map(|j| j.id.clone()).collect::<Vec<_>>(),
-        vec![second.id.clone(), first.id.clone()]
+        vec![ran.id.clone(), second.id.clone(), first.id.clone()]
     );
-    r.shot("isler-05-yeniden-acildi");
+    r.shot("isler-07-yeniden-acildi");
 
     // 6. What this run made goes: to the trash and removed for good.
     r.cloud(Event::CatalogTab(Tab::Info));
