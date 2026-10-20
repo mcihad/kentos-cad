@@ -14,12 +14,15 @@ use std::time::Instant;
 use kentos_commands::{
     BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
     ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
-    ProcessingTools, ProcessingToolsListed, RecordStep, RecordTotal, RunInput, RunSink, ToolNote,
-    ToolParameter, codes,
+    ProcessingTools, ProcessingToolsListed, RecordStep, RecordTotal, RunInput, RunSink,
+    SinkColumn, SinkDimension, SinkMode, SinkReport, SinkTable, ToolNote, ToolParameter, codes,
 };
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geometry::Bounds;
-use kentos_native_application::processing_host::{BatchEnd, BatchFlow, ToolHost, register_tools};
+use kentos_native_application::geopackage::BATCH_ROWS;
+use kentos_native_application::processing_host::{
+    BatchEnd, BatchFlow, RunEnd, ToolHost, register_tools,
+};
 use serde_json::{Value, json};
 
 use crate::features::{Host, Scene};
@@ -467,29 +470,40 @@ impl ToolHost for Tools {
         doc: &mut Document,
         input: &ProcessingRun,
         write: bool,
-    ) -> Result<(ProcessingRan, Vec<CommandWarning>), Box<CommandError>> {
+        flow: &dyn BatchFlow,
+    ) -> Result<RunEnd, Box<CommandError>> {
         let registry = Registry::builtin();
         let ready = ready(&registry, doc, input)?;
         let Some(sink) = &input.sink else {
             let (ran, _) = run_on(doc, ready, &registry, &mut Digests::new())?;
-            return Ok((ran, Vec::new()));
+            return Ok(RunEnd::Ran(ran, Vec::new()));
         };
         let target = sink_target(sink)?;
         let (tool_id, tool_label) = (ready.tool.id.clone(), ready.tool.label.clone());
         // The run is made on a copy: the drawing does not change, the file takes the result.
         let mut copy = doc.reading_copy();
         let (mut ran, added) = run_on(&mut copy, ready, &registry, &mut Digests::new())?;
+        // The tool is not asked to stop; a stop that came while it computed ends the run before the file is touched.
+        if flow.stopped() {
+            return Ok(RunEnd::Cancelled);
+        }
         let lineage = Lineage {
             tool: (&tool_id, &tool_label),
             request: input,
             inputs: &ran.inputs,
             drawing: doc.revision().to_string(),
         };
-        let (exported, warnings) = write_sink(&mut copy, &added, &target, write, &lineage)?;
-        ran.sink = Some(exported);
-        ran.step = None;
-        ran.revision = doc.revision().to_string();
-        Ok((ran, warnings))
+        match write_sink(&mut copy, &added, &target, write, &lineage, flow)? {
+            Sunk::Cancelled => Ok(RunEnd::Cancelled),
+            Sunk::Done(done) => {
+                let (exported, report, warnings) = *done;
+                ran.sink = Some(exported);
+                ran.sink_report = Some(report);
+                ran.step = None;
+                ran.revision = doc.revision().to_string();
+                Ok(RunEnd::Ran(ran, warnings))
+            }
+        }
     }
 
     fn check_batch(
@@ -998,6 +1012,7 @@ fn run_on(
                 notes,
                 inputs,
                 sink: None,
+                sink_report: None,
                 step: edited.then(|| tool.label.clone()),
                 record: record_of(begun, &tool, model.as_ref(), &record, result.grids.clone()),
                 revision: doc.revision().to_string(),
@@ -1088,9 +1103,14 @@ fn inputs_of(doc: &Document, ready: &Ready, digests: &mut Digests) -> Vec<RunInp
         .collect()
 }
 
-/// Where a sink writes, or why not there: an absolute `.gpkg` path in a folder that is there; a file that is there
-/// only with `overwrite`.
-fn sink_target(sink: &RunSink) -> Result<(PathBuf, bool), Box<CommandError>> {
+/// Where a sink writes, and how: an absolute `.gpkg` path in a folder that is there; for a new file one that is there
+/// only with `overwrite`; for `addTables` and `replaceTables` a file that is there (docs/adr/0549 §1).
+struct Target {
+    path: PathBuf,
+    mode: SinkMode,
+}
+
+fn sink_target(sink: &RunSink) -> Result<Target, Box<CommandError>> {
     let at = Some("sink.path".to_owned());
     let path = sink.path.trim();
     let p = Path::new(path);
@@ -1121,14 +1141,40 @@ fn sink_target(sink: &RunSink) -> Result<(PathBuf, bool), Box<CommandError>> {
         ));
     }
     let exists = p.exists();
-    if exists && !sink.overwrite {
-        return Err(refused(
-            codes::FILE_EXISTS,
-            format!("{path} var; üzerine yazmak için overwrite: true verin."),
-            at,
-        ));
+    match sink.mode {
+        SinkMode::New => {
+            if exists && !sink.overwrite {
+                return Err(refused(
+                    codes::FILE_EXISTS,
+                    format!("{path} var; üzerine yazmak için overwrite: true verin."),
+                    at,
+                ));
+            }
+        }
+        SinkMode::AddTables | SinkMode::ReplaceTables => {
+            if sink.overwrite {
+                return Err(refused(
+                    codes::INVALID_INPUT,
+                    "overwrite yeni dosyanın üzerine yazmak içindir; addTables ve replaceTables var olan dosyaya dokunmadan tablo ekler ya da yenisiyle değiştirir."
+                        .into(),
+                    Some("sink.overwrite".to_owned()),
+                ));
+            }
+            if !exists {
+                return Err(refused(
+                    codes::FILE_NOT_FOUND,
+                    format!(
+                        "{path} yok; tablo eklenecek GeoPackage'ın yolunu verin ya da yeni bir dosya için sink.mode vermeyin."
+                    ),
+                    at,
+                ));
+            }
+        }
     }
-    Ok((p.to_path_buf(), exists))
+    Ok(Target {
+        path: p.to_path_buf(),
+        mode: sink.mode,
+    })
 }
 
 /// What a result came from (docs/adr/0511): the tool, the request as given, the layers it read, the drawing's revision.
@@ -1194,18 +1240,49 @@ fn utc_at(ms: u64) -> String {
     format!("{text}Z")
 }
 
+/// How a sink's write ended.
+enum Sunk {
+    /// Written (or, for a plan, measured on a passing copy): what the file holds now, how it was made, what was lost.
+    Done(Box<(GpkgExported, SinkReport, Vec<CommandWarning>)>),
+    /// Stopped between two batches: the file is as it was.
+    Cancelled,
+}
+
+fn unwritable(why: String) -> Box<CommandError> {
+    refused(
+        codes::FILE_UNWRITABLE,
+        format!("GeoPackage yazılamadı: {why}. Eski dosya olduğu gibi kaldı."),
+        Some("sink.path".to_owned()),
+    )
+}
+
+/// The passing file a write is made in beside the target.
+fn passing_file(path: &Path) -> PathBuf {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    path.with_extension(format!(
+        "gpkg.kentos-{}-{}",
+        std::process::id(),
+        NEXT.fetch_add(1, Ordering::Relaxed)
+    ))
+}
+
 /// The objects a run made on `copy` written to the sink's GeoPackage, each layer they are on a table; the other
-/// objects of the copy are left out first. The file is made beside the target under a passing name and, with
-/// `write`, put in its place in one step; a plan removes it. What it holds, and what it could not hold.
+/// objects of the copy are left out first (docs/adr/0508 §4, 0549).
+///
+/// - A new file is made beside the target under a passing name and, with `write`, put in its place in one step.
+/// - Into a file that is there (`addTables`, `replaceTables`) the tables go in one SQLite transaction on the file
+///   itself: nothing of it is there until it commits, and a refusal, a failure or a stop rolls it back. A plan does
+///   the same on a passing copy of the file, and removes the copy.
+/// - The rows go in batches of [`BATCH_ROWS`]; `flow` is asked before each.
 fn write_sink(
     copy: &mut Document,
     added: &[Slot],
-    (path, _): &(PathBuf, bool),
+    target: &Target,
     write: bool,
     lineage: &Lineage<'_>,
-) -> Result<(GpkgExported, Vec<CommandWarning>), Box<CommandError>> {
-    use std::sync::atomic::{AtomicU64, Ordering};
-    static NEXT: AtomicU64 = AtomicU64::new(0);
+    flow: &dyn BatchFlow,
+) -> Result<Sunk, Box<CommandError>> {
     let at = Some("sink.path".to_owned());
     let keep: HashSet<Slot> = added.iter().copied().collect();
     let others: Vec<Slot> = copy
@@ -1230,50 +1307,38 @@ fn write_sink(
             at,
         ));
     }
-    let tmp = path.with_extension(format!(
-        "gpkg.kentos-{}-{}",
-        std::process::id(),
-        NEXT.fetch_add(1, Ordering::Relaxed)
-    ));
-    let _ = std::fs::remove_file(&tmp);
-    let written = kentos_native_application::geopackage::write(copy, &layers, &tmp).and_then(|w| {
-        // Each table says what it came from (docs/adr/0511): GeoPackage's metadata extension.
-        let gp = kentos_geopackage::GeoPackage::open(&tmp, true).map_err(|e| e.0)?;
-        let made = utc_now();
-        for t in &w.tables {
-            gp.add_metadata(
-                &t.table,
-                LINEAGE_STANDARD,
-                "application/json",
-                &lineage.document(&t.table, &t.layer, &made),
-                &made,
-            )
-            .map_err(|e| e.0)?;
-        }
-        gp.close().map_err(|e| e.0)?;
-        Ok(w)
-    });
-    let bytes = std::fs::read(&tmp);
-    let unwritable = |why: String| {
-        refused(
-            codes::FILE_UNWRITABLE,
-            format!("GeoPackage yazılamadı: {why}. Eski dosya olduğu gibi kaldı."),
-            Some("sink.path".to_owned()),
-        )
+    let path = &target.path;
+    let fresh = target.mode == SinkMode::New;
+    // Where the tables are written: a new file in a passing one, a file that is there in itself (a plan: in a copy).
+    let (work, in_place) = if fresh || !write {
+        (passing_file(path), false)
+    } else {
+        (path.clone(), true)
     };
-    let (written, bytes) = match (written, bytes) {
-        (Ok(w), Ok(b)) => (w, b),
-        (Err(why), _) => {
-            let _ = std::fs::remove_file(&tmp);
-            return Err(unwritable(why));
-        }
-        (_, Err(e)) => {
-            let _ = std::fs::remove_file(&tmp);
-            return Err(unwritable(e.to_string()));
+    if !in_place {
+        let _ = std::fs::remove_file(&work);
+    }
+    if !fresh && !write {
+        std::fs::copy(path, &work).map_err(|e| unwritable(e.to_string()))?;
+    }
+    let outcome = write_tables(copy, &layers, &work, target.mode, lineage, flow);
+    let finished = match outcome {
+        Ok(f) => f,
+        Err(e) => {
+            if !in_place {
+                let _ = std::fs::remove_file(&work);
+            }
+            return match e {
+                Stop::Cancelled => Ok(Sunk::Cancelled),
+                Stop::Refused(why) => Err(why),
+            };
         }
     };
-    if written.tables.is_empty() {
-        let _ = std::fs::remove_file(&tmp);
+    if finished.written.tables.is_empty() {
+        if !in_place {
+            let _ = std::fs::remove_file(&work);
+        }
+        // Nothing was committed (the transaction found nothing to write), so the file is as it was.
         return Err(refused(
             codes::NOTHING_TO_EXPORT,
             "Aracın yaptığı nesnelerin GeoPackage'da geometrisi yok (yazı, ölçü, blok, tarama); dosyaya yazılacak sonuç yok."
@@ -1281,14 +1346,26 @@ fn write_sink(
             at,
         ));
     }
-    if write {
-        if let Err(e) = std::fs::rename(&tmp, path) {
-            let _ = std::fs::remove_file(&tmp);
+    let measured = std::fs::File::open(&work)
+        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)));
+    let (bytes, sha256) = match measured {
+        Ok(m) => m,
+        Err(e) => {
+            if !in_place {
+                let _ = std::fs::remove_file(&work);
+            }
             return Err(unwritable(e.to_string()));
         }
-    } else {
-        let _ = std::fs::remove_file(&tmp);
+    };
+    if fresh && write {
+        if let Err(e) = std::fs::rename(&work, path) {
+            let _ = std::fs::remove_file(&work);
+            return Err(unwritable(e.to_string()));
+        }
+    } else if !in_place {
+        let _ = std::fs::remove_file(&work);
     }
+    let written = finished.written;
     let mut warnings = Vec::new();
     let mut said: Vec<String> = Vec::new();
     if !written.left.is_empty() {
@@ -1320,10 +1397,43 @@ fn write_sink(
             path: Some("sink".into()),
         });
     }
+    let dimension = |flag: u8| match flag {
+        0 => SinkDimension::None,
+        1 => SinkDimension::All,
+        _ => SinkDimension::Some,
+    };
+    let report = SinkReport {
+        mode: target.mode,
+        tables: written
+            .tables
+            .iter()
+            .map(|t| SinkTable {
+                table: t.table.clone(),
+                layer: t.layer.clone(),
+                rows: t.rows,
+                geometry: t.geometry.clone(),
+                z: dimension(t.z),
+                m: dimension(t.m),
+                replaced: t.replaced,
+                columns: t
+                    .columns
+                    .iter()
+                    .map(|(a, c)| SinkColumn {
+                        attribute: a.clone(),
+                        column: c.clone(),
+                    })
+                    .collect(),
+            })
+            .collect(),
+        untouched: finished.untouched,
+        batches: written.batches,
+        batch_rows: BATCH_ROWS as u32,
+        ids: kentos_geopackage::UIDS_EXTENSION.to_owned(),
+    };
     let exported = GpkgExported {
         path: path.display().to_string(),
-        bytes: bytes.len() as u64,
-        sha256: kentos_commands::encoding::sha256_hex(&bytes),
+        bytes,
+        sha256,
         tables: written
             .tables
             .into_iter()
@@ -1337,5 +1447,131 @@ fn write_sink(
         left: written.left,
         approximated: written.approximated,
     };
-    Ok((exported, warnings))
+    Ok(Sunk::Done(Box::new((exported, report, warnings))))
+}
+
+/// Why the tables were not written.
+enum Stop {
+    Cancelled,
+    Refused(Box<CommandError>),
+}
+
+/// What a committed write holds.
+struct Finished {
+    written: kentos_native_application::geopackage::Written,
+    /// The tables the file had before that the write left alone.
+    untouched: Vec<String>,
+}
+
+/// The tables written in `work` in one transaction: committed when every batch is in, rolled back (the session
+/// dropped) when anything stops it.
+fn write_tables(
+    copy: &Document,
+    layers: &[String],
+    work: &Path,
+    mode: SinkMode,
+    lineage: &Lineage<'_>,
+    flow: &dyn BatchFlow,
+) -> Result<Finished, Stop> {
+    use kentos_native_application::geopackage::{Clash, Flow, WriteStop, write_in};
+    let path_text = work.display().to_string();
+    let fresh = mode == SinkMode::New;
+    let mut gp = if fresh {
+        kentos_geopackage::GeoPackage::create(work).map_err(|e| Stop::Refused(unwritable(e.0)))?
+    } else {
+        kentos_geopackage::GeoPackage::open(work, true).map_err(|e| {
+            Stop::Refused(refused(
+                codes::IMPORT_UNREADABLE,
+                format!("{path_text} GeoPackage olarak açılamadı: {}. Dosyaya dokunulmadı.", e.0),
+                Some("sink.path".to_owned()),
+            ))
+        })?
+    };
+    let before: Vec<String> = if fresh {
+        Vec::new()
+    } else {
+        gp.layers()
+            .map_err(|e| Stop::Refused(unwritable(e.0)))?
+            .into_iter()
+            .map(|l| l.name)
+            .collect()
+    };
+    let session = gp
+        .session()
+        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    let stopped = || flow.stopped();
+    let progress = |done: u64, total: u64| flow.progress(done, total);
+    let clash = match mode {
+        SinkMode::New => None,
+        SinkMode::AddTables => Some(Clash::Refuse),
+        SinkMode::ReplaceTables => Some(Clash::Replace),
+    };
+    let written = write_in(
+        copy,
+        layers,
+        &session,
+        clash,
+        BATCH_ROWS,
+        &Flow {
+            stopped: &stopped,
+            progress: &progress,
+        },
+    )
+    .map_err(|stop| match stop {
+        WriteStop::Cancelled => Stop::Cancelled,
+        WriteStop::Taken { table, replaceable } => Stop::Refused(refused(
+            codes::TABLE_EXISTS,
+            if replaceable {
+                format!(
+                    "“{table}” tablosu {path_text} dosyasında var (tablonun adı katmanın adıdır); üzerine yazmak için sink.mode: replaceTables verin ya da katmanı başka adla yapın. Dosyaya dokunulmadı."
+                )
+            } else {
+                format!(
+                    "“{table}” adı {path_text} dosyasında bir nesne ya da öznitelik tablosu değil (başka bir tür tablo ya da bir eklentinin tablosu); aynı adlı tablo değiştirilmez. Dosyaya dokunulmadı."
+                )
+            },
+            Some("sink.path".to_owned()),
+        )),
+        WriteStop::Srs(why) => Stop::Refused(refused(codes::CRS_MISMATCH, why, Some("sink.path".to_owned()))),
+        WriteStop::Failed(why) => Stop::Refused(unwritable(why)),
+    })?;
+    if written.tables.is_empty() {
+        // Dropping the session rolls back what little it did (the spatial reference system).
+        drop(session);
+        return Ok(Finished {
+            written,
+            untouched: Vec::new(),
+        });
+    }
+    // Each table says what it came from (docs/adr/0511): GeoPackage's metadata extension.
+    let made = utc_now();
+    for t in &written.tables {
+        session
+            .add_metadata(
+                &t.table,
+                LINEAGE_STANDARD,
+                "application/json",
+                &lineage.document(&t.table, &t.layer, &made),
+                &made,
+            )
+            .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    }
+    if flow.stopped() {
+        return Err(Stop::Cancelled);
+    }
+    session
+        .commit()
+        .map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    gp.close().map_err(|e| Stop::Refused(unwritable(e.0)))?;
+    let replaced: Vec<String> = written
+        .tables
+        .iter()
+        .filter(|t| t.replaced)
+        .map(|t| t.table.to_ascii_lowercase())
+        .collect();
+    let untouched = before
+        .into_iter()
+        .filter(|n| !replaced.contains(&n.to_ascii_lowercase()))
+        .collect();
+    Ok(Finished { written, untouched })
 }

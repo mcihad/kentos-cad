@@ -227,16 +227,26 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı
     katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında
     taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor,
-    zaman). tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet;
-    cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir,
-    adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım
-    çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın
-    record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı
-    değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince
-    aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü,
-    projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve
-    süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje
-    dosyasına yazılmaz.
+    zaman). sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a
+    tablo ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna
+    dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle
+    değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı
+    (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
+    sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
+    SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
+    olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
+    tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
+    eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
+    kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
+    olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
+    modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
+    adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
+    alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
+    1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
+    kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
+    ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
+    ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
+    süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -289,16 +299,26 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların
         kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır
         (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).
-        tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet;
-        cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir,
-        adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım
-        çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın
-        record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı
-        değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince
-        aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü,
-        projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve
-        süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje
-        dosyasına yazılmaz.
+        sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a tablo
+        ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna
+        dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle
+        değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı
+        (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
+        sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
+        SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
+        olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
+        tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
+        eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
+        kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
+        olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
+        modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
+        adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
+        alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
+        1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
+        kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
+        ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
+        ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
+        süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
 
         Args:
             doc: The drawing it works on.

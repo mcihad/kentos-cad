@@ -229,14 +229,24 @@ def usable(c: dict) -> bool:
 LEFT_KINDS = {"text": "yazı", "dimension": "ölçü", "insert": "blok", "hatch": "tarama", "leader": "kılavuz", "table": "tablo"}
 
 
-def sink_case(c: dict, inputs: list[str]) -> dict:
-    """One of İşlemler's cases planned with a sink (docs/adr/0508 §4): the same run on a copy, its new objects as one
-    table named by the new layer's name, the drawing unchanged. A plan writes no file; the file's own bytes are the
-    sink test's (processing_sink_cases.py)."""
+BATCH_ROWS = 5000
+
+
+def columns_of(made: list[dict]) -> list[dict]:
+    """The columns a table of these objects has (docs/adr/0549 §4): a new layer has no fields, so one text column per
+    attribute the written objects carry, in the attributes' byte order (a name is its own column here)."""
+    keys: set[str] = set()
+    for a in made:
+        if a.get("kind", "") not in LEFT_KINDS:
+            keys |= set(a.get("attrs", {}))
+    return [{"attribute": k, "column": k} for k in sorted(keys, key=lambda k: k.encode("utf-8"))]
+
+
+def sink_base(c: dict, inputs: list[str]) -> dict:
+    """The pieces every sink case of İşlemler's case `c` shares: its setup, the run's step with the answer minus the
+    sink, the table it makes (the new layer's name, its rows after what GeoPackage cannot hold) and the loss."""
     run = run_case(c, "parcels.kcad")
     step = run["steps"][0]
-    step["op"] = "plan"
-    step["input"]["sink"] = {"path": "$fixture:processing/v1/sonuc-plan.gpkg"}
     out = step["result"]["output"]
     want = c["expect"]
     layer = want["layers"][0]
@@ -251,25 +261,261 @@ def sink_case(c: dict, inputs: list[str]) -> dict:
     out.pop("step", None)
     out["record"] = "$any"
     out["inputs"] = [{"layer": l, "digest": "$any"} for l in inputs]
-    out["sink"] = {
-        "path": "$fixture:processing/v1/sonuc-plan.gpkg",
-        "bytes": "$any",
-        "sha256": "$any",
-        "tables": [{"table": layer["name"], "layer": layer["id"], "rows": rows, "geometry": "$any"}],
-        **({"left": left} if left else {}),
-        "approximated": 0,
-    }
-    if left:
-        parts = ", ".join(f"{n} {k}" for k, n in sorted(left.items()))
-        step["result"]["warnings"] = [{
-            "code": "export_losses",
-            "message": f"GeoPackage'da karşılığı olmayan nesneler yazılmadı: {parts}.",
-            "path": "sink",
-        }]
     out.pop("layers", None)
     out["layers"] = [layer["id"]]
-    step["expect"] = {"canUndo": False, "dirty": False, "revision": "same"}
-    return {"name": f"Dosyaya (GeoPackage), plan: {c['title']} ({c['id']})", "setup": document(c["document"]), "steps": [step]}
+    return {
+        "case": c, "setup": document(c["document"]), "step": step, "layer": layer, "left": left, "rows": rows,
+        "columns": columns_of(made),
+    }
+
+
+def sink_answer(base: dict, path: str, mode: str, replaced: bool = False, untouched: list[str] | None = None) -> dict:
+    """The answer of a run that wrote `base`'s table to the file at `path` (docs/adr/0549 §4)."""
+    layer = base["layer"]
+    answer = json.loads(json.dumps(base["step"]["result"]["output"]))
+    table = {
+        "table": layer["name"], "layer": layer["id"], "rows": base["rows"], "geometry": "$any", "z": "$any",
+        "m": "$any", **({"replaced": True} if replaced else {}), "columns": base["columns"],
+    }
+    answer["sink"] = {
+        "path": path, "bytes": "$any", "sha256": "$any",
+        "tables": [{"table": layer["name"], "layer": layer["id"], "rows": base["rows"], "geometry": "$any"}],
+        **({"left": base["left"]} if base["left"] else {}),
+        "approximated": 0,
+    }
+    answer["sinkReport"] = {
+        "mode": mode, "tables": [table], **({"untouched": untouched} if untouched else {}),
+        "batches": 1, "batchRows": BATCH_ROWS, "ids": "kentos_uids",
+    }
+    return answer
+
+
+def sink_warnings(base: dict) -> list[dict]:
+    if not base["left"]:
+        return []
+    parts = ", ".join(f"{n} {k}" for k, n in sorted(base["left"].items()))
+    return [{
+        "code": "export_losses",
+        "message": f"GeoPackage'da karşılığı olmayan nesneler yazılmadı: {parts}.",
+        "path": "sink",
+    }]
+
+
+UNDISTURBED = {"canUndo": False, "dirty": False, "revision": "same"}
+
+
+def sink_step(base: dict, op: str, sink: dict, answer: dict) -> dict:
+    step = json.loads(json.dumps(base["step"]))
+    step["op"] = op
+    step["input"]["sink"] = sink
+    result: dict = json.loads(json.dumps(base["step"]["result"]))
+    result["output"] = answer
+    if base["left"]:
+        result["warnings"] = sink_warnings(base)
+    step["result"] = result
+    step["expect"] = dict(UNDISTURBED)
+    return step
+
+
+def sink_case(c: dict, inputs: list[str]) -> dict:
+    """One of İşlemler's cases planned with a sink (docs/adr/0508 §4): the same run on a copy, its new objects as one
+    table named by the new layer's name, the drawing unchanged. A plan writes no file; the file's own bytes are the
+    sink test's (processing_sink_cases.py)."""
+    base = sink_base(c, inputs)
+    path = "$fixture:processing/v1/sonuc-plan.gpkg"
+    step = sink_step(base, "plan", {"path": path}, sink_answer(base, path, "new"))
+    return {"name": f"Dosyaya (GeoPackage), plan: {c['title']} ({c['id']})", "setup": base["setup"], "steps": [step]}
+
+
+# The file a result is added to: QGIS 4.2.3's own (its tables are checked against OGR by geopackage_cases.py), so an
+# added table beside them is told from them by the tables they are described as.
+QGIS_FILE = "geopackage/v1/qgis.gpkg"
+
+
+def qgis_tables() -> list[dict]:
+    """qgis.gpkg's tables as `cad.sources.describe` lists them: the shared case of that command, written from OGR."""
+    d = json.loads((OUT / "cad.sources.describe.json").read_text(encoding="utf-8"))
+    return d["cases"][0]["steps"][0]["result"]["output"]["tables"]
+
+
+def listed(base: dict, replace: bool = False) -> dict:
+    """The table a sink made, as `cad.sources.describe` lists it in the file."""
+    return {
+        "name": base["layer"]["name"], "data": "features", "rows": base["rows"], "geometry": "$any", "srid": 5254,
+        "columns": "$any", "capabilities": "$any",
+    }
+
+
+def described(path: str, tables: list[dict]) -> dict:
+    return {
+        "op": "execute", "command": "cad.sources.describe", "input": {"path": path},
+        "result": {"status": "completed", "output": {"tables": tables, "revision": "$any"}, "warnings": []},
+        "expect": dict(UNDISTURBED),
+    }
+
+
+def copy_qgis(to: str) -> dict:
+    return {"op": "copyFile", "from": f"$fixture:{QGIS_FILE}", "to": to}
+
+
+def failed_step(base: dict, sink: dict, code: str, message: str, path: str = "sink.path") -> dict:
+    step = json.loads(json.dumps(base["step"]))
+    step["op"] = "execute"
+    step["input"]["sink"] = sink
+    step["result"] = failed(code, message, path)
+    step["expect"] = {"canUndo": False, "revision": "same"}
+    return step
+
+
+SINK_TOOLS = [
+    ("geometry", "intersection", ["parsel", "imar"], "ekle-kesisim"),
+    ("geometry", "buffer-points", ["agac"], "ekle-tampon"),
+    ("geometry", "dissolve-ada", ["parsel"], "ekle-birlestirme"),
+]
+
+
+def into_cases(geometry: dict) -> list[dict]:
+    """Results written into a GeoPackage that is there (docs/adr/0549): tables added beside the file's own, which no
+    write touches; a table of the same name refused unless replacing is asked; a plan that leaves the file alone."""
+    old = qgis_tables()
+    old_names = [t["name"] for t in old]
+    out = []
+    for _, cid, inputs, slug in SINK_TOOLS:
+        base = sink_base(geometry[cid], inputs)
+        title = geometry[cid]["title"]
+        file = f"$tmp:{slug}.gpkg"
+        add = {"path": file, "mode": "addTables"}
+        replace = {"path": file, "mode": "replaceTables"}
+        mine = listed(base)
+        setup = base["setup"]
+        out.append({
+            "name": f"Var olan GeoPackage'a tablo ekleme: {title}; dosyanın tabloları olduğu gibi",
+            "setup": setup,
+            "steps": [
+                copy_qgis(file),
+                sink_step(base, "execute", add, sink_answer(base, file, "addTables", untouched=old_names)),
+                described(file, old + [mine]),
+            ],
+        })
+        out.append({
+            "name": f"Var olan GeoPackage'a ekleme, plan: {title}; dosya yazılmaz",
+            "setup": setup,
+            "steps": [
+                copy_qgis(file),
+                sink_step(base, "plan", add, sink_answer(base, file, "addTables", untouched=old_names)),
+                described(file, old),
+            ],
+        })
+        out.append({
+            "name": f"Aynı adlı tablo: addTables reddeder (table_exists), dosya değişmez: {title}",
+            "setup": setup,
+            "steps": [
+                copy_qgis(file),
+                sink_step(base, "execute", add, sink_answer(base, file, "addTables", untouched=old_names)),
+                failed_step(base, add, "table_exists",
+                            f"“{base['layer']['name']}” tablosu {file} dosyasında var (tablonun adı katmanın adıdır); "
+                            "üzerine yazmak için sink.mode: replaceTables verin ya da katmanı başka adla yapın. "
+                            "Dosyaya dokunulmadı."),
+                described(file, old + [mine]),
+            ],
+        })
+        out.append({
+            "name": f"replaceTables aynı adlı tabloyu yenisiyle değiştirir, dosyanın öbür tablolarına dokunmaz: {title}",
+            "setup": setup,
+            "steps": [
+                copy_qgis(file),
+                sink_step(base, "execute", add, sink_answer(base, file, "addTables", untouched=old_names)),
+                sink_step(base, "execute", replace,
+                          sink_answer(base, file, "replaceTables", replaced=True, untouched=old_names)),
+                described(file, old + [mine]),
+            ],
+        })
+        out.append({
+            "name": f"replaceTables aynı adlı tablo yoksa yalnız ekler (replaced yok): {title}",
+            "setup": setup,
+            "steps": [
+                copy_qgis(file),
+                sink_step(base, "execute", replace, sink_answer(base, file, "replaceTables", untouched=old_names)),
+                described(file, old + [mine]),
+            ],
+        })
+    # Two results into one file: both tables are there, the file's own six beside them.
+    first = sink_base(geometry["intersection"], ["parsel", "imar"])
+    second = sink_base(geometry["dissolve-ada"], ["parsel"])
+    file = "$tmp:iki-sonuc.gpkg"
+    out.append({
+        "name": "Aynı dosyaya iki sonuç: ikisi de eklenir, dosyanın tabloları olduğu gibi",
+        "setup": first["setup"],
+        "steps": [
+            copy_qgis(file),
+            sink_step(first, "execute", {"path": file, "mode": "addTables"},
+                      sink_answer(first, file, "addTables", untouched=old_names)),
+            sink_step(second, "execute", {"path": file, "mode": "addTables"},
+                      sink_answer(second, file, "addTables", untouched=old_names + [first["layer"]["name"]])),
+            described(file, old + [listed(first), listed(second)]),
+        ],
+    })
+    # A new file, then another result added to it.
+    file = "$tmp:yeni-sonra-ekle.gpkg"
+    out.append({
+        "name": "Yeni dosya, sonra ona tablo ekleme: iki tablo",
+        "setup": first["setup"],
+        "steps": [
+            sink_step(first, "execute", {"path": file}, sink_answer(first, file, "new")),
+            sink_step(second, "execute", {"path": file, "mode": "addTables"},
+                      sink_answer(second, file, "addTables", untouched=[first["layer"]["name"]])),
+            described(file, [listed(first), listed(second)]),
+        ],
+    })
+    # The refusals before anything is written.
+    base = sink_base(geometry["buffer-points"], ["agac"])
+    missing = "$tmp:yok-dosya.gpkg"
+    out.append({
+        "name": "addTables: dosya yok (file_not_found), hiçbir şey yazılmaz",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": missing, "mode": "addTables"}, "file_not_found",
+                              f"{missing} yok; tablo eklenecek GeoPackage'ın yolunu verin ya da yeni bir dosya için "
+                              "sink.mode vermeyin.")],
+    })
+    out.append({
+        "name": "replaceTables: dosya yok (file_not_found)",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": missing, "mode": "replaceTables"}, "file_not_found",
+                              f"{missing} yok; tablo eklenecek GeoPackage'ın yolunu verin ya da yeni bir dosya için "
+                              "sink.mode vermeyin.")],
+    })
+    out.append({
+        "name": "addTables ile overwrite birlikte verilmez (invalid_input)",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": "$tmp:x.gpkg", "mode": "addTables", "overwrite": True}, "invalid_input",
+                              "overwrite yeni dosyanın üzerine yazmak içindir; addTables ve replaceTables var olan "
+                              "dosyaya dokunmadan tablo ekler ya da yenisiyle değiştirir.", "sink.overwrite")],
+    })
+    out.append({
+        "name": "replaceTables ile overwrite birlikte verilmez (invalid_input)",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": "$tmp:x.gpkg", "mode": "replaceTables", "overwrite": True},
+                              "invalid_input",
+                              "overwrite yeni dosyanın üzerine yazmak içindir; addTables ve replaceTables var olan "
+                              "dosyaya dokunmadan tablo ekler ya da yenisiyle değiştirir.", "sink.overwrite")],
+    })
+    text = "$fixture:processing/v1/metin.gpkg"
+    out.append({
+        "name": "addTables: GeoPackage olmayan dosya (import_unreadable), dosyaya dokunulmaz",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": text, "mode": "addTables"}, "import_unreadable",
+                              f"{text} GeoPackage olarak açılamadı: “{text}” bir SQLite dosyası değil. "
+                              "Dosyaya dokunulmadı.")],
+    })
+    out.append({
+        "name": "addTables: .gpkg olmayan ad (invalid_file_path)",
+        "setup": base["setup"],
+        "steps": [failed_step(base, {"path": "$fixture:processing/v1/sonuc.shp", "mode": "addTables"},
+                              "invalid_file_path",
+                              "$fixture:processing/v1/sonuc.shp bir GeoPackage adı değil; sonucun dosyası .gpkg ile "
+                              "biter.")],
+    })
+    return out
 
 
 SINK_REFUSALS = [
@@ -781,6 +1027,21 @@ def tools_cases() -> list[dict]:
     return out
 
 
+NOT_A_GEOPACKAGE = "Bu bir GeoPackage değil: düz metin, SQLite başlığı yok (docs/adr/0549).\n"
+
+
+def write_text(name: str, text: str, check: bool) -> bool:
+    """A file a case reads that is no GeoPackage (a sink that is asked to add tables to it says so and leaves it)."""
+    path = PROCESSING / name
+    if check:
+        if not path.exists() or path.read_text(encoding="utf-8") != text:
+            print(f"{path.relative_to(ROOT)} eski: üreticiyi çalıştırın")
+            return False
+        return True
+    path.write_text(text, encoding="utf-8")
+    return True
+
+
 def write(name: str, data: dict, check: bool) -> bool:
     path = OUT / name
     text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
@@ -816,6 +1077,7 @@ def main() -> int:
         sink_case(cases["number-vertices-both"], ["parsel"]),
     ]
     run_cases += sink_refusals()
+    run_cases += into_cases(geometry)
     run_cases += own_run_from(cases)
     run_cases += model_cases(cases)
     run_cases += OWN_RUN
@@ -840,6 +1102,7 @@ def main() -> int:
         "cases": tools_cases(),
     }
     ok = write("cad.processing.run.json", run, check) & write("cad.processing.tools.json", tools, check)
+    ok &= write_text("metin.gpkg", NOT_A_GEOPACKAGE, check)
     if ok:
         print(f"İşlem komutlarının durumları tutarlı: {len(run_cases)} + {len(tools['cases'])} durum")
     return 0 if ok else 1

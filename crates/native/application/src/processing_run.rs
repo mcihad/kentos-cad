@@ -5,7 +5,7 @@
 use kentos_commands::{CommandResult, ProcessingRan, ProcessingRun};
 
 use crate::ExecutionContext;
-use crate::processing_host::host;
+use crate::processing_host::{JobFlow, RunEnd, host};
 
 pub fn validate(cx: &ExecutionContext<'_>, input: &ProcessingRun) -> CommandResult<()> {
     match host().and_then(|h| h.check(cx.doc, input)) {
@@ -18,16 +18,18 @@ pub fn validate(cx: &ExecutionContext<'_>, input: &ProcessingRun) -> CommandResu
 }
 
 pub fn plan(cx: &ExecutionContext<'_>, input: &ProcessingRun) -> CommandResult<ProcessingRan> {
+    let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check(cx.doc, input)?;
         let mut copy = cx.doc.reading_copy();
-        h.run(&mut copy, input, false)
+        h.run(&mut copy, input, false, &flow)
     });
     match ran {
-        Ok((mut output, warnings)) => {
+        Ok(RunEnd::Ran(mut output, warnings)) => {
             output.revision = cx.doc.revision().to_string();
             CommandResult::Completed { output, warnings }
         }
+        Ok(RunEnd::Cancelled) => CommandResult::Cancelled,
         Err(error) => CommandResult::Failed { error: *error },
     }
 }
@@ -38,12 +40,14 @@ pub fn execute(
 ) -> CommandResult<ProcessingRan> {
     // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
     let dry = cx.dry();
+    let flow = JobFlow(cx.job);
     let ran = host().and_then(|h| {
         h.check(cx.doc, &input)?;
-        h.run(cx.doc, &input, !dry)
+        h.run(cx.doc, &input, !dry, &flow)
     });
     match ran {
-        Ok((output, warnings)) => CommandResult::Completed { output, warnings },
+        Ok(RunEnd::Ran(output, warnings)) => CommandResult::Completed { output, warnings },
+        Ok(RunEnd::Cancelled) => CommandResult::Cancelled,
         Err(error) => CommandResult::Failed { error: *error },
     }
 }

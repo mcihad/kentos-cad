@@ -999651,7 +999651,7 @@
       "id": "cad.processing.run",
       "version": 1,
       "title": "İşlem aracını çalıştır",
-      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.",
+      "summary": "İşlemler'in bir aracını açık değerlerle çalıştırır; masaüstünün İşlemler penceresinin çalıştırıcısı, tek geri alma adımı (adı aracın adı). Verilmeyen parametre bu çizimdeki varsayılanını alır. Nesne girdisi { scope: all } (görünen katmanlar), { scope: layer, layerId }, { scope: uids, uids }, { scope: selection } (girdinin selection'ının adlandırdığı nesneler) ya da { scope: visible } (view kutusundakiler), isteğe bağlı kinds ile; nesne girdisinin varsayılanı seçimdir. Dosya parametresi { path } (tablo dosyası pencerenin okuduğu gibi okunur) ya da { name, rows }. Ekranın seçimi ve görünümü okunmaz: yalnız girdinin selection'ı ve view'u. Retler sırayla: tools_unavailable, unknown_tool, invalid_uid, entity_not_found, invalid_parameters (aracın olmayan parametresi, kuralına uymayan değer, okunmayan dosya, view'suz görünen alan; parametresiyle), tool_failed (araç çalıştı ve durdu: kilitli katman, girdi yok, aracın kendi reddi; çizim değişmez). Cevap aracın özeti, eklediği ve değiştirdiği nesneler (kalıcı kimlikleriyle), seçtikleri, açtığı katmanlar, çıktıları (nesne çıktıları kalıcı kimliklerle, sayılar, metinler, tablolar), notları ve adımın adı. plan aracı çizimin bir kopyasında çalıştırır: aynı algoritmayla ne yazılacağını söyler, yeni nesnelerin kimlikleri kopyanındır. Raster araçları başsız ortamda rasterin bağlı ya da gömülü GeoTIFF ve PNG dosyasını okur, sonucu COG olarak yazar; adresteki raster, JPEG, NetCDF ve nokta bulutu dosyaları yalnız masaüstünde, başsız ortamda tool_failed. sink { path, overwrite } sonucu çizim yerine yeni bir GeoPackage'a yazar: araç kopyada çalışır, yaptığı nesnelerin katmanları birer tablo (adı katmanın adı, alanları sütun, kimlikler kentos_uids'te), çizim değişmez; dosya geçici adla yazılıp tek adımla yerine konur, var olan dosya yalnız overwrite ile değişir; retler invalid_file_path, file_exists, file_unwritable, nothing_to_export, GeoPackage'ın tutmadığı nesneler export_losses; cevabın sink'i yolu, boyu, SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman). sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a tablo ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.",
       "aliases": [
         "islem",
         "process"
@@ -999670,8 +999670,12 @@
       "input": {
         "$defs": {
           "RunSink": {
-            "description": "A run's result written to a new GeoPackage instead of the drawing (docs/adr/0508 §4): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. The file is written whole or not at all; one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete.",
+            "description": "A run's result written to a GeoPackage instead of the drawing (docs/adr/0508 §4, 0549): the tool runs on a copy,\nthe objects it made are written, each layer they are on a table (the layer's name, its fields as columns), and the\ndrawing does not change. A new file is written whole or not at all (one that is there is replaced only with\n`overwrite`, and the old file stays until the new one is complete); into a file that is there the tables go in one\ntransaction, a batch of rows at a time, and a run that fails or is stopped leaves the file as it was.",
             "properties": {
+              "mode": {
+                "$ref": "#/$defs/SinkMode",
+                "description": "New file (the default), tables added to a file that is there, or tables added and same-named ones replaced."
+              },
               "overwrite": {
                 "type": "boolean"
               },
@@ -999684,6 +999688,26 @@
               "path"
             ],
             "type": "object"
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1000164,6 +1000188,160 @@
             ],
             "type": "object"
           },
+          "SinkColumn": {
+            "description": "A column of a sink's table and the attribute it holds.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "description": "The column's name; it differs from the attribute's when the name had to change (a column of the same name in\nanother case, `fid`, `geom`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "SinkDimension": {
+            "description": "Whether a geometry column holds Z (or M) in the rows of a sink's table.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "No row has it.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Every row has it.",
+                "type": "string"
+              },
+              {
+                "const": "some",
+                "description": "Some rows have it, others do not (the column allows it).",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkReport": {
+            "description": "What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out\nor written as chords is in the answer's `sink` and its `export_losses` warning.",
+            "properties": {
+              "batchRows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "batches": {
+                "description": "The batches the rows went in, and how many rows a batch holds at most.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ids": {
+                "description": "The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/SinkTable"
+                },
+                "type": "array"
+              },
+              "untouched": {
+                "description": "The tables the file already had that the write did not touch (a new file has none).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "mode",
+              "tables",
+              "batches",
+              "batchRows",
+              "ids"
+            ],
+            "type": "object"
+          },
+          "SinkTable": {
+            "description": "One table of a sink: what it holds and how it was made.",
+            "properties": {
+              "columns": {
+                "description": "The columns in order, each with its attribute.",
+                "items": {
+                  "$ref": "#/$defs/SinkColumn"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for a table of records.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer of the copy the rows are the objects of.",
+                "type": "string"
+              },
+              "m": {
+                "$ref": "#/$defs/SinkDimension"
+              },
+              "replaced": {
+                "description": "A table of the file taken out and written again (`replaceTables`).",
+                "type": "boolean"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "z": {
+                "$ref": "#/$defs/SinkDimension"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows",
+              "z",
+              "m",
+              "columns"
+            ],
+            "type": "object"
+          },
           "ToolNote": {
             "description": "A note the tool made while it ran.",
             "properties": {
@@ -1000251,6 +1000429,17 @@
               }
             ],
             "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4)."
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -1000695,6 +1000884,160 @@
             ],
             "type": "object"
           },
+          "SinkColumn": {
+            "description": "A column of a sink's table and the attribute it holds.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "description": "The column's name; it differs from the attribute's when the name had to change (a column of the same name in\nanother case, `fid`, `geom`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "SinkDimension": {
+            "description": "Whether a geometry column holds Z (or M) in the rows of a sink's table.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "No row has it.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Every row has it.",
+                "type": "string"
+              },
+              {
+                "const": "some",
+                "description": "Some rows have it, others do not (the column allows it).",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkReport": {
+            "description": "What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out\nor written as chords is in the answer's `sink` and its `export_losses` warning.",
+            "properties": {
+              "batchRows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "batches": {
+                "description": "The batches the rows went in, and how many rows a batch holds at most.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ids": {
+                "description": "The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/SinkTable"
+                },
+                "type": "array"
+              },
+              "untouched": {
+                "description": "The tables the file already had that the write did not touch (a new file has none).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "mode",
+              "tables",
+              "batches",
+              "batchRows",
+              "ids"
+            ],
+            "type": "object"
+          },
+          "SinkTable": {
+            "description": "One table of a sink: what it holds and how it was made.",
+            "properties": {
+              "columns": {
+                "description": "The columns in order, each with its attribute.",
+                "items": {
+                  "$ref": "#/$defs/SinkColumn"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for a table of records.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer of the copy the rows are the objects of.",
+                "type": "string"
+              },
+              "m": {
+                "$ref": "#/$defs/SinkDimension"
+              },
+              "replaced": {
+                "description": "A table of the file taken out and written again (`replaceTables`).",
+                "type": "boolean"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "z": {
+                "$ref": "#/$defs/SinkDimension"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows",
+              "z",
+              "m",
+              "columns"
+            ],
+            "type": "object"
+          },
           "ToolNote": {
             "description": "A note the tool made while it ran.",
             "properties": {
@@ -1000782,6 +1001125,17 @@
               }
             ],
             "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
+          },
+          "sinkReport": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/SinkReport"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4)."
           },
           "step": {
             "description": "The undo step's name; none when the drawing did not change.",
@@ -1001141,6 +1001495,17 @@
                 ],
                 "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
               },
+              "sinkReport": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SinkReport"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4)."
+              },
               "step": {
                 "description": "The undo step's name; none when the drawing did not change.",
                 "type": [
@@ -1001500,6 +1001865,160 @@
             "required": [
               "layer",
               "digest"
+            ],
+            "type": "object"
+          },
+          "SinkColumn": {
+            "description": "A column of a sink's table and the attribute it holds.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "description": "The column's name; it differs from the attribute's when the name had to change (a column of the same name in\nanother case, `fid`, `geom`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "SinkDimension": {
+            "description": "Whether a geometry column holds Z (or M) in the rows of a sink's table.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "No row has it.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Every row has it.",
+                "type": "string"
+              },
+              {
+                "const": "some",
+                "description": "Some rows have it, others do not (the column allows it).",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkReport": {
+            "description": "What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out\nor written as chords is in the answer's `sink` and its `export_losses` warning.",
+            "properties": {
+              "batchRows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "batches": {
+                "description": "The batches the rows went in, and how many rows a batch holds at most.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ids": {
+                "description": "The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/SinkTable"
+                },
+                "type": "array"
+              },
+              "untouched": {
+                "description": "The tables the file already had that the write did not touch (a new file has none).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "mode",
+              "tables",
+              "batches",
+              "batchRows",
+              "ids"
+            ],
+            "type": "object"
+          },
+          "SinkTable": {
+            "description": "One table of a sink: what it holds and how it was made.",
+            "properties": {
+              "columns": {
+                "description": "The columns in order, each with its attribute.",
+                "items": {
+                  "$ref": "#/$defs/SinkColumn"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for a table of records.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer of the copy the rows are the objects of.",
+                "type": "string"
+              },
+              "m": {
+                "$ref": "#/$defs/SinkDimension"
+              },
+              "replaced": {
+                "description": "A table of the file taken out and written again (`replaceTables`).",
+                "type": "boolean"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "z": {
+                "$ref": "#/$defs/SinkDimension"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows",
+              "z",
+              "m",
+              "columns"
             ],
             "type": "object"
           },
@@ -1001736,6 +1002255,17 @@
                 ],
                 "description": "The GeoPackage the result went to (or with `plan` would go to), when the input gave a sink."
               },
+              "sinkReport": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SinkReport"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "How the sink wrote it: mode, tables with their columns, Z and M, what the file kept (docs/adr/0549 §4)."
+              },
               "step": {
                 "description": "The undo step's name; none when the drawing did not change.",
                 "type": [
@@ -1002095,6 +1002625,160 @@
             "required": [
               "layer",
               "digest"
+            ],
+            "type": "object"
+          },
+          "SinkColumn": {
+            "description": "A column of a sink's table and the attribute it holds.",
+            "properties": {
+              "attribute": {
+                "type": "string"
+              },
+              "column": {
+                "description": "The column's name; it differs from the attribute's when the name had to change (a column of the same name in\nanother case, `fid`, `geom`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "attribute",
+              "column"
+            ],
+            "type": "object"
+          },
+          "SinkDimension": {
+            "description": "Whether a geometry column holds Z (or M) in the rows of a sink's table.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "No row has it.",
+                "type": "string"
+              },
+              {
+                "const": "all",
+                "description": "Every row has it.",
+                "type": "string"
+              },
+              {
+                "const": "some",
+                "description": "Some rows have it, others do not (the column allows it).",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkMode": {
+            "description": "What a sink does with the file at its path (docs/adr/0508 §4, 0549 §1).",
+            "oneOf": [
+              {
+                "const": "new",
+                "description": "A new file: one that is there is replaced only with `overwrite`.",
+                "type": "string"
+              },
+              {
+                "const": "addTables",
+                "description": "The tables are added to a GeoPackage that is there; a table of the same name is refused (`table_exists`), no\ntable of the file is touched.",
+                "type": "string"
+              },
+              {
+                "const": "replaceTables",
+                "description": "As `addTables`, but a feature or attribute table of the same name is replaced by the new one; no other table\nof the file is touched.",
+                "type": "string"
+              }
+            ]
+          },
+          "SinkReport": {
+            "description": "What a sink did and how, in the answer (docs/adr/0549 §4): the policy of the write made visible. What was left out\nor written as chords is in the answer's `sink` and its `export_losses` warning.",
+            "properties": {
+              "batchRows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "batches": {
+                "description": "The batches the rows went in, and how many rows a batch holds at most.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "ids": {
+                "description": "The table of the file that keeps each row's lasting id (`kentos_uids`: the table, the row's fid, the id).",
+                "type": "string"
+              },
+              "mode": {
+                "$ref": "#/$defs/SinkMode"
+              },
+              "tables": {
+                "items": {
+                  "$ref": "#/$defs/SinkTable"
+                },
+                "type": "array"
+              },
+              "untouched": {
+                "description": "The tables the file already had that the write did not touch (a new file has none).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "mode",
+              "tables",
+              "batches",
+              "batchRows",
+              "ids"
+            ],
+            "type": "object"
+          },
+          "SinkTable": {
+            "description": "One table of a sink: what it holds and how it was made.",
+            "properties": {
+              "columns": {
+                "description": "The columns in order, each with its attribute.",
+                "items": {
+                  "$ref": "#/$defs/SinkColumn"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "The geometry column's type; none for a table of records.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer of the copy the rows are the objects of.",
+                "type": "string"
+              },
+              "m": {
+                "$ref": "#/$defs/SinkDimension"
+              },
+              "replaced": {
+                "description": "A table of the file taken out and written again (`replaceTables`).",
+                "type": "boolean"
+              },
+              "rows": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "table": {
+                "type": "string"
+              },
+              "z": {
+                "$ref": "#/$defs/SinkDimension"
+              }
+            },
+            "required": [
+              "table",
+              "layer",
+              "rows",
+              "z",
+              "m",
+              "columns"
             ],
             "type": "object"
           },
@@ -1052023,6 +1052707,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Projenin pafta kitabında pafta yok."
+    },
+    {
+      "code": "table_exists",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosyada aynı adlı tablo var; üzerine yazmak için replaceTables isteyin ya da başka bir ad verin. Dosyaya dokunulmadı."
     },
     {
       "code": "file_not_found",

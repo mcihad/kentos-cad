@@ -507,26 +507,7 @@ impl GeoPackage {
 
     /// A spatial reference system by its id.
     pub fn srs(&self, id: i32) -> Result<Option<Srs>> {
-        let r = self.conn.query_row(
-            "SELECT srs_name, srs_id, organization, organization_coordsys_id, definition, description
-             FROM gpkg_spatial_ref_sys WHERE srs_id = ?1",
-            [id],
-            |r| {
-                Ok(Srs {
-                    name: r.get(0)?,
-                    id: r.get(1)?,
-                    organization: r.get(2)?,
-                    organization_id: r.get(3)?,
-                    definition: r.get(4)?,
-                    description: r.get(5)?,
-                })
-            },
-        );
-        match r {
-            Ok(s) => Ok(Some(s)),
-            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
-            Err(e) => Err(e.into()),
-        }
+        read_srs(&self.conn, id)
     }
 
     /// The file's extensions.
@@ -694,41 +675,7 @@ impl GeoPackage {
         metadata: &str,
         timestamp: &str,
     ) -> Result<i64> {
-        const DEFINITION: &str = "http://www.geopackage.org/spec120/#extension_metadata";
-        self.conn.execute_batch(
-            "CREATE TABLE IF NOT EXISTS gpkg_metadata (
-               id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
-               md_scope TEXT NOT NULL DEFAULT 'dataset',
-               md_standard_uri TEXT NOT NULL,
-               mime_type TEXT NOT NULL DEFAULT 'text/xml',
-               metadata TEXT NOT NULL DEFAULT '');
-             CREATE TABLE IF NOT EXISTS gpkg_metadata_reference (
-               reference_scope TEXT NOT NULL,
-               table_name TEXT,
-               column_name TEXT,
-               row_id_value INTEGER,
-               timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
-               md_file_id INTEGER NOT NULL,
-               md_parent_id INTEGER,
-               CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
-               CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id));",
-        )?;
-        for t in ["gpkg_metadata", "gpkg_metadata_reference"] {
-            self.conn.execute(
-                "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, 'gpkg_metadata', ?2, 'read-write')",
-                params![t, DEFINITION],
-            )?;
-        }
-        self.conn.execute(
-            "INSERT INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata) VALUES ('dataset', ?1, ?2, ?3)",
-            params![standard, mime, metadata],
-        )?;
-        let id = self.conn.last_insert_rowid();
-        self.conn.execute(
-            "INSERT INTO gpkg_metadata_reference (reference_scope, table_name, timestamp, md_file_id) VALUES ('table', ?1, ?2, ?3)",
-            params![table, timestamp, id],
-        )?;
-        Ok(id)
+        add_metadata_in(&self.conn, table, standard, mime, metadata, timestamp)
     }
 
     /// The metadata documents `table` carries (docs/adr/0511, 0530): each one's standard URI and its text, in id
@@ -757,18 +704,7 @@ impl GeoPackage {
 
     /// Adds a spatial reference system, unless one with its id is there.
     pub fn add_srs(&self, s: &Srs) -> Result<()> {
-        self.conn.execute(
-            "INSERT OR IGNORE INTO gpkg_spatial_ref_sys VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-            params![
-                s.name,
-                s.id,
-                s.organization,
-                s.organization_id,
-                s.definition,
-                s.description
-            ],
-        )?;
-        Ok(())
+        insert_srs(&self.conn, s)
     }
 
     /// Writes a table with its rows in one transaction: its contents and geometry column rows, its box, its spatial
@@ -779,147 +715,22 @@ impl GeoPackage {
         rows: &[NewRow],
         uids: Option<&[String]>,
     ) -> Result<Vec<i64>> {
-        if def
-            .columns
-            .iter()
-            .any(|c| c.name.eq_ignore_ascii_case("fid"))
-            || def
-                .geometry
-                .as_ref()
-                .is_some_and(|g| g.name.eq_ignore_ascii_case("fid"))
-        {
-            return Err(Error(format!(
-                "“{}” tablosunun bir sütunu fid adını taşıyor",
-                def.name
-            )));
-        }
         let tx = self.conn.transaction()?;
-        let t = quote(&def.name);
-        let mut cols = vec!["\"fid\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL".to_owned()];
-        if let Some(g) = &def.geometry {
-            cols.push(format!("{} {}", quote(&g.name), g.type_name));
-        }
-        for c in &def.columns {
-            let decl = if c.decl.trim().is_empty() {
-                c.kind.decl()
-            } else {
-                c.decl.clone()
-            };
-            let mut s = format!("{} {decl}", quote(&c.name));
-            if c.not_null {
-                s.push_str(" NOT NULL");
-            }
-            if let Some(d) = &c.default {
-                s.push_str(&format!(" DEFAULT {d}"));
-            }
-            cols.push(s);
-        }
-        tx.execute_batch(&format!("CREATE TABLE {t} ({});", cols.join(", ")))?;
-        tx.execute(
-            "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?1, ?2, ?3, ?4, ?5)",
-            params![
-                def.name,
-                def.data_type.key(),
-                def.identifier.clone().unwrap_or_else(|| def.name.clone()),
-                def.description.clone().unwrap_or_default(),
-                def.srs_id
-            ],
-        )?;
-        if let Some(g) = &def.geometry {
-            tx.execute(
-                "INSERT INTO gpkg_geometry_columns VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
-                params![
-                    def.name,
-                    g.name,
-                    g.type_name,
-                    def.srs_id.unwrap_or(-1),
-                    g.z,
-                    g.m
-                ],
-            )?;
-        }
-        let srs = def.srs_id.unwrap_or(-1);
-        let mut names = vec!["\"fid\"".to_owned()];
-        if let Some(g) = &def.geometry {
-            names.push(quote(&g.name));
-        }
-        names.extend(def.columns.iter().map(|c| quote(&c.name)));
-        let marks = vec!["?"; names.len()].join(", ");
-        let mut fids = Vec::with_capacity(rows.len());
-        let mut bounds: Option<[f64; 4]> = None;
-        let mut curved = false;
-        {
-            let mut st = tx.prepare(&format!(
-                "INSERT INTO {t} ({}) VALUES ({marks})",
-                names.join(", ")
-            ))?;
-            for row in rows {
-                if row.values.len() != def.columns.len() {
-                    return Err(Error(format!(
-                        "“{}” tablosunun satırında {} değer var, {} sütun bekleniyor",
-                        def.name,
-                        row.values.len(),
-                        def.columns.len()
-                    )));
-                }
-                let mut args = vec![row.fid.map_or(Value::Null, Value::Integer)];
-                if def.geometry.is_some() {
-                    args.push(match &row.geometry {
-                        Some(g) => {
-                            curved |= g.is_curved();
-                            if let Some(b) = g.bounds() {
-                                bounds = Some(match bounds {
-                                    None => b,
-                                    Some(a) => [
-                                        a[0].min(b[0]),
-                                        a[1].min(b[1]),
-                                        a[2].max(b[2]),
-                                        a[3].max(b[3]),
-                                    ],
-                                });
-                            }
-                            Value::Blob(write_blob(srs, g))
-                        }
-                        None => Value::Null,
-                    });
-                }
-                args.extend(row.values.iter().cloned());
-                st.execute(rusqlite::params_from_iter(args.iter()))?;
-                fids.push(tx.last_insert_rowid());
-            }
-        }
-        if let Some(b) = bounds {
-            tx.execute(
-                "UPDATE gpkg_contents SET min_x = ?2, min_y = ?3, max_x = ?4, max_y = ?5 WHERE table_name = ?1",
-                params![def.name, b[0], b[1], b[2], b[3]],
-            )?;
-        }
-        if let Some(g) = &def.geometry {
-            index(&tx, &def.name, &g.name)?;
-            if curved {
-                tx.execute(
-                    "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, ?3, 'http://www.geopackage.org/spec/#extension_geometry_types', 'read-write')",
-                    params![def.name, g.name, format!("gpkg_geom_{}", g.type_name)],
-                )?;
-            }
-        }
-        if let Some(uids) = uids {
-            tx.execute_batch(
-                "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
-                 PRIMARY KEY (table_name, fid));",
-            )?;
-            tx.execute(
-                "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
-                [UIDS_EXTENSION],
-            )?;
-            let mut st = tx.prepare("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
-            for (fid, uid) in fids.iter().zip(uids) {
-                st.execute(params![def.name, fid, uid])?;
-            }
-        }
+        let mut w = start_in(&tx, def)?;
+        let fids = append_in(&tx, &mut w, rows, uids)?;
+        finish_in(&tx, w)?;
         tx.commit()?;
         Ok(fids)
     }
+
+    /// Opens a transaction that writes tables piece by piece (docs/adr/0549): tables made, rows appended in batches,
+    /// tables replaced, all of it committed together or, when the session is dropped or rolled back, none of it.
+    pub fn session(&mut self) -> Result<Session<'_>> {
+        Ok(Session {
+            tx: self.conn.transaction()?,
+        })
+    }
+
 
     /// Edits a table of the file in place, in one transaction (docs/adr/0503): its missing columns added (as
     /// declared), rows updated by fid (their geometry, when the table has a column for it, and every value in the
@@ -1074,7 +885,9 @@ fn edit_in(tx: &rusqlite::Transaction<'_>, layer: &Layer, edits: &Edits) -> Resu
         Ok(fids)
 }
 
-/// The spatial index of a table's geometry column (§F.3, GeoPackage 1.3's triggers).
+/// The spatial index of a table's geometry column (§F.3): GeoPackage 1.3's triggers in a file of its own, the file's
+/// own edition's in an older or newer one (1.4 has `update2`, `4`, `5`, `6` and `7`; a table added to QGIS's 1.4 file
+/// gets the triggers its validator wants, docs/adr/0549).
 fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
     let t = quote(table);
     let c = quote(column);
@@ -1085,26 +898,46 @@ fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
             "({new}.\"fid\", ST_MinX({new}.{c}), ST_MaxX({new}.{c}), ST_MinY({new}.{c}), ST_MaxY({new}.{c}))"
         )
     };
+    let edition: i64 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;
+    let updates = if edition >= 10400 {
+        format!(
+            "CREATE TRIGGER {u6} AFTER UPDATE OF {c} ON {t} WHEN OLD.\"fid\" = NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c})) AND (OLD.{c} NOTNULL AND NOT ST_IsEmpty(OLD.{c}))
+               BEGIN UPDATE {r} SET minx = ST_MinX(NEW.{c}), maxx = ST_MaxX(NEW.{c}), miny = ST_MinY(NEW.{c}), maxy = ST_MaxY(NEW.{c}) WHERE id = NEW.\"fid\"; END;
+             CREATE TRIGGER {u7} AFTER UPDATE OF {c} ON {t} WHEN OLD.\"fid\" = NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c})) AND (OLD.{c} ISNULL OR ST_IsEmpty(OLD.{c}))
+               BEGIN INSERT INTO {r} VALUES {new}; END;
+             CREATE TRIGGER {u5} AFTER UPDATE ON {t} WHEN OLD.\"fid\" != NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c}))
+               BEGIN DELETE FROM {r} WHERE id = OLD.\"fid\"; INSERT OR REPLACE INTO {r} VALUES {new}; END;",
+            u5 = trig("update5"),
+            u6 = trig("update6"),
+            u7 = trig("update7"),
+            new = row("NEW"),
+        )
+    } else {
+        format!(
+            "CREATE TRIGGER {u1} AFTER UPDATE OF {c} ON {t} WHEN OLD.\"fid\" = NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c}))
+               BEGIN INSERT OR REPLACE INTO {r} VALUES {new}; END;
+             CREATE TRIGGER {u3} AFTER UPDATE ON {t} WHEN OLD.\"fid\" != NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c}))
+               BEGIN DELETE FROM {r} WHERE id = OLD.\"fid\"; INSERT OR REPLACE INTO {r} VALUES {new}; END;",
+            u1 = trig("update1"),
+            u3 = trig("update3"),
+            new = row("NEW"),
+        )
+    };
     conn.execute_batch(&format!(
         "CREATE VIRTUAL TABLE {r} USING rtree(id, minx, maxx, miny, maxy);
          INSERT OR REPLACE INTO {r} SELECT \"fid\", ST_MinX({c}), ST_MaxX({c}), ST_MinY({c}), ST_MaxY({c}) FROM {t}
            WHERE {c} NOT NULL AND NOT ST_IsEmpty({c});
          CREATE TRIGGER {ins} AFTER INSERT ON {t} WHEN (new.{c} NOT NULL AND NOT ST_IsEmpty(NEW.{c}))
            BEGIN INSERT OR REPLACE INTO {r} VALUES {new}; END;
-         CREATE TRIGGER {u1} AFTER UPDATE OF {c} ON {t} WHEN OLD.\"fid\" = NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c}))
-           BEGIN INSERT OR REPLACE INTO {r} VALUES {new}; END;
+         {updates}
          CREATE TRIGGER {u2} AFTER UPDATE OF {c} ON {t} WHEN OLD.\"fid\" = NEW.\"fid\" AND (NEW.{c} ISNULL OR ST_IsEmpty(NEW.{c}))
            BEGIN DELETE FROM {r} WHERE id = OLD.\"fid\"; END;
-         CREATE TRIGGER {u3} AFTER UPDATE ON {t} WHEN OLD.\"fid\" != NEW.\"fid\" AND (NEW.{c} NOTNULL AND NOT ST_IsEmpty(NEW.{c}))
-           BEGIN DELETE FROM {r} WHERE id = OLD.\"fid\"; INSERT OR REPLACE INTO {r} VALUES {new}; END;
          CREATE TRIGGER {u4} AFTER UPDATE ON {t} WHEN OLD.\"fid\" != NEW.\"fid\" AND (NEW.{c} ISNULL OR ST_IsEmpty(NEW.{c}))
            BEGIN DELETE FROM {r} WHERE id IN (OLD.\"fid\", NEW.\"fid\"); END;
          CREATE TRIGGER {del} AFTER DELETE ON {t} WHEN old.{c} NOT NULL
            BEGIN DELETE FROM {r} WHERE id = OLD.\"fid\"; END;",
         ins = trig("insert"),
-        u1 = trig("update1"),
         u2 = trig("update2"),
-        u3 = trig("update3"),
         u4 = trig("update4"),
         del = trig("delete"),
         new = row("NEW"),
@@ -1112,6 +945,454 @@ fn index(conn: &Connection, table: &str, column: &str) -> Result<()> {
     conn.execute(
         "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, 'gpkg_rtree_index', 'http://www.geopackage.org/spec/#extension_rtree', 'write-only')",
         params![table, column],
+    )?;
+    Ok(())
+}
+
+/// A table being written piece by piece: what it must still do when its rows are all in (its box, its index).
+#[derive(Debug)]
+pub struct TableWrite {
+    def: TableDef,
+    bounds: Option<[f64; 4]>,
+    curved: bool,
+    rows: u64,
+}
+
+impl TableWrite {
+    /// The rows appended so far.
+    pub fn rows(&self) -> u64 {
+        self.rows
+    }
+}
+
+/// What a name is in a file (docs/adr/0549): free, a feature or attribute table a session may replace, or something
+/// it must not touch (a tile table, an unregistered SQLite table, an extension's table, a view).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum Taken {
+    Free,
+    Data(DataType),
+    Other,
+}
+
+/// A transaction writing tables (docs/adr/0549): nothing is in the file until [`Session::commit`]; dropping the session,
+/// or [`Session::rollback`], leaves the file as it was.
+pub struct Session<'a> {
+    tx: rusqlite::Transaction<'a>,
+}
+
+impl Session<'_> {
+    /// What `name` is in the file; SQLite's names are one whatever their case.
+    pub fn taken(&self, name: &str) -> Result<Taken> {
+        let in_master: i64 = self.tx.query_row(
+            "SELECT count(*) FROM sqlite_master WHERE name = ?1 COLLATE NOCASE AND type IN ('table', 'view')",
+            [name],
+            |r| r.get(0),
+        )?;
+        if in_master == 0 {
+            return Ok(Taken::Free);
+        }
+        let kind: Option<String> = self
+            .tx
+            .query_row(
+                "SELECT data_type FROM gpkg_contents WHERE table_name = ?1 COLLATE NOCASE",
+                [name],
+                |r| r.get(0),
+            )
+            .ok();
+        Ok(match kind.as_deref().map(DataType::read) {
+            Some(t @ (DataType::Features | DataType::Attributes)) => Taken::Data(t),
+            _ => Taken::Other,
+        })
+    }
+
+    /// The exact name `gpkg_contents` keeps a table under (the case it was written in).
+    pub fn registered_name(&self, name: &str) -> Result<Option<String>> {
+        Ok(self
+            .tx
+            .query_row(
+                "SELECT table_name FROM gpkg_contents WHERE table_name = ?1 COLLATE NOCASE",
+                [name],
+                |r| r.get(0),
+            )
+            .ok())
+    }
+
+    /// The spatial reference system of `id`, when the file has one.
+    pub fn srs(&self, id: i32) -> Result<Option<Srs>> {
+        read_srs(&self.tx, id)
+    }
+
+    /// Adds a spatial reference system, unless one with its id is there.
+    pub fn add_srs(&self, s: &Srs) -> Result<()> {
+        insert_srs(&self.tx, s)
+    }
+
+    /// Takes a feature or attribute table out of the file, with everything of it: its rows, its contents and geometry
+    /// column rows, its extension rows, its spatial index and its triggers, its lasting ids, and the metadata
+    /// documents only it referenced. Other tables, and tables other programs keep about it, are not touched.
+    pub fn drop_table(&self, name: &str) -> Result<()> {
+        let exact = self.registered_name(name)?.unwrap_or_else(|| name.to_owned());
+        let geometry: Option<String> = self
+            .tx
+            .query_row(
+                "SELECT column_name FROM gpkg_geometry_columns WHERE table_name = ?1",
+                [&exact],
+                |r| r.get(0),
+            )
+            .ok();
+        let has = |t: &str| -> Result<bool> {
+            let n: i64 = self.tx.query_row(
+                "SELECT count(*) FROM sqlite_master WHERE type = 'table' AND name = ?1",
+                [t],
+                |r| r.get(0),
+            )?;
+            Ok(n > 0)
+        };
+        if let Some(column) = &geometry {
+            let r = format!("rtree_{exact}_{column}");
+            if has(&r)? {
+                self.tx
+                    .execute_batch(&format!("DROP TABLE {};", quote(&r)))?;
+            }
+            self.tx.execute(
+                "DELETE FROM gpkg_extensions WHERE table_name = ?1 AND column_name = ?2",
+                params![exact, column],
+            )?;
+        }
+        if has("gpkg_metadata_reference")? && has("gpkg_metadata")? {
+            let docs: Vec<i64> = {
+                let mut st = self.tx.prepare(
+                    "SELECT md_file_id FROM gpkg_metadata_reference WHERE table_name = ?1",
+                )?;
+                st.query_map([&exact], |r| r.get(0))?
+                    .collect::<rusqlite::Result<_>>()?
+            };
+            self.tx.execute(
+                "DELETE FROM gpkg_metadata_reference WHERE table_name = ?1",
+                [&exact],
+            )?;
+            for id in docs {
+                self.tx.execute(
+                    "DELETE FROM gpkg_metadata WHERE id = ?1
+                       AND NOT EXISTS (SELECT 1 FROM gpkg_metadata_reference WHERE md_file_id = ?1 OR md_parent_id = ?1)",
+                    [id],
+                )?;
+            }
+        }
+        if has("kentos_uids")? {
+            self.tx
+                .execute("DELETE FROM kentos_uids WHERE table_name = ?1", [&exact])?;
+        }
+        if has("gpkg_ogr_contents")? {
+            self.tx.execute(
+                "DELETE FROM gpkg_ogr_contents WHERE table_name = ?1",
+                [&exact],
+            )?;
+        }
+        self.tx
+            .execute("DELETE FROM gpkg_extensions WHERE table_name = ?1", [&exact])?;
+        self.tx.execute(
+            "DELETE FROM gpkg_geometry_columns WHERE table_name = ?1",
+            [&exact],
+        )?;
+        self.tx.execute(
+            "DELETE FROM gpkg_contents WHERE table_name = ?1",
+            [&exact],
+        )?;
+        self.tx
+            .execute_batch(&format!("DROP TABLE {};", quote(&exact)))?;
+        Ok(())
+    }
+
+    /// Starts a table: its SQL table, its contents and its geometry column rows. Rows follow with [`Session::append`].
+    pub fn start_table(&self, def: &TableDef) -> Result<TableWrite> {
+        start_in(&self.tx, def)
+    }
+
+    /// Appends a batch of rows to a table started here, with each row's lasting id when `uids` is given. Returns the
+    /// rows' fids in their order.
+    pub fn append(
+        &self,
+        w: &mut TableWrite,
+        rows: &[NewRow],
+        uids: Option<&[String]>,
+    ) -> Result<Vec<i64>> {
+        append_in(&self.tx, w, rows, uids)
+    }
+
+    /// Ends a table: its box, its spatial index and the extension of its curved geometry type.
+    pub fn finish_table(&self, w: TableWrite) -> Result<()> {
+        finish_in(&self.tx, w)
+    }
+
+    /// A table's metadata document, as [`GeoPackage::add_metadata`].
+    pub fn add_metadata(
+        &self,
+        table: &str,
+        standard: &str,
+        mime: &str,
+        metadata: &str,
+        timestamp: &str,
+    ) -> Result<i64> {
+        add_metadata_in(&self.tx, table, standard, mime, metadata, timestamp)
+    }
+
+    /// Writes everything out: the file is as the session made it.
+    pub fn commit(self) -> Result<()> {
+        self.tx.commit()?;
+        Ok(())
+    }
+
+    /// Takes everything back: the file is as it was.
+    pub fn rollback(self) -> Result<()> {
+        self.tx.rollback()?;
+        Ok(())
+    }
+}
+
+fn start_in(conn: &Connection, def: &TableDef) -> Result<TableWrite> {
+    if def
+        .columns
+        .iter()
+        .any(|c| c.name.eq_ignore_ascii_case("fid"))
+        || def
+            .geometry
+            .as_ref()
+            .is_some_and(|g| g.name.eq_ignore_ascii_case("fid"))
+    {
+        return Err(Error(format!(
+            "“{}” tablosunun bir sütunu fid adını taşıyor",
+            def.name
+        )));
+    }
+    let t = quote(&def.name);
+    let mut cols = vec!["\"fid\" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL".to_owned()];
+    if let Some(g) = &def.geometry {
+        cols.push(format!("{} {}", quote(&g.name), g.type_name));
+    }
+    for c in &def.columns {
+        let decl = if c.decl.trim().is_empty() {
+            c.kind.decl()
+        } else {
+            c.decl.clone()
+        };
+        let mut s = format!("{} {decl}", quote(&c.name));
+        if c.not_null {
+            s.push_str(" NOT NULL");
+        }
+        if let Some(d) = &c.default {
+            s.push_str(&format!(" DEFAULT {d}"));
+        }
+        cols.push(s);
+    }
+    conn.execute_batch(&format!("CREATE TABLE {t} ({});", cols.join(", ")))?;
+    conn.execute(
+        "INSERT INTO gpkg_contents (table_name, data_type, identifier, description, srs_id) VALUES (?1, ?2, ?3, ?4, ?5)",
+        params![
+            def.name,
+            def.data_type.key(),
+            def.identifier.clone().unwrap_or_else(|| def.name.clone()),
+            def.description.clone().unwrap_or_default(),
+            def.srs_id
+        ],
+    )?;
+    if let Some(g) = &def.geometry {
+        conn.execute(
+            "INSERT INTO gpkg_geometry_columns VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+            params![
+                def.name,
+                g.name,
+                g.type_name,
+                def.srs_id.unwrap_or(-1),
+                g.z,
+                g.m
+            ],
+        )?;
+    }
+    Ok(TableWrite {
+        def: def.clone(),
+        bounds: None,
+        curved: false,
+        rows: 0,
+    })
+}
+
+fn append_in(
+    conn: &Connection,
+    w: &mut TableWrite,
+    rows: &[NewRow],
+    uids: Option<&[String]>,
+) -> Result<Vec<i64>> {
+    let def = &w.def;
+    let t = quote(&def.name);
+    let srs = def.srs_id.unwrap_or(-1);
+    let mut names = vec!["\"fid\"".to_owned()];
+    if let Some(g) = &def.geometry {
+        names.push(quote(&g.name));
+    }
+    names.extend(def.columns.iter().map(|c| quote(&c.name)));
+    let marks = vec!["?"; names.len()].join(", ");
+    let mut fids = Vec::with_capacity(rows.len());
+    let (mut bounds, mut curved) = (w.bounds, w.curved);
+    {
+        let mut st = conn.prepare_cached(&format!(
+            "INSERT INTO {t} ({}) VALUES ({marks})",
+            names.join(", ")
+        ))?;
+        for row in rows {
+            if row.values.len() != def.columns.len() {
+                return Err(Error(format!(
+                    "“{}” tablosunun satırında {} değer var, {} sütun bekleniyor",
+                    def.name,
+                    row.values.len(),
+                    def.columns.len()
+                )));
+            }
+            let mut args = vec![row.fid.map_or(Value::Null, Value::Integer)];
+            if def.geometry.is_some() {
+                args.push(match &row.geometry {
+                    Some(g) => {
+                        curved |= g.is_curved();
+                        if let Some(b) = g.bounds() {
+                            bounds = Some(match bounds {
+                                None => b,
+                                Some(a) => [
+                                    a[0].min(b[0]),
+                                    a[1].min(b[1]),
+                                    a[2].max(b[2]),
+                                    a[3].max(b[3]),
+                                ],
+                            });
+                        }
+                        Value::Blob(write_blob(srs, g))
+                    }
+                    None => Value::Null,
+                });
+            }
+            args.extend(row.values.iter().cloned());
+            st.execute(rusqlite::params_from_iter(args.iter()))?;
+            fids.push(conn.last_insert_rowid());
+        }
+    }
+    if let Some(uids) = uids {
+        conn.execute_batch(
+            "CREATE TABLE IF NOT EXISTS kentos_uids (table_name TEXT NOT NULL, fid INTEGER NOT NULL, uid TEXT NOT NULL,
+             PRIMARY KEY (table_name, fid));",
+        )?;
+        conn.execute(
+            "INSERT OR IGNORE INTO gpkg_extensions VALUES ('kentos_uids', NULL, ?1, 'https://kentos.app/geopackage/uids (docs/adr/0502)', 'read-write')",
+            [UIDS_EXTENSION],
+        )?;
+        let mut st = conn.prepare_cached("INSERT OR REPLACE INTO kentos_uids VALUES (?1, ?2, ?3)")?;
+        for (fid, uid) in fids.iter().zip(uids) {
+            st.execute(params![def.name, fid, uid])?;
+        }
+    }
+    w.bounds = bounds;
+    w.curved = curved;
+    w.rows += rows.len() as u64;
+    Ok(fids)
+}
+
+fn finish_in(conn: &Connection, w: TableWrite) -> Result<()> {
+    let def = &w.def;
+    if let Some(b) = w.bounds {
+        conn.execute(
+            "UPDATE gpkg_contents SET min_x = ?2, min_y = ?3, max_x = ?4, max_y = ?5 WHERE table_name = ?1",
+            params![def.name, b[0], b[1], b[2], b[3]],
+        )?;
+    }
+    if let Some(g) = &def.geometry {
+        index(conn, &def.name, &g.name)?;
+        if w.curved {
+            conn.execute(
+                "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, ?2, ?3, 'http://www.geopackage.org/spec/#extension_geometry_types', 'read-write')",
+                params![def.name, g.name, format!("gpkg_geom_{}", g.type_name)],
+            )?;
+        }
+    }
+    Ok(())
+}
+
+fn add_metadata_in(
+    conn: &Connection,
+    table: &str,
+    standard: &str,
+    mime: &str,
+    metadata: &str,
+    timestamp: &str,
+) -> Result<i64> {
+    const DEFINITION: &str = "http://www.geopackage.org/spec120/#extension_metadata";
+    conn.execute_batch(
+        "CREATE TABLE IF NOT EXISTS gpkg_metadata (
+           id INTEGER CONSTRAINT m_pk PRIMARY KEY ASC NOT NULL,
+           md_scope TEXT NOT NULL DEFAULT 'dataset',
+           md_standard_uri TEXT NOT NULL,
+           mime_type TEXT NOT NULL DEFAULT 'text/xml',
+           metadata TEXT NOT NULL DEFAULT '');
+         CREATE TABLE IF NOT EXISTS gpkg_metadata_reference (
+           reference_scope TEXT NOT NULL,
+           table_name TEXT,
+           column_name TEXT,
+           row_id_value INTEGER,
+           timestamp DATETIME NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now')),
+           md_file_id INTEGER NOT NULL,
+           md_parent_id INTEGER,
+           CONSTRAINT crmr_mfi_fk FOREIGN KEY (md_file_id) REFERENCES gpkg_metadata(id),
+           CONSTRAINT crmr_mpi_fk FOREIGN KEY (md_parent_id) REFERENCES gpkg_metadata(id));",
+    )?;
+    for t in ["gpkg_metadata", "gpkg_metadata_reference"] {
+        conn.execute(
+            "INSERT OR IGNORE INTO gpkg_extensions VALUES (?1, NULL, 'gpkg_metadata', ?2, 'read-write')",
+            params![t, DEFINITION],
+        )?;
+    }
+    conn.execute(
+        "INSERT INTO gpkg_metadata (md_scope, md_standard_uri, mime_type, metadata) VALUES ('dataset', ?1, ?2, ?3)",
+        params![standard, mime, metadata],
+    )?;
+    let id = conn.last_insert_rowid();
+    conn.execute(
+        "INSERT INTO gpkg_metadata_reference (reference_scope, table_name, timestamp, md_file_id) VALUES ('table', ?1, ?2, ?3)",
+        params![table, timestamp, id],
+    )?;
+    Ok(id)
+}
+
+fn read_srs(conn: &Connection, id: i32) -> Result<Option<Srs>> {
+    let r = conn.query_row(
+        "SELECT srs_name, srs_id, organization, organization_coordsys_id, definition, description
+         FROM gpkg_spatial_ref_sys WHERE srs_id = ?1",
+        [id],
+        |r| {
+            Ok(Srs {
+                name: r.get(0)?,
+                id: r.get(1)?,
+                organization: r.get(2)?,
+                organization_id: r.get(3)?,
+                definition: r.get(4)?,
+                description: r.get(5)?,
+            })
+        },
+    );
+    match r {
+        Ok(s) => Ok(Some(s)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e.into()),
+    }
+}
+
+fn insert_srs(conn: &Connection, s: &Srs) -> Result<()> {
+    conn.execute(
+        "INSERT OR IGNORE INTO gpkg_spatial_ref_sys VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+        params![
+            s.name,
+            s.id,
+            s.organization,
+            s.organization_id,
+            s.definition,
+            s.description
+        ],
     )?;
     Ok(())
 }

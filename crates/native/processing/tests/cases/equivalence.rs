@@ -205,7 +205,20 @@ fn both_ways(
         sink: None,
         drawing: place.map(|p| p.folder.join("cizim.kcad").display().to_string()),
     };
-    let ran = tools().expect("the tools").run(&mut doc, &input, true);
+    struct Go;
+    impl kentos_native_application::processing_host::BatchFlow for Go {
+        fn stopped(&self) -> bool {
+            false
+        }
+        fn progress(&self, _: u64, _: u64) {}
+    }
+    let ran = tools()
+        .expect("the tools")
+        .run(&mut doc, &input, true, &Go)
+        .map(|end| match end {
+            kentos_native_application::processing_host::RunEnd::Ran(ran, warnings) => (ran, warnings),
+            kentos_native_application::processing_host::RunEnd::Cancelled => panic!("it was not stopped"),
+        });
 
     match (&window.outcome, ran) {
         (Outcome::Ok { record, .. }, Ok((ran, _))) => {

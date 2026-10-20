@@ -6,7 +6,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 ## Ürün komutları
 
 - 213 komut; masaüstü 192, başsız 213, Python 213, MCP 192, sunucu 21.
-- Seçenekler: 3534 hücre, 1180 tanesi bir durumda deneniyor (2354 açık).
+- Seçenekler: 3537 hücre, 1183 tanesi bir durumda deneniyor (2354 açık).
 - Veri türleri (hedef türler): 178 hücre, 120 tanesi bir durumda deneniyor (58 açık).
 - Ortak komut durumu olmayan: 32; 21 sunucu komutu (sunucunun veritabanı testlerinde), 11 dosya komutu (başsız testlerde ve biçim başvurularında: file.export.atlas, file.export.block, file.export.csv, file.export.dxf, file.export.fgb, file.export.gis, file.export.gpkg, file.export.pdf, file.export.shp, file.export.sld, file.package).
 
@@ -80,7 +80,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `cad.polygon.create` | lineType="continuous", lineType="dashdot", lineType="dotted" | — |
 | `cad.polygon.regular` | lineType="continuous", lineType="dashdot", lineType="dashed", lineType="dotted" | — |
 | `cad.polyline.create` | lineType="continuous", lineType="dashdot", lineType="dashed", lineType="dotted" | — |
-| `cad.processing.run` | overwrite=true | — |
+| `cad.processing.run` | mode="new" | — |
 | `cad.profiles.apply` | geometry="line", geometry="record", kind="boolean", kind="date", kind="datetime", kind="integer", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
 | `cad.profiles.check` | geometry="line", geometry="record", kind="boolean", kind="date", kind="datetime", kind="integer", kind="time", level="district", level="neighbourhood", level="province", maxExclusive=true, merge="clear", merge="first", merge="max", merge="min", merge="sum", minExclusive=true, multiple=true, retired=true, split="clear", split="copy", split="default", split="ratio", unique=true | — |
 | `cad.ramps.create` | discipline="architecture", discipline="electrical", discipline="interior", discipline="landscape", discipline="mechanical", discipline="plumbing", discipline="structure", phase="demolish", phase="new", phase="temporary", status="approved", status="built", status="proposed", status="underConstruction" | — |
@@ -156,7 +156,7 @@ türü, ev sahibi ve onu deneyen ortak durumlar. Bütün hücreler `coverage.jso
 | `distance.euclidean` | 5 | 5 | add=false |
 | `generalize.dropParts` | 4 | 4 | holes=false |
 | `generate.concaveHull` | 5 | 5 | group="each" |
-| `geometry.buffer` | 6 | 7 | side="right" |
+| `geometry.buffer` | 6 | 20 | side="right" |
 | `geometry.reproject` | 2 | 3 | source="5253", source="5255", source="5256", source="5257", source="5258", source="5259", source="5252", source="2319", source="2321", source="2322", source="2323", source="2324", source="2325", source="23035", source="23036", source="23037", source="23038", source="32635", source="32636", source="32637", source="32638", source="4326", source="3857" |
 | `hydrology.basins` | 4 | 4 | fill=false |
 | `hydrology.fill` | 4 | 4 | add=false |
