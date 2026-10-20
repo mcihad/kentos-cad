@@ -29,6 +29,8 @@ fn config() -> Config {
         blob_dir: std::env::temp_dir().join("kentos-api-tests-blobs"),
         proxy_allow: None,
         workers: 0,
+        job_limits: Default::default(),
+        job_retention: std::time::Duration::from_secs(14 * 24 * 3600),
     }
 }
 

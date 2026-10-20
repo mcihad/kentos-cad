@@ -49,6 +49,12 @@ pub struct Config {
     /// How many server-job workers `kentosd serve` runs beside the API (`KENTOS_WORKERS`, 0–16; docs/adr/0542).
     /// Absent: 1. `kentosd worker` runs workers alone.
     pub workers: u32,
+    /// What server jobs may take (`KENTOS_JOB_LIMIT`: queued and running jobs of one organisation together,
+    /// 1–10 000, default 50; `KENTOS_JOB_ARTIFACT_MAX_MB`: the biggest artifact of a job, 1–1 048 576 MB, default
+    /// 2 048; docs/adr/0547).
+    pub job_limits: kentos_application::jobs::JobLimits,
+    /// How long a finished job and its artifact are kept (`KENTOS_JOB_RETENTION_DAYS`, 1–3650 days, default 14).
+    pub job_retention: Duration,
 }
 
 /// Days of event log kept unless `KENTOS_EVENT_RETENTION_DAYS` says otherwise.
@@ -56,6 +62,50 @@ pub const DEFAULT_RETENTION_DAYS: u64 = 7;
 
 /// Days a project moved to the trash stays there unless `KENTOS_TRASH_RETENTION_DAYS` says otherwise.
 pub const DEFAULT_TRASH_RETENTION_DAYS: u64 = 30;
+
+/// `KENTOS_JOB_RETENTION_DAYS`: whole days, at least one.
+pub fn job_retention(value: Option<&str>) -> Result<Duration, String> {
+    days(
+        "KENTOS_JOB_RETENTION_DAYS",
+        value,
+        kentos_contracts::SERVER_JOB_RETENTION_DAYS_DEFAULT,
+    )
+}
+
+/// `KENTOS_JOB_LIMIT` and `KENTOS_JOB_ARTIFACT_MAX_MB`: what server jobs may take.
+pub fn job_limits(
+    limit: Option<&str>,
+    artifact_mb: Option<&str>,
+) -> Result<kentos_application::jobs::JobLimits, String> {
+    let defaults = kentos_application::jobs::JobLimits::default();
+    let number = |name: &str, value: Option<&str>, max: u64, default: u64| -> Result<u64, String> {
+        match value {
+            None => Ok(default),
+            Some(v) => v
+                .trim()
+                .parse::<u64>()
+                .ok()
+                .filter(|n| (1..=max).contains(n))
+                .ok_or_else(|| format!("{name} 1 ile {max} arasında bir sayı olmalı: {v}")),
+        }
+    };
+    let tenant_active = number(
+        "KENTOS_JOB_LIMIT",
+        limit,
+        10_000,
+        u64::from(defaults.tenant_active),
+    )?;
+    let mb = number(
+        "KENTOS_JOB_ARTIFACT_MAX_MB",
+        artifact_mb,
+        1_048_576,
+        defaults.artifact_max / (1024 * 1024),
+    )?;
+    Ok(kentos_application::jobs::JobLimits {
+        tenant_active: u32::try_from(tenant_active).unwrap_or(u32::MAX),
+        artifact_max: mb * 1024 * 1024,
+    })
+}
 
 /// `KENTOS_EVENT_RETENTION_DAYS`: whole days, at least one (a client away longer reopens the project).
 pub fn retention(value: Option<&str>) -> Result<Duration, String> {
@@ -147,8 +197,15 @@ impl Config {
                     .parse::<u32>()
                     .ok()
                     .filter(|n| *n <= 16)
-                    .ok_or_else(|| format!("KENTOS_WORKERS 0 ile 16 arasında bir sayı olmalı: {v}"))?,
+                    .ok_or_else(|| {
+                        format!("KENTOS_WORKERS 0 ile 16 arasında bir sayı olmalı: {v}")
+                    })?,
             },
+            job_limits: job_limits(
+                get("KENTOS_JOB_LIMIT").as_deref(),
+                get("KENTOS_JOB_ARTIFACT_MAX_MB").as_deref(),
+            )?,
+            job_retention: job_retention(get("KENTOS_JOB_RETENTION_DAYS").as_deref())?,
             env_file,
             vars,
         })
@@ -175,6 +232,38 @@ mod tests {
             trash_retention(Some("0"))
                 .unwrap_err()
                 .contains("KENTOS_TRASH_RETENTION_DAYS")
+        );
+    }
+
+    #[test]
+    fn the_job_settings_are_within_bounds_and_name_themselves() {
+        let day = 24 * 3600;
+        assert_eq!(job_retention(None).unwrap().as_secs(), 14 * day);
+        assert_eq!(job_retention(Some("3")).unwrap().as_secs(), 3 * day);
+        assert!(
+            job_retention(Some("0"))
+                .unwrap_err()
+                .contains("KENTOS_JOB_RETENTION_DAYS")
+        );
+        let defaults = job_limits(None, None).unwrap();
+        assert_eq!(
+            (defaults.tenant_active, defaults.artifact_max),
+            (50, 2 << 30)
+        );
+        let set = job_limits(Some(" 5 "), Some("64")).unwrap();
+        assert_eq!((set.tenant_active, set.artifact_max), (5, 64 << 20));
+        for bad in ["0", "10001", "x", "-1", ""] {
+            assert!(
+                job_limits(Some(bad), None)
+                    .unwrap_err()
+                    .contains("KENTOS_JOB_LIMIT"),
+                "{bad}"
+            );
+        }
+        assert!(
+            job_limits(None, Some("0"))
+                .unwrap_err()
+                .contains("KENTOS_JOB_ARTIFACT_MAX_MB")
         );
     }
 }

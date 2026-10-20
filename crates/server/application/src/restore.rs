@@ -301,6 +301,7 @@ async fn recheck(
     }
     now.require(ProjectPermission::History)?;
     now.require(ProjectPermission::Download)?;
+    crate::projects::require_whole_copy(tx, &now).await?;
     Ok(Rechecked::Fresh(now))
 }
 

@@ -95,6 +95,7 @@ pub async fn duplicate(
         return Err(gone(&now.name));
     }
     now.require(ProjectPermission::Download)?;
+    crate::projects::require_whole_copy(&mut tx, &now).await?;
     let storage: String =
         sqlx::query_scalar("select storage from kentos.project where tenant_id = $1 and id = $2")
             .bind(now.tenant)

@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 
 use kentos_commands::{BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun};
 use kentos_domain::{Document, Slot};
-use kentos_native_application::processing_host::{BatchEnd, BatchFlow, tools};
+use kentos_native_application::processing_host::{BatchEnd, BatchFlow, RunEnd, tools};
 use kentos_processing::record::{Rerun, rerun_kind};
 use serde_json::{Value, json};
 
@@ -53,6 +53,18 @@ impl BatchFlow for Flow {
     }
 }
 
+/// A run that is never stopped: its answer.
+fn ran_it(doc: &mut Document, run: &ProcessingRun) -> kentos_commands::ProcessingRan {
+    match tools()
+        .expect("registered")
+        .run(doc, run, true, &Flow::new(u32::MAX))
+        .expect("runs")
+    {
+        RunEnd::Ran(ran, _) => ran,
+        RunEnd::Cancelled => panic!("it was not stopped"),
+    }
+}
+
 fn values(pairs: &[(&str, Value)]) -> BTreeMap<String, Value> {
     pairs
         .iter()
@@ -74,6 +86,7 @@ fn three_rows(doc: &Document) -> ProcessingBatch {
             .collect(),
         selection: (1..=3).map(|n| uid(doc, n)).collect(),
         view: None,
+        drawing: None,
     }
 }
 
@@ -193,10 +206,11 @@ fn a_model_that_stops_in_the_middle_leaves_no_layer_behind() {
         selection: vec![uid(&doc, 1), uid(&doc, 2)],
         view: None,
         sink: None,
+        drawing: None,
     };
     let error = tools()
         .expect("registered")
-        .run(&mut doc, &run, true)
+        .run(&mut doc, &run, true, &Flow::new(u32::MAX))
         .expect_err("the second step stops");
     assert_eq!(error.code, "tool_failed");
     assert_eq!(doc.entities().count(), count);
@@ -224,11 +238,9 @@ fn a_record_names_the_objects_the_seed_and_the_system() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
-    let (ran, _) = tools()
-        .expect("registered")
-        .run(&mut doc, &run, true)
-        .expect("runs");
+    let ran = ran_it(&mut doc, &run);
     let r = &ran.record;
     assert_eq!(r.seed, Some(7));
     assert_eq!(r.srid, Some(5256));
@@ -263,11 +275,9 @@ fn running_a_record_again_is_told_apart() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
-    let (ran, _) = tools()
-        .expect("registered")
-        .run(&mut doc, &run, true)
-        .expect("runs");
+    let ran = ran_it(&mut doc, &run);
     let record = ran.record;
     // The run did not edit: the drawing is still at the revision it began with.
     assert_eq!(rerun_kind(&record, &doc), Rerun::SameRevision);
@@ -344,6 +354,7 @@ fn batch_timing() {
             .collect(),
         selection: Vec::new(),
         view: None,
+        drawing: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(ran) = tools()
@@ -374,6 +385,7 @@ fn batch_timing() {
             .collect(),
         selection: Vec::new(),
         view: None,
+        drawing: None,
     };
     let clock = std::time::Instant::now();
     let BatchEnd::Ran(_) = tools()
@@ -431,11 +443,9 @@ fn a_raster_run_records_its_grids() {
         selection: Vec::new(),
         view: None,
         sink: None,
+        drawing: None,
     };
-    let (ran, _) = tools()
-        .expect("registered")
-        .run(&mut doc, &run, true)
-        .expect("runs");
+    let ran = ran_it(&mut doc, &run);
     let grids = &ran.record.grids;
     assert_eq!(grids.len(), 2, "{grids:?}");
     assert_eq!(grids[0].role, "input");

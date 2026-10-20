@@ -513,7 +513,13 @@ impl App {
         if writes && run.group.is_none() {
             run.group = Some(doc.model.begin_group(run.label.as_deref().unwrap_or(STEP)));
         }
-        let mut answer = kentos_headless::rpc::call(&mut doc.model, method, params)?;
+        let mut answer = kentos_headless::rpc::call_from(
+            &mut doc.model,
+            None,
+            doc.path.as_deref(),
+            method,
+            params,
+        )?;
         if method == "summary"
             && let Some(fields) = answer.as_object_mut()
         {

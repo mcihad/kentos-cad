@@ -153,9 +153,10 @@ impl App {
             | "journal" | "replay" | "start" | "job" | "wait" | "cancel" => {
                 // The desktop does not wait for a job on its interface thread: `wait` says how it is.
                 let method = if method == "wait" { "job" } else { method };
-                let mut answer = kentos_headless::rpc::call_with(
+                let mut answer = kentos_headless::rpc::call_from(
                     &mut doc.model,
                     Some(&mut self.python.jobs),
+                    doc.path.as_deref(),
                     method,
                     &params,
                 )

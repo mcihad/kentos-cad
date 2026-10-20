@@ -435,6 +435,17 @@ impl App {
                 if self.charts.layer.as_ref() != Some(&id) {
                     self.charts.field = None;
                 }
+                // The table's rows are of the table's layer: another layer takes all of its own.
+                if self.charts.show == Show::Table
+                    && self
+                        .document
+                        .as_ref()
+                        .and_then(|d| self.feature_layer(d))
+                        .as_ref()
+                        != Some(&id)
+                {
+                    self.charts.show = Show::All;
+                }
                 self.charts.layer = Some(id);
                 self.charts.source = Source::Layer;
             }
@@ -444,6 +455,24 @@ impl App {
                 }
             }
             Event::Show(show) => {
+                // Tablonun süzgeciyle reads the table's layer.
+                if show == Show::Table
+                    && let Some(layer) = self
+                        .document
+                        .as_ref()
+                        .and_then(|d| self.feature_layer(d))
+                {
+                    if self.charts.layer.as_ref() != Some(&layer) {
+                        self.charts.field = None;
+                        self.charts.layer_spec = self
+                            .charts
+                            .layer_spec
+                            .as_ref()
+                            .map(|s| Spec::new(s.kind));
+                    }
+                    self.charts.layer = Some(layer);
+                    self.charts.source = Source::Layer;
+                }
                 self.charts.show = show;
             }
             Event::Kind(kind) => {

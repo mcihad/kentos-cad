@@ -1089,6 +1089,9 @@ codes! {
     NOTHING_TO_EXPORT = "nothing_to_export", Failed, false, "Çizimde yazılacak nesne yok.";
     /// A project with no sheet to print.
     NO_SHEETS = "no_sheets", Failed, false, "Projenin pafta kitabında pafta yok.";
+    /// A table to write into a GeoPackage that is there already under that name (a processing sink's `addTables`,
+    /// docs/adr/0549 §1), or one the write must not replace.
+    TABLE_EXISTS = "table_exists", Failed, false, "Dosyada aynı adlı tablo var; üzerine yazmak için replaceTables isteyin ya da başka bir ad verin. Dosyaya dokunulmadı.";
     /// A file to read that is not there (`file.import.dxf`, docs/adr/0257 §3).
     FILE_NOT_FOUND = "file_not_found", Failed, false, "Okunacak dosya yok.";
     /// A file to import that cannot be read as its format.

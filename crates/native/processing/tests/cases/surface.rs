@@ -18,15 +18,15 @@ use kentos_processing::files::{
 
 use super::*;
 
-fn surface_fixture(rel: &str) -> Vec<u8> {
+pub(crate) fn surface_fixture(rel: &str) -> Vec<u8> {
     let path = folder().join(rel);
     std::fs::read(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()))
 }
 
 /// The cases' rasters by their file's name, and what a run writes, by its name.
-struct FixtureFiles {
-    rasters: BTreeMap<String, Vec<u8>>,
-    written: Arc<Mutex<BTreeMap<String, Vec<u8>>>>,
+pub(crate) struct FixtureFiles {
+    pub(crate) rasters: BTreeMap<String, Vec<u8>>,
+    pub(crate) written: Arc<Mutex<BTreeMap<String, Vec<u8>>>>,
 }
 
 struct Kept {

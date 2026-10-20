@@ -10,6 +10,10 @@
 //!   fence passes). A worker that dies loses the lease; the next claim takes the job again until its attempts run out.
 //! - **Staged:** the artifact is written to the object store before the finish; a finish that does not pass (a lost
 //!   lease, a cancel, a refused access) removes it, and the store's cleanup removes any that no job holds.
+//! - **Limits (docs/adr/0547):** an organisation has at most `JobLimits::tenant_active` jobs queued and running (a
+//!   request past it is refused with `quota_exceeded`), an artifact past `artifact_max` fails its job (`too_large`), an
+//!   artifact that cannot be written fails it with `storage` and leaves no object, and `expire` removes finished jobs
+//!   (and their artifacts) older than the retention.
 //! - **Seeing:** the project's users list and read its jobs; the asker or `project.edit` cancels one; `project.download`
 //!   downloads a succeeded export.
 
@@ -18,10 +22,12 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use kentos_contracts::{
-    PROJECT_EXPORT_JOB, ProjectExportInput, ProjectPermission, ProjectStorage, SERVER_JOB_KINDS,
-    SERVER_JOB_LIST_MAX, SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob,
-    ServerJobArtifact, ServerJobCreate, ServerJobError, ServerJobList, ServerJobState,
-    SignInMethod,
+    CheckpointCreate, CommandEnvelope, PROJECT_CHECKPOINT_CREATE,
+    PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_JOB, PROJECT_EXPORT_JOB,
+    ProjectExportInput, ProjectPermission, ProjectStorage, SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+    SERVER_JOB_KINDS, SERVER_JOB_LIST_MAX, SERVER_JOB_TENANT_ACTIVE_DEFAULT,
+    SERVER_JOB_TIMEOUT_DEFAULT, SERVER_JOB_TIMEOUT_MAX, ServerJob, ServerJobArtifact,
+    ServerJobCreate, ServerJobError, ServerJobList, ServerJobState, SignInMethod,
 };
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -32,6 +38,25 @@ use crate::access::ProjectAccess;
 use crate::blobs::{Blobs, WriteError};
 use crate::error::{AppError, AppResult};
 use crate::projects::{rfc3339, storage_of};
+
+/// What the server lets jobs take (docs/adr/0547): the server sets them (`KENTOS_JOB_LIMIT`,
+/// `KENTOS_JOB_ARTIFACT_MAX_MB`), the defaults hold for tests and for a server that sets none.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct JobLimits {
+    /// Queued and running jobs of one organisation together.
+    pub tenant_active: u32,
+    /// The biggest artifact a job may stage, in bytes.
+    pub artifact_max: u64,
+}
+
+impl Default for JobLimits {
+    fn default() -> Self {
+        Self {
+            tenant_active: SERVER_JOB_TENANT_ACTIVE_DEFAULT,
+            artifact_max: SERVER_JOB_ARTIFACT_MAX_DEFAULT,
+        }
+    }
+}
 
 /// A job's row as its project's users read it.
 #[derive(sqlx::FromRow)]
@@ -136,19 +161,48 @@ fn sha256_hex(bytes: &[u8]) -> String {
 fn checked_input(kind: &str, input: &Value) -> AppResult<Value> {
     match kind {
         PROJECT_EXPORT_JOB => {
-            let input = if input.is_null() { json!({}) } else { input.clone() };
-            let parsed: ProjectExportInput = serde_json::from_value(input.clone()).map_err(|e| {
-                AppError::invalid_at("input", format!("project.export'un girdisi okunamadı: {e}"))
-            })?;
+            let input = if input.is_null() {
+                json!({})
+            } else {
+                input.clone()
+            };
+            let parsed: ProjectExportInput =
+                serde_json::from_value(input.clone()).map_err(|e| {
+                    AppError::invalid_at(
+                        "input",
+                        format!("project.export'un girdisi okunamadı: {e}"),
+                    )
+                })?;
             if let Some(r) = &parsed.expected_revision
                 && r.parse::<i64>().ok().filter(|n| *n >= 0).is_none()
             {
                 return Err(AppError::invalid_at(
                     "input.expectedRevision",
-                    format!("expectedRevision bir veri revizyonu (sıfır ya da artı tam sayı) olmalı: {r}"),
+                    format!(
+                        "expectedRevision bir veri revizyonu (sıfır ya da artı tam sayı) olmalı: {r}"
+                    ),
                 ));
             }
             Ok(input)
+        }
+        PROJECT_CHECKPOINT_JOB => {
+            let parsed: CheckpointCreate = serde_json::from_value(input.clone()).map_err(|e| {
+                AppError::invalid_at(
+                    "input",
+                    format!("project.checkpoint'in girdisi okunamadı: {e}"),
+                )
+            })?;
+            crate::checkpoints::name_of(&parsed.name).map_err(|e| e.at("input.name"))?;
+            crate::checkpoints::note_of(parsed.note.clone()).map_err(|e| e.at("input.note"))?;
+            if let Some(r) = &parsed.file_revision
+                && r.parse::<i64>().ok().filter(|n| *n > 0).is_none()
+            {
+                return Err(AppError::invalid_at(
+                    "input.fileRevision",
+                    format!("fileRevision bir revizyon numarası olmalı: {r}"),
+                ));
+            }
+            Ok(input.clone())
         }
         other => Err(AppError::invalid_at(
             "kind",
@@ -166,6 +220,7 @@ pub async fn create(
     db: &kentos_postgres::Db,
     access: &ProjectAccess,
     asked: ServerJobCreate,
+    limits: &JobLimits,
 ) -> AppResult<ServerJob> {
     access.live()?;
     let request = asked.request_id.trim();
@@ -187,11 +242,11 @@ pub async fn create(
     if asked.kind == PROJECT_EXPORT_JOB {
         access.require(ProjectPermission::Download)?;
     }
-    let digest = sha256_hex(
-        serde_json::to_string(&input)
-            .unwrap_or_default()
-            .as_bytes(),
-    );
+    if asked.kind == PROJECT_CHECKPOINT_JOB {
+        access.writable()?;
+        access.require(ProjectPermission::FeatureWrite)?;
+    }
+    let digest = sha256_hex(serde_json::to_string(&input).unwrap_or_default().as_bytes());
     let mut tx = db.scoped(access.scope()).await?;
     let (storage, revision): (String, i64) = sqlx::query_as(
         "select storage, data_revision from kentos.project where tenant_id = $1 and id = $2",
@@ -206,6 +261,29 @@ pub async fn create(
             "“{}” projesi dosya olarak saklanıyor; .kcad dosyası zaten onun revizyonlarıdır.",
             access.name
         )));
+    }
+    // A retried request gets its job back whatever the organisation's load; a new one needs a place.
+    let earlier: Option<Uuid> = sqlx::query_scalar(
+        "select id from kentos.server_job where tenant_id = $1 and project_id = $2 and created_by = $3 and request_id = $4",
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(access.actor.user_id)
+    .bind(request)
+    .fetch_optional(&mut *tx)
+    .await?;
+    if earlier.is_none() {
+        let room: bool = sqlx::query_scalar("select kentos.job_slot($1, $2)")
+            .bind(access.tenant)
+            .bind(i32::try_from(limits.tenant_active).unwrap_or(i32::MAX))
+            .fetch_one(&mut *tx)
+            .await?;
+        if !room {
+            return Err(AppError::Quota(format!(
+                "Kurumunuzun sırada ve çalışan iş sınırına ({}) ulaşıldı; bir iş bitince ya da durdurulunca yeniden isteyin.",
+                limits.tenant_active
+            )));
+        }
     }
     let id = Uuid::now_v7();
     sqlx::query(
@@ -269,7 +347,11 @@ async fn row_of(
 }
 
 /// One job.
-pub async fn get(db: &kentos_postgres::Db, access: &ProjectAccess, id: Uuid) -> AppResult<ServerJob> {
+pub async fn get(
+    db: &kentos_postgres::Db,
+    access: &ProjectAccess,
+    id: Uuid,
+) -> AppResult<ServerJob> {
     let mut tx = db.scoped(access.scope()).await?;
     let row = row_of(&mut tx, access, id).await?;
     tx.commit().await?;
@@ -278,7 +360,11 @@ pub async fn get(db: &kentos_postgres::Db, access: &ProjectAccess, id: Uuid) -> 
 
 /// Cancels a job: a queued one at once, a running one at its worker's next beat; one that is over stays as it is.
 /// Its asker or a holder of `project.edit` may.
-pub async fn cancel(db: &kentos_postgres::Db, access: &ProjectAccess, id: Uuid) -> AppResult<ServerJob> {
+pub async fn cancel(
+    db: &kentos_postgres::Db,
+    access: &ProjectAccess,
+    id: Uuid,
+) -> AppResult<ServerJob> {
     let mut tx = db.scoped(access.scope()).await?;
     let row = row_of(&mut tx, access, id).await?;
     if row.created_by != access.actor.user_id && !access.allows(ProjectPermission::Edit) {
@@ -355,16 +441,29 @@ struct Claim {
 
 /// What a job's run ended in, before its finish.
 enum Outcome {
-    Done { result: Value, key: String, size: i64, sha256: String },
-    Failed { code: &'static str, message: String },
+    /// `artifact`: the staged object (key, size, SHA-256) when the kind has one.
+    Done {
+        result: Value,
+        artifact: Option<(String, i64, String)>,
+        /// What the result was cut by (docs/adr/0550 §5): the stamp of the caller's reach it was built
+        /// for; the finish asks it again and refuses a result the caller no longer may take.
+        reach: Option<String>,
+    },
+    Failed {
+        code: &'static str,
+        message: String,
+    },
     /// Asked to stop, or the lease lost: no finish.
     Stopped,
 }
 
 fn failed_of(e: &AppError) -> (&'static str, String) {
     let code = match e {
-        AppError::Forbidden(_) | AppError::NotFound(_) | AppError::Unauthenticated(_) => "forbidden",
+        AppError::Forbidden(_) | AppError::NotFound(_) | AppError::Unauthenticated(_) => {
+            "forbidden"
+        }
         AppError::Deleted(_) => "gone",
+        AppError::Archived(_) => "archived",
         AppError::Invalid { .. } => "invalid",
         AppError::Storage(_) => "storage",
         AppError::Conflict { .. } => "revision_conflict",
@@ -379,7 +478,26 @@ pub async fn work_once(
     blobs: &Blobs,
     owner: Uuid,
     lease: Duration,
+    limits: &JobLimits,
 ) -> AppResult<Option<Worked>> {
+    work_once_between(db, blobs, owner, lease, limits, || async {}).await
+}
+
+/// [`work_once`] with something done between the run and its finish: what a test does to the project
+/// while a job runs (a grant taken away, a field marked), the moment the finish asks everything again.
+#[doc(hidden)]
+pub async fn work_once_between<F, Fut>(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    owner: Uuid,
+    lease: Duration,
+    limits: &JobLimits,
+    between: F,
+) -> AppResult<Option<Worked>>
+where
+    F: FnOnce() -> Fut,
+    Fut: std::future::Future<Output = ()>,
+{
     /// `claim_job`'s row: tenant, project, job, kind, input, base revision, asker, fence, attempts.
     type Claimed = (Uuid, Uuid, Uuid, String, Value, i64, Uuid, i64, i32);
     let secs = i32::try_from(lease.as_secs().clamp(1, 3600)).unwrap_or(30);
@@ -427,14 +545,21 @@ pub async fn work_once(
             }
         })
     };
-    let outcome = run(db, blobs, &claim, &stop).await;
+    let outcome = run(db, blobs, &claim, &stop, limits).await;
     beat.abort();
+    between().await;
     let state = finish(db, blobs, &claim, outcome).await?;
     Ok(Some(Worked { job: id, state }))
 }
 
 /// The run of one claim, the access asked as the user who asked for it.
-async fn run(db: &kentos_postgres::Db, blobs: &Blobs, claim: &Claim, stop: &AtomicBool) -> Outcome {
+async fn run(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    claim: &Claim,
+    stop: &AtomicBool,
+    limits: &JobLimits,
+) -> Outcome {
     let access = match actor_access(db, claim).await {
         Ok(a) => a,
         Err(e) => {
@@ -443,7 +568,8 @@ async fn run(db: &kentos_postgres::Db, blobs: &Blobs, claim: &Claim, stop: &Atom
         }
     };
     match claim.kind.as_str() {
-        PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop).await,
+        PROJECT_EXPORT_JOB => export(db, blobs, claim, &access, stop, limits).await,
+        PROJECT_CHECKPOINT_JOB => checkpoint(db, blobs, claim, &access, stop).await,
         other => Outcome::Failed {
             code: "invalid",
             message: format!("“{other}” bu sunucunun bilmediği bir iş."),
@@ -465,6 +591,7 @@ async fn export(
     claim: &Claim,
     access: &ProjectAccess,
     stop: &AtomicBool,
+    limits: &JobLimits,
 ) -> Outcome {
     if let Err(e) = access
         .live()
@@ -475,7 +602,7 @@ async fn export(
         return Outcome::Failed { code, message };
     }
     let input: ProjectExportInput = serde_json::from_value(claim.input.clone()).unwrap_or_default();
-    let snap = match crate::snapshot::take(db, access).await {
+    let snap = match crate::snapshot::take(db, access, crate::snapshot::Take::Cut).await {
         Ok(s) => s,
         Err(e) => {
             let (code, message) = failed_of(&e);
@@ -496,8 +623,17 @@ async fn export(
     if stop.load(Ordering::SeqCst) {
         return Outcome::Stopped;
     }
-    let key = Blobs::job_key(claim.tenant, claim.project, claim.id, &snap.sha256);
     let size = snap.bytes.len();
+    if size as u64 > limits.artifact_max {
+        return Outcome::Failed {
+            code: "too_large",
+            message: format!(
+                "Projenin dosyası {size} bayt; sunucunun bir işe verdiği sınır {} bayt. Sunucu yöneticisine başvurun.",
+                limits.artifact_max
+            ),
+        };
+    }
+    let key = Blobs::job_key(claim.tenant, claim.project, claim.id, &snap.sha256);
     let written = async {
         let mut w = blobs.create(&key, size as u64).await?;
         w.write(&snap.bytes).await.map_err(|e| match e {
@@ -520,9 +656,50 @@ async fn export(
             "objects": snap.objects,
             "eventCursor": snap.event_cursor.to_string(),
         }),
-        key,
-        size: i64::try_from(size).unwrap_or(i64::MAX),
-        sha256: snap.sha256,
+        artifact: Some((key, i64::try_from(size).unwrap_or(i64::MAX), snap.sha256)),
+        reach: snap.reach,
+    }
+}
+
+/// `project.checkpoint`: the checkpoint command run as the user who asked, its idempotency key the job's id, so a
+/// run the lease took away from its worker and a second run make one checkpoint (the second gets the stored answer).
+async fn checkpoint(
+    db: &kentos_postgres::Db,
+    blobs: &Blobs,
+    claim: &Claim,
+    access: &ProjectAccess,
+    stop: &AtomicBool,
+) -> Outcome {
+    if let Err(e) = access
+        .live()
+        .and_then(|()| access.require(ProjectPermission::JobsRun))
+    {
+        let (code, message) = failed_of(&e);
+        return Outcome::Failed { code, message };
+    }
+    if stop.load(Ordering::SeqCst) {
+        return Outcome::Stopped;
+    }
+    let envelope = CommandEnvelope {
+        command_name: PROJECT_CHECKPOINT_CREATE.into(),
+        version: PROJECT_CHECKPOINT_CREATE_VERSION,
+        tenant_id: claim.tenant.to_string(),
+        project_id: claim.project.to_string(),
+        request_id: format!("job-{}", claim.id),
+        idempotency_key: format!("job-{}", claim.id),
+        expected_versions: Default::default(),
+        input: claim.input.clone(),
+    };
+    match crate::checkpoints::create(db, blobs, access, envelope).await {
+        Ok(change) => Outcome::Done {
+            result: serde_json::to_value(&change).unwrap_or(Value::Null),
+            artifact: None,
+            reach: None,
+        },
+        Err(e) => {
+            let (code, message) = failed_of(&e);
+            Outcome::Failed { code, message }
+        }
     }
 }
 
@@ -554,32 +731,74 @@ async fn finish(
         }
         Outcome::Done {
             result,
-            key,
-            size,
-            sha256,
+            artifact,
+            reach,
         } => {
+            let (key, size, sha256) = match artifact {
+                Some((k, s, h)) => (Some(k), Some(s), Some(h)),
+                None => (None, None, None),
+            };
+            let remove = |key: &Option<String>| {
+                let key = key.clone();
+                async move {
+                    if let Some(key) = key {
+                        let _ = blobs.remove(&key).await;
+                    }
+                }
+            };
             // The access asked again at the commit: a grant taken away while the job ran does not let it in.
             let access = match actor_access(db, claim).await {
                 Ok(a) => a,
                 Err(e) => {
-                    let _ = blobs.remove(&key).await;
+                    remove(&key).await;
                     let (code, message) = failed_of(&e);
-                    return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message })).await;
+                    return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message }))
+                        .await;
                 }
             };
             let mut tx = db.scoped(access.scope()).await?;
-            let again = crate::access::recheck(&mut tx, &access)
-                .await
-                .and_then(|a| {
-                    a.live()?;
-                    a.require(ProjectPermission::JobsRun)?;
-                    a.require(ProjectPermission::Download)
-                });
-            if let Err(e) = again {
-                drop(tx);
-                let _ = blobs.remove(&key).await;
-                let (code, message) = failed_of(&e);
-                return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message })).await;
+            let again = match crate::access::recheck(&mut tx, &access).await {
+                Ok(a) => a
+                    .live()
+                    .and_then(|()| a.require(ProjectPermission::JobsRun))
+                    .and_then(|()| {
+                        if claim.kind == PROJECT_EXPORT_JOB {
+                            a.require(ProjectPermission::Download)
+                        } else {
+                            Ok(())
+                        }
+                    })
+                    .map(|()| a),
+                Err(e) => Err(e),
+            };
+            let a = match again {
+                Ok(a) => a,
+                Err(e) => {
+                    drop(tx);
+                    remove(&key).await;
+                    let (code, message) = failed_of(&e);
+                    return Box::pin(finish(db, blobs, claim, Outcome::Failed { code, message }))
+                        .await;
+                }
+            };
+            // The reach asked again too: a result cut for the caller as they were is not theirs once the
+            // forms' marks or their right to design them changed while the job ran.
+            if let Some(stamp) = &reach {
+                let now = crate::projects::reading_of(&mut tx, &a).await?;
+                if now.reach.stamp() != *stamp {
+                    drop(tx);
+                    remove(&key).await;
+                    return Box::pin(finish(
+                        db,
+                        blobs,
+                        claim,
+                        Outcome::Failed {
+                            code: "reach_changed",
+                            message: "Formların gizlediği alanlar ya da form tasarlama yetkiniz iş sürerken değişti; verilen kopya artık sizin görebileceğiniz kopya değil, bu yüzden verilmedi.".into(),
+                        },
+                    ))
+                    .await;
+                }
             }
             let passed: bool = sqlx::query_scalar(
                 "select kentos.finish_job($1, $2, true, $3, $4, $5, $6, null, null)",
@@ -596,7 +815,7 @@ async fn finish(
             if passed {
                 Ok(ServerJobState::Succeeded)
             } else {
-                let _ = blobs.remove(&key).await;
+                remove(&key).await;
                 Ok(ServerJobState::Running)
             }
         }
@@ -605,17 +824,19 @@ async fn finish(
 
 /// Runs jobs until `stop` is set: one after another while there are any, then waiting `idle` between looks; `said`
 /// hears what each claim ended in (the caller logs it).
+#[allow(clippy::too_many_arguments)]
 pub async fn run_worker(
     db: kentos_postgres::Db,
     blobs: Blobs,
     owner: Uuid,
     lease: Duration,
     idle: Duration,
+    limits: JobLimits,
     stop: Arc<AtomicBool>,
     said: impl Fn(AppResult<Worked>),
 ) {
     while !stop.load(Ordering::SeqCst) {
-        match work_once(&db, &blobs, owner, lease).await {
+        match work_once(&db, &blobs, owner, lease, &limits).await {
             Ok(Some(w)) => said(Ok(w)),
             Ok(None) => tokio::time::sleep(idle).await,
             Err(e) => {

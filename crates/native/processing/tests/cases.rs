@@ -2528,6 +2528,10 @@ fn every_case_does_what_it_says() {
 #[path = "cases/surface.rs"]
 mod surface;
 
+// The window's run and cad.processing.run's are one run (docs/adr/0548).
+#[path = "cases/equivalence.rs"]
+mod equivalence;
+
 /// A network built from a drawing of a synthetic grid city (225 × 225 crossings 50 m apart, every block its own
 /// polyline with its speed and a tenth one way): what reading the drawing costs (the definition's layers and
 /// expressions; the desktop does this part on its interface's thread, docs/adr/0209 §12) and the whole build as the

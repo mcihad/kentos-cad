@@ -61,6 +61,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -89,6 +90,8 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
             doc: The drawing it works on.
             tool:
             rows:
+            drawing: As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+                folder (then in the project's search paths), a result written beside it. The host gives it.
             parameters: The values every row takes unless it gives its own.
             selection: As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
             view: Unit: length.
@@ -107,6 +110,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.execute_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -119,6 +123,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -129,6 +134,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.plan_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -141,6 +147,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -151,6 +158,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.validate_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -163,6 +171,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         *,
         tool: str,
         rows: Sequence[BatchRow],
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         view: Sequence[float] | None | Unset = UNSET,
@@ -178,6 +187,7 @@ class _ProcessingBatch(LocalCommand[ProcessingBatch, ProcessingBatched, Processi
         return self.answer_input(doc, ProcessingBatch(
             tool=tool,
             rows=list(rows),
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             view=_opt(view, lambda x: list(x)),
@@ -217,16 +227,26 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
     SHA-256'sı ve tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı
     katmanların kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında
     taşır (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor,
-    zaman). tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet;
-    cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir,
-    adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım
-    çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın
-    record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı
-    değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince
-    aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü,
-    projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve
-    süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje
-    dosyasına yazılmaz.
+    zaman). sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a
+    tablo ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna
+    dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle
+    değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı
+    (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
+    sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
+    SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
+    olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
+    tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
+    eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
+    kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
+    olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
+    modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
+    adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
+    alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
+    1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
+    kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
+    ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
+    ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
+    süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
     """
     __slots__ = ()
     id = "cad.processing.run"
@@ -243,6 +263,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -278,20 +299,32 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         tabloları, inputs'u okunan katmanlar, içeriklerinin özeti ve bağlı katmanların
         kaynak sürümleri; her tablo soyunu GeoPackage'ın metadata uzantısında taşır
         (https://kentos.app/lineage/1: araç, istek, girdiler ve özetleri, motor, zaman).
-        tool “model:” ve modelin kimliği de olabilir (model:builtin.parcelSheet;
-        cad.processing.tools'un models'i listeler): modelin girdileri parametreleridir,
-        adımları sırayla çalışır, hepsi tek geri alma adımıdır (adı modelin adı); bir adım
-        çalışmazsa önceki adımların sonuçları geri alınır, hiçbir şey yazılmaz. Cevabın
-        record'u koşunun kaydıdır (kentos.run-record 1): araç ya da model ve sürümü, aldığı
-        değerler (varsayılanlar doldurulmuş, nesneler kalıcı kimliklerle: aynen verilince
-        aynı işi yeniden çalıştırır), girdi katmanları ve içerik özetleri, çizimin sürümü,
-        projenin koordinat sistemi, varsa tohum, motor ve ev sahibi, başlangıç zamanı ve
-        süresi, her adımın girdi ve çıktı kayıt sayısı ve süresi, kesin toplam. Kayıt proje
-        dosyasına yazılmaz.
+        sink.mode: new (varsayılan: yeni dosya), addTables (var olan GeoPackage'a tablo
+        ekler; aynı adlı tablo table_exists ile reddedilir, dosyanın başka tablosuna
+        dokunulmaz) ya da replaceTables (aynı adlı nesne ya da öznitelik tablosunu yenisiyle
+        değiştirir; başka tabloya dokunulmaz); mode new dışında dosya var olmalı
+        (file_not_found), GeoPackage olarak okunmalı (import_unreadable), çizimin koordinat
+        sistemini taşımalı (crs_mismatch), overwrite verilmez (invalid_input). Tablolar tek
+        SQLite işleminde, beş bin satırlık parçalarla yazılır; hata ya da durdurma (iş
+        olarak çalışırken) dosyayı olduğu gibi bırakır. Cevabın sinkReport'u kipi, her
+        tablonun satırlarını, geometri türünü, Z ve M'ini, sütunlarının öznitelikleriyle
+        eşlemesini, dosyanın dokunulmayan tablolarını ve parça sayısını söyler; satırların
+        kalıcı kimlikleri kentos_uids tablosundadır. tool “model:” ve modelin kimliği de
+        olabilir (model:builtin.parcelSheet; cad.processing.tools'un models'i listeler):
+        modelin girdileri parametreleridir, adımları sırayla çalışır, hepsi tek geri alma
+        adımıdır (adı modelin adı); bir adım çalışmazsa önceki adımların sonuçları geri
+        alınır, hiçbir şey yazılmaz. Cevabın record'u koşunun kaydıdır (kentos.run-record
+        1): araç ya da model ve sürümü, aldığı değerler (varsayılanlar doldurulmuş, nesneler
+        kalıcı kimliklerle: aynen verilince aynı işi yeniden çalıştırır), girdi katmanları
+        ve içerik özetleri, çizimin sürümü, projenin koordinat sistemi, varsa tohum, motor
+        ve ev sahibi, başlangıç zamanı ve süresi, her adımın girdi ve çıktı kayıt sayısı ve
+        süresi, kesin toplam. Kayıt proje dosyasına yazılmaz.
 
         Args:
             doc: The drawing it works on.
             tool:
+            drawing: The open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+                folder (then in the project's search paths), a result written beside it. The host gives it.
             parameters:
             selection: The objects the run takes as chosen (persistent ids, in order): a features input's `selection` scope.
             sink: Where the result goes instead of the drawing (docs/adr/0508 §4): a new GeoPackage.
@@ -310,6 +343,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.execute_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -322,6 +356,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -332,6 +367,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.plan_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -344,6 +380,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -354,6 +391,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.validate_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,
@@ -366,6 +404,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         /,
         *,
         tool: str,
+        drawing: str | None | Unset = UNSET,
         parameters: Mapping[str, Any] | None | Unset = UNSET,
         selection: Sequence[str] | Unset = UNSET,
         sink: RunSink | None | Unset = UNSET,
@@ -381,6 +420,7 @@ class _ProcessingRun(LocalCommand[ProcessingRun, ProcessingRan, ProcessingRan]):
         """
         return self.answer_input(doc, ProcessingRun(
             tool=tool,
+            drawing=drawing,
             parameters=_opt(parameters, lambda x: dict(x)),
             selection=_opt(selection, lambda x: list(x)),
             sink=sink,

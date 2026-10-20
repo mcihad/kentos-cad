@@ -101,6 +101,8 @@ pub enum Settle {
             String,
         )>,
     ),
+    /// An export job of the open project, asked once its edits went (catalog_jobs.rs).
+    Job(Box<kentos_commands::ProjectSummary>),
     /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
     Convert(
         Box<(
@@ -357,6 +359,7 @@ impl App {
                 let (p, input) = *what;
                 self.checkpoint_send(&p, input)
             }
+            Some(Settle::Job(p)) => self.jobs_send_export(&p),
             Some(Settle::Metadata(what)) => self.metadata_renamed(*what, sent),
             Some(Settle::Convert(what)) => {
                 let (p, input) = *what;

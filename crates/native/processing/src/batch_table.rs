@@ -242,6 +242,7 @@ pub fn input(
         rows,
         selection,
         view,
+        drawing: None,
     })
 }
 

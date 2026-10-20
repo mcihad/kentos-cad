@@ -194,38 +194,16 @@ mod tests {
 /// The text a hidden value is written as (docs/adr/0443 §2).
 pub const HIDDEN: &str = "‹gizli›";
 
-/// The layer fields' keys and names the project's forms keep out of the recorder's examples (a field
-/// item's `redact`, in any form's draft or release).
+/// The layer fields' keys and names the project's forms keep out of the recorder's examples, a table's
+/// file, a statistic, a chart and an atlas (a field item's `redact`, in any form's draft or release):
+/// the one resolver's list (`kentos_forms::reach::redacted_names`, docs/adr/0550), the same one the
+/// server cuts a copy by. A local drawing's owner reads every value on screen; what leaves is cut.
 pub fn redacted_names(doc: &kentos_domain::Document) -> Vec<String> {
-    let mut out: Vec<String> = Vec::new();
-    for form in &doc.settings().forms {
-        let fields = doc
-            .layers()
-            .get(&form.layer)
-            .map(|n| n.fields.clone())
-            .unwrap_or_default();
-        let bodies = std::iter::once(&form.draft).chain(form.releases.iter().map(|r| &r.body));
-        for body in bodies {
-            for (_, item) in body.walk() {
-                if let kentos_commands::FormItem::Field(f) = item
-                    && f.redact
-                {
-                    let names = std::iter::once(f.field.clone()).chain(
-                        fields
-                            .iter()
-                            .filter(|l| l.key() == f.field)
-                            .map(|l| l.name.clone()),
-                    );
-                    for n in names {
-                        if !out.contains(&n) {
-                            out.push(n);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    out
+    let layers = doc.layers();
+    let empty: &[kentos_commands::LayerField] = &[];
+    kentos_forms::reach::redacted_names(&doc.settings().forms, |layer| {
+        layers.get(layer).map_or(empty, |n| n.fields.as_slice())
+    })
 }
 
 /// `input` with every text value under a hidden name written as [`HIDDEN`]: a call's values, attributes,

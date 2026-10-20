@@ -54,6 +54,8 @@ pub(super) enum Chip {
     Kind,
     Open,
     Trashed,
+    /// A failed job: the same red as the trash.
+    Danger,
     Plain,
 }
 
@@ -67,7 +69,7 @@ pub(super) fn chip<'a>(text: impl Into<String>, kind: Chip) -> Element<'a, Messa
                 iced::widget::text::Style {
                     color: Some(match kind {
                         Chip::Open => t.accent_hover,
-                        Chip::Trashed => t.danger,
+                        Chip::Trashed | Chip::Danger => t.danger,
                         Chip::Kind | Chip::Plain => t.muted,
                     }),
                 }
@@ -81,7 +83,7 @@ pub(super) fn chip<'a>(text: impl Into<String>, kind: Chip) -> Element<'a, Messa
             border: Border {
                 color: match kind {
                     Chip::Open => t.accent,
-                    Chip::Trashed => t.danger,
+                    Chip::Trashed | Chip::Danger => t.danger,
                     Chip::Kind | Chip::Plain => t.border,
                 },
                 width: 1.0,

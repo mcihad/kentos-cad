@@ -150,11 +150,11 @@ impl App {
         let Some(doc) = &self.document else {
             return (Vec::new(), Vec::new(), 0);
         };
+        // The columns the table shows, as a copy of it writes them (docs/adr/0546 §1).
         let fields: Vec<String> = rows
-            .table
-            .columns
+            .visible
             .iter()
-            .filter_map(|c| c.key.clone())
+            .filter_map(|&j| rows.table.columns[j].key.clone())
             .collect();
         let objects: Vec<String> = rows
             .shown

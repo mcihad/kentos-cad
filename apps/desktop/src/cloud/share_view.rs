@@ -184,6 +184,7 @@ impl App {
                 list.admins_access_all_projects,
             )));
         }
+        panel = panel.push(note(people::COPIES));
         panel.into()
     }
 }

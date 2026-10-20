@@ -20,4 +20,9 @@ parameters?: Record<string, unknown>, rows: Array<BatchRow>,
 /**
  * As `cad.processing.run`'s: the objects every row takes as chosen, and the box it takes as on screen.
  */
-selection?: Array<string>, view?: [number, number, number, number], };
+selection?: Array<string>, view?: [number, number, number, number], 
+/**
+ * As `cad.processing.run`'s: the open drawing's own file, an absolute path, when it has one: a raster's relative path is found from its
+ * folder (then in the project's search paths), a result written beside it. The host gives it.
+ */
+drawing?: string, };

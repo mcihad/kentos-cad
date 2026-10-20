@@ -223,11 +223,18 @@ Liste:
   `copyFile` adımı web'in oynatıcısında, Kaynakla uzlaştır penceresi.
 - [ ] `CBS-34` veri profilleri (ADR 0541, 20 Ekim): web'de gerekenler: `cad.profiles.apply` ve `.check`'in işleyicileri (ya da
   WASM), Veri profili penceresi, `catalog/v1/profiles/`'ın web'in paketine girmesi; profil verisi ve kurallar ortaktır.
+- [ ] `CBS-38` tek çözücü (ADR 0550, 20 Ekim): web'de gerekenler: Veri girişi için olay süzmesinin (kapsam dışı kayıt silme olarak
+  gelir) ve çakışmada 404'ün istemci tarafı, saklı kopya reddinin iletisi, `reach_changed` iş kodu ve Projeyi paylaş'ın Kişiler notu
+  (`people::COPIES`); `redact` işaretinin son yayın kuralı web'in form tasarımcısında; sunucu ve çözücü ortaktır.
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
-  sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da).
+  sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da); 0547: Sunucu işleri sekmesi (iş türleri `project.export` ve `project.checkpoint`, durum çipi,
+  ilerleme, Durdur, İndir (Range), `quota_exceeded`, `too_large`, `storage`, `archived` iletileri); kurallar `kentos_cloud::server_jobs`'ta (web'e TS karşılığı).
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar (ADR 0546, 20 Ekim): web'de gerekenler: Sütunlar ▾, Kopyala, formda
+  `redact`'lı alanın kopyaya, dosyaya, İstatistik'e ve Grafik'e girmemesi, İncele ▾ ve Göster ▾'in Tablonun süzgeciyle'si; bağlı katman
+  web'e gelince tablonun Kaynak satırı.
 - [ ] `CBS-40` Kaynak durumu (ADR 0543, 20 Ekim): web'de gerekenler: bağlı katmanlar web'e dönünce Kaynak durumu penceresi (durumun
   `objects`, `rows`, `total`, `next`'i ve satırın düğmesi); kural ve komut ortaktır.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
@@ -286,6 +293,11 @@ Liste:
 - [ ] `CBS-19` bağlı görünümler ve tema (ADR 0523, 19 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok; geri dönüşte iki
   görünüm, görünüm başına tema (katman durumunun ağaç kopyası), Bağla ve kaydırmalı karşılaştırma; depo `labels_shown_in`'i
   WASM bağlayıcısına açar.
+- [ ] `CBS-05` GML ve XYZ (ADR 0545, 20 Ekim): web'de gerekenler: `file.export.gml`, `file.import.gml` ve `file.export.xyz`'in
+  işleyicileri biçim işçisinde (`gml_read`, `gml_write`, `gml_table`, `xyz_table`'ın WASM bağlayıcısı; `.xsd` ve `.gfs` okumada seçilen
+  dosyalardan, yazmada indirmede yanında), GML içe/dışa aktar ve XYZ dışa aktar pencereleri; TS türleri üretildi.
+- [ ] `CBS-23` var olan GeoPackage'a yazma (ADR 0549, 20 Ekim): web'de `cad.processing.run`'ın `sink.mode`'u, `sinkReport` ve
+  `table_exists` yok (web'in işlem çalıştırıcısında GeoPackage yazma zaten yok); üretilen TS türleri güncel.
 - [ ] `CBS-05` FlatGeobuf (ADR 0544, 20 Ekim): web'de gerekenler: `file.export.fgb` ve `file.import.fgb`'nin işleyicileri biçim
   işçisinde (`kentos_geopackage::fgb` ve `fgb_table`'ın WASM bağlayıcısı), FlatGeobuf içe ve dışa aktar pencereleri; TS türleri
   üretildi.
@@ -2009,6 +2021,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar ve kaynak satırı (dilim): Sütunlar ▾, Kopyala, Dışa aktar gösterilen
+  sütunlarla, formda `redact`'lı alan dışarı çıkmaz; İstatistik ve Grafik Tablonun süzgeciyle; bağlı katmanın tablosunda Kaynak satırı.
+  Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar (ADR 0546 §4'ün tasarımı), sütun başlığı menüsü, alan yetkisinin
+  ortak çözücüsü (CBS-38), bilgi kartında kaynak satırı. — **20 Ekim, [ADR 0546](docs/adr/0546-attribute-table-outgoing-and-source-line.md).**
+- [ ] `CBS-41` kapsam matrisi ve eşdeğerlik (dilim): `scripts/gis/coverage.py` (işlem + seçenek + veri türü + ev sahibi, kanıtı ortak
+  durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 420 durumu (raster dosyaları bayt bayt) pencereden ve `cad.processing.run`'dan
+  oynatır, ikisi aynı; ev sahibi `drawing` alanlı komutlara açık çizimin dosyasını verir (`with_own_file`). Kalan: nokta bulutu
+  ve çok boyutlu araçların başsız yolu, `cad.processing.run`'ın çağrı kaydı, açık seçenek hücreleri. — **20 Ekim,
+  [ADR 0548](docs/adr/0548-coverage-matrix-and-run-equivalence.md).**
 - [ ] `CBS-43` servisten veri almanın bitişi ve OGC API süzgeç profili (dilim): `feed::Ending`, `profile::FeedProfile`,
   `FeedConnecting::conformance_request`; masaüstünde Uygunluk satırı ve kayan form; Python `Taken.ending`, teklifin `profile`'ı;
   `feed_paging_cases.py`, `tests/all/paging.rs`, `test_services.py`. Kalan: canlı sağlayıcı, ETag, belirteç yenileme. — **18 Ekim,
@@ -2029,6 +2050,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   kutu 0,6 ms; `docs/perf/provider-2026-10-18.md`); katmanın özeti ve dosyanın SHA-256'sı akışla, yeni katmana bağlamada satırlar
   bir kez (100 000 parselde 1,3 GB'tan 323 MB'a). Kalan: görünür küme ve sayfalar, çizim alanının süreleri, soğuk önbellek, ağ,
   stres. — **18 Ekim, [ADR 0509](docs/adr/0509-provider-baseline-and-link-memory.md).**
+- [ ] `CBS-23` var olan GeoPackage'a yazma (dilim): `sink.mode` `new`, `addTables`, `replaceTables` (öbür tablolara dokunulmaz, aynı ad
+  `table_exists`); tek SQLite işleminde 5000 satırlık gruplarla, her soru noktasında iptalde dosya bayt bayt eskisi; yanıtta
+  `sinkReport`; GeoPackage 1.4 dosyasına 1.4 tetikleriyle; 77 ortak durum. Kalan: girdiyi kaynaktan sayfa sayfa okuma (araçların
+  akışlı hesabıyla), masaüstü İşlemler penceresinde sink seçeneği, PostGIS'e yazma. — **20 Ekim,
+  [ADR 0549](docs/adr/0549-processing-into-existing-geopackage.md).**
 - [ ] `CBS-23` sonucu dosyaya yazma (ilk dilim): `cad.processing.run`'ın `sink`'i (yeni GeoPackage, bütün ya da hiç, çizim
   değişmez, soy `inputs`); G1 dosyaya yazılıp OGR'la denetlenir (`processing_sink_cases.py`). Kalan: var olan dosyaya ekleme,
   akış ve parça parça yazma, ara depo, iptal, PostGIS. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md) §4.**
@@ -2044,6 +2070,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   penceresi. Kalan: kurumun profilinin içe alınması ve sürüm göçü, kurum eşlemeleri, adres normalizasyonu ve yinelenen adres kodunun
   Adres sekmesinde gösterilmesi, ifraz, tevhit, hisse ve PlanGML, gerçek kullanıcılarla günlük kullanım kabulü (CBS-40).
   — **20 Ekim, [ADR 0541](docs/adr/0541-data-profiles.md).**
+- [ ] `CBS-38` yetki kapsamı (dilim 2): tek çözücü `kentos_forms::reach` (çağıran sınıfı, alan düzeyi gizli/işaretli/açık, kayıt
+  sorgusu, kopya kuralı, damga; 16 ortak durum bağımsız Python başvurusundan). Sunucuda Veri girişinin sayısı ve sınırı, olayları
+  (kapsam dışı kayıt sürümsüz silme), çakışması (404), formun liste değerleri ve geçmiş sayıları; bütün formları kaldırılmış katman
+  hiçbir şey vermez. `redact` alan projenin görüntüsünden ve `project.export` işinden kesilir (tasarımcı hariç); saklı kopya yalnız
+  kesilmeden alabilene; dışa aktarma işi kesinleşmede damgayı yeniden sorar (`reach_changed`). Yerel çizim ve başsız sunucu tüm hak,
+  indirilmiş kopya geri alınamaz. Kalan: kapsamın SQL'e itilmesi, ayrı olay günlüğü, saklı kopyaların kesilebilmesi, kaynak ve
+  dataset yetkileri, AI bağlamı ve önbellekler. — **20 Ekim, [ADR 0550](docs/adr/0550-one-reach-resolver.md).**
 - [ ] `CBS-38` yetki kapsamı (dilim): Veri girişinin satır kapsamı. Formun `scope`'u (alanlar ve `@` değerleri; `@kullanici_eposta`),
   `kentos_forms::scope` (canlı formlardan biri ulaşırsa; boş, yanlış ve derlenmeyen kapsam hiçbir şey vermez), `form_scope_invalid`,
   sürüm farkında Kapsam; sunucuda Veri girişinin okuması, sayımı ve kimlikle okuması kapsamla süzülür, kapsam dışına yazma 404, kapsam
@@ -2054,9 +2087,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   revizyon, istek kimliğiyle tek iş, durum ve ilerleme, deneme ve süre sınırı; işçi kira ve çitle (`claim_job`, `beat_job`,
   `finish_job`), ölen işçinin işi sonrakine geçer, eski çitin bitirmesi geçmez; `project.export` sonucu önce nesne deposuna yazar,
   bitirme isteyen kullanıcı olarak yetkiyi ve revizyonu yeniden sorar, geçmezse dosya silinir, sahipsiz dosyayı temizlik siler; iptal;
-  yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. Kalan:
-  başka iş türleri, CPU, bellek ve disk kotası, masaüstünde işler listesi, önbellek anahtarı, yedek ve geri yükleme tatbikatı, ölçümler.
-  — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md).**
+  yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. 2. dilim:
+  kurum başına iş sınırı (`quota_exceeded`), dosya boy sınırı (`too_large`), yazılamayan depo (`storage`), biten işin saklama süpürmesi
+  (göç 0030), `kentosd jobs` ölçümleri, `project.checkpoint` iş türü, iş dosyasında Range; masaüstünde katalogda Sunucu işleri sekmesi
+  (iste, listele, yokla, Durdur, İndir; pencere kapanınca iş kalır); Python `checkpoint_job`. Kalan: başka iş türleri (sunucuda İşlemler
+  aracı, büyük içe aktarma, atlas PDF'i), CPU ve bellek kotası, işçinin ilerleme yazması, önbellek anahtarı, yedek ve geri yükleme
+  tatbikatı. — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md) ve [ADR 0547](docs/adr/0547-server-jobs-limits-and-desktop.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik
@@ -2180,6 +2216,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   alışverişi › CSV içe aktar… ve CSV dışa aktar…; Python ve MCP; bağımsız denetim `csv_exchange_cases.py` (GDAL ve OGR, 21
   durum). Kalan: GML, FlatGeobuf, GeoParquet, XYZ yazımı, staging, reddedilen satırlar, upsert. — **19 Ekim,
   [ADR 0522](docs/adr/0522-csv-tables.md).**
+- [ ] `CBS-05` GML ve XYZ (dilim): `file.export.gml` (GML 3.2, her katman bir nesne türü, yanında `.xsd`; yaylar kesin; srsName ve
+  EPSG eksen sırası; `posList`'te boyut), `file.import.gml` (GML 2, 3.1, 3.2; featureMember, featureMembers, member; türler `.xsd`,
+  `.gfs` ya da değerlerden; xsi:nil boş değer, boş öğe boş metin; eksen sırası srsName'den, CRS84; GeoPackage alma yolundan, tek adım)
+  ve `file.export.xyz` (noktalar ya da bütün köşeler; ayırıcı, basamak, başlık, kotsuz konum); çekirdek
+  `kentos_native_application::{gml_read, gml_write, gml_table, xyz_table}`; masaüstünde Veri › Dosya alışverişi › GML içe aktar…, GML
+  dışa aktar…, XYZ dışa aktar…; Python ve MCP; bağımsız denetim `gml_exchange_cases.py` (OGR, 35 durum). Kalan: GeoParquet (kitaplık:
+  sahibin onayı), staging, upsert, GMLAS'ın karmaşık içeriği. — **20 Ekim, [ADR 0545](docs/adr/0545-gml-and-xyz.md).**
 - [ ] `CBS-05` FlatGeobuf (dilim): kendi kodeğimiz `kentos_geopackage::fgb` (FlatBuffers'ı ileri yönde yazan ve sınırlarıyla okuyan,
   paketli Hilbert R-ağacı; yaylar CircularString, CompoundCurve, CurvePolygon, MultiCurve, MultiSurface olarak kesin, Z ve M; NULL ile
   boş metin ayrı), `file.export.fgb` (tek dosya, `katman` sütunu, EPSG; konumsuz kayıt varsa dizinsiz) ve `file.import.fgb`
