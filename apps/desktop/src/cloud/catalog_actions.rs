@@ -70,6 +70,8 @@ pub enum Fetch {
     Project,
     Revision(String),
     Checkpoint(String),
+    /// A succeeded server job's file (docs/adr/0547).
+    Job(String),
 }
 
 /// A download: what it fetches, its name (the save window's and the
@@ -575,6 +577,13 @@ impl App {
                 };
                 client
                     .checkpoint_file(tenant, project, checkpoint, Some(progress))
+                    .await?
+            } else if let Fetch::Job(job) = &what {
+                let Some(job) = uuid(job) else {
+                    return Err(ApiFailure::new(0, "local", "İşin kimliği okunamadı."));
+                };
+                client
+                    .server_job_artifact(tenant, project, job, Some(progress))
                     .await?
             } else if storage == ProjectStorage::File {
                 // A file project's newest revision.

@@ -154,7 +154,7 @@ pub async fn list(
 
 /// The start of an open-ended byte range (`Range: bytes=N-`): the only kind
 /// a download goes on with; anything else is answered with the whole file.
-fn range_start(headers: &HeaderMap) -> Option<u64> {
+pub(crate) fn range_start(headers: &HeaderMap) -> Option<u64> {
     let text = headers.get(header::RANGE)?.to_str().ok()?.trim();
     let (start, end) = text.strip_prefix("bytes=")?.split_once('-')?;
     if !end.trim().is_empty() {

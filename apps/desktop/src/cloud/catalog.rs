@@ -24,6 +24,7 @@ use kentos_commands::{
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::catalog_actions::{Act, Acting};
 use crate::cloud::catalog_history::History;
+use crate::cloud::catalog_jobs::Jobs;
 use crate::cloud::{Event, plan, uuid, words};
 
 /// Projects asked for at once (the web's page).
@@ -81,12 +82,14 @@ pub enum Step {
     End,
 }
 
-/// The selected project's two tabs.
+/// The selected project's tabs: Bilgiler, Geçmiş and, on the desktop, Sunucu işleri (docs/adr/0547; the shared
+/// plan keeps the web's two).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Tab {
     #[default]
     Info,
     History,
+    Jobs,
 }
 
 /// The line under the list: what an action did, or why it failed.
@@ -151,12 +154,21 @@ pub struct Catalog {
     pub(super) acting: Option<Acting>,
     /// The Geçmiş tab (catalog_history.rs).
     pub history: History,
+    /// The Sunucu işleri tab (catalog_jobs.rs).
+    pub jobs: Jobs,
     /// A project made here to select once the list shows it, and whether to
     /// open it then (the web's `wanted` and `openAfter`).
     pub(super) wanted: Option<(String, bool)>,
     /// A project form over the window (catalog_forms.rs), and its request on its way.
     pub form: Option<crate::cloud::catalog_forms::Form>,
     pub(super) form_asked: Option<crate::cloud::catalog_forms::Asked>,
+}
+
+impl App {
+    /// After the selection or the tab changed: the shown tab's data asked, the hidden tabs' let go.
+    pub(crate) fn tabs_follow(&mut self) -> Task<Message> {
+        Task::batch([self.history_follow(), self.jobs_follow()])
+    }
 }
 
 impl Catalog {
@@ -305,6 +317,7 @@ impl App {
             asking: None,
             acting: None,
             history: History::default(),
+            jobs: Jobs::default(),
             wanted: pick.map(|(id, _)| (id, false)),
             form: None,
             form_asked: None,
@@ -464,7 +477,7 @@ impl App {
                 c.select(None);
                 c.status = None;
                 let load = self.catalog_load(false);
-                return Task::batch([load, self.history_follow()]);
+                return Task::batch([load, self.tabs_follow()]);
             }
             Event::CatalogSearch(text) => {
                 c.search = text;
@@ -484,7 +497,7 @@ impl App {
             }
             Event::CatalogPick(id) => {
                 c.select(Some(id));
-                return self.history_follow();
+                return self.tabs_follow();
             }
             // ↑ ↓ Home End in the list (the web's list keys).
             Event::CatalogStep(step) => {
@@ -507,11 +520,11 @@ impl App {
                     (Step::Up, Some(i)) => i.saturating_sub(1),
                 };
                 c.select(Some(ids[next].clone()));
-                return self.history_follow();
+                return self.tabs_follow();
             }
             Event::CatalogTab(tab) => {
                 c.tab = tab;
-                return self.history_follow();
+                return self.tabs_follow();
             }
             Event::CatalogHover(id) => c.hovered = id,
             Event::CatalogMore => {
@@ -616,7 +629,7 @@ impl App {
                 }
                 page(c, more, result);
                 let made = self.catalog_listed();
-                return Task::batch([made, self.history_follow(), self.came_online()]);
+                return Task::batch([made, self.tabs_follow(), self.came_online()]);
             }
             _ => {}
         }

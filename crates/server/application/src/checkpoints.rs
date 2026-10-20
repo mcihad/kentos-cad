@@ -82,7 +82,7 @@ fn checkpoint_of(row: &CheckpointRow) -> Checkpoint {
 
 /// A checkpoint's name as it is kept: trimmed, 1 to [`CHECKPOINT_NAME_MAX`]
 /// characters, on one line.
-fn name_of(name: &str) -> AppResult<String> {
+pub(crate) fn name_of(name: &str) -> AppResult<String> {
     let name = name.trim();
     let count = name.chars().count();
     if count == 0 || count > CHECKPOINT_NAME_MAX {
@@ -104,7 +104,7 @@ fn name_of(name: &str) -> AppResult<String> {
 
 /// A note as it is kept: trimmed, at most [`CHECKPOINT_NOTE_MAX`]
 /// characters, lines and tabs allowed; an empty one is none.
-fn note_of(note: Option<String>) -> AppResult<Option<String>> {
+pub(crate) fn note_of(note: Option<String>) -> AppResult<Option<String>> {
     let Some(note) = note else {
         return Ok(None);
     };

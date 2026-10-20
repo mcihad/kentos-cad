@@ -233,6 +233,30 @@ class ProjectRef:
         answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
         return answer
 
+    def checkpoint_job(
+        self,
+        name: str,
+        *,
+        note: str | None = None,
+        request_id: str | None = None,
+        timeout_seconds: int | None = None,
+    ) -> dict[str, Any]:
+        """Asks the server to make a checkpoint of the project (``project.checkpoint``; docs/adr/0547). The job's
+        ``result`` holds the checkpoint; the same ``request_id`` sent again gives the same job, and the checkpoint
+        is made once even if the worker that began it is lost."""
+        input_: dict[str, Any] = {"name": name}
+        if note:
+            input_["note"] = note
+        body: dict[str, Any] = {
+            "kind": "project.checkpoint",
+            "input": input_,
+            "requestId": request_id or str(uuid.uuid4()),
+        }
+        if timeout_seconds is not None:
+            body["timeoutSeconds"] = timeout_seconds
+        answer: dict[str, Any] = self.connection._request("POST", self._jobs(), body)
+        return answer
+
     def jobs(self) -> list[dict[str, Any]]:
         """The project's server jobs, newest first."""
         answer: dict[str, Any] = self.connection._request("GET", self._jobs())
@@ -263,7 +287,8 @@ class ProjectRef:
             time.sleep(every)
 
     def job_artifact(self, job: str) -> bytes:
-        """A succeeded export's file; ``Document.from_bytes`` opens it."""
+        """A succeeded export's file; ``Document.from_bytes`` opens it. A server that limits an organisation's jobs
+        answers a request past the limit with ``ServerError`` (code ``quota_exceeded``, ``retryable``)."""
         return self.connection._bytes(f"{self._jobs()}/{urllib.parse.quote(job, safe='')}/artifact")
 
     def _command(

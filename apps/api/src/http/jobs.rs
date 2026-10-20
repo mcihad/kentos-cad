@@ -5,7 +5,7 @@
 use axum::Json;
 use axum::body::Body;
 use axum::extract::{Path, State};
-use axum::http::{HeaderMap, StatusCode};
+use axum::http::{HeaderMap, HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
 use kentos_application::{AppError, jobs};
 use kentos_contracts::{ServerJob, ServerJobCreate, ServerJobList};
@@ -14,7 +14,7 @@ use uuid::Uuid;
 use super::AppState;
 use super::auth::Caller;
 use super::error::{Body as JsonBody, Failure};
-use super::files::{FileBody, kcad_headers};
+use super::files::{FileBody, kcad_headers, range_start};
 use super::projects::project_access;
 
 fn job_id(text: &str) -> Result<Uuid, AppError> {
@@ -31,7 +31,7 @@ pub async fn create(
 ) -> Result<(StatusCode, Json<ServerJob>), Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        jobs::create(state.db()?, &a, input).await
+        jobs::create(state.db()?, &a, input, &state.config.job_limits).await
     };
     run.await
         .map(|j| (StatusCode::CREATED, Json(j)))
@@ -81,7 +81,8 @@ pub async fn cancel(
 }
 
 /// `GET …/projects/{project}/jobs/{job}/artifact`: a succeeded export's file (`project.download`), its SHA-256 as the
-/// entity tag and the revision it shows.
+/// entity tag and the revision it shows. An artifact never changes, so a download cut short goes on from where it
+/// stopped: `Range: bytes=N-` answers the rest (206) (docs/adr/0045, 0547).
 pub async fn artifact(
     State(state): State<AppState>,
     headers: HeaderMap,
@@ -90,24 +91,56 @@ pub async fn artifact(
 ) -> Result<Response, Failure> {
     let run = async {
         let a = project_access(&state, &caller, &tenant, &project).await?;
-        let (job, file) = jobs::artifact(state.db()?, &state.blobs, &a, job_id(&job)?).await?;
-        let artifact = job.artifact.clone().unwrap_or_else(|| kentos_contracts::ServerJobArtifact {
-            size: String::new(),
-            sha256: String::new(),
-            name: format!("{}.kcad", a.name),
-        });
+        let (job, mut file) = jobs::artifact(state.db()?, &state.blobs, &a, job_id(&job)?).await?;
+        let artifact =
+            job.artifact
+                .clone()
+                .unwrap_or_else(|| kentos_contracts::ServerJobArtifact {
+                    size: String::new(),
+                    sha256: String::new(),
+                    name: format!("{}.kcad", a.name),
+                });
         let revision = job
             .result
             .as_ref()
             .and_then(|r| r["revision"].as_str())
             .unwrap_or_default()
             .to_owned();
+        let size: u64 = artifact.size.parse().unwrap_or(0);
+        let start = range_start(&headers).filter(|s| *s > 0);
+        if let Some(s) = start
+            && s >= size
+        {
+            let mut response = StatusCode::RANGE_NOT_SATISFIABLE.into_response();
+            if let Ok(v) = HeaderValue::from_str(&format!("bytes */{size}")) {
+                response.headers_mut().insert(header::CONTENT_RANGE, v);
+            }
+            return Ok(response);
+        }
+        if let Some(s) = start {
+            use tokio::io::AsyncSeekExt as _;
+            file.seek(std::io::SeekFrom::Start(s))
+                .await
+                .map_err(AppError::Storage)?;
+        }
         let mut response = Body::new(FileBody::new(file)).into_response();
         let h = response.headers_mut();
-        if let Ok(v) = axum::http::HeaderValue::from_str(&artifact.size) {
-            h.insert(axum::http::header::CONTENT_LENGTH, v);
+        h.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+        match start {
+            Some(s) => {
+                h.insert(header::CONTENT_LENGTH, HeaderValue::from(size - s));
+                if let Ok(v) = HeaderValue::from_str(&format!("bytes {s}-{}/{size}", size - 1)) {
+                    h.insert(header::CONTENT_RANGE, v);
+                }
+            }
+            None => {
+                h.insert(header::CONTENT_LENGTH, HeaderValue::from(size));
+            }
         }
         kcad_headers(h, &artifact.sha256, &revision, &artifact.name);
+        if start.is_some() {
+            *response.status_mut() = StatusCode::PARTIAL_CONTENT;
+        }
         Ok(response)
     };
     run.await.map_err(|e| Failure::with(e, &headers))

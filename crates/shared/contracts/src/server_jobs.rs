@@ -1,7 +1,8 @@
 //! Durable server jobs (docs/adr/0542; plan/gis.md CBS-39): a job a user asks the server to run for a project, its
 //! state, progress, attempts and staged artifact. The input is kept as given with its SHA-256 and the project's data
 //! revision when asked; a worker claims it with a lease and a fence, and finishes it as the user who asked, with the
-//! access asked again. The kinds are the server's own: today `project.export`, the project as one `.kcad` file.
+//! access asked again. The kinds are the server's own: `project.export`, the project as one `.kcad` file, and
+//! `project.checkpoint`, a checkpoint made as a job (docs/adr/0547).
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -9,11 +10,21 @@ use serde_json::Value;
 use ts_rs::TS;
 
 /// The kinds of server jobs.
-pub const SERVER_JOB_KINDS: &[&str] = &[PROJECT_EXPORT_JOB];
+pub const SERVER_JOB_KINDS: &[&str] = &[PROJECT_EXPORT_JOB, PROJECT_CHECKPOINT_JOB];
+/// A checkpoint made as a job (docs/adr/0547): the input is a [`CheckpointCreate`](crate::CheckpointCreate), the
+/// result the [`CheckpointChange`](crate::CheckpointChange) the command answered, no artifact.
+pub const PROJECT_CHECKPOINT_JOB: &str = "project.checkpoint";
 /// The project (a database project) as one KCAD v2 file, staged in the object store.
 pub const PROJECT_EXPORT_JOB: &str = "project.export";
 /// The most jobs one listing gives.
 pub const SERVER_JOB_LIST_MAX: usize = 100;
+/// How many jobs one organisation may have queued and running together, unless the server says otherwise
+/// (`KENTOS_JOB_LIMIT`), and the biggest artifact a job may stage, in bytes (`KENTOS_JOB_ARTIFACT_MAX_MB`).
+pub const SERVER_JOB_TENANT_ACTIVE_DEFAULT: u32 = 50;
+pub const SERVER_JOB_ARTIFACT_MAX_DEFAULT: u64 = 2 * 1024 * 1024 * 1024;
+/// How many days a finished job (and its artifact) is kept unless the server says otherwise
+/// (`KENTOS_JOB_RETENTION_DAYS`).
+pub const SERVER_JOB_RETENTION_DAYS_DEFAULT: u64 = 14;
 /// The longest time a job may run, in seconds, and its default.
 pub const SERVER_JOB_TIMEOUT_MAX: u32 = 86_400;
 pub const SERVER_JOB_TIMEOUT_DEFAULT: u32 = 600;
@@ -98,7 +109,8 @@ pub struct ServerJobArtifact {
 #[serde(rename_all = "camelCase")]
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ServerJobError {
-    /// `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` or `failed`.
+    /// `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
+    /// not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`.
     pub code: String,
     pub message: String,
 }
