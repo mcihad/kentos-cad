@@ -17202,6 +17202,37 @@ class ExportPdf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportQml(_Model):
+    """Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is
+    for one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).
+    Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no
+    class or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.qml`.
+        layer: The layer's id.
+        overwrite: Write over a file that is there.
+    """
+    path: str
+    layer: str
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layer"] = self.layer
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportQml:
+        return cls(
+            path=data["path"],
+            layer=data["layer"],
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportReport(_Model):
     """What a writer did besides writing: counts, and anything it could not write as it was.
     Attributes:
@@ -22404,6 +22435,45 @@ class ImportPdf(_Model):
             strokes=data.get("strokes", UNSET),
             texts=data.get("texts", UNSET),
             tolerance=UNSET if "tolerance" not in data else None if data["tolerance"] is None else float(data["tolerance"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportQml(_Model):
+    """Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo
+    step “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,
+    in order:
+    `invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,
+    `not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.
+    Attributes:
+        layer: The layer's id.
+        expected_revision: The document revision the input was prepared against, as decimal text.
+        path: An absolute path to a `.qml`.
+        text: The QML itself, instead of a path.
+    """
+    layer: str
+    expected_revision: str | None | Unset = UNSET
+    path: str | None | Unset = UNSET
+    text: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.path is not UNSET:
+            out["path"] = self.path
+        if self.text is not UNSET:
+            out["text"] = self.text
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportQml:
+        return cls(
+            layer=data["layer"],
+            expected_revision=data.get("expectedRevision", UNSET),
+            path=data.get("path", UNSET),
+            text=data.get("text", UNSET),
         )
 
 
@@ -34493,6 +34563,88 @@ class ProjectVariable(_Model):
             kind=_enum_in(VariableKind, data["kind"]) if "kind" in data else VariableKind.TEXT,
             label=data.get("label", UNSET),
             value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QmlExported(_Model):
+    """What `file.export.qml` wrote (or with `plan` would write).
+    Attributes:
+        rules: Classes and rules written. Unit: count.
+        bytes: Unit: bytes.
+        lost: What the QML could not say, a sentence each.
+    """
+    path: str
+    layer: str
+    rules: int
+    bytes: int
+    sha256: str
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["layer"] = self.layer
+        out["rules"] = self.rules
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QmlExported:
+        return cls(
+            path=data["path"],
+            layer=data["layer"],
+            rules=data["rules"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            lost=list(data["lost"]) if "lost" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class QmlImported(_Model):
+    """What `file.import.qml` made the layer's look.
+    Attributes:
+        kind: The renderer's type: `single`, `categorized`, `graduated` or `rules`.
+        rules: Classes and rules taken. Unit: count.
+        renderer: The renderer as the layer now has it.
+        changed: Whether the layer's look changed (an undo step was written).
+        revision: The document's revision after the write, as decimal text.
+        lost: What KentOS could not take, a sentence each.
+    """
+    layer: str
+    kind: str
+    rules: int
+    renderer: Any
+    changed: bool
+    revision: str
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["kind"] = self.kind
+        out["rules"] = self.rules
+        out["renderer"] = self.renderer
+        out["changed"] = self.changed
+        out["revision"] = self.revision
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> QmlImported:
+        return cls(
+            layer=data["layer"],
+            kind=data["kind"],
+            rules=data["rules"],
+            renderer=data["renderer"],
+            changed=data["changed"],
+            revision=data["revision"],
+            lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
 
@@ -57423,6 +57575,7 @@ __all__ = [
     "ExportGml",
     "ExportGpkg",
     "ExportPdf",
+    "ExportQml",
     "ExportReport",
     "ExportShp",
     "ExportSld",
@@ -57642,6 +57795,7 @@ __all__ = [
     "ImportGml",
     "ImportGpkg",
     "ImportPdf",
+    "ImportQml",
     "ImportSld",
     "ImportedLayer",
     "InfoCard",
@@ -58159,6 +58313,8 @@ __all__ = [
     "PropertiesOperation",
     "PropertiesOperationName",
     "PublishFormsOp",
+    "QmlExported",
+    "QmlImported",
     "QuantityTotals",
     "RadiusConstraintRule",
     "RadiusDimensionMeasure",

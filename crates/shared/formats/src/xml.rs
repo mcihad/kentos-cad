@@ -120,6 +120,19 @@ pub fn document(text: &str) -> Result<Document<'_>, Unparsed> {
     Document::parse(text).map_err(|_| Unparsed::NotXml)
 }
 
+/// The text's document with its DTD allowed (a QGIS style file starts `<!DOCTYPE qgis …>`); roxmltree still limits
+/// what its entities expand to.
+pub fn document_with_dtd(text: &str) -> Result<Document<'_>, Unparsed> {
+    if depth(text) > DEPTH {
+        return Err(Unparsed::TooDeep);
+    }
+    let options = roxmltree::ParsingOptions {
+        allow_dtd: true,
+        ..roxmltree::ParsingOptions::default()
+    };
+    Document::parse_with_options(text, options).map_err(|_| Unparsed::NotXml)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

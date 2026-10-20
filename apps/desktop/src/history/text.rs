@@ -210,6 +210,8 @@ pub(crate) const TITLES: [(&str, &str); 201] = [
     ("file.export.gis", "GIS türevi dışa aktar"),
     ("file.export.sld", "Görünüşü SLD olarak dışa aktar"),
     ("file.import.sld", "SLD'den görünüş al"),
+    ("file.export.qml", "Görünüşü QML olarak dışa aktar"),
+    ("file.import.qml", "QML'den görünüş al"),
     ("file.export.dxf", "DXF dışa aktar"),
     ("file.export.block", "Bloğu dosyaya yaz"),
     ("file.export.pdf", "PDF olarak yazdır"),

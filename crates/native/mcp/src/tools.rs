@@ -653,6 +653,8 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.shp"
             | "file.export.sld"
             | "file.import.sld"
+            | "file.export.qml"
+            | "file.import.qml"
             | "file.export.csv"
             | "file.export.fgb"
             | "file.export.gml"

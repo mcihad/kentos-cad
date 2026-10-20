@@ -94,7 +94,7 @@ pub fn kinds_of(doc: &Document, layer: &str) -> Kinds {
 }
 
 /// A symbol of the project's library by id.
-fn library_symbol(doc: &Document, id: &str) -> Option<Value> {
+pub(crate) fn library_symbol(doc: &Document, id: &str) -> Option<Value> {
     doc.styles()
         .items
         .iter()

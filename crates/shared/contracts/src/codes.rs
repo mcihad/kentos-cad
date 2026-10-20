@@ -1265,6 +1265,8 @@ codes! {
     DERIVATION_EDITED = "derivation_edited", Warning, false, "Türevin bazı satırları GIS'te değiştirilmiş; kaynak olan çizimdeki nesneler değişmedi ve bu değişiklikleri almaz.";
     /// An SLD whose look KentOS cannot read (docs/adr/0516).
     INVALID_SLD = "invalid_sld", Failed, false, "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok.";
+    /// A QML whose look KentOS cannot read (docs/adr/0555).
+    INVALID_QML = "invalid_qml", Failed, false, "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok.";
     /// Objects a file format has no place for, or written approximately (docs/adr/0502).
     EXPORT_LOSSES = "export_losses", Warning, false, "Bazı nesneler dosyaya yazılamadı ya da yaklaşık yazıldı; çıktı sayılarını verir.";
     /// The PDF could not be made.

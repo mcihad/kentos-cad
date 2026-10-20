@@ -1,0 +1,1070 @@
+#!/usr/bin/env python3
+"""QML'den görünüş al'ın ortak durumları ve QML'in QGIS 4.2 ile iki yönlü denetimi (docs/adr/0555), KentOS kodu olmadan.
+
+    python3 scripts/fixtures/qml_cases.py --files    # QGIS 4.2'nin QML'lerini ve elle yazılanları fixtures/qml/v1'e yazar
+    python3 scripts/fixtures/qml_cases.py            # fixtures/commands/v1/file.import.qml.json'u yazar
+    python3 scripts/fixtures/qml_cases.py --check    # yazılı durumlar güncel mi; KentOS'un QML'leri QGIS'te ne oluyor
+
+Okuma kuralları ADR'den, bu betikte yeniden yazılmıştır (xml.etree ile): QGIS'in tek simge, kategorili, aralıklı ve
+kurallı görünüşü KentOS'un aynı türü; basit dolgu (kenarı ayrı çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel
+kesikler), basit işaret ve merkez dolgusu; renkler `r,g,b,a`'dan #rrggbb(aa); mm, nokta, inç, piksel ve harita birimi;
+kuralların süzgeci QGIS'in ifadesinden KentOS'unkine (bu betiğin kendi ayrıştırıcısıyla). Alınamayanların cümleleri de
+ADR'nin sözleridir.
+
+KentOS'un yazdığı QML'leri (`KENTOS_WRITE_QML=1 cargo test -p kentos-headless --test headless qml` yazar,
+fixtures/qml/v1/out) QGIS 4.2 `loadNamedStyle` ile açar: görünüşün türü, sınıflar, süzgeçler, renkler, kalınlıklar,
+birimler ve saydamlık beklenenle denetlenir.
+"""
+
+from __future__ import annotations
+
+import json
+import math
+import os
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[2]
+DIR = ROOT / "fixtures/qml/v1"
+CASES = ROOT / "fixtures/commands/v1/file.import.qml.json"
+QGIS = Path("/Applications/QGIS-final-4_2_2.app/Contents")
+POINT_MM = 25.4 / 72.0
+
+SHAPES = [("circle", "circle"), ("square", "square"), ("diamond", "diamond"), ("triangle", "triangle"),
+          ("pentagon", "pentagon"), ("hexagon", "hexagon"), ("octagon", "octagon"), ("star", "star"),
+          ("cross", "cross"), ("x", "cross2"), ("line", "line"), ("arrow", "arrow"), ("arrowhead", "filled_arrowhead"),
+          ("chevron", "arrowhead"), ("semicircle", "semi_circle")]
+SHAPES_IN = {"equilateral_triangle": "triangle", "quarter_circle": "quartercircle", "cross_fill": "cross"}
+
+# ─── QGIS's expressions and KentOS's, from the ADR ─────────────────────────────────────────────────────
+
+KEYWORDS = {"ve", "veya", "değil", "boş", "gibi", "arasında", "and", "or", "not", "is", "null", "like", "between",
+            "doğru", "yanlış", "true", "false"}
+
+
+def bare_field(w: str) -> bool:
+    return bool(w) and (w[0].isalpha() or w[0] == "_") and all(c.isalnum() or c == "_" for c in w) \
+        and w.lower() not in KEYWORDS
+
+
+def tokens(src: str):
+    """QGIS's tokens: "x" a field, 'x' a text."""
+    out, i, c = [], 0, src
+    while i < len(c):
+        ch = c[i]
+        if ch.isspace():
+            i += 1
+        elif ch in "'\"":
+            q, s, j = ch, "", i + 1
+            while True:
+                if j >= len(c):
+                    return None
+                if c[j] == q:
+                    if j + 1 < len(c) and c[j + 1] == q:
+                        s += q
+                        j += 2
+                        continue
+                    break
+                s += c[j]
+                j += 1
+            out.append(("field", s) if q == '"' else ("text", s))
+            i = j + 1
+        elif ch.isdigit() or (ch in "-." and i + 1 < len(c) and c[i + 1].isdigit()):
+            j = i + 1
+            while j < len(c) and (c[j].isdigit() or c[j] in ".eE"):
+                j += 1
+            try:
+                out.append(("num", float(c[i:j])))
+            except ValueError:
+                return None
+            i = j
+        elif ch == "(":
+            out.append(("open",))
+            i += 1
+        elif ch == ")":
+            out.append(("close",))
+            i += 1
+        elif ch == ",":
+            out.append(("comma",))
+            i += 1
+        elif ch in "<>=!":
+            two = c[i:i + 2]
+            if two in ("<=", ">=", "<>", "!=", "=="):
+                out.append(("op", {"<=": "<=", ">=": ">=", "<>": "<>", "!=": "<>", "==": "="}[two]))
+                i += 2
+            elif ch in "<>=":
+                out.append(("op", ch))
+                i += 1
+            else:
+                return None
+        elif ch.isalpha() or ch == "_":
+            j = i + 1
+            while j < len(c) and (c[j].isalnum() or c[j] == "_"):
+                j += 1
+            w = c[i:j]
+            if w.lower() == "in":
+                out.append(("word", "in"))
+            elif bare_field(w):
+                out.append(("field", w))
+            else:
+                out.append(("word", w.lower()))
+            i = j
+        else:
+            return None
+    return out
+
+
+def parse_qgis(src: str):
+    t = tokens(src)
+    if t is None:
+        return None
+    at = [0]
+
+    def get(k=0):
+        return t[at[0] + k] if at[0] + k < len(t) else None
+
+    def word(tok, words):
+        return tok is not None and tok[0] == "word" and tok[1] in words
+
+    def lit(tok):
+        if tok is None or tok[0] not in ("num", "text"):
+            return None
+        return tok
+
+    def or_of():
+        parts = [and_of()]
+        if parts[0] is None:
+            return None
+        while word(get(), ("veya", "or")):
+            at[0] += 1
+            p = and_of()
+            if p is None:
+                return None
+            parts.append(p)
+        return parts[0] if len(parts) == 1 else ("or", parts)
+
+    def and_of():
+        parts = [not_of()]
+        if parts[0] is None:
+            return None
+        while word(get(), ("ve", "and")):
+            at[0] += 1
+            p = not_of()
+            if p is None:
+                return None
+            parts.append(p)
+        return parts[0] if len(parts) == 1 else ("and", parts)
+
+    def not_of():
+        tok = get()
+        if word(tok, ("değil", "not")):
+            at[0] += 1
+            f = not_of()
+            return None if f is None else ("not", f)
+        if tok == ("open",):
+            at[0] += 1
+            f = or_of()
+            if f is None or get() != ("close",):
+                return None
+            at[0] += 1
+            return f
+        if tok is None or tok[0] != "field":
+            return None
+        name = tok[1]
+        at[0] += 1
+        nxt = get()
+        if nxt is not None and nxt[0] == "op":
+            at[0] += 1
+            li = lit(get())
+            if li is None:
+                return None
+            at[0] += 1
+            return ("cmp", nxt[1], name, li)
+        if word(nxt, ("boş", "is")):
+            at[0] += 1
+            if nxt[1] == "is":
+                if word(get(), ("null",)):
+                    at[0] += 1
+                    return ("null", name)
+                if word(get(), ("not",)) and word(get(1), ("null",)):
+                    at[0] += 2
+                    return ("not", ("null", name))
+                return None
+            if word(get(), ("değil",)):
+                at[0] += 1
+                return ("not", ("null", name))
+            return ("null", name)
+        if word(nxt, ("gibi", "like")):
+            at[0] += 1
+            p = get()
+            if p is None or p[0] != "text":
+                return None
+            at[0] += 1
+            return ("like", name, p[1])
+        if word(nxt, ("in",)):
+            at[0] += 1
+            if get() != ("open",):
+                return None
+            at[0] += 1
+            parts = []
+            while True:
+                li = lit(get())
+                if li is None:
+                    return None
+                parts.append(("cmp", "=", name, li))
+                at[0] += 1
+                sep = get()
+                if sep == ("comma",):
+                    at[0] += 1
+                elif sep == ("close",):
+                    at[0] += 1
+                    break
+                else:
+                    return None
+            return parts[0] if len(parts) == 1 else ("or", parts)
+        if word(nxt, ("arasında", "between")):
+            at[0] += 1
+            a, sep, b = get(), get(1), get(2)
+            if a is None or a[0] != "num" or not word(sep, ("ve", "and")) or b is None or b[0] != "num":
+                return None
+            at[0] += 3
+            return ("between", name, a[1], b[1])
+        return None
+
+    f = or_of()
+    return f if f is not None and at[0] == len(t) else None
+
+
+def num(v: float) -> str:
+    if v == math.trunc(v) and abs(v) < 1e15:
+        return str(int(v))
+    return repr(v)
+
+
+def lit_text(li):
+    return num(li[1]) if li[0] == "num" else "'" + li[1].replace("'", "''") + "'"
+
+
+def kentos_text(f) -> str:
+    k = f[0]
+    if k == "cmp":
+        return f"[{f[2]}] {f[1]} {lit_text(f[3])}"
+    if k == "between":
+        return f"[{f[1]}] arasında {num(f[2])} ve {num(f[3])}"
+    if k == "null":
+        return f"[{f[1]}] boş"
+    if k == "like":
+        return f"[{f[1]}] gibi '" + f[2].replace("'", "''") + "'"
+    if k == "and":
+        return " ve ".join(f"({kentos_text(p)})" if p[0] == "or" else kentos_text(p) for p in f[1])
+    if k == "or":
+        return " veya ".join(f"({kentos_text(p)})" if p[0] == "and" else kentos_text(p) for p in f[1])
+    inner = f[1]
+    if inner[0] == "null":
+        return f"[{inner[1]}] boş değil"
+    return f"değil ({kentos_text(inner)})"
+
+
+# ─── The reader, from the ADR ──────────────────────────────────────────────────────────────────────────
+
+
+def child(n, name):
+    for c in n:
+        if c.tag == name:
+            return c
+    return None
+
+
+def props(layer):
+    m = {}
+    opt = child(layer, "Option")
+    if opt is not None:
+        for o in opt:
+            if o.get("name") is not None and o.get("value") is not None:
+                m[o.get("name")] = o.get("value")
+    for p in layer:
+        if p.tag == "prop" and p.get("k") is not None and p.get("v") is not None:
+            m[p.get("k")] = p.get("v")
+    return m
+
+
+def fnum(s):
+    try:
+        return float(s.strip())
+    except (AttributeError, ValueError):
+        return None
+
+
+def round3(v: float) -> float:
+    x = v * 1000.0
+    return math.copysign(math.floor(abs(x) + 0.5), x) / 1000.0
+
+
+def colour_in(text):
+    if text is None:
+        return None
+    t = text.strip()
+    if t.startswith("#"):
+        h = t[1:].lower()
+        return "#" + h[:6] + (h[6:8] if len(h) == 8 and h[6:8] != "ff" else "")
+    parts = []
+    for x in t.split(",")[:4]:
+        try:
+            v = int(x.strip())
+        except ValueError:
+            continue
+        if 0 <= v <= 255:
+            parts.append(v)
+    if len(parts) < 3:
+        return None
+    a = parts[3] if len(parts) > 3 else 255
+    if a == 0:
+        return None
+    rgb = "#%02x%02x%02x" % tuple(parts[:3])
+    return rgb if a == 255 else rgb + "%02x" % a
+
+
+def size_in(v, unit):
+    u = unit or "MM"
+    if u == "MM":
+        return v, "mm"
+    if u == "Point":
+        return v * POINT_MM, "mm"
+    if u == "Inch":
+        return v * 25.4, "mm"
+    if u == "Pixel":
+        return v, "px"
+    if u in ("MapUnit", "RenderMetersInMapUnits"):
+        return v, "m"
+    return None
+
+
+def size_as(v, unit, to):
+    got = size_in(v, unit)
+    return got[0] if got is not None and got[1] == to else None
+
+
+def data_defined(layer, lost, what):
+    for d in layer:
+        if d.tag != "data_defined_properties":
+            continue
+        for o in d.iter():
+            if o.get("name") == "active" and o.get("value") == "true":
+                lost.append(f"{what}: veriye bağlı değerler (data defined) alınmadı; sabit değerleri alındı")
+                return
+
+
+def nonzero_pair(text):
+    if text is None:
+        return False
+    for x in text.split(","):
+        v = fnum(x)
+        if v is not None and v != 0.0:
+            return True
+    return False
+
+
+def read_line(m, ident, lost, what):
+    style = m.get("line_style", "solid")
+    if style == "no":
+        return None
+    color = colour_in(m.get("line_color", m.get("color")))
+    if color is None:
+        return None
+    lw = fnum(m.get("line_width"))
+    got = size_in(0.26 if lw is None else lw, m.get("line_width_unit"))
+    if got is None:
+        lost.append(f"{what}: çizginin yüzde boyu KentOS'ta yok; 0,26 mm alındı")
+        got = (0.26, "mm")
+    width, unit = got
+    layer = {"id": ident, "type": "simpleLine", "color": color, "width": width, "unit": unit}
+    if m.get("use_custom_dash") == "1":
+        raw = m.get("customdash", "")
+        d = []
+        for p in raw.split(";"):
+            v = fnum(p)
+            if v is None:
+                continue
+            w = size_as(v, m.get("customdash_unit"), unit)
+            if w is not None:
+                d.append(w)
+        if not d and raw != "":
+            lost.append(f"{what}: kesiklerin birimi çizginin biriminden başka; kesikler alınmadı")
+        dash = d or None
+    else:
+        w = width if width > 0 else 1.0
+        pattern = {"dash": [4, 2], "dot": [1, 2], "dash dot": [4, 2, 1, 2], "dash dot dot": [4, 2, 1, 2, 1, 2]}.get(style)
+        dash = [round3(p * w) for p in pattern] if pattern else None
+    if dash:
+        layer["dash"] = dash
+    layer["cap"] = {"round": "round", "flat": "butt"}.get(m.get("capstyle", "square"), "square")
+    layer["join"] = {"round": "round", "miter": "miter"}.get(m.get("joinstyle", "bevel"), "bevel")
+    ring = m.get("ring_filter")
+    if ring == "1":
+        layer["rings"] = "exterior"
+    elif ring == "2":
+        layer["rings"] = "interior"
+    off = fnum(m.get("offset"))
+    if off is not None and off != 0.0:
+        lost.append(f"{what}: çizginin paralel kaydırması alınmadı")
+    a, b = fnum(m.get("trim_distance_start")), fnum(m.get("trim_distance_end"))
+    if (a is not None and a != 0.0) or (b is not None and b != 0.0):
+        lost.append(f"{what}: çizginin uçlardan kırpması alınmadı")
+    return layer
+
+
+def read_marker(m, lost, what):
+    name = m.get("name", "circle")
+    shape = next((k for k, q in SHAPES if q == name), None) or SHAPES_IN.get(name)
+    if shape is None:
+        lost.append(f"{what}: “{name}” işareti KentOS'ta yok; kare alındı")
+        shape = "square"
+    sz = fnum(m.get("size"))
+    got = size_in(2.0 if sz is None else sz, m.get("size_unit"))
+    if got is None:
+        lost.append(f"{what}: işaretin yüzde boyu KentOS'ta yok; 2 mm alındı")
+        got = (2.0, "mm")
+    size, unit = got
+    v = {"id": "p", "type": "shape", "shape": shape, "size": size, "unit": unit, "fill": colour_in(m.get("color"))}
+    if m.get("outline_style") != "no":
+        stroke = colour_in(m.get("outline_color"))
+        if stroke is not None:
+            v["stroke"] = stroke
+            ow = fnum(m.get("outline_width"))
+            w = size_as(0.0 if ow is None else ow, m.get("outline_width_unit"), unit)
+            if w is None:
+                lost.append(f"{what}: işaretin çizgi kalınlığının birimi boyununkinden başka; kalınlık alınmadı")
+            else:
+                v["strokeWidth"] = w
+    angle = fnum(m.get("angle"))
+    if angle is not None and angle != 0.0:
+        v["rotation"] = -angle
+    if nonzero_pair(m.get("offset")):
+        lost.append(f"{what}: işaretin kaydırması alınmadı")
+    if m.get("horizontal_anchor_point", "1") != "1" or m.get("vertical_anchor_point", "1") != "1":
+        lost.append(f"{what}: işaretin bağlantı noktası alınmadı")
+    if m.get("scale_method") == "area":
+        lost.append(f"{what}: işaretin alana göre ölçeklenmesi alınmadı")
+    return v
+
+
+def read_symbol(s, lost, what):
+    key = s.get("type", "")
+    if key not in ("fill", "line", "marker"):
+        lost.append(f"{what}: “{key}” simgesi alınmadı")
+        return None
+    layers = []
+    for i, layer in enumerate([c for c in s if c.tag == "layer"]):
+        cls = layer.get("class", "")
+        m = props(layer)
+        data_defined(layer, lost, what)
+        taken = []
+        if key == "fill" and cls == "SimpleFill":
+            style = m.get("style", "solid")
+            if style == "solid":
+                c = colour_in(m.get("color"))
+                if c is not None:
+                    taken.append({"id": f"f{i}", "type": "simpleFill", "color": c})
+            elif style != "no":
+                lost.append(f"{what}: “{style}” fırça deseni KentOS'un dolgusuna çevrilmedi")
+            if m.get("outline_style", "solid") != "no":
+                line = {k: m[src] for k, src in [("line_color", "outline_color"), ("line_width", "outline_width"),
+                                                  ("line_width_unit", "outline_width_unit"),
+                                                  ("line_style", "outline_style"), ("joinstyle", "joinstyle")]
+                        if src in m}
+                got = read_line(line, f"o{i}", lost, what)
+                if got is not None:
+                    taken.append(got)
+            if nonzero_pair(m.get("offset")):
+                lost.append(f"{what}: dolgunun kaydırması alınmadı")
+        elif key in ("fill", "line") and cls == "SimpleLine":
+            got = read_line(m, f"l{i}", lost, what)
+            if got is not None:
+                taken.append(got)
+        elif key == "marker" and cls == "SimpleMarker":
+            taken.append(read_marker(m, lost, what))
+        elif key == "fill" and cls == "CentroidFill":
+            sub = child(layer, "symbol")
+            got = read_symbol(sub, lost, what) if sub is not None else None
+            if got is not None and got[0] == "marker":
+                cm = {"id": f"c{i}", "type": "centroidMarker", "marker": got[1]}
+                if m.get("point_on_surface") == "0":
+                    cm["position"] = "centroid"
+                taken.append(cm)
+            else:
+                lost.append(f"{what}: merkez işaretinin simgesi alınmadı")
+        else:
+            lost.append(f"{what}: QGIS'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
+        if layer.get("enabled") == "0":
+            for t in taken:
+                t["enabled"] = False
+        layers += taken
+    if not layers:
+        return None
+    v = {"type": key, "layers": layers}
+    a = fnum(s.get("alpha"))
+    if a is not None and a < 1.0:
+        v["opacity"] = a
+    return key, v
+
+
+def set_of(sym):
+    return {} if sym is None else {sym[0]: sym[1]}
+
+
+def read_rules(parent, symbols, lost, count):
+    out = []
+    for r in [c for c in parent if c.tag == "rule"]:
+        label = r.get("label") or f"Kural {count[0] + 1}"
+        v = {"label": label}
+        f = (r.get("filter") or "").strip()
+        if f:
+            if f.upper() == "ELSE":
+                v["isElse"] = True
+            else:
+                parsed = parse_qgis(f)
+                if parsed is None:
+                    lost.append(f"“{label}” kuralının “{f}” süzgeci KentOS'un ifadesine çevrilemedi; kural ve alt "
+                                "kuralları alınmadı")
+                    continue
+                v["filter"] = kentos_text(parsed)
+        count[0] += 1
+        v["id"] = f"r{count[0]}"
+        if r.get("symbol") is not None:
+            v["symbols"] = set_of(symbols.get(r.get("symbol")))
+        for attr, key in (("scalemindenom", "minScale"), ("scalemaxdenom", "maxScale")):
+            s = fnum(r.get(attr))
+            if s is not None and s > 0:
+                v[key] = s
+        if r.get("checkstate") == "0":
+            v["enabled"] = False
+        kids = read_rules(r, symbols, lost, count)
+        if kids:
+            v["children"] = kids
+        out.append(v)
+    return out
+
+
+def read(text: str):
+    """(renderer, lost, rules) or the refusal's words."""
+    try:
+        root = ET.fromstring(text)
+    except ET.ParseError:
+        return "Dosya okunabilir bir XML değil."
+    if root.tag != "qgis":
+        return "Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil."
+    r = child(root, "renderer-v2")
+    if r is None:
+        return "QML'de QGIS'in görünüşü (renderer-v2) yok."
+    lost = []
+    if child(root, "labeling") is not None or root.get("labelsEnabled") == "1":
+        lost.append("etiketler alınmadı; KentOS'ta etiketler ayrıdır")
+    op = child(root, "layerOpacity")
+    if op is not None and fnum(op.text) is not None and fnum(op.text) < 1.0:
+        lost.append("katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)")
+    symbols = {}
+    lst = child(r, "symbols")
+    if lst is not None:
+        for s in [c for c in lst if c.tag == "symbol"]:
+            name = s.get("name", "")
+            got = read_symbol(s, lost, f"“{name}” simgesi")
+            if got is not None:
+                symbols[name] = got
+    kind = r.get("type", "")
+
+    def attr_field():
+        a = (r.get("attr") or "").strip()
+        bare = a[1:-1].replace('""', '"') if len(a) >= 2 and a[0] == '"' and a[-1] == '"' else a
+        if bare and (a.startswith('"') or all(c.isalnum() or c == "_" for c in bare)):
+            return bare
+        lost.append(f"görünüşün “{a}” ifadesi bir alan değil; KentOS'un ifadesine çevrilemedi")
+        return None
+
+    if kind == "singleSymbol":
+        first = next((c for c in lst if c.tag == "symbol"), None) if lst is not None else None
+        sym = symbols.get(first.get("name")) if first is not None else None
+        if sym is None:
+            return "QML'in simgesi KentOS'un çizebileceği bir simge değil."
+        renderer, rules = {"type": "single", "symbols": set_of(sym)}, 1
+    elif kind == "categorizedSymbol":
+        field = attr_field()
+        if field is None:
+            return "Kategorili görünüşün alanı okunamadı."
+        cats, other, n = [], None, 0
+        node = child(r, "categories")
+        for c in ([x for x in node if x.tag == "category"] if node is not None else []):
+            label = c.get("label", "")
+            sset = set_of(symbols.get(c.get("symbol")))
+            enabled = c.get("render") != "false"
+            vals = [v.get("value") for v in c if v.tag == "val" and v.get("value") is not None]
+            null = c.get("type") == "NULL" or (not vals and not c.get("value"))
+            n += 1
+            if null and not vals:
+                if other is not None:
+                    lost.append(f"ikinci “Diğerleri” sınıfı (“{label}”) alınmadı")
+                else:
+                    other = sset
+                continue
+            for v in (vals or [c.get("value", "")]):
+                cat = {"value": v, "label": label or v, "symbols": sset}
+                if not enabled:
+                    cat["enabled"] = False
+                cats.append(cat)
+        renderer = {"type": "categorized", "expr": f"[{field}]", "categories": cats}
+        if other is not None:
+            renderer["other"] = other
+        rules = n
+    elif kind == "graduatedSymbol":
+        field = attr_field()
+        if field is None:
+            return "Aralıklı görünüşün alanı okunamadı."
+        classes = []
+        node = child(r, "ranges")
+        for c in ([x for x in node if x.tag == "range"] if node is not None else []):
+            lo, hi = fnum(c.get("lower")), fnum(c.get("upper"))
+            if lo is None or hi is None:
+                continue
+            classes.append({"min": lo, "max": hi, "label": c.get("label", ""),
+                            "symbols": set_of(symbols.get(c.get("symbol")))})
+            if c.get("render") == "false":
+                lost.append(f"kapalı “{c.get('label', '')}” sınıfı açık alındı (KentOS'un aralıklarında kapatma yok)")
+        if len(classes) > 1:
+            lost.append("QGIS'in aralıkları alt sınırı dışarıda bırakır (alt < değer ≤ üst, ilki hariç), KentOS'unkiler "
+                        "üst sınırı (alt ≤ değer < üst, sonuncu hariç); sınıf sınırındaki değer bir üstteki sınıfa geçer")
+        ss = child(r, "sizescale")
+        if (ss is not None and ss.get("scalemethod") is not None) or r.get("graduatedMethod") == "GraduatedSize":
+            lost.append("boya göre aralıklı görünüş renge göre alındı")
+        renderer, rules = {"type": "graduated", "expr": f"[{field}]", "classes": classes}, len(classes)
+    elif kind == "RuleRenderer":
+        count = [0]
+        top = child(r, "rules")
+        lst_rules = read_rules(top, symbols, lost, count) if top is not None else []
+        renderer, rules = {"type": "rules", "rules": lst_rules}, count[0]
+    else:
+        return (f"QGIS'in “{kind}” görünüşü KentOS'a çevrilmedi (tek simge, kategorili, aralıklı ve kurallı görünüş "
+                "alınır).")
+    if rules == 0:
+        return "QML'de KentOS'un çizebileceği bir sınıf ya da kural yok."
+    return renderer, lost, rules
+
+
+# ─── The files ─────────────────────────────────────────────────────────────────────────────────────────
+
+LINE = """<layer class="SimpleLine" enabled="1" locked="0" pass="0"><Option type="Map">
+ <Option name="line_color" type="QString" value="0,0,0,255"/><Option name="line_width" type="QString" value="0.5"/>
+ <Option name="line_width_unit" type="QString" value="MM"/></Option></layer>"""
+
+HAND = {
+    # Losses: an SVG marker, an unknown shape, a data-defined size, labels, the layer's opacity.
+    "kayipli.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="3.34.0" labelsEnabled="1"><renderer-v2 type="singleSymbol"><symbols>
+<symbol name="0" type="marker" alpha="1">
+<layer class="SvgMarker" enabled="1"><Option type="Map"><Option name="name" type="QString" value="x.svg"/></Option></layer>
+<layer class="SimpleMarker" enabled="1"><Option type="Map"><Option name="name" type="QString" value="heart"/>
+<Option name="color" type="QString" value="255,0,0,255"/><Option name="size" type="QString" value="4"/>
+<Option name="outline_style" type="QString" value="no"/><Option name="offset" type="QString" value="1,0"/></Option>
+<data_defined_properties><Option type="Map"><Option name="properties" type="Map"><Option name="size" type="Map">
+<Option name="active" type="bool" value="true"/><Option name="expression" type="QString" value="&quot;boy&quot;"/>
+</Option></Option></Option></data_defined_properties></layer>
+</symbol></symbols></renderer-v2><labeling type="simple"/><layerOpacity>0.5</layerOpacity></qgis>
+""",
+    # QGIS 2's <prop k v>, inches and points; a disabled layer; a hatch brush.
+    "qgis2.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="2.18.0"><renderer-v2 type="singleSymbol"><symbols><symbol name="0" type="fill" alpha="0.6">
+<layer class="SimpleFill" enabled="1"><prop k="color" v="10,20,30,255"/><prop k="style" v="b_diagonal"/>
+<prop k="outline_color" v="200,0,0,255"/><prop k="outline_style" v="dash"/><prop k="outline_width" v="1"/>
+<prop k="outline_width_unit" v="Point"/></layer>
+<layer class="SimpleLine" enabled="0"><prop k="line_color" v="0,0,255,128"/><prop k="line_width" v="0.01"/>
+<prop k="line_width_unit" v="Inch"/><prop k="capstyle" v="flat"/><prop k="joinstyle" v="miter"/></layer>
+</symbol></symbols></renderer-v2></qgis>
+""",
+    # A categorized look on an expression, not a field.
+    "ifade.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><renderer-v2 type="categorizedSymbol" attr="upper(&quot;ada&quot;)"><categories>
+<category label="A" render="true" symbol="0" type="string" value="A"/></categories><symbols>
+<symbol name="0" type="fill" alpha="1">""" + LINE + """</symbol></symbols></renderer-v2></qgis>
+""",
+    # Rules: a filter KentOS cannot say leaves its rule and its children; IN becomes OR; a disabled rule; ELSE.
+    "suzgecler.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><renderer-v2 type="RuleRenderer"><rules key="{0}">
+<rule key="{1}" label="Seçili adalar" filter="&quot;ada&quot; IN ('A', 'C') AND &quot;alan&quot; BETWEEN 100 AND 900" symbol="0">
+ <rule key="{2}" label="Tapusuz" filter="&quot;tapulu&quot; IS NULL OR NOT (&quot;tapulu&quot; = 1)" symbol="1"/>
+</rule>
+<rule key="{3}" label="İşlevli" filter="upper(&quot;ada&quot;) = 'B'" symbol="1"><rule key="{4}" label="Alt" symbol="0"/></rule>
+<rule key="{5}" label="Kapalı" filter="&quot;ad&quot; LIKE 'Ç%'" symbol="0" checkstate="0" scalemaxdenom="5000"/>
+<rule key="{6}" filter="ELSE" symbol="1"/>
+</rules><symbols>
+<symbol name="0" type="fill" alpha="1">""" + LINE + """</symbol>
+<symbol name="1" type="fill" alpha="1"><layer class="SimpleFill" enabled="1"><Option type="Map">
+<Option name="color" type="QString" value="#33a02c"/><Option name="outline_style" type="QString" value="no"/></Option></layer></symbol>
+</symbols></renderer-v2></qgis>
+""",
+    "isi.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><renderer-v2 type="heatmapRenderer" radius="10"/></qgis>
+""",
+    "bos.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><labeling type="simple"/></qgis>
+""",
+    "yalniz-svg.qml": """<!DOCTYPE qgis PUBLIC 'http://mrcc.com/qgis.dtd' 'SYSTEM'>
+<qgis version="4.2.2"><renderer-v2 type="singleSymbol"><symbols><symbol name="0" type="marker" alpha="1">
+<layer class="SvgMarker" enabled="1"><Option type="Map"/></layer></symbol></symbols></renderer-v2></qgis>
+""",
+    "sld-degil.qml": """<?xml version="1.0"?><StyledLayerDescriptor version="1.1.0"/>
+""",
+    "bozuk.qml": "<qgis><renderer-v2",
+}
+
+QGIS_STYLES = r"""
+from qgis.core import *
+QgsApplication.setPrefixPath('{q}/MacOS', True)
+app = QgsApplication([], False); app.initQgis()
+G = '{g}'
+out = '{out}/'
+parsel = QgsVectorLayer(G + '|layername=parsel', 'parsel', 'ogr')
+cats = []
+for v, c in [('A', '#e41a1c'), ('B', '#377eb8')]:
+    cats.append(QgsRendererCategory(v, QgsFillSymbol.createSimple({{'color': c, 'outline_color': '#222222', 'outline_width': '0.4'}}), 'Ada ' + v))
+cats.append(QgsRendererCategory(['C', 'D'], QgsFillSymbol.createSimple({{'color': '#4daf4a', 'outline_style': 'no'}}), 'C ve D'))
+cats.append(QgsRendererCategory(None, QgsFillSymbol.createSimple({{'color': '#999999'}}), 'Diğer'))
+parsel.setRenderer(QgsCategorizedSymbolRenderer('ada', cats)); parsel.saveNamedStyle(out + 'qgis-kategorili.qml')
+ranges = []
+for lo, hi, c in [(0, 500, '#fee5d9'), (500, 1000, '#fcae91'), (1000, 5000, '#de2d26')]:
+    ranges.append(QgsRendererRange(lo, hi, QgsFillSymbol.createSimple({{'color': c, 'outline_color': '#555555', 'outline_width': '0.26'}}), f'{{lo}} - {{hi}}'))
+parsel.setRenderer(QgsGraduatedSymbolRenderer('alan', ranges)); parsel.saveNamedStyle(out + 'qgis-aralikli.qml')
+root = QgsRuleBasedRenderer.Rule(None)
+r1 = QgsRuleBasedRenderer.Rule(QgsFillSymbol.createSimple({{'color': '#1b9e77'}}), 0, 0, '"tapulu" = 1', 'Tapulu')
+r1b = QgsRuleBasedRenderer.Rule(QgsFillSymbol.createSimple({{'color': '#e7298a'}}), 0, 0, '"alan" >= 1000', 'Tapulu büyük')
+r1.appendChild(r1b)
+r2 = QgsRuleBasedRenderer.Rule(QgsFillSymbol.createSimple({{'color': '#d95f02', 'outline_style': 'dash'}}), 500, 10000, '"alan" > 100 AND "ada" <> \'B\'', 'Büyük')
+r3 = QgsRuleBasedRenderer.Rule(QgsFillSymbol.createSimple({{'color': '#7570b3'}}), 0, 0, 'ELSE', 'Diğer'); r3.setIsElse(True)
+for r in (r1, r2, r3): root.appendChild(r)
+parsel.setRenderer(QgsRuleBasedRenderer(root)); parsel.saveNamedStyle(out + 'qgis-kurallar.qml')
+yol = QgsVectorLayer(G + '|layername=yol', 'yol', 'ogr')
+s = QgsLineSymbol.createSimple({{'line_color': '#3366cc', 'line_width': '0.8', 'line_style': 'dash', 'capstyle': 'round', 'joinstyle': 'round'}})
+s.appendSymbolLayer(QgsSimpleLineSymbolLayer.create({{'line_color': '#ffffff', 'line_width': '2', 'line_width_unit': 'MapUnit', 'use_custom_dash': '1', 'customdash': '6;3', 'customdash_unit': 'MapUnit'}}))
+s.setOpacity(0.75)
+yol.setRenderer(QgsSingleSymbolRenderer(s)); yol.saveNamedStyle(out + 'qgis-cizgi.qml')
+nokta = QgsVectorLayer(G + '|layername=nokta', 'nokta', 'ogr')
+nokta.setRenderer(QgsSingleSymbolRenderer(QgsMarkerSymbol.createSimple({{'name': 'triangle', 'color': '#ff0000', 'outline_color': '#000000', 'outline_width': '0.3', 'size': '3', 'angle': '30'}})))
+nokta.saveNamedStyle(out + 'qgis-nokta.qml')
+nokta.setRenderer(QgsSingleSymbolRenderer(QgsMarkerSymbol.createSimple({{'name': 'cross2', 'color': '#00000000', 'outline_color': '#0000ff', 'outline_width': '1', 'outline_width_unit': 'Pixel', 'size': '8', 'size_unit': 'Pixel'}})))
+nokta.saveNamedStyle(out + 'qgis-piksel.qml')
+cen = QgsCentroidFillSymbolLayer(); cen.setPointOnSurface(False)
+cen.setSubSymbol(QgsMarkerSymbol.createSimple({{'name': 'star', 'color': '#ffcc00', 'size': '4'}}))
+fs = QgsFillSymbol.createSimple({{'color': '#ffffff', 'outline_color': '#000000'}}); fs.appendSymbolLayer(cen)
+parsel.setRenderer(QgsSingleSymbolRenderer(fs)); parsel.saveNamedStyle(out + 'qgis-merkez.qml')
+print('ok')
+"""
+
+
+def qgis_env():
+    return dict(os.environ, QT_QPA_PLATFORM="offscreen", PYTHONHOME=str(QGIS / "Resources"),
+                PYTHONPATH=f"{QGIS}/Resources/python3.12:{QGIS}/Resources/python3.12/site-packages:"
+                           f"{QGIS}/Resources/python3.12/lib-dynload",
+                PROJ_DATA=str(QGIS / "Resources/qgis/proj"))
+
+
+def write_files() -> None:
+    DIR.mkdir(parents=True, exist_ok=True)
+    for name, text in HAND.items():
+        (DIR / name).write_text(text, encoding="utf-8")
+    code = QGIS_STYLES.format(q=QGIS, g=ROOT / "fixtures/geopackage/v1/qgis.gpkg", out=DIR)
+    r = subprocess.run([str(QGIS / "MacOS/python3.12"), "-c", code], env=qgis_env(), capture_output=True, text=True,
+                       timeout=300)
+    if "ok" not in r.stdout:
+        sys.exit(f"QGIS QML yazamadı: {r.stderr[-600:]}")
+    print(f"{len(HAND)} elle yazılmış ve 7 QGIS QML'i: {DIR}")
+
+
+# ─── The cases ─────────────────────────────────────────────────────────────────────────────────────────
+
+LAYER_STYLE = {"color": "fg", "lineType": "continuous", "lineWeight": 0.25}
+
+
+def layer(ident, name, **extra):
+    return {"id": ident, "name": name, "type": "layer", "visible": True, "locked": False, "expanded": True,
+            "style": dict(LAYER_STYLE), "children": [], **extra}
+
+
+SETUP = {
+    "format": "kentos.document", "version": 1, "name": "QML'den görünüş",
+    "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad",
+                 "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow"},
+    "origin": {"x": 487000, "y": 4420000},
+    "layers": [
+        layer("parsel", "Parsel"), layer("yol", "Yol"), layer("durak", "Durak"),
+        {"id": "imar", "name": "İmar", "type": "group", "visible": True, "locked": False, "expanded": True,
+         "style": dict(LAYER_STYLE), "children": [layer("imar-alan", "İmar alanı")]},
+        layer("altlik", "OpenStreetMap", service={"kind": "xyz", "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                                                    "maxZoom": 19}),
+    ],
+    "activeLayer": "parsel",
+    "entities": [
+        {"kind": "polygon", "id": 1, "layerId": "parsel", "attrs": {"ada": "A", "alan": "420"},
+         "pts": [{"x": 487000, "y": 4420000}, {"x": 487030, "y": 4420000}, {"x": 487030, "y": 4420014}, {"x": 487000, "y": 4420014}]},
+        {"kind": "polyline", "id": 2, "layerId": "yol", "attrs": {},
+         "pts": [{"x": 487000, "y": 4420020}, {"x": 487060, "y": 4420020}]},
+        {"kind": "point", "id": 3, "layerId": "durak", "attrs": {"ad": "Merkez"}, "p": {"x": 487010, "y": 4420025}},
+    ],
+    "styles": {"items": [], "categories": []},
+}
+
+
+def layer_after(ident, renderer):
+    layers = json.loads(json.dumps(SETUP["layers"]))
+
+    def walk(nodes):
+        for n in nodes:
+            if n["id"] == ident:
+                n["style"]["renderer"] = renderer
+            walk(n["children"])
+
+    walk(layers)
+    return layers
+
+
+def imported(ident, name):
+    renderer, lost, rules = read((DIR / name).read_text(encoding="utf-8"))
+    output = {"layer": ident, "kind": renderer["type"], "rules": rules, "renderer": renderer, "changed": True,
+              "revision": "$current"}
+    if lost:
+        output["lost"] = lost
+    warnings = [] if not lost else [{"code": "import_losses", "message": "QML'in bazı parçaları alınamadı: "
+                                     + "; ".join(lost) + ".", "path": "path"}]
+    return renderer, output, warnings
+
+
+def ok_case(title, ident, name, by_text=False):
+    renderer, output, warnings = imported(ident, name)
+    path = {"text": (DIR / name).read_text(encoding="utf-8")} if by_text else {"path": f"$fixture:qml/v1/{name}"}
+    return {"name": title, "steps": [{
+        "op": "execute", "input": {"layer": ident, **path},
+        "result": {"status": "completed", "output": output, "warnings": warnings},
+        "expect": {"ids": [1, 2, 3], "canUndo": True, "dirty": True, "revision": "changed",
+                   "layers": layer_after(ident, renderer)},
+    }]}
+
+
+def failed(title, inp, code, message, path):
+    return {"name": title, "steps": [{
+        "op": "execute", "input": inp,
+        "result": {"status": "failed", "error": {"code": code, "message": message, "path": path}},
+        "expect": {"ids": [1, 2, 3], "canUndo": False, "dirty": False, "revision": "same"},
+    }]}
+
+
+def refused(title, name, layer_id="parsel"):
+    words = read((DIR / name).read_text(encoding="utf-8"))
+    assert isinstance(words, str), name
+    return failed(title, {"layer": layer_id, "path": f"$fixture:qml/v1/{name}"}, "invalid_qml", words, "path")
+
+
+def build_cases():
+    cases = [
+        ok_case("QGIS'in kategorili görünüşü: iki değer, iki değerli sınıf her değer için, NULL sınıfı Diğerleri olur",
+                "parsel", "qgis-kategorili.qml"),
+        ok_case("QGIS'in aralıklı görünüşü: üç aralık, sınır kuralının farkı söylenir", "parsel", "qgis-aralikli.qml"),
+        ok_case("QGIS'in kurallı görünüşü: iç içe kural, ölçek aralığı, kesikli kenar, ELSE", "parsel",
+                "qgis-kurallar.qml"),
+        ok_case("QGIS'in çizgisi: Qt'nin kesik deseni kalınlıkla, özel kesikler harita biriminde, simgenin saydamlığı",
+                "yol", "qgis-cizgi.qml"),
+        ok_case("QGIS'in noktası: üçgen, saat yönünde 30° KentOS'ta -30°, kenar kalınlığı", "durak", "qgis-nokta.qml"),
+        ok_case("Piksel birimi ve saydam dolgu: çarpı işareti dolgusuz", "durak", "qgis-piksel.qml"),
+        ok_case("Merkez dolgusu: yıldız ağırlık merkezinde, dolgu ve kenarı ayrı katmanlar", "parsel",
+                "qgis-merkez.qml"),
+        ok_case("Alınamayanlar söylenir: SVG işareti, bilinmeyen şekil, veriye bağlı boy, kaydırma, etiketler, katmanın "
+                "saydamlığı", "durak", "kayipli.qml"),
+        ok_case("QGIS 2'nin prop'ları: nokta ve inç mm'ye, kapalı katman kapalı, fırça deseni söylenir", "parsel",
+                "qgis2.qml"),
+        ok_case("Süzgeçler: IN veya'ya, BETWEEN, IS NULL, NOT; işlevli süzgeç alt kuralıyla alınmaz; kapalı kural",
+                "parsel", "suzgecler.qml"),
+        ok_case("QML dosya yerine metin olarak verilir", "parsel", "qgis-kategorili.qml", by_text=True),
+    ]
+    renderer, output, warnings = imported("parsel", "qgis-merkez.qml")
+    cases.append({"name": "Aynı görünüş ikinci kez: değişmez, adım yazılmaz", "steps": [
+        {"op": "execute", "input": {"layer": "parsel", "path": "$fixture:qml/v1/qgis-merkez.qml"},
+         "result": {"status": "completed", "output": output, "warnings": warnings},
+         "expect": {"canUndo": True, "revision": "changed"}},
+        {"op": "execute", "input": {"layer": "parsel", "path": "$fixture:qml/v1/qgis-merkez.qml"},
+         "result": {"status": "completed", "output": dict(output, changed=False), "warnings": warnings},
+         "expect": {"revision": "same", "layers": layer_after("parsel", renderer)}},
+    ]})
+    plan_out = imported("parsel", "qgis-aralikli.qml")
+    cases.append({"name": "Plan okur, hiçbir şey yazmaz", "steps": [
+        {"op": "plan", "input": {"layer": "parsel", "path": "$fixture:qml/v1/qgis-aralikli.qml"},
+         "result": {"status": "completed", "output": plan_out[1], "warnings": plan_out[2]},
+         "expect": {"ids": [1, 2, 3], "canUndo": False, "dirty": False, "revision": "same", "layers": SETUP["layers"]}},
+    ]})
+    line = imported("yol", "qgis-cizgi.qml")
+    cases.append({"name": "Geri alınır ve yinelenir", "steps": [
+        {"op": "execute", "input": {"layer": "yol", "path": "$fixture:qml/v1/qgis-cizgi.qml"},
+         "result": {"status": "completed", "output": line[1], "warnings": line[2]}},
+        {"op": "undo", "expect": {"canUndo": False, "canRedo": True, "layers": SETUP["layers"]}},
+        {"op": "redo", "expect": {"canUndo": True, "canRedo": False, "layers": layer_after("yol", line[0])}},
+    ]})
+    cases += [
+        failed("Ne yol ne metin", {"layer": "parsel"}, "invalid_input",
+               "QML'in ya yolunu (path) ya da kendisini (text) verin, ikisini birden değil.", "path"),
+        failed("Hem yol hem metin", {"layer": "parsel", "path": "$fixture:qml/v1/qgis-nokta.qml", "text": "<x/>"},
+               "invalid_input", "QML'in ya yolunu (path) ya da kendisini (text) verin, ikisini birden değil.", "path"),
+        failed("Olmayan dosya", {"layer": "parsel", "path": "$fixture:qml/v1/yok.qml"}, "file_unreadable",
+               "“$fixture:qml/v1/yok.qml” okunamadı: No such file or directory (os error 2). Dosyanın yerinde olduğunu denetleyin.",
+               "path"),
+        refused("XML olmayan dosya", "bozuk.qml"),
+        refused("QML olmayan XML (SLD)", "sld-degil.qml"),
+        refused("Görünüşü olmayan QML (yalnız etiket)", "bos.qml"),
+        refused("KentOS'ta olmayan görünüş türü (ısı haritası)", "isi.qml"),
+        refused("Kategorili görünüş bir ifadeyle, alanla değil", "ifade.qml"),
+        refused("Çizilebilecek simgesi olmayan QML (yalnız SVG işareti)", "yalniz-svg.qml", "durak"),
+        failed("Olmayan katman", {"layer": "yok", "path": "$fixture:qml/v1/qgis-nokta.qml"}, "layer_not_found",
+               "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.", "layer"),
+        failed("Katman grubu", {"layer": "imar", "path": "$fixture:qml/v1/qgis-nokta.qml"}, "not_a_layer",
+               "“İmar” bir katman grubu; işleyici yalnız katmanın olur. Grubun bir katmanını verin.", "layer"),
+        failed("Servis katmanı", {"layer": "altlik", "path": "$fixture:qml/v1/qgis-nokta.qml"}, "service_layer",
+               "“OpenStreetMap” servisten çizilir ve nesne tutmaz; işleyici nesneleri olan katmanın olur.", "layer"),
+    ]
+    cases.append({"name": "Eski sürüme göre hazırlanmış istek: hiçbir şey yazılmaz", "steps": [
+        {"op": "execute", "input": {"layer": "parsel", "path": "$fixture:qml/v1/qgis-nokta.qml", "expectedRevision": "999"},
+         "result": {"status": "conflict", "error": {
+             "code": "revision_conflict",
+             "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+             "path": "expectedRevision", "revision": "$current"}},
+         "expect": {"canUndo": False, "revision": "same"}},
+    ]})
+    return {
+        "format": "kentos.command-cases", "version": 1, "command": "file.import.qml", "commandVersion": 1,
+        "title": "QML'den görünüş al",
+        "note": "ADR 0555. QGIS 4.2'nin yazdığı ve elle yazılmış QML'ler (fixtures/qml/v1); görünüşler ADR'nin okuma kuralıyla burada, xml.etree'yle kurulur. Bağımsız başvuru: scripts/fixtures/qml_cases.py; elle düzenlemeyin.",
+        "setup": SETUP,
+        "cases": cases,
+    }
+
+
+# ─── KentOS's QMLs in QGIS ─────────────────────────────────────────────────────────────────────────────
+
+QGIS_READ = r"""
+import json
+from qgis.core import *
+from qgis.PyQt.QtGui import QColor
+QgsApplication.setPrefixPath('{q}/MacOS', True)
+app = QgsApplication([], False); app.initQgis()
+G = '{g}'
+def sym(s):
+    if s is None:
+        return None
+    out = {{'opacity': round(s.opacity(), 3), 'layers': []}}
+    for i in range(s.symbolLayerCount()):
+        sl = s.symbolLayer(i)
+        d = {{'class': sl.layerType(), 'enabled': sl.enabled(), 'colour': sl.color().name(QColor.NameFormat.HexArgb)}}
+        if sl.layerType() == 'SimpleLine':
+            d['width'] = [round(sl.width(), 4), QgsUnitTypes.encodeUnit(sl.widthUnit())]
+            d['dash'] = [round(x, 4) for x in sl.customDashVector()] if sl.useCustomDashPattern() else []
+        if sl.layerType() == 'SimpleMarker':
+            d['shape'] = QgsSimpleMarkerSymbolLayerBase.encodeShape(sl.shape())
+            d['size'] = [round(sl.size(), 4), QgsUnitTypes.encodeUnit(sl.sizeUnit())]
+            d['angle'] = round(sl.angle(), 4)
+        out['layers'].append(d)
+    return out
+def rule(x):
+    return {{'label': x.label(), 'filter': x.filterExpression(), 'else': x.isElse(), 'max': x.maximumScale(),
+            'min': x.minimumScale(), 'symbol': sym(x.symbol()), 'children': [rule(c) for c in x.children()]}}
+out = {{}}
+for name, table in {files}:
+    l = QgsVectorLayer(G + '|layername=' + table, table, 'ogr')
+    msg, ok = l.loadNamedStyle('{dir}/' + name)
+    r = l.renderer()
+    info = {{'ok': ok, 'type': r.type()}}
+    if r.type() == 'categorizedSymbol':
+        info['field'] = r.classAttribute()
+        info['classes'] = [[c.value(), c.label(), sym(c.symbol())['layers'][0]['colour']] for c in r.categories()]
+    elif r.type() == 'graduatedSymbol':
+        info['field'] = r.classAttribute()
+        info['classes'] = [[g.lowerValue(), g.upperValue(), sym(g.symbol())['layers'][0]['colour']] for g in r.ranges()]
+    elif r.type() == 'RuleRenderer':
+        info['rules'] = [rule(x) for x in r.rootRule().children()]
+    else:
+        info['symbol'] = sym(r.symbol())
+    out[name] = info
+print(json.dumps(out, ensure_ascii=False))
+"""
+
+OUTLINE = {"class": "SimpleLine", "enabled": True, "colour": "#ff222222", "width": [0.4, "MM"], "dash": []}
+
+
+def area(colour):
+    return {"opacity": 1.0, "layers": [{"class": "SimpleFill", "enabled": True, "colour": colour}, OUTLINE]}
+
+
+# What KentOS's QMLs (written by the headless test) must be in QGIS 4.2.
+WANT = {
+    "kentos-kategorili.qml": ("parsel", {"type": "categorizedSymbol", "field": "ada", "classes": [
+        ["A", "Ada A", "#ffe41a1c"], ["B", "Ada B", "#ff377eb8"], [None, "Diğerleri", "#80999999"]]}),
+    "kentos-aralikli.qml": ("parsel", {"type": "graduatedSymbol", "field": "alan", "classes": [
+        [0.0, 500.0, "#fffee5d9"], [500.0, 1000.0, "#fffcae91"], [1000.0, 5000.0, "#ffde2d26"]]}),
+    "kentos-kurallar.qml": ("parsel", {"type": "RuleRenderer", "rules": [
+        {"label": "Tapulu", "filter": '"tapulu" = 1', "else": False, "max": 0.0, "min": 0.0, "symbol": area("#ff1b9e77"),
+         "children": [{"label": "Büyük", "filter": "\"alan\" > 1000 AND \"ada\" <> 'B'", "else": False, "max": 500.0,
+                       "min": 10000.0, "symbol": area("#ffd95f02"), "children": []}]},
+        {"label": "Diğer", "filter": "ELSE", "else": True, "max": 0.0, "min": 0.0, "symbol": area("#ff7570b3"),
+         "children": []}]}),
+    "kentos-cizgi.qml": ("yol", {"type": "singleSymbol", "symbol": {"opacity": 0.8, "layers": [
+        {"class": "SimpleLine", "enabled": True, "colour": "#ff3366cc", "width": [0.8, "MM"], "dash": [3.0, 1.5]},
+        {"class": "SimpleLine", "enabled": True, "colour": "#ffffffff", "width": [2.0, "RenderMetersInMapUnits"],
+         "dash": []}]}}),
+    "kentos-nokta.qml": ("nokta", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "SimpleMarker", "enabled": True, "colour": "#ffff0000", "shape": "triangle", "size": [3.0, "MM"],
+         "angle": 30.0}]}}),
+}
+
+
+def check_out():
+    out_dir = DIR / "out"
+    missing = [n for n in WANT if not (out_dir / n).exists()]
+    if missing:
+        return [f"{n} yok: önce KENTOS_WRITE_QML=1 ile KentOS'un testini çalıştırın" for n in missing]
+    py = QGIS / "MacOS/python3.12"
+    if not py.exists():
+        print("QGIS 4.2 yok; KentOS'un QML'leri QGIS'te denetlenmedi.")
+        return []
+    files = [(n, t) for n, (t, _) in WANT.items()]
+    code = QGIS_READ.format(q=QGIS, g=ROOT / "fixtures/geopackage/v1/qgis.gpkg", files=files, dir=out_dir)
+    r = subprocess.run([str(py), "-c", code], env=qgis_env(), capture_output=True, text=True, timeout=300)
+    line = [x for x in r.stdout.splitlines() if x.startswith("{")]
+    if not line:
+        return [f"QGIS okuyamadı: {r.stderr[-600:]}"]
+    got = json.loads(line[-1])
+    problems = []
+    for name, (_, want) in WANT.items():
+        g = got.get(name, {})
+        if not g.get("ok"):
+            problems.append(f"{name}: QGIS yüklemedi")
+        for k, v in want.items():
+            if g.get(k) != v:
+                problems.append(f"{name}: QGIS'te {k} {json.dumps(g.get(k), ensure_ascii=False)}, beklenen "
+                                f"{json.dumps(v, ensure_ascii=False)}")
+    return problems
+
+
+def main() -> None:
+    if "--files" in sys.argv:
+        write_files()
+        return
+    data = build_cases()
+    text = json.dumps(data, ensure_ascii=False, indent=1) + "\n"
+    if "--check" in sys.argv:
+        problems = []
+        if not CASES.exists() or CASES.read_text(encoding="utf-8") != text:
+            problems.append(f"{CASES.relative_to(ROOT)} güncel değil")
+        problems += check_out()
+        if problems:
+            sys.exit("\n".join(problems))
+        print(f"{len(data['cases'])} durum güncel; KentOS'un QML'leri QGIS 4.2'de beklenen görünüşte.")
+        return
+    CASES.write_text(text, encoding="utf-8")
+    print(f"{len(data['cases'])} durum: {CASES.relative_to(ROOT)}")
+
+
+if __name__ == "__main__":
+    main()

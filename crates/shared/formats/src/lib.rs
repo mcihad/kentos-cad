@@ -50,6 +50,7 @@ pub mod raster;
 pub mod report;
 pub mod reproject;
 pub mod shp;
+pub mod qml;
 pub mod sld;
 pub mod spaces;
 pub mod table_file;
