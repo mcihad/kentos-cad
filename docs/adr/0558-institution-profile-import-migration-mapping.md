@@ -9,7 +9,7 @@
   - 0540 (komut türleri `kentos-commands`'ta), 0244 (CAD işlem manifesti).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - profil dosyalarının `.kcad`'in içinde (şema numarası) taşınması ve Paketle'nin `profiller` klasörünü kopyalaması;
+  - profil dosyalarının `.kcad`'in içinde (şema numarası) taşınması (Paketle `profiller` klasörünü kopyalar, aşağıda 10);
   - göçün eşlemeyle birlikte (kurumun adlarıyla yazılı veriyi taşımak) çalışması;
   - değer listesini bölmenin ve birleştirmenin `mapValues`'tan başka biçimleri (liste kimliği değiştirme);
   - adres normalizasyonu, ifraz, tevhit, hisse ve PlanGML (ADR 0541'deki gibi).
@@ -36,7 +36,7 @@ karşılaştırmayı katman yolunun ilk adımında düşürüyordu. Üç şey ge
    - **Neden `.kcad`'in içinde değil:** `.kcad` şema numarası başka işlerle çakışır, stil kitaplığı bilmediği türü düşürür ve
      bir profil kurumun dosyasıdır: çizimden ayrı sürümlenir, birden çok projede kullanılır. Dosya bayt bayt kurumun verdiği
      biçimde (sözleşmenin yazımıyla, girintili JSON) durur; çizim dosyasının şeması değişmez. Paketle henüz `profiller`i
-     kopyalamaz (sonraya kalan).
+     kopyalamıyordu; 10. madde bunu giderdi.
 2. **Profilin sürümü `release`'tir, biçim sürümü `version` değil.**
    - `DataProfile.release` (varsayılan 1; 1'den küçük `invalid_profile`) ve `migrations`: bir sürümden sonrakine
      (`from`, `to = from + 1`, başlık, 1–64 adım) verinin taşınma adımları. Bir sürümden iki göç, profilin sürümünü aşan göç ve
@@ -128,6 +128,19 @@ karşılaştırmayı katman yolunun ilk adımında düşürüyordu. Üç şey ge
    `mapping`, `mapping_name`, `drawing`'i. MCP'de `cad.profiles.import` ve `cad.profiles.migrate` yıkıcıdır (`overwrite` yazar, göç
    değer yazar), `cad.profiles.list` ve `.check` salt okunurdur.
 
+10. **Paketle profilleri taşır** (`file.package`, ADR 0506 ve 0350 §4; 21 Ekim 2026).
+   - Projenin dosyasının klasöründeki (`from`) `profiller/<ad>.profil.json` ve `<ad>.eslem.json` dosyaları paketteki `profiller/` altına
+     **aynı adlarla bayt bayt** kopyalanır; paket klasöründe proje dosyasının yanında durdukları için başka bilgisayarda komutlar
+     (`cad.profiles.list`, `apply`, `check`, `migrate`) onları aynı kuralla bulur. Kopyalar `paket.json`'un `files`'ında `profile` ve
+     `mapping` türüyle, boyları ve SHA-256'larıyla listelenir (`links` 0: dosya bir bağla değil yeriyle bulunur); yazma her kopyayı
+     geri okuyup özetini karşılaştırır (diğer kopyalar gibi).
+   - Klasörün başka dosyası (`notlar.txt`), içindeki klasör ve dosya olmayan girdi kopyalanmaz. Açılamayan dosya paketi düşürmez:
+     kopyalanmaz ve söylenir (`package_left`, `unreadable`, `at` `profiller:<dosya adı>`; manifestin `left`'inde).
+   - Proje dosyasının klasörü bilinmiyorsa (`from` yok) profil aranmaz; masaüstü `from`'u açık çizimin klasörü olarak verir.
+   - Sözleşme: `PackagedKind`'e `Profile` ve `Mapping`, `LeftWhy`'a `Unreadable`; biçim ve şema değişmedi. Ortak durum:
+     başsız sunucunun paket senaryosu (profil ve eşleme klasörü, kopyalanmayanlar, kilitli dosya, taşınan paketin açılışta profilleri
+     bulması) ve `scripts/fixtures/package_cases.py` (bağımsız: bayt bayt, JSON olarak okunuş, manifest, `unreadable`).
+
 ## Doğrulama
 
 - Ortak durumlar KentOS kodu olmadan yazılmış başvurudan (`scripts/fixtures/profile_files_cases.py`,
@@ -147,8 +160,8 @@ karşılaştırmayı katman yolunun ilk adımında düşürüyordu. Üç şey ge
 
 ## Sonuçlar ve sınırlar
 
-- Profil dosyaları çizimle birlikte taşınmaz (Paketle kopyalamaz, `.kcad` taşımaz): başka bilgisayara giden çizimin yanına
-  `profiller` klasörü de gitmelidir. Bulut projesinde çizimin dosyası yoktur: profil ve eşleme komuta kendisiyle verilir.
+- Profil dosyaları `.kcad`'in içinde taşınmaz: çizim dosyasıyla başka bilgisayara giderken yanındaki `profiller` klasörü de
+  gitmelidir; Paketle bunu yapar (10). Bulut projesinde çizimin dosyası yoktur: profil ve eşleme komuta kendisiyle verilir.
 - Göç eşlemeyle çalışmaz; kurumun adlarıyla yazılı veriyi taşımak için önce göç profilin adlarıyla yazılmış adımlarla çalışmalı ya da
   profilin göç adımları kurumun adlarıyla (kendi profili olarak) yazılmalıdır.
 - Değer listesi başka listeye taşınamaz (liste kimliği değiştirme); `mapValues` ve `retireCode` ile aynı listenin kodları taşınır.

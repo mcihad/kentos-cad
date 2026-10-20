@@ -2099,8 +2099,8 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   alma adımı “Profil göçü”, uymayan değerler değer değer ve nesne kimlikleriyle; katman adları geri alınmaz) ve `apply` ile `check`'in
   `mapping`ı (kurumun katman yolu, alan adı ve kodlarıyla; hiçbir ad kendiliğinden değişmez); nesnelerin değerleri alanın adının
   altında okunur. Masaüstünde Veri profili penceresinde profil ve eşleme seçici, İçe aktar…, göç. 100 000 ağaçta göçün planı 0,59 s,
-  yazması 0,52 s. Kalan: profil dosyalarının `.kcad`'de ve Paketle'de taşınması, göçün eşlemeyle çalışması, değer listesi kimliği
-  değiştirme, adres normalizasyonu. — **20 Ekim, [ADR 0558](docs/adr/0558-institution-profile-import-migration-mapping.md).**
+  yazması 0,52 s. Paketle `profiller/` dosyalarını bayt bayt taşır (21 Ekim). Kalan: profil dosyalarının `.kcad`'de taşınması, göçün
+  eşlemeyle çalışması, değer listesi kimliği değiştirme, adres normalizasyonu. — **20 Ekim, [ADR 0558](docs/adr/0558-institution-profile-import-migration-mapping.md).**
 - [ ] `CBS-38` yetki kapsamı (dilim 2): tek çözücü `kentos_forms::reach` (çağıran sınıfı, alan düzeyi gizli/işaretli/açık, kayıt
   sorgusu, kopya kuralı, damga; 16 ortak durum bağımsız Python başvurusundan). Sunucuda Veri girişinin sayısı ve sınırı, olayları
   (kapsam dışı kayıt sürümsüz silme), çakışması (404), formun liste değerleri ve geçmiş sayıları; bütün formları kaldırılmış katman

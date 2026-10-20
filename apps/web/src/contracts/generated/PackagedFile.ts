@@ -14,6 +14,6 @@ path: string,
  */
 from: string, kind: PackagedKind, bytes: bigint, sha256: string, 
 /**
- * How many links point to it.
+ * How many links point to it (a profile or a mapping is found by its place, not linked: 0).
  */
 links: number, };

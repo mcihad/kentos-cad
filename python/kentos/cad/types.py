@@ -2205,14 +2205,16 @@ class LeftWhy(_StrEnum):
     - ``database``: A database's table: the link stays, the computer that opens the package reaches the database itself.
     - ``address``: An address (http, https): read where the package opens, not copied.
     - ``substituted``: A typeface KentOS does not have (an SHX line font, another family): its texts are drawn in a substitute face.
+    - ``unreadable``: The file is there and cannot be read (a profile or a mapping the disk does not give): not copied.
     """
     MISSING = "missing"
     DATABASE = "database"
     ADDRESS = "address"
     SUBSTITUTED = "substituted"
+    UNREADABLE = "unreadable"
 
 
-LeftWhyName = Literal["missing", "database", "address", "substituted"]
+LeftWhyName = Literal["missing", "database", "address", "substituted", "unreadable"]
 """The names of :class:`LeftWhy`, for a plain string."""
 
 
@@ -2771,6 +2773,8 @@ class PackagedKind(_StrEnum):
     - ``attachment``: An object's attachment.
     - ``xref``: An external reference's source drawing (docs/adr/0350 §4).
     - ``font``: A text style's typeface (left out only: KentOS's own faces come with it).
+    - ``profile``: A data profile of the project, `profiller/<ad>.profil.json` (docs/adr/0558).
+    - ``mapping``: An institution's mapping of the project, `profiller/<ad>.eslem.json` (docs/adr/0558).
     """
     SOURCE = "source"
     PICTURE = "picture"
@@ -2779,9 +2783,11 @@ class PackagedKind(_StrEnum):
     ATTACHMENT = "attachment"
     XREF = "xref"
     FONT = "font"
+    PROFILE = "profile"
+    MAPPING = "mapping"
 
 
-PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font"]
+PackagedKindName = Literal["source", "picture", "sidecar", "table", "attachment", "xref", "font", "profile", "mapping"]
 """The names of :class:`PackagedKind`, for a plain string."""
 
 
@@ -30306,8 +30312,8 @@ class PackageLeft(_Model):
     """A link left as it was.
     Attributes:
         path: The path or address as the project keeps it.
-        at: The object (its lasting id), bound layer (its id), external reference (`xref:` and its name) or text style
-            (`stil:` and its name) that keeps it.
+        at: The object (its lasting id), bound layer (its id), external reference (`xref:` and its name), text style
+            (`stil:` and its name) or profile file (`profiller:` and its file name) that keeps it.
     """
     kind: PackagedKind | PackagedKindName
     path: str
@@ -30372,7 +30378,7 @@ class PackagedFile(_Model):
         path: Its path in the package, `/` between its parts (`veri/kadastro.gpkg`).
         from_: The file it was copied from.
         bytes: Unit: bytes.
-        links: How many links point to it. Unit: count.
+        links: How many links point to it (a profile or a mapping is found by its place, not linked: 0). Unit: count.
     """
     path: str
     from_: str

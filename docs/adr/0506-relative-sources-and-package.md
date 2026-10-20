@@ -110,3 +110,9 @@ ve “Paketle” (QGIS'in Package Layers'ı, AutoCAD'in eTransmit'i). Parola pro
 - KCAD örnekleri: `sources.kcad`'in ilk bağı göreli yollu. Bozuk örnekler: mutlak, ortasında `..` ve veritabanının
   göreli yolu (`broken/sources-relative-absolute.kcad`, `sources-relative-climbs.kcad`,
   `sources-database-relative.kcad`).
+
+## Ek (21 Ekim 2026): projenin profilleri pakete girer
+
+Projenin veri profilleri ve eşlemeleri (`profiller/<ad>.profil.json`, `<ad>.eslem.json`, proje dosyasının yanında; ADR 0558) pakete
+`profiller/` altında aynı adlarla bayt bayt kopyalanır, `paket.json`'da `profile` ve `mapping` türüyle listelenir; açılamayan dosya
+kopyalanmaz ve söylenir (`unreadable`). Ayrıntı ve doğrulama: [ADR 0558](0558-institution-profile-import-migration-mapping.md) §10.
