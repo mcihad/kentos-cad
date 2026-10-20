@@ -1139,6 +1139,15 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
     state
 }
 
+/// The state of one bound layer, as `cad.sources.describe` gives it (the same function, so the rule that says what
+/// waits is not written twice): the Öznitelik tablosu's source line reads it (docs/adr/0546 §3). It reads the table,
+/// so a caller keeps the answer and asks again only when something it depends on changed. None: the layer is not
+/// bound.
+pub fn layer_state(doc: &Document, layer: &str) -> Option<SourceState> {
+    let link = doc.settings().sources.iter().find(|l| l.layer == layer)?;
+    Some(state_of(doc, link, &relations::ties(doc)))
+}
+
 fn count(n: usize) -> u32 {
     u32::try_from(n).unwrap_or(u32::MAX)
 }

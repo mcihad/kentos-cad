@@ -55,6 +55,18 @@ pub fn act_words(next: SourceNext, kind: SourceKind) -> Option<&'static str> {
     })
 }
 
+/// The event that does the one thing a state asks for (`next`), the same for this window and for Öznitelik
+/// tablosu's source line (docs/adr/0546 §3); none when nothing waits.
+pub fn way_out(next: SourceNext, layer: Option<String>) -> Option<Bound> {
+    Some(match next {
+        SourceNext::None => return None,
+        SourceNext::Write => Bound::Write(layer),
+        SourceNext::Read => Bound::Read(layer),
+        SourceNext::Relink => Bound::Relink(layer),
+        SourceNext::Reconcile => Bound::Reconcile(layer),
+    })
+}
+
 impl App {
     /// Kaynak durumu (`source.status`): the window over the project's bound layers.
     pub(crate) fn open_source_status(&mut self) {
@@ -115,18 +127,13 @@ impl App {
                     return Task::none();
                 };
                 w.chosen = Some(i);
-                let layer = Some(s.link.layer.clone());
-                let event = match s.next {
-                    SourceNext::None => return Task::none(),
-                    SourceNext::Write => Bound::Write(layer),
-                    SourceNext::Read => Bound::Read(layer),
-                    SourceNext::Relink => Bound::Relink(layer),
-                    // Its own window takes the place of this one.
-                    SourceNext::Reconcile => {
-                        self.source_status = None;
-                        Bound::Reconcile(layer)
-                    }
+                let Some(event) = way_out(s.next, Some(s.link.layer.clone())) else {
+                    return Task::none();
                 };
+                // Its own window takes the place of this one.
+                if matches!(event, Bound::Reconcile(_)) {
+                    self.source_status = None;
+                }
                 let task = self.bound_event(event);
                 self.refresh_source_status();
                 task

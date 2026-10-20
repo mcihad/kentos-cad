@@ -17,6 +17,7 @@ use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableLine, SortOrder, Table};
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
+use super::outgoing::{Analyse, ColumnsEvent, words as out_words};
 use super::{Event, Rows, Show, texts};
 use crate::app::{App, Message};
 use crate::icons::from_web;
@@ -50,7 +51,7 @@ fn bar_button<'a>(
 /// What the bar needs in one row, logical pixels at the default type size:
 /// the layer (220), the search (180), Göster (190), the filter (220 and its
 /// ε), the count and the three buttons, their gaps and margins.
-const BAR_ONE_ROW: f32 = 1370.0;
+const BAR_ONE_ROW: f32 = 1760.0;
 
 /// A list editor's choices for a field: none, then its codes by their labels,
 /// or yes and no; with the one written now.
@@ -196,6 +197,80 @@ impl App {
             Tip::new(texts::EXPORT).body(texts::EXPORT_HINT),
             iced::widget::tooltip::Position::Top,
         );
+        // Sütunlar ▾ (docs/adr/0546 §1): which columns the table shows; a hidden one is in no copy or file either.
+        let hidden = self.hidden_columns(rows.layer.as_deref());
+        let named: Vec<(String, String)> = rows
+            .table
+            .columns
+            .iter()
+            .filter_map(|c| Some((c.key.clone()?, c.label.clone())))
+            .collect();
+        let hidden_count = named.iter().filter(|(k, _)| hidden.contains(k)).count();
+        let columns_face = container(
+            row![
+                icon(from_web(Some("columns"))).size(14.0),
+                label::body(if hidden_count == 0 {
+                    out_words::COLUMNS.to_owned()
+                } else {
+                    format!("{} ({hidden_count} gizli)", out_words::COLUMNS)
+                }),
+                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding([4, 10])
+        .style(style::container::field_box);
+        let columns_menu = tip(
+            MenuButton::new(columns_face, move || {
+                let mut menu = Menu::new().header(out_words::COLUMNS_HEADER);
+                for (key, label) in &named {
+                    menu = menu
+                        .check(
+                            label.clone(),
+                            !hidden.contains(key),
+                            Some(msg(Event::Columns(ColumnsEvent::Toggle(key.clone())))),
+                        )
+                        .stay();
+                }
+                menu.separator().item(
+                    out_words::SHOW_ALL,
+                    Some(msg(Event::Columns(ColumnsEvent::ShowAll))),
+                )
+            }),
+            Tip::new(out_words::COLUMNS).body(out_words::COLUMNS_HINT),
+            iced::widget::tooltip::Position::Top,
+        );
+        // İncele ▾ (docs/adr/0546 §2): İstatistik and Grafik over the rows the table shows.
+        let analyse_face = container(
+            row![
+                icon(from_web(Some("chartBar"))).size(14.0),
+                label::body(out_words::ANALYSE),
+                icon(Icon::ChevronDown).size(12.0).tone(Tone::Muted),
+            ]
+            .spacing(6)
+            .align_y(Center),
+        )
+        .padding([4, 10])
+        .style(style::container::field_box);
+        let has_layer = rows.layer.is_some();
+        let analyse = tip(
+            MenuButton::new(analyse_face, move || {
+                if !has_layer {
+                    return Menu::new();
+                }
+                Menu::new()
+                    .item(
+                        out_words::STATISTICS,
+                        Some(msg(Event::Analyse(Analyse::Statistics))),
+                    )
+                    .icon(from_web(Some("chartHistogram")))
+                    .item(out_words::CHART, Some(msg(Event::Analyse(Analyse::Chart))))
+                    .icon(from_web(Some("chartPie")))
+            }),
+            Tip::new(out_words::ANALYSE).body(out_words::ANALYSE_HINT),
+            iced::widget::tooltip::Position::Top,
+        );
         let pane = kentos_ui::widget::segmented::Segmented::new(
             [super::Pane::Table, super::Pane::Form],
             self.features.pane,
@@ -211,7 +286,15 @@ impl App {
                 texts::ZOOM_HINT,
                 (!self.selection.is_empty()).then(|| msg(Event::ZoomSelection)),
             ),
+            columns_menu,
+            bar_button(
+                "tableGridAll",
+                out_words::COPY,
+                out_words::COPY_HINT,
+                rows.layer.is_some().then(|| msg(Event::Copy)),
+            ),
             export,
+            analyse,
             bar_button(
                 "tableRowBelow",
                 texts::ADD_RECORD,
@@ -248,14 +331,17 @@ impl App {
             ),
         ]
         .spacing(10)
-        .align_y(Center);
+        .align_y(Center)
+        .wrap()
+        .vertical_spacing(6);
         let one_row = width <= 0.0 || width >= typography::from_default(BAR_ONE_ROW);
         let bar: Element<'_, Message> = if one_row {
             row![filters, space::horizontal(), actions]
                 .align_y(Center)
                 .into()
         } else {
-            iced::widget::column![filters, row![space::horizontal(), actions]]
+            // The buttons wrap in a narrow panel, as the filters do.
+            iced::widget::column![filters, container(actions).width(Fill)]
                 .spacing(6)
                 .into()
         };
@@ -280,6 +366,11 @@ impl App {
             return self.joins_tab(doc, v, picker);
         }
         let bar = self.features_bar(&rows, self.viewport.bounds.width);
+        // A bound layer's table: its source, state and the one way out (docs/adr/0546 §3).
+        let bar: Element<'_, Message> = match self.features_source_line(&rows) {
+            Some(line) => iced::widget::column![bar, line].into(),
+            None => bar,
+        };
         if panel.pane == super::Pane::Form {
             return iced::widget::column![
                 bar,
@@ -296,7 +387,8 @@ impl App {
                 .align_right()
                 .sortable(None, msg(Event::Sort(0))),
         ];
-        for (j, c) in rows.table.columns.iter().enumerate() {
+        for &j in &rows.visible {
+            let c = &rows.table.columns[j];
             let order = (rows.sorted == Some(j)).then_some(if panel.descending {
                 SortOrder::Descending
             } else {
@@ -346,12 +438,13 @@ impl App {
                 })
                 .collect()
         };
+        let visible = rows.visible.clone();
         let min_width = 56.0
-            + table_columns
+            + visible
                 .iter()
-                .map(|c| if c.key.is_none() { 110.0 } else { 140.0 })
+                .map(|&j| if table_columns[j].key.is_none() { 110.0 } else { 140.0 })
                 .sum::<f32>()
-            + 8.0 * table_columns.len() as f32;
+            + 8.0 * visible.len() as f32;
         let table = Table::new(columns)
             .horizontal()
             .min_width(min_width)
@@ -366,7 +459,8 @@ impl App {
                         .on_double_click(msg(Event::Zoom(i)))
                         .into(),
                 ];
-                for (j, c) in table_columns.iter().enumerate() {
+                for &j in &visible {
+                    let c = &table_columns[j];
                     let value = line.cells[j].shown.clone();
                     if editing == Some((slot, j)) {
                         let field = c.field.as_ref();
