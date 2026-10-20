@@ -92,6 +92,11 @@ pub enum Event {
     SldImport(String),
     SldExportTo(String, Option<std::path::PathBuf>),
     SldImportFrom(String, Option<std::path::PathBuf>),
+    /// Görünüşü QML olarak kaydet… and QML'den görünüş al… (layer_qml.rs, docs/adr/0555), as the SLD's.
+    QmlExport(String),
+    QmlImport(String),
+    QmlExportTo(String, Option<std::path::PathBuf>),
+    QmlImportFrom(String, Option<std::path::PathBuf>),
     /// Sil: the layer, or the group with everything under it, and their objects.
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
@@ -243,6 +248,16 @@ impl App {
                 self.sld_import_from(id, path);
                 return Task::none();
             }
+            Event::QmlExport(id) => return self.qml_export_ask(id),
+            Event::QmlImport(id) => return self.qml_import_ask(id),
+            Event::QmlExportTo(id, path) => {
+                self.qml_export_to(id, path);
+                return Task::none();
+            }
+            Event::QmlImportFrom(id, path) => {
+                self.qml_import_from(id, path);
+                return Task::none();
+            }
             _ => {}
         }
         if let Event::ZoomTo(id) = &event {
@@ -361,7 +376,11 @@ impl App {
             | Event::SldExport(_)
             | Event::SldImport(_)
             | Event::SldExportTo(..)
-            | Event::SldImportFrom(..) => {}
+            | Event::SldImportFrom(..)
+            | Event::QmlExport(_)
+            | Event::QmlImport(_)
+            | Event::QmlExportTo(..)
+            | Event::QmlImportFrom(..) => {}
             Event::Snap(id, snap) => model.set_layer_snap(&id, snap),
             Event::SelectObjects(id) => {
                 let Some(node) = model.layers().get(&id) else {
@@ -804,6 +823,11 @@ impl App {
             .icon(icon("sldExport"))
             .item("SLD'den görünüş al…", event(Event::SldImport(id.clone())))
             .icon(icon("sldImport"))
+            // QML (docs/adr/0555): QGIS's own style file, out and in.
+            .item("Görünüşü QML olarak kaydet…", event(Event::QmlExport(id.clone())))
+            .icon(icon("qmlExport"))
+            .item("QML'den görünüş al…", event(Event::QmlImport(id.clone())))
+            .icon(icon("qmlImport"))
             .separator()
             // Değişikliğin etkisi (docs/adr/0314 §4): what a change of its look would reach.
             .item(
@@ -1486,7 +1510,7 @@ fn screens() {
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
             for name in [
-                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar", "sld",
+                "tek", "cok", "menu", "renk", "ad", "sil", "komutlar", "durumlar", "sld", "qml",
             ]
             .into_iter()
             .filter(|n| {
@@ -1564,6 +1588,25 @@ fn screens() {
                         app.selection.set(Vec::new());
                         // Katman stili shows the look taken.
                         app.open_layer_style(Some("parsel".into()));
+                    }
+                    // QML'den görünüş al (docs/adr/0555): QGIS 4.2's fill with a star at each parcel's centroid.
+                    "qml" => {
+                        let qml = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+                            .join("../../fixtures/qml/v1/qgis-merkez.qml");
+                        let _ = app.update(Message::Layer(Event::QmlImportFrom(
+                            "parsel".into(),
+                            Some(qml),
+                        )));
+                        let model = &app.document.as_ref().expect("open").model;
+                        let renderer = model
+                            .layers()
+                            .get("parsel")
+                            .and_then(|n| n.style.renderer.clone());
+                        assert_eq!(
+                            renderer.as_ref().map(|r| r["type"].clone()),
+                            Some("single".into())
+                        );
+                        app.selection.set(Vec::new());
                     }
                     "komutlar" => {
                         let _ = app.update(Message::Layer(Event::AddBeside("bina".into())));

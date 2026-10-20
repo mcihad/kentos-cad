@@ -1057433,6 +1057433,340 @@
       ]
     },
     {
+      "id": "file.export.qml",
+      "version": 1,
+      "title": "Görünüşü QML olarak dışa aktar",
+      "summary": "Katmanın görünüşünü (işleyicisini, yoksa katmanın renk, çizgi tipi, kalınlık, dolgu ve nokta simgesini) QGIS'in stil dosyası olarak path'e (.qml) yazar; QGIS 4.2 Stil › Stil yükle ile açar. Tek simge, kategorili (Diğerleri QGIS'in NULL sınıfı), aralıklı ve kurallı görünüş (iç içe kurallar, ölçek aralıkları, ELSE, kapalı kural) QGIS'in aynı türüyle; kuralların süzgeci QGIS'in ifadesiyle (\"Ad\" = 'x'): alanın sayı ya da metinle karşılaştırması, arasında, boş, gibi, ve, veya ve değil. Simgeler: basit dolgu, basit çizgi (renk, kalınlık, kesikler, uç, köşe, halkalar), şekil işaretleri (on beş şekil; döndürme QGIS'in saat yönüyle), merkez işareti; birimler mm, piksel ve haritada metre olarak kalır, simgenin saydamlığı ve kapalı katman korunur. QML tek geometri türü içindir: alanlar, sonra çizgiler, sonra noktalar; öbürleri, tarama, degrade, desen ve resim dolgusu, işaretli çizgi, SVG ve yazı işareti, veriye göre değer ve efektler yazılmaz, export_losses ile söylenir. Çizimi değiştirmez ve geri alma adımı değildir.",
+      "aliases": [
+        "qmlout"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.export.qml` v1: the layer's look (its renderer, or its simple look) at `path`, a `.qml`. A QML is\nfor one geometry type: the layer's objects choose it (areas, then lines, then points; areas when it has none).\nRefusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `not_a_layer`, `nothing_to_export` (no\nclass or rule QGIS's symbol layers here can draw), `file_unwritable`. Warnings: `export_losses`.",
+        "properties": {
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "overwrite": {
+            "default": false,
+            "description": "Write over a file that is there.",
+            "type": "boolean"
+          },
+          "path": {
+            "description": "An absolute path ending `.qml`.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer"
+        ],
+        "title": "ExportQml",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.qml` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What the QML could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "QmlExported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.export.qml` wrote (or with `plan` would write).",
+        "properties": {
+          "bytes": {
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "bytes"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What the QML could not say, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "path": {
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules written.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "layer",
+          "rules",
+          "bytes",
+          "sha256"
+        ],
+        "title": "QmlExported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_file_path",
+          "file_exists",
+          "layer_not_found",
+          "not_a_layer",
+          "nothing_to_export",
+          "file_unwritable"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanının görünüşü",
+          "input": {
+            "layer": "parsel",
+            "overwrite": true,
+            "path": "/veri/parsel.qml"
+          }
+        }
+      ]
+    },
+    {
+      "id": "file.import.qml",
+      "version": 1,
+      "title": "QML'den görünüş al",
+      "summary": "path'teki (ya da text'teki) QGIS stil dosyasının görünüşünü katmanın işleyicisi yapar, tek geri alma adımı (Katman stili): QGIS'in tek simge, kategorili, aralıklı ve kurallı görünüşü KentOS'un aynı türü olur; birden çok değerli sınıf her değer için bir sınıf, NULL sınıfı Diğerleri, kuralların süzgeci KentOS'un ifadesine çevrilir (IN de). Basit dolgu (kenarı ayrı çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel kesikler), basit işaret ve merkez dolgusu, simgenin saydamlığı, kapalı katman, mm, nokta, inç, piksel ve harita birimi alınır. Başka simge katmanları, fırça desenleri, veriye bağlı değerler, etiketler, katmanın saydamlığı ve çevrilemeyen süzgeç alınmaz, import_losses ile söylenir; aralıkların sınır kuralı farkı da söylenir. QGIS 3 ve 4'ün yazdığı QML okunur. Katman aynı görünüşteyse adım yazılmaz (changed false). plan dosyayı okur, hiçbir şey yazmaz.",
+      "aliases": [
+        "qmlin"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Input of `file.import.qml` v1: the look of the QML at `path` (or its `text`) made the layer's renderer, one undo\nstep “Katman stili”: QGIS's renderer as KentOS's of the same kind, rule filters in KentOS's expressions. Refusals,\nin order:\n`invalid_input` (neither or both of `path` and `text`), `file_unreadable`, `invalid_qml`, `layer_not_found`,\n`not_a_layer`, `service_layer`, `revision_conflict`. Warnings: `import_losses`.",
+        "properties": {
+          "expectedRevision": {
+            "description": "The document revision the input was prepared against, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The layer's id.",
+            "type": "string"
+          },
+          "path": {
+            "description": "An absolute path to a `.qml`.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "text": {
+            "description": "The QML itself, instead of a path.",
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "ImportQml",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.qml` made the layer's look.",
+        "properties": {
+          "changed": {
+            "description": "Whether the layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "renderer": {
+            "description": "The renderer as the layer now has it."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "kind",
+          "rules",
+          "renderer",
+          "changed",
+          "revision"
+        ],
+        "title": "QmlImported",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "What `file.import.qml` made the layer's look.",
+        "properties": {
+          "changed": {
+            "description": "Whether the layer's look changed (an undo step was written).",
+            "type": "boolean"
+          },
+          "kind": {
+            "description": "The renderer's type: `single`, `categorized`, `graduated` or `rules`.",
+            "type": "string"
+          },
+          "layer": {
+            "type": "string"
+          },
+          "lost": {
+            "description": "What KentOS could not take, a sentence each.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "renderer": {
+            "description": "The renderer as the layer now has it."
+          },
+          "revision": {
+            "description": "The document's revision after the write, as decimal text.",
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "rules": {
+            "description": "Classes and rules taken.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "kind",
+          "rules",
+          "renderer",
+          "changed",
+          "revision"
+        ],
+        "title": "QmlImported",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "invalid_input",
+          "file_unreadable",
+          "invalid_qml",
+          "layer_not_found",
+          "not_a_layer",
+          "service_layer",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "import_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "QGIS'in yazdığı parsel görünüşü",
+          "input": {
+            "layer": "parsel",
+            "path": "/veri/parsel.qml"
+          }
+        }
+      ]
+    },
+    {
       "id": "file.export.dxf",
       "version": 1,
       "title": "DXF dışa aktar",
@@ -1061416,6 +1061750,12 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Dosya okunabilir bir SLD değil ya da KentOS'un çizebileceği bir kuralı yok."
+    },
+    {
+      "code": "invalid_qml",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Dosya okunabilir bir QGIS stil dosyası (QML) değil ya da KentOS'un çizebileceği bir görünüşü yok."
     },
     {
       "code": "export_losses",

@@ -217,6 +217,9 @@ Liste:
   ve `experiment`; Analiz panelinde Yerel Moran; WASM süreleri.
 - [ ] `CBS-17` SLD alışverişi (ADR 0516, 19 Ekim): web'de gerekenler: `file.export.sld` ve `file.import.sld`'nin işleyicileri
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
+- [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
+  (`qml`'in WASM bağlayıcısı, `formats-wasm`'e), Katmanlar'ın sağ tık menüsünde iki öğe (ikonlar `qmlExport`, `qmlImport`); TS
+  türleri üretildi.
 - [ ] `CBS-28` COG (ADR 0515, 19 Ekim): web'de gerekenler: çözümleme işçisinin raster sonuçlarını `cog::plan`'la COG'a çevirmesi
   (WASM bağlayıcısı; indirilen dosya da COG), Raster işlemleri'nde COG olarak kaydet (`copy` işi bağlayıcıda).
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
@@ -2301,6 +2304,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Katmanlar'ın sağ tıkında; Python ve MCP; 24 ortak durum `sld_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin SLD'leri ve
   KentOS'unkiler QGIS'te. Kalan: QML, MapLibre, etiketler, tematik işleyiciler, alan kimliklerine bağ. — **19 Ekim,
   [ADR 0516](docs/adr/0516-sld-style-exchange.md).**
+- [ ] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
+  sınıfı, aralıklı, iç içe kurallı; basit dolgu, çizgi, işaret ve merkez dolgusu; birimler mm, piksel, haritada metre; simgenin
+  saydamlığı, kapalı katman; süzgeçler QGIS'in ifadesinden ve ifadesine, IN de; tek geometri türü), `file.export.qml` ve
+  `file.import.qml` (`invalid_qml`; tek adım Katman stili); Katmanlar'ın sağ tıkında; Python ve MCP; 27 ortak durum
+  `qml_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin QML'leri ve KentOS'unkiler QGIS'te `loadNamedStyle` ile. Kalan:
+  QGIS'in öbür simge katmanları, veriye bağlı değerler, etiketler, MapLibre. — **20 Ekim,
+  [ADR 0555](docs/adr/0555-qml-style-exchange.md).**
 - [x] `CBS-25` permütasyon/FDR ve deney profili: Moran I ve Gi*'a tohumlu permütasyon (`kentos.spatial-inference/1`: SplitMix64 +
   xoshiro256**, katlanmış sözde p, yerelde koşullu permütasyon), Gi*'a FDR (Benjamini–Hochberg) ve Bonferroni, yeni Yerel Moran
   (LISA) `stats.localMoran`; `profile` tablosu ve `experiment` JSON'u (tohum, permütasyon, komşuluk, kapsam, girdinin SHA-256'sı);

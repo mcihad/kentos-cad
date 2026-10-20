@@ -1956,6 +1956,170 @@ fn layer_looks_go_out_as_sld_and_come_back() {
 }
 
 #[test]
+fn layer_looks_go_out_as_qml_and_come_back() {
+    // docs/adr/0555: categorized, graduated, rule-based and single looks written as QGIS layer style files; what a QML
+    // cannot say is said; each read back by file.import.qml gives the same renderer. With KENTOS_WRITE_QML=1 the
+    // files go to fixtures/qml/v1/out for scripts/fixtures/qml_cases.py, which loads them in QGIS 4.2.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let (parsel, yol, nokta) = (id("parsel"), id("yol"), id("nokta"));
+    let fill = |c: &str| {
+        json!({ "fill": { "type": "fill", "layers": [
+            { "id": "f", "type": "simpleFill", "color": c },
+            { "id": "o", "type": "simpleLine", "color": "#222222", "width": 0.4, "unit": "mm", "cap": "butt", "join": "miter" } ] } })
+    };
+    let looks = [
+        (
+            "kentos-kategorili.qml",
+            parsel.clone(),
+            json!({ "type": "categorized", "expr": "[ada]", "categories": [
+                { "value": "A", "label": "Ada A", "symbols": fill("#e41a1c") },
+                { "value": "B", "label": "Ada B", "symbols": fill("#377eb8") } ],
+                "other": fill("#99999980") }),
+            "categorized",
+        ),
+        (
+            "kentos-aralikli.qml",
+            parsel.clone(),
+            json!({ "type": "graduated", "expr": "[alan]", "classes": [
+                { "min": 0.0, "max": 500.0, "label": "küçük", "symbols": fill("#fee5d9") },
+                { "min": 500.0, "max": 1000.0, "label": "orta", "symbols": fill("#fcae91") },
+                { "min": 1000.0, "max": 5000.0, "label": "büyük", "symbols": fill("#de2d26") } ] }),
+            "graduated",
+        ),
+        (
+            "kentos-kurallar.qml",
+            parsel.clone(),
+            json!({ "type": "rules", "rules": [
+                { "id": "r1", "label": "Tapulu", "filter": "[tapulu] = 1", "symbols": fill("#1b9e77"),
+                  "children": [ { "id": "r2", "label": "Büyük", "filter": "[alan] > 1000 ve [ada] <> 'B'",
+                    "minScale": 500, "maxScale": 10000, "symbols": fill("#d95f02") } ] },
+                { "id": "r3", "label": "Diğer", "isElse": true, "symbols": fill("#7570b3") } ] }),
+            "rules",
+        ),
+        (
+            "kentos-cizgi.qml",
+            yol.clone(),
+            json!({ "type": "single", "symbols": { "line": { "type": "line", "opacity": 0.8, "layers": [
+                { "id": "l", "type": "simpleLine", "color": "#3366cc", "width": 0.8, "unit": "mm",
+                  "dash": [3.0, 1.5], "cap": "round", "join": "round" },
+                { "id": "m", "type": "simpleLine", "color": "#ffffff", "width": 2.0, "unit": "m" } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-nokta.qml",
+            nokta.clone(),
+            json!({ "type": "single", "symbols": { "marker": { "type": "marker", "layers": [
+                { "id": "p", "type": "shape", "shape": "triangle", "size": 3.0, "unit": "mm", "fill": "#ff0000",
+                  "stroke": "#000000", "strokeWidth": 0.3, "rotation": -30.0 },
+                { "id": "g", "type": "shape", "shape": "gear", "size": 2.0, "unit": "mm", "fill": "#00ff00" } ] } } }),
+            "single",
+        ),
+    ];
+    let dir = std::env::temp_dir().join(format!("kentos-qml-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    for (name, layer, renderer, kind) in &looks {
+        let set = s
+            .call(json!({ "command": "cad.layers.renderer", "input": { "layer": layer, "renderer": renderer } }))
+            .expect("answers");
+        assert_eq!(set["status"], "completed", "{set}");
+        let path = dir.join(name);
+        let planned = s
+            .call(json!({ "command": "file.export.qml", "op": "plan",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.qml",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"]["bytes"], planned["output"]["bytes"]);
+        let text = std::fs::read_to_string(&path).expect("written");
+        assert!(text.contains("<renderer-v2"), "{text}");
+        let lost = out["output"]["lost"].to_string();
+        match *name {
+            "kentos-nokta.qml" => assert!(lost.contains("gear"), "{out}"),
+            "kentos-aralikli.qml" => assert!(lost.contains("alt sınırı"), "{out}"),
+            _ => assert!(out["output"].get("lost").is_none(), "{out}"),
+        }
+        // Read back into the same layer: the same renderer, but for the graduated bounds and the gear.
+        let back = s
+            .call(json!({ "command": "file.import.qml",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(back["status"], "completed", "{back}");
+        assert_eq!(back["output"]["kind"], *kind, "{back}");
+        let r = &back["output"]["renderer"];
+        match *name {
+            "kentos-kategorili.qml" => {
+                assert_eq!(r["categories"][1]["value"], "B");
+                assert_eq!(r["other"]["fill"]["layers"][0]["color"], "#99999980");
+                assert_eq!(r["categories"][0]["symbols"]["fill"]["layers"][1]["width"], 0.4);
+            }
+            "kentos-kurallar.qml" => {
+                assert_eq!(r["rules"][0]["filter"], "[tapulu] = 1");
+                assert_eq!(
+                    r["rules"][0]["children"][0]["filter"],
+                    "[alan] > 1000 ve [ada] <> 'B'"
+                );
+                assert_eq!(r["rules"][0]["children"][0]["maxScale"], 10000.0);
+                assert_eq!(r["rules"][1]["isElse"], true);
+            }
+            "kentos-cizgi.qml" => {
+                let line = &r["symbols"]["line"];
+                assert_eq!(line["opacity"], 0.8);
+                assert_eq!(line["layers"][0]["dash"], json!([3.0, 1.5]));
+                assert_eq!(line["layers"][1]["unit"], "m");
+            }
+            "kentos-nokta.qml" => {
+                let m = &r["symbols"]["marker"]["layers"][0];
+                assert_eq!(m["rotation"], -30.0);
+                assert_eq!(m["strokeWidth"], 0.3);
+            }
+            _ => {}
+        }
+        // Written over only when asked.
+        let again = s
+            .call(json!({ "command": "file.export.qml",
+                "input": { "layer": layer, "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(again["error"]["code"], "file_exists", "{again}");
+        if std::env::var_os("KENTOS_WRITE_QML").is_some() {
+            let out_dir = format!(
+                "{}/../../../fixtures/qml/v1/out",
+                env!("CARGO_MANIFEST_DIR")
+            );
+            std::fs::create_dir_all(&out_dir).expect("a folder");
+            std::fs::copy(&path, format!("{out_dir}/{name}")).expect("kept");
+        }
+    }
+    let missing = s
+        .call(json!({ "command": "file.export.qml",
+            "input": { "layer": "yok", "path": dir.join("x.qml").display().to_string() } }))
+        .expect("answers");
+    assert_eq!(missing["error"]["code"], "layer_not_found", "{missing}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
 fn csv_tables_go_out_and_come_back() {
     // docs/adr/0522: the GeoPackage's layers written as CSVs (WKT, its .csvt and .prj) and read back into a new
     // drawing: the same objects, arcs exact; X/Y writes the points and counts the rest. With KENTOS_WRITE_CSV=1 the
