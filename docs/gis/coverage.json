@@ -3970,7 +3970,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 145,
+   "cases": 155,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -4109,13 +4109,14 @@
     "mcp": true,
     "server": false
    },
-   "cases": 276,
+   "cases": 297,
    "files": [
     "fixtures/commands/v1/cad.constraints.edit.follow.json",
     "fixtures/commands/v1/cad.dimensions.follow.json",
     "fixtures/commands/v1/cad.entities.edit.json",
     "fixtures/commands/v1/cad.entities.edit.policies.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
+    "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.styles.edit.json",
     "fixtures/commands/v1/desktop/cad.entities.edit.json"
    ],
@@ -7845,7 +7846,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 854,
+   "cases": 893,
    "files": [
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
@@ -13853,11 +13854,12 @@
     "mcp": true,
     "server": false
    },
-   "cases": 198,
+   "cases": 211,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.records.page.json",
     "fixtures/commands/v1/cad.relations.edit.json",
+    "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.together.json"
    ],
@@ -14725,7 +14727,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 396,
+   "cases": 436,
    "files": [
     "fixtures/commands/v1/cad.forms.submit.commit.json",
     "fixtures/commands/v1/cad.gis.derivation.json",
@@ -14782,7 +14784,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 33,
+   "cases": 59,
    "files": [
     "fixtures/commands/v1/cad.sources.reconcile.json"
    ],
