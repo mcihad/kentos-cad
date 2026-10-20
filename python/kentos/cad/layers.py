@@ -378,15 +378,16 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
     kopyalarıyla aynı gruba “<ad> kopyası” olarak kopyalar; merge kaynak katmanların
     (layers) nesnelerini hedef katmana (layer) taşır ve kaynakları siler, etkin katman
     kaynaksa hedef etkin olur; fields katmanın alanlarını yazar ve renames ile
-    nesnelerinin anahtarlarını yeniden adlandırır; purge boş katmanları, boş kalan
-    grupları ve hiçbir yerde kullanılmayan blok tanımlarını siler (layers ve blocks
-    verilirse yalnız onları; kalanların kullandığı kalır, kept'te sayılır). Hiçbir şey
-    değişmezse hiçbir şey yazılmaz (changed false). Adım adı işlemin adıdır: Katman
-    ekle, Grup ekle, Katman rengi, Çizgi tipi, Çizgi kalınlığı, Katman stili, Katmanı
-    taşı, Katman sil, Katmanı kopyala, Katmanları birleştir, Alanlar, Kullanılmayanları
-    temizle. Ad, görünürlük, kilit ve etkin katman cad.layers.set'tedir.
-    expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
-    conflict olur.
+    nesnelerinin anahtarlarını yeniden adlandırır, alanın adının geçtiği yerler de
+    (cad.fields.usage'ın yerleri, görünüş dahil) aynı adımda yeni adı alır; purge boş
+    katmanları, boş kalan grupları ve hiçbir yerde kullanılmayan blok tanımlarını siler
+    (layers ve blocks verilirse yalnız onları; kalanların kullandığı kalır, kept'te
+    sayılır). Hiçbir şey değişmezse hiçbir şey yazılmaz (changed false). Adım adı
+    işlemin adıdır: Katman ekle, Grup ekle, Katman rengi, Çizgi tipi, Çizgi kalınlığı,
+    Katman stili, Katmanı taşı, Katman sil, Katmanı kopyala, Katmanları birleştir,
+    Alanlar, Kullanılmayanları temizle. Ad, görünürlük, kilit ve etkin katman
+    cad.layers.set'tedir. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir
+    şey yazılmaz, sonuç conflict olur.
     """
     __slots__ = ()
     id = "cad.layers.edit"
@@ -436,14 +437,15 @@ class _LayersEdit(LocalCommand[LayersEdit, LayersEdited, LayersEdited]):
         kopyası” olarak kopyalar; merge kaynak katmanların (layers) nesnelerini hedef
         katmana (layer) taşır ve kaynakları siler, etkin katman kaynaksa hedef etkin olur;
         fields katmanın alanlarını yazar ve renames ile nesnelerinin anahtarlarını yeniden
-        adlandırır; purge boş katmanları, boş kalan grupları ve hiçbir yerde kullanılmayan
-        blok tanımlarını siler (layers ve blocks verilirse yalnız onları; kalanların
-        kullandığı kalır, kept'te sayılır). Hiçbir şey değişmezse hiçbir şey yazılmaz
-        (changed false). Adım adı işlemin adıdır: Katman ekle, Grup ekle, Katman rengi,
-        Çizgi tipi, Çizgi kalınlığı, Katman stili, Katmanı taşı, Katman sil, Katmanı
-        kopyala, Katmanları birleştir, Alanlar, Kullanılmayanları temizle. Ad, görünürlük,
-        kilit ve etkin katman cad.layers.set'tedir. expectedRevision verilmişse ve çizim o
-        sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
+        adlandırır, alanın adının geçtiği yerler de (cad.fields.usage'ın yerleri, görünüş
+        dahil) aynı adımda yeni adı alır; purge boş katmanları, boş kalan grupları ve hiçbir
+        yerde kullanılmayan blok tanımlarını siler (layers ve blocks verilirse yalnız
+        onları; kalanların kullandığı kalır, kept'te sayılır). Hiçbir şey değişmezse hiçbir
+        şey yazılmaz (changed false). Adım adı işlemin adıdır: Katman ekle, Grup ekle,
+        Katman rengi, Çizgi tipi, Çizgi kalınlığı, Katman stili, Katmanı taşı, Katman sil,
+        Katmanı kopyala, Katmanları birleştir, Alanlar, Kullanılmayanları temizle. Ad,
+        görünürlük, kilit ve etkin katman cad.layers.set'tedir. expectedRevision verilmişse
+        ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.
 
         Args:
             doc: The drawing it works on.

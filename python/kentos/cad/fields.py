@@ -294,9 +294,11 @@ class _FieldsUsage(LocalCommand[FieldsUsage, FieldsUsed, FieldsUsed]):
     geçtiği yerler: alanın katmanının formlarının taslağı ve yayımlanmış sürümleri (öğe,
     koşullar, hesap, varsayılan, seçenek süzgeci, denetimler, notun metni), başka
     formların bu katmandan listeleri ve ilişkili kayıtları, ilişkiler, katmanın koşullu
-    biçimi, süzgeci, etiketleri, zamanı, bilgi kartı ve eylemleri. Her yerin Türkçe adı,
-    yolu, alanı nasıl andığı (anahtar, ad, ifade, şablon) ve yayımlanmış sürümde olup
-    olmadığı. Çizimi değiştirmez; plan aynı cevabı verir.
+    biçimi, süzgeci, görünüşü (işleyicinin ifadeleri, kuralların süzgeçleri, katmanda
+    tanımlı simgelerin veriye bağlı değerleri; kitaplığın simgeleri değil), etiketleri,
+    zamanı, bilgi kartı ve eylemleri. Her yerin Türkçe adı, yolu, alanı nasıl andığı
+    (anahtar, ad, ifade, şablon) ve yayımlanmış sürümde olup olmadığı. Çizimi
+    değiştirmez; plan aynı cevabı verir.
     """
     __slots__ = ()
     id = "cad.fields.usage"
@@ -321,9 +323,11 @@ class _FieldsUsage(LocalCommand[FieldsUsage, FieldsUsed, FieldsUsed]):
         katmanının formlarının taslağı ve yayımlanmış sürümleri (öğe, koşullar, hesap,
         varsayılan, seçenek süzgeci, denetimler, notun metni), başka formların bu katmandan
         listeleri ve ilişkili kayıtları, ilişkiler, katmanın koşullu biçimi, süzgeci,
-        etiketleri, zamanı, bilgi kartı ve eylemleri. Her yerin Türkçe adı, yolu, alanı
-        nasıl andığı (anahtar, ad, ifade, şablon) ve yayımlanmış sürümde olup olmadığı.
-        Çizimi değiştirmez; plan aynı cevabı verir.
+        görünüşü (işleyicinin ifadeleri, kuralların süzgeçleri, katmanda tanımlı simgelerin
+        veriye bağlı değerleri; kitaplığın simgeleri değil), etiketleri, zamanı, bilgi kartı
+        ve eylemleri. Her yerin Türkçe adı, yolu, alanı nasıl andığı (anahtar, ad, ifade,
+        şablon) ve yayımlanmış sürümde olup olmadığı. Çizimi değiştirmez; plan aynı cevabı
+        verir.
 
         Args:
             doc: The drawing it works on.
