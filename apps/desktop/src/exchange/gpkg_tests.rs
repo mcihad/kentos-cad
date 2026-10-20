@@ -176,7 +176,10 @@ fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
     // Kaynak durumu (a window since docs/adr/0543) now has nothing waiting on the layer.
     let _ = app.update(Message::Run("source.status"));
     let row = app.source_status_row("import-parsel").expect("a row");
-    assert_eq!(app.source_status_next(row), kentos_commands::SourceNext::None);
+    assert_eq!(
+        app.source_status_next(row),
+        kentos_commands::SourceNext::None
+    );
     let _ = app.update(Message::SourceStatus(crate::source_status::Event::Close));
     let _ = app.update(Message::Bound(crate::bound::Event::Unlink(Some(
         "import-parsel".into(),
@@ -635,8 +638,13 @@ fn reconcile_scene(name: &str) -> (App, PathBuf) {
     let mut app = app_with_drawing();
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let run_on = |doc: &mut kentos_domain::Document, command: &str, input: serde_json::Value| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), command, CallOp::Execute, input)
-            .expect("runs");
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
         assert_eq!(answer["status"], "completed", "{answer}");
     };
     run_on(
@@ -666,7 +674,11 @@ fn reconcile_scene(name: &str) -> (App, PathBuf) {
     }
     for n in [7, 9] {
         let u = uid(doc, n);
-        run_on(doc, "cad.entities.delete", serde_json::json!({ "uids": [u] }));
+        run_on(
+            doc,
+            "cad.entities.delete",
+            serde_json::json!({ "uids": [u] }),
+        );
     }
     run_on(
         doc,
@@ -688,11 +700,21 @@ fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together(
     let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
         "import-parsel".into(),
     ))));
-    assert!(app.reconcile.is_some(), "the refused write opens the window");
-    assert_eq!(std::fs::read(&file).expect("read"), before, "nothing written over");
+    assert!(
+        app.reconcile.is_some(),
+        "the refused write opens the window"
+    );
+    assert_eq!(
+        std::fs::read(&file).expect("read"),
+        before,
+        "nothing written over"
+    );
     // Uzlaştır waits for every conflict's side.
     let view = format!("{:?}", app.reconcile);
-    assert!(view.contains("RemovedInLayer") && view.contains("RemovedInTable"), "{view}");
+    assert!(
+        view.contains("RemovedInLayer") && view.contains("RemovedInTable"),
+        "{view}"
+    );
     let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
     let _ = app.update(Message::Reconcile(R::Apply));
     assert!(app.reconcile.is_none(), "closed when done");
@@ -706,7 +728,11 @@ fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together(
     let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
         "import-parsel".into(),
     ))));
-    assert!(says(&app, "yazılacak bir şey yok"), "{:?}", app.log.lines().last().map(|l| l.text.clone()));
+    assert!(
+        says(&app, "yazılacak bir şey yok"),
+        "{:?}",
+        app.log.lines().last().map(|l| l.text.clone())
+    );
 }
 
 #[test]
@@ -719,7 +745,11 @@ fn reconcile_screens() {
 
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (width, height, mode) in [(1440.0, 900.0, "dark"), (1100.0, 650.0, "dark"), (1440.0, 900.0, "light")] {
+    for (width, height, mode) in [
+        (1440.0, 900.0, "dark"),
+        (1100.0, 650.0, "dark"),
+        (1440.0, 900.0, "light"),
+    ] {
         let (mut app, _file) = reconcile_scene(&format!("gpkg-uzlas-{mode}-{width}"));
         let _ = app
             .settings
@@ -767,6 +797,207 @@ fn reconcile_screens() {
     }
 }
 
+/// uzlas-komsu.gpkg (docs/adr/0553) bound over a copy, both tables (four parcels side by side, three buildings), the
+/// project's relation, the layers edited as tests/all/reconcile.rs edits them, then the copy changed as QGIS changed it.
+fn komsu_scene(name: &str) -> (App, PathBuf) {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let file = scratch(name).join("uzlas-komsu.gpkg");
+    std::fs::copy(gpkg("uzlas-komsu.gpkg"), &file).expect("copied");
+    let mut app = app_with_drawing();
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let run_on = |doc: &mut kentos_domain::Document, command: &str, input: serde_json::Value| {
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    };
+    for table in ["komsu", "bina"] {
+        run_on(
+            doc,
+            "cad.sources.edit",
+            serde_json::json!({ "edit": { "kind": "link", "path": file.display().to_string(), "table": table } }),
+        );
+    }
+    run_on(
+        doc,
+        "cad.relations.edit",
+        serde_json::json!({ "edit": { "kind": "create", "relation": { "id": "bina-komsu", "name": "Parselin binaları",
+            "parent": "import-komsu", "child": "import-bina", "field": "komsu" } } }),
+    );
+    let by = |doc: &kentos_domain::Document, layer: &str, name: &str, value: &str| {
+        doc.by_layer_with_uids(layer)
+            .find(|(_, e)| e.base().attrs.get(name).map(String::as_str) == Some(value))
+            .map(|(u, _)| u.to_string())
+            .expect("an object")
+    };
+    let (x0, y0) = (487000.0, 4420000.0);
+    let p = |x: f64, y: f64| serde_json::json!({ "x": x0 + x, "y": y0 + y });
+    let u = by(doc, "import-komsu", "ad", "K1");
+    run_on(
+        doc,
+        "cad.entities.set",
+        serde_json::json!({ "uids": [u], "attrs": { "ad": "Z1" }, "operation": "attributes" }),
+    );
+    for (k, pts) in [
+        (
+            "K2",
+            [p(20.0, 0.0), p(40.0, 0.0), p(42.0, 22.0), p(20.0, 20.0)],
+        ),
+        (
+            "K3",
+            [p(40.0, 0.0), p(60.0, 0.0), p(60.0, 20.0), p(42.0, 22.0)],
+        ),
+    ] {
+        let u = by(doc, "import-komsu", "ad", k);
+        run_on(
+            doc,
+            "cad.entities.edit",
+            serde_json::json!({ "operation": "grip", "changes": [{ "kind": "update", "uid": u,
+                "geometry": { "kind": "polygon", "pts": pts } }] }),
+        );
+    }
+    let u = by(doc, "import-komsu", "ad", "K4");
+    run_on(
+        doc,
+        "cad.entities.delete",
+        serde_json::json!({ "uids": [u] }),
+    );
+    for (k, kat) in [("K2", "5"), ("K3", "7")] {
+        let parent = by(doc, "import-komsu", "ad", k);
+        let u = by(doc, "import-bina", "komsu", &parent);
+        run_on(
+            doc,
+            "cad.entities.set",
+            serde_json::json!({ "uids": [u], "attrs": { "kat": kat }, "operation": "attributes" }),
+        );
+    }
+    std::fs::copy(gpkg("uzlas-komsu-qgis.gpkg"), &file).expect("changed in QGIS");
+    (app, file)
+}
+
+#[test]
+fn a_reconcile_takes_the_files_other_layers_and_resolves_a_group_whole() {
+    use crate::source_reconcile::Event as R;
+    use kentos_commands::ReconcileSide;
+    let (mut app, file) = komsu_scene("gpkg-komsu");
+    let before = std::fs::read(&file).expect("read");
+    let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+        "import-komsu".into(),
+    ))));
+    let w = app
+        .reconcile
+        .as_ref()
+        .expect("the refused write opens the window");
+    let view = format!("{w:?}");
+    // The file's other layer goes with it; the plan says what merged and the two groups.
+    assert!(view.contains("with: [\"import-bina\"]"), "{view}");
+    assert!(
+        view.contains("SharedVertex") && view.contains("Relation"),
+        "{view}"
+    );
+    assert!(view.contains("merged: [ReconcileMerge"), "{view}");
+    assert_eq!(
+        std::fs::read(&file).expect("read"),
+        before,
+        "nothing written over"
+    );
+    // A side taken for one member of a group is taken for all of them.
+    let member = w
+        .plan_conflicts()
+        .into_iter()
+        .find(|(_, group)| group.is_some())
+        .expect("a group's member");
+    let _ = app.update(Message::Reconcile(R::Side(
+        member.0.clone(),
+        ReconcileSide::Table,
+    )));
+    let sides = app.reconcile.as_ref().expect("the window").sides_taken();
+    assert!(sides >= 2, "the group's members all took the side: {sides}");
+    let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
+    let _ = app.update(Message::Reconcile(R::Apply));
+    assert!(app.reconcile.is_none(), "closed when done");
+    assert_ne!(std::fs::read(&file).expect("read"), before, "written");
+    // Both tables went in one call: nothing is left to write for either layer.
+    for layer in ["import-komsu", "import-bina"] {
+        let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+            layer.into(),
+        ))));
+        assert!(
+            says(&app, "yazılacak bir şey yok"),
+            "{layer}: {:?}",
+            app.log.lines().last().map(|l| l.text.clone())
+        );
+    }
+}
+
+#[test]
+#[ignore = "pictures, run by hand"]
+fn reconcile_group_screens() {
+    use crate::source_reconcile::Event as R;
+    use iced::Size;
+    use kentos_commands::ReconcileSide;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (width, height, mode) in [
+        (1440.0, 900.0, "dark"),
+        (1100.0, 650.0, "dark"),
+        (1440.0, 900.0, "light"),
+    ] {
+        let (mut app, _file) = komsu_scene(&format!("gpkg-komsu-{mode}-{width}"));
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut picture = |app: &mut App, label: &str| {
+            snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            let _ = snapshot.render(app.view(), &app.theme());
+            let path = out.join(format!(
+                "gpkg-uzlastir-grup-{mode}-{label}-{width}x{height}.png"
+            ));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
+            println!("{}", path.display());
+        };
+        let slots: Vec<f64> = {
+            let doc = app.document.as_ref().expect("a drawing");
+            doc.model
+                .by_layer_with_uids("import-komsu")
+                .filter_map(|(u, _)| doc.model.slot_of(u))
+                .map(|s| f64::from(s.0))
+                .collect()
+        };
+        app.zoom_to_objects(&slots);
+        let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
+            "import-komsu".into(),
+        ))));
+        picture(&mut app, "pencere");
+        // One group to the table's side, the rest to the layer's.
+        let member = app
+            .reconcile
+            .as_ref()
+            .and_then(|w| w.plan_conflicts().into_iter().find(|(_, g)| g.is_some()))
+            .expect("a group's member");
+        let _ = app.update(Message::Reconcile(R::All(ReconcileSide::Layer)));
+        let _ = app.update(Message::Reconcile(R::Side(member.0, ReconcileSide::Table)));
+        picture(&mut app, "secildi");
+        let _ = app.update(Message::Reconcile(R::Apply));
+        app.zoom_to_objects(&slots);
+        picture(&mut app, "uzlasti");
+    }
+}
+
 /// Kaynak durumu's scene (docs/adr/0543): the reconcile scene's parcels (both sides changed), a copy of qgis.gpkg's
 /// points with one attribute edited (only the layer changed), wgs84.gpkg's places in their own system, and a file
 /// bound then gone.
@@ -781,7 +1012,13 @@ fn status_scene(name: &str) -> (App, PathBuf) {
     std::fs::copy(gpkg("qgis.gpkg"), &gone).expect("copied");
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let run_on = |doc: &mut kentos_domain::Document, input: serde_json::Value, command: &str| {
-        let answer = registry::run(&mut ExecutionContext::new(doc), command, CallOp::Execute, input).expect("runs");
+        let answer = registry::run(
+            &mut ExecutionContext::new(doc),
+            command,
+            CallOp::Execute,
+            input,
+        )
+        .expect("runs");
         assert_eq!(answer["status"], "completed", "{answer}");
         answer
     };
@@ -790,7 +1027,10 @@ fn status_scene(name: &str) -> (App, PathBuf) {
         serde_json::json!({ "edit": { "kind": "link", "path": points.display().to_string(), "table": "nokta" } }),
         "cad.sources.edit",
     );
-    let layer = linked["output"]["link"]["layer"].as_str().expect("a layer").to_owned();
+    let layer = linked["output"]["link"]["layer"]
+        .as_str()
+        .expect("a layer")
+        .to_owned();
     run_on(
         doc,
         serde_json::json!({ "edit": { "kind": "link", "path": gpkg("wgs84.gpkg").display().to_string(), "table": "yer", "reproject": true } }),
@@ -801,7 +1041,11 @@ fn status_scene(name: &str) -> (App, PathBuf) {
         serde_json::json!({ "edit": { "kind": "link", "path": gone.display().to_string(), "table": "yol" } }),
         "cad.sources.edit",
     );
-    let first = doc.by_layer_with_uids(&layer).next().map(|(u, _)| u.to_string()).expect("a point");
+    let first = doc
+        .by_layer_with_uids(&layer)
+        .next()
+        .map(|(u, _)| u.to_string())
+        .expect("a point");
     run_on(
         doc,
         serde_json::json!({ "uids": [first], "attrs": { "ad": "Yeni ad" }, "operation": "attributes" }),
@@ -834,7 +1078,12 @@ fn the_source_status_says_each_layers_way_out_and_takes_it() {
     assert_eq!(layers.len(), 4, "{layers:?}");
     assert_eq!(
         layers.iter().map(|l| next(&app, l)).collect::<Vec<_>>(),
-        [SourceNext::Reconcile, SourceNext::Write, SourceNext::None, SourceNext::Relink]
+        [
+            SourceNext::Reconcile,
+            SourceNext::Write,
+            SourceNext::None,
+            SourceNext::Relink
+        ]
     );
     // Kaynağa yaz on the points: the file written, the row now the same.
     let before = std::fs::read(&points).expect("read");
@@ -850,7 +1099,9 @@ fn the_source_status_says_each_layers_way_out_and_takes_it() {
 
 /// The state of the layer the table shows: its way out and whether the reading is of an earlier drawing.
 fn table_source(app: &mut App, layer: &str) -> Option<(kentos_commands::SourceNext, bool)> {
-    let _ = app.update(Message::Features(crate::features::Event::Layer(layer.to_owned())));
+    let _ = app.update(Message::Features(crate::features::Event::Layer(
+        layer.to_owned(),
+    )));
     let doc = app.document.as_ref().expect("a drawing");
     let rows = app.feature_rows(doc);
     app.source_state(&rows).map(|(s, stale)| (s.next, stale))
@@ -917,8 +1168,7 @@ fn the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out() {
             .map(|(u, _)| u.to_string())
             .expect("a point")
     };
-    let input =
-        serde_json::json!({ "uids": [uid], "attrs": { "ad": "Başka ad" }, "operation": "attributes" });
+    let input = serde_json::json!({ "uids": [uid], "attrs": { "ad": "Başka ad" }, "operation": "attributes" });
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(
             &mut app.document.as_mut().expect("a drawing").model,
@@ -951,7 +1201,11 @@ fn table_source_screens() {
 
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (width, height, mode) in [(1440.0, 900.0, "dark"), (1100.0, 650.0, "dark"), (1440.0, 900.0, "light")] {
+    for (width, height, mode) in [
+        (1440.0, 900.0, "dark"),
+        (1100.0, 650.0, "dark"),
+        (1440.0, 900.0, "light"),
+    ] {
         let (mut app, _) = status_scene(&format!("gpkg-tablo-{mode}-{width}"));
         let _ = app
             .settings
@@ -974,7 +1228,9 @@ fn table_source_screens() {
                 let _ = app.update(message);
             });
             let _ = snapshot.render(app.view(), &app.theme());
-            let path = out.join(format!("gpkg-tablo-kaynak-{mode}-{label}-{width}x{height}.png"));
+            let path = out.join(format!(
+                "gpkg-tablo-kaynak-{mode}-{label}-{width}x{height}.png"
+            ));
             snapshot
                 .render(app.view(), &app.theme())
                 .save(&path)
@@ -1000,7 +1256,11 @@ fn source_status_screens() {
 
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
     std::fs::create_dir_all(&out).expect("a folder for the pictures");
-    for (width, height, mode) in [(1440.0, 900.0, "dark"), (1100.0, 650.0, "dark"), (1440.0, 900.0, "light")] {
+    for (width, height, mode) in [
+        (1440.0, 900.0, "dark"),
+        (1100.0, 650.0, "dark"),
+        (1440.0, 900.0, "light"),
+    ] {
         let (mut app, _) = status_scene(&format!("gpkg-durum-{mode}-{width}"));
         let _ = app
             .settings
@@ -1012,7 +1272,9 @@ fn source_status_screens() {
                 let _ = app.update(message);
             });
             let _ = snapshot.render(app.view(), &app.theme());
-            let path = out.join(format!("gpkg-kaynak-durumu-{mode}-{label}-{width}x{height}.png"));
+            let path = out.join(format!(
+                "gpkg-kaynak-durumu-{mode}-{label}-{width}x{height}.png"
+            ));
             snapshot
                 .render(app.view(), &app.theme())
                 .save(&path)
@@ -1021,12 +1283,30 @@ fn source_status_screens() {
         };
         let _ = app.update(Message::Bound(crate::bound::Event::Status));
         let missing = app.source_status_row(
-            &app.document.as_ref().expect("a drawing").model.settings().sources[3].layer.clone(),
+            &app.document
+                .as_ref()
+                .expect("a drawing")
+                .model
+                .settings()
+                .sources[3]
+                .layer
+                .clone(),
         );
-        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(missing.expect("a row"))));
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(
+            missing.expect("a row"),
+        )));
         picture(&mut app, "pencere");
         let i = app
-            .source_status_row(&app.document.as_ref().expect("a drawing").model.settings().sources[1].layer.clone())
+            .source_status_row(
+                &app.document
+                    .as_ref()
+                    .expect("a drawing")
+                    .model
+                    .settings()
+                    .sources[1]
+                    .layer
+                    .clone(),
+            )
             .expect("a row");
         let _ = app.update(Message::SourceStatus(crate::source_status::Event::Act(i)));
         picture(&mut app, "yazildi");

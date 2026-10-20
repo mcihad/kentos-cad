@@ -825,13 +825,15 @@ class ConflictKind(_StrEnum):
     - ``changed``: Both changed it, differently.
     - ``removedInLayer``: The layer removed it, the table changed it.
     - ``removedInTable``: The table removed it, the layer changed it.
+    - ``related``: Not in conflict itself: it belongs to a group with one (docs/adr/0553 §2) and goes the way the group does.
     """
     CHANGED = "changed"
     REMOVED_IN_LAYER = "removedInLayer"
     REMOVED_IN_TABLE = "removedInTable"
+    RELATED = "related"
 
 
-ConflictKindName = Literal["changed", "removedInLayer", "removedInTable"]
+ConflictKindName = Literal["changed", "removedInLayer", "removedInTable", "related"]
 """The names of :class:`ConflictKind`, for a plain string."""
 
 
@@ -1668,6 +1670,20 @@ class GridOrigin(_StrEnum):
 
 GridOriginName = Literal["center", "corner"]
 """The names of :class:`GridOrigin`, for a plain string."""
+
+
+class GroupReason(_StrEnum):
+    """Why objects are one group (docs/adr/0553 §2).
+
+    - ``sharedVertex``: Neighbours that shared a vertex when the layer and the table last matched, which both sides moved.
+    - ``relation``: A parent one side removed and a child (a relation's) the other side added or changed.
+    """
+    SHARED_VERTEX = "sharedVertex"
+    RELATION = "relation"
+
+
+GroupReasonName = Literal["sharedVertex", "relation"]
+"""The names of :class:`GroupReason`, for a plain string."""
 
 
 class HatchDrawOrder(_StrEnum):
@@ -34366,13 +34382,18 @@ class ReconcileConflict(_Model):
     """One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.
     Attributes:
         geometry: Whether the kind or the geometry differs (a removal: always).
-        fields: The attributes that differ, by name.
+        fields: The attributes that differ, by name; of an object both changed, only those both changed differently (the rest
+            merged), unless the base keeps no fields of it.
+        group: The group it belongs to (the lowest lasting id among its objects), none for a conflict of its own.
+        layer: The object's layer, when more than one layer is reconciled.
         side: The side it is resolved to; none: unresolved.
     """
     object: str
     kind: ConflictKind | ConflictKindName
     geometry: bool
     fields: list[ConflictField] | Unset = UNSET
+    group: str | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
     side: ReconcileSide | ReconcileSideName | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
@@ -34382,6 +34403,10 @@ class ReconcileConflict(_Model):
         out["geometry"] = self.geometry
         if self.fields is not UNSET:
             out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.group is not UNSET:
+            out["group"] = self.group
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
         if self.side is not UNSET:
             out["side"] = None if self.side is None else _enum_out(self.side)
         return out
@@ -34393,6 +34418,8 @@ class ReconcileConflict(_Model):
             kind=_enum_in(ConflictKind, data["kind"]),
             geometry=data["geometry"],
             fields=[ConflictField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            group=data.get("group", UNSET),
+            layer=data.get("layer", UNSET),
             side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(ReconcileSide, data["side"]),
         )
 
@@ -34426,8 +34453,103 @@ class ReconcileCounts(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ReconcileGroup(_Model):
+    """Objects whose changes belong together, resolved together: one side for all of them.
+    Attributes:
+        id: The lowest lasting id among the members.
+        objects: The members' lasting ids, in the ids' order.
+        side: The side the group is resolved to; none: unresolved.
+    """
+    id: str
+    objects: list[str]
+    reasons: list[GroupReason | GroupReasonName]
+    side: ReconcileSide | ReconcileSideName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["objects"] = list(self.objects)
+        out["reasons"] = [_enum_out(e0) for e0 in self.reasons]
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileGroup:
+        return cls(
+            id=data["id"],
+            objects=list(data["objects"]),
+            reasons=[_enum_in(GroupReason, e0) for e0 in data["reasons"]],
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(ReconcileSide, data["side"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconcileLayer(_Model):
+    """One layer's share of a reconcile of several (docs/adr/0553 §3)."""
+    layer: str
+    from_table: ReconcileCounts
+    to_table: ReconcileCounts
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["fromTable"] = self.from_table.to_json()
+        out["toTable"] = self.to_table.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileLayer:
+        return cls(
+            layer=data["layer"],
+            from_table=ReconcileCounts.from_json(data["fromTable"]),
+            to_table=ReconcileCounts.from_json(data["toTable"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconcileMerge(_Model):
+    """An object both sides changed and the merge put together (docs/adr/0553 §1): the attributes each side changed, and
+    whose geometry went into it.
+    Attributes:
+        from_layer: The attributes only the layer changed (its value is in the merge), by name.
+        from_table: The attributes only the table changed.
+        geometry: The side whose geometry the merge has, when only one changed it.
+        layer: The object's layer, when more than one layer is reconciled.
+    """
+    object: str
+    from_layer: list[str] | Unset = UNSET
+    from_table: list[str] | Unset = UNSET
+    geometry: ReconcileSide | ReconcileSideName | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["object"] = self.object
+        if self.from_layer is not UNSET:
+            out["fromLayer"] = list(self.from_layer)
+        if self.from_table is not UNSET:
+            out["fromTable"] = list(self.from_table)
+        if self.geometry is not UNSET:
+            out["geometry"] = None if self.geometry is None else _enum_out(self.geometry)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileMerge:
+        return cls(
+            object=data["object"],
+            from_layer=list(data["fromLayer"]) if "fromLayer" in data else UNSET,
+            from_table=list(data["fromTable"]) if "fromTable" in data else UNSET,
+            geometry=UNSET if "geometry" not in data else None if data["geometry"] is None else _enum_in(ReconcileSide, data["geometry"]),
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ReconcileTake(_Model):
-    """One conflict resolved by hand.
+    """One conflict resolved by hand (an object of a group takes the whole group's side).
     Attributes:
         object: The object's lasting id.
     """
@@ -37305,11 +37427,16 @@ class SourceBase(_Model):
         source: The link's id (`kaynak-N`).
         revision: The file's SHA-256 and the layer's digest it was taken at.
         rows: The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).
+        fields: What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in
+            base64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its
+            vertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a
+            whole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].
     """
     source: str
     revision: str
     digest: str
     rows: str
+    fields: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -37317,6 +37444,8 @@ class SourceBase(_Model):
         out["revision"] = self.revision
         out["digest"] = self.digest
         out["rows"] = self.rows
+        if self.fields is not UNSET:
+            out["fields"] = self.fields
         return out
 
     @classmethod
@@ -37326,6 +37455,7 @@ class SourceBase(_Model):
             revision=data["revision"],
             digest=data["digest"],
             rows=data["rows"],
+            fields=data.get("fields", UNSET),
         )
 
 
@@ -37773,16 +37903,21 @@ class SourcesReconcile(_Model):
     `derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no
     base for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),
     `not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),
-    `geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`
-    (executing, a conflict without a side).
+    `geometry_mismatch` (a layer's object the table's column cannot hold), `transaction_split` (a layer of `with` in
+    another file), `group_split` (the objects of one group taken to different sides); conflict: `unresolved_conflicts`
+    (executing, a conflict without a side). Warning: `field_base_missing` (objects both sides changed that the base keeps
+    no fields of, which conflict as a whole).
     Attributes:
         layer: The bound layer, by id.
         rest: The side of every conflict `take` does not name.
         take: Conflicts resolved one by one.
+        with_: More bound layers of the same GeoPackage file, reconciled with it in one transaction (the file's revision is
+            checked once).
     """
     layer: str
     rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET
     take: list[ReconcileTake] | Unset = UNSET
+    with_: list[str] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -37791,6 +37926,8 @@ class SourcesReconcile(_Model):
             out["rest"] = None if self.rest is None else _enum_out(self.rest)
         if self.take is not UNSET:
             out["take"] = [e0.to_json() for e0 in self.take]
+        if self.with_ is not UNSET:
+            out["with"] = list(self.with_)
         return out
 
     @classmethod
@@ -37799,6 +37936,7 @@ class SourcesReconcile(_Model):
             layer=data["layer"],
             rest=UNSET if "rest" not in data else None if data["rest"] is None else _enum_in(ReconcileSide, data["rest"]),
             take=[ReconcileTake.from_json(e0) for e0 in data["take"]] if "take" in data else UNSET,
+            with_=list(data["with"]) if "with" in data else UNSET,
         )
 
 
@@ -37812,6 +37950,9 @@ class SourcesReconciled(_Model):
         unresolved: Conflicts without a side. Unit: count.
         source: The file's SHA-256 (plan: as it is; executed: after the write).
         revision: ^(0|[1-9][0-9]*)$
+        groups: Groups of related changes (docs/adr/0553 §2), by their ids' order.
+        layers: Each layer's share, when more than one layer is reconciled.
+        merged: Objects both sides changed that were merged field by field (docs/adr/0553 §1), in the lasting ids' order.
     """
     from_table: ReconcileCounts
     to_table: ReconcileCounts
@@ -37820,6 +37961,9 @@ class SourcesReconciled(_Model):
     source: str
     revision: str
     conflicts: list[ReconcileConflict] | Unset = UNSET
+    groups: list[ReconcileGroup] | Unset = UNSET
+    layers: list[ReconcileLayer] | Unset = UNSET
+    merged: list[ReconcileMerge] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -37831,6 +37975,12 @@ class SourcesReconciled(_Model):
         out["revision"] = self.revision
         if self.conflicts is not UNSET:
             out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
+        if self.groups is not UNSET:
+            out["groups"] = [e0.to_json() for e0 in self.groups]
+        if self.layers is not UNSET:
+            out["layers"] = [e0.to_json() for e0 in self.layers]
+        if self.merged is not UNSET:
+            out["merged"] = [e0.to_json() for e0 in self.merged]
         return out
 
     @classmethod
@@ -37843,6 +37993,9 @@ class SourcesReconciled(_Model):
             source=data["source"],
             revision=data["revision"],
             conflicts=[ReconcileConflict.from_json(e0) for e0 in data["conflicts"]] if "conflicts" in data else UNSET,
+            groups=[ReconcileGroup.from_json(e0) for e0 in data["groups"]] if "groups" in data else UNSET,
+            layers=[ReconcileLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
+            merged=[ReconcileMerge.from_json(e0) for e0 in data["merged"]] if "merged" in data else UNSET,
         )
 
 
@@ -56141,6 +56294,8 @@ __all__ = [
     "GridsCreated",
     "GridsPlan",
     "GroupFormItem",
+    "GroupReason",
+    "GroupReasonName",
     "HatchAssoc",
     "HatchCurve",
     "HatchDrawOrder",
@@ -56721,6 +56876,9 @@ __all__ = [
     "ReboundSpacesOperation",
     "ReconcileConflict",
     "ReconcileCounts",
+    "ReconcileGroup",
+    "ReconcileLayer",
+    "ReconcileMerge",
     "ReconcileSide",
     "ReconcileSideName",
     "ReconcileTake",

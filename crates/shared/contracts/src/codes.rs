@@ -1154,6 +1154,10 @@ codes! {
     NOT_A_CONFLICT = "not_a_conflict", Failed, false, "Nesne bir çatışma değil; yalnız çatışmalar için yan seçilir.";
     /// A reconcile with conflicts no side was taken for (docs/adr/0538 §2).
     UNRESOLVED_CONFLICTS = "unresolved_conflicts", Conflict, true, "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin.";
+    /// The objects of one group of related changes taken to different sides (docs/adr/0553 §2).
+    GROUP_SPLIT = "group_split", Failed, false, "Birlikte değişen nesneler (bir grup) farklı yanlara seçilemez; grubun tamamı için bir yan seçin.";
+    /// Objects both sides changed that the base keeps no fields of, so they conflict as a whole (docs/adr/0553 §1).
+    FIELD_BASE_MISSING = "field_base_missing", Warning, false, "Tabanın alan kaydı olmayan nesneleri iki yan değiştirdiyse bütün olarak çatışır; alanlar tek tek birleştirilemez.";
     /// A data profile KentOS has not by that name, or none given (docs/adr/0541).
     UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
     /// A data profile whose shape does not hold (docs/adr/0541).

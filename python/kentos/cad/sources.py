@@ -292,16 +292,24 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
     nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız
     katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te,
     başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur.
-    İkisinin farklı değiştirdiği ya da birinin silip öbürünün değiştirdiği nesne
-    çatışmadır: farklı öznitelikler adlarıyla, iki yanın değerleriyle, geometrinin
-    farklı olup olmadığı söylenir; son yazan kazanmaz, take (nesne nesne) ve rest
-    (kalanlar) ile bir yan seçilir. plan dosyayı okur, hiçbir şey yazmaz ve hepsini
-    söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts,
-    conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır:
-    tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini
-    de geri alır. Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok
-    nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan
-    sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır.
+    İkisinin de değiştirdiği nesne tabana karşı alan alan birleştirilir (docs/adr/0553):
+    yalnız bir yanın değiştirdiği öznitelik ve geometri o yanınkini alır, iki yan birden
+    farklı değiştirdiği öznitelik ya da geometri çatışmadır (iki yanın değerleriyle);
+    nesne, tabanın alan kaydı yoksa bütün olarak çatışır (field_base_missing). Birinin
+    silip öbürünün değiştirdiği nesne de çatışmadır. Birlikte değişen nesneler bir
+    gruptur ve birlikte, tek yanla çözülür: ortak köşesini iki yanın da taşıdığı
+    komşular ve bir yanın sildiği üst kayıtla öbür yanın eklediği ya da değiştirdiği alt
+    kayıt (ilişki). Son yazan kazanmaz: take (nesne ya da grup için) ve rest (kalanlar)
+    ile bir yan seçilir; bir grubun nesneleri farklı yanlara seçilemez (group_split).
+    with ile aynı GeoPackage dosyasının başka bağlı katmanları aynı çağrıda ve tek
+    SQLite işleminde uzlaştırılır (başka dosyadaki katman transaction_split). plan
+    dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar
+    çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı
+    katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır:
+    tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ
+    (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz
+    (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız
+    alandaki satırlar karşılaştırılır.
     """
     __slots__ = ()
     id = "cad.sources.reconcile"
@@ -320,6 +328,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         layer: str,
         rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET,
         take: Sequence[ReconcileTake] | Unset = UNSET,
+        with_: Sequence[str] | Unset = UNSET,
         request_id: str | None = None,
         expected: Expected | None = None,
     ) -> SourcesReconciled:
@@ -327,23 +336,32 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti,
         docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya
         yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır,
-        ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin farklı değiştirdiği ya da
-        birinin silip öbürünün değiştirdiği nesne çatışmadır: farklı öznitelikler adlarıyla,
-        iki yanın değerleriyle, geometrinin farklı olup olmadığı söylenir; son yazan
-        kazanmaz, take (nesne nesne) ve rest (kalanlar) ile bir yan seçilir. plan dosyayı
-        okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden
-        yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır,
-        katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem,
-        dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ (bu sürümden önce
-        bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base):
-        önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar
-        karşılaştırılır.
+        ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin de değiştirdiği nesne tabana
+        karşı alan alan birleştirilir (docs/adr/0553): yalnız bir yanın değiştirdiği
+        öznitelik ve geometri o yanınkini alır, iki yan birden farklı değiştirdiği öznitelik
+        ya da geometri çatışmadır (iki yanın değerleriyle); nesne, tabanın alan kaydı yoksa
+        bütün olarak çatışır (field_base_missing). Birinin silip öbürünün değiştirdiği nesne
+        de çatışmadır. Birlikte değişen nesneler bir gruptur ve birlikte, tek yanla çözülür:
+        ortak köşesini iki yanın da taşıdığı komşular ve bir yanın sildiği üst kayıtla öbür
+        yanın eklediği ya da değiştirdiği alt kayıt (ilişki). Son yazan kazanmaz: take
+        (nesne ya da grup için) ve rest (kalanlar) ile bir yan seçilir; bir grubun nesneleri
+        farklı yanlara seçilemez (group_split). with ile aynı GeoPackage dosyasının başka
+        bağlı katmanları aynı çağrıda ve tek SQLite işleminde uzlaştırılır (başka dosyadaki
+        katman transaction_split). plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler.
+        Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict);
+        çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma
+        adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır.
+        Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman)
+        uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma
+        kopyasında yalnız alandaki satırlar karşılaştırılır.
 
         Args:
             doc: The drawing it works on.
             layer: The bound layer, by id.
             rest: The side of every conflict `take` does not name.
             take: Conflicts resolved one by one.
+            with_: More bound layers of the same GeoPackage file, reconciled with it in one transaction (the file's revision is
+                checked once).
             request_id: Names this write: sent again with the same call it is answered as
                 before and applied once (docs/adr/0253 §6).
             expected: What must still hold (:class:`Expected`: the revision, stamps, a plan's
@@ -360,6 +378,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
             layer=layer,
             rest=rest,
             take=_opt(take, lambda x: list(x)),
+            with_=_opt(with_, lambda x: list(x)),
         ), request_id=request_id, expected=expected)
 
     def plan(
@@ -370,6 +389,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         layer: str,
         rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET,
         take: Sequence[ReconcileTake] | Unset = UNSET,
+        with_: Sequence[str] | Unset = UNSET,
     ) -> SourcesReconciled:
         """What it would write, with nothing written; the plan's ``revision``, given as
         ``expected_revision``, writes exactly this plan or nothing.
@@ -378,6 +398,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
             layer=layer,
             rest=rest,
             take=_opt(take, lambda x: list(x)),
+            with_=_opt(with_, lambda x: list(x)),
         ))
 
     def validate(
@@ -388,6 +409,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         layer: str,
         rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET,
         take: Sequence[ReconcileTake] | Unset = UNSET,
+        with_: Sequence[str] | Unset = UNSET,
     ) -> list[CommandNote]:
         """Checks the input against the drawing, writing nothing; its warnings.
         A refusal raises as for the call.
@@ -396,6 +418,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
             layer=layer,
             rest=rest,
             take=_opt(take, lambda x: list(x)),
+            with_=_opt(with_, lambda x: list(x)),
         ))
 
     def answer(
@@ -406,6 +429,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
         layer: str,
         rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET,
         take: Sequence[ReconcileTake] | Unset = UNSET,
+        with_: Sequence[str] | Unset = UNSET,
         op: str = "execute",
         request_id: str | None = None,
         expected: Expected | None = None,
@@ -419,6 +443,7 @@ class _SourcesReconcile(LocalCommand[SourcesReconcile, SourcesReconciled, Source
             layer=layer,
             rest=rest,
             take=_opt(take, lambda x: list(x)),
+            with_=_opt(with_, lambda x: list(x)),
         ), op=op, request_id=request_id, expected=expected)
 
 

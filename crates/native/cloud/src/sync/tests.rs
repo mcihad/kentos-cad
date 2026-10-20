@@ -244,6 +244,55 @@ fn a_conflict_stops_sending_until_mine_is_kept() {
 }
 
 #[test]
+fn a_conflict_in_other_fields_is_merged_and_sent_again_over_theirs_and_a_clash_stays() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let uid = o.document.uid(Slot(1)).unwrap();
+    let base = o.document.get(Slot(1)).unwrap().clone();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    sync.next(&o.document).unwrap();
+    // The server answers: someone labelled it (version 3) while this was on its way.
+    let mut theirs = base.clone();
+    theirs.base_mut().label = Some("ortak".into());
+    let answer = |entity: Entity| {
+        ApiFailure::new(409, "conflict", "Nesne başkası tarafından değiştirildi.").with_conflicts(vec![
+            FeatureConflict {
+                id: uid.to_string(),
+                reason: ConflictReason::Changed,
+                expected: Some("1".into()),
+                actual: Some("3".into()),
+                current: Some(FeatureRecord {
+                    id: uid.to_string(),
+                    version: "3".into(),
+                    entity,
+                }),
+            },
+        ])
+    };
+    let (after, merged) = sync.failed_in(&mut o.document, &answer(theirs));
+    assert_eq!((after, merged), (After::Retry(Duration::ZERO), 1));
+    assert!(sync.conflicts().is_empty());
+    assert_eq!(sync.state(), SaveState::Pending);
+    assert_eq!(x_of(&o.document, uid), Some(486700.0));
+    let slot = o.document.slot_of(uid).unwrap();
+    assert_eq!(o.document.get(slot).unwrap().base().label.as_deref(), Some("ortak"));
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions.get(&uid.to_string()).map(String::as_str),
+        Some("3")
+    );
+    // Both moved it, differently: the same field, a conflict as before.
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    sync.next(&o.document).unwrap();
+    let (after, merged) = sync.failed_in(&mut o.document, &answer(point(486800.0)));
+    assert_eq!((after, merged), (After::Stop, 0));
+    assert_eq!(sync.state(), SaveState::Conflict);
+    assert_eq!(sync.conflicts().len(), 1);
+}
+
+#[test]
 fn a_viewer_and_an_archived_project_send_nothing() {
     let mut viewer = opened(vec![ProjectPermission::Read], ProjectState::Active);
     let mut sync = ProjectSync::new(&viewer).unwrap();
@@ -622,6 +671,79 @@ fn an_object_changed_here_and_elsewhere_is_a_conflict_until_theirs_is_taken() {
     assert_eq!(sync.version_of(id), Some("5"));
     assert_eq!(sync.state(), SaveState::Saved);
     assert_eq!(sync.next(&o.document), None);
+}
+
+#[test]
+fn an_object_changed_here_and_elsewhere_in_other_fields_is_merged_and_sent_over_theirs() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    // Mine moves the point; theirs labels it and changes an attribute.
+    let base = o.document.get(Slot(1)).unwrap().clone();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    sync.observe(&o.document);
+    let mut theirs = base.clone();
+    theirs.base_mut().label = Some("ortak".into());
+    theirs.base_mut().attrs.insert("Ada".into(), "101".into());
+    let incoming = sync.incoming(&page(vec![event(10, None, &[(id, FeatureOp::Update)], false)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![record(id, "5", theirs)],
+                info: None,
+                blocks: None,
+            },
+        )
+        .unwrap();
+    // Both stay: no conflict, the merge is in the drawing and waits to go over the server's version.
+    assert_eq!((taken.conflicts, taken.merged), (0, 1));
+    assert_eq!(x_of(&o.document, id), Some(486700.0));
+    let slot = o.document.slot_of(id).unwrap();
+    let merged = o.document.get(slot).unwrap();
+    assert_eq!(merged.base().label.as_deref(), Some("ortak"));
+    assert_eq!(merged.base().attrs.get("Ada").map(String::as_str), Some("101"));
+    assert!(sync.conflicts().is_empty());
+    assert_eq!(sync.version_of(id), Some("5"));
+    let env = sync.next(&o.document).unwrap();
+    assert_eq!(
+        env.expected_versions.get(&id.to_string()).map(String::as_str),
+        Some("5")
+    );
+    match &input(&env).features[0] {
+        FeatureChange::Update { id: sent, entity } => {
+            assert_eq!(sent, &id.to_string());
+            assert_eq!(entity.base().label.as_deref(), Some("ortak"));
+        }
+        other => panic!("an update: {other:?}"),
+    }
+}
+
+#[test]
+fn an_object_whose_change_is_on_its_way_is_not_merged_but_a_conflict() {
+    let mut o = editor();
+    let mut sync = ProjectSync::new(&o).unwrap();
+    let id = o.document.uid(Slot(1)).unwrap();
+    let base = o.document.get(Slot(1)).unwrap().clone();
+    assert!(o.document.update(Slot(1), point(486700.0)));
+    // Sent, the answer not yet here: the object is in the command on its way.
+    assert!(sync.next(&o.document).is_some());
+    let mut theirs = base;
+    theirs.base_mut().label = Some("ortak".into());
+    let incoming = sync.incoming(&page(vec![event(10, None, &[(id, FeatureOp::Update)], false)]));
+    let taken = sync
+        .take_remote(
+            &mut o.document,
+            incoming,
+            Remote {
+                records: vec![record(id, "5", theirs)],
+                info: None,
+                blocks: None,
+            },
+        )
+        .unwrap();
+    assert_eq!((taken.conflicts, taken.merged), (1, 0));
 }
 
 #[test]

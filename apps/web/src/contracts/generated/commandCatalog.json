@@ -15062,6 +15062,13 @@
               "digest": {
                 "type": "string"
               },
+              "fields": {
+                "description": "What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in\nbase64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its\nvertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a\nwhole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "revision": {
                 "description": "The file's SHA-256 and the layer's digest it was taken at.",
                 "type": "string"
@@ -26760,6 +26767,13 @@
             "properties": {
               "digest": {
                 "type": "string"
+              },
+              "fields": {
+                "description": "What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in\nbase64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its\nvertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a\nwhole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The file's SHA-256 and the layer's digest it was taken at.",
@@ -43203,6 +43217,13 @@
             "properties": {
               "digest": {
                 "type": "string"
+              },
+              "fields": {
+                "description": "What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in\nbase64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its\nvertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a\nwhole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "revision": {
                 "description": "The file's SHA-256 and the layer's digest it was taken at.",
@@ -1003806,7 +1003827,7 @@
       "id": "cad.sources.reconcile",
       "version": 1,
       "title": "Kaynakla uzlaştır",
-      "summary": "Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin farklı değiştirdiği ya da birinin silip öbürünün değiştirdiği nesne çatışmadır: farklı öznitelikler adlarıyla, iki yanın değerleriyle, geometrinin farklı olup olmadığı söylenir; son yazan kazanmaz, take (nesne nesne) ve rest (kalanlar) ile bir yan seçilir. plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır.",
+      "summary": "Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin de değiştirdiği nesne tabana karşı alan alan birleştirilir (docs/adr/0553): yalnız bir yanın değiştirdiği öznitelik ve geometri o yanınkini alır, iki yan birden farklı değiştirdiği öznitelik ya da geometri çatışmadır (iki yanın değerleriyle); nesne, tabanın alan kaydı yoksa bütün olarak çatışır (field_base_missing). Birinin silip öbürünün değiştirdiği nesne de çatışmadır. Birlikte değişen nesneler bir gruptur ve birlikte, tek yanla çözülür: ortak köşesini iki yanın da taşıdığı komşular ve bir yanın sildiği üst kayıtla öbür yanın eklediği ya da değiştirdiği alt kayıt (ilişki). Son yazan kazanmaz: take (nesne ya da grup için) ve rest (kalanlar) ile bir yan seçilir; bir grubun nesneleri farklı yanlara seçilemez (group_split). with ile aynı GeoPackage dosyasının başka bağlı katmanları aynı çağrıda ve tek SQLite işleminde uzlaştırılır (başka dosyadaki katman transaction_split). plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır.",
       "aliases": [
         "kaynakuzlastir"
       ],
@@ -1003840,7 +1003861,7 @@
           },
           "ReconcileTake": {
             "additionalProperties": false,
-            "description": "One conflict resolved by hand.",
+            "description": "One conflict resolved by hand (an object of a group takes the whole group's side).",
             "properties": {
               "object": {
                 "description": "The object's lasting id.",
@@ -1003859,7 +1003880,7 @@
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "additionalProperties": false,
-        "description": "Input of `cad.sources.reconcile` v1. Refusals: `source_not_found`, `layer_not_found`, `source_gone`,\n`derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no\nbase for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),\n`not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),\n`geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`\n(executing, a conflict without a side).",
+        "description": "Input of `cad.sources.reconcile` v1. Refusals: `source_not_found`, `layer_not_found`, `source_gone`,\n`derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no\nbase for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),\n`not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),\n`geometry_mismatch` (a layer's object the table's column cannot hold), `transaction_split` (a layer of `with` in\nanother file), `group_split` (the objects of one group taken to different sides); conflict: `unresolved_conflicts`\n(executing, a conflict without a side). Warning: `field_base_missing` (objects both sides changed that the base keeps\nno fields of, which conflict as a whole).",
         "properties": {
           "layer": {
             "description": "The bound layer, by id.",
@@ -1003880,6 +1003901,13 @@
             "description": "Conflicts resolved one by one.",
             "items": {
               "$ref": "#/$defs/ReconcileTake"
+            },
+            "type": "array"
+          },
+          "with": {
+            "description": "More bound layers of the same GeoPackage file, reconciled with it in one transaction (the file's revision is\nchecked once).",
+            "items": {
+              "type": "string"
             },
             "type": "array"
           }
@@ -1003933,6 +1003961,26 @@
                 "const": "removedInTable",
                 "description": "The table removed it, the layer changed it.",
                 "type": "string"
+              },
+              {
+                "const": "related",
+                "description": "Not in conflict itself: it belongs to a group with one (docs/adr/0553 §2) and goes the way the group does.",
+                "type": "string"
+              }
+            ]
+          },
+          "GroupReason": {
+            "description": "Why objects are one group (docs/adr/0553 §2).",
+            "oneOf": [
+              {
+                "const": "sharedVertex",
+                "description": "Neighbours that shared a vertex when the layer and the table last matched, which both sides moved.",
+                "type": "string"
+              },
+              {
+                "const": "relation",
+                "description": "A parent one side removed and a child (a relation's) the other side added or changed.",
+                "type": "string"
               }
             ]
           },
@@ -1003940,7 +1003988,7 @@
             "description": "One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.",
             "properties": {
               "fields": {
-                "description": "The attributes that differ, by name.",
+                "description": "The attributes that differ, by name; of an object both changed, only those both changed differently (the rest\nmerged), unless the base keeps no fields of it.",
                 "items": {
                   "$ref": "#/$defs/ConflictField"
                 },
@@ -1003950,8 +1003998,22 @@
                 "description": "Whether the kind or the geometry differs (a removal: always).",
                 "type": "boolean"
               },
+              "group": {
+                "description": "The group it belongs to (the lowest lasting id among its objects), none for a conflict of its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/ConflictKind"
+              },
+              "layer": {
+                "description": "The object's layer, when more than one layer is reconciled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "object": {
                 "type": "string"
@@ -1004004,6 +1004066,109 @@
             ],
             "type": "object"
           },
+          "ReconcileGroup": {
+            "description": "Objects whose changes belong together, resolved together: one side for all of them.",
+            "properties": {
+              "id": {
+                "description": "The lowest lasting id among the members.",
+                "type": "string"
+              },
+              "objects": {
+                "description": "The members' lasting ids, in the ids' order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "reasons": {
+                "items": {
+                  "$ref": "#/$defs/GroupReason"
+                },
+                "type": "array"
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side the group is resolved to; none: unresolved."
+              }
+            },
+            "required": [
+              "id",
+              "objects",
+              "reasons"
+            ],
+            "type": "object"
+          },
+          "ReconcileLayer": {
+            "description": "One layer's share of a reconcile of several (docs/adr/0553 §3).",
+            "properties": {
+              "fromTable": {
+                "$ref": "#/$defs/ReconcileCounts"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "toTable": {
+                "$ref": "#/$defs/ReconcileCounts"
+              }
+            },
+            "required": [
+              "layer",
+              "fromTable",
+              "toTable"
+            ],
+            "type": "object"
+          },
+          "ReconcileMerge": {
+            "description": "An object both sides changed and the merge put together (docs/adr/0553 §1): the attributes each side changed, and\nwhose geometry went into it.",
+            "properties": {
+              "fromLayer": {
+                "description": "The attributes only the layer changed (its value is in the merge), by name.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "fromTable": {
+                "description": "The attributes only the table changed.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side whose geometry the merge has, when only one changed it."
+              },
+              "layer": {
+                "description": "The object's layer, when more than one layer is reconciled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "object": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "object"
+            ],
+            "type": "object"
+          },
           "ReconcileSide": {
             "description": "The side a conflict is resolved to.",
             "oneOf": [
@@ -1004038,6 +1004203,27 @@
           },
           "fromTable": {
             "$ref": "#/$defs/ReconcileCounts"
+          },
+          "groups": {
+            "description": "Groups of related changes (docs/adr/0553 §2), by their ids' order.",
+            "items": {
+              "$ref": "#/$defs/ReconcileGroup"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "Each layer's share, when more than one layer is reconciled.",
+            "items": {
+              "$ref": "#/$defs/ReconcileLayer"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "Objects both sides changed that were merged field by field (docs/adr/0553 §1), in the lasting ids' order.",
+            "items": {
+              "$ref": "#/$defs/ReconcileMerge"
+            },
+            "type": "array"
           },
           "revision": {
             "description": "^(0|[1-9][0-9]*)$",
@@ -1004112,6 +1004298,26 @@
                 "const": "removedInTable",
                 "description": "The table removed it, the layer changed it.",
                 "type": "string"
+              },
+              {
+                "const": "related",
+                "description": "Not in conflict itself: it belongs to a group with one (docs/adr/0553 §2) and goes the way the group does.",
+                "type": "string"
+              }
+            ]
+          },
+          "GroupReason": {
+            "description": "Why objects are one group (docs/adr/0553 §2).",
+            "oneOf": [
+              {
+                "const": "sharedVertex",
+                "description": "Neighbours that shared a vertex when the layer and the table last matched, which both sides moved.",
+                "type": "string"
+              },
+              {
+                "const": "relation",
+                "description": "A parent one side removed and a child (a relation's) the other side added or changed.",
+                "type": "string"
               }
             ]
           },
@@ -1004119,7 +1004325,7 @@
             "description": "One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.",
             "properties": {
               "fields": {
-                "description": "The attributes that differ, by name.",
+                "description": "The attributes that differ, by name; of an object both changed, only those both changed differently (the rest\nmerged), unless the base keeps no fields of it.",
                 "items": {
                   "$ref": "#/$defs/ConflictField"
                 },
@@ -1004129,8 +1004335,22 @@
                 "description": "Whether the kind or the geometry differs (a removal: always).",
                 "type": "boolean"
               },
+              "group": {
+                "description": "The group it belongs to (the lowest lasting id among its objects), none for a conflict of its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "kind": {
                 "$ref": "#/$defs/ConflictKind"
+              },
+              "layer": {
+                "description": "The object's layer, when more than one layer is reconciled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "object": {
                 "type": "string"
@@ -1004183,6 +1004403,109 @@
             ],
             "type": "object"
           },
+          "ReconcileGroup": {
+            "description": "Objects whose changes belong together, resolved together: one side for all of them.",
+            "properties": {
+              "id": {
+                "description": "The lowest lasting id among the members.",
+                "type": "string"
+              },
+              "objects": {
+                "description": "The members' lasting ids, in the ids' order.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "reasons": {
+                "items": {
+                  "$ref": "#/$defs/GroupReason"
+                },
+                "type": "array"
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side the group is resolved to; none: unresolved."
+              }
+            },
+            "required": [
+              "id",
+              "objects",
+              "reasons"
+            ],
+            "type": "object"
+          },
+          "ReconcileLayer": {
+            "description": "One layer's share of a reconcile of several (docs/adr/0553 §3).",
+            "properties": {
+              "fromTable": {
+                "$ref": "#/$defs/ReconcileCounts"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "toTable": {
+                "$ref": "#/$defs/ReconcileCounts"
+              }
+            },
+            "required": [
+              "layer",
+              "fromTable",
+              "toTable"
+            ],
+            "type": "object"
+          },
+          "ReconcileMerge": {
+            "description": "An object both sides changed and the merge put together (docs/adr/0553 §1): the attributes each side changed, and\nwhose geometry went into it.",
+            "properties": {
+              "fromLayer": {
+                "description": "The attributes only the layer changed (its value is in the merge), by name.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "fromTable": {
+                "description": "The attributes only the table changed.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side whose geometry the merge has, when only one changed it."
+              },
+              "layer": {
+                "description": "The object's layer, when more than one layer is reconciled.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "object": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "object"
+            ],
+            "type": "object"
+          },
           "ReconcileSide": {
             "description": "The side a conflict is resolved to.",
             "oneOf": [
@@ -1004217,6 +1004540,27 @@
           },
           "fromTable": {
             "$ref": "#/$defs/ReconcileCounts"
+          },
+          "groups": {
+            "description": "Groups of related changes (docs/adr/0553 §2), by their ids' order.",
+            "items": {
+              "$ref": "#/$defs/ReconcileGroup"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "Each layer's share, when more than one layer is reconciled.",
+            "items": {
+              "$ref": "#/$defs/ReconcileLayer"
+            },
+            "type": "array"
+          },
+          "merged": {
+            "description": "Objects both sides changed that were merged field by field (docs/adr/0553 §1), in the lasting ids' order.",
+            "items": {
+              "$ref": "#/$defs/ReconcileMerge"
+            },
+            "type": "array"
           },
           "revision": {
             "description": "^(0|[1-9][0-9]*)$",
@@ -1004267,10 +1004611,13 @@
           "not_a_conflict",
           "invalid_input",
           "unresolved_conflicts",
-          "source_changed"
+          "source_changed",
+          "transaction_split",
+          "group_split"
         ],
         "warnings": [
-          "export_losses"
+          "export_losses",
+          "field_base_missing"
         ]
       },
       "examples": [
@@ -1004290,6 +1004637,16 @@
                 "object": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401",
                 "side": "table"
               }
+            ]
+          }
+        },
+        {
+          "title": "Parsel ve bina katmanlarını tek çağrıda, tek işlemde uzlaştır",
+          "input": {
+            "layer": "import-parsel",
+            "rest": "table",
+            "with": [
+              "import-bina"
             ]
           }
         }
@@ -1053168,6 +1053525,18 @@
       "kind": "conflict",
       "retryable": true,
       "meaning": "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin."
+    },
+    {
+      "code": "group_split",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Birlikte değişen nesneler (bir grup) farklı yanlara seçilemez; grubun tamamı için bir yan seçin."
+    },
+    {
+      "code": "field_base_missing",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Tabanın alan kaydı olmayan nesneleri iki yan değiştirdiyse bütün olarak çatışır; alanlar tek tek birleştirilemez."
     },
     {
       "code": "unknown_profile",

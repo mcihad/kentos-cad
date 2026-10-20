@@ -374,6 +374,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
     ),
     (
         "cad.sources.reconcile",
+        "field_base_missing",
+        "tabanın alan kaydı olmayan nesne (eski sürümde bağlanmış ya da kayıtları 8 MiB'a sığmayan katman) ortak durum setup'ında üretilemez: özetleri yeniden hesaplamak KentOS'un özet kuralını kopyalamak olurdu; reconcile.rs'in a_base_without_field_records_conflicts_as_a_whole_and_says_so'su kaydı kaldırıp sınar (ADR 0553 §1)",
+    ),
+    (
+        "cad.sources.reconcile",
         "invalid_extent",
         "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510, 0538)",
     ),

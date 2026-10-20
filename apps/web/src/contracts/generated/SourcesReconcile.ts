@@ -7,14 +7,21 @@ import type { ReconcileTake } from "./ReconcileTake";
  * `derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no
  * base for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),
  * `not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),
- * `geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`
- * (executing, a conflict without a side).
+ * `geometry_mismatch` (a layer's object the table's column cannot hold), `transaction_split` (a layer of `with` in
+ * another file), `group_split` (the objects of one group taken to different sides); conflict: `unresolved_conflicts`
+ * (executing, a conflict without a side). Warning: `field_base_missing` (objects both sides changed that the base keeps
+ * no fields of, which conflict as a whole).
  */
 export type SourcesReconcile = { 
 /**
  * The bound layer, by id.
  */
 layer: string, 
+/**
+ * More bound layers of the same GeoPackage file, reconciled with it in one transaction (the file's revision is
+ * checked once).
+ */
+with?: Array<string>, 
 /**
  * Conflicts resolved one by one.
  */

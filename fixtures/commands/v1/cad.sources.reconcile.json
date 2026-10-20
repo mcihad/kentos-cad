@@ -84,7 +84,7 @@
  },
  "cases": [
   {
-   "name": "plan iki yanın değişikliklerini ve dört çatışmayı söyler, hiçbir şey yazmaz",
+   "name": "plan iki yanın değişikliklerini, birleşenleri ve üç çatışmayı söyler, hiçbir şey yazmaz",
    "steps": [
     {
      "op": "copyFile",
@@ -297,15 +297,26 @@
       "output": {
        "fromTable": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "removed": 1
        },
        "toTable": {
         "added": 1,
-        "modified": 1,
+        "modified": 2,
         "removed": 1
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -346,23 +357,6 @@
          ]
         },
         {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
-          }
-         ]
-        },
-        {
          "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
          "kind": "changed",
          "geometry": false,
@@ -375,7 +369,7 @@
          ]
         }
        ],
-       "unresolved": 4,
+       "unresolved": 3,
        "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
        "revision": "$current"
       },
@@ -602,7 +596,7 @@
       "output": {
        "fromTable": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "removed": 1
        },
        "toTable": {
@@ -611,6 +605,17 @@
         "removed": 2
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -648,24 +653,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "layer"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "layer"
@@ -916,10 +903,21 @@
        },
        "toTable": {
         "added": 1,
-        "modified": 1,
+        "modified": 2,
         "removed": 1
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -957,24 +955,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "table"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "table"
@@ -1219,7 +1199,7 @@
         "side": "table"
        },
        {
-        "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+        "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
         "side": "layer"
        }
       ],
@@ -1230,7 +1210,7 @@
       "output": {
        "fromTable": {
         "added": 1,
-        "modified": 3,
+        "modified": 4,
         "removed": 1
        },
        "toTable": {
@@ -1239,6 +1219,17 @@
         "removed": 2
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -1276,24 +1267,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "layer"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "layer"
@@ -1773,6 +1746,749 @@
    ]
   },
   {
+   "name": "farklı alanlar birleşir: katmanın ve tablonun öznitelikleri ikisi de kalır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-alan-birlesir.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-alan-birlesir.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "malik": "Yeni1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-alan-birlesir.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "fromLayer": [
+          "malik"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "öznitelik ve geometri ayrı yanlardan birleşir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-geometri-oznitelik.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-geometri-oznitelik.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+      ],
+      "attrs": {
+       "malik": "Yeni2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-geometri-oznitelik.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+         "fromLayer": [
+          "malik"
+         ],
+         "geometry": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı alan iki yanda farklı değişirse yalnız o alan çatışır, öbürleri birleşir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-alan-catisir.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-alan-catisir.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "999",
+       "malik": "Q"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-alan-catisir.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 5,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "conflicts": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "999",
+           "table": "201"
+          }
+         ]
+        }
+       ],
+       "unresolved": 1,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çatışan alan seçilen yandan, öbür alanlar birleşmiş gelir (layer)",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-alan-cozum-layer.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-alan-cozum-layer.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "999",
+       "malik": "Q"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-alan-cozum-layer.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+        "side": "layer"
+       }
+      ],
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 5,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "agreed": 0,
+       "conflicts": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "999",
+           "table": "201"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çatışan alan seçilen yandan, öbür alanlar birleşmiş gelir (table)",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-alan-cozum-table.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-alan-cozum-table.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "999",
+       "malik": "Q"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-alan-cozum-table.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+        "side": "table"
+       }
+      ],
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "agreed": 0,
+       "conflicts": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "999",
+           "table": "201"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı alana iki yan da aynı değeri yazdıysa uyuşur, çatışma değil",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-ayni-deger.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-ayni-deger.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "ada": "201"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-ayni-deger.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 5,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 1,
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir yan alanı kaldırdı, öbürü başka alanı değiştirdi: birleşir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-alan-kaldir.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-alan-kaldir.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "malik": null
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "parsel_no": "11"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-alan-kaldir.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "malik"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "yürütme: kalanlar tablonun yanına, katman tablonun hâlini alır",
    "steps": [
     {
@@ -1992,10 +2708,21 @@
        },
        "toTable": {
         "added": 1,
-        "modified": 1,
+        "modified": 2,
         "removed": 1
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -2033,24 +2760,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "table"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "table"
@@ -2145,11 +2854,6 @@
        },
        "5": {
         "kind": "polygon",
-        "attrs": {
-         "ada": "104",
-         "parsel_no": "4",
-         "malik": "Zehra"
-        },
         "pts": [
          {
           "x": 487090.0,
@@ -2168,15 +2872,15 @@
           "y": 4420020.0
          }
         ],
+        "attrs": {
+         "ada": "104",
+         "malik": "Zehra",
+         "parsel_no": "4"
+        },
         "layerId": "import-parsel"
        },
        "6": {
         "kind": "polygon",
-        "attrs": {
-         "ada": "205",
-         "parsel_no": "5",
-         "malik": "Ece"
-        },
         "pts": [
          {
           "x": 487120.0,
@@ -2195,6 +2899,11 @@
           "y": 4420020.0
          }
         ],
+        "attrs": {
+         "ada": "205",
+         "malik": "Ece",
+         "parsel_no": "50"
+        },
         "layerId": "import-parsel"
        },
        "9": {
@@ -2579,7 +3288,7 @@
       "output": {
        "fromTable": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "removed": 1
        },
        "toTable": {
@@ -2588,6 +3297,17 @@
         "removed": 2
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -2625,24 +3345,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "layer"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "layer"
@@ -2764,11 +3466,6 @@
        },
        "6": {
         "kind": "polygon",
-        "attrs": {
-         "ada": "105",
-         "parsel_no": "50",
-         "malik": "Ece"
-        },
         "pts": [
          {
           "x": 487120.0,
@@ -2787,6 +3484,11 @@
           "y": 4420020.0
          }
         ],
+        "attrs": {
+         "ada": "205",
+         "malik": "Ece",
+         "parsel_no": "50"
+        },
         "layerId": "import-parsel"
        },
        "7": {
@@ -2952,6 +3654,388 @@
      },
      "expect": {
       "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yürütme: birleşen nesne iki yanın değişikliğini katmanda ve dosyada taşır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-birlesme-yurut.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-birlesme-yurut.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "703fb6fc-d09b-5f6d-bf65-24b83b6e3565"
+      ],
+      "attrs": {
+       "malik": "Yeni1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3"
+      ],
+      "attrs": {
+       "malik": "Yeni2"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-birlesme-yurut.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+         "fromLayer": [
+          "malik"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        },
+        {
+         "object": "e9bb5c6d-ebd2-5f54-9edc-4f164e2a89b3",
+         "fromLayer": [
+          "malik"
+         ],
+         "geometry": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "attrs": {
+         "ada": "201",
+         "malik": "Yeni1",
+         "parsel_no": "1"
+        },
+        "layerId": "import-parsel"
+       },
+       "3": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487035.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420020.0
+         }
+        ],
+        "attrs": {
+         "ada": "102",
+         "malik": "Yeni2",
+         "parsel_no": "2"
+        },
+        "layerId": "import-parsel"
+       },
+       "5": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "104",
+         "parsel_no": "4",
+         "malik": "Zehra"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "205",
+         "parsel_no": "5",
+         "malik": "Ece"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "8": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "207",
+         "parsel_no": "7",
+         "malik": "Gül"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "108",
+         "parsel_no": "8",
+         "malik": "Hakan"
+        },
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "10": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "109",
+         "parsel_no": "9",
+         "malik": "İpek"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "11": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "110",
+         "parsel_no": "10",
+         "malik": "Ortak"
+        },
+        "pts": [
+         {
+          "x": 487270.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "12": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "111",
+         "parsel_no": "11",
+         "malik": "Yeni"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
      }
     }
    ]
@@ -3176,10 +4260,21 @@
        },
        "toTable": {
         "added": 1,
-        "modified": 1,
+        "modified": 2,
         "removed": 1
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -3217,24 +4312,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "table"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "table"
@@ -4069,6 +5146,4079 @@
    ]
   },
   {
+   "name": "birlikte değişenler gruptur: ortak köşeyi iki yan da taşıdı, silinen üst kayıtla eklenen alt kayıt",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-plan.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-plan.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-plan.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-plan.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ]
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ]
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ]
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ]
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ]
+        }
+       ],
+       "unresolved": 5,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grubun nesneleri tek yanla çözülür: kalanlar katmanın yanına",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-katman.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-katman.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-katman.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 5,
+        "removed": 2
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "layer"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "layer"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 3,
+          "removed": 1
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 1
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grubun nesneleri tek yanla çözülür: kalanlar tablonun yanına",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-tablo.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-tablo.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-tablo.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 4,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "table"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "table"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 1,
+          "modified": 3,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir üyeye seçilen yan bütün gruba geçer, kalanlar katmanın yanına",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-uye.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-uye.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-uye.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-uye.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "take": [
+       {
+        "object": "98908247-0463-5f2f-a14c-a064c516379e",
+        "side": "table"
+       }
+      ],
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 4,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 3,
+        "removed": 2
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "layer"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "table"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 3,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 1
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 1
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup ve çatışmalar ayrı ayrı çözülür",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-ayri.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-ayri.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-ayri.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-ayri.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "take": [
+       {
+        "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "side": "layer"
+       },
+       {
+        "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+        "side": "table"
+       },
+       {
+        "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+        "side": "table"
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 2,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 4,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "table"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "layer"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 3,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yürütme: gruplar kalanların yanına, tek işlemde iki katman",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-yurut-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yurut-katman.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yurut-katman.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-yurut-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 5,
+        "removed": 2
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "layer"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "layer"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 3,
+          "removed": 1
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 1
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "layer"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       6,
+       7,
+       8
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "attrs": {
+         "ad": "Z1",
+         "not": "qgis",
+         "tur": "arsa"
+        },
+        "layerId": "import-komsu"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ad": "K2",
+         "tur": "arsa",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487042.0,
+          "y": 4420022.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-komsu"
+       },
+       "4": {
+        "kind": "polygon",
+        "attrs": {
+         "ad": "K3",
+         "tur": "arsa",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487042.0,
+          "y": 4420022.0
+         }
+        ],
+        "layerId": "import-komsu"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "komsu": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "kat": "1",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487005.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487015.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487015.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487005.0,
+          "y": 4420015.0
+         }
+        ],
+        "layerId": "import-bina"
+       },
+       "7": {
+        "kind": "polygon",
+        "attrs": {
+         "komsu": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "kat": "5",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487025.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487025.0,
+          "y": 4420015.0
+         }
+        ],
+        "layerId": "import-bina"
+       },
+       "8": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487045.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487045.0,
+          "y": 4420015.0
+         }
+        ],
+        "attrs": {
+         "kat": "7",
+         "komsu": "98908247-0463-5f2f-a14c-a064c516379e",
+         "not": "q"
+        },
+        "layerId": "import-bina"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current",
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yürütme: gruplar tablonun yanına, silinen üst kayıt geri gelir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-yurut-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yurut-tablo.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yurut-tablo.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-yurut-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 4,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "layer": "import-komsu",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "groups": [
+        {
+         "id": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "objects": [
+          "4f77feb3-3c87-5577-8617-a7b39af4197c",
+          "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+         ],
+         "reasons": [
+          "relation"
+         ],
+         "side": "table"
+        },
+        {
+         "id": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "objects": [
+          "90f6d170-cc27-583a-a9dd-331d740c1a43",
+          "98908247-0463-5f2f-a14c-a064c516379e"
+         ],
+         "reasons": [
+          "sharedVertex"
+         ],
+         "side": "table"
+        }
+       ],
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 1,
+          "modified": 3,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        }
+       ],
+       "conflicts": [
+        {
+         "object": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "layer": "import-bina",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "kat",
+           "table": "3"
+          },
+          {
+           "name": "komsu",
+           "table": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "layer": "import-komsu",
+         "kind": "changed",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "98908247-0463-5f2f-a14c-a064c516379e",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "side": "table"
+        },
+        {
+         "object": "b1559f25-c5fd-5a11-b4df-615f5ae3f43a",
+         "layer": "import-bina",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "kat",
+           "layer": "7",
+           "table": "9"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "layer": "import-komsu",
+         "kind": "related",
+         "geometry": true,
+         "group": "4f77feb3-3c87-5577-8617-a7b39af4197c",
+         "fields": [
+          {
+           "name": "ad",
+           "table": "K4"
+          },
+          {
+           "name": "not",
+           "table": "-"
+          },
+          {
+           "name": "tur",
+           "table": "arsa"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       6,
+       7,
+       8,
+       9,
+       10
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "attrs": {
+         "ad": "Z1",
+         "not": "qgis",
+         "tur": "arsa"
+        },
+        "layerId": "import-komsu"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ad": "K2",
+         "tur": "arsa",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420025.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-komsu"
+       },
+       "4": {
+        "kind": "polygon",
+        "attrs": {
+         "ad": "K3",
+         "tur": "arsa",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487040.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487040.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-komsu"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "komsu": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "kat": "1",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487005.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487015.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487015.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487005.0,
+          "y": 4420015.0
+         }
+        ],
+        "layerId": "import-bina"
+       },
+       "7": {
+        "kind": "polygon",
+        "attrs": {
+         "komsu": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+         "kat": "5",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487025.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487025.0,
+          "y": 4420015.0
+         }
+        ],
+        "layerId": "import-bina"
+       },
+       "8": {
+        "kind": "polygon",
+        "pts": [
+         {
+          "x": 487045.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487045.0,
+          "y": 4420015.0
+         }
+        ],
+        "attrs": {
+         "kat": "9",
+         "komsu": "98908247-0463-5f2f-a14c-a064c516379e",
+         "not": "q"
+        },
+        "layerId": "import-bina"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "komsu": "ceee9e95-0096-5b8a-b36d-8d85c328c7a4",
+         "kat": "3",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487065.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487075.0,
+          "y": 4420005.0
+         },
+         {
+          "x": 487075.0,
+          "y": 4420015.0
+         },
+         {
+          "x": 487065.0,
+          "y": 4420015.0
+         }
+        ],
+        "layerId": "import-bina"
+       },
+       "10": {
+        "kind": "polygon",
+        "attrs": {
+         "ad": "K4",
+         "tur": "arsa",
+         "not": "-"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-komsu"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current",
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        }
+       ]
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız katman değişti: ortak köşeyi yalnız o taşıdı, grup yok",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-yalniz-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yalniz-katman.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-yalniz-katman.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "agreed": 0,
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        }
+       ],
+       "unresolved": 0,
+       "source": "c88f01d615436415fb30fccde1c44b831e42754067f75930534b1d1ec1eb2212",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ortak köşeye dokunmayan taşımalar grup değildir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-uzak.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-uzak.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-uzak.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487062.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-uzak.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 3,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "agreed": 0,
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 1,
+          "removed": 0
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "silinen üst kayıtta alt kayıt yoksa grup yok: yalnız tablonun eklediği alt kayıt gelir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-iliskisiz.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-iliskisiz.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-iliskisiz.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-iliskisiz.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 3,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 1
+       },
+       "agreed": 0,
+       "layers": [
+        {
+         "layer": "import-komsu",
+         "fromTable": {
+          "added": 0,
+          "modified": 2,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 1
+         }
+        },
+        {
+         "layer": "import-bina",
+         "fromTable": {
+          "added": 1,
+          "modified": 1,
+          "removed": 0
+         },
+         "toTable": {
+          "added": 0,
+          "modified": 0,
+          "removed": 0
+         }
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tek katman da aynı çözümü kullanır, katman adı cevapta yoktur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-tek-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-tek-katman.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-tek-katman.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-tek-katman.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 2,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 1,
+        "removed": 0
+       },
+       "agreed": 0,
+       "merged": [
+        {
+         "object": "417d7675-a7a3-53f5-b505-16d2d38e7ae4",
+         "fromLayer": [
+          "ad"
+         ],
+         "fromTable": [
+          "not"
+         ]
+        }
+       ],
+       "unresolved": 0,
+       "source": "873cad9a8d6b224e18129b92addfffc27c2cf204908b1d64b67a29761b732d19",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "çözülmemiş çatışmayla yürümez, hiçbir şey yazılmaz",
    "steps": [
     {
@@ -4281,7 +9431,7 @@
       "status": "conflict",
       "error": {
        "code": "unresolved_conflicts",
-       "message": "4 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "message": "3 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
        "path": "take"
       }
      },
@@ -4504,7 +9654,7 @@
       "status": "conflict",
       "error": {
        "code": "unresolved_conflicts",
-       "message": "4 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "message": "3 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
        "path": "take"
       }
      },
@@ -4725,6 +9875,273 @@
       "take": [
        {
         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "layer"
+       }
+      ]
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "unresolved_conflicts",
+       "message": "2 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "path": "take"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir grubun çözülmesi ötekileri çözmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-cozulmedi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-cozulmedi.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-cozulmedi.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-cozulmedi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "take": [
+       {
+        "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
         "side": "layer"
        }
       ]
@@ -5439,6 +10856,534 @@
    ]
   },
   {
+   "name": "bir grubun nesneleri farklı yanlara seçilemez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-grup-bolunmez.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-bolunmez.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-grup-bolunmez.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "417d7675-a7a3-53f5-b505-16d2d38e7ae4"
+      ],
+      "attrs": {
+       "ad": "Z1"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487020.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          },
+          {
+           "x": 487020.0,
+           "y": 4420020.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "operation": "grip",
+      "changes": [
+       {
+        "kind": "update",
+        "uid": "98908247-0463-5f2f-a14c-a064c516379e",
+        "geometry": {
+         "kind": "polygon",
+         "pts": [
+          {
+           "x": 487040.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420000.0
+          },
+          {
+           "x": 487060.0,
+           "y": 4420020.0
+          },
+          {
+           "x": 487042.0,
+           "y": 4420022.0
+          }
+         ]
+        }
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ceee9e95-0096-5b8a-b36d-8d85c328c7a4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "cd88a43a-89d2-5f60-838d-06ffab08b020"
+      ],
+      "attrs": {
+       "kat": "5"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b1559f25-c5fd-5a11-b4df-615f5ae3f43a"
+      ],
+      "attrs": {
+       "kat": "7"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu-qgis.gpkg",
+     "to": "$tmp:uz-grup-bolunmez.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-bina"
+      ],
+      "take": [
+       {
+        "object": "90f6d170-cc27-583a-a9dd-331d740c1a43",
+        "side": "layer"
+       },
+       {
+        "object": "98908247-0463-5f2f-a14c-a064c516379e",
+        "side": "table"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "group_split",
+       "message": "98908247-0463-5f2f-a14c-a064c516379e nesnesi birlikte değişen bir grubun üyesi; grubun öbür nesneleri için başka yan seçilmiş. Grubun tamamı için bir yan seçin.",
+       "path": "take.1.object"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aynı katman iki kez verilmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-with-iki-kez.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-iki-kez.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-iki-kez.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "import-komsu"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "“import-komsu” katmanı birden çok kez verildi; her katman bir kez uzlaştırılır.",
+       "path": "with"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "with'teki bağlı olmayan katman",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-with-bagli-degil.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-bagli-degil.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-bagli-degil.gpkg",
+       "table": "bina"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "create",
+       "relation": {
+        "id": "bina-komsu",
+        "name": "Parselin binaları",
+        "parent": "import-komsu",
+        "child": "import-bina",
+        "field": "komsu"
+       }
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.relations.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-komsu",
+      "with": [
+       "cizim"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_found",
+       "message": "“cizim” katmanı bir kaynağa bağlı değil; önce cad.sources.edit ile bağlayın.",
+       "path": "with"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "başka dosyadaki katman birlikte uzlaştırılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-with-dosya-a.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-dosya-a.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-komsu.gpkg",
+     "to": "$tmp:uz-with-dosya-b.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-with-dosya-b.gpkg",
+       "table": "komsu"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "with": [
+       "import-komsu"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "transaction_split",
+       "message": "“import-komsu” katmanı $tmp:uz-with-dosya-b.gpkg kaynağında, “import-parsel” katmanı $tmp:uz-with-dosya-a.gpkg dosyasında; birlikte uzlaştırılacak katmanlar tek GeoPackage dosyasında olmalı. Katmanları ayrı ayrı uzlaştırın.",
+       "path": "with"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
    "name": "alanı olmayan öznitelik yazılmaz, söylenir",
    "steps": [
     {
@@ -5674,7 +11619,7 @@
       "output": {
        "fromTable": {
         "added": 1,
-        "modified": 2,
+        "modified": 3,
         "removed": 1
        },
        "toTable": {
@@ -5683,6 +11628,17 @@
         "removed": 2
        },
        "agreed": 1,
+       "merged": [
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "fromLayer": [
+          "parsel_no"
+         ],
+         "fromTable": [
+          "ada"
+         ]
+        }
+       ],
        "conflicts": [
         {
          "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
@@ -5720,24 +11676,6 @@
           {
            "name": "parsel_no",
            "layer": "6"
-          }
-         ],
-         "side": "layer"
-        },
-        {
-         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
-         "kind": "changed",
-         "geometry": false,
-         "fields": [
-          {
-           "name": "ada",
-           "layer": "105",
-           "table": "205"
-          },
-          {
-           "name": "parsel_no",
-           "layer": "50",
-           "table": "5"
           }
          ],
          "side": "layer"

@@ -6,13 +6,22 @@ import type { ReconcileSide } from "./ReconcileSide";
 /**
  * One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.
  */
-export type ReconcileConflict = { object: string, kind: ConflictKind, 
+export type ReconcileConflict = { object: string, 
+/**
+ * The object's layer, when more than one layer is reconciled.
+ */
+layer?: string, kind: ConflictKind, 
+/**
+ * The group it belongs to (the lowest lasting id among its objects), none for a conflict of its own.
+ */
+group?: string, 
 /**
  * Whether the kind or the geometry differs (a removal: always).
  */
 geometry: boolean, 
 /**
- * The attributes that differ, by name.
+ * The attributes that differ, by name; of an object both changed, only those both changed differently (the rest
+ * merged), unless the base keeps no fields of it.
  */
 fields?: Array<ConflictField>, 
 /**

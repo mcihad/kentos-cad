@@ -28,6 +28,7 @@ use crate::geopackage as gp;
 use crate::provider;
 
 mod base;
+mod merge;
 pub mod reconcile;
 pub mod relate;
 mod relations;

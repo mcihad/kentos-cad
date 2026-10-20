@@ -2141,6 +2141,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 92 (docs/adr/0553 §1): a base's field records.
+    if any("fields" in b for b in (settings or {}).get("sourceBases", [])):
+        return 92
     # Schema 91 (docs/adr/0538 §1): the bound layers' bases.
     if "sourceBases" in (settings or {}):
         return 91
@@ -2693,7 +2696,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-92.kcad"] = container(root(cmap(parts), version=uint(92)))
+    files["schema-version-93.kcad"] = container(root(cmap(parts), version=uint(93)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4503,6 +4506,21 @@ def build():
     out["broken/source-bases-no-link.kcad"] = sb_broken(lambda b: b.update(source="kaynak-9"))
     out["broken/source-bases-out-of-order.kcad"] = sb_broken(lambda b: sb_rows(b, lambda r: r[32:64] + r[:32] + r[64:]))
     out["broken/source-bases-part-row.kcad"] = sb_broken(lambda b: sb_rows(b, lambda r: r[:-4]))
+    # The bases' field records (docs/adr/0553 §1): schema 92's; in schema 91 an unknown field; a record cut short and a
+    # record too many refused.
+    out["source-field-bases.kcad"] = container(document(load("source-field-bases.json")))
+    fb_payload = document(load("source-field-bases.json"))
+    assert fb_payload.count(b"\x67version\x18\x5c") == 1, "the field records are schema 92"
+    out["broken/source-field-bases-in-schema-91.kcad"] = container(fb_payload.replace(b"\x67version\x18\x5c", b"\x67version\x18\x5b"))
+
+    def fb_broken(f):
+        d = copy.deepcopy(load("source-field-bases.json"))
+        b = d["settings"]["sourceBases"][0]
+        b["fields"] = base64.b64encode(f(base64.b64decode(b["fields"]))).decode()
+        return container(document(d))
+
+    out["broken/source-field-bases-part-record.kcad"] = fb_broken(lambda r: r[:-3])
+    out["broken/source-field-bases-extra-record.kcad"] = fb_broken(lambda r: r + r[:19])
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

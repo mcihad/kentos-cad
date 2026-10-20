@@ -6912,7 +6912,9 @@ pub fn catalog() -> CommandCatalog {
             version: crate::CAD_SOURCES_RECONCILE_VERSION,
             title: "Kaynakla uzlaştır".into(),
             summary: "Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur. \
-                      İkisinin farklı değiştirdiği ya da birinin silip öbürünün değiştirdiği nesne çatışmadır: farklı öznitelikler adlarıyla, iki yanın değerleriyle, geometrinin farklı olup olmadığı söylenir; son yazan kazanmaz, take (nesne nesne) ve rest (kalanlar) ile bir yan seçilir. \
+                      İkisinin de değiştirdiği nesne tabana karşı alan alan birleştirilir (docs/adr/0553): yalnız bir yanın değiştirdiği öznitelik ve geometri o yanınkini alır, iki yan birden farklı değiştirdiği öznitelik ya da geometri çatışmadır (iki yanın değerleriyle); nesne, tabanın alan kaydı yoksa bütün olarak çatışır (field_base_missing). Birinin silip öbürünün değiştirdiği nesne de çatışmadır. \
+                      Birlikte değişen nesneler bir gruptur ve birlikte, tek yanla çözülür: ortak köşesini iki yanın da taşıdığı komşular ve bir yanın sildiği üst kayıtla öbür yanın eklediği ya da değiştirdiği alt kayıt (ilişki). Son yazan kazanmaz: take (nesne ya da grup için) ve rest (kalanlar) ile bir yan seçilir; bir grubun nesneleri farklı yanlara seçilemez (group_split). \
+                      with ile aynı GeoPackage dosyasının başka bağlı katmanları aynı çağrıda ve tek SQLite işleminde uzlaştırılır (başka dosyadaki katman transaction_split). \
                       plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. \
                       Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır."
                 .into(),
@@ -6937,6 +6939,11 @@ pub fn catalog() -> CommandCatalog {
                 CommandExample {
                     title: "Bir çatışmada tablonun hâlini, kalanlarda katmanınkini al".into(),
                     input: json!({ "layer": "import-parsel", "take": [{ "object": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401", "side": "table" }], "rest": "layer" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Parsel ve bina katmanlarını tek çağrıda, tek işlemde uzlaştır".into(),
+                    input: json!({ "layer": "import-parsel", "with": ["import-bina"], "rest": "table" }),
                     output: None,
                 },
             ],

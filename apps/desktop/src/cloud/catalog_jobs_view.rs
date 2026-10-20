@@ -181,9 +181,9 @@ impl App {
         if job.state == ServerJobState::Running {
             main = main.push(progress::bar(Some(job.progress.clamp(0.0, 1.0))));
         }
-        let mut times = format!("istendi {}", when(&job.created_at, &zone));
+        let mut times = format!("istendi {}", when(&job.created_at, zone));
         if let Some(end) = job.finished_at.as_deref().filter(|e| !e.is_empty()) {
-            times.push_str(&format!(" · bitti {}", when(end, &zone)));
+            times.push_str(&format!(" · bitti {}", when(end, zone)));
         }
         if job.attempts > 1 {
             times.push_str(&format!(" · {}. deneme", job.attempts));

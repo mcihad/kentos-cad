@@ -20,4 +20,11 @@ revision: string, digest: string,
 /**
  * The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).
  */
-rows: string, };
+rows: string, 
+/**
+ * What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in
+ * base64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its
+ * vertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a
+ * whole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].
+ */
+fields?: string, };

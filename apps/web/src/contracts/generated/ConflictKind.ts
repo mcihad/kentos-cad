@@ -3,4 +3,4 @@
 /**
  * How the two sides of a conflict differ.
  */
-export type ConflictKind = "changed" | "removedInLayer" | "removedInTable";
+export type ConflictKind = "changed" | "removedInLayer" | "removedInTable" | "related";

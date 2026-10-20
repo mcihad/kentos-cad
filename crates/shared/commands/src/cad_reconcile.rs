@@ -7,6 +7,13 @@
 //! geometry does are said, and it is resolved explicitly by taking a side (`take`, `rest`); the last writer does not
 //! win. A plan says it all and writes nothing; executing with every conflict resolved takes the table's side into the
 //! layer and writes the layer's to the table, in one undo step and one transaction.
+//!
+//! Docs/adr/0553 extends it three ways. An object both sides changed is merged field by field against the base when
+//! they changed different attributes (or one the attributes and the other the geometry): both win, and only an
+//! attribute or a geometry both changed differently stays a conflict, with both values. Changes that belong together
+//! (neighbours whose shared vertex both sides moved, a parent one side removed and a child the other added or changed)
+//! are one group, resolved together. Several bound layers of one GeoPackage file are reconciled in one call and one
+//! transaction (`with`).
 
 use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
@@ -31,7 +38,7 @@ pub enum ReconcileSide {
     Table,
 }
 
-/// One conflict resolved by hand.
+/// One conflict resolved by hand (an object of a group takes the whole group's side).
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -47,8 +54,10 @@ pub struct ReconcileTake {
 /// `derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no
 /// base for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),
 /// `not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),
-/// `geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`
-/// (executing, a conflict without a side).
+/// `geometry_mismatch` (a layer's object the table's column cannot hold), `transaction_split` (a layer of `with` in
+/// another file), `group_split` (the objects of one group taken to different sides); conflict: `unresolved_conflicts`
+/// (executing, a conflict without a side). Warning: `field_base_missing` (objects both sides changed that the base keeps
+/// no fields of, which conflict as a whole).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -57,6 +66,11 @@ pub struct ReconcileTake {
 pub struct SourcesReconcile {
     /// The bound layer, by id.
     pub layer: String,
+    /// More bound layers of the same GeoPackage file, reconciled with it in one transaction (the file's revision is
+    /// checked once).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub with: Vec<String>,
     /// Conflicts resolved one by one.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReconcileTake>>", optional))]
@@ -80,6 +94,8 @@ pub enum ConflictKind {
     RemovedInLayer,
     /// The table removed it, the layer changed it.
     RemovedInTable,
+    /// Not in conflict itself: it belongs to a group with one (docs/adr/0553 §2) and goes the way the group does.
+    Related,
 }
 
 /// An attribute the two sides hold differently; none where a side has no value (or no object: a removed object's
@@ -107,10 +123,19 @@ pub struct ConflictField {
 #[cfg_attr(feature = "ts", ts(export))]
 pub struct ReconcileConflict {
     pub object: String,
+    /// The object's layer, when more than one layer is reconciled.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer: Option<String>,
     pub kind: ConflictKind,
+    /// The group it belongs to (the lowest lasting id among its objects), none for a conflict of its own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub group: Option<String>,
     /// Whether the kind or the geometry differs (a removal: always).
     pub geometry: bool,
-    /// The attributes that differ, by name.
+    /// The attributes that differ, by name; of an object both changed, only those both changed differently (the rest
+    /// merged), unless the base keeps no fields of it.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ConflictField>>", optional))]
     pub fields: Vec<ConflictField>,
@@ -118,6 +143,76 @@ pub struct ReconcileConflict {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "ts", ts(optional))]
     pub side: Option<ReconcileSide>,
+}
+
+/// An object both sides changed and the merge put together (docs/adr/0553 §1): the attributes each side changed, and
+/// whose geometry went into it.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ReconcileMerge {
+    pub object: String,
+    /// The object's layer, when more than one layer is reconciled.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub layer: Option<String>,
+    /// The attributes only the layer changed (its value is in the merge), by name.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub from_layer: Vec<String>,
+    /// The attributes only the table changed.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub from_table: Vec<String>,
+    /// The side whose geometry the merge has, when only one changed it.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub geometry: Option<ReconcileSide>,
+}
+
+/// Why objects are one group (docs/adr/0553 §2).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum GroupReason {
+    /// Neighbours that shared a vertex when the layer and the table last matched, which both sides moved.
+    SharedVertex,
+    /// A parent one side removed and a child (a relation's) the other side added or changed.
+    Relation,
+}
+
+/// Objects whose changes belong together, resolved together: one side for all of them.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ReconcileGroup {
+    /// The lowest lasting id among the members.
+    pub id: String,
+    /// The members' lasting ids, in the ids' order.
+    pub objects: Vec<String>,
+    pub reasons: Vec<GroupReason>,
+    /// The side the group is resolved to; none: unresolved.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub side: Option<ReconcileSide>,
+}
+
+/// One layer's share of a reconcile of several (docs/adr/0553 §3).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct ReconcileLayer {
+    pub layer: String,
+    pub from_table: ReconcileCounts,
+    pub to_table: ReconcileCounts,
 }
 
 /// What goes one way: objects added, changed and removed.
@@ -149,6 +244,18 @@ pub struct SourcesReconciled {
     /// Objects both sides changed (or removed) alike.
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub agreed: u32,
+    /// Objects both sides changed that were merged field by field (docs/adr/0553 §1), in the lasting ids' order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReconcileMerge>>", optional))]
+    pub merged: Vec<ReconcileMerge>,
+    /// Groups of related changes (docs/adr/0553 §2), by their ids' order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReconcileGroup>>", optional))]
+    pub groups: Vec<ReconcileGroup>,
+    /// Each layer's share, when more than one layer is reconciled.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReconcileLayer>>", optional))]
+    pub layers: Vec<ReconcileLayer>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(as = "Option<Vec<ReconcileConflict>>", optional))]
     pub conflicts: Vec<ReconcileConflict>,

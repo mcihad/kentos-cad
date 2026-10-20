@@ -83,6 +83,9 @@ pub struct Taken {
     pub changed: usize,
     /// Objects (and the metadata) with changes here too: now conflicts.
     pub conflicts: usize,
+    /// Objects with unsent changes here that the server's change touched in other fields: merged field by field
+    /// (docs/adr/0553 §4), the merge waiting to be sent over the server's version.
+    pub merged: usize,
     /// Layers the new tree dropped that stay for their unsent objects.
     pub kept: Vec<KeptLayer>,
     /// What else the user hears (block definitions kept, put back or renamed).
@@ -353,6 +356,7 @@ impl ProjectSync {
             .collect();
         let mut tracked = Vec::new();
         let mut waits = Vec::new();
+        let mut merged: Vec<Uuid> = Vec::new();
         for id in incoming.fetch.iter().chain(&incoming.removed) {
             let record = records.get(id).copied();
             // A version this device knows already (its own commit, taken in
@@ -366,6 +370,19 @@ impl ProjectSync {
             // (it may have waited for its layer).
             if record.is_none() && !self.known.contains_key(id) && doc.slot_of(*id).is_none() {
                 self.unwait(*id);
+                continue;
+            }
+            // Unsent changes here and the server's in other fields of the same object: both stay (merged against
+            // the copy both started from). A change on its way, a removal or a clash is a conflict as before.
+            if let Some(r) = record
+                && let Some(merge) = self.merged_with(doc, *id, r)
+                && is_layer(layers, &merge.base().layer_id)
+            {
+                self.unwait(*id);
+                change.put.push((*id, merge));
+                tracked.push((*id, Some(r)));
+                merged.push(*id);
+                taken.merged += 1;
                 continue;
             }
             if self.busy_locally(doc, *id) {
@@ -461,6 +478,10 @@ impl ProjectSync {
                 None => self.forget(id),
             }
             self.dirty.remove(&id);
+        }
+        // The merges are changes the server does not have yet: they go over the version that came in.
+        for id in merged {
+            self.dirty.insert(id);
         }
         if let Some(version) = new_meta {
             self.took_meta(doc, version, server_tree);
