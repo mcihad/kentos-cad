@@ -2766,6 +2766,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-jobrun"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "kentos-headless",
+ "kentos-processing",
+ "serde_json",
+]
+
+[[package]]
 name = "kentos-kcad"
 version = "0.1.0"
 dependencies = [

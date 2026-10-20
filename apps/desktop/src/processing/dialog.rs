@@ -16,7 +16,7 @@ use kentos_processing::{
 use serde_json::{Value, json};
 
 use super::Event;
-use super::plan::{StatusLine, Targets, auto_target, status_line};
+use super::plan::{ServerPlace, StatusLine, Targets, auto_target, status_line};
 
 /// How the last run ended, for the footer.
 #[derive(Clone, Debug, PartialEq)]
@@ -43,6 +43,8 @@ pub enum RunStatus {
     Invalid(String),
     /// It started and failed, or was stopped.
     Error(String),
+    /// It was asked of the server as a job (docs/adr/0559 §5): what was said of it; the job goes on there.
+    Asked(String),
 }
 
 /// A table a run gives (Özet istatistik): its columns and rows, texts.
@@ -188,6 +190,8 @@ pub struct ToolDialog {
     /// After Çalıştır every problem shows, not only those of touched fields.
     attempted: bool,
     pub(super) advanced_open: bool,
+    /// On the server (docs/adr/0559 §5): the result goes to a GeoPackage the job keeps, not to the project.
+    pub(super) server_sink: bool,
     pub status: RunStatus,
     /// The background run this window shows (background.rs), while it runs.
     pub(super) waiting: Option<u64>,
@@ -223,6 +227,7 @@ impl ToolDialog {
             touched: BTreeSet::new(),
             attempted: false,
             advanced_open,
+            server_sink: false,
             status: RunStatus::Idle,
             waiting: None,
             issues: Vec::new(),
@@ -514,7 +519,7 @@ impl ToolDialog {
     /// Nerede çalışır for this window (plan.rs): the places the tool names
     /// (a model: every place one of its steps can go here, the web's), those
     /// this program has, and where Otomatik sends the inputs now.
-    pub(super) fn targets(&self, registry: &Registry) -> Targets {
+    pub(super) fn targets(&self, registry: &Registry, server: &ServerPlace) -> Targets {
         let here = |t: &Target| matches!(t, Target::Client | Target::Worker);
         let model = self
             .tool
@@ -537,10 +542,25 @@ impl ToolDialog {
                 }
                 (places.clone(), places)
             }
-            None => (
-                self.tool.targets.clone(),
-                self.tool.targets.iter().copied().filter(here).collect(),
-            ),
+            None => {
+                // The server's place is the open cloud project's, for every tool (docs/adr/0559 §5).
+                let mut declared = self.tool.targets.clone();
+                let mut available: Vec<Target> =
+                    self.tool.targets.iter().copied().filter(here).collect();
+                match server {
+                    ServerPlace::Absent => {}
+                    ServerPlace::Ready => {
+                        declared.retain(|t| *t != Target::Server);
+                        declared.push(Target::Server);
+                        available.push(Target::Server);
+                    }
+                    ServerPlace::Off(_) => {
+                        declared.retain(|t| *t != Target::Server);
+                        declared.push(Target::Server);
+                    }
+                }
+                (declared, available)
+            }
         };
         let size = self.inputs.values().map(|s| s.count).sum();
         Targets {
@@ -548,6 +568,10 @@ impl ToolDialog {
             declared,
             available,
             model: model.is_some(),
+            server_off: match server {
+                ServerPlace::Off(why) => Some(why.clone()),
+                _ => None,
+            },
         }
     }
 

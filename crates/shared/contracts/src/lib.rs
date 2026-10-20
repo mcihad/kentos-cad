@@ -117,6 +117,7 @@ pub mod service;
 pub mod schedule;
 pub mod viewmark;
 pub mod settings;
+pub mod processing_job;
 pub mod server_jobs;
 pub mod sheets;
 pub mod style;

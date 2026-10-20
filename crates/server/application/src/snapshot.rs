@@ -84,6 +84,9 @@ pub struct ProjectSnapshot {
     /// What the file was cut by (docs/adr/0550 §3): the reach's stamp ([`kentos_forms::reach::Reach::stamp`])
     /// of the caller it was taken for; none for a whole copy.
     pub reach: Option<String>,
+    /// Whether the objects were cut by it: the copy is not the project (docs/adr/0559: a result computed on it is not
+    /// written back).
+    pub cut: bool,
 }
 
 /// How a copy of the whole project is taken (docs/adr/0550 §3).
@@ -116,6 +119,7 @@ pub(crate) async fn take(
     let (mut doc, revision, event_cursor) = read(&mut tx, access).await?;
     tx.commit().await?;
     // Cut by the same moment's forms: the settings the file carries are the ones it was judged by.
+    let mut cut = false;
     let reach = match how {
         Take::Whole => None,
         Take::Cut => {
@@ -134,6 +138,7 @@ pub(crate) async fn take(
                 crate::projects::caller_of(access),
             );
             if !reach.whole_copy_ok() {
+                cut = true;
                 doc.entities = std::mem::take(&mut doc.entities)
                     .into_iter()
                     .map(|e| crate::form_guard::cut(e, &reach))
@@ -172,6 +177,7 @@ pub(crate) async fn take(
         objects,
         meta,
         reach,
+        cut,
     })
 }
 

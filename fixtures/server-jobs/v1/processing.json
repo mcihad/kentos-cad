@@ -1,0 +1,2922 @@
+{
+ "doc": "docs/adr/0559-processing-server-jobs.md",
+ "note": "written by scripts/fixtures/processing_job_cases.py; read by crates/server/application/tests/processing_job_cases.rs",
+ "limits": {
+  "maxChanges": 5000,
+  "selectionMax": 100000,
+  "parametersMax": 256,
+  "memoryFloorMb": 64
+ },
+ "inputs": [
+  {
+   "name": "a tool alone",
+   "input": {
+    "tool": "geometry.buffer"
+   },
+   "fault": null
+  },
+  {
+   "name": "values, selection and view",
+   "input": {
+    "tool": "geometry.buffer",
+    "parameters": {
+     "mesafe": 5,
+     "ad": "x"
+    },
+    "selection": [
+     "00000000-0000-4000-8000-000000000005"
+    ],
+    "view": [
+     0.0,
+     0.0,
+     10.0,
+     10.0
+    ]
+   },
+   "fault": null
+  },
+  {
+   "name": "a table given as rows",
+   "input": {
+    "tool": "stats.summary",
+    "parameters": {
+     "tablo": {
+      "name": "t",
+      "rows": [
+       [
+        "a",
+        1
+       ]
+      ]
+     }
+    }
+   },
+   "fault": null
+  },
+  {
+   "name": "an empty tool",
+   "input": {
+    "tool": ""
+   },
+   "fault": "input.tool"
+  },
+  {
+   "name": "a blank tool",
+   "input": {
+    "tool": "   "
+   },
+   "fault": "input.tool"
+  },
+  {
+   "name": "a tool with a control character",
+   "input": {
+    "tool": "geo\u0007metry"
+   },
+   "fault": "input.tool"
+  },
+  {
+   "name": "a tool of 200 characters",
+   "input": {
+    "tool": "tttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+   },
+   "fault": null
+  },
+  {
+   "name": "a tool of 201 characters",
+   "input": {
+    "tool": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+   },
+   "fault": "input.tool"
+  },
+  {
+   "name": "a file value",
+   "input": {
+    "tool": "x",
+    "parameters": {
+     "dosya": {
+      "path": "/etc/passwd"
+     }
+    }
+   },
+   "fault": "input.parameters.dosya.path"
+  },
+  {
+   "name": "a file value deep in a list",
+   "input": {
+    "tool": "x",
+    "parameters": {
+     "a": [
+      1,
+      {
+       "b": {
+        "path": "x"
+       }
+      }
+     ]
+    }
+   },
+   "fault": "input.parameters.a[1].b.path"
+  },
+  {
+   "name": "a path that is not a text is a value",
+   "input": {
+    "tool": "x",
+    "parameters": {
+     "a": {
+      "path": 3
+     }
+    }
+   },
+   "fault": null
+  },
+  {
+   "name": "a selection that is not an id",
+   "input": {
+    "tool": "x",
+    "selection": [
+     "00000000-0000-4000-8000-000000000005",
+     "yok"
+    ]
+   },
+   "fault": "input.selection[1]"
+  },
+  {
+   "name": "an upper-case id is not an id",
+   "input": {
+    "tool": "x",
+    "selection": [
+     "00000000-0000-4000-8000-0000000000FF"
+    ]
+   },
+   "fault": "input.selection[0]"
+  },
+  {
+   "name": "a box with its corners the wrong way",
+   "input": {
+    "tool": "x",
+    "view": [
+     5.0,
+     0.0,
+     1.0,
+     1.0
+    ]
+   },
+   "fault": "input.view"
+  },
+  {
+   "name": "a box of one point",
+   "input": {
+    "tool": "x",
+    "view": [
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   },
+   "fault": null
+  },
+  {
+   "name": "a revision that is not a number",
+   "input": {
+    "tool": "x",
+    "expectedRevision": "bir"
+   },
+   "fault": "input.expectedRevision"
+  },
+  {
+   "name": "revision zero",
+   "input": {
+    "tool": "x",
+    "expectedRevision": "0"
+   },
+   "fault": null
+  },
+  {
+   "name": "a revision past the database's",
+   "input": {
+    "tool": "x",
+    "expectedRevision": "9223372036854775808"
+   },
+   "fault": "input.expectedRevision"
+  },
+  {
+   "name": "no CPU",
+   "input": {
+    "tool": "x",
+    "cpuSeconds": 0
+   },
+   "fault": "input.cpuSeconds"
+  },
+  {
+   "name": "one CPU second",
+   "input": {
+    "tool": "x",
+    "cpuSeconds": 1
+   },
+   "fault": null
+  },
+  {
+   "name": "memory under the floor",
+   "input": {
+    "tool": "x",
+    "memoryMb": 63
+   },
+   "fault": "input.memoryMb"
+  },
+  {
+   "name": "memory at the floor",
+   "input": {
+    "tool": "x",
+    "memoryMb": 64
+   },
+   "fault": null
+  },
+  {
+   "name": "the most values",
+   "input": {
+    "tool": "x",
+    "parameters": {
+     "p0": 0,
+     "p1": 1,
+     "p2": 2,
+     "p3": 3,
+     "p4": 4,
+     "p5": 5,
+     "p6": 6,
+     "p7": 7,
+     "p8": 8,
+     "p9": 9,
+     "p10": 10,
+     "p11": 11,
+     "p12": 12,
+     "p13": 13,
+     "p14": 14,
+     "p15": 15,
+     "p16": 16,
+     "p17": 17,
+     "p18": 18,
+     "p19": 19,
+     "p20": 20,
+     "p21": 21,
+     "p22": 22,
+     "p23": 23,
+     "p24": 24,
+     "p25": 25,
+     "p26": 26,
+     "p27": 27,
+     "p28": 28,
+     "p29": 29,
+     "p30": 30,
+     "p31": 31,
+     "p32": 32,
+     "p33": 33,
+     "p34": 34,
+     "p35": 35,
+     "p36": 36,
+     "p37": 37,
+     "p38": 38,
+     "p39": 39,
+     "p40": 40,
+     "p41": 41,
+     "p42": 42,
+     "p43": 43,
+     "p44": 44,
+     "p45": 45,
+     "p46": 46,
+     "p47": 47,
+     "p48": 48,
+     "p49": 49,
+     "p50": 50,
+     "p51": 51,
+     "p52": 52,
+     "p53": 53,
+     "p54": 54,
+     "p55": 55,
+     "p56": 56,
+     "p57": 57,
+     "p58": 58,
+     "p59": 59,
+     "p60": 60,
+     "p61": 61,
+     "p62": 62,
+     "p63": 63,
+     "p64": 64,
+     "p65": 65,
+     "p66": 66,
+     "p67": 67,
+     "p68": 68,
+     "p69": 69,
+     "p70": 70,
+     "p71": 71,
+     "p72": 72,
+     "p73": 73,
+     "p74": 74,
+     "p75": 75,
+     "p76": 76,
+     "p77": 77,
+     "p78": 78,
+     "p79": 79,
+     "p80": 80,
+     "p81": 81,
+     "p82": 82,
+     "p83": 83,
+     "p84": 84,
+     "p85": 85,
+     "p86": 86,
+     "p87": 87,
+     "p88": 88,
+     "p89": 89,
+     "p90": 90,
+     "p91": 91,
+     "p92": 92,
+     "p93": 93,
+     "p94": 94,
+     "p95": 95,
+     "p96": 96,
+     "p97": 97,
+     "p98": 98,
+     "p99": 99,
+     "p100": 100,
+     "p101": 101,
+     "p102": 102,
+     "p103": 103,
+     "p104": 104,
+     "p105": 105,
+     "p106": 106,
+     "p107": 107,
+     "p108": 108,
+     "p109": 109,
+     "p110": 110,
+     "p111": 111,
+     "p112": 112,
+     "p113": 113,
+     "p114": 114,
+     "p115": 115,
+     "p116": 116,
+     "p117": 117,
+     "p118": 118,
+     "p119": 119,
+     "p120": 120,
+     "p121": 121,
+     "p122": 122,
+     "p123": 123,
+     "p124": 124,
+     "p125": 125,
+     "p126": 126,
+     "p127": 127,
+     "p128": 128,
+     "p129": 129,
+     "p130": 130,
+     "p131": 131,
+     "p132": 132,
+     "p133": 133,
+     "p134": 134,
+     "p135": 135,
+     "p136": 136,
+     "p137": 137,
+     "p138": 138,
+     "p139": 139,
+     "p140": 140,
+     "p141": 141,
+     "p142": 142,
+     "p143": 143,
+     "p144": 144,
+     "p145": 145,
+     "p146": 146,
+     "p147": 147,
+     "p148": 148,
+     "p149": 149,
+     "p150": 150,
+     "p151": 151,
+     "p152": 152,
+     "p153": 153,
+     "p154": 154,
+     "p155": 155,
+     "p156": 156,
+     "p157": 157,
+     "p158": 158,
+     "p159": 159,
+     "p160": 160,
+     "p161": 161,
+     "p162": 162,
+     "p163": 163,
+     "p164": 164,
+     "p165": 165,
+     "p166": 166,
+     "p167": 167,
+     "p168": 168,
+     "p169": 169,
+     "p170": 170,
+     "p171": 171,
+     "p172": 172,
+     "p173": 173,
+     "p174": 174,
+     "p175": 175,
+     "p176": 176,
+     "p177": 177,
+     "p178": 178,
+     "p179": 179,
+     "p180": 180,
+     "p181": 181,
+     "p182": 182,
+     "p183": 183,
+     "p184": 184,
+     "p185": 185,
+     "p186": 186,
+     "p187": 187,
+     "p188": 188,
+     "p189": 189,
+     "p190": 190,
+     "p191": 191,
+     "p192": 192,
+     "p193": 193,
+     "p194": 194,
+     "p195": 195,
+     "p196": 196,
+     "p197": 197,
+     "p198": 198,
+     "p199": 199,
+     "p200": 200,
+     "p201": 201,
+     "p202": 202,
+     "p203": 203,
+     "p204": 204,
+     "p205": 205,
+     "p206": 206,
+     "p207": 207,
+     "p208": 208,
+     "p209": 209,
+     "p210": 210,
+     "p211": 211,
+     "p212": 212,
+     "p213": 213,
+     "p214": 214,
+     "p215": 215,
+     "p216": 216,
+     "p217": 217,
+     "p218": 218,
+     "p219": 219,
+     "p220": 220,
+     "p221": 221,
+     "p222": 222,
+     "p223": 223,
+     "p224": 224,
+     "p225": 225,
+     "p226": 226,
+     "p227": 227,
+     "p228": 228,
+     "p229": 229,
+     "p230": 230,
+     "p231": 231,
+     "p232": 232,
+     "p233": 233,
+     "p234": 234,
+     "p235": 235,
+     "p236": 236,
+     "p237": 237,
+     "p238": 238,
+     "p239": 239,
+     "p240": 240,
+     "p241": 241,
+     "p242": 242,
+     "p243": 243,
+     "p244": 244,
+     "p245": 245,
+     "p246": 246,
+     "p247": 247,
+     "p248": 248,
+     "p249": 249,
+     "p250": 250,
+     "p251": 251,
+     "p252": 252,
+     "p253": 253,
+     "p254": 254,
+     "p255": 255
+    }
+   },
+   "fault": null
+  },
+  {
+   "name": "one value too many",
+   "input": {
+    "tool": "x",
+    "parameters": {
+     "p0": 0,
+     "p1": 1,
+     "p2": 2,
+     "p3": 3,
+     "p4": 4,
+     "p5": 5,
+     "p6": 6,
+     "p7": 7,
+     "p8": 8,
+     "p9": 9,
+     "p10": 10,
+     "p11": 11,
+     "p12": 12,
+     "p13": 13,
+     "p14": 14,
+     "p15": 15,
+     "p16": 16,
+     "p17": 17,
+     "p18": 18,
+     "p19": 19,
+     "p20": 20,
+     "p21": 21,
+     "p22": 22,
+     "p23": 23,
+     "p24": 24,
+     "p25": 25,
+     "p26": 26,
+     "p27": 27,
+     "p28": 28,
+     "p29": 29,
+     "p30": 30,
+     "p31": 31,
+     "p32": 32,
+     "p33": 33,
+     "p34": 34,
+     "p35": 35,
+     "p36": 36,
+     "p37": 37,
+     "p38": 38,
+     "p39": 39,
+     "p40": 40,
+     "p41": 41,
+     "p42": 42,
+     "p43": 43,
+     "p44": 44,
+     "p45": 45,
+     "p46": 46,
+     "p47": 47,
+     "p48": 48,
+     "p49": 49,
+     "p50": 50,
+     "p51": 51,
+     "p52": 52,
+     "p53": 53,
+     "p54": 54,
+     "p55": 55,
+     "p56": 56,
+     "p57": 57,
+     "p58": 58,
+     "p59": 59,
+     "p60": 60,
+     "p61": 61,
+     "p62": 62,
+     "p63": 63,
+     "p64": 64,
+     "p65": 65,
+     "p66": 66,
+     "p67": 67,
+     "p68": 68,
+     "p69": 69,
+     "p70": 70,
+     "p71": 71,
+     "p72": 72,
+     "p73": 73,
+     "p74": 74,
+     "p75": 75,
+     "p76": 76,
+     "p77": 77,
+     "p78": 78,
+     "p79": 79,
+     "p80": 80,
+     "p81": 81,
+     "p82": 82,
+     "p83": 83,
+     "p84": 84,
+     "p85": 85,
+     "p86": 86,
+     "p87": 87,
+     "p88": 88,
+     "p89": 89,
+     "p90": 90,
+     "p91": 91,
+     "p92": 92,
+     "p93": 93,
+     "p94": 94,
+     "p95": 95,
+     "p96": 96,
+     "p97": 97,
+     "p98": 98,
+     "p99": 99,
+     "p100": 100,
+     "p101": 101,
+     "p102": 102,
+     "p103": 103,
+     "p104": 104,
+     "p105": 105,
+     "p106": 106,
+     "p107": 107,
+     "p108": 108,
+     "p109": 109,
+     "p110": 110,
+     "p111": 111,
+     "p112": 112,
+     "p113": 113,
+     "p114": 114,
+     "p115": 115,
+     "p116": 116,
+     "p117": 117,
+     "p118": 118,
+     "p119": 119,
+     "p120": 120,
+     "p121": 121,
+     "p122": 122,
+     "p123": 123,
+     "p124": 124,
+     "p125": 125,
+     "p126": 126,
+     "p127": 127,
+     "p128": 128,
+     "p129": 129,
+     "p130": 130,
+     "p131": 131,
+     "p132": 132,
+     "p133": 133,
+     "p134": 134,
+     "p135": 135,
+     "p136": 136,
+     "p137": 137,
+     "p138": 138,
+     "p139": 139,
+     "p140": 140,
+     "p141": 141,
+     "p142": 142,
+     "p143": 143,
+     "p144": 144,
+     "p145": 145,
+     "p146": 146,
+     "p147": 147,
+     "p148": 148,
+     "p149": 149,
+     "p150": 150,
+     "p151": 151,
+     "p152": 152,
+     "p153": 153,
+     "p154": 154,
+     "p155": 155,
+     "p156": 156,
+     "p157": 157,
+     "p158": 158,
+     "p159": 159,
+     "p160": 160,
+     "p161": 161,
+     "p162": 162,
+     "p163": 163,
+     "p164": 164,
+     "p165": 165,
+     "p166": 166,
+     "p167": 167,
+     "p168": 168,
+     "p169": 169,
+     "p170": 170,
+     "p171": 171,
+     "p172": 172,
+     "p173": 173,
+     "p174": 174,
+     "p175": 175,
+     "p176": 176,
+     "p177": 177,
+     "p178": 178,
+     "p179": 179,
+     "p180": 180,
+     "p181": 181,
+     "p182": 182,
+     "p183": 183,
+     "p184": 184,
+     "p185": 185,
+     "p186": 186,
+     "p187": 187,
+     "p188": 188,
+     "p189": 189,
+     "p190": 190,
+     "p191": 191,
+     "p192": 192,
+     "p193": 193,
+     "p194": 194,
+     "p195": 195,
+     "p196": 196,
+     "p197": 197,
+     "p198": 198,
+     "p199": 199,
+     "p200": 200,
+     "p201": 201,
+     "p202": 202,
+     "p203": 203,
+     "p204": 204,
+     "p205": 205,
+     "p206": 206,
+     "p207": 207,
+     "p208": 208,
+     "p209": 209,
+     "p210": 210,
+     "p211": 211,
+     "p212": 212,
+     "p213": 213,
+     "p214": 214,
+     "p215": 215,
+     "p216": 216,
+     "p217": 217,
+     "p218": 218,
+     "p219": 219,
+     "p220": 220,
+     "p221": 221,
+     "p222": 222,
+     "p223": 223,
+     "p224": 224,
+     "p225": 225,
+     "p226": 226,
+     "p227": 227,
+     "p228": 228,
+     "p229": 229,
+     "p230": 230,
+     "p231": 231,
+     "p232": 232,
+     "p233": 233,
+     "p234": 234,
+     "p235": 235,
+     "p236": 236,
+     "p237": 237,
+     "p238": 238,
+     "p239": 239,
+     "p240": 240,
+     "p241": 241,
+     "p242": 242,
+     "p243": 243,
+     "p244": 244,
+     "p245": 245,
+     "p246": 246,
+     "p247": 247,
+     "p248": 248,
+     "p249": 249,
+     "p250": 250,
+     "p251": 251,
+     "p252": 252,
+     "p253": 253,
+     "p254": 254,
+     "p255": 255,
+     "p256": 256
+    }
+   },
+   "fault": "input.parameters"
+  }
+ ],
+ "memory": [
+  {
+   "bytes": 0,
+   "estimate": 201326592
+  },
+  {
+   "bytes": 1,
+   "estimate": 201326616
+  },
+  {
+   "bytes": 1024,
+   "estimate": 201351168
+  },
+  {
+   "bytes": 1000000,
+   "estimate": 225326592
+  },
+  {
+   "bytes": 52428800,
+   "estimate": 1459617792
+  },
+  {
+   "bytes": 1073741824,
+   "estimate": 25971130368
+  },
+  {
+   "bytes": 1099511627776,
+   "estimate": 26388480393216
+  },
+  {
+   "bytes": 768614336404564650,
+   "estimate": 18446744073709551615
+  },
+  {
+   "bytes": 768614336404564651,
+   "estimate": 18446744073709551615
+  },
+  {
+   "bytes": 18446744073709551615,
+   "estimate": 18446744073709551615
+  }
+ ],
+ "budgets": [
+  {
+   "request": {},
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 1800,
+    "memoryBytes": 4294967296
+   }
+  },
+  {
+   "request": {
+    "cpuSeconds": 60
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 60,
+    "memoryBytes": 4294967296
+   }
+  },
+  {
+   "request": {
+    "cpuSeconds": 99999
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 1800,
+    "memoryBytes": 4294967296
+   }
+  },
+  {
+   "request": {
+    "memoryMb": 512
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 1800,
+    "memoryBytes": 536870912
+   }
+  },
+  {
+   "request": {
+    "memoryMb": 100000
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 1800,
+    "memoryBytes": 4294967296
+   }
+  },
+  {
+   "request": {
+    "cpuSeconds": 60,
+    "memoryMb": 512
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 60,
+    "memoryBytes": 536870912
+   }
+  },
+  {
+   "request": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "limits": {
+    "cpuSeconds": 1800,
+    "memoryMb": 4096
+   },
+   "budget": {
+    "cpuSeconds": 1800,
+    "memoryBytes": 4294967296
+   }
+  },
+  {
+   "request": {
+    "cpuSeconds": 60
+   },
+   "limits": {
+    "cpuSeconds": 10,
+    "memoryMb": 128
+   },
+   "budget": {
+    "cpuSeconds": 10,
+    "memoryBytes": 134217728
+   }
+  },
+  {
+   "request": {
+    "memoryMb": 4096
+   },
+   "limits": {
+    "cpuSeconds": 10,
+    "memoryMb": 128
+   },
+   "budget": {
+    "cpuSeconds": 10,
+    "memoryBytes": 134217728
+   }
+  }
+ ],
+ "deltas": [
+  {
+   "name": "nothing changed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "one object created",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "slot": 4,
+      "layer": "cizim",
+      "x": 4.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 1,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000004"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "three objects created",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "slot": 4,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000005",
+      "slot": 5,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000006",
+      "slot": 6,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 3,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000004",
+     "00000000-0000-4000-8000-000000000005",
+     "00000000-0000-4000-8000-000000000006"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "one object moved",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.5,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 1,
+    "removed": 0,
+    "created": [],
+    "updated": [
+     "00000000-0000-4000-8000-000000000001"
+    ],
+    "deleted": []
+   }
+  },
+  {
+   "name": "one attribute changed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "2"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 1,
+    "removed": 0,
+    "created": [],
+    "updated": [
+     "00000000-0000-4000-8000-000000000003"
+    ],
+    "deleted": []
+   }
+  },
+  {
+   "name": "an attribute added",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {
+       "yeni": "x"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 1,
+    "removed": 0,
+    "created": [],
+    "updated": [
+     "00000000-0000-4000-8000-000000000002"
+    ],
+    "deleted": []
+   }
+  },
+  {
+   "name": "an object moved to another layer",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "yol",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 1,
+    "removed": 0,
+    "created": [],
+    "updated": [
+     "00000000-0000-4000-8000-000000000001"
+    ],
+    "deleted": []
+   }
+  },
+  {
+   "name": "one object removed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 1,
+    "created": [],
+    "updated": [],
+    "deleted": [
+     "00000000-0000-4000-8000-000000000002"
+    ]
+   }
+  },
+  {
+   "name": "every object removed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 3,
+    "created": [],
+    "updated": [],
+    "deleted": [
+     "00000000-0000-4000-8000-000000000001",
+     "00000000-0000-4000-8000-000000000002",
+     "00000000-0000-4000-8000-000000000003"
+    ]
+   }
+  },
+  {
+   "name": "created, changed and removed together",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 9.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000007",
+      "slot": 7,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 1,
+    "changed": 1,
+    "removed": 1,
+    "created": [
+     "00000000-0000-4000-8000-000000000007"
+    ],
+    "updated": [
+     "00000000-0000-4000-8000-000000000001"
+    ],
+    "deleted": [
+     "00000000-0000-4000-8000-000000000002"
+    ]
+   }
+  },
+  {
+   "name": "slot numbers are not content",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 11,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 12,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 13,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "the same objects in another order",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "objects created in an empty project",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 2,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000001",
+     "00000000-0000-4000-8000-000000000002"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a layer added",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "sonuc"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "layers"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a layer added with its objects",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "sonuc"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000008",
+      "slot": 8,
+      "layer": "sonuc",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [
+     "layers"
+    ],
+    "added": 1,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000008"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a layer removed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "layers"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "layers reordered",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "yol",
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "layers"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "the active layer changed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim",
+     "yol"
+    ],
+    "activeLayer": "yol",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "activeLayer"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "the project renamed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Yeni ad",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "name"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "the plot scale changed",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 500.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "patch": [
+     "settings"
+    ],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "metadata and objects together",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Başka",
+    "plotScale": 250.0,
+    "layers": [
+     "cizim",
+     "sonuc"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000009",
+      "slot": 9,
+      "layer": "sonuc",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [
+     "layers",
+     "name",
+     "settings"
+    ],
+    "added": 1,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000009"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a block added is not carried",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": []
+   },
+   "expect": {
+    "refused": "unsupported_change"
+   }
+  },
+  {
+   "name": "a block removed is not carried",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "expect": {
+    "refused": "unsupported_change"
+   }
+  },
+  {
+   "name": "a block renamed is not carried",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Pencere"
+    ],
+    "entities": []
+   },
+   "expect": {
+    "refused": "unsupported_change"
+   }
+  },
+  {
+   "name": "blocks beside objects: the blocks refuse",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı",
+     "Yeni"
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "slot": 4,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "refused": "unsupported_change"
+   }
+  },
+  {
+   "name": "the same blocks and a created object",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [
+     "Kapı"
+    ],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 1.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000002",
+      "slot": 2,
+      "layer": "cizim",
+      "x": 2.0,
+      "y": 0.0,
+      "attrs": {}
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000003",
+      "slot": 3,
+      "layer": "cizim",
+      "x": 3.0,
+      "y": 0.0,
+      "attrs": {
+       "a": "1"
+      }
+     },
+     {
+      "uid": "00000000-0000-4000-8000-000000000004",
+      "slot": 4,
+      "layer": "cizim",
+      "x": 0.0,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 1,
+    "changed": 0,
+    "removed": 0,
+    "created": [
+     "00000000-0000-4000-8000-000000000004"
+    ],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "exactly the most a command takes",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 5000,
+     "layer": "cizim"
+    }
+   },
+   "expect": {
+    "patch": [],
+    "added": 5000,
+    "changed": 0,
+    "removed": 0,
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "one past the most",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": []
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 5001,
+     "layer": "cizim"
+    }
+   },
+   "expect": {
+    "refused": "too_many_changes"
+   }
+  },
+  {
+   "name": "a removal and a creation count together",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 2600,
+     "layer": "cizim"
+    }
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 2600,
+     "layer": "cizim",
+     "from": 2601
+    }
+   },
+   "expect": {
+    "refused": "too_many_changes"
+   }
+  },
+  {
+   "name": "many unchanged objects are not changes",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 6000,
+     "layer": "cizim"
+    }
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [],
+    "generate": {
+     "count": 6000,
+     "layer": "cizim"
+    }
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 0,
+    "removed": 0,
+    "created": [],
+    "updated": [],
+    "deleted": []
+   }
+  },
+  {
+   "name": "a change of place the size of a float step",
+   "before": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 0.1,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "after": {
+    "name": "Proje",
+    "plotScale": 1000.0,
+    "layers": [
+     "cizim"
+    ],
+    "activeLayer": "cizim",
+    "blocks": [],
+    "entities": [
+     {
+      "uid": "00000000-0000-4000-8000-000000000001",
+      "slot": 1,
+      "layer": "cizim",
+      "x": 0.1000000000000001,
+      "y": 0.0,
+      "attrs": {}
+     }
+    ]
+   },
+   "expect": {
+    "patch": [],
+    "added": 0,
+    "changed": 1,
+    "removed": 0,
+    "created": [],
+    "updated": [
+     "00000000-0000-4000-8000-000000000001"
+    ],
+    "deleted": []
+   }
+  }
+ ]
+}

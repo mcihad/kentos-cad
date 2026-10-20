@@ -235,6 +235,9 @@ Liste:
 - [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
+- [ ] `CBS-39` İşlemler araçları sunucu işi olarak (ADR 0559, 20 Ekim): web'de gerekenler: Nerede çalışır'da “KentOS sunucusunda” ve Sonuç
+  seçimi (projeye yaz, dosyaya yaz), isteğin `ProcessingJobInput` olarak kurulması (`cad.processing.run`'ın değerleri, seçim, görünür alan), Sunucu işleri
+  sekmesinde işlem satırları (ilerleme sözcükleri, sonuç satırı, `.gpkg` indirme) ve yeni hata kodlarının önerileri; sunucu, çocuk süreç ve sözleşme ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
   sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da); 0547: Sunucu işleri sekmesi (iş türleri `project.export` ve `project.checkpoint`, durum çipi,
   ilerleme, Durdur, İndir (Range), `quota_exceeded`, `too_large`, `storage`, `archived` iletileri); kurallar `kentos_cloud::server_jobs`'ta (web'e TS karşılığı).
@@ -2110,6 +2113,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   (iste, listele, yokla, Durdur, İndir; pencere kapanınca iş kalır); Python `checkpoint_job`. Kalan: başka iş türleri (sunucuda İşlemler
   aracı, büyük içe aktarma, atlas PDF'i), CPU ve bellek kotası, işçinin ilerleme yazması, önbellek anahtarı, yedek ve geri yükleme
   tatbikatı. — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md) ve [ADR 0547](docs/adr/0547-server-jobs-limits-and-desktop.md).**
+- [ ] `CBS-39` İşlemler araçları sunucu işi olarak (dilim 3): üçüncü iş türü `project.processing` (girdi `cad.processing.run`'ın girdisi, yerel dosya yolu
+  reddedilir, sabitlenen revizyon), sonuç **commit** (aracın yaptığı delta tek `project.changes` komutuyla, işin bitirme işleminde: proje aracın okuduğu
+  revizyondaysa, yetki yeniden sorulur, geçmeyen kira commit'i de geri alır) ya da **dosya** (GeoPackage artifact'ı, proje değişmez); araç **ayrı süreçte**
+  (`apps/jobrun`, `kentos-jobrun`: boş ortam, bir klasör) çalışır, işçi çocuğun CPU ve belleğini ölçer, bütçeyi (`KENTOS_JOB_CPU_SECONDS`, `KENTOS_JOB_MEMORY_MB`, istek
+  daha küçük isteyebilir) aşınca öldürür (`cpu_limit`, `memory_limit`) ve dosya boyundan kestirdiği bellek bütçeye sığmıyorsa hiç çalıştırmaz (`memory_estimate`);
+  işçi ilerleme ve sözcüklerini vuruşta yazar (`progress_text`, göç 0031); masaüstünde Nerede çalışır'da KentOS sunucusunda ve Sonuç seçimi, Sunucu işleri
+  sekmesinde işlem satırları; Python `processing_job`. Kalan: MCP'de iş türleri, blok yazan ve 5000'den çok nesne yazan araçlar, dosya alan araçlar, modeller,
+  büyük içe aktarma ve atlas PDF'i türleri, gerçek Linux'ta `/proc` ölçümü ve cgroup, kullanıcı başına kota, önbellek anahtarı, yedek ve geri yükleme tatbikatı.
+  — **20 Ekim, [ADR 0559](docs/adr/0559-processing-server-jobs.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik

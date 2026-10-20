@@ -47,6 +47,8 @@ pub enum Action {
     Select,
     /// Geri al: the run changed the drawing.
     Undo,
+    /// Sunucu işleri: the job asked of the server, watched in the catalog (docs/adr/0559 §5).
+    Jobs,
 }
 
 /// The line beside the buttons.
@@ -103,6 +105,13 @@ pub fn status_line(status: &RunStatus, attempted: bool, issues: &[Issue]) -> Sta
                 ..line(LineKind::Running, None, text)
             };
         }
+        // A job asked of the server (docs/adr/0559 §5): said, with the way to its row.
+        RunStatus::Asked(text) => {
+            return StatusLine {
+                actions: vec![Action::Jobs],
+                ..line(LineKind::Ok, Some(LineIcon::Success), text.clone())
+            };
+        }
         RunStatus::Ok {
             text,
             pick,
@@ -156,12 +165,20 @@ pub fn status_line(status: &RunStatus, attempted: bool, issues: &[Issue]) -> Sta
     line(LineKind::Idle, None, String::new())
 }
 
-/// The buttons for `status`.
+/// The buttons for `status` (the window asks [`footer_at`] with where the run goes; the tests ask it for here).
+#[cfg(test)]
 pub fn footer_of(status: &RunStatus) -> Footer {
+    footer_at(status, false)
+}
+
+/// The buttons for `status` when the run goes to the server (`server`: “Sunucuda çalıştır”, docs/adr/0559 §5).
+pub fn footer_at(status: &RunStatus, server: bool) -> Footer {
     let running = matches!(status, RunStatus::Running { .. });
     Footer {
         run: if running {
             "Çalışıyor…"
+        } else if server {
+            "Sunucuda çalıştır"
         } else {
             "Çalıştır"
         },
@@ -227,6 +244,16 @@ pub fn target_short(t: Target) -> &'static str {
 /// the work is done.
 pub const AUTO_HINT: &str = "2.000 ya da daha çok nesneli işler arka planda hesaplanır.";
 
+/// Where the server stands for a window (docs/adr/0559 §5): the open drawing is not a cloud database project (the
+/// place is not listed), it is and the account may run jobs there, or it is and may not (listed, off, with why).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub enum ServerPlace {
+    #[default]
+    Absent,
+    Ready,
+    Off(String),
+}
+
 /// What the window knows of the places (the web's `TargetsInput`).
 pub struct Targets {
     /// The places the tool names, in its order.
@@ -236,6 +263,8 @@ pub struct Targets {
     /// Where Otomatik sends these inputs now; none for a model (each step decides).
     pub auto: Option<Target>,
     pub model: bool,
+    /// Why the server is listed and off (docs/adr/0559 §5): the note of its row instead of “yakında”.
+    pub server_off: Option<String>,
 }
 
 /// One row of Nerede çalışır.
@@ -301,12 +330,11 @@ pub fn targets_view(
             let note = (!several).then(|| "bu çalıştırmada".to_owned());
             option(Choice::At(*d), target_label(*d), note, false)
         } else {
-            option(
-                Choice::At(*d),
-                target_label(*d),
-                Some("yakında".to_owned()),
-                true,
-            )
+            let note = (*d == Target::Server)
+                .then(|| t.server_off.clone())
+                .flatten()
+                .unwrap_or_else(|| "yakında".to_owned());
+            option(Choice::At(*d), target_label(*d), Some(note), true)
         });
     }
     let hint = (several && current == Some(Choice::Auto)).then_some(AUTO_HINT);
@@ -374,6 +402,7 @@ mod tests {
                 Action::Zoom => "zoom",
                 Action::Select => "select",
                 Action::Undo => "undo",
+                Action::Jobs => "jobs",
             }).collect::<Vec<_>>(),
         });
         if let Some(p) = line.progress {
@@ -462,6 +491,7 @@ mod tests {
                 available: places(&c["available"]),
                 auto: (!c["auto"].is_null()).then(|| target_of(&c["auto"])),
                 model: c["model"] == true,
+                server_off: None,
             };
             let choice = Choice::read(c["choice"].as_str().unwrap_or_default());
             let (options, hint, current) = targets_view(&t, choice);

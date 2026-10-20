@@ -10,7 +10,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../../.."
 mkdir -p .run
-cargo build -q -p kentos-api
+cargo build -q -p kentos-api -p kentos-jobrun
 env_file="${KENTOS_ENV_FILE:-.env.local}"
 if [ -z "${KENTOS_DEV_PASSWORD:-}" ] && [ -f "$env_file" ]; then
   KENTOS_DEV_PASSWORD="$(sed -n 's/^KENTOS_DEV_PASSWORD=//p' "$env_file")"

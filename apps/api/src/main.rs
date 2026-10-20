@@ -12,6 +12,7 @@ mod config;
 mod http;
 mod hub;
 mod oidc;
+mod processing_job;
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -223,6 +224,16 @@ fn spawn_workers(
     count: u32,
     limits: kentos_application::jobs::JobLimits,
 ) -> Vec<tokio::task::JoinHandle<()>> {
+    // The tools of `project.processing` jobs run in a child of this program (docs/adr/0559 §3); without it the
+    // workers leave those jobs to another that has it.
+    let processor: Option<Arc<dyn kentos_application::processing_job::Processor>> =
+        match processing_job::ChildProcessor::new() {
+            Ok(p) => Some(Arc::new(p)),
+            Err(e) => {
+                tracing::warn!(error = %e, "araç işlemi yok; işçiler project.processing işi almayacak");
+                None
+            }
+        };
     (0..count)
         .map(|_| {
             let owner = uuid::Uuid::now_v7();
@@ -233,6 +244,7 @@ fn spawn_workers(
                 WORKER_LEASE,
                 WORKER_IDLE,
                 limits,
+                processor.clone(),
                 Arc::new(std::sync::atomic::AtomicBool::new(false)),
                 move |done| match done {
                     Ok(w) => tracing::info!(worker = %owner, job = %w.job, state = ?w.state, "sunucu işi bitti"),

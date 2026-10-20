@@ -185,6 +185,73 @@ class ConnectionTests(unittest.TestCase):
         self.assertEqual(refused.exception.code, "quota_exceeded")
         self.assertTrue(refused.exception.retryable)
 
+    def test_a_processing_job_is_asked_as_the_command_takes_the_run(self) -> None:
+        conn = cad.Connection.login(self.server.url, "ayse", "parola")
+        project = conn.project(PROJECT["id"], TENANT)
+        base = f"/v1/tenants/{TENANT}/projects/{PROJECT['id']}/jobs"
+        running = {
+            "id": "j3",
+            "kind": "project.processing",
+            "state": "running",
+            "progress": 0.4,
+            "progressText": "Araç çalışıyor: Tampon",
+        }
+        self.server.replies[base] = (201, {**running, "state": "queued", "progress": 0.0}, {})
+        self.server.replies[f"{base}/j3"] = (200, running, {})
+        asked = project.processing_job(
+            "geometry.buffer",
+            parameters={"mesafe": 5},
+            selection=["0199aaaa-0000-7000-8000-000000000001"],
+            view=[0.0, 0.0, 10.0, 10.0],
+            mode="sink",
+            expected_revision="7",
+            label="Tampon",
+            cpu_seconds=60,
+            memory_mb=512,
+            request_id="istek-3",
+            timeout_seconds=120,
+        )
+        self.assertEqual(asked["kind"], "project.processing")
+        self.assertEqual(
+            self.server.requests[-1]["body"],
+            {
+                "kind": "project.processing",
+                "input": {
+                    "tool": "geometry.buffer",
+                    "mode": "sink",
+                    "label": "Tampon",
+                    "parameters": {"mesafe": 5},
+                    "selection": ["0199aaaa-0000-7000-8000-000000000001"],
+                    "view": [0.0, 0.0, 10.0, 10.0],
+                    "expectedRevision": "7",
+                    "cpuSeconds": 60,
+                    "memoryMb": 512,
+                },
+                "requestId": "istek-3",
+                "timeoutSeconds": 120,
+            },
+        )
+        # A tool alone is a commit with nothing else said; the progress words come with the job.
+        project.processing_job("points.numberVertices", request_id="istek-4")
+        self.assertEqual(
+            self.server.requests[-1]["body"],
+            {
+                "kind": "project.processing",
+                "input": {"tool": "points.numberVertices", "mode": "commit"},
+                "requestId": "istek-4",
+            },
+        )
+        self.assertEqual(project.job("j3")["progressText"], "Araç çalışıyor: Tampon")
+        # A local file in a value is the server's refusal, typed.
+        self.server.replies[base] = (
+            400,
+            {"error": "invalid", "message": "Sunucu işi yerel dosya okumaz.", "path": "input.parameters.dosya.path"},
+            {},
+        )
+        with self.assertRaises(cad.ServerError) as refused:
+            project.processing_job("x", parameters={"dosya": {"path": "/etc/passwd"}})
+        self.assertEqual(refused.exception.code, "invalid")
+
     def test_a_server_that_does_not_answer(self) -> None:
         url = self.server.url
         self.server.close()

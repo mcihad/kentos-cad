@@ -27,6 +27,7 @@ mod fields;
 pub mod memory;
 pub mod panel;
 mod plan;
+mod server;
 
 /// The İşlemler panel's event as the app's message (the ribbon's model buttons send it too).
 pub(crate) fn panel_message(event: panel::Event) -> crate::app::Message {
@@ -64,6 +65,8 @@ mod raster_vector_tests;
 mod remote_tests;
 #[cfg(test)]
 mod sampling_tests;
+#[cfg(test)]
+mod server_tests;
 #[cfg(test)]
 mod stats_tests;
 #[cfg(test)]
@@ -145,6 +148,10 @@ pub struct Processing {
     pub(crate) running: Vec<background::Running>,
     /// The last background run's id.
     runs: u64,
+    /// The request id of a server job asked and not answered yet (server.rs): asked again with it after a failure.
+    pub(crate) server_request: Option<String>,
+    /// The ask on its way.
+    pub(crate) server_asked: Option<u64>,
 }
 
 impl Default for Processing {
@@ -160,6 +167,8 @@ impl Default for Processing {
             batch: None,
             running: Vec::new(),
             runs: 0,
+            server_request: None,
+            server_asked: None,
         }
     }
 }
@@ -251,6 +260,10 @@ pub enum Event {
     Panel(panel::Event),
     /// Toplu çalıştır (batch.rs).
     Batch(batch::Event),
+    /// On the server, the result goes to a GeoPackage (true) or to the project (server.rs, docs/adr/0559 §5).
+    ServerSink(bool),
+    /// Sunucu işleri on the line after a job was asked: the catalog on the project's jobs.
+    ServerJobs,
 }
 
 /// The app as the window reads it: the live descriptions and previews.
@@ -417,6 +430,13 @@ impl App {
                 return Task::none();
             }
             Event::Batch(e) => return self.processing_batch_event(e),
+            Event::ServerSink(sink) => {
+                if let Some(window) = &mut self.processing.dialog {
+                    window.server_sink = sink;
+                }
+                return Task::none();
+            }
+            Event::ServerJobs => return self.processing_open_jobs(),
             Event::Run => return self.run_processing(),
             Event::Stop => {
                 self.processing_stop();
@@ -558,6 +578,7 @@ impl App {
     /// another thread, the window showing how far it is (background.rs).
     fn run_processing(&mut self) -> Task<Message> {
         let variables = self.expression_variables();
+        let server = self.server_place();
         let Some(window) = &mut self.processing.dialog else {
             return Task::none();
         };
@@ -570,11 +591,15 @@ impl App {
         };
         let values = window.values.clone();
         let tool = window.tool.clone();
-        let targets = window.targets(&self.processing.registry);
+        let targets = window.targets(&self.processing.registry, &server);
         let choice = plan::effective_choice(
             plan::Choice::read(self.processing.memory.target(&tool.id)),
             &targets.available,
         );
+        // On the server (server.rs): the tool does not run here; a job is asked for.
+        if choice == Some(plan::Choice::At(Target::Server)) {
+            return self.processing_server_run();
+        }
         // Otomatik's answer for the whole: a tool's is taken again from its
         // job below, its locked objects left out (the web's).
         let background = |auto: Option<Target>| match choice {

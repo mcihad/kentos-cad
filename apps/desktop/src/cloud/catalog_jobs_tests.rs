@@ -42,6 +42,7 @@ fn job(id: &str, state: ServerJobState) -> ServerJob {
         base_revision: "4".into(),
         state,
         progress: 0.0,
+        progress_text: None,
         attempts: 1,
         max_attempts: 3,
         timeout_seconds: 600,
@@ -569,6 +570,116 @@ mod screens {
             ProjectPermission::History,
         ];
         shot(&mut snapshot, &mut app, "izleyici");
+    }
+
+    /// The tab with the jobs İşlemler's tools made (docs/adr/0559): one running with the words its worker says, one
+    /// committed to the project, one that wrote a file (İndir), one stopped at its CPU budget, one refused because the
+    /// project moved.
+    #[test]
+    #[ignore = "pictures"]
+    fn the_tab_with_processing_jobs() {
+        for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+            for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+                processing_jobs_shot(mode, suffix, width, height);
+            }
+        }
+    }
+
+    fn processing_jobs_shot(mode: &str, suffix: &str, width: f32, height: f32) {
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut app = jobs_of(ProjectStorage::Database);
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
+        answer(&mut app, Vec::new());
+        let tool = |n: u8, label: &str, mode: &str| ServerJob {
+            kind: "project.processing".into(),
+            input: json!({ "tool": "geometry.buffer", "label": label, "mode": mode }),
+            created_at: format!("2026-10-20T10:{:02}:00Z", 10 - n),
+            ..job(&jid(n), ServerJobState::Queued)
+        };
+        let usage = json!({ "cpuSeconds": 12.4, "peakMemoryMb": 612.0 });
+        let running = ServerJob {
+            progress: 0.62,
+            progress_text: Some("Araç çalışıyor: Tampon".into()),
+            started_at: Some("2026-10-20T10:09:02Z".into()),
+            state: ServerJobState::Running,
+            ..tool(1, "Tampon", "commit")
+        };
+        let committed = ServerJob {
+            state: ServerJobState::Succeeded,
+            progress: 1.0,
+            finished_at: Some("2026-10-20T10:07:41Z".into()),
+            result: Some(json!({
+                "tool": "attributes.calculate", "mode": "commit", "baseRevision": "11", "revision": "12",
+                "summary": "412 nesnede “Hesap alanı” yazıldı.", "added": 0, "changed": 412, "removed": 0,
+                "usage": usage
+            })),
+            ..tool(2, "Öznitelik hesapla", "commit")
+        };
+        let filed = ServerJob {
+            state: ServerJobState::Succeeded,
+            progress: 1.0,
+            finished_at: Some("2026-10-20T10:05:12Z".into()),
+            artifact: Some(ServerJobArtifact {
+                size: "2467840".into(),
+                sha256: "d".repeat(64),
+                name: "Ada 1246 ölçü projesi - Kesişim.gpkg".into(),
+            }),
+            result: Some(json!({
+                "tool": "geometry.intersection", "mode": "sink", "baseRevision": "11",
+                "summary": "1 284 parça yazıldı.", "added": 1284, "changed": 0, "removed": 0,
+                "usage": usage
+            })),
+            ..tool(3, "Kesişim", "sink")
+        };
+        let stopped = ServerJob {
+            state: ServerJobState::Failed,
+            finished_at: Some("2026-10-20T10:03:30Z".into()),
+            error: Some(ServerJobError {
+                code: "cpu_limit".into(),
+                message: "Araç 1800 sn işlemci süresi kullandı; bu işin işlemci bütçesi 1800 sn. İş durduruldu, hiçbir şey yazılmadı. Girdiyi daraltın ya da sunucu yöneticisinden bütçeyi artırmasını isteyin.".into(),
+            }),
+            ..tool(4, "Tampon", "commit")
+        };
+        let moved = ServerJob {
+            state: ServerJobState::Failed,
+            finished_at: Some("2026-10-20T10:01:20Z".into()),
+            error: Some(ServerJobError {
+                code: "revision_conflict".into(),
+                message: "Proje 11. revizyonda değil (12); değişiklikler yazılmadı.".into(),
+            }),
+            ..tool(5, "Tampon", "commit")
+        };
+        answer_more_shot(&mut app, vec![running, committed, filed, stopped, moved]);
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("islem-isleri-{width}x{height}{suffix}"),
+        );
+        // The details column scrolled down: the rows below.
+        let mut update = |app: &mut App, message| {
+            let _ = app.update(message);
+        };
+        snapshot.step(
+            &mut app,
+            App::view,
+            &mut update,
+            &[
+                iced::Event::Mouse(iced::mouse::Event::CursorMoved {
+                    position: iced::Point::new(width * 0.76, height * 0.6),
+                }),
+                iced::Event::Mouse(iced::mouse::Event::WheelScrolled {
+                    delta: iced::mouse::ScrollDelta::Lines { x: 0.0, y: -12.0 },
+                }),
+            ],
+        );
+        shot(
+            &mut snapshot,
+            &mut app,
+            &format!("islem-isleri-altta-{width}x{height}{suffix}"),
+        );
     }
 
     fn answer_more_shot(app: &mut App, jobs: Vec<ServerJob>) {
