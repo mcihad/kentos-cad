@@ -196,6 +196,10 @@ Liste:
   öğesinin türe göre seçicisi, `io/` ve `.kcad` okuma.
 - [ ] `CBS-03` GeoPackage (ADR 0502, 17 Ekim): web'de gerekenler: `file.import.gpkg` ve `file.export.gpkg` (web'de SQLite
   yok: sqlite-wasm ya da sunucu yolu kararı), içe aktarma penceresi; TS türleri üretildi.
+- [ ] `CBS-03` GeoPackage karo profili (ADR 0556, 20 Ekim): web'de gerekenler: `cad.rasters.gpkgread` ve `cad.rasters.gpkgwrite`
+  (web'de SQLite yok: sqlite-wasm ya da sunucu yolu kararı; `fixtures/commands/v1/cad.rasters.gpkgread.json` ve `.gpkgwrite.json`),
+  PNG yazıcısı (`png::encode`'un WASM bağlayıcısı), GeoPackage karolarını oku ve Rasteri GeoPackage karosu yaz pencereleri; TS
+  türleri üretildi.
 - [ ] `CBS-01/02/11/36` bağlı katman (ADR 0503, 17 Ekim): web'de gerekenler: `cad.sources.describe`, `.edit`, `.sync`
   işleyicileri (web'de SQLite ve dosya yazma yok: sunucu yolu ya da File System Access kararı), `.kcad` şema 74'ün
   `sources`'ı (`io/kcad.ts`), Katmanlar'da rozet ve Kaynak ▸; TS türleri üretildi. ADR 0504: `link`'in `reproject`'i ve
@@ -1998,6 +2002,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   dışa aktarma; QGIS 4.2.3'ün dosyası GDAL'ın okuduğu gibi okunur, KentOS'unki QGIS'te açılır ve GDAL'ın
   doğrulayıcısından geçer; 23 ortak durum. Dosyada yerinde düzenleme ADR 0503'le geldi. Kalan: raster ve ilişki
   profilleri. — **17 Ekim, [ADR 0502](docs/adr/0502-geopackage.md).**
+- [x] `CBS-03` GeoPackage karo (raster) profili: `kentos-geopackage`'ın `tiles` modülü (karo matrisi kümeleri, karolar, tek işlemde
+  piramit yazma), `png::encode`, `cad.rasters.gpkgread` (bir düzeyin penceresi GDAL'ın yuvarlamasıyla tek GeoTIFF, isteğe bağlı
+  rasterin katmanı; PNG karolar, eksik karo saydam) ve `cad.rasters.gpkgwrite` (rasterin 256 × 256 PNG piramidi, 2 × 2 ortalamasıyla
+  kaba düzeyler, yeni dosya ya da var olana tablo) (Python, MCP; 82 ortak durum GDAL'ın GeoPackage sürücüsüyle), masaüstünde
+  iki pencere; yazılan GeoPackage GDAL'ın doğrulayıcısından geçer, GDAL ve QGIS 4.2 aynı pikselleri okur. Kalan: canlı karo kaynağı,
+  JPEG ve WebP karolar, yükseklik karoları, şerit şerit okuma. — **20 Ekim, [ADR 0556](docs/adr/0556-geopackage-tiles.md).**
 - [ ] `CBS-01`, `CBS-02`, `CBS-11`, `CBS-36` bağlı katman (GeoPackage dilimi): projenin `sources`'ı (`.kcad` şema 74; dosyanın
   SHA-256'sı ve katmanın özeti), `cad.sources.describe`, `.edit` (bağla, çöz, yeniden bağla) ve `.sync` (yaz: tek SQLite
   işleminde ekle, güncelle, sil, sütun ekle; oku: tek geri alma adımı), `source_changed` ve `pending_changes` çakışmaları;

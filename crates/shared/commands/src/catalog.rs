@@ -2808,6 +2808,78 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // GeoPackage tile pyramids as rasters (docs/adr/0556), held together by
+        // fixtures/commands/v1/cad.rasters.gpkgread.json and cad.rasters.gpkgwrite.json.
+        CommandDescriptor {
+            id: crate::CAD_RASTERS_GPKGREAD.into(),
+            version: crate::CAD_RASTERS_GPKGREAD_VERSION,
+            title: "GeoPackage karolarını oku".into(),
+            summary: "Bir GeoPackage'ın karo (raster) tablosunu okur: tables dosyadaki her karo tablosunu (karo matrisi kümesinin kutusu, veri kutusu, EPSG kodu, her zoom düzeyinin matrisi, karo boyu, pikseli, karo sayısı ve karolarının biçimi) söyler. \
+                      output verilirse seçilen zoom düzeyi (zoom; yoksa en yükseği) ve alan (area, tablonun sisteminde [en küçük x, en küçük y, en büyük x, en büyük y]; yoksa tablonun veri kutusu, o da yoksa karo matrisi kümesinin kutusu, düzeyin ızgarasına kesilir) tek raster olarak output'a kuzeyi yukarıda, tablonun sisteminde, dört bantlı (kırmızı, yeşil, mavi, alfa) 8 bitlik GeoTIFF yazılır; dosyada karosu olmayan yer saydamdır (alfa 0, tiles_missing). \
+                      Pencerenin sınırı GDAL'ın GeoPackage sürücüsünün kuralıyla pikselin tamına yuvarlanır (başlangıç (min − küme başlangıcı) / piksel'in yuvarlağı, boy (en büyük − en küçük) / piksel + 0,5'in tamı) ve ızgaradan taşan yer kesilir. Karolar PNG olmalı ve matrisin karo boyunda olmalı (8 bit gri, gri+alfa, RGB, RGBA ve paletli); JPEG, WebP ve 8 bitten fazla PNG okunmaz (tile_format_unsupported); raster en çok 25 milyon piksel olur (gpkg_tiles_too_large). \
+                      Tablo EPSG sistemini bildirmiyorsa srid 0 olur (crs_undeclared). layer verilirse raster output'a bağlı olarak o katmana eklenir (tek geri alma adımı “GeoPackage karoları”; sistemi projeninkinden başkaysa crs_mismatch); verilmezse çizim değişmez. Dosya yarım kalmaz: geçici adla yazılır, geri okunup denetlenir, sonra yerine konur; var olan output overwrite verilmezse reddedilir (file_exists). plan yazmadan söyler."
+                .into(),
+            aliases: vec!["gpkgkaro".into(), "gpkgraster".into(), "karooku".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RastersGpkgRead>(),
+            output: schema::<crate::RastersGpkgReadDone>(),
+            plan: Some(schema::<crate::RastersGpkgReadDone>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Dosyadaki karo tablolarını ve zoom düzeylerini listele".into(),
+                    input: json!({ "path": "/veri/ortofoto.gpkg" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "En ince düzeyin bir alanını GeoTIFF yap ve altlık katmanına ekle".into(),
+                    input: json!({
+                        "path": "/veri/ortofoto.gpkg",
+                        "table": "orto",
+                        "area": [487000.0, 4420000.0, 487500.0, 4420400.0],
+                        "output": "/veri/orto-parca.tif",
+                        "layer": "altlik"
+                    }),
+                    output: None,
+                },
+            ],
+        },
+        CommandDescriptor {
+            id: crate::CAD_RASTERS_GPKGWRITE.into(),
+            version: crate::CAD_RASTERS_GPKGWRITE_VERSION,
+            title: "Rasteri GeoPackage karosu olarak yaz".into(),
+            summary: "Çizimdeki bir rasteri (uid; 8 bitlik, kuzeyi yukarıda, paletsiz, dosyası ya da kitaplık kaynağı okunabilen) path'e GeoPackage karo tablosu (table; yoksa tiles) olarak yazar: 256 × 256 PNG karolar, en ince zoom düzeyi rasterin kendi pikseli, her kaba düzey yarı piksel çözünürlüklü (2 × 2 ortalaması; ızgaranın dışı saydam); karo ızgarasının başlangıcı rasterin sol üst köşesidir ve karo matrisi kümesinin kutusu en kaba düzeyin tek karosunu kaplar, veri kutusu rasterin kendi kutusudur. \
+                      Karolar rasterin bantlarındandır: 1 bant gri, 2 bant gri ve alfa, 3 ve 4 bant RGBA (alfa rasterde yoksa içeride 255, ızgara dışında 0). Rasterin sistemi (EPSG kodu ve WKT'si; sistemsizse tanımsız kartezyen) dosyaya yazılır. nodata değeri karoda taşınamaz (nodata_lost). Raster 25 milyon pikseli aşarsa gpkg_tiles_too_large. \
+                      mode new: yeni GeoPackage (1.3; var olan dosyanın üzerine yalnız overwrite ile yazılır, geçici adla yazılır, geri okunup yerine konur); add: var olan GeoPackage'a tek işlemde tablo eklenir (aynı adlı tablo table_exists, hata olursa dosya olduğu gibi kalır). plan yazmadan yazılacak olanı söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["gpkgkarouret".into(), "karoyaz".into(), "rastergpkg".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::RastersGpkgWrite>(),
+            output: schema::<crate::RastersGpkgWritten>(),
+            plan: Some(schema::<crate::RastersGpkgWritten>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Ortofotoyu karo tablosu olarak yeni bir GeoPackage'a yaz".into(),
+                input: json!({
+                    "uid": "6f1c0a52-3b7e-4d0a-9a55-0d4f6b1f2c11",
+                    "path": "/veri/ortofoto.gpkg",
+                    "table": "orto"
+                }),
+                output: None,
+            }],
+        },
         // A temporal layer's state as valid and as known (docs/adr/0537), held together by
         // fixtures/commands/v1/cad.time.query.json. The web is paused.
         CommandDescriptor {
@@ -8577,6 +8649,12 @@ mod tests {
                     }
                     crate::CAD_RASTERS_MOSAIC => {
                         serde_json::from_value::<crate::RastersMosaic>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RASTERS_GPKGREAD => {
+                        serde_json::from_value::<crate::RastersGpkgRead>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_RASTERS_GPKGWRITE => {
+                        serde_json::from_value::<crate::RastersGpkgWrite>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_INSERTS_CLIP => {
                         serde_json::from_value::<crate::InsertsClip>(e.input.clone()).map(|_| ())

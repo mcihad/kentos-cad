@@ -138,6 +138,8 @@ COMMANDS: dict[str, Any] = {
     "cad.profiles.check": profiles.check,
     "cad.ramps.create": ramps.create,
     "cad.rasters.georef": rasters.georef,
+    "cad.rasters.gpkgread": rasters.gpkgread,
+    "cad.rasters.gpkgwrite": rasters.gpkgwrite,
     "cad.rasters.mosaic": rasters.mosaic,
     "cad.records.create": records.create,
     "cad.records.duplicate": records.duplicate,

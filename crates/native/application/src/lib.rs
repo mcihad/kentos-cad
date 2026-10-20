@@ -220,6 +220,7 @@ mod xrefs_bind;
 pub mod links;
 pub mod assets_check;
 pub mod images_edit;
+pub mod gpkg_tiles;
 pub mod rasters_mosaic;
 pub mod stac_host;
 pub mod stac_prepare;
@@ -634,6 +635,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_RASTERS_MOSAIC,
         kentos_commands::CAD_RASTERS_MOSAIC_VERSION,
+    ),
+    // GeoPackage karoları ([`gpkg_tiles`], docs/adr/0556).
+    (
+        kentos_commands::CAD_RASTERS_GPKGREAD,
+        kentos_commands::CAD_RASTERS_GPKGREAD_VERSION,
+    ),
+    (
+        kentos_commands::CAD_RASTERS_GPKGWRITE,
+        kentos_commands::CAD_RASTERS_GPKGWRITE_VERSION,
     ),
     // Raster oturt'un kaydı ([`rasters_georef`], docs/adr/0518).
     (

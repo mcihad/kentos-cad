@@ -13746,6 +13746,64 @@
    ]
   },
   {
+   "id": "cad.rasters.gpkgread",
+   "title": "GeoPackage karolarını oku",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 51,
+   "files": [
+    "fixtures/commands/v1/cad.rasters.gpkgread.json"
+   ],
+   "options": [
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "cad.rasters.gpkgwrite",
+   "title": "Rasteri GeoPackage karosu olarak yaz",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 35,
+   "files": [
+    "fixtures/commands/v1/cad.rasters.gpkgwrite.json"
+   ],
+   "options": [
+    {
+     "key": "mode",
+     "value": "add",
+     "covered": true
+    },
+    {
+     "key": "mode",
+     "value": "new",
+     "covered": true
+    },
+    {
+     "key": "overwrite",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "cad.rasters.mosaic",
    "title": "Sanal mozaik",
    "effect": "document",

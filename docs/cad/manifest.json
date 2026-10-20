@@ -6458,6 +6458,38 @@
    "tests": 0
   },
   {
+   "id": "raster.gpkgRead",
+   "kind": "command",
+   "title": "GeoPackage karoları…",
+   "level": "semantic",
+   "via": [
+    "cad.rasters.gpkgread"
+   ],
+   "operation": null,
+   "python": "kentos.cad.rasters.gpkgread",
+   "mcp": "cad.rasters.gpkgread",
+   "note": "Pencere tabloları ve düzeyleri gösterir, GeoTIFF'i ve isteğe bağlı rasteri komut yazar (ADR 0556 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "raster.gpkgWrite",
+   "kind": "command",
+   "title": "Rasteri GeoPackage karosu yaz…",
+   "level": "semantic",
+   "via": [
+    "cad.rasters.gpkgwrite"
+   ],
+   "operation": null,
+   "python": "kentos.cad.rasters.gpkgwrite",
+   "mcp": "cad.rasters.gpkgwrite",
+   "note": "Pencere karo piramidinin planını gösterir, GeoPackage'ı komut yazar (ADR 0556 §5).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.mosaic",
    "kind": "command",
    "title": "Sanal mozaik",

@@ -1,0 +1,122 @@
+[
+  {
+    "affine": [
+      487200.0,
+      1.5,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.5
+    ],
+    "bands": 4,
+    "file": "karo-rgb.gpkg",
+    "source": "kaynak/rgb.tif",
+    "table": "karo",
+    "tiles": 9
+  },
+  {
+    "affine": [
+      487200.0,
+      0.5,
+      0.0,
+      4420600.0,
+      0.0,
+      -0.5
+    ],
+    "bands": 4,
+    "file": "karo-rgba.gpkg",
+    "source": "kaynak/rgba.tif",
+    "table": "karo",
+    "tiles": 3
+  },
+  {
+    "affine": [
+      487200.0,
+      0.25,
+      0.0,
+      4420600.0,
+      0.0,
+      -0.25
+    ],
+    "bands": 1,
+    "file": "karo-gri.gpkg",
+    "source": "kaynak/gri.tif",
+    "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      2.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -3.0
+    ],
+    "bands": 2,
+    "file": "karo-gri-alfa.gpkg",
+    "source": "kaynak/gri-alfa.tif",
+    "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      1.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 1,
+    "file": "karo-nodata.gpkg",
+    "source": "kaynak/nodata.tif",
+    "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      0.0,
+      1.0,
+      0.0,
+      64.0,
+      0.0,
+      -1.0
+    ],
+    "bands": 4,
+    "file": "karo-sistemsiz.gpkg",
+    "source": "kaynak/sistemsiz.tif",
+    "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      32.0,
+      0.001,
+      0.0,
+      40.0,
+      0.0,
+      -0.001
+    ],
+    "bands": 4,
+    "file": "karo-cografi.gpkg",
+    "source": "kaynak/cografi.tif",
+    "table": "karo",
+    "tiles": 1
+  },
+  {
+    "affine": [
+      487200.0,
+      10.0,
+      0.0,
+      4420600.0,
+      0.0,
+      -10.0
+    ],
+    "bands": 4,
+    "file": "karo-bos-bir.gpkg",
+    "source": "kaynak/bos-bir.tif",
+    "table": "karo",
+    "tiles": 1
+  }
+]

@@ -36,6 +36,8 @@ use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::meshes::{describe as meshes_describe, query as meshes_query};
+use crate::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
+use kentos_commands::{RastersGpkgRead, RastersGpkgWrite};
 use crate::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use kentos_commands::{
@@ -172,6 +174,8 @@ macro_rules! by_command {
             kentos_commands::CAD_ASSETS_CHECK => $then!(assets_check, AssetsCheck),
             kentos_commands::CAD_IMAGES_EDIT => $then!(images_edit, ImagesEdit),
             kentos_commands::CAD_RASTERS_MOSAIC => $then!(rasters_mosaic, RastersMosaic),
+            kentos_commands::CAD_RASTERS_GPKGREAD => $then!(gpkg_tiles_read, RastersGpkgRead),
+            kentos_commands::CAD_RASTERS_GPKGWRITE => $then!(gpkg_tiles_write, RastersGpkgWrite),
             kentos_commands::CAD_STAC_SEARCH => $then!(stac_search, StacSearch),
             kentos_commands::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_commands::CAD_POINTCLOUDS_DESCRIBE => $then!(pointclouds_describe, PointCloudsDescribe),

@@ -44,6 +44,7 @@ use kentos_native_application::time_query;
 use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
+use kentos_native_application::gpkg_tiles::{read as gpkg_tiles_read, write as gpkg_tiles_write};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
 use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use kentos_native_application::records_page;
@@ -906,6 +907,18 @@ impl Input for kentos_commands::ImagesEdit {
 }
 
 impl Input for kentos_commands::RastersMosaic {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RastersGpkgRead {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::RastersGpkgWrite {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3169,6 +3182,12 @@ fn run_op(
         }
         kentos_commands::CAD_RASTERS_MOSAIC => {
             run!(rasters_mosaic, kentos_commands::RastersMosaic)
+        }
+        kentos_commands::CAD_RASTERS_GPKGREAD => {
+            run!(gpkg_tiles_read, kentos_commands::RastersGpkgRead)
+        }
+        kentos_commands::CAD_RASTERS_GPKGWRITE => {
+            run!(gpkg_tiles_write, kentos_commands::RastersGpkgWrite)
         }
         kentos_commands::CAD_STAC_SEARCH => {
             run!(stac_search, kentos_commands::StacSearch)

@@ -120,7 +120,7 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-03 — GeoPackage feature ve tablolarını doğrudan oku/yaz — P0; uzantılar P1**
 
-  *Kısmen (17 Ekim 2026; [ADR 0502](../docs/adr/0502-geopackage.md)): GDAL'sız kendi crate'i `kentos-geopackage` (keşif, tipli sütunlar, geometri Z/M ve eğrilerle, R-tree, tek işlemde toplu yazma, `kentos_uids` ile fid ↔ UUID); `file.import.gpkg`/`file.export.gpkg` ve masaüstü penceresi; QGIS 4.2.3'ün gerçek dosyası okunur, KentOS'un yazdığı QGIS'te açılır, GDAL'ın doğrulayıcısından geçer. Dosyada yerinde düzenleme ve bilinmeyen uzantıları koruyarak geri yazma ADR 0503'le geldi. Kalan: raster karo ve ilişki profilleri.*
+  *Kısmen (17 Ekim 2026; [ADR 0502](../docs/adr/0502-geopackage.md)): GDAL'sız kendi crate'i `kentos-geopackage` (keşif, tipli sütunlar, geometri Z/M ve eğrilerle, R-tree, tek işlemde toplu yazma, `kentos_uids` ile fid ↔ UUID); `file.import.gpkg`/`file.export.gpkg` ve masaüstü penceresi; QGIS 4.2.3'ün gerçek dosyası okunur, KentOS'un yazdığı QGIS'te açılır, GDAL'ın doğrulayıcısından geçer. Dosyada yerinde düzenleme ve bilinmeyen uzantıları koruyarak geri yazma ADR 0503'le geldi. Raster karo profili (20 Ekim 2026; [ADR 0556](../docs/adr/0556-geopackage-tiles.md)): `tiles` modülü, `cad.rasters.gpkgread` (karo tablosunun bir düzeyi GeoTIFF olarak, GDAL'ın pikselleriyle) ve `cad.rasters.gpkgwrite` (rasterin PNG karo piramidi; GDAL'ın doğrulayıcısından geçer, QGIS 4.2'de açılır), masaüstünde iki pencere. Kalan: canlı karo kaynağı, JPEG ve WebP karolar, yükseklik karoları, ilişki profili.*
 
   **Mevcut:** GeoJSON/Shapefile temeli var; kaynakta GeoPackage provider/codec bulunamadı [K03]. Kullanılabilir bir açık GIS için en büyük günlük veri alışverişi boşluklarından biridir.
 

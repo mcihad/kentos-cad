@@ -1457,6 +1457,29 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // GeoPackage karoları (docs/adr/0556).
+    Entry {
+        id: "cad.rasters.gpkgread",
+        refusals: &[
+            &["invalid_file_path", "file_not_found", "import_unreadable", "no_tile_table", "table_not_found"],
+            &["zoom_not_found", "invalid_area", "tile_table_empty", "gpkg_tiles_too_large"],
+            &["tile_unreadable", "tile_format_unsupported", "file_exists", "crs_mismatch", "file_unwritable"],
+            LAYER,
+            REVISION,
+        ],
+        warnings: &["crs_undeclared", "tiles_missing", "layer_hidden"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.rasters.gpkgwrite",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "not_a_raster", "invalid_file_path", "invalid_table_name"],
+            &["raster_unsupported", "raster_not_north_up", "gpkg_tiles_too_large", "unknown_asset"],
+            &["file_not_found", "import_unreadable", "file_exists", "table_exists", "file_unwritable"],
+        ],
+        warnings: &["nodata_lost"],
+        targets: none,
+    },
     // Zamanda sorgu (docs/adr/0537).
     Entry {
         id: "cad.time.query",
