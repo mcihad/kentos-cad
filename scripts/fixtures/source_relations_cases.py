@@ -704,7 +704,7 @@ def together_cases():
         case("dosya katmanlar onunla son eşleştiğinden beri değiştiyse birlikte yazılmaz",
              plan(write_in(PARSEL, MALIK),
                   conflict("source_changed", f"{fx(t)} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. "
-                           "Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.", "layer")),
+                           "İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.", "layer")),
              setup_=static(t, revision=STALE)),
         case("dosya yerinde yoksa",
              plan(write_in(PARSEL, MALIK),

@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-37` kaynakla uzlaştırma (ADR 0538, 20 Ekim): web'de gerekenler: `.kcad` şema 91'in `sourceBases`'i web'in kodeğinde
+  (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.sources.reconcile`'ın işleyicisi (web bağlı katmana geri döndüğünde), ortak durumların
+  `copyFile` adımı web'in oynatıcısında, Kaynakla uzlaştır penceresi.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
   kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
   sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
@@ -2021,6 +2024,15 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-37` kaynakla uzlaştırma (dilim): bağın tabanı (projenin `sourceBases`'i, `.kcad` şema 91: son eşleşmede her nesnenin
+  katmandaki ve tablodaki özeti; bağlama, okuma ve yazma yeniden alır), `cad.sources.reconcile` (tabana göre iki yanın ekleme, değiştirme
+  ve silmeleri; yalnız bir yanın değiştirdiği o yandan, aynı biçimde değişen uyuşur; öbürleri çatışma: farklı öznitelikler iki yanın
+  değerleriyle, geometri; `take` ve `rest` ile açık yan, çözülmeden yürümez `unresolved_conflicts`; tablonun yanı katmana, katmanın yanı
+  tabloya tek adım ve tek işlem), yazmanın `source_changed`'i uzlaştırmayı önerir, masaüstünde Kaynakla uzlaştır penceresi (Benimki /
+  Tablodaki, Hepsi, nesneyi göster) ve yazma reddinde kendiliğinden. Kalan: aynı nesnede alan alan birleştirme, ilişkili değişikliklerin
+  (ortak kenar, N:M, üst-alt) birlikte denetimi, birden çok katmanın birlikte uzlaştırılması, bulut projesinin `project.changes`
+  çatışmasının aynı farkla gösterilmesi, sunucu işinin commit'inde sürüm denetimi, adlı çalışma sürümü ve review. — **20 Ekim,
+  [ADR 0538](docs/adr/0538-source-reconcile.md).**
 - [ ] `CBS-33` iki zamanlı katmanlar (dilim): katmanın zaman ayarında sürümlerin kayıt zamanı (`recordedStart`, `recordedEnd`; `.kcad`
   şema 90), çekirdekte bilinen günün kuralı (`time::recorded_interval`, `known`; [kayıt, yerine geçiş)), salt okunur `cad.time.query`
   (geçerlilik anı ya da aralığı ve bilinen gün; gösterilenler ve nedenler; bölgeli anlar, UTC cevap), masaüstünde Zaman ayarları'nda kayıt

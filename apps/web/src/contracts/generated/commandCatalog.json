@@ -13448,6 +13448,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sourceBases": {
+                "description": "The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a\nreconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`\nobjects has none.",
+                "items": {
+                  "$ref": "#/$defs/SourceBase"
+                },
+                "type": "array"
+              },
               "sources": {
                 "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
                 "items": {
@@ -15038,6 +15045,34 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceBase": {
+            "additionalProperties": false,
+            "description": "A bound layer's base (docs/adr/0538 §1): each object's hashes when the layer and its table last matched, so a\nlater reconcile tells what the layer changed from what the table did, object by object. The layer's hash is that of\nthe object's kind, geometry and attributes (the first 8 bytes of the SHA-256 of their canonical JSON, the\nessence `layer_digest` hashes); the table's that of the object its row reads as. The two differ only where a row\ndoes not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the\nlink's `revision` and `digest` it was taken at: with others it is stale and not used.",
+            "properties": {
+              "digest": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 and the layer's digest it was taken at.",
+                "type": "string"
+              },
+              "rows": {
+                "description": "The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).",
+                "type": "string"
+              },
+              "source": {
+                "description": "The link's id (`kaynak-N`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "revision",
+              "digest",
+              "rows"
             ],
             "type": "object"
           },
@@ -26121,6 +26156,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sourceBases": {
+                "description": "The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a\nreconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`\nobjects has none.",
+                "items": {
+                  "$ref": "#/$defs/SourceBase"
+                },
+                "type": "array"
+              },
               "sources": {
                 "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
                 "items": {
@@ -26695,6 +26737,34 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceBase": {
+            "additionalProperties": false,
+            "description": "A bound layer's base (docs/adr/0538 §1): each object's hashes when the layer and its table last matched, so a\nlater reconcile tells what the layer changed from what the table did, object by object. The layer's hash is that of\nthe object's kind, geometry and attributes (the first 8 bytes of the SHA-256 of their canonical JSON, the\nessence `layer_digest` hashes); the table's that of the object its row reads as. The two differ only where a row\ndoes not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the\nlink's `revision` and `digest` it was taken at: with others it is stale and not used.",
+            "properties": {
+              "digest": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 and the layer's digest it was taken at.",
+                "type": "string"
+              },
+              "rows": {
+                "description": "The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).",
+                "type": "string"
+              },
+              "source": {
+                "description": "The link's id (`kaynak-N`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "revision",
+              "digest",
+              "rows"
             ],
             "type": "object"
           },
@@ -41470,6 +41540,13 @@
                 ],
                 "x-unit": "epsg"
               },
+              "sourceBases": {
+                "description": "The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a\nreconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`\nobjects has none.",
+                "items": {
+                  "$ref": "#/$defs/SourceBase"
+                },
+                "type": "array"
+              },
               "sources": {
                 "description": "The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).",
                 "items": {
@@ -43096,6 +43173,34 @@
             "required": [
               "sha256",
               "bytes"
+            ],
+            "type": "object"
+          },
+          "SourceBase": {
+            "additionalProperties": false,
+            "description": "A bound layer's base (docs/adr/0538 §1): each object's hashes when the layer and its table last matched, so a\nlater reconcile tells what the layer changed from what the table did, object by object. The layer's hash is that of\nthe object's kind, geometry and attributes (the first 8 bytes of the SHA-256 of their canonical JSON, the\nessence `layer_digest` hashes); the table's that of the object its row reads as. The two differ only where a row\ndoes not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the\nlink's `revision` and `digest` it was taken at: with others it is stale and not used.",
+            "properties": {
+              "digest": {
+                "type": "string"
+              },
+              "revision": {
+                "description": "The file's SHA-256 and the layer's digest it was taken at.",
+                "type": "string"
+              },
+              "rows": {
+                "description": "The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).",
+                "type": "string"
+              },
+              "source": {
+                "description": "The link's id (`kaynak-N`).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "source",
+              "revision",
+              "digest",
+              "rows"
             ],
             "type": "object"
           },
@@ -1000382,6 +1000487,499 @@
       ]
     },
     {
+      "id": "cad.sources.reconcile",
+      "version": 1,
+      "title": "Kaynakla uzlaştır",
+      "summary": "Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur. İkisinin farklı değiştirdiği ya da birinin silip öbürünün değiştirdiği nesne çatışmadır: farklı öznitelikler adlarıyla, iki yanın değerleriyle, geometrinin farklı olup olmadığı söylenir; son yazan kazanmaz, take (nesne nesne) ve rest (kalanlar) ile bir yan seçilir. plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır.",
+      "aliases": [
+        "kaynakuzlastir"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "ReconcileSide": {
+            "description": "The side a conflict is resolved to.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "The layer's object (or its removal) is written to the table.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "The table's row (or its removal) is taken into the layer.",
+                "type": "string"
+              }
+            ]
+          },
+          "ReconcileTake": {
+            "additionalProperties": false,
+            "description": "One conflict resolved by hand.",
+            "properties": {
+              "object": {
+                "description": "The object's lasting id.",
+                "type": "string"
+              },
+              "side": {
+                "$ref": "#/$defs/ReconcileSide"
+              }
+            },
+            "required": [
+              "object",
+              "side"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.sources.reconcile` v1. Refusals: `source_not_found`, `layer_not_found`, `source_gone`,\n`derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no\nbase for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),\n`not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),\n`geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`\n(executing, a conflict without a side).",
+        "properties": {
+          "layer": {
+            "description": "The bound layer, by id.",
+            "type": "string"
+          },
+          "rest": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ReconcileSide"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The side of every conflict `take` does not name."
+          },
+          "take": {
+            "description": "Conflicts resolved one by one.",
+            "items": {
+              "$ref": "#/$defs/ReconcileTake"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "SourcesReconcile",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ConflictField": {
+            "description": "An attribute the two sides hold differently; none where a side has no value (or no object: a removed object's\nattributes are all the other side's).",
+            "properties": {
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "ConflictKind": {
+            "description": "How the two sides of a conflict differ.",
+            "oneOf": [
+              {
+                "const": "changed",
+                "description": "Both changed it, differently.",
+                "type": "string"
+              },
+              {
+                "const": "removedInLayer",
+                "description": "The layer removed it, the table changed it.",
+                "type": "string"
+              },
+              {
+                "const": "removedInTable",
+                "description": "The table removed it, the layer changed it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ReconcileConflict": {
+            "description": "One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.",
+            "properties": {
+              "fields": {
+                "description": "The attributes that differ, by name.",
+                "items": {
+                  "$ref": "#/$defs/ConflictField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "Whether the kind or the geometry differs (a removal: always).",
+                "type": "boolean"
+              },
+              "kind": {
+                "$ref": "#/$defs/ConflictKind"
+              },
+              "object": {
+                "type": "string"
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side it is resolved to; none: unresolved."
+              }
+            },
+            "required": [
+              "object",
+              "kind",
+              "geometry"
+            ],
+            "type": "object"
+          },
+          "ReconcileCounts": {
+            "description": "What goes one way: objects added, changed and removed.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "modified": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "added",
+              "modified",
+              "removed"
+            ],
+            "type": "object"
+          },
+          "ReconcileSide": {
+            "description": "The side a conflict is resolved to.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "The layer's object (or its removal) is written to the table.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "The table's row (or its removal) is taken into the layer.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.reconcile` v1, and its plan: what goes into the layer from the table and into the table from\nthe layer (resolved conflicts counted on their side), the objects both sides changed alike, the conflicts in the\nlasting ids' order, and the file's revision (plan: before; executed: after).",
+        "properties": {
+          "agreed": {
+            "description": "Objects both sides changed (or removed) alike.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/ReconcileConflict"
+            },
+            "type": "array"
+          },
+          "fromTable": {
+            "$ref": "#/$defs/ReconcileCounts"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's SHA-256 (plan: as it is; executed: after the write).",
+            "type": "string"
+          },
+          "toTable": {
+            "$ref": "#/$defs/ReconcileCounts"
+          },
+          "unresolved": {
+            "description": "Conflicts without a side.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "fromTable",
+          "toTable",
+          "agreed",
+          "unresolved",
+          "source",
+          "revision"
+        ],
+        "title": "SourcesReconciled",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ConflictField": {
+            "description": "An attribute the two sides hold differently; none where a side has no value (or no object: a removed object's\nattributes are all the other side's).",
+            "properties": {
+              "layer": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "ConflictKind": {
+            "description": "How the two sides of a conflict differ.",
+            "oneOf": [
+              {
+                "const": "changed",
+                "description": "Both changed it, differently.",
+                "type": "string"
+              },
+              {
+                "const": "removedInLayer",
+                "description": "The layer removed it, the table changed it.",
+                "type": "string"
+              },
+              {
+                "const": "removedInTable",
+                "description": "The table removed it, the layer changed it.",
+                "type": "string"
+              }
+            ]
+          },
+          "ReconcileConflict": {
+            "description": "One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.",
+            "properties": {
+              "fields": {
+                "description": "The attributes that differ, by name.",
+                "items": {
+                  "$ref": "#/$defs/ConflictField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "description": "Whether the kind or the geometry differs (a removal: always).",
+                "type": "boolean"
+              },
+              "kind": {
+                "$ref": "#/$defs/ConflictKind"
+              },
+              "object": {
+                "type": "string"
+              },
+              "side": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ReconcileSide"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The side it is resolved to; none: unresolved."
+              }
+            },
+            "required": [
+              "object",
+              "kind",
+              "geometry"
+            ],
+            "type": "object"
+          },
+          "ReconcileCounts": {
+            "description": "What goes one way: objects added, changed and removed.",
+            "properties": {
+              "added": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "modified": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "removed": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "added",
+              "modified",
+              "removed"
+            ],
+            "type": "object"
+          },
+          "ReconcileSide": {
+            "description": "The side a conflict is resolved to.",
+            "oneOf": [
+              {
+                "const": "layer",
+                "description": "The layer's object (or its removal) is written to the table.",
+                "type": "string"
+              },
+              {
+                "const": "table",
+                "description": "The table's row (or its removal) is taken into the layer.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.sources.reconcile` v1, and its plan: what goes into the layer from the table and into the table from\nthe layer (resolved conflicts counted on their side), the objects both sides changed alike, the conflicts in the\nlasting ids' order, and the file's revision (plan: before; executed: after).",
+        "properties": {
+          "agreed": {
+            "description": "Objects both sides changed (or removed) alike.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "conflicts": {
+            "items": {
+              "$ref": "#/$defs/ReconcileConflict"
+            },
+            "type": "array"
+          },
+          "fromTable": {
+            "$ref": "#/$defs/ReconcileCounts"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "source": {
+            "description": "The file's SHA-256 (plan: as it is; executed: after the write).",
+            "type": "string"
+          },
+          "toTable": {
+            "$ref": "#/$defs/ReconcileCounts"
+          },
+          "unresolved": {
+            "description": "Conflicts without a side.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "fromTable",
+          "toTable",
+          "agreed",
+          "unresolved",
+          "source",
+          "revision"
+        ],
+        "title": "SourcesReconciled",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "source_not_found",
+          "layer_not_found",
+          "layer_locked",
+          "source_gone",
+          "import_unreadable",
+          "table_not_found",
+          "source_unreachable",
+          "source_readonly",
+          "geometry_mismatch",
+          "file_unwritable",
+          "invalid_extent",
+          "derived_dataset",
+          "crs_mismatch",
+          "no_source_base",
+          "not_a_conflict",
+          "invalid_input",
+          "unresolved_conflicts",
+          "source_changed"
+        ],
+        "warnings": [
+          "export_losses"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Parsel katmanıyla tablonun farkını gör",
+          "input": {
+            "layer": "import-parsel"
+          }
+        },
+        {
+          "title": "Bir çatışmada tablonun hâlini, kalanlarda katmanınkini al",
+          "input": {
+            "layer": "import-parsel",
+            "rest": "layer",
+            "take": [
+              {
+                "object": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401",
+                "side": "table"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sources.relate",
       "version": 1,
       "title": "İlişkiyi dosyaya eşle",
@@ -1047664,6 +1048262,24 @@
       "kind": "failed",
       "retryable": false,
       "meaning": "Katman sürümlerinin kayıt zamanını tutmuyor; bilinen günle sorulamaz."
+    },
+    {
+      "code": "no_source_base",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bağlı katmanın son eşleşmeden tabanı yok; iki yanın değişiklikleri ayrılamaz. Önce yazın ya da okuyun."
+    },
+    {
+      "code": "not_a_conflict",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Nesne bir çatışma değil; yalnız çatışmalar için yan seçilir."
+    },
+    {
+      "code": "unresolved_conflicts",
+      "kind": "conflict",
+      "retryable": true,
+      "meaning": "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin."
     },
     {
       "code": "invalid_period",

@@ -322,6 +322,12 @@ SCHEMA_WITH_GEOREF = 88
 SCHEMA_WITH_JOIN_VIEWS = 89
 # Schema 90: schema 89 and a layer time's `recordedStart` and `recordedEnd`, its versions' system time (docs/adr/0537).
 SCHEMA_WITH_RECORDED_TIME = 90
+# Schema 91: schema 90 and the settings' `sourceBases`, each bound layer's objects' hashes when the layer and its table
+# last matched (docs/adr/0538 §1).
+SCHEMA_WITH_SOURCE_BASES = 91
+# A base's rows: 16 bytes of lasting id, the layer's 8-byte hash and the table's, at most this many.
+BASE_ROW = 32
+MAX_BASE_ROWS = 200_000
 GEOREF_METHODS = ("helmert", "affine", "projective", "poly2", "poly3", "thinPlate")
 # The fewest control points each method is fitted to.
 GEOREF_NEED = {"helmert": 2, "affine": 3, "projective": 4, "poly2": 6, "poly3": 10, "thinPlate": 3}
@@ -522,7 +528,7 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2758,6 +2764,7 @@ class _Schema:
         self.georef = version >= SCHEMA_WITH_GEOREF
         self.join_views = version >= SCHEMA_WITH_JOIN_VIEWS
         self.recorded_time = version >= SCHEMA_WITH_RECORDED_TIME
+        self.source_bases = version >= SCHEMA_WITH_SOURCE_BASES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -3295,6 +3302,7 @@ class _Schema:
                 **({"namedViews": (self.named_views_, False)} if self.views else {}),
                 **({"lineTypes": (self.line_types_, False), "lineTypeScale": (self.line_type_scale_, False)} if self.patterns else {}),
                 **({"sources": (self.sources_, False)} if self.sources else {}),
+                **({"sourceBases": (self.source_bases_, False)} if self.source_bases else {}),
                 **({"wallStyles": (self.wall_styles_, False), "arch": (self.arch_, False)} if self.walls else {}),
                 **({"forms": (self.forms_, False), "relations": (self.relations_, False),
                     "domains": (self.domains_, False)} if self.forms else {}),
@@ -3311,6 +3319,15 @@ class _Schema:
         if second is not None and (second == 0 or not has_system or second == s["srid"]):
             self.path.append("secondSrid")
             self.fail("bad_value", "ikinci koordinat sistemi projeninkinden başka bir sistem olmalı; yerel projenin ikinci sistemi olmaz")
+        # A base is a link's, one a link (docs/adr/0538 §1).
+        bases = s.get("sourceBases", [])
+        links = {x["id"] for x in s.get("sources", [])}
+        seen = set()
+        for i, b in enumerate(bases):
+            if b["source"] not in links or b["source"] in seen:
+                self.path.extend(["sourceBases", str(i)])
+                self.fail("bad_value", f"“{b['source']}” bağı yok ya da ikinci tabanı")
+            seen.add(b["source"])
         # A feet-and-inches style is an inch or foot drawing's (docs/adr/0262 §2).
         if "lengthStyle" in s and s.get("drawingUnit") not in ("in", "ft"):
             self.path.append("lengthStyle")
@@ -4657,6 +4674,40 @@ class _Schema:
         problem = relations_problem(lst)
         if problem:
             self.fail("bad_value", problem)
+        return lst
+
+    def source_bases_(self, v):
+        """Schema 91 (docs/adr/0538 §1): each bound layer's base; its revision and digest 64 lower-case hex digits, its
+        rows base64 (RFC 4648 with padding) of whole 32-byte rows in strictly rising lasting id order, at most 200 000."""
+        import base64
+        import binascii
+
+        def hex64(x):
+            t = self.text(x)
+            if len(t) != 64 or any(c not in "0123456789abcdef" for c in t):
+                self.fail("bad_value", "64 küçük onaltılı hane değil")
+            return t
+
+        def rows(x):
+            t = self.text(x)
+            try:
+                raw = base64.b64decode(t, validate=True)
+            except (binascii.Error, ValueError):
+                self.fail("bad_value", "satırlar base64 değil")
+            if base64.b64encode(raw).decode() != t:
+                self.fail("bad_value", "satırlar yazıcının base64'ünde değil")
+            if len(raw) % BASE_ROW or len(raw) // BASE_ROW > MAX_BASE_ROWS:
+                self.fail("bad_value", f"satırlar {BASE_ROW} baytlık değil ya da {MAX_BASE_ROWS}'den çok")
+            ids = [raw[i:i + 16] for i in range(0, len(raw), BASE_ROW)]
+            if any(a >= b for a, b in zip(ids, ids[1:])):
+                self.fail("bad_value", "satırlar kalıcı kimliklerin artan sırasında değil")
+            return t
+
+        base = self.fields({"source": (self.text, True), "revision": (hex64, True), "digest": (hex64, True),
+                            "rows": (rows, True)})
+        lst = self.array(base)(v)
+        if not lst:
+            self.fail("bad_value", "boş liste yazılmaz")
         return lst
 
     def sources_(self, v):

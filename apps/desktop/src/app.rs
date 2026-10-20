@@ -149,6 +149,8 @@ pub enum Dialog {
     RemoveTemplate,
     /// Kaynaktan oku over the layer's own edits (bound.rs); the layer is `App::bound_pending`.
     SourceDiscard,
+    /// Kaynakla uzlaştır (source_reconcile.rs, docs/adr/0538); the window is `App::reconcile`.
+    SourceReconcile,
     /// Şablon düzenleyici (template_editor.rs); its form is `App::template_editor`.
     TemplateEditor,
     /// The open cloud project's actions (cloud/actions.rs): Yeniden adlandır,
@@ -562,6 +564,8 @@ pub enum Message {
     Services(crate::services::app::Event),
     /// Bağlı katmanlar (bound.rs, docs/adr/0503).
     Bound(crate::bound::Event),
+    /// Kaynakla uzlaştır's window (source_reconcile.rs, docs/adr/0538).
+    Reconcile(crate::source_reconcile::Event),
     /// Metin dosyası yerleştir's file: its name and bytes, or none (text_file.rs).
     TextFile(Option<(String, Vec<u8>)>),
     /// Resim ekle's file: its name, path and bytes, or none (cancelled).
@@ -1077,6 +1081,8 @@ pub struct App {
     pub removing_layer: Option<String>,
     /// The bound layer Kaynaktan oku asks about (bound.rs, `Dialog::SourceDiscard`).
     pub bound_pending: Option<String>,
+    /// Kaynakla uzlaştır's window (source_reconcile.rs, docs/adr/0538).
+    pub(crate) reconcile: Option<crate::source_reconcile::Window>,
     /// The typed settings (docs/adr/0023): kept in `ayarlar.json` when opened by `main`.
     pub settings: Settings,
     /// The settings window's draft while it is open.
@@ -1357,6 +1363,7 @@ impl App {
             xrefs: Default::default(),
             xref_watch: Default::default(),
             quantities: None,
+            reconcile: None,
             layer_purge: None,
             take_from: None,
             layer_list: None,
@@ -1825,6 +1832,7 @@ impl App {
             Message::PointClouds(event) => return self.pointclouds_event(event),
             Message::Services(event) => return self.services_event(event),
             Message::Bound(event) => return self.bound_event(event),
+            Message::Reconcile(event) => return self.reconcile_event(event),
             Message::CommandCancelled => {
                 self.line_focused = false;
                 return self.run("tool.cancel");
@@ -2771,6 +2779,7 @@ impl App {
                 return self.bound_event(crate::bound::Event::WriteTogether(None));
             }
             "source.read" => return self.bound_event(crate::bound::Event::Read(None)),
+            "source.reconcile" => return self.bound_event(crate::bound::Event::Reconcile(None)),
             "source.status" => return self.bound_event(crate::bound::Event::Status),
             "source.unlink" => return self.bound_event(crate::bound::Event::Unlink(None)),
             "source.relink" => return self.bound_event(crate::bound::Event::Relink(None)),

@@ -27,6 +27,8 @@ use crate::codes;
 use crate::geopackage as gp;
 use crate::provider;
 
+mod base;
+pub mod reconcile;
 pub mod relate;
 mod relations;
 mod together;
@@ -961,6 +963,7 @@ fn set_link(doc: &mut Document, link: Option<SourceLink>, remove: Option<&str>) 
     let mut settings = doc.settings().clone();
     if let Some(id) = remove {
         settings.sources.retain(|s| s.id != id);
+        settings.source_bases.retain(|b| b.source != id);
     }
     if let Some(link) = link {
         match settings.sources.iter_mut().find(|s| s.id == link.id) {
@@ -1444,6 +1447,8 @@ fn link_table(
         writable,
     };
     set_link(doc, Some(link.clone()), None);
+    // The layer holds the table's rows as a reload reads them (docs/adr/0538 §1).
+    base::take(doc, &link, None);
     Ok((
         SourcesEdited {
             link: Some(link),
@@ -2045,7 +2050,7 @@ fn sync_run(
                 return Err(conflict(
                     codes::SOURCE_CHANGED,
                     format!(
-                        "{} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
+                        "{} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
                         link.path
                     ),
                     "layer",
@@ -2152,7 +2157,8 @@ fn sync_run(
             }
             link.digest = layer_digest(doc, &link.layer);
             out.source = link.revision.clone();
-            set_link(doc, Some(link), None);
+            set_link(doc, Some(link.clone()), None);
+            base::after_write(doc, &link);
             out.revision = doc.revision().to_string();
             Ok((out, warnings))
         }
@@ -2259,7 +2265,8 @@ fn sync_run(
             .map_err(|why| refuse(codes::IMPORT_UNREADABLE, why, "layer"))?;
             link.revision = stored.sha256;
             link.digest = layer_digest(doc, &link.layer);
-            set_link(doc, Some(link), None);
+            set_link(doc, Some(link.clone()), None);
+            base::take(doc, &link, None);
             Ok((
                 SourcesSynced {
                     revision: doc.revision().to_string(),

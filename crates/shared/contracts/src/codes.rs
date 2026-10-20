@@ -1145,6 +1145,12 @@ codes! {
     NOT_TEMPORAL = "not_temporal", Failed, false, "Katmanın zaman ayarı yok; zamanla sorulamaz.";
     /// A day known asked of a layer that does not record its versions (docs/adr/0537).
     NOT_RECORDED = "not_recorded", Failed, false, "Katman sürümlerinin kayıt zamanını tutmuyor; bilinen günle sorulamaz.";
+    /// A bound layer without a base for its link's revision and digest (docs/adr/0538 §1).
+    NO_SOURCE_BASE = "no_source_base", Failed, false, "Bağlı katmanın son eşleşmeden tabanı yok; iki yanın değişiklikleri ayrılamaz. Önce yazın ya da okuyun.";
+    /// A side taken for an object that is not a conflict (docs/adr/0538 §2).
+    NOT_A_CONFLICT = "not_a_conflict", Failed, false, "Nesne bir çatışma değil; yalnız çatışmalar için yan seçilir.";
+    /// A reconcile with conflicts no side was taken for (docs/adr/0538 §2).
+    UNRESOLVED_CONFLICTS = "unresolved_conflicts", Conflict, true, "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).

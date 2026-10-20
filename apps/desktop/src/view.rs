@@ -1773,6 +1773,7 @@ impl App {
             Asking::RemoveLayer => self.remove_layer_question(),
             Asking::RemoveTemplate => self.remove_template_question(),
             Asking::SourceDiscard => self.bound_discard_question(),
+            Asking::SourceReconcile => self.reconcile_view(),
             Asking::TemplateEditor => self.template_editor_view(),
             Asking::CloudRename => self.rename_view(),
             Asking::CloudTrash => self.trash_view(),

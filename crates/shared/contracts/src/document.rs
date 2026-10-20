@@ -212,6 +212,12 @@ pub struct ProjectSettings {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceLink>>"))]
     pub sources: Vec<crate::SourceLink>,
+    /// The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a
+    /// reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
+    /// objects has none.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(optional, as = "Option<Vec<crate::SourceBase>>"))]
+    pub source_bases: Vec<crate::SourceBase>,
     /// The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
     /// absent: 1.
     #[serde(default, skip_serializing_if = "Option::is_none")]

@@ -661,6 +661,8 @@ fn command_tool(c: &Value) -> Value {
             // A bound layer's binding changes; a sync writes its table or replaces its objects (docs/adr/0503).
             | "cad.sources.edit"
             | "cad.sources.sync"
+            // It takes the table's side into the layer and writes the layer's to the table (docs/adr/0538).
+            | "cad.sources.reconcile"
             // It writes a many-to-many reference's mapping table into the file or takes it out (docs/adr/0532 §2).
             | "cad.sources.relate"
             // It writes over the attributes of many objects (docs/adr/0507).

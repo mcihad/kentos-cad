@@ -248,3 +248,95 @@ pub fn address_problem(address: &str) -> Option<String> {
     }
     None
 }
+
+/// The most objects a bound layer's base is kept for (docs/adr/0538 §1): a layer of more has none, and its two sides'
+/// changes cannot be told apart (`cad.sources.reconcile` refuses, `no_source_base`).
+pub const MAX_BASE_ROWS: usize = 200_000;
+/// The bytes of one row of a base: the lasting id (16), the layer's hash (8) and the table's (8), big-endian.
+pub const BASE_ROW: usize = 32;
+
+/// A bound layer's base (docs/adr/0538 §1): each object's hashes when the layer and its table last matched, so a
+/// later reconcile tells what the layer changed from what the table did, object by object. The layer's hash is that of
+/// the object's kind, geometry and attributes (the first 8 bytes of the SHA-256 of their canonical JSON, the
+/// essence `layer_digest` hashes); the table's that of the object its row reads as. The two differ only where a row
+/// does not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the
+/// link's `revision` and `digest` it was taken at: with others it is stale and not used.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct SourceBase {
+    /// The link's id (`kaynak-N`).
+    pub source: String,
+    /// The file's SHA-256 and the layer's digest it was taken at.
+    pub revision: String,
+    pub digest: String,
+    /// The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).
+    pub rows: String,
+}
+
+/// One object of a base: its lasting id's bytes, the layer's hash and the table's.
+pub type BaseRow = ([u8; 16], u64, u64);
+
+/// A base's rows read; none when they are not base64, not whole rows, not in strictly rising id order or too many.
+pub fn base_rows(rows: &str) -> Option<Vec<BaseRow>> {
+    let bytes = crate::encoding::base64_decode(rows)?;
+    if bytes.len() % BASE_ROW != 0 || bytes.len() / BASE_ROW > MAX_BASE_ROWS {
+        return None;
+    }
+    let mut out: Vec<BaseRow> = Vec::with_capacity(bytes.len() / BASE_ROW);
+    for row in bytes.chunks_exact(BASE_ROW) {
+        let mut uid = [0u8; 16];
+        uid.copy_from_slice(&row[..16]);
+        let mut a = [0u8; 8];
+        a.copy_from_slice(&row[16..24]);
+        let mut b = [0u8; 8];
+        b.copy_from_slice(&row[24..]);
+        if out.last().is_some_and(|(last, _, _)| *last >= uid) {
+            return None;
+        }
+        out.push((uid, u64::from_be_bytes(a), u64::from_be_bytes(b)));
+    }
+    Some(out)
+}
+
+/// The rows written as a base's text (in rising id order: they are sorted here).
+pub fn base_text(mut rows: Vec<BaseRow>) -> String {
+    rows.sort_by_key(|r| r.0);
+    let mut bytes = Vec::with_capacity(rows.len() * BASE_ROW);
+    for (uid, a, b) in rows {
+        bytes.extend_from_slice(&uid);
+        bytes.extend_from_slice(&a.to_be_bytes());
+        bytes.extend_from_slice(&b.to_be_bytes());
+    }
+    crate::encoding::base64_encode(&bytes)
+}
+
+fn hex64(s: &str) -> bool {
+    s.len() == 64 && s.bytes().all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+}
+
+/// What is wrong with the project's bases, if anything: each of a link the project has, at most one a link, its
+/// revision and digest 64 lower-case hex digits, its rows readable (`base_rows`).
+pub fn bases_problem(bases: &[SourceBase], sources: &[SourceLink]) -> Option<String> {
+    let mut seen = std::collections::BTreeSet::new();
+    for (i, b) in bases.iter().enumerate() {
+        let at = format!("{}. taban", i + 1);
+        if !sources.iter().any(|s| s.id == b.source) {
+            return Some(format!("{at}: “{}” kimlikli bir bağ yok", b.source));
+        }
+        if !seen.insert(b.source.as_str()) {
+            return Some(format!("{at}: “{}” bağının ikinci tabanı", b.source));
+        }
+        if !hex64(&b.revision) || !hex64(&b.digest) {
+            return Some(format!("{at}: sürümü ya da özeti 64 küçük onaltılı hane değil"));
+        }
+        if base_rows(&b.rows).is_none() {
+            return Some(format!(
+                "{at}: satırları okunmuyor (base64, {BASE_ROW} baytlık satırlar, artan kimlik sırası, en çok {MAX_BASE_ROWS})"
+            ));
+        }
+    }
+    None
+}

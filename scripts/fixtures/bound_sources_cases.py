@@ -703,7 +703,7 @@ def sync_cases():
         case("dosya değiştiyse yazılmaz",
              step({"layer": "bagli", "direction": "write"},
                   conflict("source_changed", f"{fx(Q)} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. "
-                           "Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.", "layer"),
+                           "İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.", "layer"),
                   op="plan"),
              setup_=setup([bound], sources=[{**good, "revision": FAKE}])),
         case("salt okunur tabloya yazılmaz",

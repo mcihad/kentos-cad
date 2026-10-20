@@ -7461,6 +7461,22 @@
    "tests": 0
   },
   {
+   "id": "source.reconcile",
+   "kind": "command",
+   "title": "Kaynakla uzlaştır",
+   "level": "semantic",
+   "via": [
+    "cad.sources.reconcile"
+   ],
+   "operation": null,
+   "python": "kentos.cad.sources.reconcile",
+   "mcp": "cad.sources.reconcile",
+   "note": "Uzlaştır penceresi planı cad.sources.reconcile ile gösterir, seçilen yanlarla aynı komutla yazar (ADR 0538).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "source.relink",
    "kind": "command",
    "title": "Yeniden bağla…",

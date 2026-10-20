@@ -232,6 +232,7 @@ mod tests {
             forms: Vec::new(),
             relations: Vec::new(),
             join_views: Vec::new(),
+            source_bases: Vec::new(),
             ucs: None,
             srid,
             length_decimals: 3,

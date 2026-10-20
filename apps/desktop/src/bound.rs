@@ -29,6 +29,8 @@ pub enum Event {
     WriteLoose(Option<String>),
     /// Kaynaktan oku.
     Read(Option<String>),
+    /// Kaynakla uzlaştır… (docs/adr/0538): both sides changed since they last matched.
+    Reconcile(Option<String>),
     /// Kaynak durumu: every binding's state.
     Status,
     /// Bağı çöz.
@@ -63,7 +65,7 @@ impl App {
         self.bound_link(&id)
     }
 
-    fn bound_name(&self, id: &str) -> String {
+    pub(crate) fn bound_name(&self, id: &str) -> String {
         self.document
             .as_ref()
             .and_then(|d| d.model.layers().get(id))
@@ -129,6 +131,10 @@ impl App {
             },
             Event::Read(layer) => match self.bound_at_hand(layer) {
                 Some(link) => self.bound_sync(&link, SyncDirection::Read, false, None),
+                None => self.warn(NO_BOUND),
+            },
+            Event::Reconcile(layer) => match self.bound_at_hand(layer) {
+                Some(link) => self.open_reconcile(&link.layer, false),
                 None => self.warn(NO_BOUND),
             },
             Event::Unlink(layer) => match self.bound_at_hand(layer) {
@@ -371,6 +377,13 @@ impl App {
                 for w in warnings {
                     self.say(Level::Warn, w.message);
                 }
+            }
+            // The file changed since: the two sides are put together, not written over (docs/adr/0538).
+            // The window says why; without a base the reconcile's refusal is said.
+            CommandResult::Conflict { error }
+                if error.code == "source_changed" && direction == SyncDirection::Write =>
+            {
+                self.open_reconcile(&link.layer, true);
             }
             CommandResult::Conflict { error } if error.code == "pending_changes" => {
                 self.bound_pending = Some(link.layer.clone());

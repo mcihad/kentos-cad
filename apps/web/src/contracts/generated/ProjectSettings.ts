@@ -24,6 +24,7 @@ import type { ProjectForm } from "./ProjectForm";
 import type { ProjectRelation } from "./ProjectRelation";
 import type { ProjectVariable } from "./ProjectVariable";
 import type { ServiceConnection } from "./ServiceConnection";
+import type { SourceBase } from "./SourceBase";
 import type { SourceLink } from "./SourceLink";
 import type { SurveySettings } from "./SurveySettings";
 import type { TextStyleDef } from "./TextStyleDef";
@@ -62,6 +63,12 @@ hatchPatterns?: Array<HatchPatternDef>,
  * The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
  */
 sources?: Array<SourceLink>, 
+/**
+ * The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a
+ * reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
+ * objects has none.
+ */
+sourceBases?: Array<SourceBase>, 
 /**
  * The project's line type scale (AutoCAD's LTSCALE, docs/adr/0313 §3): every pattern's lengths times it, above 0;
  * absent: 1.

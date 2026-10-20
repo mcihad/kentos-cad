@@ -805,6 +805,22 @@ ColumnShapeName = Literal["rect", "round"]
 """The names of :class:`ColumnShape`, for a plain string."""
 
 
+class ConflictKind(_StrEnum):
+    """How the two sides of a conflict differ.
+
+    - ``changed``: Both changed it, differently.
+    - ``removedInLayer``: The layer removed it, the table changed it.
+    - ``removedInTable``: The table removed it, the layer changed it.
+    """
+    CHANGED = "changed"
+    REMOVED_IN_LAYER = "removedInLayer"
+    REMOVED_IN_TABLE = "removedInTable"
+
+
+ConflictKindName = Literal["changed", "removedInLayer", "removedInTable"]
+"""The names of :class:`ConflictKind`, for a plain string."""
+
+
 class ConstraintSense(_StrEnum):
     """Where a new constraint's sense comes from.
 
@@ -3098,6 +3114,20 @@ class RasterStretch(_StrEnum):
 
 RasterStretchName = Literal["none", "minMax", "percent", "manual"]
 """The names of :class:`RasterStretch`, for a plain string."""
+
+
+class ReconcileSide(_StrEnum):
+    """The side a conflict is resolved to.
+
+    - ``layer``: The layer's object (or its removal) is written to the table.
+    - ``table``: The table's row (or its removal) is taken into the layer.
+    """
+    LAYER = "layer"
+    TABLE = "table"
+
+
+ReconcileSideName = Literal["layer", "table"]
+"""The names of :class:`ReconcileSide`, for a plain string."""
 
 
 class RegistryDatum(_StrEnum):
@@ -10833,6 +10863,33 @@ class ComponentHatch(_Model):
             scale=float(data["scale"]),
             angle=float(data["angle"]),
             color=data.get("color", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ConflictField(_Model):
+    """An attribute the two sides hold differently; none where a side has no value (or no object: a removed object's
+    attributes are all the other side's).
+    """
+    name: str
+    layer: str | None | Unset = UNSET
+    table: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.table is not UNSET:
+            out["table"] = self.table
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ConflictField:
+        return cls(
+            name=data["name"],
+            layer=data.get("layer", UNSET),
+            table=data.get("table", UNSET),
         )
 
 
@@ -31976,6 +32033,9 @@ class ProjectSettings(_Model):
         second_srid: The project's second coordinate system (docs/adr/0167 §1): its
             coordinates are shown beside the project's own; absent: none. Never
             the project's own system, never a local project's. Unit: epsg.
+        source_bases: The bound layers' bases (docs/adr/0538 §1): each object's hashes when a layer and its table last matched, so a
+            reconcile tells each side's changes apart. A link has at most one; a layer of more than `MAX_BASE_ROWS`
+            objects has none.
         sources: The layers bound to a table of a file, each with the file's revision when it last matched (docs/adr/0503).
         survey: The project's survey constants and tolerances (docs/adr/0169 §3);
             absent: k = [`REFRACTION`] and no tolerance.
@@ -32023,6 +32083,7 @@ class ProjectSettings(_Model):
     relations: list[ProjectRelation] | Unset = UNSET
     second_custom_crs: CrsDefinition | None | Unset = UNSET
     second_srid: int | None | Unset = UNSET
+    source_bases: list[SourceBase] | Unset = UNSET
     sources: list[SourceLink] | Unset = UNSET
     survey: SurveySettings | None | Unset = UNSET
     text_styles: list[TextStyleDef] | Unset = UNSET
@@ -32093,6 +32154,8 @@ class ProjectSettings(_Model):
             out["secondCustomCrs"] = None if self.second_custom_crs is None else self.second_custom_crs.to_json()
         if self.second_srid is not UNSET:
             out["secondSrid"] = self.second_srid
+        if self.source_bases is not UNSET:
+            out["sourceBases"] = [e0.to_json() for e0 in self.source_bases]
         if self.sources is not UNSET:
             out["sources"] = [e0.to_json() for e0 in self.sources]
         if self.survey is not UNSET:
@@ -32148,6 +32211,7 @@ class ProjectSettings(_Model):
             relations=[ProjectRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
             second_custom_crs=UNSET if "secondCustomCrs" not in data else None if data["secondCustomCrs"] is None else CrsDefinition.from_json(data["secondCustomCrs"]),
             second_srid=data.get("secondSrid", UNSET),
+            source_bases=[SourceBase.from_json(e0) for e0 in data["sourceBases"]] if "sourceBases" in data else UNSET,
             sources=[SourceLink.from_json(e0) for e0 in data["sources"]] if "sources" in data else UNSET,
             survey=UNSET if "survey" not in data else None if data["survey"] is None else SurveySettings.from_json(data["survey"]),
             text_styles=[TextStyleDef.from_json(e0) for e0 in data["textStyles"]] if "textStyles" in data else UNSET,
@@ -33272,6 +33336,93 @@ class RastersMosaicked(_Model):
             revision=data["revision"],
             nodata=UNSET if "nodata" not in data else None if data["nodata"] is None else float(data["nodata"]),
             uid=data.get("uid", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconcileConflict(_Model):
+    """One conflict: the object, how the sides differ (the attributes by name, and the geometry), the side it goes to.
+    Attributes:
+        geometry: Whether the kind or the geometry differs (a removal: always).
+        fields: The attributes that differ, by name.
+        side: The side it is resolved to; none: unresolved.
+    """
+    object: str
+    kind: ConflictKind | ConflictKindName
+    geometry: bool
+    fields: list[ConflictField] | Unset = UNSET
+    side: ReconcileSide | ReconcileSideName | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["object"] = self.object
+        out["kind"] = _enum_out(self.kind)
+        out["geometry"] = self.geometry
+        if self.fields is not UNSET:
+            out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.side is not UNSET:
+            out["side"] = None if self.side is None else _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileConflict:
+        return cls(
+            object=data["object"],
+            kind=_enum_in(ConflictKind, data["kind"]),
+            geometry=data["geometry"],
+            fields=[ConflictField.from_json(e0) for e0 in data["fields"]] if "fields" in data else UNSET,
+            side=UNSET if "side" not in data else None if data["side"] is None else _enum_in(ReconcileSide, data["side"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconcileCounts(_Model):
+    """What goes one way: objects added, changed and removed.
+    Attributes:
+        added: Unit: count.
+        modified: Unit: count.
+        removed: Unit: count.
+    """
+    added: int
+    modified: int
+    removed: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["added"] = self.added
+        out["modified"] = self.modified
+        out["removed"] = self.removed
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileCounts:
+        return cls(
+            added=data["added"],
+            modified=data["modified"],
+            removed=data["removed"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ReconcileTake(_Model):
+    """One conflict resolved by hand.
+    Attributes:
+        object: The object's lasting id.
+    """
+    object: str
+    side: ReconcileSide | ReconcileSideName
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["object"] = self.object
+        out["side"] = _enum_out(self.side)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ReconcileTake:
+        return cls(
+            object=data["object"],
+            side=_enum_in(ReconcileSide, data["side"]),
         )
 
 
@@ -35937,6 +36088,42 @@ class SnapFound(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class SourceBase(_Model):
+    """A bound layer's base (docs/adr/0538 §1): each object's hashes when the layer and its table last matched, so a
+    later reconcile tells what the layer changed from what the table did, object by object. The layer's hash is that of
+    the object's kind, geometry and attributes (the first 8 bytes of the SHA-256 of their canonical JSON, the
+    essence `layer_digest` hashes); the table's that of the object its row reads as. The two differ only where a row
+    does not read back bit for bit as the object written (a coordinate system moved through). A base belongs to the
+    link's `revision` and `digest` it was taken at: with others it is stale and not used.
+    Attributes:
+        source: The link's id (`kaynak-N`).
+        revision: The file's SHA-256 and the layer's digest it was taken at.
+        rows: The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).
+    """
+    source: str
+    revision: str
+    digest: str
+    rows: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["source"] = self.source
+        out["revision"] = self.revision
+        out["digest"] = self.digest
+        out["rows"] = self.rows
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourceBase:
+        return cls(
+            source=data["source"],
+            revision=data["revision"],
+            digest=data["digest"],
+            rows=data["rows"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class SourceCapabilities(_Model):
     """What a source can do (docs/adr/0503 §1): each told apart, so a refusal says which.
     Attributes:
@@ -36353,6 +36540,85 @@ class SourcesEdited(_Model):
             layers=[ImportedLayer.from_json(e0) for e0 in data["layers"]] if "layers" in data else UNSET,
             link=UNSET if "link" not in data else None if data["link"] is None else SourceLink.from_json(data["link"]),
             pins=UNSET if "pins" not in data else None if data["pins"] is None else SyncedPins.from_json(data["pins"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesReconcile(_Model):
+    """Input of `cad.sources.reconcile` v1. Refusals: `source_not_found`, `layer_not_found`, `source_gone`,
+    `derived_dataset`, `crs_mismatch`, `invalid_extent`, `source_readonly`, `layer_locked`, `no_source_base` (the link has no
+    base for its revision and digest: bound before this version, or a layer of more than `MAX_BASE_ROWS` objects),
+    `not_a_conflict` (a `take` for an object that is not one), `invalid_input` (an object taken twice),
+    `geometry_mismatch` (a layer's object the table's column cannot hold); conflict: `unresolved_conflicts`
+    (executing, a conflict without a side).
+    Attributes:
+        layer: The bound layer, by id.
+        rest: The side of every conflict `take` does not name.
+        take: Conflicts resolved one by one.
+    """
+    layer: str
+    rest: ReconcileSide | ReconcileSideName | None | Unset = UNSET
+    take: list[ReconcileTake] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.rest is not UNSET:
+            out["rest"] = None if self.rest is None else _enum_out(self.rest)
+        if self.take is not UNSET:
+            out["take"] = [e0.to_json() for e0 in self.take]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesReconcile:
+        return cls(
+            layer=data["layer"],
+            rest=UNSET if "rest" not in data else None if data["rest"] is None else _enum_in(ReconcileSide, data["rest"]),
+            take=[ReconcileTake.from_json(e0) for e0 in data["take"]] if "take" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class SourcesReconciled(_Model):
+    """Output of `cad.sources.reconcile` v1, and its plan: what goes into the layer from the table and into the table from
+    the layer (resolved conflicts counted on their side), the objects both sides changed alike, the conflicts in the
+    lasting ids' order, and the file's revision (plan: before; executed: after).
+    Attributes:
+        agreed: Objects both sides changed (or removed) alike. Unit: count.
+        unresolved: Conflicts without a side. Unit: count.
+        source: The file's SHA-256 (plan: as it is; executed: after the write).
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    from_table: ReconcileCounts
+    to_table: ReconcileCounts
+    agreed: int
+    unresolved: int
+    source: str
+    revision: str
+    conflicts: list[ReconcileConflict] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["fromTable"] = self.from_table.to_json()
+        out["toTable"] = self.to_table.to_json()
+        out["agreed"] = self.agreed
+        out["unresolved"] = self.unresolved
+        out["source"] = self.source
+        out["revision"] = self.revision
+        if self.conflicts is not UNSET:
+            out["conflicts"] = [e0.to_json() for e0 in self.conflicts]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> SourcesReconciled:
+        return cls(
+            from_table=ReconcileCounts.from_json(data["fromTable"]),
+            to_table=ReconcileCounts.from_json(data["toTable"]),
+            agreed=data["agreed"],
+            unresolved=data["unresolved"],
+            source=data["source"],
+            revision=data["revision"],
+            conflicts=[ReconcileConflict.from_json(e0) for e0 in data["conflicts"]] if "conflicts" in data else UNSET,
         )
 
 
@@ -54188,6 +54454,9 @@ __all__ = [
     "ComponentEdge",
     "ComponentHatch",
     "ConcentricConstraintRule",
+    "ConflictField",
+    "ConflictKind",
+    "ConflictKindName",
     "Constraint",
     "ConstraintDiagnosis",
     "ConstraintEdit",
@@ -55147,6 +55416,11 @@ __all__ = [
     "RayEntity",
     "RayEntityGeometry",
     "ReboundSpacesOperation",
+    "ReconcileConflict",
+    "ReconcileCounts",
+    "ReconcileSide",
+    "ReconcileSideName",
+    "ReconcileTake",
     "RecordChange",
     "RecordCopy",
     "RecordEntity",
@@ -55326,6 +55600,7 @@ __all__ = [
     "SolveConstraintEdit",
     "SolveStatus",
     "SolveStatusName",
+    "SourceBase",
     "SourceCapabilities",
     "SourceColumn",
     "SourceKind",
@@ -55344,6 +55619,8 @@ __all__ = [
     "SourcesEdit",
     "SourcesEditOp",
     "SourcesEdited",
+    "SourcesReconcile",
+    "SourcesReconciled",
     "SourcesRelate",
     "SourcesRelated",
     "SourcesSync",

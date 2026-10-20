@@ -363,6 +363,26 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te, ulaşılamayan veritabanı kentos-postgis'in testlerinde (ADR 0505)",
     ),
     (
+        "cad.sources.reconcile",
+        "file_unwritable",
+        "yazılamayan dosya ortak durumda kurulamaz; salt okunur kopyada katmanın yanının da geri alındığını reconcile.rs'in a_file_that_cannot_be_written_takes_nothing_into_the_layer'ı sınar (ADR 0538)",
+    ),
+    (
+        "cad.sources.reconcile",
+        "invalid_extent",
+        "bağdaki alan sınırı tablonun sistemine çevrilemediğinde; ortak durumların sistemleri birbirine çevrilir (ADR 0510, 0538)",
+    ),
+    (
+        "cad.sources.reconcile",
+        "source_changed",
+        "dosya uzlaştırmanın okuması ile yazması arasında değişirse; iki adım arası tek çağrının içinde ortak durumda kurulamaz, yazmanın denetimi cad.sources.sync'inkidir (ADR 0538 §2)",
+    ),
+    (
+        "cad.sources.reconcile",
+        "source_unreachable",
+        "veritabanına ulaşılıp ulaşılmadığı ev sahibinin sağlayıcısına bağlı (Python kaydeder, uygulamanın testleri kaydetmez); sağlayıcısız ret sources.rs'te (ADR 0505, 0538)",
+    ),
+    (
         "cad.processing.tools",
         "tools_unavailable",
         "her ev sahibi işlem araçlarını kaydeder, ortak durumların koşucusu da; kaydedilmeyen ortamın reddi uygulamanın kendi testinde (processing_run.rs)",

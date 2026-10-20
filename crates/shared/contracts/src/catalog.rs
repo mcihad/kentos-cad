@@ -7037,6 +7037,42 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // Both sides of a bound layer changed (docs/adr/0538), held together by
+        // fixtures/commands/v1/cad.sources.reconcile.json.
+        CommandDescriptor {
+            id: crate::CAD_SOURCES_RECONCILE.into(),
+            version: crate::CAD_SOURCES_RECONCILE_VERSION,
+            title: "Kaynakla uzlaştır".into(),
+            summary: "Hem katmanı hem tablosu son eşleşmeden beri değişen bağlı katmanı uzlaştırır. Bağın tabanı (son eşleşmede her nesnenin katmandaki ve tablodaki özeti, docs/adr/0538) ile karşılaştırılır: yalnız katmanın değiştirdiği nesne tabloya yazılır, yalnız tablonun değiştirdiği (QGIS'te, başka bir KentOS'ta) katmana alınır, ikisinin aynı biçimde değiştirdiği uyuşur. \
+                      İkisinin farklı değiştirdiği ya da birinin silip öbürünün değiştirdiği nesne çatışmadır: farklı öznitelikler adlarıyla, iki yanın değerleriyle, geometrinin farklı olup olmadığı söylenir; son yazan kazanmaz, take (nesne nesne) ve rest (kalanlar) ile bir yan seçilir. \
+                      plan dosyayı okur, hiçbir şey yazmaz ve hepsini söyler. Yürütme bütün çatışmalar çözülmeden yapılmaz (unresolved_conflicts, conflict); çözülünce tablonun yanı katmana alınır, katmanın yanı tabloya yazılır: tek geri alma adımı (“Uzlaştır: tablo”) ve tek işlem, dosyanın yazılamaması ikisini de geri alır. \
+                      Tabanı olmayan bağ (bu sürümden önce bağlanan, MAX_BASE_ROWS'tan çok nesneli katman) uzlaştırılamaz (no_source_base): önce yazın ya da okuyun. Alan sınırlı çalışma kopyasında yalnız alandaki satırlar karşılaştırılır."
+                .into(),
+            aliases: vec!["kaynakuzlastir".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::SourcesReconcile>(),
+            output: schema::<crate::SourcesReconciled>(),
+            plan: Some(schema::<crate::SourcesReconciled>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "Parsel katmanıyla tablonun farkını gör".into(),
+                    input: json!({ "layer": "import-parsel" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "Bir çatışmada tablonun hâlini, kalanlarda katmanınkini al".into(),
+                    input: json!({ "layer": "import-parsel", "take": [{ "object": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d2401", "side": "table" }], "rest": "layer" }),
+                    output: None,
+                },
+            ],
+        },
         // A many-to-many reference in a bound GeoPackage (docs/adr/0532), held together by
         // fixtures/commands/v1/cad.sources.relate.json.
         CommandDescriptor {
@@ -8758,6 +8794,9 @@ mod tests {
                     }
                     crate::CAD_SOURCES_RELATE => {
                         serde_json::from_value::<crate::SourcesRelate>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_SOURCES_RECONCILE => {
+                        serde_json::from_value::<crate::SourcesReconcile>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_RECORDS_PAGE => {
                         serde_json::from_value::<crate::RecordsPage>(e.input.clone()).map(|_| ())

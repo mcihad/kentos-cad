@@ -237,7 +237,7 @@ pub(super) fn write(
             return Err(conflict(
                 codes::SOURCE_CHANGED,
                 format!(
-                    "{} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
+                    "{} katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
                     link.path
                 ),
                 at(i),
@@ -477,7 +477,8 @@ pub(super) fn write(
         let mut link = it.link.clone();
         link.revision = after.clone();
         link.digest = layer_digest(doc, &link.layer);
-        set_link(doc, Some(link), None);
+        set_link(doc, Some(link.clone()), None);
+        super::base::after_write(doc, &link);
     }
     // The file's other bound tables were not touched: they match the file as they did.
     if after != before {
@@ -490,7 +491,8 @@ pub(super) fn write(
             .collect();
         for mut link in others {
             link.revision = after.clone();
-            set_link(doc, Some(link), None);
+            set_link(doc, Some(link.clone()), None);
+            super::base::carried(doc, &link, &before);
         }
     }
     out.source = after;

@@ -1,0 +1,6999 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.sources.reconcile",
+ "commandVersion": 1,
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Bağlı katmanlar",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "plan iki yanın değişikliklerini ve dört çatışmayı söyler, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-plan.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-plan.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-plan.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 2,
+        "removed": 1
+       },
+       "toTable": {
+        "added": 1,
+        "modified": 1,
+        "removed": 1
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ]
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ]
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ]
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ]
+        }
+       ],
+       "unresolved": 4,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kalanlar katmanın yanına: tabloya yazılacaklar artar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-katman.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-katman.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 2,
+        "removed": 1
+       },
+       "toTable": {
+        "added": 2,
+        "modified": 3,
+        "removed": 2
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kalanlar tablonun yanına: katmana alınacaklar artar",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-tablo.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-tablo.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 4,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 1,
+        "modified": 1,
+        "removed": 1
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çatışmalar tek tek, kalanlar katmanın yanına",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-tek.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-tek.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-tek.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "table"
+       },
+       {
+        "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+        "side": "layer"
+       }
+      ],
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 3,
+        "removed": 1
+       },
+       "toTable": {
+        "added": 2,
+        "modified": 2,
+        "removed": 2
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız tablo değişti: hepsi katmana alınır, çatışma yok",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-yalniz-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-yalniz-tablo.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-yalniz-tablo.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız katman değişti: hepsi tabloya yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-yalniz-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-yalniz-katman.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 1,
+        "modified": 5,
+        "removed": 2
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "hiçbir yan değişmedi: hepsi sıfır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-degismedi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-degismedi.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "ikisi de sildiyse uyuşur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-ikisi-sildi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-ikisi-sildi.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "96fa43fd-8500-551c-a892-498425da2b9f"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-ikisi-sildi.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 2,
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yürütme: kalanlar tablonun yanına, katman tablonun hâlini alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-yurut-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-yurut-tablo.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-yurut-tablo.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 4,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 1,
+        "modified": 1,
+        "removed": 1
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       9,
+       11,
+       12,
+       13,
+       14
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "201",
+         "parsel_no": "1",
+         "malik": "Ahmet"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "2",
+         "malik": "Ayşe"
+        },
+        "pts": [
+         {
+          "x": 487035.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "5": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "104",
+         "parsel_no": "4",
+         "malik": "Zehra"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "205",
+         "parsel_no": "5",
+         "malik": "Ece"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "108",
+         "parsel_no": "8",
+         "malik": "Selin"
+        },
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "11": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "110",
+         "parsel_no": "10",
+         "malik": "Ortak"
+        },
+        "pts": [
+         {
+          "x": 487270.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "12": {
+        "kind": "polygon",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487400.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487400.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "13": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "207",
+         "parsel_no": "7",
+         "malik": "Gül"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "14": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "111",
+         "parsel_no": "11",
+         "malik": "Yeni"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yürütme: kalanlar katmanın yanına, dosyaya katmanınkiler yazılır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-yurut-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-yurut-katman.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-yurut-katman.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 2,
+        "removed": 1
+       },
+       "toTable": {
+        "added": 2,
+        "modified": 3,
+        "removed": 2
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       7,
+       9,
+       11,
+       12,
+       13
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "201",
+         "parsel_no": "1",
+         "malik": "Ahmet"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "2",
+         "malik": "Ayşe"
+        },
+        "pts": [
+         {
+          "x": 487035.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "5": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "104",
+         "parsel_no": "4",
+         "malik": "Veli"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "105",
+         "parsel_no": "50",
+         "malik": "Ece"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "7": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "106",
+         "parsel_no": "6",
+         "malik": "Mehmet"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "108",
+         "parsel_no": "8",
+         "malik": "Selin"
+        },
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "11": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "110",
+         "parsel_no": "10",
+         "malik": "Ortak"
+        },
+        "pts": [
+         {
+          "x": 487270.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "12": {
+        "kind": "polygon",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487400.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487400.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "13": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "111",
+         "parsel_no": "11",
+         "malik": "Yeni"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geri almak katmanı uzlaştırmadan önceki hâline döndürür",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-geri.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-geri.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-geri.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "table"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 2,
+        "modified": 4,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 1,
+        "modified": 1,
+        "removed": 1
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "table"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "table"
+        }
+       ],
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Uzlaştır: parsel",
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       9,
+       11,
+       12
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "101",
+         "parsel_no": "1",
+         "malik": "Ahmet"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "2",
+         "malik": "Ayşe"
+        },
+        "pts": [
+         {
+          "x": 487030.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487030.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "4": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "103",
+         "parsel_no": "3",
+         "malik": "Can"
+        },
+        "pts": [
+         {
+          "x": 487060.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487080.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487060.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "5": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "104",
+         "parsel_no": "4",
+         "malik": "Veli"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "105",
+         "parsel_no": "50",
+         "malik": "Ece"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "7": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "106",
+         "parsel_no": "6",
+         "malik": "Mehmet"
+        },
+        "pts": [
+         {
+          "x": 487150.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487170.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487150.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "108",
+         "parsel_no": "8",
+         "malik": "Selin"
+        },
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "11": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "110",
+         "parsel_no": "10",
+         "malik": "Ortak"
+        },
+        "pts": [
+         {
+          "x": 487270.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "12": {
+        "kind": "polygon",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487400.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487420.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487400.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       }
+      },
+      "revision": "changed"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çatışma yoksa yan seçmeden yürür: katman tablonun hâlini alır",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-yalniz-tablo-yurut.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-yalniz-tablo-yurut.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-yalniz-tablo-yurut.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 6,
+        "removed": 2
+       },
+       "toTable": {
+        "added": 0,
+        "modified": 0,
+        "removed": 0
+       },
+       "agreed": 0,
+       "unresolved": 0,
+       "source": "$any",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       5,
+       6,
+       8,
+       9,
+       10,
+       11,
+       12
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "201",
+         "parsel_no": "1",
+         "malik": "Ahmet"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "3": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "102",
+         "parsel_no": "2",
+         "malik": "Ayşe"
+        },
+        "pts": [
+         {
+          "x": 487035.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487055.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487035.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "5": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "104",
+         "parsel_no": "4",
+         "malik": "Zehra"
+        },
+        "pts": [
+         {
+          "x": 487090.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487090.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "6": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "205",
+         "parsel_no": "5",
+         "malik": "Ece"
+        },
+        "pts": [
+         {
+          "x": 487120.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487140.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487120.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "8": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "207",
+         "parsel_no": "7",
+         "malik": "Gül"
+        },
+        "pts": [
+         {
+          "x": 487180.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487200.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487180.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "9": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "108",
+         "parsel_no": "8",
+         "malik": "Hakan"
+        },
+        "pts": [
+         {
+          "x": 487210.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487230.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487210.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "10": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "109",
+         "parsel_no": "9",
+         "malik": "İpek"
+        },
+        "pts": [
+         {
+          "x": 487240.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487260.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487240.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "11": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "110",
+         "parsel_no": "10",
+         "malik": "Ortak"
+        },
+        "pts": [
+         {
+          "x": 487270.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487290.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487270.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       },
+       "12": {
+        "kind": "polygon",
+        "attrs": {
+         "ada": "111",
+         "parsel_no": "11",
+         "malik": "Yeni"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487300.0,
+          "y": 4420020.0
+         }
+        ],
+        "layerId": "import-parsel"
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçerleme: yan seçilmişse yürür",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-gecerle.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-gecerle.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-gecerle.gpkg"
+    },
+    {
+     "op": "validate",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çözülmemiş çatışmayla yürümez, hiçbir şey yazılmaz",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-cozulmedi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-cozulmedi.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-cozulmedi.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "unresolved_conflicts",
+       "message": "4 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "path": "take"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçerleme çözülmemiş çatışmayı reddeder",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-cozulmedi-g.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-cozulmedi-g.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-cozulmedi-g.gpkg"
+    },
+    {
+     "op": "validate",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "unresolved_conflicts",
+       "message": "4 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "path": "take"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "biri çözülse de kalanlar yürütmeyi durdurur",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-cozulmedi-tek.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-cozulmedi-tek.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-cozulmedi-tek.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "layer"
+       }
+      ]
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "unresolved_conflicts",
+       "message": "3 çatışma çözülmedi; hiçbir şey yazılmadı. Her biri için take ile ya da kalanlar için rest ile bir yan seçin (layer: katmanınki, table: tablonunki).",
+       "path": "take"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız tablonun değiştirdiği nesne için yan seçilmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-cakisma-degil.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-cakisma-degil.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-cakisma-degil.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565",
+        "side": "layer"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_conflict",
+       "message": "703fb6fc-d09b-5f6d-bf65-24b83b6e3565 bir çatışma değil; yan yalnız plan'ın conflicts'indeki nesneler için seçilir.",
+       "path": "take.0.object"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kalıcı kimlik olmayan nesne",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-kimlik-degil.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-kimlik-degil.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-kimlik-degil.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "layer"
+       },
+       {
+        "object": "parsel-4",
+        "side": "table"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_conflict",
+       "message": "parsel-4 bir çatışma değil; yan yalnız plan'ın conflicts'indeki nesneler için seçilir.",
+       "path": "take.1.object"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir çatışmaya iki kez yan seçilmez",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-iki-kez.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-iki-kez.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-iki-kez.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "take": [
+       {
+        "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "layer"
+       },
+       {
+        "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+        "side": "table"
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_input",
+       "message": "d05132de-056e-58a9-a206-c1a7f9c4fa19 için iki kez yan seçilmiş; her çatışma bir kez.",
+       "path": "take.1.object"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanı olmayan öznitelik yazılmaz, söylenir",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-kayip.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-kayip.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d05132de-056e-58a9-a206-c1a7f9c4fa19"
+      ],
+      "attrs": {
+       "malik": "Veli"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "b3ea640f-61a2-54e7-b287-fa507a274e9b"
+      ],
+      "attrs": {
+       "parsel_no": "50"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "942987ea-0861-5dbb-b59c-b1387eab8c93"
+      ],
+      "attrs": {
+       "malik": "Mehmet"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "205ba692-f7c5-5329-8d86-7cdfa3fd1a66"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "malik": "Selin"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "d26573bb-4d9e-5234-a2f3-1f501c312bcc"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.delete"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "ec05b263-427e-5267-8581-9b493ed2051a"
+      ],
+      "attrs": {
+       "malik": "Ortak"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "pts": [
+       {
+        "x": 487400.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420000.0
+       },
+       {
+        "x": 487420.0,
+        "y": 4420020.0
+       },
+       {
+        "x": 487400.0,
+        "y": 4420020.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.polygon.create"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "1cd4a1d1-7b73-5484-8bf9-ee4351b4a19e"
+      ],
+      "attrs": {
+       "durum": "x"
+      },
+      "operation": "attributes"
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.entities.set"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-kayip.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel",
+      "rest": "layer"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "fromTable": {
+        "added": 1,
+        "modified": 2,
+        "removed": 1
+       },
+       "toTable": {
+        "added": 2,
+        "modified": 3,
+        "removed": 2
+       },
+       "agreed": 1,
+       "conflicts": [
+        {
+         "object": "205ba692-f7c5-5329-8d86-7cdfa3fd1a66",
+         "kind": "removedInLayer",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "table": "207"
+          },
+          {
+           "name": "malik",
+           "table": "Gül"
+          },
+          {
+           "name": "parsel_no",
+           "table": "7"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "942987ea-0861-5dbb-b59c-b1387eab8c93",
+         "kind": "removedInTable",
+         "geometry": true,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "106"
+          },
+          {
+           "name": "malik",
+           "layer": "Mehmet"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "6"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "b3ea640f-61a2-54e7-b287-fa507a274e9b",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "ada",
+           "layer": "105",
+           "table": "205"
+          },
+          {
+           "name": "parsel_no",
+           "layer": "50",
+           "table": "5"
+          }
+         ],
+         "side": "layer"
+        },
+        {
+         "object": "d05132de-056e-58a9-a206-c1a7f9c4fa19",
+         "kind": "changed",
+         "geometry": false,
+         "fields": [
+          {
+           "name": "malik",
+           "layer": "Veli",
+           "table": "Zehra"
+          }
+         ],
+         "side": "layer"
+        }
+       ],
+       "unresolved": 0,
+       "source": "29f8aa020c5e452ded7b9ced0f2a17e872b511f2b891026f676599bd8c6f4c35",
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "export_losses",
+        "message": "parsel: katmanın alanı olmayan öznitelikler yazılmadı (durum); Alanlar penceresinden alan yapın.",
+        "path": "layer"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tablonun sütununa uymayan nesne",
+   "steps": [
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas.gpkg",
+     "to": "$tmp:uz-nokta.gpkg"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "edit": {
+       "kind": "link",
+       "path": "$tmp:uz-nokta.gpkg",
+       "table": "parsel"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.sources.edit"
+    },
+    {
+     "op": "execute",
+     "input": {
+      "layerId": "import-parsel",
+      "p": {
+       "x": 487500.0,
+       "y": 4420100.0
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": "$any",
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "changed"
+     },
+     "command": "cad.point.create"
+    },
+    {
+     "op": "captureUid",
+     "id": 12,
+     "as": "nokta"
+    },
+    {
+     "op": "copyFile",
+     "from": "$fixture:geopackage/v1/uzlas-qgis.gpkg",
+     "to": "$tmp:uz-nokta.gpkg"
+    },
+    {
+     "op": "plan",
+     "input": {
+      "layer": "import-parsel"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "geometry_mismatch",
+       "message": "$uid:nokta kimlikli nesne tabloya yazılamaz: POINT geometrisi MULTIPOLYGON sütununa yazılamaz.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bağlı olmayan katman",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_not_found",
+       "message": "“cizim” katmanı bir kaynağa bağlı değil; önce cad.sources.edit ile bağlayın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "tabanı olmayan bağ uzlaştırılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "no_source_base",
+       "message": "“bagli” katmanının dosyayla son eşleşmesinden tabanı yok (bu sürümden önce bağlanmış ya da 200000 nesneden büyük); iki yanın değişiklikleri ayrılamaz. Önce yazın (cad.sources.sync write) ya da tablodan okuyun (read).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "çizimde olmayan bağlı katman",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "silinen"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "Bağlı “silinen” katmanı çizimde yok; bağı çözün (cad.sources.edit unlink).",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "parsel",
+       "layer": "silinen",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "kilitli katman",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "parsel",
+       "layer": "kilitli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "yerinde olmayan dosya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_gone",
+       "message": "$fixture:geopackage/v1/yok.gpkg yerinde yok; dosyanın yeni yerini cad.sources.edit relink ile verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/yok.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "salt okunur tablo",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "source_readonly",
+       "message": "$fixture:geopackage/v1/uzlas.gpkg dosyasının “parsel” tablosuna yazılamaz (salt okunur); uzlaştırmak katmanın yanını yazar.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": false
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "okunmayan dosya",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/bozuk.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "b3fe10cebbf06d6c655d5e34a6bd1d3ee28fdf0d832cab42243e30e535ad2c64",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "dosyada olmayan tablo",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "table_not_found",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "yok",
+       "layer": "bagli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "koordinat sistemi olmayan projede başka sistemdeki tablo",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "“bagli” eşitlenemez: tablo EPSG:5256 sisteminde; projenin koordinat sistemi yok (yerel proje), çevrilemez.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:geopackage/v1/uzlas.gpkg",
+       "table": "parsel",
+       "layer": "bagli",
+       "revision": "0ebecf2f0e047ae91bf456234005697b81a4fc5dab93bce8e467b8aa1ab45b4a",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "çizimden türetilmiş tablo uzlaştırılmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "bagli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "derived_dataset",
+       "message": "$any",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Bağlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis",
+     "sources": [
+      {
+       "id": "kaynak-1",
+       "kind": "geopackage",
+       "path": "$fixture:gis-derivation/v1/ada.gpkg",
+       "table": "Parsel",
+       "layer": "bagli",
+       "revision": "8d53035962dca59f2cd157c5a4bf3e7c4ffdca3c39d3ec2a9657b08400ec6cb8",
+       "digest": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+       "srid": 5256,
+       "writable": true
+      }
+     ]
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "bagli",
+      "name": "Bagli",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  }
+ ]
+}

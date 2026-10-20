@@ -656,6 +656,11 @@ impl App {
             let source = source
                 .item("Kaynaktan oku", bound(crate::bound::Event::Read(Some(id.clone()))))
                 .icon(icon("sourceRead"))
+                .item(
+                    "Kaynakla uzlaştır…",
+                    bound(crate::bound::Event::Reconcile(Some(id.clone()))),
+                )
+                .icon(icon("sourceReconcile"))
                 .item("Kaynak durumu", bound(crate::bound::Event::Status))
                 .icon(icon("sourceLinked"))
                 .item(

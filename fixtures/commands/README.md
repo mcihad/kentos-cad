@@ -95,6 +95,7 @@ Masaüstüne özgü dosyaların durumlarını KentOS kodu olmadan sözleşmenin 
 | `undo`, `redo` | `returns` | Belgenin geri alması ya da yinelemesi; `returns` adımın adıdır (`"Ekle"`) ya da `null` |
 | `captureRevision` | `as` | Belgenin şimdiki sürümünü bu adla saklar |
 | `captureUid` | `id`, `as` | Nesnenin kalıcı kimliğini bu adla saklar |
+| `copyFile` | `from`, `to` | Bir fixture dosyasının baytlarını bir `$tmp:` dosyasının üstüne yazar: iki adım arasında başkasının (QGIS) değiştirdiği bağlı tablo (ADR 0538) |
 | `captureBlock` | `name`, `as` | Bu adlı blok tanımının kimliğini (ADR 0144) bu adla saklar |
 
 Her adımda `expect` (aşağıda) ve `note` de bulunabilir. Komut adımında `result` zorunludur.

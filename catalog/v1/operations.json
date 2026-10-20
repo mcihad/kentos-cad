@@ -855,6 +855,13 @@
       ],
       "note": "Katmanı ve ilişkiyle bağlı katmanları cad.sources.sync write'ın with'iyle tek işlemde yazar (ADR 0532)."
     },
+    "source.reconcile": {
+      "level": "semantic",
+      "via": [
+        "cad.sources.reconcile"
+      ],
+      "note": "Uzlaştır penceresi planı cad.sources.reconcile ile gösterir, seçilen yanlarla aynı komutla yazar (ADR 0538)."
+    },
     "source.read": {
       "level": "semantic",
       "via": [

@@ -502,6 +502,7 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
     let mut domains = Vec::new();
     let mut relations = Vec::new();
     let mut join_views = Vec::new();
+    let mut source_bases: Vec<kentos_contracts::SourceBase> = Vec::new();
     let mut sources = Vec::new();
     let mut length_style = None;
     let mut xref_paths = Vec::new();
@@ -631,6 +632,29 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                     return Err(r.fail_at(Code::BadValue, at, &problem));
                 }
                 sources = list;
+            }
+            // Schema 91 (docs/adr/0538 §1): the bound layers' bases, read whole; checked against the links below.
+            "sourceBases" if has.source_bases => {
+                let at = r.position();
+                let value = r.opaque()?;
+                let list: Vec<kentos_contracts::SourceBase> = serde_json::from_value(value.clone())
+                    .map_err(|e| {
+                        let words = e.to_string();
+                        let code = if words.contains("unknown field") {
+                            Code::UnknownField
+                        } else {
+                            Code::BadValue
+                        };
+                        r.fail_at(code, at, &format!("kaynak tabanları okunamadı: {words}"))
+                    })?;
+                if list.is_empty() {
+                    return Err(r.fail_at(
+                        Code::BadValue,
+                        at,
+                        "boş liste yazılmaz; taban yoksa alan hiç yazılmaz",
+                    ));
+                }
+                source_bases = list;
             }
             // Schema 72 (docs/adr/0405 §1): the project's relations, read whole and checked.
             "relations" if has.forms => {
@@ -983,7 +1007,11 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
             r,
         ));
     }
+    if let Some(problem) = kentos_contracts::bases_problem(&source_bases, &sources) {
+        return Err(relation("sourceBases", &problem, r));
+    }
     Ok(ProjectSettings {
+        source_bases,
         heights,
         coordinate_epoch,
         line_type_scale,

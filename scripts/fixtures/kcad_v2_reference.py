@@ -335,6 +335,8 @@ def settings(s):
                 "forms": (opaque, False),
                 # Schema 74 (docs/adr/0503): the layers bound to their sources, as their JSON.
                 "sources": (opaque, False),
+                # Schema 91 (docs/adr/0538 §1): the bound layers' bases, as their JSON.
+                "sourceBases": (opaque, False),
                 # Schema 75 (docs/adr/0339 §2, §3): the wall styles and the architectural settings, as their JSON.
                 "wallStyles": (opaque, False),
                 "arch": (opaque, False),
@@ -2139,6 +2141,9 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 91 (docs/adr/0538 §1): the bound layers' bases.
+    if "sourceBases" in (settings or {}):
+        return 91
     # Schema 90 (docs/adr/0537): a layer time's system time attributes.
     def recorded(nodes):
         return any(any(k in n.get("time", {}) for k in ("recordedStart", "recordedEnd")) or recorded(n["children"]) for n in nodes)
@@ -2688,7 +2693,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-91.kcad"] = container(root(cmap(parts), version=uint(91)))
+    files["schema-version-92.kcad"] = container(root(cmap(parts), version=uint(92)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4479,6 +4484,25 @@ def build():
 
     out["broken/recorded-time-end-only.kcad"] = rec_broken(lambda d: rec_time(d).pop("recordedStart"))
     out["broken/recorded-time-valid-field.kcad"] = rec_broken(lambda d: rec_time(d).update(recordedStart="gecerlilik_baslangic"))
+    # The bound layers' bases (docs/adr/0538 §1): schema 91's; in schema 90 an unknown field; a base of no link, rows
+    # out of order and rows not whole refused.
+    out["source-bases.kcad"] = container(document(load("source-bases.json")))
+    sb_payload = document(load("source-bases.json"))
+    assert sb_payload.count(b"\x67version\x18\x5b") == 1, "the bases are schema 91"
+    out["broken/source-bases-in-schema-90.kcad"] = container(sb_payload.replace(b"\x67version\x18\x5b", b"\x67version\x18\x5a"))
+
+    def sb_broken(change):
+        d = copy.deepcopy(load("source-bases.json"))
+        change(d["settings"]["sourceBases"][0])
+        return container(document(d))
+
+    def sb_rows(b, f):
+        raw = base64.b64decode(b["rows"])
+        b["rows"] = base64.b64encode(f(raw)).decode()
+
+    out["broken/source-bases-no-link.kcad"] = sb_broken(lambda b: b.update(source="kaynak-9"))
+    out["broken/source-bases-out-of-order.kcad"] = sb_broken(lambda b: sb_rows(b, lambda r: r[32:64] + r[:32] + r[64:]))
+    out["broken/source-bases-part-row.kcad"] = sb_broken(lambda b: sb_rows(b, lambda r: r[:-4]))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

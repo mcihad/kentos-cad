@@ -42,7 +42,7 @@ use kentos_native_application::{processing_batch, processing_run, processing_too
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
-use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, relate as sources_relate, sync as sources_sync};
+use kentos_native_application::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use kentos_native_application::records_page;
 use kentos_native_application::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, blocks_define, blocks_edit,
@@ -108,6 +108,8 @@ const STEP_KEYS: &[&str] = &[
     "expect",
     "note",
     "relaxConstraints",
+    "from",
+    "to",
 ];
 
 /// JSON equality with numbers compared as numbers (the file's `1` is the document's `1.0`);
@@ -2242,6 +2244,13 @@ impl Input for kentos_domain::contracts::SourcesSync {
     }
 }
 
+impl Input for kentos_domain::contracts::SourcesReconcile {
+    /// No number: a layer and the sides taken.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_domain::contracts::SourcesRelate {
     /// No number: a relation, an operation and a table's name.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3234,6 +3243,7 @@ fn run_op(
         kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
         kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
         kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
+        kentos_domain::contracts::CAD_SOURCES_RECONCILE => run!(sources_reconcile, kentos_domain::contracts::SourcesReconcile),
         kentos_domain::contracts::CAD_SOURCES_RELATE => run!(sources_relate, kentos_domain::contracts::SourcesRelate),
         kentos_domain::contracts::CAD_RECORDS_PAGE => run!(records_page, kentos_domain::contracts::RecordsPage),
         kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
@@ -3480,6 +3490,16 @@ fn run_step(
                 .and_then(|id| doc.uid(Slot(id)))
                 .ok_or(format!("{at}: {id:?} nesnesi yok"))?;
             state.uids.insert(name.to_owned(), uid);
+        }
+        // A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538): a
+        // fixture's bytes over a `$tmp:` file.
+        "copyFile" => {
+            let from = with_fixtures(step["from"].as_str().ok_or(format!("{at}: “from” yok"))?);
+            let to = step["to"].as_str().ok_or(format!("{at}: “to” yok"))?;
+            if !to.starts_with("$tmp:") {
+                return Err(format!("{at}: “to” bir $tmp: dosyası olmalı"));
+            }
+            std::fs::copy(&from, with_fixtures(to)).map_err(|e| format!("{at}: {from}: {e}"))?;
         }
         other => return Err(format!("{at}: bilinmeyen işlem “{other}”")),
     }

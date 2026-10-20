@@ -393,6 +393,7 @@ impl<'d> Encoder<'d> {
             + usize::from(!s.relations.is_empty())
             + usize::from(!s.join_views.is_empty())
             + usize::from(!s.sources.is_empty())
+            + usize::from(!s.source_bases.is_empty())
             + usize::from(!s.line_types.is_empty())
             + usize::from(!s.hatch_patterns.is_empty())
             + usize::from(s.line_type_scale.is_some());
@@ -605,6 +606,18 @@ impl<'d> Encoder<'d> {
                 }
                 e.w.text(length_style(style));
                 Ok(())
+            })?;
+        }
+        // Schema 91 (docs/adr/0538 §1): the bound layers' bases.
+        if !s.source_bases.is_empty() {
+            self.key("sourceBases");
+            self.at(Seg::Name("sourceBases"), |e| {
+                if let Some(problem) = kentos_contracts::bases_problem(&s.source_bases, &s.sources) {
+                    return Err(e.fail(Code::BadValue, &problem));
+                }
+                let value = serde_json::to_value(&s.source_bases)
+                    .map_err(|err| e.fail(Code::BadValue, &err.to_string()))?;
+                e.plain(&value)
             })?;
         }
         self.key("areaDecimals");
@@ -1786,6 +1799,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 .is_some_and(kentos_contracts::LayerTime::recorded)
                 || recorded(&n.children)
         })
+    }
+    // Schema 91 (docs/adr/0538 §1): the bound layers' bases.
+    if !doc.settings.source_bases.is_empty() {
+        return crate::SCHEMA_WITH_SOURCE_BASES;
     }
     if recorded(&doc.layers) {
         return crate::SCHEMA_WITH_RECORDED_TIME;

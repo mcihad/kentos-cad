@@ -17,6 +17,7 @@ import keyword
 import os
 import math
 import re
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -147,6 +148,10 @@ class Case:
                 self.revisions[step["as"]] = self.doc.revision
             elif op == "captureUid":
                 self.uids[step["as"]] = self.slots()[step["id"]].uid
+            elif op == "copyFile":
+                # A file changed by someone else between two steps (a QGIS edit of a bound table, docs/adr/0538).
+                assert step["to"].startswith("$tmp:"), f"{at}: “to” is not a $tmp: file"
+                shutil.copyfile(paths(step["from"]), paths(step["to"]))
             elif op == "captureBlock":
                 block = self.block_named(step["name"])
                 assert block is not None, f"{at}: no block {step['name']}"

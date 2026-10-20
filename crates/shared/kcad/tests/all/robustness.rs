@@ -498,6 +498,7 @@ fn drawing(rng: &mut Rng) -> DocumentSnapshotV2 {
             forms: Vec::new(),
             relations: Vec::new(),
             join_views: Vec::new(),
+            source_bases: Vec::new(),
             ucs: None,
             srid: rng.next() as u32,
             length_decimals: rng.below(10) as u32,

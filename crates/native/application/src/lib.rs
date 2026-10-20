@@ -1035,6 +1035,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
         kentos_contracts::CAD_SOURCES_SYNC,
         kentos_contracts::CAD_SOURCES_SYNC_VERSION,
     ),
+    // Both sides of a bound layer changed ([`sources::reconcile`], docs/adr/0538).
+    (
+        kentos_contracts::CAD_SOURCES_RECONCILE,
+        kentos_contracts::CAD_SOURCES_RECONCILE_VERSION,
+    ),
     // A many-to-many reference in a bound GeoPackage ([`sources::relate`], docs/adr/0532).
     (
         kentos_contracts::CAD_SOURCES_RELATE,

@@ -543,11 +543,14 @@ pub const SCHEMA_WITH_JOIN_VIEWS: u32 = 89;
 /// Schema 90 (docs/adr/0537): a layer time's `recordedStart` and `recordedEnd`, the attributes of its objects'
 /// system time (when each version was recorded and superseded), written only when a layer has them.
 pub const SCHEMA_WITH_RECORDED_TIME: u32 = 90;
+/// Schema 91 (docs/adr/0538 §1): the settings' `sourceBases`, each bound layer's objects' hashes when the layer and
+/// its table last matched (their JSON, the rows base64), written only when a project has one.
+pub const SCHEMA_WITH_SOURCE_BASES: u32 = 91;
 /// The largest drawing order a file holds: 2³¹ − 1; the smallest is −2³¹.
 pub const MAX_ORDER: u64 = i32::MAX as u64;
 
 /// The document schemas this codec reads, oldest first.
-pub const SCHEMAS: [u32; 89] = [
+pub const SCHEMAS: [u32; 90] = [
     kentos_contracts::DOCUMENT_VERSION_2,
     SCHEMA_WITH_LINE_WEIGHTS,
     SCHEMA_WITH_ELEVATIONS,
@@ -637,6 +640,7 @@ pub const SCHEMAS: [u32; 89] = [
     SCHEMA_WITH_GEOREF,
     SCHEMA_WITH_JOIN_VIEWS,
     SCHEMA_WITH_RECORDED_TIME,
+    SCHEMA_WITH_SOURCE_BASES,
 ];
 
 /// The file a drawing is saved as.

@@ -2947,6 +2947,17 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "cad.sources.reconcile",
+        refusals: &[
+            &["source_not_found", "layer_not_found", "layer_locked", "source_gone", "import_unreadable", "table_not_found", "source_unreachable"],
+            &["source_readonly", "geometry_mismatch", "file_unwritable", "invalid_extent", "derived_dataset", "crs_mismatch"],
+            // docs/adr/0538: the base, the sides taken.
+            &["no_source_base", "not_a_conflict", "invalid_input", "unresolved_conflicts", "source_changed"],
+        ],
+        warnings: &["export_losses"],
+        targets: none,
+    },
+    Entry {
         id: "cad.sources.relate",
         refusals: &[
             &["unknown_relation", "relation_unbound", "source_gone", "transaction_split"],

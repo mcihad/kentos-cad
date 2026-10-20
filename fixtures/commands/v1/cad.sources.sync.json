@@ -1111,7 +1111,7 @@
       "status": "conflict",
       "error": {
        "code": "source_changed",
-       "message": "$fixture:geopackage/v1/qgis.gpkg katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. Önce tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
+       "message": "$fixture:geopackage/v1/qgis.gpkg katman onunla son eşleştiğinden beri değişti; üzerine yazılmadı. İki yanı cad.sources.reconcile ile uzlaştırın, tablodan okuyun (direction read) ya da dosyanın kopyasını bağlayın.",
        "path": "layer"
       }
      },

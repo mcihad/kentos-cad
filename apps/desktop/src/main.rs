@@ -182,6 +182,7 @@ mod layer_merge;
 mod joins_window;
 mod layer_order;
 mod layer_purge;
+mod source_reconcile;
 mod layer_sld;
 mod layer_snap;
 mod layer_states;
