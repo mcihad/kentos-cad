@@ -1,0 +1,1479 @@
+{
+ "format": "kentos.acceptance",
+ "version": 1,
+ "id": "parcels",
+ "title": "Ada: parseller ve binalar; tipli alanlar, hesap, sorgu; beş biçim; başka ortamda aç (CBS-44)",
+ "source": "plan/gis.md CBS-44; docs/adr/0554",
+ "project": {
+  "name": "Ada 101",
+  "workspace": "gis",
+  "srid": 5256
+ },
+ "tolerance": 1e-09,
+ "steps": [
+  {
+   "name": "Parsel katmanı",
+   "command": "cad.layers.edit",
+   "input": {
+    "operation": "add",
+    "name": "Parsel",
+    "activate": true
+   },
+   "bind": {
+    "parsel": "layer"
+   }
+  },
+  {
+   "name": "Parsel katmanının tipli alanları",
+   "command": "cad.layers.edit",
+   "input": {
+    "operation": "fields",
+    "layer": "$parsel",
+    "fields": [
+     {
+      "name": "ada",
+      "kind": "integer"
+     },
+     {
+      "name": "parsel",
+      "kind": "integer"
+     },
+     {
+      "name": "malik",
+      "kind": "text"
+     },
+     {
+      "name": "tapu_alani",
+      "kind": "decimal"
+     },
+     {
+      "name": "hesap_alani",
+      "kind": "decimal"
+     },
+     {
+      "name": "tescil",
+      "kind": "date"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Bina katmanı",
+   "command": "cad.layers.edit",
+   "input": {
+    "operation": "add",
+    "name": "Bina"
+   },
+   "bind": {
+    "bina": "layer"
+   }
+  },
+  {
+   "name": "Bina katmanının tipli alanları",
+   "command": "cad.layers.edit",
+   "input": {
+    "operation": "fields",
+    "layer": "$bina",
+    "fields": [
+     {
+      "name": "kat",
+      "kind": "integer"
+     },
+     {
+      "name": "kullanim",
+      "kind": "text"
+     }
+    ]
+   }
+  },
+  {
+   "name": "Parsel 1",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$parsel",
+    "pts": [
+     {
+      "x": 500000.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500000.0,
+      "y": 4400030.0
+     }
+    ]
+   },
+   "as": "p1",
+   "expect": {
+    "measures": {
+     "p1": {
+      "area": 600.0
+     }
+    },
+    "count": 1
+   }
+  },
+  {
+   "name": "Parsel 1'in öznitelikleri",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$p1"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "ada": "101",
+     "parsel": "1",
+     "malik": "Ahmet Yılmaz",
+     "tapu_alani": "600.5",
+     "tescil": "2019-05-14"
+    }
+   },
+   "expect": {
+    "objects": {
+     "p1": {
+      "kind": "polygon",
+      "attrs": {
+       "ada": "101",
+       "parsel": "1",
+       "malik": "Ahmet Yılmaz",
+       "tapu_alani": "600.5",
+       "tescil": "2019-05-14"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Parsel 2",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$parsel",
+    "pts": [
+     {
+      "x": 500020.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500020.0,
+      "y": 4400030.0
+     }
+    ]
+   },
+   "as": "p2",
+   "expect": {
+    "measures": {
+     "p2": {
+      "area": 600.0
+     }
+    },
+    "count": 2
+   }
+  },
+  {
+   "name": "Parsel 2'in öznitelikleri",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$p2"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "ada": "101",
+     "parsel": "2",
+     "malik": "",
+     "tapu_alani": "599.75",
+     "tescil": "2020-11-02"
+    }
+   },
+   "expect": {
+    "objects": {
+     "p2": {
+      "kind": "polygon",
+      "attrs": {
+       "ada": "101",
+       "parsel": "2",
+       "malik": "",
+       "tapu_alani": "599.75",
+       "tescil": "2020-11-02"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Parsel 3",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$parsel",
+    "pts": [
+     {
+      "x": 500040.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500065.0,
+      "y": 4400000.0
+     },
+     {
+      "x": 500065.0,
+      "y": 4400030.0
+     },
+     {
+      "x": 500040.0,
+      "y": 4400030.0
+     }
+    ]
+   },
+   "as": "p3",
+   "expect": {
+    "measures": {
+     "p3": {
+      "area": 750.0
+     }
+    },
+    "count": 3
+   }
+  },
+  {
+   "name": "Parsel 3'in öznitelikleri",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$p3"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "ada": "101",
+     "parsel": "3",
+     "malik": "Şükrü Öğüt",
+     "tapu_alani": "750"
+    }
+   },
+   "expect": {
+    "objects": {
+     "p3": {
+      "kind": "polygon",
+      "attrs": {
+       "ada": "101",
+       "parsel": "3",
+       "malik": "Şükrü Öğüt",
+       "tapu_alani": "750"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Bina 1",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$bina",
+    "pts": [
+     {
+      "x": 500005.0,
+      "y": 4400005.0
+     },
+     {
+      "x": 500015.0,
+      "y": 4400005.0
+     },
+     {
+      "x": 500015.0,
+      "y": 4400017.0
+     },
+     {
+      "x": 500005.0,
+      "y": 4400017.0
+     }
+    ]
+   },
+   "as": "b1",
+   "expect": {
+    "measures": {
+     "b1": {
+      "area": 120.0
+     }
+    },
+    "count": 4
+   }
+  },
+  {
+   "name": "Bina 1'in öznitelikleri",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$b1"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "kat": "3",
+     "kullanim": "Konut"
+    }
+   },
+   "expect": {
+    "objects": {
+     "b1": {
+      "attrs": {
+       "kat": "3",
+       "kullanim": "Konut"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Bina 2",
+   "command": "cad.polygon.create",
+   "input": {
+    "layerId": "$bina",
+    "pts": [
+     {
+      "x": 500048.0,
+      "y": 4400008.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400008.0
+     },
+     {
+      "x": 500060.0,
+      "y": 4400022.0
+     },
+     {
+      "x": 500048.0,
+      "y": 4400022.0
+     }
+    ]
+   },
+   "as": "b2",
+   "expect": {
+    "measures": {
+     "b2": {
+      "area": 168.0
+     }
+    },
+    "count": 5
+   }
+  },
+  {
+   "name": "Bina 2'in öznitelikleri",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$b2"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "kat": "1",
+     "kullanim": "Dükkân"
+    }
+   },
+   "expect": {
+    "objects": {
+     "b2": {
+      "attrs": {
+       "kat": "1",
+       "kullanim": "Dükkân"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Bir değer yanlış girilir",
+   "command": "cad.entities.set",
+   "input": {
+    "uids": [
+     "$p1"
+    ],
+    "operation": "attributes",
+    "attrs": {
+     "malik": "Yanlış"
+    }
+   },
+   "expect": {
+    "objects": {
+     "p1": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "1",
+       "malik": "Yanlış",
+       "tapu_alani": "600.5",
+       "tescil": "2019-05-14"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Geri al: değer eski hâlinde",
+   "undo": "Değiştir",
+   "expect": {
+    "objects": {
+     "p1": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "1",
+       "malik": "Ahmet Yılmaz",
+       "tapu_alani": "600.5",
+       "tescil": "2019-05-14"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Alan hesapla: hesap_alani = round($alan, 2)",
+   "command": "cad.fields.write",
+   "input": {
+    "layer": "$parsel",
+    "write": {
+     "kind": "calculate",
+     "field": "hesap_alani",
+     "expression": "round($alan, 2)"
+    }
+   },
+   "expect": {
+    "objects": {
+     "p1": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "1",
+       "malik": "Ahmet Yılmaz",
+       "tapu_alani": "600.5",
+       "tescil": "2019-05-14",
+       "hesap_alani": "600"
+      }
+     },
+     "p2": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "2",
+       "malik": "",
+       "tapu_alani": "599.75",
+       "tescil": "2020-11-02",
+       "hesap_alani": "600"
+      }
+     },
+     "p3": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "3",
+       "malik": "Şükrü Öğüt",
+       "tapu_alani": "750",
+       "hesap_alani": "750"
+      }
+     }
+    }
+   }
+  },
+  {
+   "name": "Konuma göre seç: üçüncü parseldeki bina",
+   "command": "cad.processing.run",
+   "input": {
+    "tool": "selection.byLocation",
+    "parameters": {
+     "input": {
+      "scope": "layer",
+      "layerId": "$bina"
+     },
+     "relation": "intersects",
+     "reference": {
+      "scope": "uids",
+      "uids": [
+       "$p3"
+      ]
+     }
+    }
+   },
+   "expect": {
+    "selected": [
+     "b2"
+    ],
+    "count": 5
+   }
+  },
+  {
+   "name": "Kaydet ve aç: proje, alanlar ve değerler",
+   "reopen": true,
+   "expect": {
+    "objects": {
+     "p1": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "1",
+       "malik": "Ahmet Yılmaz",
+       "tapu_alani": "600.5",
+       "tescil": "2019-05-14",
+       "hesap_alani": "600"
+      }
+     },
+     "p2": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "2",
+       "malik": "",
+       "tapu_alani": "599.75",
+       "tescil": "2020-11-02",
+       "hesap_alani": "600"
+      }
+     },
+     "p3": {
+      "attrs": {
+       "ada": "101",
+       "parsel": "3",
+       "malik": "Şükrü Öğüt",
+       "tapu_alani": "750",
+       "hesap_alani": "750"
+      }
+     },
+     "b1": {
+      "attrs": {
+       "kat": "3",
+       "kullanim": "Konut"
+      }
+     },
+     "b2": {
+      "attrs": {
+       "kat": "1",
+       "kullanim": "Dükkân"
+      }
+     }
+    },
+    "measures": {
+     "p1": {
+      "area": 600.0
+     },
+     "p2": {
+      "area": 600.0
+     },
+     "p3": {
+      "area": 750.0
+     },
+     "b1": {
+      "area": 120.0
+     },
+     "b2": {
+      "area": 168.0
+     }
+    },
+    "count": 5
+   }
+  },
+  {
+   "name": "Dışa aktar: ada.gpkg",
+   "command": "file.export.gpkg",
+   "input": {
+    "path": "$out:ada.gpkg"
+   }
+  },
+  {
+   "name": "Dışa aktar: ada.fgb",
+   "command": "file.export.fgb",
+   "input": {
+    "path": "$out:ada.fgb"
+   }
+  },
+  {
+   "name": "Dışa aktar: ada.gml",
+   "command": "file.export.gml",
+   "input": {
+    "path": "$out:ada.gml"
+   }
+  },
+  {
+   "name": "Dışa aktar: ada-shp",
+   "command": "file.export.shp",
+   "input": {
+    "path": "$out:ada-shp"
+   }
+  },
+  {
+   "name": "Dışa aktar: ada.csv",
+   "command": "file.export.csv",
+   "input": {
+    "path": "$out:ada.csv"
+   }
+  },
+  {
+   "name": "Başka ortamda aç: GeoPackage yeni projede, alanlar ve değerler eksiksiz",
+   "fresh": true,
+   "command": "file.import.gpkg",
+   "input": {
+    "path": "$out:ada.gpkg"
+   },
+   "expect": {
+    "count": 5,
+    "layers": {
+     "Parsel": {
+      "key": "parsel",
+      "rows": {
+       "1": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "2": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "3": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       }
+      },
+      "areas": {
+       "1": 600.0,
+       "2": 600.0,
+       "3": 750.0
+      }
+     },
+     "Bina": {
+      "key": "kullanim",
+      "rows": {
+       "Konut": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "Dükkân": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       }
+      },
+      "areas": {
+       "Konut": 120.0,
+       "Dükkân": 168.0
+      }
+     }
+    }
+   }
+  }
+ ],
+ "files": {
+  "srid": 5256,
+  "gpkg": {
+   "path": "ada.gpkg",
+   "layers": {
+    "Parsel": {
+     "key": "parsel",
+     "rows": {
+      "1": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ],
+        [
+         500000.0,
+         4400030.0
+        ]
+       ]
+      },
+      "2": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ]
+       ]
+      },
+      "3": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       },
+       "ring": [
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400030.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "ada",
+      "parsel",
+      "malik",
+      "tapu_alani",
+      "hesap_alani",
+      "tescil"
+     ]
+    },
+    "Bina": {
+     "key": "kullanim",
+     "rows": {
+      "Konut": {
+       "attrs": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "ring": [
+        [
+         500005.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400017.0
+        ],
+        [
+         500005.0,
+         4400017.0
+        ]
+       ]
+      },
+      "Dükkân": {
+       "attrs": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       },
+       "ring": [
+        [
+         500048.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400022.0
+        ],
+        [
+         500048.0,
+         4400022.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "kat",
+      "kullanim"
+     ]
+    }
+   },
+   "nullsKept": true
+  },
+  "fgb": {
+   "path": "ada.fgb",
+   "layers": {
+    "Parsel": {
+     "key": "parsel",
+     "rows": {
+      "1": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ],
+        [
+         500000.0,
+         4400030.0
+        ]
+       ]
+      },
+      "2": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ]
+       ]
+      },
+      "3": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       },
+       "ring": [
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400030.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "ada",
+      "parsel",
+      "malik",
+      "tapu_alani",
+      "hesap_alani",
+      "tescil"
+     ]
+    },
+    "Bina": {
+     "key": "kullanim",
+     "rows": {
+      "Konut": {
+       "attrs": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "ring": [
+        [
+         500005.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400017.0
+        ],
+        [
+         500005.0,
+         4400017.0
+        ]
+       ]
+      },
+      "Dükkân": {
+       "attrs": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       },
+       "ring": [
+        [
+         500048.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400022.0
+        ],
+        [
+         500048.0,
+         4400022.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "kat",
+      "kullanim"
+     ]
+    }
+   },
+   "layerColumn": "katman",
+   "nullsKept": true
+  },
+  "gml": {
+   "path": "ada.gml",
+   "layers": {
+    "Parsel": {
+     "key": "parsel",
+     "rows": {
+      "1": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ],
+        [
+         500000.0,
+         4400030.0
+        ]
+       ]
+      },
+      "2": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ]
+       ]
+      },
+      "3": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       },
+       "ring": [
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400030.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "ada",
+      "parsel",
+      "malik",
+      "tapu_alani",
+      "hesap_alani",
+      "tescil"
+     ]
+    },
+    "Bina": {
+     "key": "kullanim",
+     "rows": {
+      "Konut": {
+       "attrs": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "ring": [
+        [
+         500005.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400017.0
+        ],
+        [
+         500005.0,
+         4400017.0
+        ]
+       ]
+      },
+      "Dükkân": {
+       "attrs": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       },
+       "ring": [
+        [
+         500048.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400022.0
+        ],
+        [
+         500048.0,
+         4400022.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "kat",
+      "kullanim"
+     ]
+    }
+   },
+   "nullsKept": false
+  },
+  "shp": {
+   "path": "ada-shp",
+   "layers": {
+    "Parsel": {
+     "key": "parsel",
+     "rows": {
+      "1": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ],
+        [
+         500000.0,
+         4400030.0
+        ]
+       ]
+      },
+      "2": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ]
+       ]
+      },
+      "3": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       },
+       "ring": [
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400030.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "ada",
+      "parsel",
+      "malik",
+      "tapu_alani",
+      "hesap_alani",
+      "tescil"
+     ]
+    },
+    "Bina": {
+     "key": "kullanim",
+     "rows": {
+      "Konut": {
+       "attrs": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "ring": [
+        [
+         500005.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400017.0
+        ],
+        [
+         500005.0,
+         4400017.0
+        ]
+       ]
+      },
+      "Dükkân": {
+       "attrs": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       },
+       "ring": [
+        [
+         500048.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400022.0
+        ],
+        [
+         500048.0,
+         4400022.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "kat",
+      "kullanim"
+     ]
+    }
+   },
+   "nullsKept": false,
+   "nameLength": 10
+  },
+  "csv": {
+   "path": "ada.csv",
+   "layers": {
+    "Parsel": {
+     "key": "parsel",
+     "rows": {
+      "1": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "1",
+        "malik": "Ahmet Yılmaz",
+        "tapu_alani": "600.5",
+        "tescil": "2019-05-14",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500000.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ],
+        [
+         500000.0,
+         4400030.0
+        ]
+       ]
+      },
+      "2": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "2",
+        "malik": "",
+        "tapu_alani": "599.75",
+        "tescil": "2020-11-02",
+        "hesap_alani": "600"
+       },
+       "ring": [
+        [
+         500020.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ],
+        [
+         500020.0,
+         4400030.0
+        ]
+       ]
+      },
+      "3": {
+       "attrs": {
+        "ada": "101",
+        "parsel": "3",
+        "malik": "Şükrü Öğüt",
+        "tapu_alani": "750",
+        "hesap_alani": "750"
+       },
+       "ring": [
+        [
+         500040.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400000.0
+        ],
+        [
+         500065.0,
+         4400030.0
+        ],
+        [
+         500040.0,
+         4400030.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "ada",
+      "parsel",
+      "malik",
+      "tapu_alani",
+      "hesap_alani",
+      "tescil"
+     ]
+    },
+    "Bina": {
+     "key": "kullanim",
+     "rows": {
+      "Konut": {
+       "attrs": {
+        "kat": "3",
+        "kullanim": "Konut"
+       },
+       "ring": [
+        [
+         500005.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400005.0
+        ],
+        [
+         500015.0,
+         4400017.0
+        ],
+        [
+         500005.0,
+         4400017.0
+        ]
+       ]
+      },
+      "Dükkân": {
+       "attrs": {
+        "kat": "1",
+        "kullanim": "Dükkân"
+       },
+       "ring": [
+        [
+         500048.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400008.0
+        ],
+        [
+         500060.0,
+         4400022.0
+        ],
+        [
+         500048.0,
+         4400022.0
+        ]
+       ]
+      }
+     },
+     "fields": [
+      "kat",
+      "kullanim"
+     ]
+    }
+   },
+   "layerColumn": "katman",
+   "nullsKept": false
+  }
+ }
+}

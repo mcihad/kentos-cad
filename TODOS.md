@@ -2241,6 +2241,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   alışverişi › CSV içe aktar… ve CSV dışa aktar…; Python ve MCP; bağımsız denetim `csv_exchange_cases.py` (GDAL ve OGR, 21
   durum). Kalan: GML, FlatGeobuf, GeoParquet, XYZ yazımı, staging, reddedilen satırlar, upsert. — **19 Ekim,
   [ADR 0522](docs/adr/0522-csv-tables.md).**
+- [ ] `CBS-44` CBS'nin ilk kabul projesi (dilim): `fixtures/acceptance/v1/parcels.json` (`acceptance_parcels.py`, KentOS kodu olmadan):
+  parsel ve bina katmanları tipli alanlarıyla, geri alma, Alan hesapla, Konuma göre seç, kaydet ve aç, beş biçime dışa aktarma, GeoPackage'ın
+  yeni projede açılması; Python'da `test_acceptance_gis.py`, dosyalar OGR'la (`--files`). Kalan: MCP ve masaüstü oynatıcısı, PostGIS, yetki,
+  restore, kesilen işlem, performans. — **20 Ekim, [ADR 0554](docs/adr/0554-gis-acceptance-project.md).**
 - [ ] `CBS-05` GML ve XYZ (dilim): `file.export.gml` (GML 3.2, her katman bir nesne türü, yanında `.xsd`; yaylar kesin; srsName ve
   EPSG eksen sırası; `posList`'te boyut), `file.import.gml` (GML 2, 3.1, 3.2; featureMember, featureMembers, member; türler `.xsd`,
   `.gfs` ya da değerlerden; xsi:nil boş değer, boş öğe boş metin; eksen sırası srsName'den, CRS84; GeoPackage alma yolundan, tek adım)
