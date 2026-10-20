@@ -3009,6 +3009,22 @@
    "tests": 2
   },
   {
+   "id": "file.export.fgb",
+   "kind": "command",
+   "title": "FlatGeobuf dışa aktar…",
+   "level": "semantic",
+   "via": [
+    "file.export.fgb"
+   ],
+   "operation": null,
+   "python": "Connection: file.export.fgb",
+   "mcp": "file.export.fgb",
+   "note": "Pencerede nesneler, sütunlar ve türleri, geometri türü, dizin ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyayı bütün yazar (ADR 0544).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "file.export.geojson",
    "kind": "command",
    "title": "GeoJSON…",
@@ -3157,6 +3173,22 @@
    "scope": "shared",
    "desktop": "implemented",
    "tests": 2
+  },
+  {
+   "id": "file.import.fgb",
+   "kind": "command",
+   "title": "FlatGeobuf içe aktar…",
+   "level": "semantic",
+   "via": [
+    "file.import.fgb"
+   ],
+   "operation": null,
+   "python": "Connection: file.import.fgb",
+   "mcp": "file.import.fgb",
+   "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0544).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
   },
   {
    "id": "file.import.geojson",

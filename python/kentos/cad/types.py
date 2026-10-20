@@ -16690,6 +16690,39 @@ class ExportDxf(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ExportFgb(_Model):
+    """Input of `file.export.fgb` v1: the layers' objects as one FlatGeobuf at `path`, the layers' fields as its columns
+    (with more than one layer a `katman` column names each feature's), the project's system as its EPSG code, the
+    spatial index written unless a record (an object without a position) is among them. Written whole or not at all.
+    Refusals, in order: `invalid_file_path`, `file_exists`, `layer_not_found`, `nothing_to_export`, `file_unwritable`.
+    Warnings: `export_losses`.
+    Attributes:
+        path: An absolute path ending `.fgb`.
+        layers: The layers, by id (a group gives its layers); empty: every layer with objects.
+        overwrite: Write over the file when it is there.
+    """
+    path: str
+    layers: list[str] | Unset = UNSET
+    overwrite: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layers is not UNSET:
+            out["layers"] = list(self.layers)
+        out["overwrite"] = self.overwrite
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ExportFgb:
+        return cls(
+            path=data["path"],
+            layers=list(data["layers"]) if "layers" in data else UNSET,
+            overwrite=data["overwrite"] if "overwrite" in data else False,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ExportGis(_Model):
     """Input of `file.export.gis` v1: the layers (every layer with objects when none) as tables of a new GeoPackage of
     derived features. Refusals, in order: `invalid_file_path`, `file_exists`, `invalid_tolerance` (outside 1e-6 to 1 m),
@@ -16951,6 +16984,65 @@ class FeatureFeed(_Model):
             name=data.get("name", UNSET),
             srid=data.get("srid", UNSET),
             version=data.get("version", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class FgbExported(_Model):
+    """What `file.export.fgb` wrote (or with `plan` would write).
+    Attributes:
+        name: The layer's name in the file (the file's name without `.fgb`).
+        features: Unit: count.
+        columns: The columns, in order, and their types as GDAL names them.
+        geometry: The layer's geometry type as GDAL names it (`Unknown` for mixed types).
+        indexed: Whether the spatial index is written.
+        bytes: Unit: bytes.
+        left: Objects not written, by kind (a text, a dimension …). Unit: count.
+        lost: What the file could not hold, a sentence each.
+    """
+    path: str
+    name: str
+    features: int
+    columns: list[str]
+    types: list[str]
+    geometry: str
+    indexed: bool
+    bytes: int
+    sha256: str
+    left: dict[str, int] | Unset = UNSET
+    lost: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        out["name"] = self.name
+        out["features"] = self.features
+        out["columns"] = list(self.columns)
+        out["types"] = list(self.types)
+        out["geometry"] = self.geometry
+        out["indexed"] = self.indexed
+        out["bytes"] = self.bytes
+        out["sha256"] = self.sha256
+        if self.left is not UNSET:
+            out["left"] = dict(self.left)
+        if self.lost is not UNSET:
+            out["lost"] = list(self.lost)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> FgbExported:
+        return cls(
+            path=data["path"],
+            name=data["name"],
+            features=data["features"],
+            columns=list(data["columns"]),
+            types=list(data["types"]),
+            geometry=data["geometry"],
+            indexed=data["indexed"],
+            bytes=data["bytes"],
+            sha256=data["sha256"],
+            left=dict(data["left"]) if "left" in data else UNSET,
+            lost=list(data["lost"]) if "lost" in data else UNSET,
         )
 
 
@@ -21563,6 +21655,45 @@ class ImportDxf(_Model):
             group=data.get("group", UNSET),
             layers=dict(data["layers"]) if "layers" in data else UNSET,
             skip_layers=list(data["skipLayers"]) if "skipLayers" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ImportFgb(_Model):
+    """Input of `file.import.fgb` v1: the FlatGeobuf at `path` taken into the drawing as one undo step “FlatGeobuf:
+    ad.fgb”, each feature an object (or a record without a geometry), its properties its attributes. The features go
+    onto `layer` when given, else onto the drawing's layer named as the file's layer, else onto a new layer with the
+    columns as its fields. A date-time column whose values are all days is taken as a date field. Refusals as
+    `file.import.gpkg`'s: `invalid_file_path`, `file_not_found`, `import_unreadable`, `layer_not_found`, `not_a_layer`,
+    `locked_layer`, `crs_mismatch`, `entity_exists`, `nothing_to_import`. Warnings: `crs_undeclared`, `import_losses`.
+    Attributes:
+        path: An absolute path to a `.fgb`.
+        layer: The layer the features go onto, by id.
+        reproject: Move coordinates in another system into the project's.
+        srid: The system the coordinates are in when the file names none (EPSG). Unit: epsg.
+    """
+    path: str
+    layer: str | None | Unset = UNSET
+    reproject: bool = False
+    srid: int | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = self.path
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        out["reproject"] = self.reproject
+        if self.srid is not UNSET:
+            out["srid"] = self.srid
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ImportFgb:
+        return cls(
+            path=data["path"],
+            layer=data.get("layer", UNSET),
+            reproject=data["reproject"] if "reproject" in data else False,
+            srid=data.get("srid", UNSET),
         )
 
 
@@ -55233,6 +55364,7 @@ __all__ = [
     "ExportBlock",
     "ExportCsv",
     "ExportDxf",
+    "ExportFgb",
     "ExportGis",
     "ExportGpkg",
     "ExportPdf",
@@ -55247,6 +55379,7 @@ __all__ = [
     "FeedKind",
     "FeedKindName",
     "FenceSelectRegion",
+    "FgbExported",
     "FieldBinding",
     "FieldBroken",
     "FieldBrokenName",
@@ -55444,6 +55577,7 @@ __all__ = [
     "ImportCsv",
     "ImportDomainsOp",
     "ImportDxf",
+    "ImportFgb",
     "ImportGpkg",
     "ImportPdf",
     "ImportSld",

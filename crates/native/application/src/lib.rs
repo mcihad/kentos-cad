@@ -75,9 +75,11 @@ pub mod processing_run;
 pub mod processing_tools;
 pub mod source_places;
 pub mod csv_table;
+pub mod fgb_table;
 pub mod gis_derivation;
 pub mod gis_derive;
 pub mod file_import_csv;
+pub mod file_import_fgb;
 pub mod shapefile;
 pub mod sld;
 pub mod sources;
@@ -1069,6 +1071,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_CSV,
         kentos_commands::FILE_IMPORT_CSV_VERSION,
+    ),
+    // A FlatGeobuf's features into the drawing ([`file_import_fgb`], docs/adr/0544).
+    (
+        kentos_commands::FILE_IMPORT_FGB,
+        kentos_commands::FILE_IMPORT_FGB_VERSION,
     ),
     // A derived GIS dataset against the drawing ([`gis_derivation`], docs/adr/0530).
     (

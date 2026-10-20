@@ -1,0 +1,1473 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.fgb",
+ "commandVersion": 1,
+ "title": "FlatGeobuf içe aktar: dizinli ve dizinsiz, yaylar, Z ve M, sistem",
+ "note": "ADR 0544. Dosyaları GDAL QGIS 4.2.3'ün GeoPackage'ından yazar; beklenenler OGR'ın FlatGeobuf sürücüsünün okuduğundan GeoPackage alma durumlarının kuralıyla (gpkg_import_cases.py) kurulur. Bağımsız başvuru: scripts/fixtures/fgb_exchange_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "GeoPackage alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "GDAL'ın dizinsiz parselleri: delikli ve çok parçalı alanlar, konumsuz kayıt, alanlar türleriyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/parsel.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.fgb",
+       "bytes": 2320,
+       "sha256": "3526fc6c710b180cc455a6a463401cd4afb786bd32a3bb619d51e7b20eacd356",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel.fgb dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29T00:00:00",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "4": {
+        "kind": "record",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "geometrisiz",
+         "parsel_no": "7"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın dizinli parselleri: dizin atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/parsel-dizinli.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-dizinli.fgb",
+       "bytes": 2384,
+       "sha256": "19ae880d779f165d8a5911bfe23cece16991e8514fd9398f76861998d77ea7f0",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-dizinli",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel-dizinli.fgb dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         }
+        ]
+       },
+       "3": {
+        "kind": "polygon",
+        "layerId": "import-parsel",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.56",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29T00:00:00",
+         "guncelleme": "2024-03-01T10:20:30",
+         "tapulu": "true",
+         "not": ""
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yaylı, kotlu ve ölçülü yol: CircularString ve CompoundCurve kesin bulge'lara, Z ve M",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.fgb",
+       "bytes": 1768,
+       "sha256": "7063058d42eee2fedc03a90515a7e74bd189e038a358e9ced430b5c1a9961ccf",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "import-yol",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kotlu nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/nokta.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.fgb",
+       "bytes": 1544,
+       "sha256": "c9d1804920f69a531f11a9c9f311519ca8d1b008e0a1c32465b8968fa700b48c",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "nokta",
+         "layer": "import-nokta",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-nokta-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-nokta",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Eğri alan (CurvePolygon)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/egri.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "egri.fgb",
+       "bytes": 1648,
+       "sha256": "711049535e180d6294a5fc865505f62e544ac0ee9e703998ce6d459201a1531f",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "egri",
+         "layer": "import-egri",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-egri",
+         "name": "egri"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-egri-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polygon",
+        "layerId": "import-egri",
+        "attrs": {
+         "ad": "yay ve kiriş"
+        },
+        "pts": [
+         {
+          "x": 487200.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487220.0,
+          "y": 4420000.0
+         }
+        ],
+        "bulges": [
+         -0.9999999999999999,
+         0.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Bileşik eğri (CompoundCurve)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/egri_yol.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "egri_yol.fgb",
+       "bytes": 1624,
+       "sha256": "479f15f1e9f24af450880f8d9faf2712e0633dbf5fd9bbfa057369a9dfbe12c0",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "egri_yol",
+         "layer": "import-egri-yol",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-egri-yol",
+         "name": "egri_yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-egri-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-egri-yol",
+        "attrs": {
+         "ad": "dönemeç"
+        },
+        "pts": [
+         {
+          "x": 487300.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487310.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487320.0,
+          "y": 4420000.0
+         }
+        ],
+        "bulges": [
+         0.0,
+         -0.9999999999999999,
+         0.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Geometrisiz tablo: her nesne kayıt",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/malik.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "malik.fgb",
+       "bytes": 360,
+       "sha256": "026a8d51b64fcb63f7292bf72d259f5203cd7f7fcb5c18f517d5d1f630f3880a",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "malik",
+         "layer": "import-malik",
+         "read": 2,
+         "objects": 2,
+         "records": 2,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-malik",
+         "name": "malik"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-malik-2"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "malik.fgb koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ayşe Öz",
+         "pay": "1/2",
+         "parsel": "1"
+        }
+       },
+       "3": {
+        "kind": "record",
+        "layerId": "import-malik",
+        "attrs": {
+         "ad": "Ömer Çelik",
+         "pay": "1/2",
+         "parsel": "1"
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Plan dosyayı okur, hiçbir şey yazmaz",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:fgb/v1/parsel.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.fgb",
+       "bytes": 2320,
+       "sha256": "3526fc6c710b180cc455a6a463401cd4afb786bd32a3bb619d51e7b20eacd356",
+       "objects": 3,
+       "tables": [
+        {
+         "table": "parsel",
+         "layer": "import-parsel",
+         "read": 3,
+         "objects": 3,
+         "records": 1,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-parsel-2",
+       "srid": 5256
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "parsel.fgb dosyasının bazı değerleri ya da satırları olduğu gibi alınamadı: “kimlik” sütunu 2⁵³'ten büyük sayılar tutuyor: metin alanı olarak, her basamağıyla alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesneler var olan katmana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb",
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.fgb",
+       "bytes": 1768,
+       "sha256": "7063058d42eee2fedc03a90515a7e74bd189e038a358e9ced430b5c1a9961ccf",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "cizim",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [],
+       "revision": "$current",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "cizim",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:fgb/v1/parsel.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı dosya ikinci kez alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.fgb",
+       "bytes": 1768,
+       "sha256": "7063058d42eee2fedc03a90515a7e74bd189e038a358e9ced430b5c1a9961ccf",
+       "objects": 2,
+       "tables": [
+        {
+         "table": "yol",
+         "layer": "import-yol",
+         "read": 2,
+         "objects": 2,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-yol-2",
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {},
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420070.0
+         },
+         {
+          "x": 487010.0,
+          "y": 4420070.0
+         }
+        ],
+        "zs": [
+         0.0,
+         1.0
+        ],
+        "ms": [
+         0.0,
+         10.0
+        ]
+       },
+       "3": {
+        "kind": "polyline",
+        "layerId": "import-yol",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_exists",
+       "message": "Dosyadaki bir kaydın kalıcı kimliği (111d8032-5095-5b0f-9279-3e92365f6127) çizimde zaten bir nesnenin: yol.fgb daha önce alınmış. Önceki alımı geri alın ya da başka bir çizimde açın.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki dosya çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yer.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "yer.fgb EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki dosya reproject ile çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yer.fgb",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yer.fgb",
+       "bytes": 1272,
+       "sha256": "219bf7872bc39322a7156c21c87248d0890c83cc2b2bf071b95e1a89f0ead2ff",
+       "srid": 4326,
+       "moved": true,
+       "objects": 1,
+       "tables": [
+        {
+         "table": "yer",
+         "layer": "import-yer",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "group": "import-yer-2",
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "revision": "changed",
+      "canUndo": true,
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "Kızılay"
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Sistem bildirmeyen dosya olduğu gibi alınır (crs_undeclared)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/sistemsiz.fgb"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "sistemsiz.fgb",
+       "bytes": 328,
+       "sha256": "5afb1d82783e29e552d51ac9606fa9599b46d0020fc4eb7e97f1c12b7b565191",
+       "objects": 1,
+       "tables": [
+        {
+         "table": "yer",
+         "layer": "import-yer",
+         "read": 1,
+         "objects": 1,
+         "records": 0,
+         "skipped": 0
+        }
+       ],
+       "layers": [
+        {
+         "id": "import-yer",
+         "name": "yer"
+        }
+       ],
+       "revision": "$current",
+       "group": "import-sistemsiz"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "sistemsiz.fgb koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "kind": "point",
+        "layerId": "import-yer",
+        "attrs": {
+         "ad": "yerel"
+        },
+        "p": {
+         "x": 12.5,
+         "y": 7.25
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesnesi olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/bos.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "bos.fgb dosyasının seçilen tablolarında alınacak kayıt yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef katman kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yok.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:fgb/v1/yok.fgb okunamadı: No such file or directory (os error 2). Dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "parsel.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“parsel.fgb” bir dosyanın mutlak yolu değil; okunacak FlatGeobuf'un tam yolunu verin (/klasör/ad.fgb).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan dosya: bozuk.fgb",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/bozuk.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:fgb/v1/bozuk.fgb FlatGeobuf olarak okunamadı: FlatGeobuf dosyası değil (başı “fgb\\x03fgb” değil)",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan dosya: kesik.fgb",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/kesik.fgb"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "$fixture:fgb/v1/kesik.fgb FlatGeobuf olarak okunamadı: nesne dosyanın dışına taşıyor",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb",
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “yol” tablosunun kayıtlarını var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:fgb/v1/yol.fgb",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; kayıtlar yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layers.yol"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "dirty": false,
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

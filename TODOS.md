@@ -286,6 +286,9 @@ Liste:
 - [ ] `CBS-19` bağlı görünümler ve tema (ADR 0523, 19 Ekim): web'de gerekenler: web'in bölünmüş görünümü yok; geri dönüşte iki
   görünüm, görünüm başına tema (katman durumunun ağaç kopyası), Bağla ve kaydırmalı karşılaştırma; depo `labels_shown_in`'i
   WASM bağlayıcısına açar.
+- [ ] `CBS-05` FlatGeobuf (ADR 0544, 20 Ekim): web'de gerekenler: `file.export.fgb` ve `file.import.fgb`'nin işleyicileri biçim
+  işçisinde (`kentos_geopackage::fgb` ve `fgb_table`'ın WASM bağlayıcısı), FlatGeobuf içe ve dışa aktar pencereleri; TS türleri
+  üretildi.
 - [ ] `CBS-05` CSV tablolar (ADR 0522, 19 Ekim): web'de gerekenler: `file.export.csv` ve `file.import.csv`'nin işleyicileri biçim
   işçisinde (`csv_table` ve `kentos_geopackage::wkt`'in WASM bağlayıcısı; `.csvt` ve `.prj` indirmede yanında, okumada
   seçilen dosyalardan), CSV içe ve dışa aktar pencereleri (geometri sütunları, plan, Ayırıcı); TS türleri üretildi.
@@ -2177,6 +2180,13 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   alışverişi › CSV içe aktar… ve CSV dışa aktar…; Python ve MCP; bağımsız denetim `csv_exchange_cases.py` (GDAL ve OGR, 21
   durum). Kalan: GML, FlatGeobuf, GeoParquet, XYZ yazımı, staging, reddedilen satırlar, upsert. — **19 Ekim,
   [ADR 0522](docs/adr/0522-csv-tables.md).**
+- [ ] `CBS-05` FlatGeobuf (dilim): kendi kodeğimiz `kentos_geopackage::fgb` (FlatBuffers'ı ileri yönde yazan ve sınırlarıyla okuyan,
+  paketli Hilbert R-ağacı; yaylar CircularString, CompoundCurve, CurvePolygon, MultiCurve, MultiSurface olarak kesin, Z ve M; NULL ile
+  boş metin ayrı), `file.export.fgb` (tek dosya, `katman` sütunu, EPSG; konumsuz kayıt varsa dizinsiz) ve `file.import.fgb`
+  (GeoPackage alma yolundan, tek adım; tarih-saat sütunu bütün değerleri günse tarih); masaüstünde Veri › Dosya alışverişi › FlatGeobuf
+  içe aktar… ve dışa aktar…; Python ve MCP; bağımsız denetim `fgb_exchange_cases.py` (GDAL'ın dosyaları, 22 durum, KentOS'un dosyaları
+  OGR'da ve dizini OGR'ın kutu süzgeciyle). Kalan: GML, GeoParquet, XYZ yazımı, staging, upsert, uzaktaki dosyanın dizinden okunması.
+  — **20 Ekim, [ADR 0544](docs/adr/0544-flatgeobuf.md).**
 - [ ] `CBS-05` Shapefile dışa aktarma (dilim): `file.export.shp` (tek arşiv, yeni klasör ya da tek `.shp`; bütün ya da hiç), katman
   ve geometri türü başına Shapefile, Z ve M, halka yönü, eğriler 0,1 mm kirişle, `.dbf`'in adları, türleri ve kod sayfası
   (UTF-8, Windows-1254), ESRI biçimli `.prj` (QGIS ve ArcGIS EPSG'yi tanır); kayıplar yazmadan önce `export_losses`'la;

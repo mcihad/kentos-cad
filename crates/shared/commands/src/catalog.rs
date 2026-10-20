@@ -7691,6 +7691,60 @@ fn protocol_commands() -> Vec<CommandDescriptor> {
                 output: None,
             }],
         },
+        // FlatGeobuf, out and in (docs/adr/0544).
+        CommandDescriptor {
+            id: crate::FILE_EXPORT_FGB.into(),
+            version: crate::FILE_EXPORT_FGB_VERSION,
+            title: "FlatGeobuf dışa aktar".into(),
+            summary: "Katmanların (layers boşsa nesnesi olan bütün katmanların) nesnelerini tek bir FlatGeobuf dosyasına yazar (v3; GDAL, QGIS ve biçimin kendi kitaplıkları okur). \
+                      Geometri biçimin türleriyle: nokta, çok nokta, çizgi, alan ve delikleri, çok parçalı; yaylar CircularString, CompoundCurve, CurvePolygon, MultiCurve ve MultiSurface olarak kesin; Z ve M köşelerde; elips, eğri ve NURBS kirişlerle (söylenir). \
+                      Katmanın alanları sütun olur (metin String, tam sayı Long, ondalık Double, evet/hayır Bool, tarih ve tarih-saat DateTime); alan olmayan öznitelikler adlarıyla metin sütunu; birden çok katmanda katman sütunu nesnenin katmanını adlandırır. Projenin sistemi EPSG koduyla yazılır. \
+                      Nesneler kutularının Hilbert sırasıyla, önlerinde paketli R-ağacı dizini (16'lık düğümler) yazılır; konumsuz kayıt varsa dizin yazılmaz (GDAL'ın kuralı). Yazı, ölçü, tablo, resim, raster ve nokta bulutu yazılmaz, türlerine göre sayılır (export_losses). Bütün yazılır ya da hiç; plan yazmadan söyler. Çizimi değiştirmez ve geri alma adımı değildir."
+                .into(),
+            aliases: vec!["fgbout".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ExportFgb>(),
+            output: schema::<crate::FgbExported>(),
+            plan: Some(schema::<crate::FgbExported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Parseller tek FlatGeobuf'ta".into(),
+                input: json!({ "path": "/veri/parsel.fgb", "layers": ["parsel"], "overwrite": true }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::FILE_IMPORT_FGB.into(),
+            version: crate::FILE_IMPORT_FGB_VERSION,
+            title: "FlatGeobuf içe aktar".into(),
+            summary: "path'teki FlatGeobuf'un nesnelerini açık çizime alır, tek geri alma adımı (“FlatGeobuf: ad.fgb”): her nesne çizimin nesnesi ya da geometrisiz kayıt, özellikleri öznitelikleri. \
+                      Bütün geometri türleri (yaylı olanlar kesin; çokyüzlü yüzey, TIN ve üçgen okunmaz, söylenir), Z ve M; sütunlar türleriyle alan olur (bütün değerleri gün olan tarih-saat sütunu tarih). Sistem dosyanın EPSG kodundan, yoksa srid'den; projeninkinden başkaysa reproject ile çevrilir, yoksa crs_mismatch. \
+                      Nesneler layer'a, yoksa dosyanın katman adındaki katmana, yoksa sütunları alan olarak taşıyan yeni katmana gider (GeoPackage içe aktarmanın kuralı); kalıcı kimlik dosyanın adı ve nesnenin sırasından. Dizin okunmaz, atlanır; bozuk dosya (sınırların, uzunlukların ya da başvuruların dışı) reddedilir. plan dosyayı okur, hiçbir şey yazmaz."
+                .into(),
+            aliases: vec!["fgbin".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ImportFgb>(),
+            output: schema::<crate::GpkgImported>(),
+            plan: Some(schema::<crate::GpkgImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "GDAL'ın yazdığı parseller".into(),
+                input: json!({ "path": "/veri/parsel.fgb" }),
+                output: None,
+            }],
+        },
         // The atlas of a sheet as a PDF with a page for each object (docs/adr/0534).
         CommandDescriptor {
             id: crate::FILE_EXPORT_ATLAS.into(),
@@ -8706,6 +8760,12 @@ mod tests {
                     }
                     crate::FILE_IMPORT_CSV => {
                         serde_json::from_value::<crate::ImportCsv>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_EXPORT_FGB => {
+                        serde_json::from_value::<crate::ExportFgb>(e.input.clone()).map(|_| ())
+                    }
+                    crate::FILE_IMPORT_FGB => {
+                        serde_json::from_value::<crate::ImportFgb>(e.input.clone()).map(|_| ())
                     }
                     crate::FILE_EXPORT_SLD => {
                         serde_json::from_value::<crate::ExportSld>(e.input.clone()).map(|_| ())

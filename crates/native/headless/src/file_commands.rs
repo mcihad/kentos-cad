@@ -579,6 +579,37 @@ fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Re
     Ok((files, output, warnings))
 }
 
+/// The FlatGeobuf of the layers: the file to write, its bytes, the answer and the warnings (docs/adr/0544).
+type FgbMade = (PathBuf, Vec<u8>, kentos_commands::FgbExported, Vec<CommandWarning>);
+
+fn fgb(doc: &Document, input: &kentos_commands::ExportFgb) -> Result<FgbMade, Refused> {
+    let (path, _) = target(&input.path, input.overwrite)?;
+    let made = kentos_native_application::fgb_table::export(doc, input)
+        .map_err(|(code, message, at)| refuse(&code, message, &at))?;
+    let mut output = made.output;
+    output.path = path.display().to_string();
+    let warnings = if output.lost.is_empty() {
+        Vec::new()
+    } else {
+        vec![CommandWarning {
+            code: codes::EXPORT_LOSSES.into(),
+            message: format!("FlatGeobuf'un tutamadığı: {}.", output.lost.join("; ")),
+            path: Some("layers".into()),
+        }]
+    };
+    Ok((path, made.bytes, output, warnings))
+}
+
+/// The FlatGeobuf written whole, as `file.export.fgb` writes it (docs/adr/0544).
+pub fn export_fgb(
+    doc: &Document,
+    input: &kentos_commands::ExportFgb,
+) -> Result<(kentos_commands::FgbExported, Vec<CommandWarning>), Refused> {
+    let (path, bytes, output, warnings) = fgb(doc, input)?;
+    write(&path, &bytes)?;
+    Ok((output, warnings))
+}
+
 /// The CSV and its `.csvt` and `.prj` written, as `file.export.csv` writes them (docs/adr/0522): the sidecars first,
 /// the CSV last, each whole.
 pub fn export_csv(
@@ -906,6 +937,39 @@ fn run_typed(
             }
         });
     }
+    if command == kentos_commands::FILE_EXPORT_FGB {
+        let typed: kentos_commands::ExportFgb = serde_json::from_value(input).map_err(|e| {
+            format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
+        })?;
+        let (path, bytes, output, warnings) = match fgb(doc, &typed) {
+            Err(refused) => return Ok((CommandResult::Failed { error: *refused }, None)),
+            Ok(made) => made,
+        };
+        let value = serde_json::to_value(&output).unwrap_or(Value::Null);
+        return Ok(match op {
+            CallOp::Validate => (
+                CommandResult::Completed {
+                    output: Value::Null,
+                    warnings: Vec::new(),
+                },
+                None,
+            ),
+            CallOp::Plan => (CommandResult::Completed { output: value, warnings }, None),
+            CallOp::Execute => {
+                if let Err(refused) = write(&path, &bytes) {
+                    return Ok((CommandResult::Failed { error: *refused }, None));
+                }
+                (
+                    CommandResult::Completed { output: value, warnings },
+                    Some(FileEffect {
+                        path: output.path.clone(),
+                        bytes: output.bytes,
+                        sha256: output.sha256.clone(),
+                    }),
+                )
+            }
+        });
+    }
     if command == FILE_EXPORT_SLD {
         let typed: kentos_commands::ExportSld = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
@@ -1049,6 +1113,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_SHP => FILE_EXPORT_SHP_VERSION,
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
+        kentos_commands::FILE_EXPORT_FGB => kentos_commands::FILE_EXPORT_FGB_VERSION,
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
         kentos_commands::FILE_EXPORT_GIS => kentos_commands::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
@@ -1080,6 +1145,11 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         FILE_EXPORT_CSV => serde_json::from_value::<kentos_commands::ExportCsv>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
+        kentos_commands::FILE_EXPORT_FGB => {
+            serde_json::from_value::<kentos_commands::ExportFgb>(input.clone())
+                .map_err(text)
+                .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
+        }
         kentos_commands::FILE_EXPORT_GIS => {
             serde_json::from_value::<kentos_commands::ExportGis>(input.clone())
                 .map_err(text)

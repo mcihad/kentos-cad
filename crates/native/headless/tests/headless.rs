@@ -1963,3 +1963,80 @@ fn csv_tables_go_out_and_come_back() {
     assert_eq!(again["error"]["code"], "file_exists", "{again}");
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+#[test]
+fn flatgeobufs_go_out_and_come_back() {
+    // docs/adr/0544: the GeoPackage's layers written as FlatGeobufs (with the spatial index when every object has a
+    // position) and read back into a new drawing: the same objects, arcs exact; the whole drawing in one file with
+    // its `katman` column. With KENTOS_WRITE_FGB=1 the files go to fixtures/fgb/v1/out for
+    // scripts/fixtures/fgb_exchange_cases.py, which reads them with OGR.
+    let src = format!(
+        "{}/../../../fixtures/geopackage/v1/qgis.gpkg",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let mut s = new_drawing();
+    let took = s
+        .call(json!({ "command": "file.import.gpkg", "input": { "path": src } }))
+        .expect("answers");
+    assert_eq!(took["status"], "completed", "{took}");
+    let id = |name: &str| -> String {
+        took["output"]["layers"]
+            .as_array()
+            .and_then(|ls| ls.iter().find(|l| l["name"] == name))
+            .and_then(|l| l["id"].as_str())
+            .unwrap_or_else(|| panic!("{name}"))
+            .to_owned()
+    };
+    let dir = std::env::temp_dir().join(format!("kentos-fgb-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let mut written = Vec::new();
+    for (name, layers) in [
+        ("parsel", vec![id("parsel")]),
+        ("yol", vec![id("yol")]),
+        ("nokta", vec![id("nokta")]),
+        ("egri", vec![id("egri")]),
+        ("egri_yol", vec![id("egri_yol")]),
+        ("hepsi", Vec::new()),
+    ] {
+        let path = dir.join(format!("kentos-{name}.fgb"));
+        let planned = s
+            .call(json!({ "command": "file.export.fgb", "op": "plan",
+                "input": { "path": path.display().to_string(), "layers": layers } }))
+            .expect("answers");
+        assert_eq!(planned["status"], "completed", "{planned}");
+        assert!(!path.exists(), "plan writes nothing");
+        let out = s
+            .call(json!({ "command": "file.export.fgb",
+                "input": { "path": path.display().to_string(), "layers": layers } }))
+            .expect("answers");
+        assert_eq!(out["status"], "completed", "{out}");
+        assert_eq!(out["output"], planned["output"], "plan says what execute writes");
+        let mut back = new_drawing();
+        let got = back
+            .call(json!({ "command": "file.import.fgb", "input": { "path": path.display().to_string() } }))
+            .expect("answers");
+        assert_eq!(got["status"], "completed", "{got}");
+        assert_eq!(got["output"]["objects"], out["output"]["features"], "{name}: {got}");
+        written.push((name, path));
+    }
+    if std::env::var_os("KENTOS_WRITE_FGB").is_some() {
+        let out_dir = format!("{}/../../../fixtures/fgb/v1/out", env!("CARGO_MANIFEST_DIR"));
+        std::fs::create_dir_all(&out_dir).expect("a folder");
+        for (name, path) in &written {
+            std::fs::copy(path, format!("{out_dir}/kentos-{name}.fgb")).expect("kept");
+        }
+    }
+    let again = s
+        .call(json!({ "command": "file.export.fgb",
+            "input": { "path": written[0].1.display().to_string(), "layers": [id("parsel")] } }))
+        .expect("answers");
+    assert_eq!(again["error"]["code"], "file_exists", "{again}");
+    let broken = dir.join("bozuk.fgb");
+    std::fs::write(&broken, b"fgb\x03fgb\x00\xff\xff\xff\xff").expect("written");
+    let refused = s
+        .call(json!({ "command": "file.import.fgb", "input": { "path": broken.display().to_string() } }))
+        .expect("answers");
+    assert_eq!(refused["error"]["code"], "import_unreadable", "{refused}");
+    let _ = std::fs::remove_dir_all(&dir);
+}

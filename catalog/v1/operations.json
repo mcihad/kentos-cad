@@ -1909,6 +1909,20 @@
       ],
       "note": "raster.cog aracı; başsız sunucunun dosyalarıyla Python ve MCP'den de (ADR 0515)."
     },
+    "file.export.fgb": {
+      "level": "semantic",
+      "via": [
+        "file.export.fgb"
+      ],
+      "note": "Pencerede nesneler, sütunlar ve türleri, geometri türü, dizin ve yazılmayanlar önizlenir; Dışa aktar… komutla dosyayı bütün yazar (ADR 0544)."
+    },
+    "file.import.fgb": {
+      "level": "semantic",
+      "via": [
+        "file.import.fgb"
+      ],
+      "note": "Pencere komutun planını gösterir, İçe aktar komutla tek adımda alır (ADR 0544)."
+    },
     "file.export.csv": {
       "level": "semantic",
       "via": [

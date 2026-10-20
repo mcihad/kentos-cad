@@ -25,6 +25,9 @@ pub(crate) mod coord_export;
 mod csv_exchange;
 #[cfg(test)]
 mod csv_tests;
+mod fgb_exchange;
+#[cfg(test)]
+mod fgb_tests;
 pub(crate) mod coord_import;
 #[cfg(test)]
 mod dimension_tests;
@@ -134,6 +137,9 @@ pub enum Window {
     AtlasExport(Box<atlas_export::State>),
     CsvExport(csv_exchange::ExportState),
     CsvImport(csv_exchange::ImportState),
+    /// FlatGeobuf dışa aktar and içe aktar (docs/adr/0544).
+    FgbExport(fgb_exchange::ExportState),
+    FgbImport(fgb_exchange::ImportState),
     /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
     PdfImport(Box<pdf_import::State>),
     /// GIS türevi dışa aktar and GIS türevini denetle (docs/adr/0530).
@@ -164,6 +170,7 @@ pub enum Event {
     Package(package::Event),
     ShpExport(shp_export::Event),
     Csv(csv_exchange::Event),
+    Fgb(fgb_exchange::Event),
     Atlas(atlas_export::Event),
     GisExport(gis_export::Event),
     GisCheck(gis_check::Event),
@@ -174,7 +181,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 27] = [
+pub const COMMANDS: [&str; 29] = [
     "file.export.atlas",
     "file.import.dxf",
     "file.import.ncz",
@@ -197,6 +204,8 @@ pub const COMMANDS: [&str; 27] = [
     "file.export.shp",
     "file.export.csv",
     "file.import.csv",
+    "file.export.fgb",
+    "file.import.fgb",
     "file.export.gis",
     "gis.derivation",
     "source.link",
@@ -243,6 +252,8 @@ impl App {
             "file.export.shp" => self.shp_export_open(),
             "file.export.csv" => self.csv_export_open(),
             "file.import.csv" => self.csv_import_pick(),
+            "file.export.fgb" => self.fgb_export_open(),
+            "file.import.fgb" => self.fgb_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
             "file.export.gis" => self.gis_export_open(),
             "gis.derivation" => self.gis_check_open(),
@@ -431,6 +442,7 @@ impl App {
             Event::Package(e) => self.package_event(e),
             Event::ShpExport(e) => self.shp_export_event(e),
             Event::Csv(e) => self.csv_event(e),
+            Event::Fgb(e) => self.fgb_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
@@ -476,6 +488,8 @@ impl App {
             Some(Window::CsvExport(s)) => self.csv_export_view(s),
             Some(Window::AtlasExport(s)) => self.atlas_export_view(s),
             Some(Window::CsvImport(s)) => self.csv_import_view(s),
+            Some(Window::FgbExport(s)) => self.fgb_export_view(s),
+            Some(Window::FgbImport(s)) => self.fgb_import_view(s),
             Some(Window::GisExport(s)) => self.gis_export_view(s),
             Some(Window::GisCheck(s)) => self.gis_check_view(s),
             Some(Window::PdfImport(s)) => self.pdf_import_view(s),
