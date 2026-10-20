@@ -2916,8 +2916,10 @@ const ENTRIES: &[Entry] = &[
             &["source_readonly", "geometry_mismatch", "file_unwritable", "invalid_extent", "derived_dataset", "crs_mismatch"],
             // docs/adr/0538: the base, the sides taken.
             &["no_source_base", "not_a_conflict", "invalid_input", "unresolved_conflicts", "source_changed"],
+            // docs/adr/0553: layers of another file, a group split.
+            &["transaction_split", "group_split"],
         ],
-        warnings: &["export_losses"],
+        warnings: &["export_losses", "field_base_missing"],
         targets: none,
     },
     Entry {

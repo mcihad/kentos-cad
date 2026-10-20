@@ -439,7 +439,19 @@ impl App {
                     doc.model.mark_saved(revision);
                 }
             }
-            Err(failure) => match live.sync.failed(&failure) {
+            Err(failure) => match {
+                // Objects the server and this device changed in different fields are put together first.
+                let (after, merged) = live.sync.failed_in(&mut doc.model, &failure);
+                if merged > 0 {
+                    say.push((
+                        false,
+                        format!(
+                            "{merged} nesneyi hem burada hem başka biri değiştirdi, ama farklı alanlarını: ikisi de korundu, birleşmiş hâli yeniden gönderiliyor."
+                        ),
+                    ));
+                }
+                after
+            } {
                 After::Retry(wait) => live.retry_at = Some(Instant::now() + wait),
                 After::Stop => {
                     if live.sync.state() != SaveState::Revoked {

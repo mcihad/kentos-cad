@@ -239,6 +239,8 @@ pub(super) struct Features {
     /// Schema 90: a layer time's system time attributes (docs/adr/0537).
     pub(super) recorded_time: bool,
     pub(super) source_bases: bool,
+    /// Schema 92: a source base's field records (docs/adr/0553 §1).
+    pub(super) source_field_bases: bool,
     /// Schema 85: an insert's clipping and a PDF underlay's page and look (docs/adr/0351).
     pub(super) clipping: bool,
     /// Schema 86: the settings' heights and coordinate epoch (docs/adr/0519).
@@ -397,6 +399,7 @@ impl Features {
             join_views: schema >= crate::SCHEMA_WITH_JOIN_VIEWS,
             recorded_time: schema >= crate::SCHEMA_WITH_RECORDED_TIME,
             source_bases: schema >= crate::SCHEMA_WITH_SOURCE_BASES,
+            source_field_bases: schema >= crate::SCHEMA_WITH_SOURCE_FIELD_BASES,
             clipping: schema >= crate::SCHEMA_WITH_CLIPPING,
             heights: schema >= crate::SCHEMA_WITH_HEIGHTS,
             network_turns: schema >= crate::SCHEMA_WITH_NETWORK_TURNS,

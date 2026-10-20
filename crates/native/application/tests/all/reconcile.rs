@@ -139,3 +139,121 @@ fn a_file_that_cannot_be_written_takes_nothing_into_the_layer() {
     let _ = std::fs::set_permissions(&tmp, perms);
     let _ = std::fs::remove_file(&tmp);
 }
+
+/// The lasting id of the object of `layer` whose attribute `name` is `value`.
+fn uid_by(doc: &Document, layer: &str, name: &str, value: &str) -> String {
+    doc.by_layer_with_uids(layer)
+        .find(|(_, e)| e.base().attrs.get(name).map(String::as_str) == Some(value))
+        .map(|(u, _)| u.to_string())
+        .unwrap_or_else(|| panic!("{layer}.{name} = {value}: no object"))
+}
+
+/// Two layers of one file (parcels side by side and the buildings on them), the project's relation, both layers
+/// edited and the file changed in QGIS; reconciled together in one call. With KENTOS_WRITE_GPKG the written copy is kept
+/// as fixtures/geopackage/v1/kentos-uzlasti-komsu.gpkg, which scripts/fixtures/reconcile_cases.py --written reads.
+#[test]
+fn two_layers_with_groups_are_reconciled_in_one_transaction() {
+    let tmp = std::env::temp_dir().join(format!("kentos-uzlas-komsu-{}.gpkg", std::process::id()));
+    std::fs::copy(dir().join("uzlas-komsu.gpkg"), &tmp).expect("copied");
+    let mut d = doc();
+    let path = tmp.display().to_string();
+    for table in ["komsu", "bina"] {
+        ok(&run(
+            &mut d,
+            "cad.sources.edit",
+            CallOp::Execute,
+            json!({ "edit": { "kind": "link", "path": path, "table": table } }),
+        ));
+    }
+    ok(&run(
+        &mut d,
+        "cad.relations.edit",
+        CallOp::Execute,
+        json!({ "edit": { "kind": "create", "relation": { "id": "bina-komsu", "name": "Parselin binaları",
+            "parent": "import-komsu", "child": "import-bina", "field": "komsu" } } }),
+    ));
+    let (k, b) = ("import-komsu", "import-bina");
+    let k_uid = |d: &Document, n: u32| uid_by(d, k, "ad", &format!("K{n}"));
+    let grip = |d: &mut Document, n: u32, pts: Value| {
+        let u = k_uid(d, n);
+        ok(&run(
+            d,
+            "cad.entities.edit",
+            CallOp::Execute,
+            json!({ "operation": "grip", "changes": [{ "kind": "update", "uid": u,
+                "geometry": { "kind": "polygon", "pts": pts } }] }),
+        ));
+    };
+    let (x0, y0) = (487000.0, 4420000.0);
+    let p = |x: f64, y: f64| json!({ "x": x0 + x, "y": y0 + y });
+    let u1 = k_uid(&d, 1);
+    ok(&run(
+        &mut d,
+        "cad.entities.set",
+        CallOp::Execute,
+        json!({ "uids": [u1], "attrs": { "ad": "Z1" }, "operation": "attributes" }),
+    ));
+    grip(&mut d, 2, json!([p(20.0, 0.0), p(40.0, 0.0), p(42.0, 22.0), p(20.0, 20.0)]));
+    grip(&mut d, 3, json!([p(40.0, 0.0), p(60.0, 0.0), p(60.0, 20.0), p(42.0, 22.0)]));
+    let u4 = k_uid(&d, 4);
+    ok(&run(&mut d, "cad.entities.delete", CallOp::Execute, json!({ "uids": [u4] })));
+    for (n, kat) in [(2, "5"), (3, "7")] {
+        let parent = uid_by(&d, k, "ad", &format!("K{n}"));
+        let u = uid_by(&d, b, "komsu", &parent);
+        ok(&run(
+            &mut d,
+            "cad.entities.set",
+            CallOp::Execute,
+            json!({ "uids": [u], "attrs": { "kat": kat }, "operation": "attributes" }),
+        ));
+    }
+    std::fs::copy(dir().join("uzlas-komsu-qgis.gpkg"), &tmp).expect("copied");
+
+    let input = json!({ "layer": k, "with": [b], "rest": "layer" });
+    let plan = ok(&run(&mut d, "cad.sources.reconcile", CallOp::Plan, input.clone())).clone();
+    assert_eq!(plan["groups"].as_array().map(Vec::len), Some(2), "{plan}");
+    assert_eq!(plan["layers"].as_array().map(Vec::len), Some(2), "{plan}");
+    let before = std::fs::read(&tmp).expect("read");
+    let done = ok(&run(&mut d, "cad.sources.reconcile", CallOp::Execute, input)).clone();
+    assert_eq!(done["toTable"], plan["toTable"], "{done}");
+    assert_ne!(std::fs::read(&tmp).expect("read"), before, "written");
+    // One transaction wrote both tables: the two layers match the file now.
+    for layer in [k, b] {
+        let again = ok(&run(&mut d, "cad.sources.reconcile", CallOp::Plan, json!({ "layer": layer }))).clone();
+        assert_eq!(again["toTable"], json!({ "added": 0, "modified": 0, "removed": 0 }), "{again}");
+        assert_eq!(again["fromTable"], json!({ "added": 0, "modified": 0, "removed": 0 }), "{again}");
+    }
+    if std::env::var_os("KENTOS_WRITE_GPKG").is_some() {
+        std::fs::copy(&tmp, dir().join("kentos-uzlasti-komsu.gpkg")).expect("copied");
+    }
+    let _ = std::fs::remove_file(&tmp);
+}
+
+#[test]
+fn a_base_without_field_records_conflicts_as_a_whole_and_says_so() {
+    let (mut d, tmp, layer) = bound("alansiz");
+    // A base taken before the field records (or too big for them): the objects both sides changed cannot be merged.
+    let mut settings = d.settings().clone();
+    for b in &mut settings.source_bases {
+        b.fields = None;
+    }
+    d.set_settings(settings);
+    let answer = run(&mut d, "cad.sources.reconcile", CallOp::Plan, json!({ "layer": layer }));
+    let out = ok(&answer);
+    // Parcels 4 and 5 (different fields, 5 would merge), 6 and 7 (a removal): four conflicts, nothing merged.
+    assert_eq!(out["conflicts"].as_array().map(Vec::len), Some(4), "{out}");
+    assert!(out.get("merged").is_none(), "{out}");
+    let warnings = answer["warnings"].as_array().expect("warnings");
+    assert!(
+        warnings.iter().any(|w| w["code"] == "field_base_missing"),
+        "{answer}"
+    );
+    // With the records it is a merge.
+    let (mut d, tmp2, layer) = bound("alanli");
+    let answer = run(&mut d, "cad.sources.reconcile", CallOp::Plan, json!({ "layer": layer }));
+    let out = ok(&answer);
+    assert_eq!(out["conflicts"].as_array().map(Vec::len), Some(3), "{out}");
+    assert_eq!(out["merged"].as_array().map(Vec::len), Some(1), "{out}");
+    let _ = std::fs::remove_file(&tmp);
+    let _ = std::fs::remove_file(&tmp2);
+}

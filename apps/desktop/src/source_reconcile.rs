@@ -2,19 +2,22 @@
 //! since they last matched (a QGIS user's edit beside the drawing's), put together object by object.
 //!
 //! The window shows `cad.sources.reconcile`'s plan: what comes into the layer from the table, what goes to the table
-//! from the layer, what both changed alike, and each conflict with the attributes that differ (both sides' values) and
-//! whether the geometry does. Each conflict takes a side, Benimki (the layer's) or Tablodaki (the table's), one by one
-//! or all at once; a row shows its object in the drawing. Uzlaştır runs the same command with the sides taken: the
-//! table's side into the layer and the layer's to the table, one undo step and one transaction. Kaynağa yaz refused
-//! because the file changed opens it.
+//! from the layer, what both changed alike, the objects both changed that merged field by field (docs/adr/0553 §1: which
+//! attributes came from which side) and each conflict with the attributes both changed differently (both sides' values)
+//! and whether the geometry did. Objects whose changes belong together (a shared vertex both sides moved, a parent one
+//! side removed and a child the other added) are a group: their rows say so, and a side taken for one is taken for all.
+//! Each conflict takes a side, Benimki (the layer's) or Tablodaki (the table's), one by one or all at once; a row shows
+//! its object in the drawing. The other layers bound to the same file go in the same call. Uzlaştır runs the same command
+//! with the sides taken: the table's side into the layers and the layers' to the table, one undo step and one
+//! transaction. Kaynağa yaz refused because the file changed opens it.
 
 use std::collections::BTreeMap;
 
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
 use kentos_commands::{
-    CommandResult, ConflictKind, ReconcileConflict, ReconcileSide, ReconcileTake,
-    SourcesReconcile, SourcesReconciled,
+    CommandResult, ConflictKind, GroupReason, ReconcileConflict, ReconcileSide, ReconcileTake,
+    SourceKind, SourcesReconcile, SourcesReconciled,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
@@ -50,6 +53,8 @@ impl std::fmt::Display for Side {
 #[derive(Debug, Clone)]
 pub struct Window {
     layer: String,
+    /// The other layers bound to the same file, reconciled with it.
+    with: Vec<String>,
     plan: SourcesReconciled,
     sides: BTreeMap<String, ReconcileSide>,
     /// Opened because Kaynağa yaz was refused: the file changed.
@@ -73,6 +78,22 @@ impl Window {
     #[cfg(test)]
     pub(crate) fn first_conflict(&self) -> Option<String> {
         self.plan.conflicts.first().map(|c| c.object.clone())
+    }
+
+    /// The conflicts' objects with the group each belongs to.
+    #[cfg(test)]
+    pub(crate) fn plan_conflicts(&self) -> Vec<(String, Option<String>)> {
+        self.plan
+            .conflicts
+            .iter()
+            .map(|c| (c.object.clone(), c.group.clone()))
+            .collect()
+    }
+
+    /// How many conflicts have a side.
+    #[cfg(test)]
+    pub(crate) fn sides_taken(&self) -> usize {
+        self.sides.len()
     }
 }
 
@@ -103,11 +124,50 @@ fn kind_words(k: ConflictKind) -> &'static str {
         ConflictKind::Changed => "İki yanda da değişti",
         ConflictKind::RemovedInLayer => "Katmanda silindi, tabloda değişti",
         ConflictKind::RemovedInTable => "Tabloda silindi, katmanda değişti",
+        ConflictKind::Related => "Birlikte değişen grubun üyesi",
     }
+}
+
+/// Why a group's objects go together, in words.
+fn reason_words(reasons: &[GroupReason]) -> String {
+    reasons
+        .iter()
+        .map(|r| match r {
+            GroupReason::SharedVertex => "ortak köşeyi iki yan da taşıdı",
+            GroupReason::Relation => "silinen üst kayıt, eklenen ya da değişen alt kayıt",
+        })
+        .collect::<Vec<_>>()
+        .join(" · ")
+}
+
+/// What a merge took from each side, in a line: “katmandan: parsel_no · tablodan: ada · geometri: tablonun”.
+fn merge_words(m: &kentos_commands::ReconcileMerge) -> String {
+    let mut parts = Vec::new();
+    if !m.from_layer.is_empty() {
+        parts.push(format!("katmandan: {}", m.from_layer.join(", ")));
+    }
+    if !m.from_table.is_empty() {
+        parts.push(format!("tablodan: {}", m.from_table.join(", ")));
+    }
+    match m.geometry {
+        Some(ReconcileSide::Layer) => parts.push("geometri: katmanın".to_owned()),
+        Some(ReconcileSide::Table) => parts.push("geometri: tablonun".to_owned()),
+        None => {}
+    }
+    parts.join(" · ")
 }
 
 /// A conflict's differences in a line: “malik: Veli ↔ Zehra · geometri farklı”.
 fn differences(c: &ReconcileConflict) -> String {
+    // A group's member that only one side holds is said so, not as a list of every value.
+    if c.kind == ConflictKind::Related && !c.fields.is_empty() {
+        if c.fields.iter().all(|f| f.layer.is_none()) {
+            return "yalnız tabloda var".to_owned();
+        }
+        if c.fields.iter().all(|f| f.table.is_none()) {
+            return "yalnız katmanda var".to_owned();
+        }
+    }
     let mut parts: Vec<String> = c
         .fields
         .iter()
@@ -120,7 +180,7 @@ fn differences(c: &ReconcileConflict) -> String {
             )
         })
         .collect();
-    if c.geometry && c.kind == ConflictKind::Changed {
+    if c.geometry && matches!(c.kind, ConflictKind::Changed | ConflictKind::Related) {
         parts.push("geometri farklı".to_owned());
     }
     parts.join(" · ")
@@ -131,17 +191,49 @@ impl App {
     fn reconcile_plan(
         &self,
         layer: &str,
+        with: &[String],
         sides: &BTreeMap<String, ReconcileSide>,
     ) -> Option<CommandResult<SourcesReconciled>> {
         let doc = self.document.as_ref()?;
         let mut model = doc.model.clone();
-        Some(reconcile::plan(&ExecutionContext::new(&mut model), &input(layer, sides)))
+        Some(reconcile::plan(
+            &ExecutionContext::new(&mut model),
+            &input(layer, with, sides),
+        ))
+    }
+
+    /// The other layers bound to the file `layer` is a table of (a GeoPackage's: they are written in one transaction).
+    fn reconcile_siblings(&self, layer: &str) -> Vec<String> {
+        let Some(doc) = self.document.as_ref() else {
+            return Vec::new();
+        };
+        let sources = &doc.model.settings().sources;
+        let Some(own) = sources.iter().find(|s| s.layer == layer) else {
+            return Vec::new();
+        };
+        if own.kind != SourceKind::Geopackage {
+            return Vec::new();
+        }
+        sources
+            .iter()
+            .filter(|s| s.layer != layer && s.kind == SourceKind::Geopackage && s.path == own.path)
+            .filter(|s| !doc.model.layers().is_locked(&s.layer))
+            .map(|s| s.layer.clone())
+            .collect()
     }
 
     /// Kaynakla uzlaştır on a bound layer: the window with the plan, or what refused it.
     pub(crate) fn open_reconcile(&mut self, layer: &str, refused: bool) {
         let sides = BTreeMap::new();
-        let Some(planned) = self.reconcile_plan(layer, &sides) else {
+        // The file's other bound layers go with it when they can (each needs its own base).
+        let siblings = self.reconcile_siblings(layer);
+        let mut with = siblings;
+        let mut planned = self.reconcile_plan(layer, &with, &sides);
+        if !with.is_empty() && !matches!(planned, Some(CommandResult::Completed { .. })) {
+            with = Vec::new();
+            planned = self.reconcile_plan(layer, &with, &sides);
+        }
+        let Some(planned) = planned else {
             self.output("Açık çizim yok.");
             return;
         };
@@ -149,6 +241,7 @@ impl App {
             CommandResult::Completed { output, .. } => {
                 self.reconcile = Some(Window {
                     layer: layer.to_owned(),
+                    with,
                     plan: output,
                     sides,
                     refused,
@@ -166,7 +259,30 @@ impl App {
         match event {
             Event::Side(object, side) => {
                 if let Some(w) = self.reconcile.as_mut() {
-                    w.sides.insert(object, side);
+                    // A group is taken whole: the side goes to every member.
+                    let group = w
+                        .plan
+                        .conflicts
+                        .iter()
+                        .find(|c| c.object == object)
+                        .and_then(|c| c.group.clone());
+                    match group {
+                        Some(g) => {
+                            let members: Vec<String> = w
+                                .plan
+                                .conflicts
+                                .iter()
+                                .filter(|c| c.group.as_ref() == Some(&g))
+                                .map(|c| c.object.clone())
+                                .collect();
+                            for m in members {
+                                w.sides.insert(m, side);
+                            }
+                        }
+                        None => {
+                            w.sides.insert(object, side);
+                        }
+                    }
                 }
                 self.reconcile_replan();
             }
@@ -202,7 +318,7 @@ impl App {
         let Some(w) = self.reconcile.clone() else {
             return;
         };
-        match self.reconcile_plan(&w.layer, &w.sides) {
+        match self.reconcile_plan(&w.layer, &w.with, &w.sides) {
             Some(CommandResult::Completed { output, .. }) => {
                 if let Some(w) = self.reconcile.as_mut() {
                     w.plan = output;
@@ -219,7 +335,8 @@ impl App {
 
     /// How a conflict's object is named in its row: its first attributes in the layer's field order (the table's for
     /// one the layer removed), else the start of its lasting id.
-    fn reconcile_name(&self, layer: &str, c: &ReconcileConflict) -> String {
+    fn reconcile_name(&self, default_layer: &str, c: &ReconcileConflict) -> String {
+        let layer = c.layer.as_deref().unwrap_or(default_layer);
         let short: String = c.object.chars().take(8).collect();
         let Some(doc) = self.document.as_ref() else {
             return short;
@@ -261,7 +378,7 @@ impl App {
         };
         let answer = reconcile::execute(
             &mut ExecutionContext::new(&mut doc.model),
-            input(&w.layer, &w.sides),
+            input(&w.layer, &w.with, &w.sides),
         );
         match answer {
             CommandResult::Completed { output, warnings } => {
@@ -322,6 +439,33 @@ impl App {
                 format!("İki yanın aynı biçimde değiştirdiği {} nesne uyuşuyor.", p.agreed),
             ));
         }
+        if !p.merged.is_empty() {
+            lines.push(words::text_line(
+                Kind::Ok,
+                format!(
+                    "İki yanın farklı alanlarını değiştirdiği {} nesne alan alan birleşir.",
+                    p.merged.len()
+                ),
+            ));
+        }
+        if !w.with.is_empty() {
+            lines.push(words::text_line(
+                Kind::Info,
+                format!(
+                    "Aynı dosyanın öteki katmanları da birlikte uzlaştırılır: {}.",
+                    w.with.join(", ")
+                ),
+            ));
+        }
+        if !p.groups.is_empty() {
+            lines.push(words::text_line(
+                Kind::Info,
+                format!(
+                    "{} grup birlikte çözülür: bir üyeye seçilen yan gruptakilerin hepsine geçer.",
+                    p.groups.len()
+                ),
+            ));
+        }
         lines.push(if p.conflicts.is_empty() {
             words::text_line(Kind::Ok, "Çatışma yok: Uzlaştır iki yanı birleştirir.")
         } else if unresolved > 0 {
@@ -339,6 +483,33 @@ impl App {
             )
         });
         let mut body = Column::new().spacing(12).push(words::summary(lines));
+        if !p.merged.is_empty() {
+            // What each merged object took from which side: the first few, the rest counted.
+            let mut merged = Column::new().spacing(2);
+            for m in p.merged.iter().take(6) {
+                let c = ReconcileConflict {
+                    object: m.object.clone(),
+                    layer: m.layer.clone(),
+                    kind: ConflictKind::Changed,
+                    group: None,
+                    geometry: false,
+                    fields: Vec::new(),
+                    side: None,
+                };
+                merged = merged.push(
+                    label::caption(format!("{} — {}", self.reconcile_name(&w.layer, &c), merge_words(m)))
+                        .style(|theme: &iced::Theme| iced::widget::text::Style {
+                            color: Some(Tokens::of(theme).muted),
+                        }),
+                );
+            }
+            if p.merged.len() > 6 {
+                merged = merged.push(label::caption(format!("… {} nesne daha", p.merged.len() - 6)));
+            }
+            body = body
+                .push(label::caption(format!("Birleştirilenler ({})", p.merged.len())))
+                .push(merged);
+        }
         if !p.conflicts.is_empty() {
             let mut list = Column::new().spacing(0).padding([4, 0]);
             for c in &p.conflicts {
@@ -355,6 +526,18 @@ impl App {
                     self.reconcile_name(&w.layer, c),
                     kind_words(c.kind)
                 )));
+                if let Some(g) = p.groups.iter().find(|g| Some(&g.id) == c.group.as_ref()) {
+                    words_col = words_col.push(
+                        label::caption(format!(
+                            "Grup ({} nesne): {}",
+                            g.objects.len(),
+                            reason_words(&g.reasons)
+                        ))
+                        .style(|theme: &iced::Theme| iced::widget::text::Style {
+                            color: Some(Tokens::of(theme).muted),
+                        }),
+                    );
+                }
                 if !detail.is_empty() {
                     words_col = words_col.push(label::caption(detail).style(
                         |theme: &iced::Theme| iced::widget::text::Style {
@@ -415,9 +598,10 @@ impl App {
 }
 
 /// The command's input: the sides taken, one by one.
-fn input(layer: &str, sides: &BTreeMap<String, ReconcileSide>) -> SourcesReconcile {
+fn input(layer: &str, with: &[String], sides: &BTreeMap<String, ReconcileSide>) -> SourcesReconcile {
     SourcesReconcile {
         layer: layer.to_owned(),
+        with: with.to_vec(),
         take: sides
             .iter()
             .map(|(object, side)| ReconcileTake {

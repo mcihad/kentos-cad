@@ -448,6 +448,12 @@ impl App {
                 taken.changed
             ));
         }
+        if taken.merged > 0 {
+            self.output(format!(
+                "{} nesneyi hem burada hem başka biri değiştirdi, ama farklı alanlarını: ikisi de korundu, birleşmiş hâli sunucuya gönderilecek.",
+                taken.merged
+            ));
+        }
         if taken.conflicts > 0 {
             self.warn(format!(
                 "Başka biri {} nesneyi değiştirdi ya da sildi; burada da değiştikleri için kayıt çakışması. Durum çubuğundaki Çakışma'ya tıklayıp seçin.",

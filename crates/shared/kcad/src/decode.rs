@@ -654,6 +654,14 @@ fn settings(r: &mut Reader<'_>, has: Features) -> Result<ProjectSettings, KcadEr
                         "boş liste yazılmaz; taban yoksa alan hiç yazılmaz",
                     ));
                 }
+                // Schema 92 (docs/adr/0553 §1): the field records are unknown before it.
+                if !has.source_field_bases && list.iter().any(|b| b.fields.is_some()) {
+                    return Err(r.fail_at(
+                        Code::UnknownField,
+                        at,
+                        "kaynak tabanının alan kayıtları şema 92'den önce yok",
+                    ));
+                }
                 source_bases = list;
             }
             // Schema 72 (docs/adr/0405 §1): the project's relations, read whole and checked.

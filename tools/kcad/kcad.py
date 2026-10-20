@@ -325,6 +325,11 @@ SCHEMA_WITH_RECORDED_TIME = 90
 # Schema 91: schema 90 and the settings' `sourceBases`, each bound layer's objects' hashes when the layer and its table
 # last matched (docs/adr/0538 §1).
 SCHEMA_WITH_SOURCE_BASES = 91
+# Schema 92: schema 91 and a source base's `fields`, what each object held besides its hashes (docs/adr/0553 §1).
+SCHEMA_WITH_SOURCE_FIELD_BASES = 92
+# The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
+MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
+MAX_BASE_VERTICES = 128
 # A base's rows: 16 bytes of lasting id, the layer's 8-byte hash and the table's, at most this many.
 BASE_ROW = 32
 MAX_BASE_ROWS = 200_000
@@ -528,7 +533,43 @@ TEXT_ALIGNS = ("baselineCenter", "baselineRight", "bottomLeft", "bottomCenter", 
 # The widest a text's letters may be drawn, times their width.
 MAX_WIDTH_FACTOR = 100.0
 MAX_BLOCK_DEPTH = 16
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES)
+def field_records_ok(raw, count):
+    """Whether `raw` is `count` whole field records (docs/adr/0553 §1): two 8-byte shape hashes, a flag byte (1:
+    attributes, 2: vertices), a 2-byte attribute count and that many (4-byte name hash, 8-byte value hash) in strictly
+    rising name hash order, a 2-byte vertex count (at most 128) and that many 4-byte hashes in strictly rising order;
+    what a flag does not name is empty."""
+    at = 0
+
+    def take(n):
+        nonlocal at
+        if at + n > len(raw):
+            raise ValueError
+        part = raw[at:at + n]
+        at += n
+        return part
+
+    try:
+        for _ in range(count):
+            take(16)
+            flags = take(1)[0]
+            if flags & ~3:
+                return False
+            na = int.from_bytes(take(2), "big")
+            names = [int.from_bytes(take(12)[:4], "big") for _ in range(na)]
+            nv = int.from_bytes(take(2), "big")
+            if nv > MAX_BASE_VERTICES:
+                return False
+            vertices = [int.from_bytes(take(4), "big") for _ in range(nv)]
+            if any(a >= b for a, b in zip(names, names[1:])) or any(a >= b for a, b in zip(vertices, vertices[1:])):
+                return False
+            if (not flags & 1 and na) or (not flags & 2 and nv):
+                return False
+    except ValueError:
+        return False
+    return at == len(raw)
+
+
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -2765,6 +2806,7 @@ class _Schema:
         self.join_views = version >= SCHEMA_WITH_JOIN_VIEWS
         self.recorded_time = version >= SCHEMA_WITH_RECORDED_TIME
         self.source_bases = version >= SCHEMA_WITH_SOURCE_BASES
+        self.source_field_bases = version >= SCHEMA_WITH_SOURCE_FIELD_BASES
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4703,11 +4745,33 @@ class _Schema:
                 self.fail("bad_value", "satırlar kalıcı kimliklerin artan sırasında değil")
             return t
 
+        def field_text(x):
+            if not self.source_field_bases:
+                self.fail("unknown_field", "kaynak tabanının alan kayıtları şema 92'den önce yok")
+            t = self.text(x)
+            try:
+                raw = base64.b64decode(t, validate=True)
+            except (binascii.Error, ValueError):
+                self.fail("bad_value", "alan kayıtları base64 değil")
+            if base64.b64encode(raw).decode() != t:
+                self.fail("bad_value", "alan kayıtları yazıcının base64'ünde değil")
+            if len(raw) > MAX_FIELD_BASE_BYTES:
+                self.fail("bad_value", f"alan kayıtları {MAX_FIELD_BASE_BYTES} bayttan çok")
+            return t
+
         base = self.fields({"source": (self.text, True), "revision": (hex64, True), "digest": (hex64, True),
-                            "rows": (rows, True)})
+                            "rows": (rows, True), "fields": (field_text, False)})
         lst = self.array(base)(v)
         if not lst:
             self.fail("bad_value", "boş liste yazılmaz")
+        # The field records: one a row, whole, their hashes in rising order (docs/adr/0553 §1).
+        for i, b in enumerate(lst):
+            if "fields" not in b:
+                continue
+            count = len(base64.b64decode(b["rows"])) // BASE_ROW
+            if not field_records_ok(base64.b64decode(b["fields"]), count):
+                self.path.extend([str(i), "fields"])
+                self.fail("bad_value", "alan kayıtları satır başına bir bütün kayıt, artan özetlerle olmalı")
         return lst
 
     def sources_(self, v):

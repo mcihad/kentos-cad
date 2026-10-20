@@ -494,6 +494,32 @@ impl ProjectSync {
             .collect()
     }
 
+    /// The object with the server's copy `theirs` and the changes here put together, when only unsent changes here
+    /// and the server's touch different fields (docs/adr/0553 §4): the merge against the copy this device knew. None
+    /// when nothing is unsent, a command with the object is on its way, the object is new here, or a field clashes.
+    pub(super) fn merged_with(
+        &self,
+        doc: &Document,
+        id: Uuid,
+        theirs: &kentos_contracts::FeatureRecord,
+    ) -> Option<Entity> {
+        if self
+            .inflight
+            .as_ref()
+            .is_some_and(|f| f.planned.iter().any(|p| p.id() == id))
+        {
+            return None;
+        }
+        let mine = current(doc, id)?;
+        let base = self.known.get(&id)?;
+        if same(mine, &base.entity) {
+            return None;
+        }
+        kentos_contracts::merge_entities(&base.entity, mine, &theirs.entity)
+            .ok()
+            .map(|m| m.entity)
+    }
+
     /// Whether the object has changes here the server does not have: not sent
     /// yet, or in the command on its way.
     pub(super) fn busy_locally(&self, doc: &Document, id: Uuid) -> bool {
@@ -684,15 +710,91 @@ impl ProjectSync {
 
     /// The command on its way failed: what to do now.
     pub fn failed(&mut self, failure: &ApiFailure) -> After {
+        self.failed_except(failure, &HashSet::new())
+    }
+
+    /// [`failed`](Self::failed) where an object the server answered with a conflict is put together with the server's
+    /// copy when the two changed different fields (docs/adr/0553 §4): the merge goes into the drawing, over the version
+    /// the server has now, and the command is sent again at once; only objects whose fields clash stay conflicts. The
+    /// number merged comes with it. Nothing is merged while an edit is open in the drawing.
+    pub fn failed_in(&mut self, doc: &mut Document, failure: &ApiFailure) -> (After, usize) {
+        let merged = if failure.conflict() {
+            self.merge_conflicts(doc, failure)
+        } else {
+            HashSet::new()
+        };
+        let n = merged.len();
+        (self.failed_except(failure, &merged), n)
+    }
+
+    /// The ids of the conflicts of `failure` that merged: their merge is in `doc`, the server's copy known here.
+    fn merge_conflicts(&mut self, doc: &mut Document, failure: &ApiFailure) -> HashSet<String> {
+        let mut done = HashSet::new();
+        if doc.is_busy() {
+            return done;
+        }
+        for c in &failure.conflicts {
+            if c.reason != ConflictReason::Changed {
+                continue;
+            }
+            let (Some(theirs), Some(version), Ok(id)) =
+                (c.current.as_ref(), c.actual.as_ref(), Uuid::parse_str(&c.id))
+            else {
+                continue;
+            };
+            let (Some(mine), Some(base)) = (current(doc, id), self.known.get(&id)) else {
+                continue;
+            };
+            // Nothing here to keep, or nothing changed there (only the version moved): the user decides as before.
+            if same(mine, &base.entity) || same(&theirs.entity, &base.entity) {
+                continue;
+            }
+            let Ok(m) = kentos_contracts::merge_entities(&base.entity, mine, &theirs.entity) else {
+                continue;
+            };
+            if doc.layers().get(&m.entity.base().layer_id).is_none() {
+                continue;
+            }
+            let mut change = kentos_domain::External::default();
+            change.put.push((id, m.entity));
+            if self.apply(doc, change).is_err() {
+                continue;
+            }
+            self.know(
+                id,
+                Tracked {
+                    version: version.clone(),
+                    entity: theirs.entity.clone(),
+                },
+            );
+            self.dirty.insert(id);
+            done.insert(c.id.clone());
+        }
+        done
+    }
+
+    fn failed_except(&mut self, failure: &ApiFailure, merged: &HashSet<String>) -> After {
         if failure.conflict() {
             self.inflight = None;
-            let found = failure.conflicts.iter().map(|c| Conflict {
-                id: c.id.clone(),
-                reason: c.reason,
-                server: c.current.clone(),
-                expected: c.expected.clone(),
-                actual: c.actual.clone(),
-            });
+            let found: Vec<Conflict> = failure
+                .conflicts
+                .iter()
+                .filter(|c| !merged.contains(&c.id))
+                .map(|c| Conflict {
+                    id: c.id.clone(),
+                    reason: c.reason,
+                    server: c.current.clone(),
+                    expected: c.expected.clone(),
+                    actual: c.actual.clone(),
+                })
+                .collect();
+            // Every conflict merged: nothing to choose, the merges go over the server's versions now.
+            if found.is_empty() && !merged.is_empty() {
+                self.tries = 0;
+                self.error = None;
+                self.state = SaveState::Pending;
+                return After::Retry(Duration::ZERO);
+            }
             for c in found {
                 match self.conflicts.iter_mut().find(|k| k.id == c.id) {
                     Some(k) => *k = c,

@@ -1801,6 +1801,9 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
         })
     }
     // Schema 91 (docs/adr/0538 §1): the bound layers' bases.
+    if doc.settings.source_bases.iter().any(|b| b.fields.is_some()) {
+        return crate::SCHEMA_WITH_SOURCE_FIELD_BASES;
+    }
     if !doc.settings.source_bases.is_empty() {
         return crate::SCHEMA_WITH_SOURCE_BASES;
     }

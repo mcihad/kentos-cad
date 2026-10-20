@@ -2,7 +2,7 @@
 import type { ReconcileSide } from "./ReconcileSide";
 
 /**
- * One conflict resolved by hand.
+ * One conflict resolved by hand (an object of a group takes the whole group's side).
  */
 export type ReconcileTake = { 
 /**

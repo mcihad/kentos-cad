@@ -274,6 +274,121 @@ pub struct SourceBase {
     pub digest: String,
     /// The rows, `BASE_ROW` bytes each in the lasting ids' byte order, in base64 (RFC 4648, with padding).
     pub rows: String,
+    /// What each row's object held besides its hashes (docs/adr/0553 §1), one record per row in the same order, in
+    /// base64: the hashes of its kind and geometry on each side, of each attribute (name and value) and of its
+    /// vertices. Without it two sides' changes to one object cannot be told apart field by field (a conflict as a
+    /// whole, docs/adr/0538), nor related changes found. Written only when it fits [`MAX_FIELD_BASE_BYTES`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub fields: Option<String>,
+}
+
+/// The most bytes a base's field records take (decoded): a layer whose records are more keeps none, and its
+/// objects conflict as a whole (docs/adr/0553 §1).
+pub const MAX_FIELD_BASE_BYTES: usize = 8 * 1024 * 1024;
+/// The most vertices a record keeps hashes of; an object of more has none (no related changes through it).
+pub const MAX_BASE_VERTICES: usize = 128;
+/// A record's flag: its attribute hashes are those of the layer and of the table alike.
+pub const FIELDS_FLAG_ATTRS: u8 = 1;
+/// A record's flag: its vertex hashes are those of the layer and of the table alike.
+pub const FIELDS_FLAG_VERTICES: u8 = 2;
+
+/// What a base keeps of one object besides the two hashes (docs/adr/0553 §1).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct BaseDetail {
+    /// The hash of the object's kind and geometry (no attributes) in the layer and in the table.
+    pub shape: (u64, u64),
+    /// Each attribute's name hash and value hash, by rising name hash; none where the table's attributes read
+    /// otherwise than the layer's (the object conflicts as a whole).
+    pub attrs: Option<Vec<(u32, u64)>>,
+    /// The hashes of the object's vertices, rising and once each; none past [`MAX_BASE_VERTICES`] or where the table's
+    /// geometry reads otherwise than the layer's.
+    pub vertices: Option<Vec<u32>>,
+}
+
+/// A base's field records read: `count` of them exactly; none when they are not base64, not whole, out of order or
+/// too many bytes.
+pub fn base_details(count: usize, text: &str) -> Option<Vec<BaseDetail>> {
+    let bytes = crate::encoding::base64_decode(text)?;
+    if bytes.len() > MAX_FIELD_BASE_BYTES {
+        return None;
+    }
+    let mut at = 0usize;
+    let mut take = |n: usize| -> Option<&[u8]> {
+        let part = bytes.get(at..at + n)?;
+        at += n;
+        Some(part)
+    };
+    let mut out = Vec::with_capacity(count);
+    for _ in 0..count {
+        let a = u64::from_be_bytes(take(8)?.try_into().ok()?);
+        let b = u64::from_be_bytes(take(8)?.try_into().ok()?);
+        let flags = take(1)?[0];
+        if flags & !(FIELDS_FLAG_ATTRS | FIELDS_FLAG_VERTICES) != 0 {
+            return None;
+        }
+        let na = usize::from(u16::from_be_bytes(take(2)?.try_into().ok()?));
+        let mut attrs: Vec<(u32, u64)> = Vec::with_capacity(na);
+        for _ in 0..na {
+            let n = u32::from_be_bytes(take(4)?.try_into().ok()?);
+            let v = u64::from_be_bytes(take(8)?.try_into().ok()?);
+            if attrs.last().is_some_and(|(last, _)| *last >= n) {
+                return None;
+            }
+            attrs.push((n, v));
+        }
+        let nv = usize::from(u16::from_be_bytes(take(2)?.try_into().ok()?));
+        if nv > MAX_BASE_VERTICES {
+            return None;
+        }
+        let mut vertices: Vec<u32> = Vec::with_capacity(nv);
+        for _ in 0..nv {
+            let v = u32::from_be_bytes(take(4)?.try_into().ok()?);
+            if vertices.last().is_some_and(|last| *last >= v) {
+                return None;
+            }
+            vertices.push(v);
+        }
+        if flags & FIELDS_FLAG_ATTRS == 0 && !attrs.is_empty() {
+            return None;
+        }
+        if flags & FIELDS_FLAG_VERTICES == 0 && !vertices.is_empty() {
+            return None;
+        }
+        out.push(BaseDetail {
+            shape: (a, b),
+            attrs: (flags & FIELDS_FLAG_ATTRS != 0).then_some(attrs),
+            vertices: (flags & FIELDS_FLAG_VERTICES != 0).then_some(vertices),
+        });
+    }
+    (at == bytes.len()).then_some(out)
+}
+
+/// The field records written as a base's text; none when they take more than [`MAX_FIELD_BASE_BYTES`].
+pub fn base_details_text(details: &[BaseDetail]) -> Option<String> {
+    let mut bytes = Vec::new();
+    for d in details {
+        bytes.extend_from_slice(&d.shape.0.to_be_bytes());
+        bytes.extend_from_slice(&d.shape.1.to_be_bytes());
+        let flags = u8::from(d.attrs.is_some()) * FIELDS_FLAG_ATTRS
+            | u8::from(d.vertices.is_some()) * FIELDS_FLAG_VERTICES;
+        bytes.push(flags);
+        let attrs = d.attrs.as_deref().unwrap_or(&[]);
+        bytes.extend_from_slice(&u16::try_from(attrs.len()).ok()?.to_be_bytes());
+        for (n, v) in attrs {
+            bytes.extend_from_slice(&n.to_be_bytes());
+            bytes.extend_from_slice(&v.to_be_bytes());
+        }
+        let vertices = d.vertices.as_deref().unwrap_or(&[]);
+        bytes.extend_from_slice(&u16::try_from(vertices.len()).ok()?.to_be_bytes());
+        for v in vertices {
+            bytes.extend_from_slice(&v.to_be_bytes());
+        }
+        if bytes.len() > MAX_FIELD_BASE_BYTES {
+            return None;
+        }
+    }
+    Some(crate::encoding::base64_encode(&bytes))
 }
 
 /// One object of a base: its lasting id's bytes, the layer's hash and the table's.
@@ -332,9 +447,16 @@ pub fn bases_problem(bases: &[SourceBase], sources: &[SourceLink]) -> Option<Str
         if !hex64(&b.revision) || !hex64(&b.digest) {
             return Some(format!("{at}: sürümü ya da özeti 64 küçük onaltılı hane değil"));
         }
-        if base_rows(&b.rows).is_none() {
+        let Some(rows) = base_rows(&b.rows) else {
             return Some(format!(
                 "{at}: satırları okunmuyor (base64, {BASE_ROW} baytlık satırlar, artan kimlik sırası, en çok {MAX_BASE_ROWS})"
+            ));
+        };
+        if let Some(fields) = &b.fields
+            && base_details(rows.len(), fields).is_none()
+        {
+            return Some(format!(
+                "{at}: alan kayıtları okunmuyor (base64, satır başına bir kayıt, artan özet sırası, en çok {MAX_FIELD_BASE_BYTES} bayt)"
             ));
         }
     }
