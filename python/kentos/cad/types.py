@@ -3587,6 +3587,26 @@ SourceKindName = Literal["geopackage", "postgis"]
 """The names of :class:`SourceKind`, for a plain string."""
 
 
+class SourceNext(_StrEnum):
+    """What a bound layer's state asks for next (docs/adr/0543): the one way out a user and a script take from it.
+
+    - ``none``: The layer and the table hold the same.
+    - ``write``: Only the layer changed: `cad.sources.sync` with `write`.
+    - ``read``: Only the file changed (or it differs without either side's mark): `cad.sources.sync` with `read`.
+    - ``reconcile``: Both changed: `cad.sources.reconcile`.
+    - ``relink``: The file, its table or the database is not reached: `cad.sources.edit` `relink` (a file), the address again (a
+    """
+    NONE = "none"
+    WRITE = "write"
+    READ = "read"
+    RECONCILE = "reconcile"
+    RELINK = "relink"
+
+
+SourceNextName = Literal["none", "write", "read", "reconcile", "relink"]
+"""The names of :class:`SourceNext`, for a plain string."""
+
+
 class SourceOverrides(_StrEnum):
     """What Tabloyu güncelle does with a cell changed by hand since its file was last read (docs/adr/0327 §5).
 
@@ -36819,13 +36839,17 @@ class SourceRelation(_Model):
 class SourceState(_Model):
     """A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
     how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
-    and the layer lacks).
+    and the layer lacks); how much of the table the layer holds and what to do next.
     Attributes:
         changed: The file changed since the layer last matched it.
         edited: The layer changed since it last matched the file.
         added: Unit: count.
         modified: Unit: count.
         removed: Unit: count.
+        objects: The layer's objects, of any kind. Unit: count.
+        rows: The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the
+            layer can hold; none when the table is not reached. Unit: count.
+        total: The whole table's rows; none when the table is not reached. Unit: count.
     """
     link: SourceLink
     found: bool
@@ -36834,6 +36858,10 @@ class SourceState(_Model):
     added: int
     modified: int
     removed: int
+    objects: int
+    next: SourceNext | SourceNextName
+    rows: int | None | Unset = UNSET
+    total: int | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -36844,6 +36872,12 @@ class SourceState(_Model):
         out["added"] = self.added
         out["modified"] = self.modified
         out["removed"] = self.removed
+        out["objects"] = self.objects
+        out["next"] = _enum_out(self.next)
+        if self.rows is not UNSET:
+            out["rows"] = self.rows
+        if self.total is not UNSET:
+            out["total"] = self.total
         return out
 
     @classmethod
@@ -36856,6 +36890,10 @@ class SourceState(_Model):
             added=data["added"],
             modified=data["modified"],
             removed=data["removed"],
+            objects=data["objects"],
+            next=_enum_in(SourceNext, data["next"]),
+            rows=data.get("rows", UNSET),
+            total=data.get("total", UNSET),
         )
 
 
@@ -56124,6 +56162,8 @@ __all__ = [
     "SourceKind",
     "SourceKindName",
     "SourceLink",
+    "SourceNext",
+    "SourceNextName",
     "SourceOverrides",
     "SourceOverridesName",
     "SourceRelation",

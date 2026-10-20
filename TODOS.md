@@ -228,6 +228,8 @@ Liste:
   oluşturucu'da; sunucu tarafı ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
   sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da).
+- [ ] `CBS-40` Kaynak durumu (ADR 0543, 20 Ekim): web'de gerekenler: bağlı katmanlar web'e dönünce Kaynak durumu penceresi (durumun
+  `objects`, `rows`, `total`, `next`'i ve satırın düğmesi); kural ve komut ortaktır.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
   kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
   sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
@@ -2052,6 +2054,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. Kalan:
   başka iş türleri, CPU, bellek ve disk kotası, masaüstünde işler listesi, önbellek anahtarı, yedek ve geri yükleme tatbikatı, ölçümler.
   — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md).**
+- [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
+  (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
+  (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik
+  tablosunda ve bilgi kartında, süzgecin geçen sayısı ve bulut taslağı, sağlayıcı hatalarının önerisi, iki referans kullanıcı grubuyla
+  kullanılabilirlik kabulü (geliştiricinin yapamayacağı iş). — **20 Ekim, [ADR 0543](docs/adr/0543-source-status-and-way-out.md).**
 - [ ] `CBS-37` kaynakla uzlaştırma (dilim): bağın tabanı (projenin `sourceBases`'i, `.kcad` şema 91: son eşleşmede her nesnenin
   katmandaki ve tablodaki özeti; bağlama, okuma ve yazma yeniden alır), `cad.sources.reconcile` (tabana göre iki yanın ekleme, değiştirme
   ve silmeleri; yalnız bir yanın değiştirdiği o yandan, aynı biçimde değişen uyuşur; öbürleri çatışma: farklı öznitelikler iki yanın

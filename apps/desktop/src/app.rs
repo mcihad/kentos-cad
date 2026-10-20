@@ -180,6 +180,8 @@ pub enum Dialog {
     DrawingStandard,
     /// Veri profili (data_profile.rs, docs/adr/0541); the window is `App::data_profile`.
     DataProfile,
+    /// Kaynak durumu (source_status.rs, docs/adr/0543); the window is `App::source_status`.
+    SourceStatus,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
     /// Parametreler (parameters_window.rs, docs/adr/0338 §1); the window is `App::parameters_window`.
@@ -491,6 +493,8 @@ pub enum Message {
     DrawingStandard(crate::drawing_standard::Event),
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     DataProfile(crate::data_profile::Event),
+    /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
+    SourceStatus(crate::source_status::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -955,6 +959,8 @@ pub struct App {
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
     /// Veri profili's window (data_profile.rs, docs/adr/0541).
     pub(crate) data_profile: Option<crate::data_profile::Window>,
+    /// Kaynak durumu's window (source_status.rs, docs/adr/0543).
+    pub(crate) source_status: Option<crate::source_status::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -1328,6 +1334,7 @@ impl App {
             layer_translate: None,
             drawing_standard: None,
             data_profile: None,
+            source_status: None,
             line_types_window: None,
             parameters_window: None,
             constraint_view: Default::default(),
@@ -1902,6 +1909,7 @@ impl App {
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
             Message::DataProfile(event) => return self.data_profile_event(event),
+            Message::SourceStatus(event) => return self.source_status_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
             Message::Parameters(event) => return self.parameters_event(event),
             Message::HatchPatterns(event) => return self.hatch_patterns_event(event),

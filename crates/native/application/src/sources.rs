@@ -14,7 +14,7 @@ use std::path::Path;
 use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
     MAX_SOURCES, PinLoss, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
-    SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
+    SourceNext, SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
     SourcesEdited, SourcesSync, SourcesSynced, SyncDirection, SyncTopology, SyncedPins,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -1093,6 +1093,10 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         added: 0,
         modified: 0,
         removed: 0,
+        objects: count(doc.by_layer_with_uids(&link.layer).count()),
+        rows: None,
+        total: None,
+        next: SourceNext::Relink,
     };
     let area = mover_for(doc, link.srid)
         .ok()
@@ -1112,7 +1116,9 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
     };
     if let (Some(mut s), Ok(mover)) = (loaded, mover_for(doc, link.srid)) {
         state.changed = s.sha256 != link.revision;
+        state.total = Some(count(s.rows.len() + s.outside.len()));
         s.reachable(mover.as_ref());
+        state.rows = Some(count(s.rows.len()));
         let skip: Vec<String> = ties
             .iter()
             .filter(|t| matches!(t.kept, relations::Kept::Mapped(_)) && t.child_layer == link.layer)
@@ -1123,7 +1129,18 @@ fn state_of(doc: &Document, link: &SourceLink, ties: &[relations::Tie]) -> Sourc
         state.modified = d.update.len() as u32;
         state.removed = d.delete.len() as u32;
     }
+    state.next = SourceNext::of(
+        state.found,
+        state.rows.is_some(),
+        state.changed,
+        state.edited,
+        state.added + state.modified + state.removed,
+    );
     state
+}
+
+fn count(n: usize) -> u32 {
+    u32::try_from(n).unwrap_or(u32::MAX)
 }
 
 fn describe_run(

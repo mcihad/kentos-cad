@@ -1538,6 +1538,8 @@ __all__ = [
     "SourceKind",
     "SourceKindName",
     "SourceLink",
+    "SourceNext",
+    "SourceNextName",
     "SourceOverrides",
     "SourceOverridesName",
     "SourceRelation",

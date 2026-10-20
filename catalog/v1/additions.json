@@ -1560,7 +1560,7 @@
       "id": "source.status",
       "title": "Kaynak durumu",
       "icon": "sourceLinked",
-      "description": "Projenin bağlı katmanlarını söyler: dosya yerinde mi, katman ya da dosya değişti mi, kaç nesne farklı.",
+      "description": "Bağlı katmanların penceresi: kaynak, yazılabilirlik, yüklü ve toplam satır, sistem, bekleyen değişiklik ve durumun istediği iş (yaz, oku, uzlaştır, yeniden bağla).",
       "aliases": [
         "KAYNAKDURUM"
       ],

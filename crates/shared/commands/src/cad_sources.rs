@@ -121,9 +121,29 @@ pub struct SourceRelation {
     pub why: Option<String>,
 }
 
+/// What a bound layer's state asks for next (docs/adr/0543): the one way out a user and a script take from it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum SourceNext {
+    /// The layer and the table hold the same.
+    None,
+    /// Only the layer changed: `cad.sources.sync` with `write`.
+    Write,
+    /// Only the file changed (or it differs without either side's mark): `cad.sources.sync` with `read`.
+    Read,
+    /// Both changed: `cad.sources.reconcile`.
+    Reconcile,
+    /// The file, its table or the database is not reached: `cad.sources.edit` `relink` (a file), the address again (a
+    /// database).
+    Relink,
+}
+
 /// A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and
 /// how the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has
-/// and the layer lacks).
+/// and the layer lacks); how much of the table the layer holds and what to do next.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "ts", derive(TS))]
 #[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
@@ -142,6 +162,39 @@ pub struct SourceState {
     pub modified: u32,
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub removed: u32,
+    /// The layer's objects, of any kind.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub objects: u32,
+    /// The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the
+    /// layer can hold; none when the table is not reached.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub rows: Option<u32>,
+    /// The whole table's rows; none when the table is not reached.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub total: Option<u32>,
+    pub next: SourceNext,
+}
+
+impl SourceNext {
+    /// The rule (docs/adr/0543): not reached, relink; no difference, none; both sides changed, reconcile; the layer
+    /// changed, write; else read.
+    pub fn of(found: bool, reached: bool, changed: bool, edited: bool, differences: u32) -> Self {
+        if !found || !reached {
+            Self::Relink
+        } else if differences == 0 {
+            Self::None
+        } else if changed && edited {
+            Self::Reconcile
+        } else if edited {
+            Self::Write
+        } else {
+            Self::Read
+        }
+    }
 }
 
 /// Input of `cad.sources.describe` v1: a file's or a PostGIS database's tables (`path`), or the project's bound layers'

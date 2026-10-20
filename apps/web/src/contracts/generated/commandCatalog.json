@@ -997438,6 +997438,36 @@
             ],
             "type": "object"
           },
+          "SourceNext": {
+            "description": "What a bound layer's state asks for next (docs/adr/0543): the one way out a user and a script take from it.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "The layer and the table hold the same.",
+                "type": "string"
+              },
+              {
+                "const": "write",
+                "description": "Only the layer changed: `cad.sources.sync` with `write`.",
+                "type": "string"
+              },
+              {
+                "const": "read",
+                "description": "Only the file changed (or it differs without either side's mark): `cad.sources.sync` with `read`.",
+                "type": "string"
+              },
+              {
+                "const": "reconcile",
+                "description": "Both changed: `cad.sources.reconcile`.",
+                "type": "string"
+              },
+              {
+                "const": "relink",
+                "description": "The file, its table or the database is not reached: `cad.sources.edit` `relink` (a file), the address again (a\ndatabase).",
+                "type": "string"
+              }
+            ]
+          },
           "SourceRelation": {
             "description": "A relation of a file's table (a row of `gpkgext_relations`).",
             "properties": {
@@ -997506,7 +997536,7 @@
             ]
           },
           "SourceState": {
-            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks).",
+            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks); how much of the table the layer holds and what to do next.",
             "properties": {
               "added": {
                 "format": "uint32",
@@ -997534,10 +997564,40 @@
                 "type": "integer",
                 "x-unit": "count"
               },
+              "next": {
+                "$ref": "#/$defs/SourceNext"
+              },
+              "objects": {
+                "description": "The layer's objects, of any kind.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "removed": {
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the\nlayer can hold; none when the table is not reached.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "total": {
+                "description": "The whole table's rows; none when the table is not reached.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "x-unit": "count"
               }
             },
@@ -997548,7 +997608,9 @@
               "edited",
               "added",
               "modified",
-              "removed"
+              "removed",
+              "objects",
+              "next"
             ],
             "type": "object"
           },
@@ -997836,6 +997898,36 @@
             ],
             "type": "object"
           },
+          "SourceNext": {
+            "description": "What a bound layer's state asks for next (docs/adr/0543): the one way out a user and a script take from it.",
+            "oneOf": [
+              {
+                "const": "none",
+                "description": "The layer and the table hold the same.",
+                "type": "string"
+              },
+              {
+                "const": "write",
+                "description": "Only the layer changed: `cad.sources.sync` with `write`.",
+                "type": "string"
+              },
+              {
+                "const": "read",
+                "description": "Only the file changed (or it differs without either side's mark): `cad.sources.sync` with `read`.",
+                "type": "string"
+              },
+              {
+                "const": "reconcile",
+                "description": "Both changed: `cad.sources.reconcile`.",
+                "type": "string"
+              },
+              {
+                "const": "relink",
+                "description": "The file, its table or the database is not reached: `cad.sources.edit` `relink` (a file), the address again (a\ndatabase).",
+                "type": "string"
+              }
+            ]
+          },
           "SourceRelation": {
             "description": "A relation of a file's table (a row of `gpkgext_relations`).",
             "properties": {
@@ -997904,7 +997996,7 @@
             ]
           },
           "SourceState": {
-            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks).",
+            "description": "A bound layer's state: whether its file is there, whether the file changed since the layer last matched it, and\nhow the layer differs from it now (objects the layer has and the table lacks, both have but differ, the table has\nand the layer lacks); how much of the table the layer holds and what to do next.",
             "properties": {
               "added": {
                 "format": "uint32",
@@ -997932,10 +998024,40 @@
                 "type": "integer",
                 "x-unit": "count"
               },
+              "next": {
+                "$ref": "#/$defs/SourceNext"
+              },
+              "objects": {
+                "description": "The layer's objects, of any kind.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
               "removed": {
                 "format": "uint32",
                 "minimum": 0,
                 "type": "integer",
+                "x-unit": "count"
+              },
+              "rows": {
+                "description": "The table's rows the working copy covers (a part's: those whose box meets its area; docs/adr/0510) and the\nlayer can hold; none when the table is not reached.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "total": {
+                "description": "The whole table's rows; none when the table is not reached.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
                 "x-unit": "count"
               }
             },
@@ -997946,7 +998068,9 @@
               "edited",
               "added",
               "modified",
-              "removed"
+              "removed",
+              "objects",
+              "next"
             ],
             "type": "object"
           },

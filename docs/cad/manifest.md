@@ -179,7 +179,7 @@ CBS'ye özgü olmayan 628 satırdan 135'i: geometry 74, none 20, processing 13, 
 | `gis.derivation` | GIS türevini denetle… | shared | cad.gis.derivation | Pencere dosyayı seçtirir ve komutun cevabını gösterir: eski, GIS'te değişen, kaynağı silinen ve türevde satırı olmayan; çizimi değiştirmez (ADR 0530). |
 | `layer.impact` | Değişikliğin etkisi | shared | cad.styles.impact |  |
 | `sheet.preflight` | Ön denetim | none | — |  |
-| `source.status` | Kaynak durumu | none | cad.sources.describe | cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503). |
+| `source.status` | Kaynak durumu | none | cad.sources.describe | Kaynak durumu penceresi cad.sources.describe'ın bağ durumlarıyla; satırın düğmesi durumun next'ini çalıştırır (ADR 0503, 0543). |
 | `standards.check` | Standardı denetle | shared | cad.standards.check | Bulgular komutun cevabıdır; pencere onları gösterir (ADR 0312 §2). |
 | `text.check` | Yazı denetimi | cad | cad.texts.check | Pencere komutun bulgularını gösterir (ADR 0325). |
 | `text.fonts` | Yazı tipleri | cad | cad.fonts.report | Pencere komutun cevabını gösterir: stillerin yazı tipleri, nasıl çözüldükleri ve PDF'in gömdükleri (ADR 0324). |

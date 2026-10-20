@@ -1632,7 +1632,11 @@
          "edited": false,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 3,
+         "rows": 3,
+         "total": 3,
+         "next": "none"
         }
        ],
        "revision": "$current"
@@ -1868,7 +1872,11 @@
          "edited": true,
          "added": 0,
          "modified": 1,
-         "removed": 0
+         "removed": 0,
+         "objects": 3,
+         "rows": 3,
+         "total": 3,
+         "next": "write"
         }
        ],
        "revision": "$current"
@@ -2100,7 +2108,11 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 1
+         "removed": 1,
+         "objects": 2,
+         "rows": 3,
+         "total": 3,
+         "next": "write"
         }
        ],
        "revision": "$current"
@@ -2233,7 +2245,11 @@
          "edited": true,
          "added": 1,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 2,
+         "rows": 1,
+         "total": 1,
+         "next": "write"
         }
        ],
        "revision": "$current"
@@ -2469,7 +2485,11 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 3,
+         "rows": 3,
+         "total": 3,
+         "next": "none"
         }
        ],
        "revision": "$current"
@@ -2509,7 +2529,11 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 3
+         "removed": 3,
+         "objects": 0,
+         "rows": 3,
+         "total": 3,
+         "next": "reconcile"
         }
        ],
        "revision": "$current"
@@ -2655,7 +2679,9 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 0,
+         "next": "relink"
         }
        ],
        "revision": "$current"
@@ -2801,7 +2827,9 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 0,
+         "next": "relink"
         }
        ],
        "revision": "$current"
@@ -2947,7 +2975,11 @@
          "edited": true,
          "added": 0,
          "modified": 0,
-         "removed": 3
+         "removed": 3,
+         "objects": 1,
+         "rows": 3,
+         "total": 3,
+         "next": "write"
         }
        ],
        "revision": "$current"
@@ -3172,7 +3204,11 @@
          "edited": false,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 1,
+         "rows": 1,
+         "total": 1,
+         "next": "none"
         }
        ],
        "revision": "$current"
@@ -3303,7 +3339,11 @@
          "edited": true,
          "added": 0,
          "modified": 1,
-         "removed": 0
+         "removed": 0,
+         "objects": 1,
+         "rows": 1,
+         "total": 1,
+         "next": "write"
         }
        ],
        "revision": "$current"
@@ -3671,7 +3711,11 @@
          "edited": false,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 3,
+         "rows": 3,
+         "total": 3,
+         "next": "none"
         },
         {
          "link": {
@@ -3690,7 +3734,11 @@
          "edited": false,
          "added": 0,
          "modified": 0,
-         "removed": 0
+         "removed": 0,
+         "objects": 1,
+         "rows": 1,
+         "total": 1,
+         "next": "none"
         }
        ],
        "revision": "$current"

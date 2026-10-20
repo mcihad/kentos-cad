@@ -556,9 +556,26 @@ def edit_cases():
 
 # ── cad.sources.describe ───────────────────────────────────────────────────
 
-def state(b, found=True, changed=False, edited=False, added=0, modified=0, removed=0):
-    return {"link": b, "found": found, "changed": changed, "edited": edited, "added": added, "modified": modified,
-            "removed": removed}
+def next_of(found, rows, changed, edited, differences):
+    """docs/adr/0543: what the state asks for next."""
+    if not found or rows is None:
+        return "relink"
+    if differences == 0:
+        return "none"
+    if changed and edited:
+        return "reconcile"
+    return "write" if edited else "read"
+
+
+def state(b, found=True, changed=False, edited=False, added=0, modified=0, removed=0, objects=0, rows=None,
+          total=None):
+    out = {"link": b, "found": found, "changed": changed, "edited": edited, "added": added, "modified": modified,
+           "removed": removed, "objects": objects}
+    if rows is not None:
+        out["rows"] = rows
+        out["total"] = rows if total is None else total
+    out["next"] = next_of(found, rows, changed, edited, added + modified + removed)
+    return out
 
 
 FAKE = "f" * 64
@@ -586,6 +603,8 @@ def describe_cases():
     s_link, b, ids = link_step("parsel", cmd="cad.sources.edit")
     n_link, nb, _ = link_step("nokta", cmd="cad.sources.edit")
     parsel = rows_of(Q, "parsel")
+    global NOKTA, YER
+    NOKTA, YER = len(rows_of(Q, "nokta")), len(rows_of(W, "yer"))
     files = [Q, "kentos.gpkg", "kentos-export.gpkg", "kentos-edited.gpkg", "wgs84.gpkg", "sistemsiz.gpkg", "bos.gpkg"]
     cs = [case(f"{n} dosyasının tabloları",
                step({"path": fx(n)}, done({"tables": tables_of(n), "revision": "$current"})))
@@ -611,22 +630,22 @@ def describe_cases():
                                           op="plan")),
         case("validate yalnız denetler", step({"path": fx(Q)}, done(None), op="validate")),
         case("bağ yokken liste boş", step({}, done({"revision": "$current"}))),
-        case("bağlanan katman tablosuyla aynı", s_link, step({}, done({"links": [state(b)], "revision": "$current"}))),
+        case("bağlanan katman tablosuyla aynı", s_link, step({}, done({"links": [state(b, objects=3, rows=3)], "revision": "$current"}))),
         case("değişen nesne: katman değişti, bir nesne farklı", s_link,
              other("cad.entities.set", {"uids": [parsel[0]["uid"]], "attrs": {"ada": "Yeni Mahalle"}, "operation": "attributes"}),
-             step({}, done({"links": [state(b, edited=True, modified=1)], "revision": "$current"}))),
+             step({}, done({"links": [state(b, edited=True, modified=1, objects=3, rows=3)], "revision": "$current"}))),
         case("silinen nesne tabloda kalır", s_link,
              other("cad.entities.delete", {"uids": [parsel[1]["uid"]]}),
-             step({}, done({"links": [state(b, edited=True, removed=1)], "revision": "$current"}))),
+             step({}, done({"links": [state(b, edited=True, removed=1, objects=2, rows=3)], "revision": "$current"}))),
         case("katmana eklenen nokta tabloda yok", n_link,
              other("cad.point.create", {"layerId": "import-nokta", "p": gi.P(487600, 4420600)}),
-             step({}, done({"links": [state(nb, edited=True, added=1)], "revision": "$current"}))),
+             step({}, done({"links": [state(nb, edited=True, added=1, objects=NOKTA + 1, rows=NOKTA)], "revision": "$current"}))),
         case("alanı olmayan öznitelik katmanı değiştirir ama satırı değiştirmez", s_link,
              other("cad.entities.set", {"uids": [parsel[0]["uid"]], "attrs": {"durum": "x"}, "operation": "attributes"}),
-             step({}, done({"links": [state(b, edited=True)], "revision": "$current"}))),
+             step({}, done({"links": [state(b, edited=True, objects=3, rows=3)], "revision": "$current"}))),
         case("dosya değişmiş, katman boş: bütün satırlar katmanda yok",
              step({}, done({"links": [state({**link("parsel", "bagli"), "revision": FAKE, "digest": FAKE},
-                                            changed=True, edited=True, removed=3)], "revision": "$current"})),
+                                            changed=True, edited=True, removed=3, rows=3)], "revision": "$current"})),
              setup_=setup([bound], sources=[{**link("parsel", "bagli"), "revision": FAKE, "digest": FAKE}])),
         case("dosya yerinde değil",
              step({}, done({"links": [state({**link("parsel", "bagli"), "path": fx("tasindi.gpkg"), "digest": FAKE},
@@ -637,18 +656,18 @@ def describe_cases():
                             "revision": "$current"})),
              setup_=setup([bound], sources=[{**link("bina", "bagli"), "digest": FAKE}])),
         case("tablonun tutmadığı nesne sayılmaz",
-             step({}, done({"links": [state({**link("parsel", "bagli"), "digest": FAKE}, edited=True, removed=3)],
+             step({}, done({"links": [state({**link("parsel", "bagli"), "digest": FAKE}, edited=True, removed=3, objects=1, rows=3)],
                             "revision": "$current"})),
              setup_=setup([bound], [{"kind": "point", "id": 2, "layerId": "bagli", "attrs": {}, "p": gi.P(1, 2)}],
                           [{**link("parsel", "bagli"), "digest": FAKE}])),
         case("başka sistemdeki tablo: gidip gelen koordinatlar aynı sayılır", wgs_link(),
-             step({}, done({"links": [state(WB)], "revision": "$current"}))),
+             step({}, done({"links": [state(WB, objects=YER, rows=YER)], "revision": "$current"}))),
         case("başka sistemdeki tablo: taşınan nokta farklı", wgs_link(),
              other("cad.entities.transform", {"uids": ["$uidOf:2"], "transform": {"kind": "move", "dx": 10, "dy": 0}}),
-             step({}, done({"links": [state(WB, edited=True, modified=1)], "revision": "$current"}))),
+             step({}, done({"links": [state(WB, edited=True, modified=1, objects=YER, rows=YER)], "revision": "$current"}))),
         *[case(f"PostGIS: {n}", step({"path": a}, bad_address(a, why, "path"))) for n, a, why in BAD_ADDRESSES],
         case("iki bağ sırasıyla", s_link, n_link,
-             step({}, done({"links": [state(b), state({**nb, "id": "kaynak-2"})], "revision": "$current"}))),
+             step({}, done({"links": [state(b, objects=3, rows=3), state({**nb, "id": "kaynak-2"}, objects=NOKTA, rows=NOKTA)], "revision": "$current"}))),
     ]
     # The second link's objects come after the first's.
     cs[-1]["steps"] = copy.deepcopy(cs[-1]["steps"])

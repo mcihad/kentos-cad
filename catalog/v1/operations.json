@@ -874,7 +874,7 @@
       "via": [
         "cad.sources.describe"
       ],
-      "note": "cad.sources.describe'ın bağlı katmanları bildirimle (ADR 0503)."
+      "note": "Kaynak durumu penceresi cad.sources.describe'ın bağ durumlarıyla; satırın düğmesi durumun next'ini çalıştırır (ADR 0503, 0543)."
     },
     "source.relink": {
       "level": "semantic",

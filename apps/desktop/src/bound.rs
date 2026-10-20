@@ -7,12 +7,12 @@
 
 use iced::{Element, Task};
 use kentos_commands::{
-    CommandResult, SourceLink, SourcesDescribe, SourcesEdit, SourcesEditOp, SourcesSync,
+    CommandResult, SourceLink, SourcesEdit, SourcesEditOp, SourcesSync,
     SyncDirection, SyncTopology,
 };
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
-use kentos_native_application::sources::{describe, edit, sync};
+use kentos_native_application::sources::{edit, sync};
 
 use crate::app::{App, Dialog, Message, Picker};
 
@@ -31,7 +31,7 @@ pub enum Event {
     Read(Option<String>),
     /// Kaynakla uzlaştır… (docs/adr/0538): both sides changed since they last matched.
     Reconcile(Option<String>),
-    /// Kaynak durumu: every binding's state.
+    /// Kaynak durumu: the window with every binding's state (source_status.rs, docs/adr/0543).
     Status,
     /// Bağı çöz.
     Unlink(Option<String>),
@@ -104,7 +104,10 @@ impl App {
                     move |p| Message::Bound(Event::Relinked(id.clone(), p)),
                 );
             }
-            Event::Relinked(id, Some(path)) => self.bound_relink(&id, &path),
+            Event::Relinked(id, Some(path)) => {
+                self.bound_relink(&id, &path);
+                self.refresh_source_status();
+            }
             Event::Relinked(_, None) => {}
             Event::Write(layer) => match self.bound_at_hand(layer) {
                 Some(link) => {
@@ -141,7 +144,7 @@ impl App {
                 Some(link) => self.bound_unlink(&link),
                 None => self.warn(NO_BOUND),
             },
-            Event::Status => self.bound_status(),
+            Event::Status => self.open_source_status(),
         }
         Task::none()
     }
@@ -453,50 +456,6 @@ impl App {
             | CommandResult::Conflict { error }
             | CommandResult::NeedsInput { error } => self.announce(Level::Error, error.message),
             _ => {}
-        }
-    }
-
-    fn bound_status(&mut self) {
-        let Some(doc) = self.document.as_mut() else {
-            return;
-        };
-        let answer = describe::execute(
-            &mut ExecutionContext::new(&mut doc.model),
-            SourcesDescribe::default(),
-        );
-        let CommandResult::Completed { output, .. } = answer else {
-            return;
-        };
-        if output.links.is_empty() {
-            self.announce(Level::Info, "Projede bağlı katman yok.".to_owned());
-            return;
-        }
-        for s in output.links {
-            let name = self.bound_name(&s.link.layer);
-            let file = format!("{} › {}", file_name(&s.link.path), s.link.table);
-            let (level, said) = if !s.found {
-                (
-                    Level::Warn,
-                    format!("“{name}”: {file} yerinde yok ({}).", s.link.path),
-                )
-            } else if s.added + s.modified + s.removed == 0 {
-                (Level::Success, format!("“{name}”: {file} ile aynı."))
-            } else {
-                let side = match (s.edited, s.changed) {
-                    (true, false) => "katmanda yazılmamış değişiklikler",
-                    (false, true) => "dosya başka bir programda değişmiş",
-                    (true, true) => "hem katman hem dosya değişmiş",
-                    (false, false) => "fark var",
-                };
-                (
-                    Level::Warn,
-                    format!(
-                        "“{name}”: {file} — {side}: tabloda olmayan {}, farklı {}, katmanda olmayan {} nesne.",
-                        s.added, s.modified, s.removed
-                    ),
-                )
-            };
-            self.announce(level, said);
         }
     }
 }

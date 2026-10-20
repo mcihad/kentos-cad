@@ -767,3 +767,125 @@ fn reconcile_screens() {
         picture(&mut app, "uzlasti");
     }
 }
+
+/// Kaynak durumu's scene (docs/adr/0543): the reconcile scene's parcels (both sides changed), a copy of qgis.gpkg's
+/// points with one attribute edited (only the layer changed), wgs84.gpkg's places in their own system, and a file
+/// bound then gone.
+fn status_scene(name: &str) -> (App, PathBuf) {
+    use kentos_commands::CallOp;
+    use kentos_native_application::{ExecutionContext, registry};
+    let (mut app, _) = reconcile_scene(name);
+    let dir = scratch(&format!("{name}-durum"));
+    let points = dir.join("noktalar.gpkg");
+    let gone = dir.join("tasindi.gpkg");
+    std::fs::copy(gpkg("qgis.gpkg"), &points).expect("copied");
+    std::fs::copy(gpkg("qgis.gpkg"), &gone).expect("copied");
+    let doc = &mut app.document.as_mut().expect("a drawing").model;
+    let run_on = |doc: &mut kentos_domain::Document, input: serde_json::Value, command: &str| {
+        let answer = registry::run(&mut ExecutionContext::new(doc), command, CallOp::Execute, input).expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+        answer
+    };
+    let linked = run_on(
+        doc,
+        serde_json::json!({ "edit": { "kind": "link", "path": points.display().to_string(), "table": "nokta" } }),
+        "cad.sources.edit",
+    );
+    let layer = linked["output"]["link"]["layer"].as_str().expect("a layer").to_owned();
+    run_on(
+        doc,
+        serde_json::json!({ "edit": { "kind": "link", "path": gpkg("wgs84.gpkg").display().to_string(), "table": "yer", "reproject": true } }),
+        "cad.sources.edit",
+    );
+    run_on(
+        doc,
+        serde_json::json!({ "edit": { "kind": "link", "path": gone.display().to_string(), "table": "yol" } }),
+        "cad.sources.edit",
+    );
+    let first = doc.by_layer_with_uids(&layer).next().map(|(u, _)| u.to_string()).expect("a point");
+    run_on(
+        doc,
+        serde_json::json!({ "uids": [first], "attrs": { "ad": "Yeni ad" }, "operation": "attributes" }),
+        "cad.entities.set",
+    );
+    std::fs::remove_file(&gone).expect("gone");
+    (app, points)
+}
+
+#[test]
+fn the_source_status_says_each_layers_way_out_and_takes_it() {
+    use crate::source_status::Event as S;
+    use kentos_commands::SourceNext;
+    let (mut app, points) = status_scene("gpkg-durum");
+    let _ = app.update(Message::Bound(crate::bound::Event::Status));
+    let next = |app: &App, layer: &str| {
+        let i = app.source_status_row(layer).expect("a row");
+        app.source_status_next(i)
+    };
+    let layers: Vec<String> = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .sources
+        .iter()
+        .map(|s| s.layer.clone())
+        .collect();
+    assert_eq!(layers.len(), 4, "{layers:?}");
+    assert_eq!(
+        layers.iter().map(|l| next(&app, l)).collect::<Vec<_>>(),
+        [SourceNext::Reconcile, SourceNext::Write, SourceNext::None, SourceNext::Relink]
+    );
+    // Kaynağa yaz on the points: the file written, the row now the same.
+    let before = std::fs::read(&points).expect("read");
+    let i = app.source_status_row(&layers[1]).expect("a row");
+    let _ = app.update(Message::SourceStatus(S::Act(i)));
+    assert_ne!(std::fs::read(&points).expect("read"), before, "written");
+    assert_eq!(next(&app, &layers[1]), SourceNext::None);
+    // Uzlaştır… opens its own window in this one's place.
+    let i = app.source_status_row(&layers[0]).expect("a row");
+    let _ = app.update(Message::SourceStatus(S::Act(i)));
+    assert!(app.reconcile.is_some() && app.source_status.is_none());
+}
+
+#[test]
+#[ignore = "pictures, run by hand"]
+fn source_status_screens() {
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (width, height, mode) in [(1440.0, 900.0, "dark"), (1100.0, 650.0, "dark"), (1440.0, 900.0, "light")] {
+        let (mut app, _) = status_scene(&format!("gpkg-durum-{mode}-{width}"));
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut picture = |app: &mut App, label: &str| {
+            snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            let _ = snapshot.render(app.view(), &app.theme());
+            let path = out.join(format!("gpkg-kaynak-durumu-{mode}-{label}-{width}x{height}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
+            println!("{}", path.display());
+        };
+        let _ = app.update(Message::Bound(crate::bound::Event::Status));
+        let missing = app.source_status_row(
+            &app.document.as_ref().expect("a drawing").model.settings().sources[3].layer.clone(),
+        );
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Pick(missing.expect("a row"))));
+        picture(&mut app, "pencere");
+        let i = app
+            .source_status_row(&app.document.as_ref().expect("a drawing").model.settings().sources[1].layer.clone())
+            .expect("a row");
+        let _ = app.update(Message::SourceStatus(crate::source_status::Event::Act(i)));
+        picture(&mut app, "yazildi");
+    }
+}
