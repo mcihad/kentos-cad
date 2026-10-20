@@ -305,10 +305,32 @@ pub async fn run(config: &Config, args: &Args) -> Result<(), String> {
             .map_err(fail)?;
             println!("“{name}” geri getirildi; listelerde görünür ve açılır");
         }
+        ["jobs"] => {
+            let metrics = kentos_application::job_upkeep::metrics(&owner_pool(config).await?)
+                .await
+                .map_err(fail)?;
+            print!("{}", jobs_report(&metrics));
+        }
         ["dev-seed"] => dev_seed(config).await?,
         _ => return Err(USAGE.into()),
     }
     Ok(())
+}
+
+/// The queue's numbers as lines of `name<TAB>value` (docs/adr/0547): no job's content, only counts and ids of
+/// organisations.
+pub fn jobs_report(m: &kentos_application::job_upkeep::JobMetrics) -> String {
+    let oldest = m
+        .oldest_queued_seconds
+        .map_or_else(|| "-".to_owned(), |s| format!("{:.0}", s.max(0.0)));
+    let mut out = format!(
+        "sırada\t{}\nçalışan\t{}\nson_24_saatte_düşen\t{}\nson_24_saatte_biten\t{}\nson_24_saatte_durdurulan\t{}\nen_eski_bekleyen_saniye\t{oldest}\n",
+        m.queued, m.running, m.failed_24h, m.succeeded_24h, m.cancelled_24h
+    );
+    for (tenant, queued, running) in &m.tenants {
+        out.push_str(&format!("kurum\t{tenant}\t{queued}\t{running}\n"));
+    }
+    out
 }
 
 /// Development data: tenant `ornek-buro` with three accounts: a project
@@ -380,6 +402,8 @@ pub const USAGE: &str = "kullanım:
   kentosd member list --tenant KISA
   kentosd project deleted --tenant KISA       çöp kutusundakiler: kimlik, ad, silinme zamanı, silen, kalıcı silinme
   kentosd project restore --tenant KISA --project KİMLİK
+  kentosd jobs                                sunucu işlerinin sayıları: sırada, çalışan, son 24 saatte düşen, en eski bekleyen
+  kentosd worker                              yalnız sunucu işi işçileri (KENTOS_WORKERS)
   kentosd dev-seed                            geliştirme kurumu ve üç hesap (ayse, mehmet, zeynep)";
 
 #[cfg(test)]
@@ -398,5 +422,36 @@ mod tests {
         assert_eq!(a.words, ["project", "restore"]);
         assert_eq!((a.value("tenant"), a.switch("seat")), (Some("buro"), true));
         assert!(Args::parse(["--tenant".to_string()].into_iter()).is_err());
+    }
+
+    #[test]
+    fn the_jobs_report_has_counts_and_ids_only() {
+        use kentos_application::job_upkeep::JobMetrics;
+        let tenant = uuid::Uuid::nil();
+        let report = jobs_report(&JobMetrics {
+            queued: 3,
+            running: 1,
+            failed_24h: 2,
+            succeeded_24h: 9,
+            cancelled_24h: 0,
+            oldest_queued_seconds: Some(41.6),
+            tenants: vec![(tenant, 3, 1)],
+        });
+        assert_eq!(
+            report,
+            format!(
+                "sırada\t3\nçalışan\t1\nson_24_saatte_düşen\t2\nson_24_saatte_biten\t9\nson_24_saatte_durdurulan\t0\nen_eski_bekleyen_saniye\t42\nkurum\t{tenant}\t3\t1\n"
+            )
+        );
+        let empty = jobs_report(&JobMetrics {
+            queued: 0,
+            running: 0,
+            failed_24h: 0,
+            succeeded_24h: 0,
+            cancelled_24h: 0,
+            oldest_queued_seconds: None,
+            tenants: vec![],
+        });
+        assert!(empty.contains("en_eski_bekleyen_saniye\t-\n"));
     }
 }

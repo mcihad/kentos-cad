@@ -26,6 +26,8 @@
 //! | `forms_plan.rs` | what the forms say and decide (fixtures/cloud/v1/forms.json) |
 //! | `catalog_history.rs` | the Geçmiş tab: revisions and checkpoints, followed; its forms and removal |
 //! | `catalog_history_view.rs` | the Geçmiş tab's rows, its forms and its question |
+//! | `catalog_jobs.rs` | the Sunucu işleri tab: the project's server jobs, asked and polled; export, stop, download (docs/adr/0547) |
+//! | `catalog_jobs_view.rs` | the Sunucu işleri tab's rows |
 //! | `opening.rs` | a project opened into the drawing, its progress |
 //! | `leaving.rs` | leaving a project: its draft first, or the question |
 //! | `copy.rs` | the project's local copy, work without a connection |
@@ -54,6 +56,8 @@ mod catalog_forms;
 mod catalog_forms_view;
 mod catalog_history;
 mod catalog_history_view;
+mod catalog_jobs;
+mod catalog_jobs_view;
 mod catalog_pane;
 mod catalog_view;
 pub mod cells;
@@ -95,6 +99,8 @@ pub mod words;
 mod catalog_forms_tests;
 #[cfg(test)]
 mod catalog_history_tests;
+#[cfg(test)]
+mod catalog_jobs_tests;
 #[cfg(test)]
 mod catalog_tests;
 #[cfg(test)]
@@ -250,6 +256,26 @@ pub enum Event {
         id: u64,
         result: Result<catalog_history::HistoryActed, ApiFailure>,
     },
+    // ── The Sunucu işleri tab (catalog_jobs.rs) ─────────────────────────
+    JobsLoaded {
+        id: u64,
+        result: Result<kentos_commands::ServerJobList, ApiFailure>,
+    },
+    JobsRetry,
+    /// “Projeyi dışa aktar (.kcad)”: asked for as a server job.
+    JobExport,
+    JobAsked {
+        id: u64,
+        result: Result<kentos_commands::ServerJob, ApiFailure>,
+    },
+    /// “Durdur” on a job (its id), and the answer.
+    JobStop(String),
+    JobStopped {
+        id: u64,
+        result: Result<kentos_commands::ServerJob, ApiFailure>,
+    },
+    /// “İndir” on a succeeded export.
+    JobDownload(kentos_commands::ServerJob),
     // ── Opening ─────────────────────────────────────────────────────────
     OpenProgress {
         id: u64,
@@ -493,7 +519,10 @@ impl CloudState {
             || self.held.is_some()
             || (self.link == copy::Link::Offline && self.me.is_some())
             || self.catalog.as_ref().is_some_and(|c| {
-                c.search_at.is_some() || c.details_at.is_some() || c.history.waits()
+                c.search_at.is_some()
+                    || c.details_at.is_some()
+                    || c.history.waits()
+                    || c.jobs.waits()
             })
             || self.share.as_ref().is_some_and(|s| s.search_at.is_some())
     }
@@ -630,6 +659,13 @@ impl App {
             | Event::HistorySubmit
             | Event::HistoryFormClose
             | Event::HistoryActed { .. } => self.history_event(event),
+            Event::JobDownload(job) => self.jobs_download(job),
+            Event::JobsLoaded { .. }
+            | Event::JobsRetry
+            | Event::JobExport
+            | Event::JobAsked { .. }
+            | Event::JobStop(_)
+            | Event::JobStopped { .. } => self.jobs_event(event),
             Event::OpenProgress { .. }
             | Event::Opened { .. }
             | Event::OpenCancel
@@ -805,10 +841,12 @@ impl App {
         };
         let details = self.catalog_details_tick(now);
         let history = self.history_tick(now);
+        let jobs = self.jobs_tick(now);
         Task::batch([
             search,
             details,
             history,
+            jobs,
             self.share_tick(now),
             self.live_tick(now),
             self.file_tick(now),

@@ -227,7 +227,11 @@ Liste:
   (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
   oluşturucu'da; sunucu tarafı ortaktır.
 - [ ] `CBS-39` dayanıklı sunucu işleri (ADR 0542, 20 Ekim): web'de gerekenler: projenin işleri (iste, listele, durum, iptal,
-  sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da).
+  sonuç dosyasını indir) web'in bulut arayüzünde; sunucu ve sözleşme ortaktır (`ServerJob` türleri `contracts/generated`'da); 0547: Sunucu işleri sekmesi (iş türleri `project.export` ve `project.checkpoint`, durum çipi,
+  ilerleme, Durdur, İndir (Range), `quota_exceeded`, `too_large`, `storage`, `archived` iletileri); kurallar `kentos_cloud::server_jobs`'ta (web'e TS karşılığı).
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar (ADR 0546, 20 Ekim): web'de gerekenler: Sütunlar ▾, Kopyala, formda
+  `redact`'lı alanın kopyaya, dosyaya, İstatistik'e ve Grafik'e girmemesi, İncele ▾ ve Göster ▾'in Tablonun süzgeciyle'si; bağlı katman
+  web'e gelince tablonun Kaynak satırı.
 - [ ] `CBS-40` Kaynak durumu (ADR 0543, 20 Ekim): web'de gerekenler: bağlı katmanlar web'e dönünce Kaynak durumu penceresi (durumun
   `objects`, `rows`, `total`, `next`'i ve satırın düğmesi); kural ve komut ortaktır.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
@@ -2009,6 +2013,10 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   açık değerler, kimliklerle nesneler, plan kopyada); ev sahiplerinin kaydı `processing_host`; Python ve MCP katalogdan; 40 + 23
   ortak durum `processing_command_cases.py`'den (İşlemler'in kendi durumları ve web'in envanteri). Kalan: başsız dosya erişimi,
   modeller, pencerenin komut kaydı, uzun iş yolu, kapsam matrisi. — **18 Ekim, [ADR 0508](docs/adr/0508-processing-tools-as-commands.md).**
+- [ ] `CBS-20` ve `CBS-40` Öznitelik tablosunda dışarı çıkanlar ve kaynak satırı (dilim): Sütunlar ▾, Kopyala, Dışa aktar gösterilen
+  sütunlarla, formda `redact`'lı alan dışarı çıkmaz; İstatistik ve Grafik Tablonun süzgeciyle; bağlı katmanın tablosunda Kaynak satırı.
+  Kalan: kaynağa itilen sıralama, süzgeç ve toplam, imleçli sayfalar (ADR 0546 §4'ün tasarımı), sütun başlığı menüsü, alan yetkisinin
+  ortak çözücüsü (CBS-38), bilgi kartında kaynak satırı. — **20 Ekim, [ADR 0546](docs/adr/0546-attribute-table-outgoing-and-source-line.md).**
 - [ ] `CBS-41` kapsam matrisi ve eşdeğerlik (dilim): `scripts/gis/coverage.py` (işlem + seçenek + veri türü + ev sahibi, kanıtı ortak
   durumlardan) → `docs/gis/coverage.{json,md}`; `tests/cases/equivalence.rs` 276 durumu pencereden ve `cad.processing.run`'dan
   oynatır, ikisi aynı. Kalan: raster, nokta bulutu ve çok boyutlu araçların komutla eşdeğerliği, açık seçenek hücreleri. — **20 Ekim,
@@ -2058,9 +2066,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   revizyon, istek kimliğiyle tek iş, durum ve ilerleme, deneme ve süre sınırı; işçi kira ve çitle (`claim_job`, `beat_job`,
   `finish_job`), ölen işçinin işi sonrakine geçer, eski çitin bitirmesi geçmez; `project.export` sonucu önce nesne deposuna yazar,
   bitirme isteyen kullanıcı olarak yetkiyi ve revizyonu yeniden sorar, geçmezse dosya silinir, sahipsiz dosyayı temizlik siler; iptal;
-  yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. Kalan:
-  başka iş türleri, CPU, bellek ve disk kotası, masaüstünde işler listesi, önbellek anahtarı, yedek ve geri yükleme tatbikatı, ölçümler.
-  — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md).**
+  yollar `…/jobs`, `kentosd serve`'ün `KENTOS_WORKERS`'ı ve `kentosd worker`; Python `export_job`, `wait_job`, `job_artifact`. 2. dilim:
+  kurum başına iş sınırı (`quota_exceeded`), dosya boy sınırı (`too_large`), yazılamayan depo (`storage`), biten işin saklama süpürmesi
+  (göç 0030), `kentosd jobs` ölçümleri, `project.checkpoint` iş türü, iş dosyasında Range; masaüstünde katalogda Sunucu işleri sekmesi
+  (iste, listele, yokla, Durdur, İndir; pencere kapanınca iş kalır); Python `checkpoint_job`. Kalan: başka iş türleri (sunucuda İşlemler
+  aracı, büyük içe aktarma, atlas PDF'i), CPU ve bellek kotası, işçinin ilerleme yazması, önbellek anahtarı, yedek ve geri yükleme
+  tatbikatı. — **20 Ekim, [ADR 0542](docs/adr/0542-durable-server-jobs.md) ve [ADR 0547](docs/adr/0547-server-jobs-limits-and-desktop.md).**
 - [ ] `CBS-40` arayüz akışı (dilim): `cad.sources.describe`'ın bağ durumunda `objects`, `rows`, `total` ve durumun istediği iş `next`
   (`SourceNext::of`: yeniden bağla, yok, uzlaştır, yaz, oku; kullanıcının işini götüren öneri yok); masaüstünde Kaynak durumu penceresi
   (kaynak ve salt okunurluk, durum, yüklü ve toplam satır, sistem, satırın düğmesi Kaynak ▸'nın komutlarıyla). Kalan: aynı bilgi Öznitelik

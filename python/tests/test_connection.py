@@ -164,6 +164,27 @@ class ConnectionTests(unittest.TestCase):
         with self.assertRaises(cad.NotFound):
             project.job("yok")
 
+    def test_a_checkpoint_job_and_the_organisations_job_limit(self) -> None:
+        conn = cad.Connection.login(self.server.url, "ayse", "parola")
+        project = conn.project(PROJECT["id"], TENANT)
+        base = f"/v1/tenants/{TENANT}/projects/{PROJECT['id']}/jobs"
+        self.server.replies[base] = (201, {"id": "j2", "kind": "project.checkpoint", "state": "queued"}, {})
+        asked = project.checkpoint_job("Teslim", note="ilk", request_id="istek-2")
+        self.assertEqual(asked["kind"], "project.checkpoint")
+        self.assertEqual(
+            self.server.requests[-1]["body"],
+            {"kind": "project.checkpoint", "input": {"name": "Teslim", "note": "ilk"}, "requestId": "istek-2"},
+        )
+        self.server.replies[base] = (
+            429,
+            {"error": "quota_exceeded", "message": "Kurumunuzun iş sınırına ulaşıldı.", "retryable": True, "retryAfter": 30},
+            {},
+        )
+        with self.assertRaises(cad.ServerError) as refused:
+            project.checkpoint_job("Teslim 2")
+        self.assertEqual(refused.exception.code, "quota_exceeded")
+        self.assertTrue(refused.exception.retryable)
+
     def test_a_server_that_does_not_answer(self) -> None:
         url = self.server.url
         self.server.close()

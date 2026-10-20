@@ -36,6 +36,9 @@ pub enum AppError {
     },
     /// Too many attempts; try again after this many seconds (429).
     Limited { message: String, retry_after: u64 },
+    /// A limit of the server is reached (docs/adr/0547): the organisation's jobs queued and running together; it clears
+    /// when jobs finish (429, `quota_exceeded`).
+    Quota(String),
     /// The database failed; the detail is logged, the client sees a generic message (500/503).
     Database(sqlx::Error),
     /// The object store of file projects failed (docs/adr/0031); the detail is logged (500).
@@ -81,6 +84,7 @@ impl AppError {
             Self::ResyncRequired(_) => "resync_required",
             Self::Conflict { .. } => "conflict",
             Self::Limited { .. } => "rate_limited",
+            Self::Quota(_) => "quota_exceeded",
             Self::Database(e) if is_unavailable(e) => "unavailable",
             Self::Database(_) => "internal",
             Self::Storage(_) => "storage",
@@ -97,6 +101,7 @@ impl AppError {
             Self::Limited { retry_after, .. } => {
                 (true, Some(u32::try_from(*retry_after).unwrap_or(u32::MAX)))
             }
+            Self::Quota(_) => (true, Some(30)),
             Self::Database(e) if is_unavailable(e) => (true, None),
             _ => (false, None),
         }
@@ -138,6 +143,7 @@ impl fmt::Display for AppError {
             | Self::NotFound(m)
             | Self::Deleted(m)
             | Self::Archived(m)
+            | Self::Quota(m)
             | Self::ResyncRequired(m) => f.write_str(m),
             Self::Invalid { message, .. }
             | Self::Conflict { message, .. }

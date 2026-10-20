@@ -5,6 +5,7 @@
  */
 export type ServerJobError = { 
 /**
- * `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` or `failed`.
+ * `timeout`, `lease_lost`, `forbidden`, `revision_conflict`, `gone`, `invalid`, `storage` (the artifact could
+ * not be written: no space, no folder), `too_large` (the artifact is past the server's limit) or `failed`.
  */
 code: string, message: string, };

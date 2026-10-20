@@ -1178,3 +1178,148 @@ fn catalog_live(
         r.cloud(Event::Close);
     }
 }
+
+/// Server jobs on a real server (docs/adr/0547): the sample becomes a database project, the Sunucu işleri tab asks
+/// for its export, a worker of `kentosd serve` runs it, the file is downloaded and is the project's KCAD v2; a second
+/// job is stopped; the app is closed and a new one finds both jobs where the server kept them.
+/// `apps/desktop/scripts/jobs-live.sh` runs it on a database of its own.
+#[test]
+#[ignore = "a real KentOS server: apps/desktop/scripts/jobs-live.sh"]
+fn jobs_live() {
+    use crate::cloud::catalog::Tab;
+    use crate::cloud::catalog_jobs::JobsState;
+    use kentos_commands::ServerJobState;
+
+    let password = std::env::var("KENTOS_DEV_PASSWORD")
+        .expect("KENTOS_DEV_PASSWORD (apps/desktop/scripts/jobs-live.sh)");
+    let server = Server::new();
+    let api = server.url();
+    let dir = run_dir().join("jobs-live");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(run_dir().join("shots")).expect("shots");
+    let stamp = crate::settings::rfc3339(std::time::SystemTime::now());
+    let name = format!("Masaüstü işler {}", &stamp[..19]);
+
+    let jobs = |a: &App| -> Vec<kentos_commands::ServerJob> {
+        a.cloud
+            .catalog
+            .as_ref()
+            .map(|c| c.jobs.list().to_vec())
+            .unwrap_or_default()
+    };
+    let over = |a: &App, n: usize| {
+        let list = jobs(a);
+        list.len() == n && list.iter().all(|j| j.state.is_over())
+    };
+
+    // 1. Signed in, the sample is a database project; its Sunucu işleri tab is empty.
+    let mut r = Runner::new(app(&dir, &api));
+    sign_in(&mut r, &password, None);
+    upload(&mut r, &name, ProjectStorage::Database, None);
+    let (_tenant, project) = ids(&r.app);
+    r.send(Message::Run("cloud.open"));
+    r.until("katalog", Duration::from_secs(10), |a| {
+        a.cloud.catalog.as_ref().is_some_and(|c| !c.loading())
+    });
+    r.cloud(Event::CatalogPick(project.clone()));
+    r.cloud(Event::CatalogTab(Tab::Jobs));
+    r.until("işler", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| matches!(c.jobs.state, JobsState::Loaded(_)))
+    });
+    assert!(jobs(&r.app).is_empty());
+    r.shot("isler-01-bos");
+
+    // 2. Projeyi dışa aktar: the job is listed at once, polled, and a worker finishes it.
+    r.cloud(Event::JobExport);
+    r.until("iş istendi", Duration::from_secs(15), |a| !jobs(a).is_empty());
+    r.shot("isler-02-istendi");
+    r.until("iş bitti", Duration::from_secs(40), |a| over(a, 1));
+    let first = jobs(&r.app).remove(0);
+    assert_eq!(first.state, ServerJobState::Succeeded, "{:?}", first.error);
+    assert!(
+        said(&r.app).iter().any(|l| l.starts_with("Sunucu işi bitti")),
+        "the log says it ended"
+    );
+    r.shot("isler-03-bitti");
+
+    // 3. İndir: the file is the project's KCAD v2 and its SHA-256 is the job's.
+    let down = dir.join("is-dosyasi.kcad");
+    r.app.picker = crate::app::Picker::File(down.clone());
+    r.cloud(Event::JobDownload(first.clone()));
+    r.until("indirme", Duration::from_secs(30), |a| {
+        last(a).contains(" indirildi: ")
+    });
+    let bytes = std::fs::read(&down).expect("the file was written");
+    assert_eq!(kentos_kcad::sniff(&bytes), kentos_kcad::Sniff::Kcad);
+    let artifact = first.artifact.clone().expect("an artifact");
+    assert_eq!(kentos_cloud::api::hex_sha256(&bytes), artifact.sha256);
+    assert_eq!(bytes.len().to_string(), artifact.size);
+    r.app.picker = crate::app::Picker::Dialog;
+
+    // 4. A second job stopped at once: a queued job is cancelled by the server on the spot.
+    r.cloud(Event::JobExport);
+    r.until("ikinci iş", Duration::from_secs(15), |a| jobs(a).len() == 2);
+    let second = jobs(&r.app)[0].clone();
+    assert_ne!(second.id, first.id);
+    r.cloud(Event::JobStop(second.id.clone()));
+    r.until("durdurma", Duration::from_secs(40), |a| over(a, 2));
+    let list = jobs(&r.app);
+    assert!(
+        matches!(
+            list[0].state,
+            ServerJobState::Cancelled | ServerJobState::Succeeded
+        ),
+        "{:?}",
+        list[0]
+    );
+    r.shot("isler-04-durduruldu");
+
+    // 5. The app is closed; a new one finds both jobs where the server kept them.
+    drop(r);
+    let mut r = Runner::new(app(&dir, &api));
+    sign_in(&mut r, &password, None);
+    r.send(Message::Run("cloud.open"));
+    r.until("katalog", Duration::from_secs(10), |a| {
+        a.cloud.catalog.as_ref().is_some_and(|c| !c.loading())
+    });
+    r.cloud(Event::CatalogPick(project.clone()));
+    r.cloud(Event::CatalogTab(Tab::Jobs));
+    r.until("işler yeniden", Duration::from_secs(15), |a| {
+        jobs(a).len() == 2
+    });
+    assert_eq!(
+        jobs(&r.app).iter().map(|j| j.id.clone()).collect::<Vec<_>>(),
+        vec![second.id.clone(), first.id.clone()]
+    );
+    r.shot("isler-05-yeniden-acildi");
+
+    // 6. What this run made goes: to the trash and removed for good.
+    r.cloud(Event::CatalogTab(Tab::Info));
+    r.cloud(Event::CatalogAct(crate::cloud::catalog_actions::Act::Trash));
+    r.cloud(Event::CatalogAnswer(true));
+    r.until("çöpe taşıma", Duration::from_secs(30), |a| {
+        a.cloud.catalog.as_ref().is_some_and(|c| {
+            c.status
+                .as_ref()
+                .is_some_and(|s| s.text.ends_with("çöp kutusuna taşındı."))
+        })
+    });
+    r.cloud(Event::CatalogView(crate::cloud::catalog::List::View(
+        kentos_commands::CatalogView::Trash,
+    )));
+    r.until("çöp kutusu", Duration::from_secs(15), |a| {
+        a.cloud
+            .catalog
+            .as_ref()
+            .is_some_and(|c| !c.loading() && c.projects.iter().any(|p| p.id == project))
+    });
+    r.cloud(Event::CatalogPick(project.clone()));
+    r.cloud(Event::CatalogAct(crate::cloud::catalog_actions::Act::Purge));
+    r.cloud(Event::CatalogAnswer(true));
+    r.until("kalıcı silme", Duration::from_secs(30), |a| {
+        last(a).contains("kalıcı olarak silindi")
+    });
+}
