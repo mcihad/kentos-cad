@@ -17,6 +17,8 @@ pub mod rules;
 pub mod search;
 pub mod session;
 pub mod trace;
+pub mod subnetworks;
+pub mod terminals;
 pub mod turns;
 
 pub use check::{Checked, Problem, ProblemKind};
@@ -26,7 +28,9 @@ pub use rules::{Connect, Dir, Rules, UTurns};
 pub use search::{Path, Query, Searcher, Span, Tree};
 pub use session::{
     Line, Missing, NetworkSession, Place, Reached, Refusal, Routed, Served, ServedArea, ServedLine,
-    TraceAnswer, Valve, points_of, problem_name,
+    Subnet, TraceAnswer, Valve, points_of, problem_name,
 };
 pub use trace::TraceKind;
+pub use subnetworks::{Reach, Reached as SubnetReached};
+pub use terminals::{NO_DEVICE, NO_TERMINAL, Terminals};
 pub use turns::{Level, TurnIn};

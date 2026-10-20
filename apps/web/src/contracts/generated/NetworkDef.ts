@@ -6,6 +6,8 @@ import type { NetworkDirection } from "./NetworkDirection";
 import type { NetworkKind } from "./NetworkKind";
 import type { NetworkLayer } from "./NetworkLayer";
 import type { NetworkLevels } from "./NetworkLevels";
+import type { NetworkSubnetworks } from "./NetworkSubnetworks";
+import type { NetworkTerminals } from "./NetworkTerminals";
 import type { NetworkTurns } from "./NetworkTurns";
 
 /**
@@ -48,4 +50,14 @@ turns?: NetworkTurns,
  * Seviyeler (docs/adr/0521 §3): which ends and insides of the edges connect, by their level fields; none: every
  * one at one level.
  */
-levels?: NetworkLevels, };
+levels?: NetworkLevels, 
+/**
+ * Terminaller (docs/adr/0557 §1): the ends of a device (a valve's in and out, a transformer's two sides) and which
+ * of them connect through it; a trace goes through a device only along those paths. None: a device is a point.
+ */
+terminals?: NetworkTerminals, 
+/**
+ * Alt ağlar (docs/adr/0557 §2): the parts the sources feed, found by `cad.subnetworks.find` and written into an
+ * attribute by `cad.subnetworks.update`. None: the network has no subnetworks.
+ */
+subnetworks?: NetworkSubnetworks, };

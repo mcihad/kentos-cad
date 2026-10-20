@@ -44,6 +44,7 @@ use kentos_commands::{
 };
 use crate::time_query;
 use kentos_commands::{StacPrepare, StacSearch};
+use crate::{subnetworks, subnetworks_update};
 use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use crate::records_page;
 use crate::profiles::{apply as profiles_apply, check as profiles_check};
@@ -124,6 +125,8 @@ macro_rules! by_command {
             kentos_commands::CAD_BLOCKS_EDIT => $then!(blocks_edit, BlocksEdit),
             kentos_commands::CAD_LAYERS_SERVICE => $then!(layers_service, LayersService),
             kentos_commands::CAD_NETWORK_DEFINE => $then!(network_define, NetworkDefine),
+            kentos_commands::CAD_SUBNETWORKS_FIND => $then!(subnetworks, kentos_commands::SubnetworksFind),
+            kentos_commands::CAD_SUBNETWORKS_UPDATE => $then!(subnetworks_update, kentos_commands::SubnetworksUpdate),
             kentos_commands::CAD_ENTITIES_OFFSET => $then!(offset, EntitiesOffset),
             kentos_commands::CAD_POINTS_CONSTRUCT => $then!(points_construct, PointsConstruct),
             kentos_commands::CAD_CURVES_CONSTRUCT => $then!(curves_construct, CurvesConstruct),

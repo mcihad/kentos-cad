@@ -1800,6 +1800,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 93 (docs/adr/0557): a network's terminals or subnetworks.
+    if doc
+        .settings
+        .networks
+        .iter()
+        .any(|n| n.terminals.is_some() || n.subnetworks.is_some())
+    {
+        return crate::SCHEMA_WITH_NETWORK_TERMINALS;
+    }
     // Schema 91 (docs/adr/0538 §1): the bound layers' bases.
     if doc.settings.source_bases.iter().any(|b| b.fields.is_some()) {
         return crate::SCHEMA_WITH_SOURCE_FIELD_BASES;

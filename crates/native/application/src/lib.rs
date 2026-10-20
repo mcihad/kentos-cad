@@ -257,6 +257,8 @@ pub mod snap_find;
 pub mod profiles;
 pub mod standards;
 pub mod stretch;
+pub mod subnetworks;
+pub mod subnetworks_update;
 pub mod style_tables;
 pub mod styles_edit;
 pub mod topology_follow;
@@ -759,6 +761,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_NETWORK_DEFINE,
         kentos_commands::CAD_NETWORK_DEFINE_VERSION,
+    ),
+    // Alt ağlar ([`subnetworks`], [`subnetworks_update`], docs/adr/0557 §2).
+    (
+        kentos_commands::CAD_SUBNETWORKS_FIND,
+        kentos_commands::CAD_SUBNETWORKS_FIND_VERSION,
+    ),
+    (
+        kentos_commands::CAD_SUBNETWORKS_UPDATE,
+        kentos_commands::CAD_SUBNETWORKS_UPDATE_VERSION,
     ),
     // Adres verisi ([`address_define`], docs/adr/0229 §14).
     (

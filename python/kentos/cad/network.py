@@ -31,8 +31,11 @@ class _NetworkDefine(LocalCommand[NetworkDefine, NetworkDefined, NetworkDefined]
     değiyorsa orada; vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized
     ya da field: alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler
     (speed: hız alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti)
-    ve kapalı kenarların ifadesi. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri
-    alma adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer
+    ve kapalı kenarların ifadesi; ayrıca turns (dönüşler), levels (seviyeler), terminals
+    (cihazların terminalleri: kenarların başlangıç ve bitiş terminal alanları, cihaz
+    katmanı, terminalleri ve aralarındaki yollar) ve subnetworks (alt ağlar: ad alanı,
+    yazılacak öznitelik, reach). Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma
+    adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer
     uyarısıyla. Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi,
     şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır.
     expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
@@ -67,10 +70,13 @@ class _NetworkDefine(LocalCommand[NetworkDefine, NetworkDefined, NetworkDefined]
         vertices: bütün köşelerde de) ve tolerans (m), yön (both, digitized ya da field:
         alanın ileri, geri ve kapalı değerleri), uzunluktan başka maliyetler (speed: hız
         alanından dakika, varsayılan hızla; field: kenarın bütününün maliyeti) ve kapalı
-        kenarların ifadesi. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı
-        değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer uyarısıyla.
-        Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi, şebeke
-        izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır.
+        kenarların ifadesi; ayrıca turns (dönüşler), levels (seviyeler), terminals
+        (cihazların terminalleri: kenarların başlangıç ve bitiş terminal alanları, cihaz
+        katmanı, terminalleri ve aralarındaki yollar) ve subnetworks (alt ağlar: ad alanı,
+        yazılacak öznitelik, reach). Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma
+        adımı değildir. Çizimde olmayan katmanı adlandıran ağ yazılır, unknown_layer
+        uyarısıyla. Analizler (en kısa yol, hizmet alanı, en yakın tesis, maliyet matrisi,
+        şebeke izleme) çizimi değiştirmez; sonuçları cad.entities.create ile yazılır.
         expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç
         conflict olur.
 

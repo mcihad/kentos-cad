@@ -388,6 +388,7 @@
     "standards.check",
     "standards.apply",
     "profile.window",
+    "network.subnetworks",
     "lineTypes.manage",
     "hatchPatterns.manage",
     "tool.layerMatch",

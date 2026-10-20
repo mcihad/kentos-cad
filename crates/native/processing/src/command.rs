@@ -673,6 +673,21 @@ impl ToolHost for Tools {
             warnings,
         ))
     }
+
+    fn network(
+        &self,
+        doc: &Document,
+        id: &str,
+    ) -> Result<
+        (
+            kentos_commands::NetworkDef,
+            kentos_geometry_core::ops::network::NetworkSession,
+        ),
+        String,
+    > {
+        let built = crate::network::from_document(doc, id)?;
+        Ok((built.def, built.session))
+    }
 }
 
 /// The most rows one batch takes (docs/adr/0529 §1).

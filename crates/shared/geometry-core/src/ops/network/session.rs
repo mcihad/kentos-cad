@@ -15,6 +15,7 @@ use super::input::{EdgeValues, JunctionValues, from_store};
 use super::route::{Reorder, RouteError, route};
 use super::rules::Rules;
 use super::search::{Query, Searcher, Span, Tree, polyline_of, spans_edges, way_cost};
+use super::subnetworks::{Reach, subnetworks};
 use super::trace::{TraceKind, trace};
 use crate::api::json::{self, Json};
 use crate::entity::Shape;
@@ -235,7 +236,7 @@ crate::json_struct!(out TraceAnswer { objects, valves, junctions, unverified, un
 fn unverifies(p: &super::check::Problem) -> bool {
     use super::check::ProblemKind as K;
     match p.kind {
-        K::NearMiss | K::Crossing | K::OffNetwork | K::Short | K::Turn => true,
+        K::NearMiss | K::Crossing | K::OffNetwork | K::Short | K::Turn | K::Terminal => true,
         K::Unread => p.cost.is_none(),
         K::Detached => false,
     }
@@ -251,6 +252,21 @@ pub struct Unverified {
 }
 
 crate::json_struct!(out Unverified { kind, x, y, ids });
+
+/// One group of controllers' subnetwork (docs/adr/0557 §2): its objects' ids.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Subnet {
+    /// The controllers' junction objects, in the group's order.
+    pub controllers: Vec<f64>,
+    /// The edge objects reached (a multi-part object once), in the graph's order.
+    pub edges: Vec<f64>,
+    /// The junction objects at the nodes reached, the controller included, once each, in the graph's order.
+    pub junctions: Vec<f64>,
+    /// The reached pieces' length.
+    pub length: f64,
+    /// How many of Denetle's connection problems (those a trace says it is unverified over) touch what it reached.
+    pub unverified: usize,
+}
 
 static NULL: Json = Json::Null;
 
@@ -347,6 +363,7 @@ pub fn problem_name(k: ProblemKind) -> &'static str {
         ProblemKind::Short => "short",
         ProblemKind::Unread => "unread",
         ProblemKind::Turn => "turn",
+        ProblemKind::Terminal => "terminal",
     }
 }
 
@@ -417,6 +434,7 @@ impl NetworkSession {
                                 .collect(),
                             _ => Vec::new(),
                         },
+                        terminals: [text(item(item(v, 5), 0)), text(item(item(v, 5), 1))],
                     },
                 )
             })
@@ -440,6 +458,10 @@ impl NetworkSession {
                         role,
                         closed: matches!(item(v, 1), Json::Bool(true)),
                         level: text(item(v, 2)),
+                        device: match item(v, 3) {
+                            Json::Num(n) if *n >= 0.0 => Some(*n as u32),
+                            _ => None,
+                        },
                     },
                 )
             })
@@ -899,6 +921,64 @@ impl NetworkSession {
             _ => TraceKind::Connected,
         };
         Ok(json_of(self.trace_of(&starts, &barriers, reach, kind)))
+    }
+
+    /// The junctions that are subnetwork controllers (docs/adr/0557 §2): the sources on the network, as indices into
+    /// the graph's junctions.
+    pub fn controllers(&self) -> Vec<u32> {
+        self.graph
+            .junctions
+            .iter()
+            .enumerate()
+            .filter(|(_, j)| j.role == Role::Source)
+            .map(|(k, _)| k as u32)
+            .collect()
+    }
+
+    /// What each of `groups` (the indices into the graph's junctions of the controllers that are one subnetwork)
+    /// reaches by `reach`, in their order, as objects.
+    pub fn subnets(&self, groups: &[Vec<u32>], reach: Reach) -> Vec<Subnet> {
+        let g = &self.graph;
+        let checked = self
+            .checked
+            .get_or_init(|| check(&self.graph, &self.report));
+        subnetworks(g, groups, reach)
+            .into_iter()
+            .zip(groups)
+            .map(|(r, group)| {
+                let mut edges: Vec<f64> =
+                    r.edges.iter().map(|&e| g.edges[e as usize].id).collect();
+                edges.dedup_by(|a, b| a.to_bits() == b.to_bits());
+                let mut junctions: Vec<f64> = r
+                    .junctions
+                    .iter()
+                    .map(|&j| g.junctions[j as usize].id)
+                    .collect();
+                junctions.dedup_by(|a, b| a.to_bits() == b.to_bits());
+                let reached: std::collections::HashSet<u64> = edges
+                    .iter()
+                    .chain(&junctions)
+                    .map(|v| v.to_bits())
+                    .collect();
+                let unverified = checked
+                    .problems
+                    .iter()
+                    .filter(|p| {
+                        unverifies(p) && p.ids.iter().any(|i| reached.contains(&i.to_bits()))
+                    })
+                    .count();
+                Subnet {
+                    controllers: group
+                        .iter()
+                        .map(|&c| g.junctions[c as usize].id)
+                        .collect(),
+                    edges,
+                    junctions,
+                    length: r.length,
+                    unverified,
+                }
+            })
+            .collect()
     }
 
     /// Denetle: the network's counts, parts and problems.

@@ -41,7 +41,9 @@ use kentos_native_application::meshes::{describe as meshes_describe, query as me
 use kentos_native_application::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use kentos_native_application::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use kentos_native_application::time_query;
-use kentos_native_application::{processing_batch, processing_run, processing_tools};
+use kentos_native_application::{
+    processing_batch, processing_run, processing_tools, subnetworks, subnetworks_update,
+};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
 use kentos_native_application::{assets_check, images_edit, rasters_mosaic, rasters_georef, inserts_clip, sheets_set, spaces_finish, templates_apply, xrefs_edit, xrefs_list, viewmarks_create, viewmarks_edit, viewmarks_references};
@@ -2319,6 +2321,19 @@ impl Input for kentos_commands::RecordsPage {
     }
 }
 
+impl Input for kentos_commands::SubnetworksFind {
+    /// No number: a network's id.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::SubnetworksUpdate {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for NetworkDefine {
     /// `network.tolerance` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
@@ -3240,6 +3255,12 @@ fn run_op(
         }
         kentos_commands::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
         kentos_commands::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_commands::CAD_SUBNETWORKS_FIND => {
+            run!(subnetworks, kentos_commands::SubnetworksFind)
+        }
+        kentos_commands::CAD_SUBNETWORKS_UPDATE => {
+            run!(subnetworks_update, kentos_commands::SubnetworksUpdate)
+        }
         kentos_commands::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
         kentos_commands::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
         kentos_commands::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),

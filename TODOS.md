@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-27` şebekede terminaller ve alt ağlar (ADR 0557, 20 Ekim): web'de gerekenler: ağın `terminals` ve `subnetworks`'ının
+  TS türleri (üretilir) ve `.kcad` şema 93'ün web kodeğinde okunması, ağın işçisinde terminal yolları (çekirdekten),
+  Ağlar penceresinin Terminaller ve Alt ağlar bölümleri, Alt ağlar penceresi, `cad.subnetworks.*` komutlarının web işleyicisi.
 - [ ] `CBS-37` alan alan birleştirme (ADR 0553, 20 Ekim): web'de gerekenler: `kentos_contracts::merge_entities`'in TS karşılığı
   (nesnenin JSON'unun üst düzey alanları, öznitelikler tek tek) ve web bulut istemcisinin iki çatışma yolunda (dışarıdan gelen değişiklik,
   409) kullanması; Kaynakla uzlaştır web'de yok.
@@ -2070,6 +2073,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-27` şebekede terminaller ve alt ağlar (dilim): ağın cihazları (düğüm katmanı, terminaller, terminal yolları; kenar
+  uçlarının bağlı olduğu terminal alanları), izleme ve Denetle terminal yollarından geçer, terminalsiz uç bütün terminallere
+  geçer ve doğrulanmamıştır; alt ağlar (Kaynak düğümleri denetleyici, Akış aşağı ya da Bağlı, yetim, paylaşılan, eski);
+  `cad.subnetworks.find` ve `.update`, `.kcad` şema 93, Ağlar'da Terminaller ve Alt ağlar, Alt ağlar penceresi, Python, MCP.
+  Kalan: en kısa yol, hizmet alanı ve maliyet matrisinde terminal yolları, alt ağın kendiliğinden güncellenmesi, artımlı graf.
+  — **20 Ekim, [ADR 0557](docs/adr/0557-network-terminals-and-subnetworks.md).**
 - [ ] `CBS-34` TUCBS profili (dilim): veri profilleri veri olarak (`catalog/v1/profiles/tucbs-temel.json`: mahalle, ada, parsel, bina,
   yol, adres, imar; alanlar, kimlikler, kayıtlı alan ve toleransı, değer listeleri, ilişkiler, adres eşlemesi; kolon adı kodda yok),
   `cad.profiles.apply` (eksik grup, katman, alan, değer listesi, ilişki ve adres verisi; var olan korunur, tek geri alma adımı) ve salt

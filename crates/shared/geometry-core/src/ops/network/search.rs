@@ -175,6 +175,11 @@ impl Places {
             .map(|k| &self.split[k].1)
     }
 
+    /// The graph's node count: virtual nodes are numbered from it.
+    pub fn base(&self) -> u32 {
+        self.base
+    }
+
     /// Nodes in all: the graph's and the virtual ones.
     pub fn count(&self) -> usize {
         self.base as usize + self.vnodes.len()
@@ -932,6 +937,7 @@ mod tests {
                 closed: false,
                 levels: [None, None, None],
                 periods: Vec::new(),
+                terminals: [None, None],
             })
             .collect();
         Graph::build(rules, &edges, &[]).0

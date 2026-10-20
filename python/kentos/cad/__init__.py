@@ -31,7 +31,7 @@ from .protocol import *  # noqa: F403
 from .types import *  # noqa: F403
 from .versions import *  # noqa: F403
 
-from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, tables, tags, templates, texts, time, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
+from . import addresses, annotations, arc, arch, arrays, assets, attachments, blocks, changeset, circle, columns, constraints, crs, curves, dimensions, domains, drawing, entities, fields, file, fonts, forms, gis, grids, hatches, hatchpatterns, images, inserts, joins, labels, layers, leaders, library, line, linetypes, meshes, network, nurbs, openings, parameters, point, pointclouds, points, polygon, polyline, processing, profiles, project, ramps, rasters, records, rectangle, relations, scenarios, schedules, schema, settings, sheets, snap, sources, spaces, stac, stairs, standards, styles, subnetworks, tables, tags, templates, texts, time, ucs, units, viewmarks, views, walls, xrefs  # noqa: E402  isort: skip
 
 __all__ = [
     "AccessSource",
@@ -424,6 +424,7 @@ __all__ = [
     "DetachViewMarksOperation",
     "DetachXrefsOperation",
     "DeviationExplodeDensity",
+    "DeviceTerminal",
     "DiameterConstraintRule",
     "DiameterDimensionMeasure",
     "DigitizedNetworkDirection",
@@ -1091,6 +1092,8 @@ __all__ = [
     "NetworkLayer",
     "NetworkLevels",
     "NetworkPeriod",
+    "NetworkSubnetworks",
+    "NetworkTerminals",
     "NetworkTurns",
     "NetworkUTurns",
     "NetworkUTurnsName",
@@ -1691,6 +1694,15 @@ __all__ = [
     "StylesImpact",
     "SubPlace",
     "SubRef",
+    "Subnetwork",
+    "SubnetworkObjects",
+    "SubnetworkReach",
+    "SubnetworkReachName",
+    "SubnetworkStale",
+    "SubnetworksFind",
+    "SubnetworksFound",
+    "SubnetworksUpdate",
+    "SubnetworksUpdated",
     "Subtype",
     "SubtypeField",
     "Summary",
@@ -1745,6 +1757,7 @@ __all__ = [
     "TenantKind",
     "TenantKindName",
     "TenantRef",
+    "TerminalDevice",
     "TextAlign",
     "TextAlignName",
     "TextColumns",
@@ -2012,6 +2025,7 @@ __all__ = [
     "stairs",
     "standards",
     "styles",
+    "subnetworks",
     "tables",
     "tags",
     "templates",

@@ -123,6 +123,7 @@ mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
 mod data_profile;
+mod subnetworks_window;
 mod source_status;
 mod drawing_standard;
 #[cfg(test)]

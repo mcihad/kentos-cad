@@ -327,6 +327,8 @@ SCHEMA_WITH_RECORDED_TIME = 90
 SCHEMA_WITH_SOURCE_BASES = 91
 # Schema 92: schema 91 and a source base's `fields`, what each object held besides its hashes (docs/adr/0553 §1).
 SCHEMA_WITH_SOURCE_FIELD_BASES = 92
+# Schema 93: schema 92 and a network's `terminals` and `subnetworks` (docs/adr/0557).
+SCHEMA_WITH_NETWORK_TERMINALS = 93
 # The most bytes a base's field records take decoded, and the most vertex hashes a record keeps.
 MAX_FIELD_BASE_BYTES = 8 * 1024 * 1024
 MAX_BASE_VERTICES = 128
@@ -422,6 +424,7 @@ JUNCTION_ROLES = ("junction", "source", "valve")
 NETWORK_COST_KINDS = ("speed", "field")
 DIRECTION_KINDS = ("both", "digitized", "field")
 U_TURNS = ("allowed", "deadEnds", "never")
+SUBNETWORK_REACHES = ("downstream", "connected")
 # Map services' bounds and names (kentos_contracts::service).
 SERVICE_KINDS = ("xyz", "wms", "wmts", "ogcTiles", "arcgis", "google", "vector")
 FEED_KINDS = ("wfs", "ogcFeatures", "arcgis", "geojson")
@@ -569,7 +572,7 @@ def field_records_ok(raw, count):
     return at == len(raw)
 
 
-SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES)
+SCHEMAS = (DOCUMENT_VERSION, SCHEMA_WITH_LINE_WEIGHTS, SCHEMA_WITH_ELEVATIONS, SCHEMA_WITH_PARTS, SCHEMA_WITH_BLOCKS, SCHEMA_WITH_TEXT_EXTRAS, SCHEMA_WITH_LEADERS, SCHEMA_WITH_DIMENSIONS, SCHEMA_WITH_LAYER_SNAP, SCHEMA_WITH_DRAWING_UNIT, SCHEMA_WITH_SECOND_SRID, SCHEMA_WITH_CUSTOM_CRS, SCHEMA_WITH_SURVEY, SCHEMA_WITH_TRAVERSE_TOLERANCES, SCHEMA_WITH_GROUND, SCHEMA_WITH_LINE_PARTS, SCHEMA_WITH_LINKED_TEXTS, SCHEMA_WITH_LAYER_STATES, SCHEMA_WITH_PARAGRAPHS, SCHEMA_WITH_STYLES, SCHEMA_WITH_TABLES, SCHEMA_WITH_HATCH_PATTERNS, SCHEMA_WITH_IMAGES, SCHEMA_WITH_TEXT_PATHS, SCHEMA_WITH_LAYER_FIELDS, SCHEMA_WITH_TOPOLOGY, SCHEMA_WITH_SURVEY_SIGMAS, SCHEMA_WITH_RASTERS, SCHEMA_WITH_ANNOTATION, SCHEMA_WITH_POINT_CLOUDS, SCHEMA_WITH_SERVICES, SCHEMA_WITH_NETWORKS, SCHEMA_WITH_TEMPORAL, SCHEMA_WITH_FILTERS, SCHEMA_WITH_LABELS, SCHEMA_WITH_VARIABLES, SCHEMA_WITH_MULTIDIM, SCHEMA_WITH_MEASURES, SCHEMA_WITH_ATTACHMENTS, SCHEMA_WITH_COMPOSE, SCHEMA_WITH_ADDRESSES, SCHEMA_WITH_DIMENSION_REFS, SCHEMA_WITH_SHEETS, SCHEMA_WITH_REQUESTS, SCHEMA_WITH_POLYLINE_EXTRAS, SCHEMA_WITH_NURBS, SCHEMA_WITH_LOOK, SCHEMA_WITH_UCS, SCHEMA_WITH_IMPERIAL, SCHEMA_WITH_SUBREF_EXTRAS, SCHEMA_WITH_VIEWS, SCHEMA_WITH_ARRAYS, SCHEMA_WITH_WIPEOUTS, SCHEMA_WITH_FROZEN, SCHEMA_WITH_PATTERNS, SCHEMA_WITH_BLOCK_EXTRAS, SCHEMA_WITH_BLOCK_CARDS, SCHEMA_WITH_DYNAMIC_BLOCKS, SCHEMA_WITH_DIMENSION_RULES, SCHEMA_WITH_DIMENSION_OPTIONS, SCHEMA_WITH_DIMENSION_MARKS, SCHEMA_WITH_OVERRIDES, SCHEMA_WITH_ANNOTATIVE, SCHEMA_WITH_PARAGRAPH_LAYOUT, SCHEMA_WITH_TEXT_FIELDS, SCHEMA_WITH_MULTILEADER, SCHEMA_WITH_TABLE_CELLS, SCHEMA_WITH_HATCH_BOUNDARIES, SCHEMA_WITH_HATCH_GAPS, SCHEMA_WITH_HATCH_EXTRAS, SCHEMA_WITH_FORMS, SCHEMA_WITH_CONSTRAINTS, SCHEMA_WITH_SOURCES, SCHEMA_WITH_WALLS, SCHEMA_WITH_WALL_JOINS, SCHEMA_WITH_OPENINGS, SCHEMA_WITH_SPACES, SCHEMA_WITH_ARCH_ELEMENTS, SCHEMA_WITH_TAGS, SCHEMA_WITH_VIEWMARKS, SCHEMA_WITH_PHASES, SCHEMA_WITH_XREFS, SCHEMA_WITH_XREF_PATHS, SCHEMA_WITH_CLIPPING, SCHEMA_WITH_HEIGHTS, SCHEMA_WITH_NETWORK_TURNS, SCHEMA_WITH_GEOREF, SCHEMA_WITH_JOIN_VIEWS, SCHEMA_WITH_RECORDED_TIME, SCHEMA_WITH_SOURCE_BASES, SCHEMA_WITH_SOURCE_FIELD_BASES, SCHEMA_WITH_NETWORK_TERMINALS)
 # Unicode's White_Space characters: a block's name is not made of these alone.
 WHITE_SPACE = set("\t\n\x0b\x0c\r \x85\xa0\u1680\u2028\u2029\u202f\u205f\u3000") | {chr(c) for c in range(0x2000, 0x200B)}
 
@@ -1008,6 +1011,91 @@ def network_problem(n):
     lv = n.get("levels")
     if lv is not None and (bad_field(lv["start"]) or bad_field(lv["end"]) or ("inside" in lv and bad_field(lv["inside"]))):
         return "Seviye alanı boş, kırpılmamış ya da çok uzun."
+    tm = n.get("terminals")
+    if tm is not None:
+        p = terminals_problem(n, tm, bad_field)
+        if p:
+            return p
+    sn = n.get("subnetworks")
+    if sn is not None:
+        p = subnetworks_problem(n, sn, bad_field)
+        if p:
+            return p
+    return None
+
+
+def network_caseless(text):
+    """Trimmed, case folded with Turkish I and İ (kentos_contracts::network::network_caseless)."""
+    return "".join({"I": "ı", "İ": "i"}.get(c, c.lower()) for c in text.strip())
+
+
+def network_id_holds(i):
+    return 1 <= len(i) <= 40 and all(c in "abcdefghijklmnopqrstuvwxyz0123456789-" for c in i)
+
+
+def terminals_problem(n, t, bad_field):
+    """A network's terminals (docs/adr/0557 §1; kentos_contracts::network::NetworkDef::terminals_problem)."""
+    if bad_field(t["start"]) or bad_field(t["end"]):
+        return "Terminal alanı boş, kırpılmamış ya da çok uzun."
+    if t["start"] == t["end"]:
+        return "Başlangıç ve bitiş terminal alanları aynı."
+    devices = t["devices"]
+    if not devices or len(devices) > 16:
+        return "Terminalli cihaz yok ya da çok."
+    layers = [j["layer"] for j in n.get("junctions", [])]
+    for i, d in enumerate(devices):
+        if d["layer"] not in layers:
+            return "Cihazın katmanı ağın düğüm katmanlarından biri değil."
+        if any(o["layer"] == d["layer"] for o in devices[:i]):
+            return "Cihazın katmanı iki kez var."
+        terms = d["terminals"]
+        if not 2 <= len(terms) <= 8:
+            return "Cihazın terminalleri 2–8 olmalı."
+        keys = []
+        for tm in terms:
+            if not network_id_holds(tm["id"]):
+                return "Terminal kimliği 1–40 küçük harf, rakam ya da tire olmalı."
+            name = tm["name"]
+            if not name.strip() or name.strip() != name or len(name) > 40:
+                return "Terminal adı boş, kırpılmamış ya da 40 karakterden uzun."
+            mine = [network_caseless(tm["id"])]
+            if network_caseless(name) != mine[0]:
+                mine.append(network_caseless(name))
+            for k in mine:
+                if k in keys:
+                    return "Cihazın terminalleri karışıyor."
+                keys.append(k)
+        paths = d["paths"]
+        if not paths or len(paths) > 16:
+            return "Cihazın yolu yok ya da çok."
+        ids = [tm["id"] for tm in terms]
+        for path in paths:
+            if len(path) < 2:
+                return "Yol en az iki terminal içermeli."
+            for m, x in enumerate(path):
+                if x not in ids:
+                    return "Yoldaki terminal cihazın terminali değil."
+                if x in path[:m]:
+                    return "Yolda terminal iki kez var."
+    return None
+
+
+def subnetworks_problem(n, s, bad_field):
+    """A network's subnetworks (docs/adr/0557 §2; kentos_contracts::network::NetworkDef::subnetworks_problem)."""
+    if not any(j["role"] == "source" for j in n.get("junctions", [])):
+        return "Alt ağların denetleyicisi yok."
+    if bad_field(s["attribute"]):
+        return "Alt ağ özniteliği boş, kırpılmamış ya da çok uzun."
+    if "name" in s and bad_field(s["name"]):
+        return "Alt ağ adı alanı boş, kırpılmamış ya da çok uzun."
+    reads = [s["name"]] if "name" in s else []
+    if "terminals" in n:
+        reads += [n["terminals"]["start"], n["terminals"]["end"]]
+    d = n["direction"]
+    if d["kind"] == "field":
+        reads.append(d["field"])
+    if s["attribute"] in reads:
+        return "Alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar."
     return None
 
 
@@ -2807,6 +2895,7 @@ class _Schema:
         self.recorded_time = version >= SCHEMA_WITH_RECORDED_TIME
         self.source_bases = version >= SCHEMA_WITH_SOURCE_BASES
         self.source_field_bases = version >= SCHEMA_WITH_SOURCE_FIELD_BASES
+        self.network_terminals = version >= SCHEMA_WITH_NETWORK_TERMINALS
         self.text_paths = version >= SCHEMA_WITH_TEXT_PATHS
         self.layer_fields = version >= SCHEMA_WITH_LAYER_FIELDS
         self.blocks = version >= SCHEMA_WITH_BLOCKS
@@ -4257,6 +4346,12 @@ class _Schema:
             }
         )
         levels = self.fields({"start": (self.text, True), "end": (self.text, True), "inside": (self.text, False)})
+        terminal = self.fields({"id": (self.text, True), "name": (self.text, True)})
+        device = self.fields({"layer": (self.text, True), "terminals": (self.array(terminal), True),
+                              "paths": (self.array(self.array(self.text)), True)})
+        terminals = self.fields({"start": (self.text, True), "end": (self.text, True), "devices": (self.array(device), True)})
+        subnetworks = self.fields({"name": (self.text, False), "attribute": (self.text, True),
+                                   "reach": (self.enum(SUBNETWORK_REACHES), True)})
         network = self.fields(
             {
                 "id": (self.text, True),
@@ -4270,6 +4365,7 @@ class _Schema:
                 "costs": (nonempty(cost, "boş maliyet listesi yazılmaz"), False),
                 "closed": (self.text, False),
                 **({"turns": (turns, False), "levels": (levels, False)} if turned else {}),
+                **({"terminals": (terminals, False), "subnetworks": (subnetworks, False)} if self.network_terminals else {}),
             }
         )
         all_ = self.array(network)(v)

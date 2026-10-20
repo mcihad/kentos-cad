@@ -1136,6 +1136,8 @@ mod tests {
             closed: None,
             turns: None,
             levels: None,
+            terminals: None,
+            subnetworks: None,
         };
         const AT: &str = "settings.networks";
         assert!(check_networks(&[], AT).is_ok());

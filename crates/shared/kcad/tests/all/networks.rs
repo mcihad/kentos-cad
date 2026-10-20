@@ -53,6 +53,8 @@ fn roads() -> NetworkDef {
         closed: None,
         turns: None,
         levels: None,
+        terminals: None,
+        subnetworks: None,
     }
 }
 
@@ -205,7 +207,7 @@ fn the_readers_errors_name_their_places() {
             Code::BadValue,
             "networks/0/kind",
         ),
-        ("broken/schema-version-93.kcad", Code::SchemaVersion, ""),
+        ("broken/schema-version-94.kcad", Code::SchemaVersion, ""),
     ] {
         let e = refused(file);
         assert_eq!(e.code, code, "{file}: {e}");

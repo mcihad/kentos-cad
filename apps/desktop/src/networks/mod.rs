@@ -11,6 +11,8 @@
 mod engine;
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod terminal_tests;
 pub mod window;
 
 use std::collections::{HashMap, HashSet};
@@ -215,7 +217,7 @@ impl App {
         self.networks.engine.send(Job::Build {
             network: key.to_owned(),
             name: def.name.clone(),
-            rules,
+            rules: Box::new(rules),
             edges,
             junctions,
             turns,

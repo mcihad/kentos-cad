@@ -1809,6 +1809,7 @@ impl App {
             Asking::LayerTranslate => self.layer_translate_view(),
             Asking::DrawingStandard => self.drawing_standard_view(),
             Asking::DataProfile => self.data_profile_view(),
+            Asking::Subnetworks => self.subnetworks_view(),
             Asking::SourceStatus => self.source_status_view(),
             Asking::LineTypes => self.line_types_view(),
             Asking::Parameters => self.parameters_view(),

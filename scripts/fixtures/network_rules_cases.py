@@ -86,6 +86,24 @@ def set_(key, value):
     return f
 
 
+def plain_with_layers(count):
+    """A utility network with `count` junction layers (the 17-devices case needs them all)."""
+    return changed(water(), set_("junctions", [{"layer": f"d{i}", "role": "junction"} for i in range(count)]))
+
+
+def device(**over):
+    return {"layer": "su-vana", "terminals": [{"id": "giris", "name": "Giriş"}, {"id": "cikis", "name": "Çıkış"}],
+            "paths": [["giris", "cikis"]], **over}
+
+
+def terminals(*devices, **over):
+    return {"start": "uc_bas", "end": "uc_son", "devices": list(devices) or [device()], **over}
+
+
+def subnets(**over):
+    return {"name": "Ad", "attribute": "Alt ağ", "reach": "downstream", **over}
+
+
 NETWORKS = [
     ("yol ağı", road()),
     ("şebeke", water()),
@@ -177,6 +195,44 @@ NETWORKS = [
     ("bütün gün kapalı", changed(plain(), set_("costs", [speed(periods=[{"from": 0, "to": 1440, "factor": 0.0}])]))),
     ("25 dönem", changed(plain(), set_("costs", [speed(periods=[{"from": i * 50, "to": i * 50 + 10, "factor": 0.5} for i in range(25)])]))),
     ("alan maliyetinde zaman profili", changed(plain(), set_("costs", [field_cost(periods=[{"from": 420, "to": 570, "factor": 0.5}])]))),
+    # Terminals and subnetworks (docs/adr/0557).
+    ("terminaller", changed(water(), set_("terminals", terminals()))),
+    ("terminaller, kimlik ve ad aynı", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "yg", "name": "YG"}, {"id": "ag", "name": "ag"}], paths=[["yg", "ag"]]))))),
+    ("terminaller, 3 terminalli iki yollu cihaz", changed(water(), set_("terminals", terminals(device(
+        terminals=[{"id": "a", "name": "A"}, {"id": "b", "name": "B"}, {"id": "c", "name": "C"}], paths=[["a", "b"], ["b", "c"]]))))),
+    ("terminal başlangıç ve bitiş alanı aynı", changed(water(), set_("terminals", terminals(end="uc_bas")))),
+    ("terminal başlangıç alanı kırpılmamış", changed(water(), set_("terminals", terminals(start=" uc_bas")))),
+    ("terminal bitiş alanı boş", changed(water(), set_("terminals", terminals(end="")))),
+    ("terminal alanı 65 karakter", changed(water(), set_("terminals", terminals(start="u" * 65)))),
+    ("cihaz yok", changed(water(), set_("terminals", {"start": "uc_bas", "end": "uc_son", "devices": []}))),
+    ("17 cihaz", changed(plain_with_layers(16), set_("terminals", {"start": "uc_bas", "end": "uc_son", "devices": [device(layer=f"d{i}") for i in range(16)] + [device(layer="d0")]}))),
+    ("cihazın katmanı düğüm katmanı değil", changed(water(), set_("terminals", terminals(device(layer="yok"))))),
+    ("aynı katman iki cihaz", changed(water(), set_("terminals", terminals(device(), device())))),
+    ("tek terminal", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "giris", "name": "Giriş"}], paths=[["giris", "giris"]]))))),
+    ("9 terminal", changed(water(), set_("terminals", terminals(device(terminals=[{"id": f"t{i}", "name": f"T{i}"} for i in range(9)], paths=[["t0", "t1"]]))))),
+    ("terminal kimliği büyük harf", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "Giris", "name": "Giriş"}, {"id": "cikis", "name": "Çıkış"}]))))),
+    ("terminal adı boş", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "giris", "name": ""}, {"id": "cikis", "name": "Çıkış"}]))))),
+    ("terminal adı kırpılmamış", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "giris", "name": "Giriş "}, {"id": "cikis", "name": "Çıkış"}]))))),
+    ("terminal adı 41 karakter", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "giris", "name": "g" * 41}, {"id": "cikis", "name": "Çıkış"}]))))),
+    ("terminal adı öbürünün kimliği", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "giris", "name": "cikis"}, {"id": "cikis", "name": "Çıkış"}]))))),
+    ("terminal adları Türkçe harfle aynı", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "a", "name": "IŞIK"}, {"id": "b", "name": "ışık"}], paths=[["a", "b"]]))))),
+    ("terminal adları I ile ı başka", changed(water(), set_("terminals", terminals(device(terminals=[{"id": "a", "name": "ILIK"}, {"id": "b", "name": "ilik"}], paths=[["a", "b"]]))))),
+    ("yol yok", changed(water(), set_("terminals", terminals(device(paths=[]))))),
+    ("17 yol", changed(water(), set_("terminals", terminals(device(paths=[["giris", "cikis"]] * 17))))),
+    ("yolda tek terminal", changed(water(), set_("terminals", terminals(device(paths=[["giris"]]))))),
+    ("yolda cihazın olmayan terminali", changed(water(), set_("terminals", terminals(device(paths=[["giris", "yok"]]))))),
+    ("yolda aynı terminal iki kez", changed(water(), set_("terminals", terminals(device(paths=[["giris", "giris"]]))))),
+    ("alt ağlar", changed(water(), set_("subnetworks", subnets()))),
+    ("alt ağlar, adı alanı olmadan", changed(water(), set_("subnetworks", {"attribute": "AltAg", "reach": "connected"}))),
+    ("alt ağlar, kaynak katmanı yok", changed(water(), lambda n: (set_("junctions", [{"layer": "su-vana", "role": "valve"}])(n), set_("subnetworks", subnets())(n)))),
+    ("alt ağ özniteliği boş", changed(water(), set_("subnetworks", subnets(attribute="")))),
+    ("alt ağ özniteliği kırpılmamış", changed(water(), set_("subnetworks", subnets(attribute=" Alt ağ")))),
+    ("alt ağ özniteliği 65 karakter", changed(water(), set_("subnetworks", subnets(attribute="a" * 65)))),
+    ("alt ağ adı alanı boş", changed(water(), set_("subnetworks", subnets(name="")))),
+    ("alt ağ özniteliği adı alanıyla aynı", changed(water(), set_("subnetworks", subnets(attribute="Ad")))),
+    ("alt ağ özniteliği terminal alanıyla aynı", changed(water(), lambda n: (set_("terminals", terminals())(n), set_("subnetworks", subnets(attribute="uc_son"))(n)))),
+    ("alt ağ özniteliği yön alanıyla aynı", changed(water(), lambda n: (set_("direction", field_direction(forward=["FT"]))(n), set_("subnetworks", subnets(attribute="yon"))(n)))),
+    ("terminaller ve alt ağlar birlikte", changed(water(), lambda n: (set_("terminals", terminals())(n), set_("subnetworks", subnets())(n)))),
 ]
 
 

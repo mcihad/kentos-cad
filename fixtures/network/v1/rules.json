@@ -3796,6 +3796,2434 @@
         "name": "A",
         "tolerance": 0.0001
       }
+    },
+    {
+      "name": "terminaller",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminaller, kimlik ve ad aynı",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "yg",
+                  "ag"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "yg",
+                  "name": "YG"
+                },
+                {
+                  "id": "ag",
+                  "name": "ag"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminaller, 3 terminalli iki yollu cihaz",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "a",
+                  "b"
+                ],
+                [
+                  "b",
+                  "c"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "a",
+                  "name": "A"
+                },
+                {
+                  "id": "b",
+                  "name": "B"
+                },
+                {
+                  "id": "c",
+                  "name": "C"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal başlangıç ve bitiş alanı aynı",
+      "problem": "“İçme suyu” ağının başlangıç ve bitiş terminal alanları aynı; her ucun kendi alanı olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_bas",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal başlangıç alanı kırpılmamış",
+      "problem": "“İçme suyu” ağının terminal alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": " uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal bitiş alanı boş",
+      "problem": "“İçme suyu” ağının terminal alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal alanı 65 karakter",
+      "problem": "“İçme suyu” ağının terminal alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "cihaz yok",
+      "problem": "“İçme suyu” ağının terminalli cihazı yok ya da çok; 1–16 cihaz olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "17 cihaz",
+      "problem": "“İçme suyu” ağının terminalli cihazı yok ya da çok; 1–16 cihaz olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "layer": "d0",
+            "role": "junction"
+          },
+          {
+            "layer": "d1",
+            "role": "junction"
+          },
+          {
+            "layer": "d2",
+            "role": "junction"
+          },
+          {
+            "layer": "d3",
+            "role": "junction"
+          },
+          {
+            "layer": "d4",
+            "role": "junction"
+          },
+          {
+            "layer": "d5",
+            "role": "junction"
+          },
+          {
+            "layer": "d6",
+            "role": "junction"
+          },
+          {
+            "layer": "d7",
+            "role": "junction"
+          },
+          {
+            "layer": "d8",
+            "role": "junction"
+          },
+          {
+            "layer": "d9",
+            "role": "junction"
+          },
+          {
+            "layer": "d10",
+            "role": "junction"
+          },
+          {
+            "layer": "d11",
+            "role": "junction"
+          },
+          {
+            "layer": "d12",
+            "role": "junction"
+          },
+          {
+            "layer": "d13",
+            "role": "junction"
+          },
+          {
+            "layer": "d14",
+            "role": "junction"
+          },
+          {
+            "layer": "d15",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "d0",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d1",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d2",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d3",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d4",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d5",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d6",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d7",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d8",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d9",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d10",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d11",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d12",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d13",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d14",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d15",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "d0",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "cihazın katmanı düğüm katmanı değil",
+      "problem": "“İçme suyu” ağının 1. cihazın katmanı ağın düğüm katmanlarından biri değil",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "yok",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "aynı katman iki cihaz",
+      "problem": "“İçme suyu” ağının 2. cihazın katmanı iki kez var",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            },
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "tek terminal",
+      "problem": "“İçme suyu” ağının 1. cihazın terminalleri 2–8 olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "giris"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "9 terminal",
+      "problem": "“İçme suyu” ağının 1. cihazın terminalleri 2–8 olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "t0",
+                  "t1"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "t0",
+                  "name": "T0"
+                },
+                {
+                  "id": "t1",
+                  "name": "T1"
+                },
+                {
+                  "id": "t2",
+                  "name": "T2"
+                },
+                {
+                  "id": "t3",
+                  "name": "T3"
+                },
+                {
+                  "id": "t4",
+                  "name": "T4"
+                },
+                {
+                  "id": "t5",
+                  "name": "T5"
+                },
+                {
+                  "id": "t6",
+                  "name": "T6"
+                },
+                {
+                  "id": "t7",
+                  "name": "T7"
+                },
+                {
+                  "id": "t8",
+                  "name": "T8"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal kimliği büyük harf",
+      "problem": "“İçme suyu” ağının 1. cihazın terminal kimliği “Giris”; 1–40 küçük harf, rakam ya da tire olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "Giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adı boş",
+      "problem": "“İçme suyu” ağının 1. cihazın “giris” terminalinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": ""
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adı kırpılmamış",
+      "problem": "“İçme suyu” ağının 1. cihazın “giris” terminalinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş "
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adı 41 karakter",
+      "problem": "“İçme suyu” ağının 1. cihazın “giris” terminalinin adı boş, kırpılmamış ya da 40 karakterden uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "ggggggggggggggggggggggggggggggggggggggggg"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adı öbürünün kimliği",
+      "problem": "“İçme suyu” ağının 1. cihazın terminalleri karışıyor: “cikis” bir terminalin kimliği ya da adı olarak iki kez var",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "cikis"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adları Türkçe harfle aynı",
+      "problem": "“İçme suyu” ağının 1. cihazın terminalleri karışıyor: “ışık” bir terminalin kimliği ya da adı olarak iki kez var",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "a",
+                  "b"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "a",
+                  "name": "IŞIK"
+                },
+                {
+                  "id": "b",
+                  "name": "ışık"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminal adları I ile ı başka",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "a",
+                  "b"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "a",
+                  "name": "ILIK"
+                },
+                {
+                  "id": "b",
+                  "name": "ilik"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "yol yok",
+      "problem": "“İçme suyu” ağının 1. cihazın yolu yok ya da çok; 1–16 yol olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "17 yol",
+      "problem": "“İçme suyu” ağının 1. cihazın yolu yok ya da çok; 1–16 yol olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ],
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "yolda tek terminal",
+      "problem": "“İçme suyu” ağının 1. cihazın 1. yolu en az iki terminal içermeli",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "yolda cihazın olmayan terminali",
+      "problem": "“İçme suyu” ağının 1. cihazın 1. yolundaki “yok” cihazın terminali değil",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "yok"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "yolda aynı terminal iki kez",
+      "problem": "“İçme suyu” ağının 1. cihazın 1. yolunda “giris” iki kez var",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "giris"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağlar",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "Alt ağ",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağlar, adı alanı olmadan",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "AltAg",
+          "reach": "connected"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağlar, kaynak katmanı yok",
+      "problem": "“İçme suyu” ağının alt ağlarının denetleyicisi yok; en az bir Kaynak düğüm katmanı olmalı",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "layer": "su-vana",
+            "role": "valve"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "Alt ağ",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği boş",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği kırpılmamış",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": " Alt ağ",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği 65 karakter",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ adı alanı boş",
+      "problem": "“İçme suyu” ağının alt ağ adı alanı boş, kırpılmamış ya da çok uzun",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "Alt ağ",
+          "name": "",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği adı alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "Ad",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği terminal alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "uc_son",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "alt ağ özniteliği yön alanıyla aynı",
+      "problem": "“İçme suyu” ağının alt ağ özniteliği ağın okuduğu bir alanın üstüne yazar; başka bir ad seçin",
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "backward": [],
+          "closed": [],
+          "field": "yon",
+          "forward": [
+            "FT"
+          ],
+          "kind": "field"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "yon",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "tolerance": 0.005
+      }
+    },
+    {
+      "name": "terminaller ve alt ağlar birlikte",
+      "problem": null,
+      "value": {
+        "connect": "vertices",
+        "direction": {
+          "kind": "digitized"
+        },
+        "edges": [
+          {
+            "layer": "su-hatti"
+          }
+        ],
+        "id": "ag-2",
+        "junctions": [
+          {
+            "closed": "durum = 'kapalı'",
+            "layer": "su-vana",
+            "role": "valve"
+          },
+          {
+            "layer": "su-depo",
+            "role": "source"
+          },
+          {
+            "filter": "tur = 'baglanti'",
+            "layer": "su-vana",
+            "role": "junction"
+          }
+        ],
+        "kind": "utility",
+        "name": "İçme suyu",
+        "subnetworks": {
+          "attribute": "Alt ağ",
+          "name": "Ad",
+          "reach": "downstream"
+        },
+        "terminals": {
+          "devices": [
+            {
+              "layer": "su-vana",
+              "paths": [
+                [
+                  "giris",
+                  "cikis"
+                ]
+              ],
+              "terminals": [
+                {
+                  "id": "giris",
+                  "name": "Giriş"
+                },
+                {
+                  "id": "cikis",
+                  "name": "Çıkış"
+                }
+              ]
+            }
+          ],
+          "end": "uc_son",
+          "start": "uc_bas"
+        },
+        "tolerance": 0.005
+      }
     }
   ],
   "note": "The rules of a project's networks (docs/adr/0209 §2), each case with the contract's words; null where the value is one. scripts/fixtures/network_rules_cases.py writes the values from the ADR and checks the verdicts with tools/kcad/kcad.py's own copy of the rules; Rust (crates/shared/contracts/tests/all/network_rules.rs, KENTOS_WRITE_NETWORK_RULES=1 writes the words) and TypeScript (apps/web/src/model/networkRules.test.ts) give the same words.",
