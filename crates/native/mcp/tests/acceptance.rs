@@ -79,7 +79,10 @@ fn differs(actual: &Value, expected: &Value, tolerance: f64, at: &str, out: &mut
 
 fn bind(value: &Value, names: &BTreeMap<String, String>) -> Value {
     match value {
-        Value::String(s) if s.starts_with('$') => json!(names[&s[1..]]),
+        // `$out:` paths are the caller's to place.
+        Value::String(s) if s.starts_with('$') && !s.starts_with("$out:") => {
+            json!(names[&s[1..]])
+        }
         Value::Object(fields) => Value::Object(
             fields
                 .iter()
@@ -308,5 +311,130 @@ fn the_room_is_drawn_corrected_dimensioned_and_hatched_as_the_scenario_says() {
     );
     let theirs = call(&mut server, "drawing.summary", json!({ "drawing": fresh }));
     assert_eq!(theirs["objects"], mine["objects"]);
+    let _ = std::fs::remove_dir_all(dir);
+}
+
+const GIS_SCENARIO: &str = include_str!("../../../../fixtures/acceptance/v1/parcels.json");
+
+/// A layer's node of the tree by its name.
+fn layer_named(nodes: &Value, name: &str) -> Option<String> {
+    for n in nodes.as_array().into_iter().flatten() {
+        if n["name"] == name && n["type"] == "layer" {
+            return n["id"].as_str().map(str::to_owned);
+        }
+        if let Some(id) = layer_named(&n["children"], name) {
+            return Some(id);
+        }
+    }
+    None
+}
+
+/// The first GIS acceptance project through the MCP server (plan/gis.md CBS-44, docs/adr/0554): the shared scenario
+/// (fixtures/acceptance/v1/parcels.json, worked out by scripts/fixtures/acceptance_parcels.py without KentOS code)
+/// replayed tool call after tool call: typed layers, an undone value, Alan hesapla, Konuma göre seç, a reopening, five
+/// formats written and the GeoPackage opened in a new drawing with nothing lost. Every write is its command's row.
+#[test]
+fn the_parcels_are_made_checked_written_and_opened_elsewhere_as_the_scenario_says() {
+    let scenario: Value = serde_json::from_str(GIS_SCENARIO).expect("the scenario");
+    let tolerance = scenario["tolerance"].as_f64().expect("a tolerance");
+    let mut server = Server::new();
+    let made = call(&mut server, "drawing.new", scenario["project"].clone());
+    let mut drawing = made["drawing"].as_str().expect("a handle").to_owned();
+    let mut names = BTreeMap::new();
+    let dir = std::env::temp_dir().join(format!("kentos-mcp-ada-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).expect("a folder");
+    let out = dir.display().to_string();
+    let mut rows: Vec<Value> = Vec::new();
+    for (n, step) in scenario["steps"].as_array().expect("steps").iter().enumerate() {
+        let name = step["name"].as_str().unwrap_or("");
+        if step["fresh"] == true {
+            let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+            rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
+            let fresh = call(&mut server, "drawing.new", scenario["project"].clone());
+            drawing = fresh["drawing"].as_str().expect("a handle").to_owned();
+        }
+        let mut selected = Value::Null;
+        if let Some(command) = step["command"].as_str() {
+            let text = bind(&step["input"], &names).to_string().replace("$out:", &format!("{out}/"));
+            let mut arguments: Value = serde_json::from_str(&text).expect("json");
+            arguments["drawing"] = json!(drawing);
+            let answer = call(&mut server, command, arguments);
+            assert_eq!(answer["status"], "completed", "{name}: {answer}");
+            if let Some(key) = step["as"].as_str() {
+                names.insert(key.to_owned(), answer["output"]["uid"].as_str().expect("uid").to_owned());
+            }
+            for (key, field) in step["bind"].as_object().into_iter().flatten() {
+                let value = answer["output"][field.as_str().expect("a field")].as_str().expect("bound");
+                names.insert(key.clone(), value.to_owned());
+            }
+            selected = answer["output"]["selected"].clone();
+        } else if let Some(label) = step["undo"].as_str() {
+            let undone = call(&mut server, "drawing.undo", json!({ "drawing": drawing }));
+            assert_eq!(undone["step"], label, "{name}");
+        } else if step["reopen"] == true {
+            let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+            rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
+            let path = dir.join(format!("ada-{n}.kcad"));
+            call(&mut server, "drawing.save", json!({ "drawing": drawing, "path": path }));
+            let opened = call(&mut server, "drawing.open", json!({ "path": path }));
+            drawing = opened["drawing"].as_str().expect("a handle").to_owned();
+        }
+        let expect = &step["expect"];
+        let mut problems = Vec::new();
+        for (key, want) in expect["objects"].as_object().into_iter().flatten() {
+            let got = call(&mut server, "drawing.entity", json!({ "drawing": drawing, "uid": names[key] }));
+            differs(&got["entity"], want, tolerance, key, &mut problems);
+        }
+        for (key, want) in expect["measures"].as_object().into_iter().flatten() {
+            let got = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": names[key] }));
+            differs(&got, want, tolerance, &format!("{key} ölçü"), &mut problems);
+        }
+        if let Some(count) = expect.get("count") {
+            let summary = call(&mut server, "drawing.summary", json!({ "drawing": drawing }));
+            differs(&summary["objects"], count, 0.0, "nesne sayısı", &mut problems);
+        }
+        if let Some(want) = expect["selected"].as_array() {
+            let mut want: Vec<String> = want.iter().filter_map(|k| k.as_str()).map(|k| names[k].clone()).collect();
+            let mut got: Vec<String> =
+                selected.as_array().into_iter().flatten().filter_map(|u| u.as_str().map(str::to_owned)).collect();
+            want.sort();
+            got.sort();
+            if got != want {
+                problems.push(format!("seçilenler {got:?}, beklenen {want:?}"));
+            }
+        }
+        for (layer, spec) in expect["layers"].as_object().into_iter().flatten() {
+            let tree = call(&mut server, "drawing.layers", json!({ "drawing": drawing }));
+            let Some(id) = layer_named(&tree["layers"], layer).or_else(|| layer_named(&tree, layer)) else {
+                problems.push(format!("{layer} katmanı yok"));
+                continue;
+            };
+            let page = call(&mut server, "drawing.entities", json!({ "drawing": drawing, "layer": id }));
+            let key = spec["key"].as_str().expect("a key");
+            let items = page["items"].as_array().cloned().unwrap_or_default();
+            let rows_of = spec["rows"].as_object().expect("rows");
+            if items.len() != rows_of.len() {
+                problems.push(format!("{layer}: {} nesne, beklenen {}", items.len(), rows_of.len()));
+            }
+            for item in &items {
+                let attrs = &item["entity"]["attrs"];
+                let Some(k) = attrs[key].as_str() else {
+                    problems.push(format!("{layer}: {key} yok"));
+                    continue;
+                };
+                differs(attrs, &rows_of[k], 0.0, &format!("{layer}/{k}"), &mut problems);
+                let m = call(&mut server, "drawing.measure", json!({ "drawing": drawing, "uid": item["uid"] }));
+                differs(&m["area"], &spec["areas"][k], tolerance, &format!("{layer}/{k} alan"), &mut problems);
+            }
+        }
+        assert!(problems.is_empty(), "{name}: {problems:#?}");
+    }
+    let journal = call(&mut server, "drawing.journal", json!({ "drawing": drawing }));
+    rows.extend(journal["calls"].as_array().cloned().unwrap_or_default());
+    assert!(
+        rows.iter().all(|r| r["kind"] == "command"),
+        "every write went through a command: {rows:#?}"
+    );
     let _ = std::fs::remove_dir_all(dir);
 }
