@@ -12204,6 +12204,58 @@
    "kinds": []
   },
   {
+   "id": "cad.meshes.describe",
+   "title": "Meshin bilgisi",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 24,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.describe.json"
+   ],
+   "options": [],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.meshes.query",
+   "title": "Mesh sor",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.meshes.query.json"
+   ],
+   "options": [
+    {
+     "key": "series",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "raster",
+     "covered": true
+    }
+   ]
+  },
+  {
    "id": "cad.network.define",
    "title": "Ağ tanımı",
    "effect": "document",
@@ -12684,13 +12736,42 @@
     "mcp": true,
     "server": false
    },
-   "cases": 31,
+   "cases": 42,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.describe.json"
    ],
    "options": [
     {
      "key": "classes",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": [
+    {
+     "kind": "pointcloud",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.pointclouds.profile",
+   "title": "Nokta bulutu profili",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.pointclouds.profile.json"
+   ],
+   "options": [
+    {
+     "key": "points",
      "value": true,
      "covered": true
     }
@@ -12716,6 +12797,29 @@
    "cases": 25,
    "files": [
     "fixtures/commands/v1/cad.pointclouds.query.json"
+   ],
+   "options": [],
+   "kinds": [
+    {
+     "kind": "pointcloud",
+     "covered": true
+    }
+   ]
+  },
+  {
+   "id": "cad.pointclouds.region",
+   "title": "Nokta bulutu alan istatistiği",
+   "effect": "query",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 40,
+   "files": [
+    "fixtures/commands/v1/cad.pointclouds.region.json"
    ],
    "options": [],
    "kinds": [

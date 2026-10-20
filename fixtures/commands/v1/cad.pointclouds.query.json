@@ -4,7 +4,7 @@
  "command": "cad.pointclouds.query",
  "commandVersion": 1,
  "title": "XYZ sor",
- "note": "ADR 0536. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık baytlarından, sistemler pyproj'la, boyutlar LAS 1.4 R15'in tablolarından, COPC düğümleri COPC 1.0 belirtiminden; KentOS kodu yok.",
+ "note": "ADR 0536, 0552. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık baytlarından, sistemler pyproj'la, boyutlar LAS 1.4 R15'in tablolarından, COPC düğümleri COPC 1.0 belirtiminden; KentOS kodu yok.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -815,6 +815,669 @@
      "render": "classification",
      "size": 2
     }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 23,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.66,
+       4400001.51,
+       4.005,
+       500399.29,
+       4400298.95,
+       5.968
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.21,
+       4400000.51,
+       4.015,
+       500399.32,
+       4400299.3,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500000.21,
+     4400000.02,
+     4.005,
+     500399.32,
+     4400299.88,
+     5.994
+    ],
+    "count": 900,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 24,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.09,
+     20.02,
+     600019.99,
+     4400009.81,
+     39.730000000000004
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 25,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 600,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 26,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 600,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 27,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 45,
+      "bounds": [
+       599999.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     }
+    ],
+    "bounds": [
+     599999.04,
+     4400000.09,
+     20.02,
+     600019.99,
+     4400009.81,
+     39.730000000000004
+    ],
+    "count": 85,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 28,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     20.02,
+     600009.92,
+     4400100.0,
+     150.0
+    ],
+    "count": 90,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 29,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-c.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600020.78,
+       4400000.78,
+       20.490000000000002,
+       600029.69,
+       4400009.72,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.42,
+     20.02,
+     600029.69,
+     4400009.72,
+     39.59
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 30,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-d.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600030.14,
+       4400000.01,
+       20.89,
+       600039.21,
+       4400009.98,
+       39.36
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.01,
+     20.02,
+     600039.21,
+     4400009.98,
+     39.36
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 31,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-e.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600040.18,
+       4400000.14,
+       20.94,
+       600049.9,
+       4400009.7,
+       39.81
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.14,
+     20.02,
+     600049.9,
+     4400009.7,
+     39.81
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 32,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-f.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600050.02,
+       4400000.18,
+       20.06,
+       600059.66,
+       4400009.3,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.18,
+     20.02,
+     600059.66,
+     4400009.48,
+     39.59
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 33,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-c.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600020.78,
+       4400000.78,
+       20.490000000000002,
+       600029.69,
+       4400009.72,
+       39.59
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-d.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600030.14,
+       4400000.01,
+       20.89,
+       600039.21,
+       4400009.98,
+       39.36
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-e.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600040.18,
+       4400000.14,
+       20.94,
+       600049.9,
+       4400009.7,
+       39.81
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-f.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600050.02,
+       4400000.18,
+       20.06,
+       600059.66,
+       4400009.3,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.01,
+     20.02,
+     600059.66,
+     4400009.98,
+     39.81
+    ],
+    "count": 240,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 34,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/area-grid.las",
+      "format": "las",
+      "count": 1681,
+      "bounds": [
+       1000.0,
+       2000.0,
+       100.0,
+       1020.0,
+       2020.0,
+       104.9
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.0,
+     100.0,
+     1020.0,
+     2020.0,
+     104.9
+    ],
+    "count": 1681,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 35,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/area-grid.las",
+      "format": "las",
+      "count": 300000000,
+      "bounds": [
+       1000.0,
+       2000.0,
+       100.0,
+       1020.0,
+       2020.0,
+       104.9
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.0,
+     100.0,
+     1020.0,
+     2020.0,
+     104.9
+    ],
+    "count": 300000000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
    }
   ],
   "styles": {
@@ -1562,7 +2225,7 @@
         "pointSourceId": 0,
         "gpsTime": 1400000002.75
        },
-       "read": 2980,
+       "read": 4780,
        "revision": "$current"
       },
       "warnings": "$any"

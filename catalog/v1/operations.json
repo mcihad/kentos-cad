@@ -765,6 +765,24 @@
       "mcp": "cad.pointclouds.query",
       "note": "Araç kendi dizinleriyle en yakın noktayı bulur; komut aynı noktayı dosyanın tam çözünürlüğünde kalıcı kimliğiyle verir (ADR 0536)."
     },
+    "pointcloud.region": {
+      "level": "query",
+      "python": "kentos.cad.pointclouds.region",
+      "mcp": "cad.pointclouds.region",
+      "note": "Pencere seçili alanı komuta verir ve cevabını gösterir; dosyalar kaynağın tam çözünürlüğünde okunur (ADR 0552)."
+    },
+    "pointcloud.profile": {
+      "level": "query",
+      "python": "kentos.cad.pointclouds.profile",
+      "mcp": "cad.pointclouds.profile",
+      "note": "Pencere seçili yolu, genişliği ve adımı komuta verir ve istasyonları gösterir (ADR 0552)."
+    },
+    "mesh.query": {
+      "level": "query",
+      "python": "kentos.cad.meshes.query",
+      "mcp": "cad.meshes.query",
+      "note": "Pencere yeri ve anı komuta verir; yüzü kalıcı kimliğiyle ve veri setlerinin değerlerini gösterir (ADR 0552)."
+    },
     "pointcloud.vpcSave": {
       "level": "none"
     },

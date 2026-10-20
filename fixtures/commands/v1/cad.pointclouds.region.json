@@ -1,0 +1,5673 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.pointclouds.region",
+ "commandVersion": 1,
+ "title": "Nokta bulutu alan istatistiği",
+ "note": "ADR 0552. Bağımsız başvuru scripts/fixtures/pointcloud_area_cases.py: noktalar laspy'den, alanın içi kesirlerle (kenar işaretleri tam), koridorun uzaklığı kesirlerle, istasyon ve ofset mpmath'le 40 basamakta, ortalamalar math.fsum'la; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Nokta bulutlarının bilgisi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "bulut",
+    "name": "Bulut",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "bulut",
+  "entities": [
+   {
+    "kind": "pointcloud",
+    "id": 1,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 2,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.66,
+       4400001.51,
+       4.005,
+       500399.29,
+       4400298.95,
+       5.968
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.51,
+     4.005,
+     500399.29,
+     4400298.95,
+     5.968
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 3,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.21,
+       4400000.51,
+       4.015,
+       500399.32,
+       4400299.3,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500000.21,
+     4400000.51,
+     4.015,
+     500399.32,
+     4400299.3,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 4,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f3.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500004.34,
+       4400003.69,
+       4.024,
+       500399.62,
+       4400297.84,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500004.34,
+     4400003.69,
+     4.024,
+     500399.62,
+     4400297.84,
+     5.986
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 5,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las13-f1.las",
+      "format": "las",
+      "count": 200,
+      "bounds": [
+       500000.66,
+       4400001.49,
+       4.048,
+       500399.29,
+       4400298.95,
+       5.989
+      ]
+     }
+    ],
+    "bounds": [
+     500000.66,
+     4400001.49,
+     4.048,
+     500399.29,
+     4400298.95,
+     5.989
+    ],
+    "count": 200,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 6,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f6.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.61,
+       4400000.19,
+       4.014,
+       500396.69,
+       4400299.95,
+       5.9350000000000005
+      ]
+     }
+    ],
+    "bounds": [
+     500000.61,
+     4400000.19,
+     4.014,
+     500396.69,
+     4400299.95,
+     5.9350000000000005
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 7,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f7.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500001.02,
+       4400000.08,
+       4.054,
+       500398.71,
+       4400298.78,
+       5.982
+      ]
+     }
+    ],
+    "bounds": [
+     500001.02,
+     4400000.08,
+     4.054,
+     500398.71,
+     4400298.78,
+     5.982
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 8,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las14-f8.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.48,
+       4400001.07,
+       4.0040000000000004,
+       500399.12,
+       4400299.84,
+       5.981
+      ]
+     }
+    ],
+    "bounds": [
+     500000.48,
+     4400001.07,
+     4.0040000000000004,
+     500399.12,
+     4400299.84,
+     5.981
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 9,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.laz",
+      "format": "laz",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 10,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/index-sample.copc.laz",
+      "format": "copc",
+      "count": 12000,
+      "bounds": [
+       400000.0,
+       4500000.0,
+       8.1,
+       400100.0,
+       4500100.0,
+       31.66
+      ]
+     }
+    ],
+    "bounds": [
+     400000.0,
+     4500000.0,
+     8.1,
+     400100.0,
+     4500100.0,
+     31.66
+    ],
+    "count": 12000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 11,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/many-chunks.laz",
+      "format": "laz",
+      "count": 120000,
+      "bounds": [
+       0.0,
+       0.0,
+       7.0,
+       199.5,
+       149.5,
+       12.99
+      ]
+     }
+    ],
+    "bounds": [
+     0.0,
+     0.0,
+     7.0,
+     199.5,
+     149.5,
+     12.99
+    ],
+    "count": 120000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 12,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 13,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500200.72,
+     4400200.23,
+     50.7,
+     500209.99,
+     4400209.79,
+     59.52
+    ],
+    "count": 20,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 14,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 50,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 15,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 16,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "url": "https://ornek.invalid/bulut.copc.laz",
+      "format": "copc",
+      "count": 10,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     100.0,
+     500100.0,
+     4400100.0,
+     150.0
+    ],
+    "count": 10,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 17,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/broken/not-las.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 18,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ],
+      "asset": "pointcloud-0536053605360536"
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "line",
+    "id": 19,
+    "layerId": "bulut",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 20,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 300000000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 21,
+    "layerId": "gizli",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     100.007,
+     500117.31,
+     4400119.88,
+     104.893
+    ],
+    "count": 40,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 22,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-wkt.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       500100.38,
+       4400100.15,
+       100.007,
+       500117.31,
+       4400119.88,
+       104.893
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/meta-geokeys.las",
+      "format": "las",
+      "count": 20,
+      "bounds": [
+       500200.72,
+       4400200.23,
+       50.7,
+       500209.99,
+       4400209.79,
+       59.52
+      ]
+     }
+    ],
+    "bounds": [
+     500100.38,
+     4400100.15,
+     50.7,
+     500209.99,
+     4400209.79,
+     104.893
+    ],
+    "count": 60,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 23,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f1.laz",
+      "format": "laz",
+      "count": 300,
+      "bounds": [
+       500000.66,
+       4400001.51,
+       4.005,
+       500399.29,
+       4400298.95,
+       5.968
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f2.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.21,
+       4400000.51,
+       4.015,
+       500399.32,
+       4400299.3,
+       5.986
+      ]
+     }
+    ],
+    "bounds": [
+     500000.21,
+     4400000.02,
+     4.005,
+     500399.32,
+     4400299.88,
+     5.994
+    ],
+    "count": 900,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 24,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.09,
+     20.02,
+     600019.99,
+     4400009.81,
+     39.730000000000004
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 25,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 600,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 26,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/las12-f0.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/yok.las",
+      "format": "las",
+      "count": 300,
+      "bounds": [
+       500000.23,
+       4400000.02,
+       4.047,
+       500397.71,
+       4400299.88,
+       5.994
+      ]
+     }
+    ],
+    "bounds": [
+     500000.23,
+     4400000.02,
+     4.047,
+     500397.71,
+     4400299.88,
+     5.994
+    ],
+    "count": 600,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 27,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 45,
+      "bounds": [
+       599999.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     }
+    ],
+    "bounds": [
+     599999.04,
+     4400000.09,
+     20.02,
+     600019.99,
+     4400009.81,
+     39.730000000000004
+    ],
+    "count": 85,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 28,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/bulut.xyz",
+      "format": "xyz",
+      "count": 50,
+      "bounds": [
+       500000.0,
+       4400000.0,
+       100.0,
+       500100.0,
+       4400100.0,
+       150.0
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     }
+    ],
+    "bounds": [
+     500000.0,
+     4400000.0,
+     20.02,
+     600009.92,
+     4400100.0,
+     150.0
+    ],
+    "count": 90,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 29,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-c.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600020.78,
+       4400000.78,
+       20.490000000000002,
+       600029.69,
+       4400009.72,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.42,
+     20.02,
+     600029.69,
+     4400009.72,
+     39.59
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 30,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-d.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600030.14,
+       4400000.01,
+       20.89,
+       600039.21,
+       4400009.98,
+       39.36
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.01,
+     20.02,
+     600039.21,
+     4400009.98,
+     39.36
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 31,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-e.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600040.18,
+       4400000.14,
+       20.94,
+       600049.9,
+       4400009.7,
+       39.81
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.14,
+     20.02,
+     600049.9,
+     4400009.7,
+     39.81
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 32,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-f.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600050.02,
+       4400000.18,
+       20.06,
+       600059.66,
+       4400009.3,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.18,
+     20.02,
+     600059.66,
+     4400009.48,
+     39.59
+    ],
+    "count": 80,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 33,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-a.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600000.04,
+       4400000.42,
+       20.02,
+       600009.92,
+       4400009.48,
+       36.35
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-b.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600010.52,
+       4400000.09,
+       20.1,
+       600019.99,
+       4400009.81,
+       39.730000000000004
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-c.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600020.78,
+       4400000.78,
+       20.490000000000002,
+       600029.69,
+       4400009.72,
+       39.59
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-d.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600030.14,
+       4400000.01,
+       20.89,
+       600039.21,
+       4400009.98,
+       39.36
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-e.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600040.18,
+       4400000.14,
+       20.94,
+       600049.9,
+       4400009.7,
+       39.81
+      ]
+     },
+     {
+      "file": "$fixture:pointcloud/v1/files/tile-f.las",
+      "format": "las",
+      "count": 40,
+      "bounds": [
+       600050.02,
+       4400000.18,
+       20.06,
+       600059.66,
+       4400009.3,
+       39.59
+      ]
+     }
+    ],
+    "bounds": [
+     600000.04,
+     4400000.01,
+     20.02,
+     600059.66,
+     4400009.98,
+     39.81
+    ],
+    "count": 240,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 34,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/area-grid.las",
+      "format": "las",
+      "count": 1681,
+      "bounds": [
+       1000.0,
+       2000.0,
+       100.0,
+       1020.0,
+       2020.0,
+       104.9
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.0,
+     100.0,
+     1020.0,
+     2020.0,
+     104.9
+    ],
+    "count": 1681,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   },
+   {
+    "kind": "pointcloud",
+    "id": 35,
+    "layerId": "bulut",
+    "attrs": {},
+    "sources": [
+     {
+      "file": "$fixture:pointcloud/v1/files/area-grid.las",
+      "format": "las",
+      "count": 300000000,
+      "bounds": [
+       1000.0,
+       2000.0,
+       100.0,
+       1020.0,
+       2020.0,
+       104.9
+      ]
+     }
+    ],
+    "bounds": [
+     1000.0,
+     2000.0,
+     100.0,
+     1020.0,
+     2020.0,
+     104.9
+    ],
+    "count": 300000000,
+    "srid": 5254,
+    "style": {
+     "render": "classification",
+     "size": 2
+    }
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "pointcloud-0536053605360536",
+     "name": "las12-f0.las",
+     "data": "data:application/octet-stream;base64,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"
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "las12-f0: dikdörtgen içindeki noktalar",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 30000.0,
+       "read": 300,
+       "total": {
+        "count": 71,
+        "classes": {
+         "5": 13,
+         "2": 6,
+         "1": 5,
+         "3": 5,
+         "4": 14,
+         "17": 9,
+         "9": 7,
+         "6": 12
+        },
+        "bounds": [
+         500052.88,
+         4400053.55,
+         4.056,
+         500247.73,
+         4400198.26,
+         5.928
+        ],
+        "z": {
+         "min": 4.056,
+         "max": 5.928,
+         "mean": 5.0785633802816905
+        },
+        "intensity": {
+         "min": 1408.0,
+         "max": 64633.0,
+         "mean": 32127.985915492958
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "read": 300,
+         "stats": {
+          "count": 71,
+          "classes": {
+           "5": 13,
+           "2": 6,
+           "1": 5,
+           "3": 5,
+           "4": 14,
+           "17": 9,
+           "9": 7,
+           "6": 12
+          },
+          "bounds": [
+           500052.88,
+           4400053.55,
+           4.056,
+           500247.73,
+           4400198.26,
+           5.928
+          ],
+          "z": {
+           "min": 4.056,
+           "max": 5.928,
+           "mean": 5.0785633802816905
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 64633.0,
+           "mean": 32127.985915492958
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0023666666666666667
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las12-f1: üçgen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400300.0
+       }
+      ],
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 60000.0,
+       "read": 300,
+       "total": {
+        "count": 151,
+        "classes": {
+         "1": 13,
+         "2": 20,
+         "5": 17,
+         "3": 16,
+         "6": 24,
+         "4": 22,
+         "17": 15,
+         "9": 24
+        },
+        "bounds": [
+         500030.69,
+         4400001.51,
+         4.082,
+         500381.62,
+         4400248.47,
+         5.9590000000000005
+        ],
+        "z": {
+         "min": 4.082,
+         "max": 5.9590000000000005,
+         "mean": 5.059966887417219
+        },
+        "intensity": {
+         "min": 189.0,
+         "max": 64928.0,
+         "mean": 32704.60927152318
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:2",
+         "read": 300,
+         "stats": {
+          "count": 151,
+          "classes": {
+           "1": 13,
+           "2": 20,
+           "5": 17,
+           "3": 16,
+           "6": 24,
+           "4": 22,
+           "17": 15,
+           "9": 24
+          },
+          "bounds": [
+           500030.69,
+           4400001.51,
+           4.082,
+           500381.62,
+           4400248.47,
+           5.9590000000000005
+          ],
+          "z": {
+           "min": 4.082,
+           "max": 5.9590000000000005,
+           "mean": 5.059966887417219
+          },
+          "intensity": {
+           "min": 189.0,
+           "max": 64928.0,
+           "mean": 32704.60927152318
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0025166666666666666
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las12-f2: L biçimli içbükey alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400300.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400300.0
+       }
+      ],
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 50000.0,
+       "read": 300,
+       "total": {
+        "count": 134,
+        "classes": {
+         "17": 23,
+         "5": 20,
+         "1": 8,
+         "3": 15,
+         "9": 18,
+         "2": 17,
+         "4": 15,
+         "6": 18
+        },
+        "bounds": [
+         500000.21,
+         4400000.51,
+         4.055,
+         500292.24,
+         4400299.3,
+         5.986
+        ],
+        "z": {
+         "min": 4.055,
+         "max": 5.986,
+         "mean": 5.310589552238806
+        },
+        "intensity": {
+         "min": 1711.0,
+         "max": 65458.0,
+         "mean": 33628.253731343284
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:3",
+         "read": 300,
+         "stats": {
+          "count": 134,
+          "classes": {
+           "17": 23,
+           "5": 20,
+           "1": 8,
+           "3": 15,
+           "9": 18,
+           "2": 17,
+           "4": 15,
+           "6": 18
+          },
+          "bounds": [
+           500000.21,
+           4400000.51,
+           4.055,
+           500292.24,
+           4400299.3,
+           5.986
+          ],
+          "z": {
+           "min": 4.055,
+           "max": 5.986,
+           "mean": 5.310589552238806
+          },
+          "intensity": {
+           "min": 1711.0,
+           "max": 65458.0,
+           "mean": 33628.253731343284
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.00268
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las12-f3: delikli alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500020.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500380.0,
+        "y": 4400020.0
+       },
+       {
+        "x": 500380.0,
+        "y": 4400280.0
+       },
+       {
+        "x": 500020.0,
+        "y": 4400280.0
+       }
+      ],
+      "holes": [
+       [
+        {
+         "x": 500100.0,
+         "y": 4400080.0
+        },
+        {
+         "x": 500300.0,
+         "y": 4400080.0
+        },
+        {
+         "x": 500300.0,
+         "y": 4400200.0
+        },
+        {
+         "x": 500100.0,
+         "y": 4400200.0
+        }
+       ]
+      ],
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 69600.0,
+       "read": 300,
+       "total": {
+        "count": 182,
+        "classes": {
+         "4": 23,
+         "6": 20,
+         "9": 27,
+         "17": 25,
+         "1": 19,
+         "2": 19,
+         "5": 21,
+         "3": 28
+        },
+        "bounds": [
+         500020.62,
+         4400020.54,
+         4.024,
+         500379.36,
+         4400279.47,
+         5.957
+        ],
+        "z": {
+         "min": 4.024,
+         "max": 5.957,
+         "mean": 4.915247252747253
+        },
+        "intensity": {
+         "min": 294.0,
+         "max": 65203.0,
+         "mean": 33442.796703296706
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:4",
+         "read": 300,
+         "stats": {
+          "count": 182,
+          "classes": {
+           "4": 23,
+           "6": 20,
+           "9": 27,
+           "17": 25,
+           "1": 19,
+           "2": 19,
+           "5": 21,
+           "3": 28
+          },
+          "bounds": [
+           500020.62,
+           4400020.54,
+           4.024,
+           500379.36,
+           4400279.47,
+           5.957
+          ],
+          "z": {
+           "min": 4.024,
+           "max": 5.957,
+           "mean": 4.915247252747253
+          },
+          "intensity": {
+           "min": 294.0,
+           "max": 65203.0,
+           "mean": 33442.796703296706
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.002614942528735632
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las13-f1: saat yönünde verilen halka",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500100.0,
+        "y": 4400250.0
+       },
+       {
+        "x": 500350.0,
+        "y": 4400250.0
+       },
+       {
+        "x": 500350.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       }
+      ],
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 37500.0,
+       "read": 200,
+       "total": {
+        "count": 59,
+        "classes": {
+         "9": 6,
+         "3": 9,
+         "5": 5,
+         "17": 13,
+         "6": 4,
+         "2": 7,
+         "1": 6,
+         "4": 9
+        },
+        "bounds": [
+         500111.06,
+         4400100.42,
+         4.127,
+         500348.79,
+         4400249.88,
+         5.901
+        ],
+        "z": {
+         "min": 4.127,
+         "max": 5.901,
+         "mean": 4.932491525423729
+        },
+        "intensity": {
+         "min": 1554.0,
+         "max": 61391.0,
+         "mean": 34263.779661016946
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:5",
+         "read": 200,
+         "stats": {
+          "count": 59,
+          "classes": {
+           "9": 6,
+           "3": 9,
+           "5": 5,
+           "17": 13,
+           "6": 4,
+           "2": 7,
+           "1": 6,
+           "4": 9
+          },
+          "bounds": [
+           500111.06,
+           4400100.42,
+           4.127,
+           500348.79,
+           4400249.88,
+           5.901
+          ],
+          "z": {
+           "min": 4.127,
+           "max": 5.901,
+           "mean": 4.932491525423729
+          },
+          "intensity": {
+           "min": 1554.0,
+           "max": 61391.0,
+           "mean": 34263.779661016946
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0015733333333333333
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las14-f6: son köşesi birinciyle aynı halka",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400150.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400150.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       }
+      ],
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 30000.0,
+       "read": 300,
+       "total": {
+        "count": 79,
+        "classes": {
+         "4": 8,
+         "20": 5,
+         "0": 3,
+         "2": 8,
+         "9": 9,
+         "11": 2,
+         "7": 10,
+         "200": 3,
+         "18": 4,
+         "64": 9,
+         "5": 2,
+         "1": 5,
+         "22": 5,
+         "3": 3,
+         "17": 2,
+         "6": 1
+        },
+        "bounds": [
+         500003.74,
+         4400000.59,
+         4.1,
+         500197.62,
+         4400149.93,
+         5.867
+        ],
+        "z": {
+         "min": 4.1,
+         "max": 5.867,
+         "mean": 5.030240506329114
+        },
+        "intensity": {
+         "min": 794.0,
+         "max": 65114.0,
+         "mean": 33732.82278481012
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:6",
+         "read": 300,
+         "stats": {
+          "count": 79,
+          "classes": {
+           "4": 8,
+           "20": 5,
+           "0": 3,
+           "2": 8,
+           "9": 9,
+           "11": 2,
+           "7": 10,
+           "200": 3,
+           "18": 4,
+           "64": 9,
+           "5": 2,
+           "1": 5,
+           "22": 5,
+           "3": 3,
+           "17": 2,
+           "6": 1
+          },
+          "bounds": [
+           500003.74,
+           4400000.59,
+           4.1,
+           500197.62,
+           4400149.93,
+           5.867
+          ],
+          "z": {
+           "min": 4.1,
+           "max": 5.867,
+           "mean": 5.030240506329114
+          },
+          "intensity": {
+           "min": 794.0,
+           "max": 65114.0,
+           "mean": 33732.82278481012
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0026333333333333334
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las14-f7: sekiz köşeli alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400250.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400300.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400300.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400100.0
+       }
+      ],
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 103750.0,
+       "read": 300,
+       "total": {
+        "count": 249,
+        "classes": {
+         "18": 13,
+         "20": 20,
+         "7": 11,
+         "9": 22,
+         "200": 13,
+         "3": 14,
+         "2": 17,
+         "4": 10,
+         "64": 20,
+         "17": 15,
+         "22": 18,
+         "1": 19,
+         "11": 11,
+         "5": 18,
+         "0": 12,
+         "6": 16
+        },
+        "bounds": [
+         500017.92,
+         4400001.33,
+         4.054,
+         500398.71,
+         4400298.78,
+         5.982
+        ],
+        "z": {
+         "min": 4.054,
+         "max": 5.982,
+         "mean": 5.055124497991969
+        },
+        "intensity": {
+         "min": 417.0,
+         "max": 65323.0,
+         "mean": 32248.863453815262
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:7",
+         "read": 300,
+         "stats": {
+          "count": 249,
+          "classes": {
+           "18": 13,
+           "20": 20,
+           "7": 11,
+           "9": 22,
+           "200": 13,
+           "3": 14,
+           "2": 17,
+           "4": 10,
+           "64": 20,
+           "17": 15,
+           "22": 18,
+           "1": 19,
+           "11": 11,
+           "5": 18,
+           "0": 12,
+           "6": 16
+          },
+          "bounds": [
+           500017.92,
+           4400001.33,
+           4.054,
+           500398.71,
+           4400298.78,
+           5.982
+          ],
+          "z": {
+           "min": 4.054,
+           "max": 5.982,
+           "mean": 5.055124497991969
+          },
+          "intensity": {
+           "min": 417.0,
+           "max": 65323.0,
+           "mean": 32248.863453815262
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0024
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "las14-f8: renkli nokta biçimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500200.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500400.0,
+        "y": 4400300.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400300.0
+       }
+      ],
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 40000.0,
+       "read": 300,
+       "total": {
+        "count": 94,
+        "classes": {
+         "6": 6,
+         "4": 7,
+         "18": 7,
+         "64": 7,
+         "3": 12,
+         "2": 5,
+         "9": 4,
+         "7": 8,
+         "17": 5,
+         "200": 5,
+         "11": 3,
+         "0": 9,
+         "20": 7,
+         "5": 6,
+         "22": 3
+        },
+        "bounds": [
+         500200.13,
+         4400100.58,
+         4.0040000000000004,
+         500399.12,
+         4400293.44,
+         5.981
+        ],
+        "z": {
+         "min": 4.0040000000000004,
+         "max": 5.981,
+         "mean": 5.064425531914893
+        },
+        "intensity": {
+         "min": 683.0,
+         "max": 65242.0,
+         "mean": 34480.414893617024
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:8",
+         "read": 300,
+         "stats": {
+          "count": 94,
+          "classes": {
+           "6": 6,
+           "4": 7,
+           "18": 7,
+           "64": 7,
+           "3": 12,
+           "2": 5,
+           "9": 4,
+           "7": 8,
+           "17": 5,
+           "200": 5,
+           "11": 3,
+           "0": 9,
+           "20": 7,
+           "5": 6,
+           "22": 3
+          },
+          "bounds": [
+           500200.13,
+           4400100.58,
+           4.0040000000000004,
+           500399.12,
+           4400293.44,
+           5.981
+          ],
+          "z": {
+           "min": 4.0040000000000004,
+           "max": 5.981,
+           "mean": 5.064425531914893
+          },
+          "intensity": {
+           "min": 683.0,
+           "max": 65242.0,
+           "mean": 34480.414893617024
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.00235
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "index-sample.laz: LAZ'da dosya bütün okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 400020.0,
+        "y": 4500020.0
+       },
+       {
+        "x": 400060.0,
+        "y": 4500020.0
+       },
+       {
+        "x": 400060.0,
+        "y": 4500050.0
+       },
+       {
+        "x": 400020.0,
+        "y": 4500050.0
+       }
+      ],
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 1200.0,
+       "read": 12000,
+       "total": {
+        "count": 133,
+        "classes": {
+         "2": 42,
+         "1": 33,
+         "6": 31,
+         "5": 27
+        },
+        "bounds": [
+         400020.0,
+         4500020.06,
+         12.43,
+         400059.93,
+         4500049.94,
+         29.48
+        ],
+        "z": {
+         "min": 12.43,
+         "max": 29.48,
+         "mean": 20.207744360902257
+        },
+        "intensity": {
+         "min": 698.0,
+         "max": 1883.0,
+         "mean": 1343.5112781954888
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:9",
+         "read": 12000,
+         "stats": {
+          "count": 133,
+          "classes": {
+           "2": 42,
+           "1": 33,
+           "6": 31,
+           "5": 27
+          },
+          "bounds": [
+           400020.0,
+           4500020.06,
+           12.43,
+           400059.93,
+           4500049.94,
+           29.48
+          ],
+          "z": {
+           "min": 12.43,
+           "max": 29.48,
+           "mean": 20.207744360902257
+          },
+          "intensity": {
+           "min": 698.0,
+           "max": 1883.0,
+           "mean": 1343.5112781954888
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.11083333333333334
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "index-sample.copc.laz: aynı alan, COPC'de yalnız değen düğümler okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 400020.0,
+        "y": 4500020.0
+       },
+       {
+        "x": 400060.0,
+        "y": 4500020.0
+       },
+       {
+        "x": 400060.0,
+        "y": 4500050.0
+       },
+       {
+        "x": 400020.0,
+        "y": 4500050.0
+       }
+      ],
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 1200.0,
+       "read": 11768,
+       "total": {
+        "count": 133,
+        "classes": {
+         "6": 31,
+         "1": 33,
+         "5": 27,
+         "2": 42
+        },
+        "bounds": [
+         400020.0,
+         4500020.06,
+         12.43,
+         400059.93,
+         4500049.94,
+         29.48
+        ],
+        "z": {
+         "min": 12.43,
+         "max": 29.48,
+         "mean": 20.207744360902257
+        },
+        "intensity": {
+         "min": 698.0,
+         "max": 1883.0,
+         "mean": 1343.5112781954888
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:10",
+         "read": 11768,
+         "stats": {
+          "count": 133,
+          "classes": {
+           "6": 31,
+           "1": 33,
+           "5": 27,
+           "2": 42
+          },
+          "bounds": [
+           400020.0,
+           4500020.06,
+           12.43,
+           400059.93,
+           4500049.94,
+           29.48
+          ],
+          "z": {
+           "min": 12.43,
+           "max": 29.48,
+           "mean": 20.207744360902257
+          },
+          "intensity": {
+           "min": 698.0,
+           "max": 1883.0,
+           "mean": 1343.5112781954888
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.11083333333333334
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "index-sample.copc.laz: bütün alan, bütün düğümler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 399999.0,
+        "y": 4499999.0
+       },
+       {
+        "x": 400101.0,
+        "y": 4499999.0
+       },
+       {
+        "x": 400101.0,
+        "y": 4500101.0
+       },
+       {
+        "x": 399999.0,
+        "y": 4500101.0
+       }
+      ],
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 10404.0,
+       "read": 12000,
+       "total": {
+        "count": 12000,
+        "classes": {
+         "6": 2979,
+         "5": 2898,
+         "2": 3090,
+         "1": 3033
+        },
+        "bounds": [
+         400000.0,
+         4500000.0,
+         8.1,
+         400100.0,
+         4500100.0,
+         31.66
+        ],
+        "z": {
+         "min": 8.1,
+         "max": 31.66,
+         "mean": 19.9963425
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 3428.0,
+         "mean": 1237.1504166666666
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:10",
+         "read": 12000,
+         "stats": {
+          "count": 12000,
+          "classes": {
+           "6": 2979,
+           "5": 2898,
+           "2": 3090,
+           "1": 3033
+          },
+          "bounds": [
+           400000.0,
+           4500000.0,
+           8.1,
+           400100.0,
+           4500100.0,
+           31.66
+          ],
+          "z": {
+           "min": 8.1,
+           "max": 31.66,
+           "mean": 19.9963425
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 3428.0,
+           "mean": 1237.1504166666666
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 1.1534025374855825
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "many-chunks.laz: 120 000 nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 20.0,
+        "y": 10.0
+       },
+       {
+        "x": 180.0,
+        "y": 30.0
+       },
+       {
+        "x": 160.0,
+        "y": 140.0
+       },
+       {
+        "x": 30.0,
+        "y": 120.0
+       }
+      ],
+      "uids": [
+       "$uidOf:11"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 16050.0,
+       "read": 120000,
+       "total": {
+        "count": 64251,
+        "classes": {
+         "2": 64251
+        },
+        "bounds": [
+         20.0,
+         10.0,
+         7.0,
+         180.0,
+         140.0,
+         12.99
+        ],
+        "z": {
+         "min": 7.0,
+         "max": 12.99,
+         "mean": 9.993832936452351
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 65535.0,
+         "mean": 32684.297582917
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:11",
+         "read": 120000,
+         "stats": {
+          "count": 64251,
+          "classes": {
+           "2": 64251
+          },
+          "bounds": [
+           20.0,
+           10.0,
+           7.0,
+           180.0,
+           140.0,
+           12.99
+          ],
+          "z": {
+           "min": 7.0,
+           "max": 12.99,
+           "mean": 9.993832936452351
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 65535.0,
+           "mean": 32684.297582917
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 4.003177570093458
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "meta-wkt.las: GPS zamanı ve ek boyutlu dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500110.0,
+        "y": 4400120.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400120.0
+       }
+      ],
+      "uids": [
+       "$uidOf:12"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 200.0,
+       "read": 40,
+       "total": {
+        "count": 27,
+        "classes": {
+         "2": 9,
+         "3": 4,
+         "6": 10,
+         "9": 4
+        },
+        "bounds": [
+         500100.38,
+         4400100.15,
+         100.155,
+         500109.97,
+         4400119.63,
+         104.893
+        ],
+        "z": {
+         "min": 100.155,
+         "max": 104.893,
+         "mean": 102.56822222222223
+        },
+        "intensity": {
+         "min": 955.0,
+         "max": 62322.0,
+         "mean": 29760.814814814814
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:12",
+         "read": 40,
+         "stats": {
+          "count": 27,
+          "classes": {
+           "2": 9,
+           "3": 4,
+           "6": 10,
+           "9": 4
+          },
+          "bounds": [
+           500100.38,
+           4400100.15,
+           100.155,
+           500109.97,
+           4400119.63,
+           104.893
+          ],
+          "z": {
+           "min": 100.155,
+           "max": 104.893,
+           "mean": 102.56822222222223
+          },
+          "intensity": {
+           "min": 955.0,
+           "max": 62322.0,
+           "mean": 29760.814814814814
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.135
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "meta-geokeys.las",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500200.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500205.0,
+        "y": 4400210.0
+       },
+       {
+        "x": 500200.0,
+        "y": 4400210.0
+       }
+      ],
+      "uids": [
+       "$uidOf:13"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 50.0,
+       "read": 20,
+       "total": {
+        "count": 8,
+        "classes": {
+         "1": 5,
+         "2": 3
+        },
+        "bounds": [
+         500200.72,
+         4400200.23,
+         52.79,
+         500204.97,
+         4400209.44,
+         58.57
+        ],
+        "z": {
+         "min": 52.79,
+         "max": 58.57,
+         "mean": 55.932500000000005
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 0.0,
+         "mean": 0.0
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:13",
+         "read": 20,
+         "stats": {
+          "count": 8,
+          "classes": {
+           "1": 5,
+           "2": 3
+          },
+          "bounds": [
+           500200.72,
+           4400200.23,
+           52.79,
+           500204.97,
+           4400209.44,
+           58.57
+          ],
+          "z": {
+           "min": 52.79,
+           "max": 58.57,
+           "mean": 55.932500000000005
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 0.0,
+           "mean": 0.0
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.16
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "iki bulut: uids sırasıyla, toplam ikisinin birleşimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:2",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 30000.0,
+       "read": 600,
+       "total": {
+        "count": 148,
+        "classes": {
+         "2": 13,
+         "5": 19,
+         "3": 15,
+         "6": 31,
+         "17": 15,
+         "4": 27,
+         "1": 8,
+         "9": 20
+        },
+        "bounds": [
+         500052.88,
+         4400051.72,
+         4.056,
+         500248.68,
+         4400199.25,
+         5.9590000000000005
+        ],
+        "z": {
+         "min": 4.056,
+         "max": 5.9590000000000005,
+         "mean": 5.063425675675676
+        },
+        "intensity": {
+         "min": 732.0,
+         "max": 64907.0,
+         "mean": 31741.97972972973
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:2",
+         "read": 300,
+         "stats": {
+          "count": 77,
+          "classes": {
+           "2": 7,
+           "5": 6,
+           "3": 10,
+           "6": 19,
+           "17": 6,
+           "4": 13,
+           "1": 3,
+           "9": 13
+          },
+          "bounds": [
+           500054.93,
+           4400051.72,
+           4.096,
+           500248.68,
+           4400199.25,
+           5.9590000000000005
+          ],
+          "z": {
+           "min": 4.096,
+           "max": 5.9590000000000005,
+           "mean": 5.049467532467533
+          },
+          "intensity": {
+           "min": 732.0,
+           "max": 64907.0,
+           "mean": 31386.051948051947
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:1",
+         "read": 300,
+         "stats": {
+          "count": 71,
+          "classes": {
+           "5": 13,
+           "2": 6,
+           "1": 5,
+           "3": 5,
+           "4": 14,
+           "17": 9,
+           "9": 7,
+           "6": 12
+          },
+          "bounds": [
+           500052.88,
+           4400053.55,
+           4.056,
+           500247.73,
+           4400198.26,
+           5.928
+          ],
+          "z": {
+           "min": 4.056,
+           "max": 5.928,
+           "mean": 5.0785633802816905
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 64633.0,
+           "mean": 32127.985915492958
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.004933333333333333
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "iki kaynaklı bulut: kaynakları birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500300.0,
+        "y": 4400300.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400300.0
+       }
+      ],
+      "uids": [
+       "$uidOf:22"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 40000.0,
+       "read": 60,
+       "total": {
+        "count": 60,
+        "classes": {
+         "2": 25,
+         "3": 5,
+         "6": 15,
+         "9": 5,
+         "1": 10
+        },
+        "bounds": [
+         500100.38,
+         4400100.15,
+         50.7,
+         500209.99,
+         4400209.79,
+         104.893
+        ],
+        "z": {
+         "min": 50.7,
+         "max": 104.893,
+         "mean": 86.75881666666668
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 62322.0,
+         "mean": 19437.083333333332
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:22",
+         "read": 60,
+         "stats": {
+          "count": 60,
+          "classes": {
+           "2": 25,
+           "3": 5,
+           "6": 15,
+           "9": 5,
+           "1": 10
+          },
+          "bounds": [
+           500100.38,
+           4400100.15,
+           50.7,
+           500209.99,
+           4400209.79,
+           104.893
+          ],
+          "z": {
+           "min": 50.7,
+           "max": 104.893,
+           "mean": 86.75881666666668
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 62322.0,
+           "mean": 19437.083333333332
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0015
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "gömülü bulut kitaplıktan okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:18"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 30000.0,
+       "read": 300,
+       "total": {
+        "count": 71,
+        "classes": {
+         "5": 13,
+         "2": 6,
+         "1": 5,
+         "3": 5,
+         "4": 14,
+         "17": 9,
+         "9": 7,
+         "6": 12
+        },
+        "bounds": [
+         500052.88,
+         4400053.55,
+         4.056,
+         500247.73,
+         4400198.26,
+         5.928
+        ],
+        "z": {
+         "min": 4.056,
+         "max": 5.928,
+         "mean": 5.0785633802816905
+        },
+        "intensity": {
+         "min": 1408.0,
+         "max": 64633.0,
+         "mean": 32127.985915492958
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:18",
+         "read": 300,
+         "stats": {
+          "count": 71,
+          "classes": {
+           "5": 13,
+           "2": 6,
+           "1": 5,
+           "3": 5,
+           "4": 14,
+           "17": 9,
+           "9": 7,
+           "6": 12
+          },
+          "bounds": [
+           500052.88,
+           4400053.55,
+           4.056,
+           500247.73,
+           4400198.26,
+           5.928
+          ],
+          "z": {
+           "min": 4.056,
+           "max": 5.928,
+           "mean": 5.0785633802816905
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 64633.0,
+           "mean": 32127.985915492958
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0023666666666666667
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "gizli katmandaki bulut adıyla sorulunca okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500120.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500120.0,
+        "y": 4400120.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400120.0
+       }
+      ],
+      "uids": [
+       "$uidOf:21"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 400.0,
+       "read": 40,
+       "total": {
+        "count": 40,
+        "classes": {
+         "2": 15,
+         "3": 5,
+         "6": 15,
+         "9": 5
+        },
+        "bounds": [
+         500100.38,
+         4400100.15,
+         100.007,
+         500117.31,
+         4400119.88,
+         104.893
+        ],
+        "z": {
+         "min": 100.007,
+         "max": 104.893,
+         "mean": 102.444975
+        },
+        "intensity": {
+         "min": 955.0,
+         "max": 62322.0,
+         "mean": 29155.625
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:21",
+         "read": 40,
+         "stats": {
+          "count": 40,
+          "classes": {
+           "2": 15,
+           "3": 5,
+           "6": 15,
+           "9": 5
+          },
+          "bounds": [
+           500100.38,
+           4400100.15,
+           100.007,
+           500117.31,
+           4400119.88,
+           104.893
+          ],
+          "z": {
+           "min": 100.007,
+           "max": 104.893,
+           "mean": 102.444975
+          },
+          "intensity": {
+           "min": 955.0,
+           "max": 62322.0,
+           "mean": 29155.625
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.1
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "hiçbir noktaya değmeyen alan: sıfır nokta, okunan yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 100.0,
+        "y": 100.0
+       },
+       {
+        "x": 200.0,
+        "y": 100.0
+       },
+       {
+        "x": 200.0,
+        "y": 200.0
+       },
+       {
+        "x": 100.0,
+        "y": 200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 10000.0,
+       "read": 0,
+       "total": {
+        "count": 0,
+        "classes": {}
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "alan dosyanın kutusuna değip noktaya değmez: dosya okunur, sıfır nokta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500001.23,
+        "y": 4400001.02
+       },
+       {
+        "x": 500013.23,
+        "y": 4400001.02
+       },
+       {
+        "x": 500013.23,
+        "y": 4400013.02
+       },
+       {
+        "x": 500001.23,
+        "y": 4400013.02
+       }
+      ],
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 144.0,
+       "read": 300,
+       "total": {
+        "count": 0,
+        "classes": {}
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "read": 300,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "metin bulutu aranmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400090.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400090.0
+       }
+      ],
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 8100.0,
+       "read": 0,
+       "total": {
+        "count": 0,
+        "classes": {}
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:14",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "cloud_source_unreadable",
+        "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
+        "path": "clouds[0].sources[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dosyası olmayan, bozuk ve adresteki kaynaklar uyarıyla atlanır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500000.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400000.0
+       },
+       {
+        "x": 500090.0,
+        "y": 4400090.0
+       },
+       {
+        "x": 500000.0,
+        "y": 4400090.0
+       }
+      ],
+      "uids": [
+       "$uidOf:15",
+       "$uidOf:16",
+       "$uidOf:17"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 8100.0,
+       "read": 0,
+       "total": {
+        "count": 0,
+        "classes": {}
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:15",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:16",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:17",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uids verilmezse görünen bulutlar, gizli katmandaki bakılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500100.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400100.0
+       },
+       {
+        "x": 500130.0,
+        "y": 4400130.0
+       },
+       {
+        "x": 500100.0,
+        "y": 4400130.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 900.0,
+       "read": 4780,
+       "total": {
+        "count": 119,
+        "classes": {
+         "17": 11,
+         "5": 15,
+         "9": 13,
+         "2": 33,
+         "6": 35,
+         "11": 1,
+         "20": 1,
+         "3": 10
+        },
+        "bounds": [
+         500100.38,
+         4400100.15,
+         4.093,
+         500129.65,
+         4400129.9,
+         104.893
+        ],
+        "z": {
+         "min": 4.093,
+         "max": 104.893,
+         "mean": 70.31516806722688
+        },
+        "intensity": {
+         "min": 530.0,
+         "max": 62322.0,
+         "mean": 29380.63025210084
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "read": 300,
+         "stats": {
+          "count": 3,
+          "classes": {
+           "17": 1,
+           "5": 2
+          },
+          "bounds": [
+           500115.81,
+           4400104.13,
+           4.2620000000000005,
+           500121.3,
+           4400129.31,
+           4.413
+          ],
+          "z": {
+           "min": 4.2620000000000005,
+           "max": 4.413,
+           "mean": 4.361666666666667
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 25040.666666666668
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:2",
+         "read": 300,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:3",
+         "read": 300,
+         "stats": {
+          "count": 5,
+          "classes": {
+           "17": 2,
+           "9": 1,
+           "2": 1,
+           "6": 1
+          },
+          "bounds": [
+           500101.04,
+           4400105.1,
+           4.111,
+           500129.65,
+           4400115.67,
+           4.814
+          ],
+          "z": {
+           "min": 4.111,
+           "max": 4.814,
+           "mean": 4.4436
+          },
+          "intensity": {
+           "min": 9980.0,
+           "max": 55236.0,
+           "mean": 39377.6
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:4",
+         "read": 300,
+         "stats": {
+          "count": 2,
+          "classes": {
+           "6": 2
+          },
+          "bounds": [
+           500119.28,
+           4400103.86,
+           4.324,
+           500121.3,
+           4400105.55,
+           4.43
+          ],
+          "z": {
+           "min": 4.324,
+           "max": 4.43,
+           "mean": 4.377
+          },
+          "intensity": {
+           "min": 19861.0,
+           "max": 57010.0,
+           "mean": 38435.5
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:5",
+         "read": 200,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:6",
+         "read": 300,
+         "stats": {
+          "count": 2,
+          "classes": {
+           "11": 1,
+           "6": 1
+          },
+          "bounds": [
+           500105.46,
+           4400102.91,
+           4.5440000000000005,
+           500118.98,
+           4400125.08,
+           4.866
+          ],
+          "z": {
+           "min": 4.5440000000000005,
+           "max": 4.866,
+           "mean": 4.705
+          },
+          "intensity": {
+           "min": 5141.0,
+           "max": 21921.0,
+           "mean": 13531.0
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:7",
+         "read": 300,
+         "stats": {
+          "count": 1,
+          "classes": {
+           "2": 1
+          },
+          "bounds": [
+           500108.71,
+           4400129.9,
+           4.545,
+           500108.71,
+           4400129.9,
+           4.545
+          ],
+          "z": {
+           "min": 4.545,
+           "max": 4.545,
+           "mean": 4.545
+          },
+          "intensity": {
+           "min": 530.0,
+           "max": 530.0,
+           "mean": 530.0
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:8",
+         "read": 300,
+         "stats": {
+          "count": 3,
+          "classes": {
+           "9": 1,
+           "5": 1,
+           "20": 1
+          },
+          "bounds": [
+           500107.08,
+           4400110.21,
+           4.093,
+           500128.71,
+           4400127.3,
+           4.697
+          ],
+          "z": {
+           "min": 4.093,
+           "max": 4.697,
+           "mean": 4.389
+          },
+          "intensity": {
+           "min": 20796.0,
+           "max": 62105.0,
+           "mean": 46584.0
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:9",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:10",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:11",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:12",
+         "read": 40,
+         "stats": {
+          "count": 40,
+          "classes": {
+           "2": 15,
+           "3": 5,
+           "6": 15,
+           "9": 5
+          },
+          "bounds": [
+           500100.38,
+           4400100.15,
+           100.007,
+           500117.31,
+           4400119.88,
+           104.893
+          ],
+          "z": {
+           "min": 100.007,
+           "max": 104.893,
+           "mean": 102.444975
+          },
+          "intensity": {
+           "min": 955.0,
+           "max": 62322.0,
+           "mean": 29155.625
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:13",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:14",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:15",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:16",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:17",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:18",
+         "read": 300,
+         "stats": {
+          "count": 3,
+          "classes": {
+           "17": 1,
+           "5": 2
+          },
+          "bounds": [
+           500115.81,
+           4400104.13,
+           4.2620000000000005,
+           500121.3,
+           4400129.31,
+           4.413
+          ],
+          "z": {
+           "min": 4.2620000000000005,
+           "max": 4.413,
+           "mean": 4.361666666666667
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 25040.666666666668
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:20",
+         "read": 300,
+         "stats": {
+          "count": 3,
+          "classes": {
+           "17": 1,
+           "5": 2
+          },
+          "bounds": [
+           500115.81,
+           4400104.13,
+           4.2620000000000005,
+           500121.3,
+           4400129.31,
+           4.413
+          ],
+          "z": {
+           "min": 4.2620000000000005,
+           "max": 4.413,
+           "mean": 4.361666666666667
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 25040.666666666668
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:22",
+         "read": 40,
+         "stats": {
+          "count": 40,
+          "classes": {
+           "2": 15,
+           "3": 5,
+           "6": 15,
+           "9": 5
+          },
+          "bounds": [
+           500100.38,
+           4400100.15,
+           100.007,
+           500117.31,
+           4400119.88,
+           104.893
+          ],
+          "z": {
+           "min": 100.007,
+           "max": 104.893,
+           "mean": 102.444975
+          },
+          "intensity": {
+           "min": 955.0,
+           "max": 62322.0,
+           "mean": 29155.625
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:23",
+         "read": 900,
+         "stats": {
+          "count": 8,
+          "classes": {
+           "17": 3,
+           "5": 2,
+           "9": 1,
+           "2": 1,
+           "6": 1
+          },
+          "bounds": [
+           500101.04,
+           4400104.13,
+           4.111,
+           500129.65,
+           4400129.31,
+           4.814
+          ],
+          "z": {
+           "min": 4.111,
+           "max": 4.814,
+           "mean": 4.412875
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 34001.25
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:24",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:25",
+         "read": 600,
+         "stats": {
+          "count": 6,
+          "classes": {
+           "17": 2,
+           "5": 4
+          },
+          "bounds": [
+           500115.81,
+           4400104.13,
+           4.2620000000000005,
+           500121.3,
+           4400129.31,
+           4.413
+          ],
+          "z": {
+           "min": 4.2620000000000005,
+           "max": 4.413,
+           "mean": 4.361666666666667
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 25040.666666666668
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:26",
+         "read": 300,
+         "stats": {
+          "count": 3,
+          "classes": {
+           "17": 1,
+           "5": 2
+          },
+          "bounds": [
+           500115.81,
+           4400104.13,
+           4.2620000000000005,
+           500121.3,
+           4400129.31,
+           4.413
+          ],
+          "z": {
+           "min": 4.2620000000000005,
+           "max": 4.413,
+           "mean": 4.361666666666667
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 57684.0,
+           "mean": 25040.666666666668
+          }
+         }
+        },
+        {
+         "uid": "$uidOf:27",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:28",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:29",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:30",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:31",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:32",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:33",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:34",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        },
+        {
+         "uid": "$uidOf:35",
+         "read": 0,
+         "stats": {
+          "count": 0,
+          "classes": {}
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.1322222222222222
+      },
+      "warnings": "$any"
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı yazmadan verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 30000.0,
+       "read": 300,
+       "total": {
+        "count": 71,
+        "classes": {
+         "5": 13,
+         "2": 6,
+         "1": 5,
+         "3": 5,
+         "4": 14,
+         "17": 9,
+         "9": 7,
+         "6": 12
+        },
+        "bounds": [
+         500052.88,
+         4400053.55,
+         4.056,
+         500247.73,
+         4400198.26,
+         5.928
+        ],
+        "z": {
+         "min": 4.056,
+         "max": 5.928,
+         "mean": 5.0785633802816905
+        },
+        "intensity": {
+         "min": 1408.0,
+         "max": 64633.0,
+         "mean": 32127.985915492958
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:1",
+         "read": 300,
+         "stats": {
+          "count": 71,
+          "classes": {
+           "5": 13,
+           "2": 6,
+           "1": 5,
+           "3": 5,
+           "4": 14,
+           "17": 9,
+           "9": 7,
+           "6": 12
+          },
+          "bounds": [
+           500052.88,
+           4400053.55,
+           4.056,
+           500247.73,
+           4400198.26,
+           5.928
+          ],
+          "z": {
+           "min": 4.056,
+           "max": 5.928,
+           "mean": 5.0785633802816905
+          },
+          "intensity": {
+           "min": 1408.0,
+           "max": 64633.0,
+           "mean": 32127.985915492958
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 0.0023666666666666667
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kafes: sınırdaki noktalar alanın içindedir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1002.0,
+        "y": 2002.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2002.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2008.0
+       },
+       {
+        "x": 1002.0,
+        "y": 2008.0
+       }
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 48.0,
+       "read": 1681,
+       "total": {
+        "count": 221,
+        "classes": {
+         "2": 56,
+         "3": 55,
+         "5": 55,
+         "6": 55
+        },
+        "bounds": [
+         1002.0,
+         2002.0,
+         100.0,
+         1010.0,
+         2008.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.39547511312217
+        },
+        "intensity": {
+         "min": 184.0,
+         "max": 900.0,
+         "mean": 542.0
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 221,
+          "classes": {
+           "2": 56,
+           "3": 55,
+           "5": 55,
+           "6": 55
+          },
+          "bounds": [
+           1002.0,
+           2002.0,
+           100.0,
+           1010.0,
+           2008.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.39547511312217
+          },
+          "intensity": {
+           "min": 184.0,
+           "max": 900.0,
+           "mean": 542.0
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 4.604166666666667
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kafes: deliğin sınırındaki nokta alanın içinde, kesin içindeki dışında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1002.0,
+        "y": 2002.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2002.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2008.0
+       },
+       {
+        "x": 1002.0,
+        "y": 2008.0
+       }
+      ],
+      "holes": [
+       [
+        {
+         "x": 1004.0,
+         "y": 2004.0
+        },
+        {
+         "x": 1008.0,
+         "y": 2004.0
+        },
+        {
+         "x": 1008.0,
+         "y": 2006.0
+        },
+        {
+         "x": 1004.0,
+         "y": 2006.0
+        }
+       ]
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 40.0,
+       "read": 1681,
+       "total": {
+        "count": 200,
+        "classes": {
+         "2": 50,
+         "3": 50,
+         "5": 50,
+         "6": 50
+        },
+        "bounds": [
+         1002.0,
+         2002.0,
+         100.0,
+         1010.0,
+         2008.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.4
+        },
+        "intensity": {
+         "min": 184.0,
+         "max": 900.0,
+         "mean": 542.0
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 200,
+          "classes": {
+           "2": 50,
+           "3": 50,
+           "5": 50,
+           "6": 50
+          },
+          "bounds": [
+           1002.0,
+           2002.0,
+           100.0,
+           1010.0,
+           2008.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.4
+          },
+          "intensity": {
+           "min": 184.0,
+           "max": 900.0,
+           "mean": 542.0
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 5.0
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kafes: eğik kenar kafesin noktalarından geçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1000.0,
+        "y": 2020.0
+       }
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 200.0,
+       "read": 1681,
+       "total": {
+        "count": 861,
+        "classes": {
+         "2": 231,
+         "3": 200,
+         "5": 210,
+         "6": 220
+        },
+        "bounds": [
+         1000.0,
+         2000.0,
+         100.0,
+         1020.0,
+         2020.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.4390243902439
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 999.0,
+         "mean": 433.31010452961675
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 861,
+          "classes": {
+           "2": 231,
+           "3": 200,
+           "5": 210,
+           "6": 220
+          },
+          "bounds": [
+           1000.0,
+           2000.0,
+           100.0,
+           1020.0,
+           2020.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.4390243902439
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 999.0,
+           "mean": 433.31010452961675
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 4.305
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kafes: köşe bir noktanın üstünde, saat yönünde halka",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1005.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1015.0,
+        "y": 2015.0
+       },
+       {
+        "x": 1015.0,
+        "y": 2005.0
+       },
+       {
+        "x": 1005.0,
+        "y": 2005.0
+       }
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 100.0,
+       "read": 1681,
+       "total": {
+        "count": 441,
+        "classes": {
+         "2": 111,
+         "3": 110,
+         "5": 110,
+         "6": 110
+        },
+        "bounds": [
+         1005.0,
+         2005.0,
+         100.0,
+         1015.0,
+         2015.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.44897959183673
+        },
+        "intensity": {
+         "min": 1.0,
+         "max": 998.0,
+         "mean": 511.83673469387753
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 441,
+          "classes": {
+           "2": 111,
+           "3": 110,
+           "5": 110,
+           "6": 110
+          },
+          "bounds": [
+           1005.0,
+           2005.0,
+           100.0,
+           1015.0,
+           2015.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.44897959183673
+          },
+          "intensity": {
+           "min": 1.0,
+           "max": 998.0,
+           "mean": 511.83673469387753
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 4.41
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kafes: iki delikli alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2020.0
+       },
+       {
+        "x": 1000.0,
+        "y": 2020.0
+       }
+      ],
+      "holes": [
+       [
+        {
+         "x": 1002.0,
+         "y": 2002.0
+        },
+        {
+         "x": 1006.0,
+         "y": 2002.0
+        },
+        {
+         "x": 1006.0,
+         "y": 2006.0
+        },
+        {
+         "x": 1002.0,
+         "y": 2006.0
+        }
+       ],
+       [
+        {
+         "x": 1010.0,
+         "y": 2010.0
+        },
+        {
+         "x": 1018.0,
+         "y": 2010.0
+        },
+        {
+         "x": 1018.0,
+         "y": 2014.0
+        },
+        {
+         "x": 1010.0,
+         "y": 2014.0
+        }
+       ]
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 352.0,
+       "read": 1681,
+       "total": {
+        "count": 1527,
+        "classes": {
+         "2": 381,
+         "3": 382,
+         "5": 382,
+         "6": 382
+        },
+        "bounds": [
+         1000.0,
+         2000.0,
+         100.0,
+         1020.0,
+         2020.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.4551407989522
+        },
+        "intensity": {
+         "min": 0.0,
+         "max": 999.0,
+         "mean": 479.5992141453831
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 1527,
+          "classes": {
+           "2": 381,
+           "3": 382,
+           "5": 382,
+           "6": 382
+          },
+          "bounds": [
+           1000.0,
+           2000.0,
+           100.0,
+           1020.0,
+           2020.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.4551407989522
+          },
+          "intensity": {
+           "min": 0.0,
+           "max": 999.0,
+           "mean": 479.5992141453831
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 4.338068181818182
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "kafes: ince şerit alan",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1000.0,
+        "y": 2010.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2010.0
+       },
+       {
+        "x": 1020.0,
+        "y": 2010.0001
+       },
+       {
+        "x": 1000.0,
+        "y": 2010.0001
+       }
+      ],
+      "uids": [
+       "$uidOf:34"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "area": 0.001999999999497959,
+       "read": 1681,
+       "total": {
+        "count": 41,
+        "classes": {
+         "2": 11,
+         "3": 10,
+         "5": 10,
+         "6": 10
+        },
+        "bounds": [
+         1000.0,
+         2010.0,
+         100.0,
+         1020.0,
+         2010.0,
+         104.9
+        ],
+        "z": {
+         "min": 100.0,
+         "max": 104.9,
+         "mean": 102.4390243902439
+        },
+        "intensity": {
+         "min": 2.0,
+         "max": 961.0,
+         "mean": 456.5853658536585
+        }
+       },
+       "clouds": [
+        {
+         "uid": "$uidOf:34",
+         "read": 1681,
+         "stats": {
+          "count": 41,
+          "classes": {
+           "2": 11,
+           "3": 10,
+           "5": 10,
+           "6": 10
+          },
+          "bounds": [
+           1000.0,
+           2010.0,
+           100.0,
+           1020.0,
+           2010.0,
+           104.9
+          ],
+          "z": {
+           "min": 100.0,
+           "max": 104.9,
+           "mean": 102.4390243902439
+          },
+          "intensity": {
+           "min": 2.0,
+           "max": 961.0,
+           "mean": 456.5853658536585
+          }
+         }
+        }
+       ],
+       "revision": "$current",
+       "density": 20500.00000514592
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "halka iki köşeli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 1.0,
+        "y": 1.0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_area",
+       "message": "Halka en az üç köşeli olmalı; alanın köşelerini sırayla verin.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "son köşe birinciyle aynıysa üç köşe sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 1.0,
+        "y": 1.0
+       },
+       {
+        "x": 0.0,
+        "y": 0.0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_area",
+       "message": "Halka en az üç köşeli olmalı; alanın köşelerini sırayla verin.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "köşeler bir doğru üzerinde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 1.0,
+        "y": 1.0
+       },
+       {
+        "x": 2.0,
+        "y": 2.0
+       }
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_area",
+       "message": "Alanın büyüklüğü sıfırdan büyük olmalı (halka eksi delikler); köşeler bir doğru üzerinde ya da delikler halkayı kaplıyor.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "delik halkayı kaplıyor",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 4.0,
+        "y": 0.0
+       },
+       {
+        "x": 4.0,
+        "y": 4.0
+       },
+       {
+        "x": 0.0,
+        "y": 4.0
+       }
+      ],
+      "holes": [
+       [
+        {
+         "x": -1.0,
+         "y": -1.0
+        },
+        {
+         "x": 5.0,
+         "y": -1.0
+        },
+        {
+         "x": 5.0,
+         "y": 5.0
+        },
+        {
+         "x": -1.0,
+         "y": 5.0
+        }
+       ]
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_area",
+       "message": "Alanın büyüklüğü sıfırdan büyük olmalı (halka eksi delikler); köşeler bir doğru üzerinde ya da delikler halkayı kaplıyor.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "delik iki köşeli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 0.0,
+        "y": 0.0
+       },
+       {
+        "x": 4.0,
+        "y": 0.0
+       },
+       {
+        "x": 4.0,
+        "y": 4.0
+       },
+       {
+        "x": 0.0,
+        "y": 4.0
+       }
+      ],
+      "holes": [
+       [
+        {
+         "x": 1.0,
+         "y": 1.0
+        },
+        {
+         "x": 2.0,
+         "y": 2.0
+        }
+       ]
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_cloud_area",
+       "message": "Delik en az üç köşeli olmalı; alanın köşelerini sırayla verin.",
+       "path": "holes[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "bulut"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“bulut” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "nokta bulutu olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 500050.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400050.0
+       },
+       {
+        "x": 500250.0,
+        "y": 4400200.0
+       },
+       {
+        "x": 500050.0,
+        "y": 4400200.0
+       }
+      ],
+      "uids": [
+       "$uidOf:19"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_pointcloud",
+       "message": "Verilen nesne bir nokta bulutu değil; bir nokta bulutunun kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kaydında çok nokta olan dosya okunmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "ring": [
+       {
+        "x": 1000.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2000.0
+       },
+       {
+        "x": 1010.0,
+        "y": 2010.0
+       },
+       {
+        "x": 1000.0,
+        "y": 2010.0
+       }
+      ],
+      "uids": [
+       "$uidOf:35"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "too_many_cloud_points",
+       "message": "Bu alan bir çağrının okuduğundan çok nokta okutur; bir çağrı en çok 200000000 nokta okur. Küçültün ya da bulutları ayrı ayrı sorun.",
+       "path": "ring"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

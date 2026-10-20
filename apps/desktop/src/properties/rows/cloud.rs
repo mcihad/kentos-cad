@@ -61,6 +61,52 @@ fn described(
     d
 }
 
+/// A virtual cloud's files summed up as `cad.pointclouds.describe` says it (docs/adr/0552), read once a session.
+fn summarised(
+    doc: &Document,
+    sources: &[kentos_commands::CloudSource],
+) -> Option<kentos_commands::CloudSummary> {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock, PoisonError};
+    static SEEN: OnceLock<Mutex<HashMap<String, Option<kentos_commands::CloudSummary>>>> =
+        OnceLock::new();
+    let key = format!("{sources:?}|{:?}", doc.path);
+    let seen = SEEN.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(d) = seen.lock().unwrap_or_else(PoisonError::into_inner).get(&key) {
+        return d.clone();
+    }
+    let d = kentos_native_application::pointclouds::summary_described(
+        &doc.model,
+        doc.path.as_deref().and_then(|p| p.to_str()),
+        sources,
+    );
+    seen.lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .insert(key, d.clone());
+    d
+}
+
+/// The rows of a virtual cloud's summary: the files read, and where they disagree (at most five).
+fn summary_rows(s: &kentos_commands::CloudSummary) -> Vec<Row> {
+    let mut out = vec![Row::text(
+        "Dosyalar",
+        format!("{} dosyanın {} tanesi okundu", s.sources, s.readable),
+    )];
+    if s.mismatches.is_empty() {
+        out.push(Row::text("Uyuşmazlık", "Yok"));
+    }
+    for m in s.mismatches.iter().take(5) {
+        out.push(Row::text("Uyuşmazlık", m.message.clone()));
+    }
+    if s.mismatches.len() > 5 {
+        out.push(Row::text(
+            "Uyuşmazlık",
+            format!("… {} uyuşmazlık daha", s.mismatches.len() - 5),
+        ));
+    }
+    out
+}
+
 /// The rows of a single source's header (docs/adr/0536): the file's version and format, the vertical system, the
 /// acquisition day, the GPS time, the extra dimensions and who wrote it.
 fn header_rows(d: &kentos_commands::CloudSourceDescribed) -> Vec<Row> {
@@ -158,7 +204,7 @@ pub(super) fn rows(
     });
     let header = match x.sources.as_slice() {
         [one] => header_rows(&described(doc, one)),
-        _ => Vec::new(),
+        many => summarised(doc, many).map_or_else(Vec::new, |s| summary_rows(&s)),
     };
     let mut rows = vec![
         Row::text("Kaynak", source),

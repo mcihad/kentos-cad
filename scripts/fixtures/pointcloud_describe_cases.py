@@ -93,7 +93,77 @@ def write_files():
     las.number_of_returns = np.ones(n, dtype=np.uint8)
     las.gps_time = 300000 + np.arange(n) * 1.5
     las.write(FILES / "meta-geokeys.las")
-    print("yazıldı: meta-wkt.las, meta-geokeys.las")
+    write_tiles()
+    write_grid()
+    print("yazıldı: meta-wkt.las, meta-geokeys.las, tile-a … tile-f.las, area-grid.las")
+
+
+# A 41 × 41 lattice (docs/adr/0552): points every half unit from (1000, 2000), every coordinate exact in binary, so
+# the cases can put a ring's edge, a hole's edge, a corridor's edge and a station's end exactly on points.
+GRID_FILE = "area-grid.las"
+
+
+def write_grid():
+    h = laspy.LasHeader(point_format=1, version="1.2")
+    h.scales = np.array([0.5, 0.5, 0.01])
+    h.offsets = np.array([1000.0, 2000.0, 0.0])
+    h.system_identifier = "KentOS fixtures"
+    h.generating_software = "laspy 2.7.0 (ADR 0552)"
+    ii, jj = np.meshgrid(np.arange(41), np.arange(41), indexing="ij")
+    i, j = ii.ravel(), jj.ravel()
+    las = laspy.LasData(h)
+    las.x = 1000.0 + i * 0.5
+    las.y = 2000.0 + j * 0.5
+    las.z = 100.0 + ((i * 7 + j * 3) % 50) * 0.1
+    las.classification = np.array([2, 3, 5, 6], dtype=np.uint8)[(i + j) % 4]
+    las.intensity = ((i * 41 + j * 5) % 1000).astype(np.uint16)
+    las.return_number = np.ones(len(i), dtype=np.uint8)
+    las.number_of_returns = np.ones(len(i), dtype=np.uint8)
+    las.gps_time = 500000.0 + np.arange(len(i)) * 0.25
+    las.write(FILES / GRID_FILE)
+
+
+# Six tiles of a virtual cloud (docs/adr/0552): the same LAS 1.2 format 1, GeoTIFF keys, 40 points each in a 10 × 10 box
+# at x0 = 600000 + 10 k (so none cover the same ground); b is a's twin, c names another horizontal system, d adds a
+# vertical one, e an extra dimension, f a finer z scale.
+TILES = {
+    "tile-a.las": {}, "tile-b.las": {}, "tile-c.las": {"epsg": 5253}, "tile-d.las": {"vertical": 5773},
+    "tile-e.las": {"extra": True}, "tile-f.las": {"zscale": 0.001},
+}
+
+
+def write_tiles():
+    import datetime
+
+    rng = np.random.default_rng(552)
+    for k, (name, o) in enumerate(TILES.items()):
+        x0 = 600000.0 + 10 * k
+        h = laspy.LasHeader(point_format=1, version="1.2")
+        h.scales = np.array([0.01, 0.01, o.get("zscale", 0.01)])
+        h.offsets = np.array([x0, 4400000.0, 0.0])
+        keys = [1, 1, 0, 3 if "vertical" in o else 2, 1024, 0, 1, 1, 3072, 0, 1, o.get("epsg", 5254)]
+        if "vertical" in o:
+            keys += [4096, 0, 1, o["vertical"]]
+        vlr = laspy.vlrs.known.GeoKeyDirectoryVlr()
+        vlr.parse_record_data(struct.pack(f"<{len(keys)}H", *keys))
+        h.vlrs.append(vlr)
+        if o.get("extra"):
+            h.add_extra_dim(laspy.ExtraBytesParams(name="ek", type=np.float32))
+        h.system_identifier = "KentOS fixtures"
+        h.generating_software = "laspy 2.7.0 (ADR 0552)"
+        h.creation_date = datetime.date(2026, 10, 20)
+        n = 40
+        las = laspy.LasData(h)
+        las.x = x0 + rng.integers(0, 1000, n) / 100
+        las.y = 4400000.0 + rng.integers(0, 1000, n) / 100
+        las.z = 20 + rng.integers(0, 2000, n) / 100
+        las.classification = np.array([2, 5] * (n // 2), dtype=np.uint8)
+        las.return_number = np.ones(n, dtype=np.uint8)
+        las.number_of_returns = np.ones(n, dtype=np.uint8)
+        las.gps_time = 400000 + np.arange(n) * 0.5
+        if o.get("extra"):
+            las.ek = rng.random(n).astype(np.float32)
+        las.write(FILES / name)
 
 
 # ── What a file is ─────────────────────────────────────────────────────
@@ -291,6 +361,7 @@ def source_record(name):
 # ── The drawing ────────────────────────────────────────────────────────
 
 STYLE = {"color": "ink", "lineType": "continuous", "lineWeight": 0.25}
+TILE_FILES = list(TILES)
 CLOUD_FILES = ["las12-f0.las", "las12-f1.laz", "las12-f2.las", "las12-f3.laz", "las13-f1.las", "las14-f6.laz",
                "las14-f7.las", "las14-f8.laz", "index-sample.laz", "index-sample.copc.laz", "many-chunks.laz",
                "meta-wkt.las", "meta-geokeys.las"]
@@ -329,6 +400,28 @@ def drawing():
     ents.append(cloud(20, "bulut", [source_record("las12-f0.las")], count=300_000_000))
     ents.append(cloud(21, "gizli", [source_record("meta-wkt.las")]))
     ents.append(cloud(22, "bulut", [source_record("meta-wkt.las"), source_record("meta-geokeys.las")]))
+    # 23: three files over the same ground (formats 0, 1, 2); 24: two tiles; 25: one file twice; 26: a file and one
+    # not found; 27: tile a whose record is stale (points, box); 28: a text source and a tile; 29–32: tile a with c
+    # (system), d (vertical system), e (extra dimension), f (scale); 33: the six tiles.
+    s0 = source_record("las12-f0.las")
+    ents.append(cloud(23, "bulut", [source_record(n) for n in ["las12-f0.las", "las12-f1.laz", "las12-f2.las"]]))
+    ents.append(cloud(24, "bulut", [source_record("tile-a.las"), source_record("tile-b.las")]))
+    ents.append(cloud(25, "bulut", [s0, s0]))
+    ents.append(cloud(26, "bulut", [s0, {**s0, "file": fx("yok.las")}]))
+    stale = source_record("tile-a.las")
+    stale["count"] += 5
+    stale["bounds"] = [stale["bounds"][0] - 1.0, *stale["bounds"][1:]]
+    ents.append(cloud(27, "bulut", [stale, source_record("tile-b.las")]))
+    ents.append(cloud(28, "bulut", [{"file": fx("bulut.xyz"), "format": "xyz", "count": 50, "bounds": TEXT_BOUNDS},
+                                    source_record("tile-a.las")]))
+    for k, other in enumerate(["tile-c.las", "tile-d.las", "tile-e.las", "tile-f.las"]):
+        ents.append(cloud(29 + k, "bulut", [source_record("tile-a.las"), source_record(other)]))
+    ents.append(cloud(33, "bulut", [source_record(n) for n in TILE_FILES]))
+    # 34: the lattice; 35: the lattice recorded with too many points (a call that would read them refuses).
+    ents.append(cloud(34, "bulut", [source_record(GRID_FILE)]))
+    big = source_record(GRID_FILE)
+    big["count"] = 300_000_000
+    ents.append(cloud(35, "bulut", [big]))
     data = base64.b64encode((FILES / "las12-f0.las").read_bytes()).decode()
     return {
         "format": "kentos.document", "version": 1, "name": "Nokta bulutlarının bilgisi",
@@ -360,10 +453,68 @@ def case(name, *steps):
     return {"name": name, "steps": list(steps)}
 
 
+def num(v):
+    """A float as Rust's `{}` writes it (positional, no trailing .0)."""
+    t = repr(float(v))
+    return t[:-2] if t.endswith(".0") else t
+
+
+def summary_ref(records, srcs):
+    """The sources of a cloud of several files summed up (docs/adr/0552): totals, the system they share, and where
+    they disagree, in the ADR's words."""
+    b = list(srcs[0]["bounds"])
+    for x in srcs[1:]:
+        b = [min(b[k], x["bounds"][k]) for k in range(3)] + [max(b[k], x["bounds"][k]) for k in range(3, 6)]
+    headed = [i for i, x in enumerate(srcs) if x["read"] and x["kind"] != "text"]
+    epsg = None
+    if headed and all(srcs[i].get("epsg") == srcs[headed[0]].get("epsg") for i in headed):
+        epsg = srcs[headed[0]].get("epsg")
+    mism = []
+    if len(headed) >= 2:
+        def differ(kind, what, vals):
+            if any(v != vals[0] for v in vals):
+                said = ", ".join(f"{i + 1}. kaynak {v}" for i, v in zip(headed, vals))
+                mism.append({"kind": kind, "sources": list(headed), "message": f"Kaynakların {what} aynı değil: {said}."})
+        differ("epsg", "yatay sistemi", [f"EPSG:{srcs[i]['epsg']}" if "epsg" in srcs[i] else "yok" for i in headed])
+        differ("vertical", "düşey sistemi", [srcs[i].get("vertical", "yok") for i in headed])
+        differ("point_format", "nokta biçimi", [str(srcs[i]["format"]) for i in headed])
+        differ("gps_time", "GPS zamanı", [srcs[i].get("gpsTime", "yok") for i in headed])
+        differ("scale", "ölçeği", [" ".join(num(v) for v in srcs[i]["scale"]) for i in headed])
+        differ("extra", "ek boyutları", ["/".join(e["name"] for e in srcs[i].get("extra", [])) or "yok" for i in headed])
+    off = [i for i in headed if records[i]["count"] != srcs[i]["count"]]
+    if off:
+        said = ", ".join(f"{i + 1}. kaynak (kayıtta {records[i]['count']}, başlıkta {srcs[i]['count']})" for i in off)
+        mism.append({"kind": "count", "sources": off,
+                     "message": f"Bulutun kaydındaki nokta sayısı kaynağın başlığındakinden farklı: {said}."})
+    off = [i for i in headed if records[i]["bounds"] != srcs[i]["bounds"]]
+    if off:
+        said = ", ".join(f"{i + 1}. kaynak" for i in off)
+        mism.append({"kind": "bounds", "sources": off,
+                     "message": f"Bulutun kaydındaki kutu kaynağın başlığındakinden farklı: {said}."})
+    pairs = 0
+    for a, i in enumerate(headed):
+        for j in headed[a + 1:]:
+            p, q = srcs[i]["bounds"], srcs[j]["bounds"]
+            if max(p[0], q[0]) < min(p[3], q[3]) and max(p[1], q[1]) < min(p[4], q[4]) and pairs < 50:
+                pairs += 1
+                mism.append({"kind": "overlap", "sources": [i, j],
+                             "message": f"{i + 1}. ve {j + 1}. kaynağın kutuları aynı yeri kaplıyor."})
+    out = {"sources": len(srcs), "readable": sum(1 for x in srcs if x["read"]),
+           "count": sum(x["count"] for x in srcs), "bounds": b}
+    if epsg is not None:
+        out["epsg"] = epsg
+    if mism:
+        out["mismatches"] = mism
+    return out
+
+
 def described(id_, sources, count=None, layer_id="bulut"):
     ent = next(e for e in drawing()["entities"] if e["id"] == id_)
-    return {"uid": f"$uidOf:{id_}", "layer": layer_id, "srid": 5254, "count": ent["count"] if count is None else count,
-            "sources": sources}
+    out = {"uid": f"$uidOf:{id_}", "layer": layer_id, "srid": 5254, "count": ent["count"] if count is None else count,
+           "sources": sources}
+    if len(sources) > 1:
+        out["summary"] = summary_ref(ent["sources"], sources)
+    return out
 
 
 def answer(clouds):
@@ -419,6 +570,7 @@ def describe_cases():
         {"uids": ["$uidOf:22"]}, done(answer([described(22, [describe("meta-wkt.las"), describe("meta-geokeys.las")])])))))
     out.append(case("gizli katmandaki bulut adıyla sorulunca okunur", step(
         {"uids": ["$uidOf:21"]}, done(answer([described(21, [describe("meta-wkt.las")], layer_id="gizli")])))))
+    out += summary_cases()
     out.append(case("aynı bulut iki kez verilse bir kez söylenir", step(
         {"uids": ["$uidOf:1", "$uidOf:1"]}, done(answer([described(1, [describe("las12-f0.las")])])))))
     out.append(case("plan aynı cevabı yazmadan verir", step(
@@ -439,6 +591,34 @@ def describe_cases():
             "Sınıflar sayılırken 300000000 nokta okunurdu; bir çağrı en çok 200000000 nokta sayar. Bulutları ayrı ayrı sorun.",
             "classes"))),
     ]
+    return out
+
+
+def summary_cases():
+    """The summary of a cloud of several files (docs/adr/0552): where the files disagree and where they do not."""
+    d = describe
+    out = []
+
+    def one(name, id_, names):
+        out.append(case(name, step({"uids": [f"$uidOf:{id_}"]}, done(answer([described(id_, [d(n) for n in names])])))))
+
+    one("özet: üç dosya aynı yerde, nokta biçimleri ve GPS zamanı farklı", 23, ["las12-f0.las", "las12-f1.laz", "las12-f2.las"])
+    one("özet: yan yana iki karo, uyuşmazlık yok", 24, ["tile-a.las", "tile-b.las"])
+    one("özet: aynı dosya iki kez, yalnız kutuları örtüşür", 25, ["las12-f0.las", "las12-f0.las"])
+    rec = drawing()["entities"][25]["sources"][1]
+    out.append(case("özet: biri okunamayan kaynak toplamda sayılır, karşılaştırmaya girmez", step(
+        {"uids": ["$uidOf:26"]},
+        done(answer([described(26, [d("las12-f0.las"), unread(rec, ANY)])]), [ANY]))))
+    one("özet: kayıttaki sayı ve kutu başlıktan farklı", 27, ["tile-a.las", "tile-b.las"])
+    text = {"file": fx("bulut.xyz"), "read": True, "kind": "text", "count": 50, "bounds": TEXT_BOUNDS,
+            "dimensions": ["x", "y", "z"]}
+    out.append(case("özet: metin kaynağı sayılır, başlığı olmadığından karşılaştırılmaz", step(
+        {"uids": ["$uidOf:28"]}, done(answer([described(28, [text, d("tile-a.las")])])))))
+    one("özet: yatay sistem farklı", 29, ["tile-a.las", "tile-c.las"])
+    one("özet: düşey sistem var, öbüründe yok", 30, ["tile-a.las", "tile-d.las"])
+    one("özet: ek boyut yalnız birinde", 31, ["tile-a.las", "tile-e.las"])
+    one("özet: ölçek farklı", 32, ["tile-a.las", "tile-f.las"])
+    one("özet: altı karo, dört ayrı uyuşmazlık sırasıyla", 33, TILE_FILES)
     return out
 
 
@@ -587,6 +767,12 @@ def query_cases():
     # Without uids every visible cloud is looked at: 12 and 22 hold meta-wkt.las, 21 (hidden) is not looked at.
     visible = [(c + 1, 0, n) for c, n in enumerate(CLOUD_FILES)] + [
         (18, 0, "las12-f0.las"), (20, 0, "las12-f0.las"), (22, 0, "meta-wkt.las"), (22, 1, "meta-geokeys.las")]
+    # The clouds of several files (23–33): every source that is a file that is there and is not text.
+    for e in drawing()["entities"][22:]:
+        for si, src in enumerate(e["sources"]):
+            name = src["file"].rsplit("/", 1)[-1]
+            if src["format"] != "xyz" and name != "yok.las":
+                visible.append((e["id"], si, name))
     text_warn = {"code": "cloud_source_unreadable", "message": "Bulutun 1. kaynağı metin bulutu; noktası burada aranmaz.",
                  "path": "clouds[13].sources[0]"}
     out.append(case("uids verilmezse görünen bulutlar: gizli katmandaki bakılmaz, eşit uzaklıkta ilk bulut", queried(
@@ -618,7 +804,7 @@ def query_cases():
     return out
 
 
-NOTE = ("ADR 0536. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık "
+NOTE = ("ADR 0536, 0552. Bağımsız başvuru scripts/fixtures/pointcloud_describe_cases.py: dosyalar laspy'yle ve başlık "
         "baytlarından, sistemler pyproj'la, boyutlar LAS 1.4 R15'in tablolarından, COPC düğümleri COPC 1.0 belirtiminden; "
         "KentOS kodu yok.")
 

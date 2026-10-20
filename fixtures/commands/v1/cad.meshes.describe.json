@@ -1,0 +1,3321 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.meshes.describe",
+ "commandVersion": 1,
+ "title": "Meshin bilgisi",
+ "note": "ADR 0552. Bağımsız başvuru scripts/fixtures/mesh_cases.py: dosyalar netcdf_classic.py'nin yazdığı klasik NetCDF'ler, ağın okunuşu UGRID 1.0 kurallarından, yüz ve değerler multidim_cases.py'nin kesirli aramasından; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Meshlerin bilgisi",
+  "settings": {
+   "srid": 5254,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4420000.0
+  },
+  "layers": [
+   {
+    "id": "mesh",
+    "name": "Mesh",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "gizli",
+    "name": "Gizli",
+    "type": "layer",
+    "visible": false,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "ink",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "mesh",
+  "entities": [
+   {
+    "kind": "raster",
+    "id": 1,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 2,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "ucx",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 2,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ],
+     "vector": "ucy"
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 3,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 4326,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "elev",
+     "mesh": "mesh",
+     "dims": []
+    },
+    "file": "$fixture:meshes/v1/files/quad-static.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 4,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 4326,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "zone",
+     "mesh": "mesh",
+     "dims": []
+    },
+    "file": "$fixture:meshes/v1/files/quad-static.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 5,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "temp",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 1,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      },
+      {
+       "name": "layer",
+       "index": 1,
+       "values": [
+        0.0,
+        10.0
+       ],
+       "units": "m"
+      }
+     ]
+    },
+    "file": "$fixture:meshes/v1/files/layered.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 6,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "wind",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1735689600000.0,
+        1735711200000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:meshes/v1/files/layered.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 7,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "taban_kotu",
+     "mesh": "Mesh2d",
+     "dims": []
+    },
+    "file": "$fixture:multidim/v1/files/sms-start.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 8,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "level",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "asset": "mesh-0552055205520552"
+   },
+   {
+    "kind": "raster",
+    "id": 9,
+    "layerId": "gizli",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 10,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/yok.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 11,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-header.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 12,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-hdf5.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 13,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "mesh",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/bad-grib.nc"
+   },
+   {
+    "kind": "raster",
+    "id": 14,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     10.0,
+     0.0,
+     4420030.0,
+     0.0,
+     -10.0
+    ],
+    "width": 4,
+    "height": 3,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "file": "$fixture:multidim/v1/files/grid-cdf2.nc",
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "dem",
+     "dims": []
+    }
+   },
+   {
+    "kind": "line",
+    "id": 15,
+    "layerId": "mesh",
+    "attrs": {},
+    "a": {
+     "x": 0,
+     "y": 0
+    },
+    "b": {
+     "x": 1,
+     "y": 1
+    }
+   },
+   {
+    "kind": "raster",
+    "id": 16,
+    "layerId": "mesh",
+    "attrs": {},
+    "affine": [
+     500000.0,
+     0.125,
+     0.0,
+     4420040.0,
+     0.0,
+     -0.125
+    ],
+    "width": 320,
+    "height": 320,
+    "bands": 1,
+    "sample": "f32",
+    "srid": 5254,
+    "style": {
+     "render": "ramp",
+     "bands": [
+      1
+     ],
+     "stretch": "minMax",
+     "ramp": "Viridis"
+    },
+    "dataset": {
+     "variable": "depth",
+     "mesh": "yok",
+     "dims": [
+      {
+       "name": "time",
+       "index": 0,
+       "values": [
+        1714543200000.0,
+        1714545000000.0,
+        1714546800000.0
+       ],
+       "time": true
+      }
+     ]
+    },
+    "file": "$fixture:multidim/v1/files/ugrid.nc"
+   }
+  ],
+  "styles": {
+   "items": [
+    {
+     "kind": "asset",
+     "id": "mesh-0552055205520552",
+     "name": "ugrid.nc",
+     "data": "data:application/octet-stream;base64,Q0RGAgAAAAAAAAAKAAAABAAAAARub2RlAAAACgAAAARmYWNlAAAABgAAAARubWF4AAAABAAAAAR0aW1lAAAAAwAAAAwAAAABAAAAC0NvbnZlbnRpb25zAAAAAAIAAAAQQ0YtMS44IFVHUklELTEuMAAAAAsAAAALAAAABG1lc2gAAAAAAAAADAAAAAUAAAAHY2Zfcm9sZQAAAAACAAAADW1lc2hfdG9wb2xvZ3kAAAAAAAASdG9wb2xvZ3lfZGltZW5zaW9uAAAAAAAEAAAAAQAAAAIAAAAQbm9kZV9jb29yZGluYXRlcwAAAAIAAAANbm9kZV94IG5vZGVfeQAAAAAAABZmYWNlX25vZGVfY29ubmVjdGl2aXR5AAAAAAACAAAABWZhY2VzAAAAAAAADGdyaWRfbWFwcGluZwAAAAIAAAADY3JzAAAAAAQAAAAEAAAAAAAABXwAAAADY3JzAAAAAAAAAAAMAAAAAQAAAAllcHNnX2NvZGUAAAAAAAACAAAACUVQU0c6NTI1NAAAAAAAAAQAAAAEAAAAAAAABYAAAAAGbm9kZV94AAAAAAABAAAAAAAAAAwAAAABAAAADXN0YW5kYXJkX25hbWUAAAAAAAACAAAAF3Byb2plY3Rpb25feF9jb29yZGluYXRlAAAAAAYAAABQAAAAAAAABYQAAAAGbm9kZV95AAAAAAABAAAAAAAAAAwAAAABAAAADXN0YW5kYXJkX25hbWUAAAAAAAACAAAAF3Byb2plY3Rpb25feV9jb29yZGluYXRlAAAAAAYAAABQAAAAAAAABdQAAAAFZmFjZXMAAAAAAAACAAAAAQAAAAIAAAAMAAAAAwAAAAdjZl9yb2xlAAAAAAIAAAAWZmFjZV9ub2RlX2Nvbm5lY3Rpdml0eQAAAAAAC3N0YXJ0X2luZGV4AAAAAAQAAAABAAAAAQAAAApfRmlsbFZhbHVlAAAAAAAEAAAAAf////8AAAAEAAAAYAAAAAAAAAYkAAAABHRpbWUAAAABAAAAAwAAAAwAAAABAAAABXVuaXRzAAAAAAAAAgAAACFzZWNvbmRzIHNpbmNlIDIwMjQtMDUtMDEgMDY6MDA6MDAAAAAAAAAGAAAAGAAAAAAAAAaEAAAABWRlcHRoAAAAAAAAAgAAAAMAAAAAAAAADAAAAAUAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEbm9kZQAAAAlsb25nX25hbWUAAAAAAAACAAAADVN1IGRlcmlubGnEn2kAAAAAAAAKX0ZpbGxWYWx1ZQAAAAAABQAAAAF88AAAAAAAC2tlbnRvc19tYXNrAAAAAAIAAAAGYWN0aXZlAAAAAAAFAAAAeAAAAAAAAAacAAAABmFjdGl2ZQAAAAAAAgAAAAMAAAABAAAADAAAAAIAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEZmFjZQAAAAEAAAAUAAAAAAAABxQAAAAFbGV2ZWwAAAAAAAACAAAAAwAAAAEAAAAMAAAAAgAAAARtZXNoAAAAAgAAAARtZXNoAAAACGxvY2F0aW9uAAAAAgAAAARmYWNlAAAABQAAAEgAAAAAAAAHKAAAAAN1Y3gAAAAAAgAAAAMAAAAAAAAADAAAAAIAAAAEbWVzaAAAAAIAAAAEbWVzaAAAAAhsb2NhdGlvbgAAAAIAAAAEbm9kZQAAAAUAAAB4AAAAAAAAB3AAAAADdWN5AAAAAAIAAAADAAAAAAAAAAwAAAACAAAABG1lc2gAAAACAAAABG1lc2gAAAAIbG9jYXRpb24AAAACAAAABG5vZGUAAAAFAAAAeAAAAAAAAAfoAAAAAAAAAABBHoSAAAAAAEEehNAAAAAAQR6FIAAAAABBHoSAAAAAAEEehNAAAAAAQR6FIAAAAABBHoSAAAAAAEEehNAAAAAAQR6FCAAAAABBHoUgAAAAAEFQ3GgAAAAAQVDcaAAAAABBUNxoAAAAAEFQ3G0AAAAAQVDcbQAAAABBUNxtAAAAAEFQ3HIAAAAAQVDccgAAAABBUNxugAAAAEFQ3HIAAAAAAAAAAQAAAAIAAAAFAAAABAAAAAIAAAADAAAABv////8AAAACAAAABgAAAAX/////AAAABAAAAAUAAAAIAAAABwAAAAUAAAAGAAAACgAAAAkAAAAFAAAACAAAAAr/////AAAAAAAAAABAnCAAAAAAAECsIAAAAAAAAAAAAD6AAAA/AAAAP0AAAD+AAAA/oAAAP8AAAD/gAABAAAAAQBAAAD+AAAA/oAAAP8AAAHzwAABAAAAAQBAAAEAgAABAMAAAQEAAAEBQAABAAAAAQBAAAEAgAABAMAAAQEAAAEBQAABAYAAAQHAAAECAAABAiAAAAQEBAQEBAQABAQEBAQEBAAEBAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAABAQAAAQIAAAECgAAAAAAAAP4AAAEAAAAAAAAAAP4AAAEAAAAAAAAAAP4AAAEAAAAAAAAAAAAAAAD+AAABAAAAAAAAAAD+AAABAAAAAAAAAAD+AAABAAAAAAAAAAAAAAAA/gAAAQAAAAAAAAAA/gAAAQAAAAAAAAAA/gAAAQAAAAAAAAADAAAAAAAAAAEAAAAC/gAAAP4AAAMAAAAAAAAAAQAAAAL+AAAA/gAAAwAAAAAAAAABAAAAAv4AAAD+AAADAAAAAAAAAAEAAAAC/gAAAP4AAAMAAAAAAAAAAQAAAAL+AAAA/gAAAwAAAAAAAAABAAAAAv4AAAD+AAAA="
+    }
+   ],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "ugrid.nc: derinlik, düzey, vektör, maske, üç zaman adımı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.05.2024 06:30"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ugrid.nc: gösterilen veri seti vektör (ucx, ucy)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:2"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:2",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "ucx",
+          "vector": "ucy",
+          "steps": [
+           {
+            "name": "time",
+            "index": 2,
+            "label": "01.05.2024 07:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "quad-static.nc: coğrafi mesh, zamansız veri setleri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "elev"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "quad-static.nc: yüz veri seti gösterilen",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:4"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:4",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "zone"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: zaman ve katman boyutları, gösterilen adım ikisinde de 1",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:5",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:meshes/v1/files/layered.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "layered.nc: yüzdeki veri seti, yalnız zaman boyutu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:6"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:6",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "wind",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.01.2025 00:00"
+           }
+          ]
+         },
+         "file": "$fixture:meshes/v1/files/layered.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "2DM ve DAT'tan dönüşen UGRID: Taban kotu ve DAT veri setleri",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:7"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:7",
+         "layer": "mesh",
+         "mesh": "Mesh2d",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 3,
+         "edges": 8,
+         "triangles": 4,
+         "bbox": [
+          0.0,
+          0.0,
+          40.0,
+          20.0
+         ],
+         "area": 800.0,
+         "meanEdge": 21.035533905932738,
+         "geographic": false,
+         "shown": {
+          "variable": "taban_kotu"
+         },
+         "file": "$fixture:multidim/v1/files/sms-start.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "taban_kotu",
+           "location": "node",
+           "longName": "Taban kotu"
+          },
+          {
+           "variable": "Su_derinligi",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1714532400000.0,
+             "last": 1714537800000.0,
+             "firstLabel": "01.05.2024 03:00",
+             "lastLabel": "01.05.2024 04:30"
+            }
+           ]
+          },
+          {
+           "variable": "Hiz_x",
+           "location": "node",
+           "vector": "Hiz_y",
+           "longName": "Hız (x)",
+           "dims": [
+            {
+             "name": "time_2",
+             "count": 2,
+             "time": true,
+             "first": 1714532400000.0,
+             "last": 1714534200000.0,
+             "firstLabel": "01.05.2024 03:00",
+             "lastLabel": "01.05.2024 03:30"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "gömülü mesh kitaplıktan okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:8"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:8",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "level",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "asset": "mesh-0552055205520552",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "gizli katmandaki mesh adıyla sorulunca okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:9"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:9",
+         "layer": "gizli",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dosyası olmayan mesh okunmaz, söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:10"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:10",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/yok.nc"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "bozuk dosya: neden söylenir, öbürleri okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:11",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:11",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-header.nc"
+        },
+        {
+         "uid": "$uidOf:1",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.05.2024 06:30"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "NetCDF-4 (HDF5) dosyası okunmaz: neden söylenir, öbürleri okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:12",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:12",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-hdf5.nc"
+        },
+        {
+         "uid": "$uidOf:1",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.05.2024 06:30"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "GRIB dosyası okunmaz: neden söylenir, öbürleri okunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:13",
+       "$uidOf:1"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:13",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-grib.nc"
+        },
+        {
+         "uid": "$uidOf:1",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.05.2024 06:30"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "dosyanın olmayan bir ağı: neden söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:16"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:16",
+         "layer": "mesh",
+         "mesh": "yok",
+         "read": false,
+         "why": "NetCDF'te “yok” ağı yok",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "Meshin dosyası okunamadı: NetCDF'te “yok” ağı yok.",
+        "path": "meshes[0]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "iki mesh: kimliklerin sırasıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:5",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:5",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:meshes/v1/files/layered.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "elev"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "aynı mesh iki kez verilse bir kez söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:3",
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "elev"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "uids verilmezse çizimin bütün meshleri sırasıyla (gizli katmandakiler dahil)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {},
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:1",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.05.2024 06:30"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:2",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "ucx",
+          "vector": "ucy",
+          "steps": [
+           {
+            "name": "time",
+            "index": 2,
+            "label": "01.05.2024 07:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:3",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "elev"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:4",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "zone"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:5",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "temp",
+          "steps": [
+           {
+            "name": "time",
+            "index": 1,
+            "label": "01.01.2025 06:00"
+           },
+           {
+            "name": "layer",
+            "index": 1,
+            "label": "10 m"
+           }
+          ]
+         },
+         "file": "$fixture:meshes/v1/files/layered.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:6",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 2,
+         "edges": 7,
+         "triangles": 4,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500020.0,
+          4420010.0
+         ],
+         "area": 200.0,
+         "meanEdge": 10.0,
+         "geographic": false,
+         "shown": {
+          "variable": "wind",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.01.2025 00:00"
+           }
+          ]
+         },
+         "file": "$fixture:meshes/v1/files/layered.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "temp",
+           "location": "node",
+           "longName": "Sıcaklık",
+           "units": "degC",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            },
+            {
+             "name": "layer",
+             "count": 2,
+             "time": false,
+             "units": "m",
+             "first": 0.0,
+             "last": 10.0,
+             "firstLabel": "0 m",
+             "lastLabel": "10 m"
+            }
+           ]
+          },
+          {
+           "variable": "wind",
+           "location": "face",
+           "units": "m/s",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1735689600000.0,
+             "last": 1735711200000.0,
+             "firstLabel": "01.01.2025 00:00",
+             "lastLabel": "01.01.2025 06:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:7",
+         "layer": "mesh",
+         "mesh": "Mesh2d",
+         "read": true,
+         "srid": 5254,
+         "nodes": 6,
+         "faces": 3,
+         "edges": 8,
+         "triangles": 4,
+         "bbox": [
+          0.0,
+          0.0,
+          40.0,
+          20.0
+         ],
+         "area": 800.0,
+         "meanEdge": 21.035533905932738,
+         "geographic": false,
+         "shown": {
+          "variable": "taban_kotu"
+         },
+         "file": "$fixture:multidim/v1/files/sms-start.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "taban_kotu",
+           "location": "node",
+           "longName": "Taban kotu"
+          },
+          {
+           "variable": "Su_derinligi",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 2,
+             "time": true,
+             "first": 1714532400000.0,
+             "last": 1714537800000.0,
+             "firstLabel": "01.05.2024 03:00",
+             "lastLabel": "01.05.2024 04:30"
+            }
+           ]
+          },
+          {
+           "variable": "Hiz_x",
+           "location": "node",
+           "vector": "Hiz_y",
+           "longName": "Hız (x)",
+           "dims": [
+            {
+             "name": "time_2",
+             "count": 2,
+             "time": true,
+             "first": 1714532400000.0,
+             "last": 1714534200000.0,
+             "firstLabel": "01.05.2024 03:00",
+             "lastLabel": "01.05.2024 03:30"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:8",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "level",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "asset": "mesh-0552055205520552",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:9",
+         "layer": "gizli",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 5254,
+         "nodes": 10,
+         "faces": 6,
+         "edges": 16,
+         "triangles": 9,
+         "bbox": [
+          500000.0,
+          4420000.0,
+          500040.0,
+          4420040.0
+         ],
+         "area": 1520.0,
+         "meanEdge": 20.439477182398715,
+         "geographic": false,
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc",
+         "epsg": 5254,
+         "datasets": [
+          {
+           "variable": "depth",
+           "location": "node",
+           "longName": "Su derinliği",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "level",
+           "location": "face",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          },
+          {
+           "variable": "ucx",
+           "location": "node",
+           "vector": "ucy",
+           "dims": [
+            {
+             "name": "time",
+             "count": 3,
+             "time": true,
+             "first": 1714543200000.0,
+             "last": 1714546800000.0,
+             "firstLabel": "01.05.2024 06:00",
+             "lastLabel": "01.05.2024 07:00"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "uid": "$uidOf:10",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/yok.nc"
+        },
+        {
+         "uid": "$uidOf:11",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-header.nc"
+        },
+        {
+         "uid": "$uidOf:12",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-hdf5.nc"
+        },
+        {
+         "uid": "$uidOf:13",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": false,
+         "why": "$any",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/bad-grib.nc"
+        },
+        {
+         "uid": "$uidOf:16",
+         "layer": "mesh",
+         "mesh": "yok",
+         "read": false,
+         "why": "NetCDF'te “yok” ağı yok",
+         "nodes": 0,
+         "faces": 0,
+         "edges": 0,
+         "triangles": 0,
+         "geographic": false,
+         "srid": 5254,
+         "datasets": [],
+         "shown": {
+          "variable": "depth",
+          "steps": [
+           {
+            "name": "time",
+            "index": 0,
+            "label": "01.05.2024 06:00"
+           }
+          ]
+         },
+         "file": "$fixture:multidim/v1/files/ugrid.nc"
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": [
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[9]"
+       },
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[10]"
+       },
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[11]"
+       },
+       {
+        "code": "mesh_source_unreadable",
+        "message": "$any",
+        "path": "meshes[12]"
+       },
+       {
+        "code": "mesh_source_unreadable",
+        "message": "Meshin dosyası okunamadı: NetCDF'te “yok” ağı yok.",
+        "path": "meshes[13]"
+       }
+      ]
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı yazmadan verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "meshes": [
+        {
+         "uid": "$uidOf:3",
+         "layer": "mesh",
+         "mesh": "mesh",
+         "read": true,
+         "srid": 4326,
+         "nodes": 7,
+         "faces": 3,
+         "edges": 9,
+         "triangles": 5,
+         "bbox": [
+          32.0,
+          36.0,
+          32.2,
+          36.2
+         ],
+         "area": 0.02500000000000071,
+         "meanEdge": 0.1046023729152581,
+         "geographic": true,
+         "shown": {
+          "variable": "elev"
+         },
+         "file": "$fixture:meshes/v1/files/quad-static.nc",
+         "epsg": 4326,
+         "datasets": [
+          {
+           "variable": "elev",
+           "location": "node",
+           "longName": "Yükseklik",
+           "units": "m"
+          },
+          {
+           "variable": "zone",
+           "location": "face",
+           "longName": "Bölge"
+          }
+         ]
+        }
+       ],
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "uids": [
+       "$uidOf:3"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "geçersiz kimlik",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "mesh"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_uid",
+       "message": "“mesh” geçerli bir nesne kimliği değil; kimlik küçük harfli, tireli bir UUID'dir (01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4e5f gibi). Kimliği nesneyi oluşturan komutun çıktısından ya da çizimden alın.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "çizimde olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entity_not_found",
+       "message": "“01925f3e-7c1a-7d2b-9e4f-0a1b2c3d4eff” kimlikli nesne çizimde yok: silinmiş ya da başka bir çizimin olabilir. Var olan bir nesnenin kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "mesh olmayan raster (CF ızgarası)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:14"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_mesh",
+       "message": "Verilen nesne bir mesh rasteri değil; bir meshin (UGRID veri setini gösteren rasterin) kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "raster olmayan nesne",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:15"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_mesh",
+       "message": "Verilen nesne bir mesh rasteri değil; bir meshin (UGRID veri setini gösteren rasterin) kimliğini verin.",
+       "path": "uids[0]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  },
+  {
+   "name": "ikinci kimlik mesh değil",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "uids": [
+       "$uidOf:1",
+       "$uidOf:15"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_mesh",
+       "message": "Verilen nesne bir mesh rasteri değil; bir meshin (UGRID veri setini gösteren rasterin) kimliğini verin.",
+       "path": "uids[1]"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     },
+     "within": 1e-09
+    }
+   ]
+  }
+ ]
+}

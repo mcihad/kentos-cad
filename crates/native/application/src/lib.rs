@@ -238,6 +238,9 @@ pub mod walls_from_lines;
 pub mod offset;
 pub mod point;
 pub mod pointclouds;
+pub mod pointcloud_areas;
+pub mod meshes;
+mod source_bytes;
 pub mod time_query;
 pub mod points_construct;
 pub mod polygon;
@@ -609,6 +612,23 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_POINTCLOUDS_QUERY,
         kentos_commands::CAD_POINTCLOUDS_QUERY_VERSION,
+    ),
+    // Nokta bulutunun alan ve profil sorgusu, meshin bilgisi ve sorgusu ([`pointcloud_areas`], [`meshes`], docs/adr/0552).
+    (
+        kentos_commands::CAD_POINTCLOUDS_REGION,
+        kentos_commands::CAD_POINTCLOUDS_REGION_VERSION,
+    ),
+    (
+        kentos_commands::CAD_POINTCLOUDS_PROFILE,
+        kentos_commands::CAD_POINTCLOUDS_PROFILE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_MESHES_DESCRIBE,
+        kentos_commands::CAD_MESHES_DESCRIBE_VERSION,
+    ),
+    (
+        kentos_commands::CAD_MESHES_QUERY,
+        kentos_commands::CAD_MESHES_QUERY_VERSION,
     ),
     // Sanal mozaik ([`rasters_mosaic`], docs/adr/0517).
     (

@@ -1144,6 +1144,22 @@ codes! {
     INVALID_REACH = "invalid_reach", Failed, false, "Aramanın erimi sıfırdan büyük olmalı.";
     /// A point cloud's source that could not be read (docs/adr/0536): the rest are read.
     CLOUD_SOURCE_UNREADABLE = "cloud_source_unreadable", Warning, false, "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu.";
+    /// A uid given to a mesh command that is not a mesh raster (docs/adr/0552).
+    NOT_A_MESH = "not_a_mesh", Failed, false, "Verilen nesne bir mesh (ağ) rasteri değil.";
+    /// A mesh's file that could not be read (docs/adr/0552): the rest are read.
+    MESH_SOURCE_UNREADABLE = "mesh_source_unreadable", Warning, false, "Bir meshin dosyası okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu.";
+    /// A variable asked of a mesh that has no such dataset (docs/adr/0552).
+    MESH_VARIABLE_NOT_FOUND = "mesh_variable_not_found", Failed, false, "Meshte böyle bir veri seti yok.";
+    /// A mesh query that would read more values than one call does (docs/adr/0552).
+    TOO_MANY_MESH_VALUES = "too_many_mesh_values", Failed, false, "Sorgu bir çağrının okuyabileceğinden çok değer okurdu.";
+    /// An area of interest that is not a ring of three finite vertices with an area (docs/adr/0552).
+    INVALID_CLOUD_AREA = "invalid_cloud_area", Failed, false, "Alan en az üç köşeli, alanı sıfırdan büyük bir halka olmalı.";
+    /// A profile's path, width or step that cannot be read (docs/adr/0552).
+    INVALID_CORRIDOR = "invalid_corridor", Failed, false, "Profilin yolu en az iki köşeli, genişliği ve adımı sıfırdan büyük olmalı.";
+    /// A profile with more stations than one call answers (docs/adr/0552).
+    TOO_MANY_STATIONS = "too_many_stations", Failed, false, "Profilin istasyon sayısı bir çağrının cevaplayabileceğinden çok.";
+    /// A profile that lists more points than one call answers (docs/adr/0552).
+    TOO_MANY_LISTED_POINTS = "too_many_listed_points", Failed, false, "Profilin koridorundaki nokta sayısı listelenebilecek en çoktan fazla.";
     /// A time query on a layer without a time setting (docs/adr/0537).
     NOT_TEMPORAL = "not_temporal", Failed, false, "Katmanın zaman ayarı yok; zamanla sorulamaz.";
     /// A day known asked of a layer that does not record its versions (docs/adr/0537).

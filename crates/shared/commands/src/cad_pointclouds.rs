@@ -199,6 +199,57 @@ pub struct CloudDescribed {
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
     pub count: u64,
     pub sources: Vec<CloudSourceDescribed>,
+    /// A cloud of several files (a virtual point cloud) summed up: totals and where the files disagree; none for a
+    /// cloud of one source (docs/adr/0552).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub summary: Option<CloudSummary>,
+}
+
+/// A place the sources of one cloud disagree: what differs, which sources, in words.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CloudMismatch {
+    /// `epsg`, `vertical`, `point_format`, `gps_time`, `scale`, `extra` (the sources' systems, format, time, scale or
+    /// extra dimensions differ), `count`, `bounds` (a source's header disagrees with the cloud's record of it) or
+    /// `overlap` (two files' boxes cover the same ground).
+    pub kind: String,
+    /// The sources it concerns (their places in the cloud's sources, 0 and up).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "index")))]
+    pub sources: Vec<u32>,
+    pub message: String,
+}
+
+/// The sources of a cloud together (docs/adr/0552).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct CloudSummary {
+    /// The sources, and how many of them were read (a header).
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub sources: u32,
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub readable: u32,
+    /// The points of all the sources (a header's count where it was read, else the cloud's record of it).
+    #[cfg_attr(feature = "ts", ts(type = "number"))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "count")))]
+    pub count: u64,
+    /// `[x₁, y₁, z₁, x₂, y₂, z₂]`: the sources' boxes together.
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "system")))]
+    pub bounds: [f64; 6],
+    /// The horizontal system's EPSG code every read source names; none when they name none or differ.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "epsg")))]
+    pub epsg: Option<u32>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CloudMismatch>>", optional))]
+    pub mismatches: Vec<CloudMismatch>,
 }
 
 /// Output of `cad.pointclouds.describe` v1.

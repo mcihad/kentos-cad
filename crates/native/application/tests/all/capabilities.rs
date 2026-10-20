@@ -218,6 +218,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "100 001 noktalı ya da kimlikli durum dosyayı megabaytlarca büyütür; bu dosyanın selections_beyond_the_limit testinde",
     ),
     (
+        "cad.meshes.query",
+        "too_many_mesh_values",
+        "2 milyon değer için yüz binlerce adımlı bir zaman ekseni gerekir (megabaytlarca dosya); sınır meshes.rs'in MESH_MOST_VALUES denetimidir, kendi birim testinde (ADR 0552 §2)",
+    ),
+    (
         "*",
         "slots_exhausted",
         "4 milyarı aşkın yuvanın tükenmesi ortak durumla kurulamaz; masaüstünün kendi testinde (fixtures/commands/README.md)",

@@ -3,13 +3,11 @@
 //! at the source's full resolution. Both read the files themselves with the point cloud core (a file where the cloud
 //! names it, looked for as the project's other links are; a library asset); an address is not reached here.
 
-use std::cell::RefCell;
 use std::collections::BTreeMap;
-use std::io::{Read, Seek, SeekFrom};
 
 use kentos_commands::{
-    CloudDescribed, CloudExtra, CloudFormat, CloudPoint, CloudSource, CloudSourceDescribed,
-    CommandResult, CommandWarning, Entity, POINTCLOUD_MOST_COUNTED, PointCloudEntity,
+    CloudDescribed, CloudExtra, CloudFormat, CloudMismatch, CloudPoint, CloudSource,
+    CloudSourceDescribed, CloudSummary, CommandResult, CommandWarning, Entity, POINTCLOUD_MOST_COUNTED, PointCloudEntity,
     PointCloudsDescribe, PointCloudsDescribed, PointCloudsQueried, PointCloudsQuery,
 };
 use kentos_domain::Document;
@@ -22,68 +20,29 @@ use kentos_pointcloud::source::{Cloud, Opening, Run};
 use crate::ExecutionContext;
 use crate::checks::{self, Stop};
 use crate::codes;
-use crate::links::find;
-
-/// Where a source's bytes are read from.
-enum Bytes {
-    Memory(Vec<u8>),
-    File(RefCell<std::fs::File>, u64),
-}
-
-impl Bytes {
-    fn size(&self) -> u64 {
-        match self {
-            Bytes::Memory(b) => b.len() as u64,
-            Bytes::File(_, n) => *n,
-        }
-    }
-
-    fn read(&self, offset: u64, len: u64) -> Result<Vec<u8>, String> {
-        match self {
-            Bytes::Memory(b) => {
-                let (a, z) = (offset as usize, (offset + len) as usize);
-                b.get(a..z)
-                    .map(<[u8]>::to_vec)
-                    .ok_or_else(|| "dosyanın dışına okunmak istendi".into())
-            }
-            Bytes::File(f, _) => {
-                let mut f = f.borrow_mut();
-                f.seek(SeekFrom::Start(offset)).map_err(|e| e.to_string())?;
-                let mut out = vec![0; len as usize];
-                f.read_exact(&mut out).map_err(|e| e.to_string())?;
-                Ok(out)
-            }
-        }
-    }
-}
+use crate::source_bytes::{Bytes, bytes_for};
 
 /// A source's bytes: its library asset, or its file found as the project's links are; why not.
-fn bytes_of(doc: &Document, drawing: Option<&str>, s: &CloudSource) -> Result<Bytes, String> {
-    if let Some(id) = &s.asset {
-        return crate::rasters_georef::asset_bytes(doc, id)
-            .map(Bytes::Memory)
-            .ok_or_else(|| format!("projenin kitaplığında “{id}” yok"));
+pub(crate) fn bytes_of(
+    doc: &Document,
+    drawing: Option<&str>,
+    s: &CloudSource,
+) -> Result<Bytes, String> {
+    if s.asset.is_none() && s.file.is_none() && s.url.is_none() {
+        return Err("bulutun kaynağı yok".into());
     }
-    if let Some(path) = &s.file {
-        let found = find(path, None, drawing, &doc.settings().xref_paths);
-        let at = found
-            .at
-            .ok_or_else(|| format!("bulunamadı; bakılan yerler: {}", found.tried.join(", ")))?;
-        let file = std::fs::File::open(&at).map_err(|e| format!("açılamadı ({e})"))?;
-        let size = file.metadata().map_err(|e| e.to_string())?.len();
-        return Ok(Bytes::File(RefCell::new(file), size));
-    }
-    if s.url.is_some() {
-        return Err(
-            "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur"
-                .into(),
-        );
-    }
-    Err("bulutun kaynağı yok".into())
+    bytes_for(
+        doc,
+        drawing,
+        s.asset.as_deref(),
+        s.file.as_deref(),
+        s.url.as_deref(),
+        "adresteki bulut burada okunmaz; masaüstünün Nokta bulutu penceresi adresten okur",
+    )
 }
 
 /// The cloud of `bytes`: its header, VLRs, chunks or COPC hierarchy.
-fn open(bytes: &Bytes) -> Result<Cloud, String> {
+pub(crate) fn open(bytes: &Bytes) -> Result<Cloud, String> {
     let mut o = Opening::new(bytes.size());
     loop {
         match o.step().map_err(|e| e.0)? {
@@ -94,7 +53,7 @@ fn open(bytes: &Bytes) -> Result<Cloud, String> {
 }
 
 /// A run's records.
-fn records(cloud: &Cloud, bytes: &Bytes, run: &Run, out: &mut Vec<u8>) -> Result<(), String> {
+pub(crate) fn records(cloud: &Cloud, bytes: &Bytes, run: &Run, out: &mut Vec<u8>) -> Result<(), String> {
     let raw = bytes.read(run.need.offset, run.need.len)?;
     out.clear();
     cloud.records(run, &raw, out).map_err(|e| e.0)
@@ -385,8 +344,22 @@ pub fn source_described(
     describe_source(doc, drawing, s, false)
 }
 
+/// A cloud's sources summed up as `cad.pointclouds.describe` says it (docs/adr/0552): none for fewer than two
+/// sources (Öznitelikler's rows).
+pub fn summary_described(
+    doc: &Document,
+    drawing: Option<&str>,
+    sources: &[CloudSource],
+) -> Option<CloudSummary> {
+    let described: Vec<CloudSourceDescribed> = sources
+        .iter()
+        .map(|s| describe_source(doc, drawing, s, false))
+        .collect();
+    summary_of(sources, &described)
+}
+
 /// The point clouds named (each once, in the input's order), or every one of the drawing in its order.
-fn clouds<'a>(
+pub(crate) fn clouds<'a>(
     doc: &'a Document,
     uids: &'a [String],
 ) -> Result<Vec<(String, &'a PointCloudEntity)>, Stop> {
@@ -414,7 +387,7 @@ fn clouds<'a>(
         .collect()
 }
 
-fn uids_checked(uids: &[String]) -> Result<(), Stop> {
+pub(crate) fn uids_checked(uids: &[String]) -> Result<(), Stop> {
     if uids.is_empty() {
         return Ok(());
     }
@@ -464,6 +437,7 @@ pub(crate) fn describe_in(
             layer: c.base.layer_id.clone(),
             srid: c.cloud.srid,
             count: c.cloud.count,
+            summary: summary_of(&c.cloud.sources, &sources),
             sources,
         });
     }
@@ -474,6 +448,181 @@ pub(crate) fn describe_in(
         },
         warnings,
     ))
+}
+
+/// The sources of a cloud of several files summed up (docs/adr/0552): their points and box together, the system they
+/// share, and where they disagree: system, point format, GPS time, scale, extra dimensions; a header that disagrees
+/// with the cloud's record of it (points, box); two files whose boxes cover the same ground (at most 50 pairs).
+fn summary_of(recorded: &[CloudSource], sources: &[CloudSourceDescribed]) -> Option<CloudSummary> {
+    if sources.len() < 2 {
+        return None;
+    }
+    let mut bounds = sources[0].bounds;
+    for s in &sources[1..] {
+        for k in 0..3 {
+            bounds[k] = bounds[k].min(s.bounds[k]);
+            bounds[k + 3] = bounds[k + 3].max(s.bounds[k + 3]);
+        }
+    }
+    // The sources that have a header to compare (a text cloud has none).
+    let headed: Vec<usize> = (0..sources.len())
+        .filter(|&i| sources[i].read && sources[i].kind != "text")
+        .collect();
+    let mut mismatches = Vec::new();
+    let mut epsg = None;
+    if !headed.is_empty() {
+        let first = sources[headed[0]].epsg;
+        if headed.iter().all(|&i| sources[i].epsg == first) {
+            epsg = first;
+        }
+    }
+    if headed.len() >= 2 {
+        let mut differ = |kind: &str, what: &str, values: Vec<String>| {
+            if values.iter().any(|v| *v != values[0]) {
+                let said: Vec<String> = headed
+                    .iter()
+                    .zip(&values)
+                    .map(|(i, v)| format!("{}. kaynak {v}", i + 1))
+                    .collect();
+                mismatches.push(CloudMismatch {
+                    kind: kind.to_owned(),
+                    sources: headed.iter().map(|&i| i as u32).collect(),
+                    message: format!("Kaynakların {what} aynı değil: {}.", said.join(", ")),
+                });
+            }
+        };
+        let none = || "yok".to_owned();
+        differ(
+            "epsg",
+            "yatay sistemi",
+            headed
+                .iter()
+                .map(|&i| sources[i].epsg.map_or_else(none, |e| format!("EPSG:{e}")))
+                .collect(),
+        );
+        differ(
+            "vertical",
+            "düşey sistemi",
+            headed
+                .iter()
+                .map(|&i| sources[i].vertical.clone().unwrap_or_else(none))
+                .collect(),
+        );
+        differ(
+            "point_format",
+            "nokta biçimi",
+            headed
+                .iter()
+                .map(|&i| sources[i].format.map_or_else(none, |f| f.to_string()))
+                .collect(),
+        );
+        differ(
+            "gps_time",
+            "GPS zamanı",
+            headed
+                .iter()
+                .map(|&i| sources[i].gps_time.clone().unwrap_or_else(none))
+                .collect(),
+        );
+        differ(
+            "scale",
+            "ölçeği",
+            headed
+                .iter()
+                .map(|&i| {
+                    sources[i].scale.map_or_else(none, |s| {
+                        format!("{} {} {}", s[0], s[1], s[2])
+                    })
+                })
+                .collect(),
+        );
+        differ(
+            "extra",
+            "ek boyutları",
+            headed
+                .iter()
+                .map(|&i| {
+                    let names: Vec<&str> = sources[i].extra.iter().map(|e| e.name.as_str()).collect();
+                    if names.is_empty() {
+                        none()
+                    } else {
+                        names.join("/")
+                    }
+                })
+                .collect(),
+        );
+    }
+    let count_off: Vec<usize> = headed
+        .iter()
+        .copied()
+        .filter(|&i| recorded.get(i).is_some_and(|r| r.count != sources[i].count))
+        .collect();
+    if !count_off.is_empty() {
+        let said: Vec<String> = count_off
+            .iter()
+            .map(|&i| {
+                format!(
+                    "{}. kaynak (kayıtta {}, başlıkta {})",
+                    i + 1,
+                    recorded[i].count,
+                    sources[i].count
+                )
+            })
+            .collect();
+        mismatches.push(CloudMismatch {
+            kind: "count".into(),
+            sources: count_off.iter().map(|&i| i as u32).collect(),
+            message: format!(
+                "Bulutun kaydındaki nokta sayısı kaynağın başlığındakinden farklı: {}.",
+                said.join(", ")
+            ),
+        });
+    }
+    let bounds_off: Vec<usize> = headed
+        .iter()
+        .copied()
+        .filter(|&i| recorded.get(i).is_some_and(|r| r.bounds != sources[i].bounds))
+        .collect();
+    if !bounds_off.is_empty() {
+        let said: Vec<String> = bounds_off.iter().map(|i| format!("{}. kaynak", i + 1)).collect();
+        mismatches.push(CloudMismatch {
+            kind: "bounds".into(),
+            sources: bounds_off.iter().map(|&i| i as u32).collect(),
+            message: format!(
+                "Bulutun kaydındaki kutu kaynağın başlığındakinden farklı: {}.",
+                said.join(", ")
+            ),
+        });
+    }
+    let mut pairs = 0;
+    'pairs: for (a, &i) in headed.iter().enumerate() {
+        for &j in &headed[a + 1..] {
+            let (p, q) = (sources[i].bounds, sources[j].bounds);
+            if p[0].max(q[0]) < p[3].min(q[3]) && p[1].max(q[1]) < p[4].min(q[4]) {
+                mismatches.push(CloudMismatch {
+                    kind: "overlap".into(),
+                    sources: vec![i as u32, j as u32],
+                    message: format!(
+                        "{}. ve {}. kaynağın kutuları aynı yeri kaplıyor.",
+                        i + 1,
+                        j + 1
+                    ),
+                });
+                pairs += 1;
+                if pairs == 50 {
+                    break 'pairs;
+                }
+            }
+        }
+    }
+    Some(CloudSummary {
+        sources: sources.len() as u32,
+        readable: sources.iter().filter(|s| s.read).count() as u32,
+        count: sources.iter().map(|s| s.count).sum(),
+        bounds,
+        epsg,
+        mismatches,
+    })
 }
 
 /// The point nearest `input.at` in plan within its reach; why not.
@@ -613,7 +762,7 @@ fn near(key: Key, info: &kentos_pointcloud::copc::Info, at: [f64; 2], reach: f64
         || at[1] - reach > low[1] + side)
 }
 
-fn answer<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
+pub(crate) fn answer<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
     match r {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),

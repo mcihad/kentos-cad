@@ -10334,12 +10334,15 @@ class CloudDescribed(_Model):
     Attributes:
         srid: The cloud's system in the project (0: none). Unit: epsg.
         count: Unit: count.
+        summary: A cloud of several files (a virtual point cloud) summed up: totals and where the files disagree; none for a
+            cloud of one source (docs/adr/0552).
     """
     uid: str
     layer: str
     srid: int
     count: int
     sources: list[CloudSourceDescribed]
+    summary: CloudSummary | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -10348,6 +10351,8 @@ class CloudDescribed(_Model):
         out["srid"] = self.srid
         out["count"] = self.count
         out["sources"] = [e0.to_json() for e0 in self.sources]
+        if self.summary is not UNSET:
+            out["summary"] = None if self.summary is None else self.summary.to_json()
         return out
 
     @classmethod
@@ -10358,6 +10363,7 @@ class CloudDescribed(_Model):
             srid=data["srid"],
             count=data["count"],
             sources=[CloudSourceDescribed.from_json(e0) for e0 in data["sources"]],
+            summary=UNSET if "summary" not in data else None if data["summary"] is None else CloudSummary.from_json(data["summary"]),
         )
 
 
@@ -10385,6 +10391,35 @@ class CloudExtra(_Model):
             name=data["name"],
             kind=data["kind"],
             size=data["size"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudMismatch(_Model):
+    """A place the sources of one cloud disagree: what differs, which sources, in words.
+    Attributes:
+        kind: `epsg`, `vertical`, `point_format`, `gps_time`, `scale`, `extra` (the sources' systems, format, time, scale or
+            extra dimensions differ), `count`, `bounds` (a source's header disagrees with the cloud's record of it) or
+            `overlap` (two files' boxes cover the same ground).
+        sources: The sources it concerns (their places in the cloud's sources, 0 and up). Unit: index.
+    """
+    kind: str
+    sources: list[int]
+    message: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = self.kind
+        out["sources"] = list(self.sources)
+        out["message"] = self.message
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudMismatch:
+        return cls(
+            kind=data["kind"],
+            sources=list(data["sources"]),
+            message=data["message"],
         )
 
 
@@ -10459,6 +10494,60 @@ class CloudPoint(_Model):
             point_source_id=data["pointSourceId"],
             gps_time=UNSET if "gpsTime" not in data else None if data["gpsTime"] is None else float(data["gpsTime"]),
             rgb=UNSET if "rgb" not in data else None if data["rgb"] is None else list(data["rgb"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudRange(_Model):
+    """A value's smallest, largest and mean.
+    Attributes:
+        min: Unit: value.
+        max: Unit: value.
+        mean: Unit: value.
+    """
+    min: float
+    max: float
+    mean: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["min"] = float(self.min)
+        out["max"] = float(self.max)
+        out["mean"] = float(self.mean)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudRange:
+        return cls(
+            min=float(data["min"]),
+            max=float(data["max"]),
+            mean=float(data["mean"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudRegionPart(_Model):
+    """One point cloud's share of an area.
+    Attributes:
+        read: The points of this cloud's sources looked at. Unit: count.
+    """
+    uid: str
+    read: int
+    stats: CloudStats
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["read"] = self.read
+        out["stats"] = self.stats.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudRegionPart:
+        return cls(
+            uid=data["uid"],
+            read=data["read"],
+            stats=CloudStats.from_json(data["stats"]),
         )
 
 
@@ -10646,6 +10735,85 @@ class CloudSourceDescribed(_Model):
             version=data.get("version", UNSET),
             vertical=data.get("vertical", UNSET),
             why=data.get("why", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudStats(_Model):
+    """What the points inside an area are.
+    Attributes:
+        count: Unit: count.
+        classes: Each classification code (as text) and its points. Unit: count.
+        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]` of the points inside; none when there are none. Unit: length.
+        z: The heights (the mean summed exactly).
+    """
+    count: int
+    classes: dict[str, int]
+    bounds: list[float] | None | Unset = UNSET
+    intensity: CloudRange | None | Unset = UNSET
+    z: CloudRange | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["count"] = self.count
+        out["classes"] = dict(self.classes)
+        if self.bounds is not UNSET:
+            out["bounds"] = None if self.bounds is None else [float(e0) for e0 in self.bounds]
+        if self.intensity is not UNSET:
+            out["intensity"] = None if self.intensity is None else self.intensity.to_json()
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else self.z.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudStats:
+        return cls(
+            count=data["count"],
+            classes=dict(data["classes"]),
+            bounds=UNSET if "bounds" not in data else None if data["bounds"] is None else [float(e0) for e0 in data["bounds"]],
+            intensity=UNSET if "intensity" not in data else None if data["intensity"] is None else CloudRange.from_json(data["intensity"]),
+            z=UNSET if "z" not in data else None if data["z"] is None else CloudRange.from_json(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class CloudSummary(_Model):
+    """The sources of a cloud together (docs/adr/0552).
+    Attributes:
+        sources: The sources, and how many of them were read (a header). Unit: count.
+        readable: Unit: count.
+        count: The points of all the sources (a header's count where it was read, else the cloud's record of it). Unit: count.
+        bounds: `[x₁, y₁, z₁, x₂, y₂, z₂]`: the sources' boxes together. Unit: system.
+        epsg: The horizontal system's EPSG code every read source names; none when they name none or differ. Unit: epsg.
+    """
+    sources: int
+    readable: int
+    count: int
+    bounds: list[float]
+    epsg: int | None | Unset = UNSET
+    mismatches: list[CloudMismatch] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["sources"] = self.sources
+        out["readable"] = self.readable
+        out["count"] = self.count
+        out["bounds"] = [float(e0) for e0 in self.bounds]
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.mismatches is not UNSET:
+            out["mismatches"] = [e0.to_json() for e0 in self.mismatches]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> CloudSummary:
+        return cls(
+            sources=data["sources"],
+            readable=data["readable"],
+            count=data["count"],
+            bounds=[float(e0) for e0 in data["bounds"]],
+            epsg=data.get("epsg", UNSET),
+            mismatches=[CloudMismatch.from_json(e0) for e0 in data["mismatches"]] if "mismatches" in data else UNSET,
         )
 
 
@@ -27344,6 +27512,501 @@ class MarkReference(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class MeshDatasetInfo(_Model):
+    """A dataset of a mesh.
+    Attributes:
+        variable: The variable (a vector's x component).
+        location: `node` or `face`.
+        dims: Its dimensions besides the places, in the file's order.
+        vector: A vector's y component.
+    """
+    variable: str
+    location: str
+    dims: list[MeshDimension] | Unset = UNSET
+    long_name: str | None | Unset = UNSET
+    units: str | None | Unset = UNSET
+    vector: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["variable"] = self.variable
+        out["location"] = self.location
+        if self.dims is not UNSET:
+            out["dims"] = [e0.to_json() for e0 in self.dims]
+        if self.long_name is not UNSET:
+            out["longName"] = self.long_name
+        if self.units is not UNSET:
+            out["units"] = self.units
+        if self.vector is not UNSET:
+            out["vector"] = self.vector
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshDatasetInfo:
+        return cls(
+            variable=data["variable"],
+            location=data["location"],
+            dims=[MeshDimension.from_json(e0) for e0 in data["dims"]] if "dims" in data else UNSET,
+            long_name=data.get("longName", UNSET),
+            units=data.get("units", UNSET),
+            vector=data.get("vector", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshDescribed(_Model):
+    """One mesh described.
+    Attributes:
+        uid: The mesh raster's persistent id.
+        mesh: The topology's name in the file.
+        read: Whether the file's mesh was read; when not, `why`.
+        nodes: Unit: count.
+        faces: Unit: count.
+        edges: The faces' edges, each once. Unit: count.
+        triangles: The faces as triangles (a face of n nodes is n − 2). Unit: count.
+        geographic: The coordinates are longitude and latitude.
+        srid: The raster's system in the project (0: none). Unit: epsg.
+        area: The faces' area, together, in the mesh's system's unit squared. Unit: system.
+        bbox: `[x₁, y₁, x₂, y₂]` in the mesh's system. Unit: system.
+        epsg: The mesh's EPSG code, when the file names one. Unit: epsg.
+        mean_edge: The edges' mean length. Unit: system.
+        notes: What the file holds that is not read, and why.
+        shown: What the raster shows.
+    """
+    uid: str
+    layer: str
+    mesh: str
+    read: bool
+    nodes: int
+    faces: int
+    edges: int
+    triangles: int
+    geographic: bool
+    srid: int
+    datasets: list[MeshDatasetInfo]
+    area: float | None | Unset = UNSET
+    asset: str | None | Unset = UNSET
+    bbox: list[float] | None | Unset = UNSET
+    epsg: int | None | Unset = UNSET
+    file: str | None | Unset = UNSET
+    mean_edge: float | None | Unset = UNSET
+    notes: list[str] | Unset = UNSET
+    shown: MeshShown | None | Unset = UNSET
+    why: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["uid"] = self.uid
+        out["layer"] = self.layer
+        out["mesh"] = self.mesh
+        out["read"] = self.read
+        out["nodes"] = self.nodes
+        out["faces"] = self.faces
+        out["edges"] = self.edges
+        out["triangles"] = self.triangles
+        out["geographic"] = self.geographic
+        out["srid"] = self.srid
+        out["datasets"] = [e0.to_json() for e0 in self.datasets]
+        if self.area is not UNSET:
+            out["area"] = None if self.area is None else float(self.area)
+        if self.asset is not UNSET:
+            out["asset"] = self.asset
+        if self.bbox is not UNSET:
+            out["bbox"] = None if self.bbox is None else [float(e0) for e0 in self.bbox]
+        if self.epsg is not UNSET:
+            out["epsg"] = self.epsg
+        if self.file is not UNSET:
+            out["file"] = self.file
+        if self.mean_edge is not UNSET:
+            out["meanEdge"] = None if self.mean_edge is None else float(self.mean_edge)
+        if self.notes is not UNSET:
+            out["notes"] = list(self.notes)
+        if self.shown is not UNSET:
+            out["shown"] = None if self.shown is None else self.shown.to_json()
+        if self.why is not UNSET:
+            out["why"] = self.why
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshDescribed:
+        return cls(
+            uid=data["uid"],
+            layer=data["layer"],
+            mesh=data["mesh"],
+            read=data["read"],
+            nodes=data["nodes"],
+            faces=data["faces"],
+            edges=data["edges"],
+            triangles=data["triangles"],
+            geographic=data["geographic"],
+            srid=data["srid"],
+            datasets=[MeshDatasetInfo.from_json(e0) for e0 in data["datasets"]],
+            area=UNSET if "area" not in data else None if data["area"] is None else float(data["area"]),
+            asset=data.get("asset", UNSET),
+            bbox=UNSET if "bbox" not in data else None if data["bbox"] is None else [float(e0) for e0 in data["bbox"]],
+            epsg=data.get("epsg", UNSET),
+            file=data.get("file", UNSET),
+            mean_edge=UNSET if "meanEdge" not in data else None if data["meanEdge"] is None else float(data["meanEdge"]),
+            notes=list(data["notes"]) if "notes" in data else UNSET,
+            shown=UNSET if "shown" not in data else None if data["shown"] is None else MeshShown.from_json(data["shown"]),
+            why=data.get("why", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshDimension(_Model):
+    """One of a dataset's dimensions besides its places: a time or another (a layer).
+    Attributes:
+        count: Unit: count.
+        time: The values are a CF time axis's moments (milliseconds since 1970).
+        first: The first and last value (a time's in milliseconds since 1970). Unit: value.
+        first_label: The first and last value as the windows say them (a time as the time slider does).
+        last: Unit: value.
+    """
+    name: str
+    count: int
+    time: bool
+    first: float | None | Unset = UNSET
+    first_label: str | None | Unset = UNSET
+    last: float | None | Unset = UNSET
+    last_label: str | None | Unset = UNSET
+    units: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["count"] = self.count
+        out["time"] = self.time
+        if self.first is not UNSET:
+            out["first"] = None if self.first is None else float(self.first)
+        if self.first_label is not UNSET:
+            out["firstLabel"] = self.first_label
+        if self.last is not UNSET:
+            out["last"] = None if self.last is None else float(self.last)
+        if self.last_label is not UNSET:
+            out["lastLabel"] = self.last_label
+        if self.units is not UNSET:
+            out["units"] = self.units
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshDimension:
+        return cls(
+            name=data["name"],
+            count=data["count"],
+            time=data["time"],
+            first=UNSET if "first" not in data else None if data["first"] is None else float(data["first"]),
+            first_label=data.get("firstLabel", UNSET),
+            last=UNSET if "last" not in data else None if data["last"] is None else float(data["last"]),
+            last_label=data.get("lastLabel", UNSET),
+            units=data.get("units", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshFace(_Model):
+    """The face found: its lasting id and what it is.
+    Attributes:
+        mesh: The mesh raster's persistent id.
+        topology: The topology's name in the file.
+        face: The face's place in the file's face order (0 and up). Unit: index.
+        nodes: The face's nodes in the file's order (each from 0, in the file's node order). Unit: index.
+        area: The face's area. Unit: system.
+    """
+    mesh: str
+    topology: str
+    face: int
+    nodes: list[int]
+    area: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["mesh"] = self.mesh
+        out["topology"] = self.topology
+        out["face"] = self.face
+        out["nodes"] = list(self.nodes)
+        out["area"] = float(self.area)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshFace:
+        return cls(
+            mesh=data["mesh"],
+            topology=data["topology"],
+            face=data["face"],
+            nodes=list(data["nodes"]),
+            area=float(data["area"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshShown(_Model):
+    """The slice a mesh raster shows: the dataset and each of its dimensions' step.
+    Attributes:
+        steps: The step of each of the dataset's dimensions besides the places.
+    """
+    variable: str
+    steps: list[MeshStepOf] | Unset = UNSET
+    vector: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["variable"] = self.variable
+        if self.steps is not UNSET:
+            out["steps"] = [e0.to_json() for e0 in self.steps]
+        if self.vector is not UNSET:
+            out["vector"] = self.vector
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshShown:
+        return cls(
+            variable=data["variable"],
+            steps=[MeshStepOf.from_json(e0) for e0 in data["steps"]] if "steps" in data else UNSET,
+            vector=data.get("vector", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshStepOf(_Model):
+    """A dimension's step shown.
+    Attributes:
+        index: Unit: index.
+        label: The value at the step as the windows say it.
+    """
+    name: str
+    index: int
+    label: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["name"] = self.name
+        out["index"] = self.index
+        if self.label is not UNSET:
+            out["label"] = self.label
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshStepOf:
+        return cls(
+            name=data["name"],
+            index=data["index"],
+            label=data.get("label", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshStepValue(_Model):
+    """One step of a series.
+    Attributes:
+        step: Unit: index.
+        time: The step's moment (milliseconds since 1970) and as the windows say it. Unit: value.
+        value: None where the dataset has no value at the place and step. Unit: value.
+    """
+    step: int
+    time: float
+    label: str
+    value: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["step"] = self.step
+        out["time"] = float(self.time)
+        out["label"] = self.label
+        if self.value is not UNSET:
+            out["value"] = None if self.value is None else float(self.value)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshStepValue:
+        return cls(
+            step=data["step"],
+            time=float(data["time"]),
+            label=data["label"],
+            value=UNSET if "value" not in data else None if data["value"] is None else float(data["value"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshValue(_Model):
+    """A dataset's value at the place.
+    Attributes:
+        location: `node` or `face`.
+        series: With `series`: the value at every step.
+        step: The time step the value is of, when the dataset has a time dimension. Unit: index.
+        time: The step's moment (milliseconds since 1970). Unit: value.
+        value: None where the dataset has no value at the place (missing, an inactive face, no step at the moment). Unit: value.
+    """
+    variable: str
+    location: str
+    series: list[MeshStepValue] | Unset = UNSET
+    step: int | None | Unset = UNSET
+    time: float | None | Unset = UNSET
+    units: str | None | Unset = UNSET
+    value: float | None | Unset = UNSET
+    vector: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["variable"] = self.variable
+        out["location"] = self.location
+        if self.series is not UNSET:
+            out["series"] = [e0.to_json() for e0 in self.series]
+        if self.step is not UNSET:
+            out["step"] = self.step
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else float(self.time)
+        if self.units is not UNSET:
+            out["units"] = self.units
+        if self.value is not UNSET:
+            out["value"] = None if self.value is None else float(self.value)
+        if self.vector is not UNSET:
+            out["vector"] = self.vector
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshValue:
+        return cls(
+            variable=data["variable"],
+            location=data["location"],
+            series=[MeshStepValue.from_json(e0) for e0 in data["series"]] if "series" in data else UNSET,
+            step=data.get("step", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
+            units=data.get("units", UNSET),
+            value=UNSET if "value" not in data else None if data["value"] is None else float(data["value"]),
+            vector=data.get("vector", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshesDescribe(_Model):
+    """Input of `cad.meshes.describe` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`.
+    Attributes:
+        drawing: The open drawing's file, a relative source's folder (the host gives it).
+        uids: The mesh rasters (persistent ids); none: every mesh of the drawing, in the drawing's order.
+    """
+    drawing: str | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshesDescribe:
+        return cls(
+            drawing=data.get("drawing", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshesDescribed(_Model):
+    """Output of `cad.meshes.describe` v1.
+    Attributes:
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    meshes: list[MeshDescribed]
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["meshes"] = [e0.to_json() for e0 in self.meshes]
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshesDescribed:
+        return cls(
+            meshes=[MeshDescribed.from_json(e0) for e0 in data["meshes"]],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshesQueried(_Model):
+    """Output of `cad.meshes.query` v1: the face (none outside every mesh) and the values.
+    Attributes:
+        read: The values read from the file. Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+    """
+    read: int
+    revision: str
+    face: MeshFace | None | Unset = UNSET
+    values: list[MeshValue] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["read"] = self.read
+        out["revision"] = self.revision
+        if self.face is not UNSET:
+            out["face"] = None if self.face is None else self.face.to_json()
+        if self.values is not UNSET:
+            out["values"] = [e0.to_json() for e0 in self.values]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshesQueried:
+        return cls(
+            read=data["read"],
+            revision=data["revision"],
+            face=UNSET if "face" not in data else None if data["face"] is None else MeshFace.from_json(data["face"]),
+            values=[MeshValue.from_json(e0) for e0 in data["values"]] if "values" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class MeshesQuery(_Model):
+    """Input of `cad.meshes.query` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`,
+    `mesh_variable_not_found`, `invalid_moment`, `too_many_mesh_values`.
+    Attributes:
+        at: The place in plan, in the mesh's system. Unit: length.
+        series: Also answer each time-stepped dataset's value at every step.
+        time: The moment of the values (milliseconds since 1970): each dataset's last time step at or before it; before its
+            first, no value. None: the steps the raster shows. Unit: value.
+        uids: The meshes looked in, in this order; none: every visible mesh of the drawing. The first whose face holds the
+            place answers.
+        variables: The datasets (variables) asked; none: every dataset of the mesh.
+    """
+    at: Vec2
+    drawing: str | None | Unset = UNSET
+    series: bool | Unset = UNSET
+    time: float | None | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+    variables: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["at"] = _vec2_out(self.at)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.series is not UNSET:
+            out["series"] = self.series
+        if self.time is not UNSET:
+            out["time"] = None if self.time is None else float(self.time)
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        if self.variables is not UNSET:
+            out["variables"] = list(self.variables)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> MeshesQuery:
+        return cls(
+            at=Vec2.from_json(data["at"]),
+            drawing=data.get("drawing", UNSET),
+            series=data.get("series", UNSET),
+            time=UNSET if "time" not in data else None if data["time"] is None else float(data["time"]),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+            variables=list(data["variables"]) if "variables" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class MosaicSource(_Model):
     """A file of the mosaic.
     Attributes:
@@ -30606,6 +31269,90 @@ class PointCloudsDescribed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class PointCloudsProfile(_Model):
+    """Input of `cad.pointclouds.profile` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
+    `invalid_corridor`, `too_many_stations`, `too_many_cloud_points`, `too_many_listed_points`.
+    Attributes:
+        path: The path in plan, at least two vertices, no two in a row the same. Unit: length.
+        width: The corridor's width: the points within half of it of the path (a rounded end), above 0. Unit: length.
+        step: The stations' step along the path, above 0. Unit: length.
+        points: Also list the points (station, offset, place, class), by station.
+        uids: The point clouds looked in; none: every visible one.
+    """
+    path: list[Vec2]
+    width: float
+    step: float
+    drawing: str | None | Unset = UNSET
+    points: bool | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["path"] = [_vec2_out(e0) for e0 in self.path]
+        out["width"] = float(self.width)
+        out["step"] = float(self.step)
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.points is not UNSET:
+            out["points"] = self.points
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsProfile:
+        return cls(
+            path=[Vec2.from_json(e0) for e0 in data["path"]],
+            width=float(data["width"]),
+            step=float(data["step"]),
+            drawing=data.get("drawing", UNSET),
+            points=data.get("points", UNSET),
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsProfiled(_Model):
+    """Output of `cad.pointclouds.profile` v1.
+    Attributes:
+        length: The path's length. Unit: length.
+        count: The points in the corridor, all the clouds together. Unit: count.
+        read: The points looked at. Unit: count.
+        bins: Every station, empty ones too, from the path's start.
+        revision: ^(0|[1-9][0-9]*)$
+        points: With `points`: the corridor's points by station, then by cloud, source and place.
+    """
+    length: float
+    count: int
+    read: int
+    bins: list[ProfileBin]
+    revision: str
+    points: list[ProfilePoint] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["length"] = float(self.length)
+        out["count"] = self.count
+        out["read"] = self.read
+        out["bins"] = [e0.to_json() for e0 in self.bins]
+        out["revision"] = self.revision
+        if self.points is not UNSET:
+            out["points"] = [e0.to_json() for e0 in self.points]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsProfiled:
+        return cls(
+            length=float(data["length"]),
+            count=data["count"],
+            read=data["read"],
+            bins=[ProfileBin.from_json(e0) for e0 in data["bins"]],
+            revision=data["revision"],
+            points=[ProfilePoint.from_json(e0) for e0 in data["points"]] if "points" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class PointCloudsQueried(_Model):
     """Output of `cad.pointclouds.query` v1: the nearest point, or none within the reach; the points looked at.
     Attributes:
@@ -30664,6 +31411,84 @@ class PointCloudsQuery(_Model):
             radius=float(data["radius"]),
             drawing=data.get("drawing", UNSET),
             uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsRegion(_Model):
+    """Input of `cad.pointclouds.region` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,
+    `invalid_cloud_area`, `too_many_cloud_points`.
+    Attributes:
+        ring: The area's outer ring in plan, at least three vertices; implicitly closed (a repeated last vertex is dropped).
+            A point on the boundary is inside. Unit: length.
+        drawing: The open drawing's file, a relative source's folder (the host gives it).
+        holes: Holes of the area: a point strictly inside one is outside the area (its boundary is inside). Unit: length.
+        uids: The point clouds looked in; none: every visible one.
+    """
+    ring: list[Vec2]
+    drawing: str | None | Unset = UNSET
+    holes: list[list[Vec2]] | Unset = UNSET
+    uids: list[str] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["ring"] = [_vec2_out(e0) for e0 in self.ring]
+        if self.drawing is not UNSET:
+            out["drawing"] = self.drawing
+        if self.holes is not UNSET:
+            out["holes"] = [[_vec2_out(e1) for e1 in e0] for e0 in self.holes]
+        if self.uids is not UNSET:
+            out["uids"] = list(self.uids)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsRegion:
+        return cls(
+            ring=[Vec2.from_json(e0) for e0 in data["ring"]],
+            drawing=data.get("drawing", UNSET),
+            holes=[[Vec2.from_json(e1) for e1 in e0] for e0 in data["holes"]] if "holes" in data else UNSET,
+            uids=list(data["uids"]) if "uids" in data else UNSET,
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class PointCloudsRegioned(_Model):
+    """Output of `cad.pointclouds.region` v1.
+    Attributes:
+        area: The area: the ring's, less the holes' (the polygon is taken as simple). Unit: area.
+        read: The points looked at, all the clouds together. Unit: count.
+        total: All the clouds together.
+        clouds: Each cloud looked in, in the asked order (or the drawing's).
+        revision: ^(0|[1-9][0-9]*)$
+        density: The points per unit of area, all the clouds together; none when there are none. Unit: value.
+    """
+    area: float
+    read: int
+    total: CloudStats
+    clouds: list[CloudRegionPart]
+    revision: str
+    density: float | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["area"] = float(self.area)
+        out["read"] = self.read
+        out["total"] = self.total.to_json()
+        out["clouds"] = [e0.to_json() for e0 in self.clouds]
+        out["revision"] = self.revision
+        if self.density is not UNSET:
+            out["density"] = None if self.density is None else float(self.density)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> PointCloudsRegioned:
+        return cls(
+            area=float(data["area"]),
+            read=data["read"],
+            total=CloudStats.from_json(data["total"]),
+            clouds=[CloudRegionPart.from_json(e0) for e0 in data["clouds"]],
+            revision=data["revision"],
+            density=UNSET if "density" not in data else None if data["density"] is None else float(data["density"]),
         )
 
 
@@ -31791,6 +32616,39 @@ class ProfileAddress(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileBin(_Model):
+    """One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).
+    Attributes:
+        from_: Unit: length.
+        to: Unit: length.
+        count: Unit: count.
+        z: The heights; none when no point falls in the station.
+    """
+    from_: float
+    to: float
+    count: int
+    z: CloudRange | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["from"] = float(self.from_)
+        out["to"] = float(self.to)
+        out["count"] = self.count
+        if self.z is not UNSET:
+            out["z"] = None if self.z is None else self.z.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileBin:
+        return cls(
+            from_=float(data["from"]),
+            to=float(data["to"]),
+            count=data["count"],
+            z=UNSET if "z" not in data else None if data["z"] is None else CloudRange.from_json(data["z"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProfileClass(_Model):
     """A class of the profile: a layer by its path, its objects' geometry, its fields.
     Attributes:
@@ -31936,6 +32794,57 @@ class ProfileFinding(_Model):
             registered=UNSET if "registered" not in data else None if data["registered"] is None else float(data["registered"]),
             subject=data.get("subject", UNSET),
             value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilePoint(_Model):
+    """A point of the corridor: its lasting id, its place along the path and its facts.
+    Attributes:
+        source: Unit: index.
+        index: Unit: index.
+        station: The distance along the path of the point's foot on the path. Unit: length.
+        offset: The distance from the path, positive on its left. Unit: length.
+        x: Unit: length.
+        y: Unit: length.
+        z: Unit: length.
+        class_: Unit: index.
+    """
+    cloud: str
+    source: int
+    index: int
+    station: float
+    offset: float
+    x: float
+    y: float
+    z: float
+    class_: int
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["cloud"] = self.cloud
+        out["source"] = self.source
+        out["index"] = self.index
+        out["station"] = float(self.station)
+        out["offset"] = float(self.offset)
+        out["x"] = float(self.x)
+        out["y"] = float(self.y)
+        out["z"] = float(self.z)
+        out["class"] = self.class_
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilePoint:
+        return cls(
+            cloud=data["cloud"],
+            source=data["source"],
+            index=data["index"],
+            station=float(data["station"]),
+            offset=float(data["offset"]),
+            x=float(data["x"]),
+            y=float(data["y"]),
+            z=float(data["z"]),
+            class_=data["class"],
         )
 
 
@@ -55860,11 +56769,16 @@ __all__ = [
     "CloudExtra",
     "CloudFormat",
     "CloudFormatName",
+    "CloudMismatch",
     "CloudPoint",
+    "CloudRange",
+    "CloudRegionPart",
     "CloudRender",
     "CloudRenderName",
     "CloudSource",
     "CloudSourceDescribed",
+    "CloudStats",
+    "CloudSummary",
     "CodeCell",
     "CoincidentConstraintRule",
     "CollectLeaderEdit",
@@ -56566,6 +57480,18 @@ __all__ = [
     "MergePolicyName",
     "MergeSpacesOperation",
     "MergeTableEdit",
+    "MeshDatasetInfo",
+    "MeshDescribed",
+    "MeshDimension",
+    "MeshFace",
+    "MeshShown",
+    "MeshStepOf",
+    "MeshStepValue",
+    "MeshValue",
+    "MeshesDescribe",
+    "MeshesDescribed",
+    "MeshesQueried",
+    "MeshesQuery",
     "MidPointConstruction",
     "MidSubPlace",
     "MirrorText",
@@ -56736,8 +57662,12 @@ __all__ = [
     "PointCloudStyle",
     "PointCloudsDescribe",
     "PointCloudsDescribed",
+    "PointCloudsProfile",
+    "PointCloudsProfiled",
     "PointCloudsQueried",
     "PointCloudsQuery",
+    "PointCloudsRegion",
+    "PointCloudsRegioned",
     "PointConstruction",
     "PointCreate",
     "PointCreated",
@@ -56787,6 +57717,7 @@ __all__ = [
     "ProcessingTools",
     "ProcessingToolsListed",
     "ProfileAddress",
+    "ProfileBin",
     "ProfileClass",
     "ProfileClassSummary",
     "ProfileFinding",
@@ -56794,6 +57725,7 @@ __all__ = [
     "ProfileFindingKindName",
     "ProfileGeometry",
     "ProfileGeometryName",
+    "ProfilePoint",
     "ProfileRelation",
     "ProfilesApplied",
     "ProfilesApply",
