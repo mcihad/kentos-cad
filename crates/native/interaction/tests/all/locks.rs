@@ -7,7 +7,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::{Level, LockPick, NO_LOCK_EDGE, Toward};
 
 /// The newest object's points, relative to (E, N).
@@ -382,8 +382,8 @@ fn no_reference_without_a_command_that_takes_points() {
 /// The bench's drawing turned to a UCS at (E, N), its x axis 90° from east (docs/adr/0261).
 fn turned(b: &mut Bench) {
     let mut settings = b.doc.settings().clone();
-    settings.ucs = Some(kentos_contracts::Ucs {
-        origin: kentos_contracts::Vec2 {
+    settings.ucs = Some(kentos_commands::Ucs {
+        origin: kentos_commands::Vec2 {
             x: common::E,
             y: common::N,
         },

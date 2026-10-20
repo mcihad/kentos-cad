@@ -15,7 +15,7 @@
 //!
 //! The reshape is the shared core's (`ops::reshape_by`); none is computed here.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{EditOperation, Entity, EntityEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, area_parts, entity_area, entity_length, polygon_ring};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;

@@ -12,7 +12,7 @@
 //! its class one its layer labels with; the pins each object would have by
 //! their rules. A change that leaves a pin as it is changes nothing.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, LabelPin, LabelsMode, LabelsPin, LabelsPinPlan, LabelsPinned,
     PinnedObject, pins_problem,
 };
@@ -207,8 +207,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LabelsPin) -> CommandResult<Label
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LabelsPin) -> CommandResult<LabelsPinned> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LABELS_PIN,
-        kentos_contracts::CAD_LABELS_PIN_VERSION,
+        kentos_commands::CAD_LABELS_PIN,
+        kentos_commands::CAD_LABELS_PIN_VERSION,
         input,
         write_execute,
     )

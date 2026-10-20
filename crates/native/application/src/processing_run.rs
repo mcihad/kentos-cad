@@ -2,7 +2,7 @@
 //! runner the desktop's İşlemler window runs, one undo step named by the tool. `plan` runs it on a copy of the
 //! drawing: what it would write, by the same algorithm (the new objects' ids are the copy's).
 
-use kentos_contracts::{CommandResult, ProcessingRan, ProcessingRun};
+use kentos_commands::{CommandResult, ProcessingRan, ProcessingRun};
 
 use crate::ExecutionContext;
 use crate::processing_host::host;
@@ -50,7 +50,7 @@ pub fn execute(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{CommandResult, DocumentSnapshotV1, ProcessingRun, ProcessingTools};
+    use kentos_commands::{CommandResult, DocumentSnapshotV1, ProcessingRun, ProcessingTools};
     use kentos_domain::Document;
 
     use crate::ExecutionContext;

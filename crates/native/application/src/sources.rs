@@ -11,7 +11,7 @@
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, ImportGpkg, ImportedLayer, LabelPin, LayerNodeType, LostPin,
     MAX_SOURCES, PinLoss, PinMove, SourceCapabilities, SourceColumn, SourceKind, SourceLink,
     SourceState, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
@@ -70,7 +70,7 @@ fn mover_for(doc: &Document, srid: Option<u32>) -> Result<Option<Mover>, String>
 }
 
 /// Why a derivative's table is not bound, read into a layer or written back (docs/adr/0530 §4).
-fn derived_message(table: &str, rec: &kentos_contracts::DerivationRecord) -> String {
+fn derived_message(table: &str, rec: &kentos_commands::DerivationRecord) -> String {
     format!(
         "“{table}” tablosu çizimden türetilmiş bir GIS verisi ({}, tolerans {} m; kaynak “{}”, {} sürümü): geometrisi kaynak yayların kirişleridir ve kaynağın yerine geçmez. Bağlanmaz, katmana okunmaz, geri yazılmaz; GIS'te yapılan değişiklikleri cad.gis.derivation gösterir, kaynağı çizimde düzenleyin.",
         rec.algorithm, rec.tolerance, rec.source.name, rec.source.revision
@@ -97,7 +97,7 @@ fn completed<T>(r: Result<(T, Vec<CommandWarning>), Stop>) -> CommandResult<T> {
 /// million objects' JSON is not built at once; the bytes, and so the digest, are those of `digest_of` on the list).
 pub fn layer_digest(doc: &Document, layer: &str) -> String {
     use sha2::{Digest, Sha256};
-    let mut items: Vec<(Uuid, &kentos_contracts::Entity)> = doc.by_layer_with_uids(layer).collect();
+    let mut items: Vec<(Uuid, &kentos_commands::Entity)> = doc.by_layer_with_uids(layer).collect();
     items.sort_by_key(|(u, _)| *u);
     let mut hasher = Sha256::new();
     hasher.update(b"[");
@@ -106,7 +106,7 @@ pub fn layer_digest(doc: &Document, layer: &str) -> String {
             hasher.update(b",");
         }
         let item = json!([u.to_string(), gp::essence(e)]);
-        hasher.update(kentos_contracts::canonical::canonical_json(&item).as_bytes());
+        hasher.update(kentos_commands::canonical::canonical_json(&item).as_bytes());
     }
     hasher.update(b"]");
     hasher
@@ -119,7 +119,7 @@ pub fn layer_digest(doc: &Document, layer: &str) -> String {
 /// The file's SHA-256, read a piece at a time.
 fn file_sha(path: &Path) -> Result<String, String> {
     std::fs::File::open(path)
-        .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
         .map(|(_, sha)| sha)
         .map_err(|e| format!("{} okunamadı: {e}", path.display()))
 }
@@ -162,12 +162,12 @@ struct Stored {
     srid: Option<u32>,
     rows: HashMap<Uuid, (i64, Option<Geometry>, Vec<Value>)>,
     /// The rows as the import reads them, in the table's own system.
-    objects: Vec<(Uuid, kentos_contracts::Entity)>,
+    objects: Vec<(Uuid, kentos_commands::Entity)>,
     /// A part's working copy (docs/adr/0510): the table's rows outside the area, by lasting id. An object of the layer
     /// moved out of the area is written over its row, not as a new one.
     outside: HashMap<Uuid, i64>,
     /// The columns as the layer's fields, and what does not come over (linking onto a new layer).
-    fields: Vec<kentos_contracts::LayerField>,
+    fields: Vec<kentos_commands::LayerField>,
     losses: BTreeSet<String>,
     writable: bool,
     sha256: String,
@@ -192,7 +192,7 @@ impl Stored {
     }
 
     /// The table's objects in the project's system (those that reach it).
-    fn in_project(&self, mover: Option<&Mover>) -> Vec<(Uuid, kentos_contracts::Entity)> {
+    fn in_project(&self, mover: Option<&Mover>) -> Vec<(Uuid, kentos_commands::Entity)> {
         let mut out = self.objects.clone();
         if let Some(m) = mover {
             out.retain_mut(|(_, e)| {
@@ -752,7 +752,7 @@ fn link_of<'a>(doc: &'a Document, id: &str) -> Option<&'a SourceLink> {
 /// alike. `path` is where the refusal points.
 fn key_check<'a>(
     key: &str,
-    objects: impl Iterator<Item = (Uuid, &'a kentos_contracts::Entity)>,
+    objects: impl Iterator<Item = (Uuid, &'a kentos_commands::Entity)>,
     path: &str,
 ) -> Result<(), Stop> {
     let mut seen: HashMap<&str, Uuid> = HashMap::new();
@@ -804,10 +804,10 @@ struct PinPlan {
 fn follow_pins(
     doc: &Document,
     link: &SourceLink,
-    objects: &[(Uuid, kentos_contracts::Entity)],
+    objects: &[(Uuid, kentos_commands::Entity)],
     outside: &HashMap<Uuid, i64>,
 ) -> PinPlan {
-    let bearers: Vec<(Uuid, &kentos_contracts::Entity)> = doc
+    let bearers: Vec<(Uuid, &kentos_commands::Entity)> = doc
         .by_layer_with_uids(&link.layer)
         .filter(|(_, e)| !e.base().label_pins.is_empty())
         .collect();
@@ -820,9 +820,9 @@ fn follow_pins(
         return plan;
     }
     let key = link.key.as_deref();
-    let new: HashMap<Uuid, &kentos_contracts::Entity> =
+    let new: HashMap<Uuid, &kentos_commands::Entity> =
         objects.iter().map(|(u, e)| (*u, e)).collect();
-    let value_of = |e: &kentos_contracts::Entity| -> Option<String> {
+    let value_of = |e: &kentos_commands::Entity| -> Option<String> {
         key.and_then(|k| e.base().attrs.get(k))
             .filter(|v| !v.is_empty())
             .cloned()
@@ -1245,7 +1245,7 @@ fn link_table(
 ) -> Result<(SourcesEdited, Vec<CommandWarning>), Stop> {
     let at = origin(path, "edit.path")?;
     if let Some(k) = key
-        && let Some(why) = kentos_contracts::key_problem(k)
+        && let Some(why) = kentos_commands::key_problem(k)
     {
         return Err(refuse(
             codes::INVALID_KEY,
@@ -1254,7 +1254,7 @@ fn link_table(
         ));
     }
     if let Some(e) = &extent {
-        let why = kentos_contracts::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
+        let why = kentos_commands::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
         let why = why.or_else(|| {
             layer.map(|_| {
                 "Var olan katmana bağlamada alan sınırı olmaz: katman tablonun bütün nesnelerini taşır. Yeni katmana bağlayın (layer vermeden).".to_owned()
@@ -1561,7 +1561,7 @@ fn edit_run(
                 ));
             };
             if let Some(k) = key {
-                if let Some(why) = kentos_contracts::key_problem(k) {
+                if let Some(why) = kentos_commands::key_problem(k) {
                     return Err(refuse(
                         codes::INVALID_KEY,
                         format!("Anahtar alanı {why}."),
@@ -1680,7 +1680,7 @@ fn change_extent(
         ));
     };
     if let Some(e) = &extent {
-        let why = kentos_contracts::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
+        let why = kentos_commands::extent_problem(e).map(|w| format!("Alan sınırının {w}."));
         let why = why.or_else(|| {
             (link.kind != SourceKind::Geopackage).then(|| {
                 "Veritabanı tablosunda alan sınırı henüz yok; GeoPackage tablosu için verin."
@@ -1825,7 +1825,7 @@ fn follow_outside(
             Shape::Line { .. } | Shape::Polyline { .. } | Shape::Polygon { .. }
         )
     };
-    let before: HashMap<Uuid, kentos_contracts::Entity> =
+    let before: HashMap<Uuid, kentos_commands::Entity> =
         stored.in_project(mover).into_iter().collect();
     let mut changes = Vec::new();
     for (uid, e) in doc.by_layer_with_uids(&link.layer) {
@@ -1880,7 +1880,7 @@ fn follow_outside(
         .by_layer_with_uids(&link.layer)
         .map(|(u, _)| u)
         .collect();
-    let candidates: Vec<(Uuid, kentos_contracts::Entity)> = near
+    let candidates: Vec<(Uuid, kentos_commands::Entity)> = near
         .in_project(mover)
         .into_iter()
         .filter(|(u, e)| {
@@ -2197,7 +2197,7 @@ fn sync_run(
             let wanted: HashSet<Uuid> = objects.iter().map(|(u, _)| *u).collect();
             // The label pins of the layer's objects, by the key when the layer has one (docs/adr/0533 §1).
             let pins = follow_pins(doc, &link, &objects, &stored.outside);
-            let mut updates: Vec<(Slot, kentos_contracts::Entity)> = Vec::new();
+            let mut updates: Vec<(Slot, kentos_commands::Entity)> = Vec::new();
             let mut adds = Vec::new();
             for (uid, mut e) in objects {
                 match doc

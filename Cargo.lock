@@ -2531,6 +2531,7 @@ dependencies = [
 name = "kentos-application"
 version = "0.1.0"
 dependencies = [
+ "kentos-commands",
  "kentos-contracts",
  "kentos-expression",
  "kentos-formats",
@@ -2568,6 +2569,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "kentos-commands"
+version = "0.1.0"
+dependencies = [
+ "kentos-contracts",
+ "libm",
+ "schemars",
+ "serde",
+ "serde_json",
+ "ts-rs",
+]
+
+[[package]]
 name = "kentos-contracts"
 version = "0.1.0"
 dependencies = [
@@ -2587,7 +2600,7 @@ dependencies = [
  "iced",
  "iced_runtime",
  "kentos-cloud",
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-expression",
  "kentos-formats",
@@ -2726,7 +2739,7 @@ dependencies = [
 name = "kentos-headless"
 version = "0.1.0"
 dependencies = [
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-formats",
  "kentos-geometry-core",
@@ -2743,7 +2756,7 @@ dependencies = [
 name = "kentos-interaction"
 version = "0.1.0"
 dependencies = [
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-geometry-core",
  "kentos-native-application",
@@ -2767,7 +2780,7 @@ name = "kentos-mcp"
 version = "0.1.0"
 dependencies = [
  "kentos-cloud",
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-headless",
  "kentos-native-application",
@@ -2780,7 +2793,7 @@ dependencies = [
 name = "kentos-native-application"
 version = "0.1.0"
 dependencies = [
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-expression",
  "kentos-formats",
@@ -2907,7 +2920,7 @@ dependencies = [
 name = "kentos-processing"
 version = "0.1.0"
 dependencies = [
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-expression",
  "kentos-formats",
@@ -2940,7 +2953,7 @@ dependencies = [
 name = "kentos-python"
 version = "0.1.0"
 dependencies = [
- "kentos-contracts",
+ "kentos-commands",
  "kentos-domain",
  "kentos-geometry-core",
  "kentos-headless",

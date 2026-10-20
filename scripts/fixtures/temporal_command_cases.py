@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.layers.time.json and cad.scenarios.edit.json: the shared cases of `cad.layers.time` v1
 and `cad.scenarios.edit` v1 (docs/adr/0210 §9, §11), their expectations built here from the contracts' rules
-(crates/shared/contracts/src/cad_layers.rs, cad_scenarios.rs, temporal.rs: the checks and their order, the codes, the
+(crates/shared/commands/src/cad_layers.rs, cad_scenarios.rs, temporal.rs: the checks and their order, the codes, the
 paths and the words; where the scenario goes and what its layers keep; the steps' names), without KentOS code. The web
 (apps/web/src/product/fixtures.test.ts), the desktop (crates/native/application/tests/all/fixtures.rs) and Python
 (python/tests/test_command_cases.py) run them.
@@ -510,7 +510,7 @@ def build_time():
         "command": "cad.layers.time",
         "commandVersion": 1,
         "title": "Katmanın zaman ayarı: yaz, değiştir, kaldır (ADR 0210 §11)",
-        "note": "scripts/fixtures/temporal_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_layers.rs, temporal.rs) KentOS kodu olmadan kurulur; kuralın sözleri fixtures/temporal/v1/rules.json'dan. `expect.layers` katman ağacının tamamıdır.",
+        "note": "scripts/fixtures/temporal_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_layers.rs, temporal.rs) KentOS kodu olmadan kurulur; kuralın sözleri fixtures/temporal/v1/rules.json'dan. `expect.layers` katman ağacının tamamıdır.",
         "setup": setup(),
         "cases": time_cases(),
     }
@@ -523,7 +523,7 @@ def build_scenario():
         "command": "cad.scenarios.edit",
         "commandVersion": 1,
         "title": "Senaryo: oluştur ve uygula (ADR 0210 §9, §11)",
-        "note": "scripts/fixtures/temporal_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_scenarios.rs, temporal.rs) KentOS kodu olmadan kurulur. `$layer:K` komutun eklediği (plan: ekleyeceği) K'ıncı katmanın kimliğidir: adımdan önce ağaçta olmayan `layer-N`'ler sayılarına göre sıralı (önce senaryo grubu, sonra kopyalar verildikleri sırayla); `expect.layers` katman ağacının tamamıdır.",
+        "note": "scripts/fixtures/temporal_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_scenarios.rs, temporal.rs) KentOS kodu olmadan kurulur. `$layer:K` komutun eklediği (plan: ekleyeceği) K'ıncı katmanın kimliğidir: adımdan önce ağaçta olmayan `layer-N`'ler sayılarına göre sıralı (önce senaryo grubu, sonra kopyalar verildikleri sırayla); `expect.layers` katman ağacının tamamıdır.",
         "setup": setup(),
         "cases": scenario_cases(),
     }

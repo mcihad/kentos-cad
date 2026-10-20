@@ -16,7 +16,7 @@ use iced::task::Handle;
 use iced::widget::text_editor;
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{ApiFailure, follow};
-use kentos_contracts::{
+use kentos_commands::{
     CHECKPOINT_NAME_MAX, CatalogView, Checkpoint, CheckpointChange, CheckpointCreate,
     CheckpointDelete, CheckpointKind, CheckpointRestore, FileRevision, PROJECT_CHECKPOINT_CREATE,
     PROJECT_CHECKPOINT_CREATE_VERSION, PROJECT_CHECKPOINT_DELETE,
@@ -276,7 +276,7 @@ impl App {
             None => Task::perform(client.project(tenant, project), move |result| {
                 crate::cloud::msg(Event::HistoryEvents {
                     id,
-                    result: result.map(|info| kentos_contracts::EventPage {
+                    result: result.map(|info| kentos_commands::EventPage {
                         events: Vec::new(),
                         next: info.event_cursor,
                     }),

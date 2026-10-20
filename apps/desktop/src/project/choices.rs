@@ -9,7 +9,7 @@ use std::fmt;
 
 use iced::widget::{Column, column, row, text_input};
 use iced::{Element, Fill};
-use kentos_contracts::{Convention, DatumTransform};
+use kentos_commands::{Convention, DatumTransform};
 use kentos_project::choice_form::{
     self, Form, GridRef, Method, PAIRS, PARAMETERS, Problems, datum_name, epsg_text,
 };

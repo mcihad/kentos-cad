@@ -32,7 +32,7 @@
 //! clicked), its preview the command's own dimension (`measured_in`). The
 //! layout and the placing are the shared core's.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionMeasure, DimensionsCreate, EdgeNear, Entity, MeasuredPoint, NewLook,
 };
 use kentos_domain::{Document, Slot};
@@ -49,7 +49,7 @@ use kentos_native_application::dimension_create::{
 use kentos_native_application::geometry::{core_look, shape};
 use kentos_native_application::{ExecutionContext, codes, dimensions_create};
 
-use kentos_contracts::{EntityId, SubRef};
+use kentos_commands::{EntityId, SubRef};
 use kentos_domain::dimension_ties::contract_place;
 use kentos_geometry_core::ops::subref::{place_at, place_in};
 use kentos_geometry_core::store::snap::SnapHit;
@@ -261,7 +261,7 @@ pub struct Dimension {
     /// style's, else 2.5 mm's (docs/adr/0183 §4).
     height: f64,
     /// The dimension style's look, as of the last call; none for Standart.
-    look: kentos_contracts::DimensionLook,
+    look: kentos_commands::DimensionLook,
     /// The dimension styles as of the last call: a CAD project's Stil.
     styles: styles::Seen,
     /// Stil: a dimension style's name is being typed.

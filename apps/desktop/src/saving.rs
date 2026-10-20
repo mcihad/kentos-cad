@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use iced::futures::channel::mpsc;
 use iced::widget::container;
 use iced::{Bottom, Element, Fill, Right, Task};
-use kentos_contracts::DocumentSnapshotV2;
+use kentos_commands::DocumentSnapshotV2;
 use kentos_kcad::{Code, Step};
 use kentos_ui::style;
 use kentos_ui::widget::progress::{Task as Job, TaskList};

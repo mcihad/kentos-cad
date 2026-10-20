@@ -15,8 +15,8 @@
 use std::collections::{HashMap, HashSet};
 use std::time::{Duration, Instant};
 
-use kentos_contracts::blocks::import_names;
-use kentos_contracts::{
+use kentos_commands::blocks::import_names;
+use kentos_commands::{
     BlockDefinition, BlockId, DimensionStyleDef, Entity, LayerNode, LayerNodeType, LayerStyle,
     ProjectSettings, TextStyleDef, Vec2, dimension_styles_problem, text_styles_problem,
 };
@@ -33,7 +33,7 @@ pub enum LayerTarget {
         visible: bool,
         locked: bool,
         /// The fields the file gives the layer (docs/adr/0199 §6).
-        fields: Vec<kentos_contracts::LayerField>,
+        fields: Vec<kentos_commands::LayerField>,
         /// `Some(false)`: the file's layer is not printed (docs/adr/0260 §4).
         plot: Option<bool>,
         /// `Some(true)`: the file's layer is frozen (docs/adr/0311 §1).
@@ -79,7 +79,7 @@ pub struct Styles {
     pub text: Vec<TextStyleDef>,
     pub dimension: Vec<DimensionStyleDef>,
     /// The file's line types with patterns and its line type scale (docs/adr/0313 §6).
-    pub line_types: Vec<kentos_contracts::LineTypeDef>,
+    pub line_types: Vec<kentos_commands::LineTypeDef>,
     pub line_type_scale: Option<f64>,
 }
 
@@ -96,7 +96,7 @@ struct ImportedStyles {
     dimension: Vec<DimensionStyleDef>,
     /// The file's line types the project lacks (a name it has is its own), and the scale when it has none
     /// (docs/adr/0313 §6).
-    line_types: Vec<kentos_contracts::LineTypeDef>,
+    line_types: Vec<kentos_commands::LineTypeDef>,
     line_type_scale: Option<f64>,
 }
 
@@ -165,16 +165,16 @@ impl ImportedStyles {
                 .line_types
                 .iter()
                 .chain(&out.line_types)
-                .any(|p| kentos_contracts::same_line_type_name(&p.name, &t.name));
+                .any(|p| kentos_commands::same_line_type_name(&p.name, &t.name));
             let mut table = settings.line_types.clone();
             table.extend(out.line_types.iter().cloned());
             table.push(t.clone());
-            if !known && kentos_contracts::line_types_problem(&table).is_none() {
+            if !known && kentos_commands::line_types_problem(&table).is_none() {
                 out.line_types.push(t);
             }
         }
         out.line_type_scale = styles.line_type_scale.filter(|s| {
-            settings.line_type_scale.is_none() && *s <= kentos_contracts::MAX_LINE_TYPE_SCALE
+            settings.line_type_scale.is_none() && *s <= kentos_commands::MAX_LINE_TYPE_SCALE
         });
         out
     }
@@ -614,11 +614,11 @@ fn apply_inner(
 }
 
 /// Puts the objects' ids in the place of an import's stand-ins (docs/adr/0333 §2): each hatch the import added that
-/// names objects by their place among the objects read ([`kentos_contracts::import_placeholder`]) names them by
+/// names objects by their place among the objects read ([`kentos_commands::import_placeholder`]) names them by
 /// their ids now. One whose closed object or face's objects were not added follows nothing; its islands left out
 /// leave its list. The hatch is cut again from its objects by the document's rule, in the same step.
 fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
-    use kentos_contracts::{EntityId, import_placeholder_index};
+    use kentos_commands::{EntityId, import_placeholder_index};
     let ids: HashMap<usize, EntityId> = placed
         .iter()
         .filter_map(|(i, s)| doc.uid(*s).map(|u| (*i, EntityId(u.into_bytes()))))
@@ -679,7 +679,7 @@ fn tie_placeholders(doc: &mut Document, placed: &[(usize, Slot)]) {
             None => !bounds.is_empty() && bounds.len() == a.bounds.len(),
         };
         let mut next = h.clone();
-        next.assoc = whole.then(|| kentos_contracts::HatchAssoc {
+        next.assoc = whole.then(|| kentos_commands::HatchAssoc {
             outer: outer.flatten(),
             bounds,
             islands: a.islands.iter().filter_map(real).collect(),
@@ -871,12 +871,12 @@ pub fn unusable(entities: &[Entity]) -> Option<(usize, &'static str)> {
 
 /// A path's numbers are finite: its rings' points and bulges, a multi-part
 /// area's every part too (docs/adr/0143).
-fn path_finite(e: &kentos_contracts::PathEntity) -> bool {
+fn path_finite(e: &kentos_commands::PathEntity) -> bool {
     let ring = |pts: &[Vec2], bulges: Option<&[f64]>| {
         pts.iter().all(|v| v.x.is_finite() && v.y.is_finite())
             && bulges.is_none_or(|b| b.iter().all(|x| x.is_finite()))
     };
-    let holes = |holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+    let holes = |holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         holes
             .iter()
             .flatten()
@@ -898,7 +898,7 @@ fn finite(e: &Entity) -> bool {
     let weight = e
         .base()
         .line_weight
-        .is_none_or(|w| (0.0..=kentos_contracts::MAX_LINE_WEIGHT).contains(&w));
+        .is_none_or(|w| (0.0..=kentos_commands::MAX_LINE_WEIGHT).contains(&w));
     weight
         && match e {
             Entity::Point(e) => p(&e.p) && e.z.is_none_or(f64::is_finite),
@@ -995,7 +995,7 @@ pub fn unusable_block(blocks: &[BlockDefinition]) -> Option<String> {
 mod tests {
     use std::collections::BTreeMap;
 
-    use kentos_contracts::{
+    use kentos_commands::{
         DocumentSnapshotV1, EntityBase, LineEntity, LineType, PointEntity, Vec2,
     };
 
@@ -1278,7 +1278,7 @@ mod tests {
     }
 
     fn insert(layer: &str, n: u8) -> Entity {
-        Entity::Insert(kentos_contracts::InsertEntity {
+        Entity::Insert(kentos_commands::InsertEntity {
             parameters: Default::default(),
             attribute_places: Default::default(),
             base: base(layer),
@@ -1495,7 +1495,7 @@ mod tests {
     }
 
     fn text_in(layer: &str, style: &str) -> Entity {
-        Entity::Text(kentos_contracts::TextEntity {
+        Entity::Text(kentos_commands::TextEntity {
             annotative: None,
             base: base(layer),
             p: Vec2 { x: 0.0, y: 0.0 },
@@ -1508,9 +1508,9 @@ mod tests {
             label_of: None,
             label_scale: None,
             paragraph: Default::default(),
-            face: kentos_contracts::TextFace {
+            face: kentos_commands::TextFace {
                 text_style: Some(style.into()),
-                font: Some(kentos_contracts::DrawingFont::Arimo),
+                font: Some(kentos_commands::DrawingFont::Arimo),
                 bold: true,
                 ..Default::default()
             },
@@ -1522,7 +1522,7 @@ mod tests {
         TextStyleDef {
             id: id.into(),
             name: name.into(),
-            font: kentos_contracts::DrawingFont::Arimo,
+            font: kentos_commands::DrawingFont::Arimo,
             bold: true,
             italic: false,
             oblique: None,

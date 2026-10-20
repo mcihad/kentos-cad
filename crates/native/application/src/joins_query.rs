@@ -10,7 +10,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, JOIN_ROWS, JoinColumn, JoinKeep, JoinReport, JoinRow, JoinSide,
     JoinTotal, JoinView, JoinsAnswer, JoinsQuery, LayerField, LayerNode, LayerNodeType,
     MOST_JOIN_ROWS, UID_KEY, join_view_problem,

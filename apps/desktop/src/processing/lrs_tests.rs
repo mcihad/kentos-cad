@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -260,7 +260,7 @@ fn picture(name: &str) -> (&'static str, Value) {
 fn corrected(app: &mut App) {
     let doc = &mut app.document.as_mut().expect("open").model;
     let mut e = doc.get(D100).expect("D-100").clone();
-    if let kentos_contracts::Entity::Polyline(path) = &mut e
+    if let kentos_commands::Entity::Polyline(path) = &mut e
         && let Some(last) = path.pts.last_mut()
     {
         last.y += 40.0;
@@ -286,17 +286,17 @@ fn drifted_events_are_found_and_moved() {
     let rows = table.expect("the table").rows;
     assert_eq!(rows.len(), 4);
     let doc = &app.document.as_ref().expect("open").model;
-    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(78)) else {
+    let Some(kentos_commands::Entity::Line(l)) = doc.get(Slot(78)) else {
         panic!("the line");
     };
     assert_eq!((l.a.x, l.b.x), (488_300.0, 488_300.0));
-    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(79)) else {
+    let Some(kentos_commands::Entity::Line(l)) = doc.get(Slot(79)) else {
         panic!("the bent one");
     };
     assert_eq!((l.b.x, l.b.y), (488_100.0, 4_421_020.0), "left where it is");
     let _ = app.update(Message::Run("edit.undo"));
     let doc = &app.document.as_ref().expect("open").model;
-    let Some(kentos_contracts::Entity::Line(l)) = doc.get(Slot(78)) else {
+    let Some(kentos_commands::Entity::Line(l)) = doc.get(Slot(78)) else {
         panic!("the line");
     };
     assert_eq!(l.a.x, 488_301.0, "one undo step");

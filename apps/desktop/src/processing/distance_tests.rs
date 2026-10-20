@@ -6,7 +6,7 @@
 //! layer, from a raster right above it; Birikimli maliyet with the
 //! elevation model and Maliyet koridoru say what they made.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};

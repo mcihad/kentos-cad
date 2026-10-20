@@ -13,7 +13,7 @@ use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use iced::widget::{Column, Row, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{AssetKind, AssetState, AssetsCheck, BlockId, XrefState, XrefsList, XrefsOperation};
+use kentos_commands::{AssetKind, AssetState, AssetsCheck, BlockId, XrefState, XrefsList, XrefsOperation};
 use kentos_native_application::assets_check;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::{label, style};
@@ -130,7 +130,7 @@ impl App {
     }
 
     /// The external references' files, with the SHA-256 compared (`cad.assets.check`).
-    fn xref_assets(&self) -> Vec<kentos_contracts::AssetStatus> {
+    fn xref_assets(&self) -> Vec<kentos_commands::AssetStatus> {
         let Some(doc) = self.document.as_ref() else { return Vec::new() };
         let input = AssetsCheck { drawing: self.drawing_file(), kinds: Some(vec![AssetKind::Xref]), digests: Some(true) };
         assets_check::check_in(&doc.model, &input).assets
@@ -255,7 +255,7 @@ impl App {
                 &kentos_native_application::ExecutionContext::new(&mut doc.model.clone()),
                 &input,
             ) {
-                kentos_contracts::CommandResult::Completed { output, .. } => Some(output.xrefs),
+                kentos_commands::CommandResult::Completed { output, .. } => Some(output.xrefs),
                 _ => None,
             }
         });

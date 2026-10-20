@@ -3,7 +3,7 @@
 //! scales are Öznitelikler's Ölçekler; a scale's own place is the tool Ölçekteki yeri
 //! (`kentos_interaction::annotative`).
 
-use kentos_contracts::{AnnotationsScales, AnnotativeOperation, CommandResult};
+use kentos_commands::{AnnotationsScales, AnnotativeOperation, CommandResult};
 use kentos_native_application::{ExecutionContext, annotations_scales};
 
 use crate::app::App;

@@ -18,7 +18,7 @@
 //! places are the shared core's (`path_array_transforms`), the same the
 //! command computes.
 
-use kentos_contracts::{ArrayLayout, Entity};
+use kentos_commands::{ArrayLayout, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::path::{path_of, point_at_s};

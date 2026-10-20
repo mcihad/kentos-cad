@@ -25,7 +25,7 @@
 //! tools used to copy them onto their locked layer; ADR 0047 records the
 //! change for the arrays.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayLayout, CommandError, CommandResult, CommandWarning, EntitiesArray, EntitiesArrayPlan,
     EntitiesArrayed, Entity,
 };
@@ -82,8 +82,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesArrayed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_ARRAY,
-        kentos_contracts::CAD_ENTITIES_ARRAY_VERSION,
+        kentos_commands::CAD_ENTITIES_ARRAY,
+        kentos_commands::CAD_ENTITIES_ARRAY_VERSION,
         input,
         write_execute,
     )
@@ -102,10 +102,10 @@ fn write_execute(
     // One associative array of a block's inserts (docs/adr/0300).
     if input.associative {
         // An associative array's items are inserts of a block: they take no constraints (docs/adr/0337 §3).
-        let ids: Vec<kentos_contracts::EntityId> = checked
+        let ids: Vec<kentos_commands::EntityId> = checked
             .sources
             .iter()
-            .filter_map(|u| kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId))
+            .filter_map(|u| kentos_commands::uuid_from_text(u).map(kentos_commands::EntityId))
             .collect();
         let held = crate::constraint_copy::any_constrained(cx.doc, &ids);
         let mut warnings = checked.warnings;
@@ -153,7 +153,7 @@ fn write_execute(
             crate::constraint_copy::group_by_ids(
                 cx.doc,
                 checked.sources.iter().filter_map(|u| {
-                    kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId)
+                    kentos_commands::uuid_from_text(u).map(kentos_commands::EntityId)
                 }),
                 item.iter().copied(),
             )

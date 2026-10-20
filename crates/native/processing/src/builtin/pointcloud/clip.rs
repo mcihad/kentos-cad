@@ -3,7 +3,7 @@
 //! arcs exact; a point on a straight edge is inside (`ops::region`). One
 //! pass; the result keeps the source's records whole.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_geometry_core::vec2::Vec2;
 use kentos_native_application::geometry::shape;
@@ -99,7 +99,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     region: &Region,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
@@ -111,7 +111,7 @@ fn go(
     let layout = plan.spec.layout();
     let (scale, offset) = (plan.spec.scale, plan.spec.offset);
     let at = place(files, r, &sources[0], "-kirpik")?;
-    let copc = at.format == kentos_contracts::CloudFormat::Copc;
+    let copc = at.format == kentos_commands::CloudFormat::Copc;
     let write_to = if copc { 0.6 } else { 1.0 };
     let mut out = Out::new(files, &at.written, plan.spec.clone())?;
     let index = region.index();

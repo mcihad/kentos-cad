@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EmptyResult, Entity, FIELDS_WRITE_LISTED, FieldChange,
     FieldsWrite, FieldsWriteOp, FieldsWritten, LayerNodeType, ValueProblem, WritePolicy, codes,
 };

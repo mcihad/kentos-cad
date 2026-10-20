@@ -13,7 +13,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{Space, container, row};
 use iced::{Background, Border, Center, Color, Element, Theme};
-use kentos_contracts::{CONTRACTS_VERSION, ProjectPermission};
+use kentos_commands::{CONTRACTS_VERSION, ProjectPermission};
 use kentos_ui::widget::Menu;
 use kentos_ui::widget::Tip;
 use kentos_ui::widget::status_bar::Readout;

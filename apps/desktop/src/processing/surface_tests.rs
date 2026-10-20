@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{DocumentSnapshotV1, Entity, RasterRender, RasterSample};
+use kentos_commands::{DocumentSnapshotV1, Entity, RasterRender, RasterSample};
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};
@@ -241,7 +241,7 @@ fn slope_on_an_area_is_written_on_the_source_s_grid() {
         .model
         .entities()
         .find_map(|e| match e {
-            kentos_contracts::Entity::Raster(r)
+            kentos_commands::Entity::Raster(r)
                 if r.raster.file.as_deref() == Some(&*out.to_string_lossy()) =>
             {
                 Some(r.raster.clone())
@@ -253,7 +253,7 @@ fn slope_on_an_area_is_written_on_the_source_s_grid() {
         .model
         .entities()
         .find_map(|e| match e {
-            kentos_contracts::Entity::Raster(r) if r.base.layer_id == "dem" => {
+            kentos_commands::Entity::Raster(r) if r.base.layer_id == "dem" => {
                 Some(r.raster.clone())
             }
             _ => None,

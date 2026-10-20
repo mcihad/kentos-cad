@@ -5,7 +5,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 
 const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objects.kcad");

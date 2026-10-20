@@ -10,7 +10,7 @@ use super::tests::{run, said, send};
 use super::{Event, Window};
 use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
-use kentos_contracts::{DocumentSnapshotV1, GisAnnotations};
+use kentos_commands::{DocumentSnapshotV1, GisAnnotations};
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

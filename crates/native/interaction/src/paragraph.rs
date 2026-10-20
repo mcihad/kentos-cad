@@ -13,7 +13,7 @@
 //!   (S) the lines' spacing, from 0.25 to 4, kept as long as the app lives;
 //! - a locked active layer is said at the first corner and nothing opens.
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationKind, EntityGeometry, MAX_LINE_SPACING, MIN_LINE_SPACING, TextAlign, TextRun,
     TextScript,
 };
@@ -360,7 +360,7 @@ impl Tool for ParagraphText {
     /// The editor's answer: the text and its formats to add, or none (Vazgeç).
     fn paragraph_typed(
         &mut self,
-        typed: Option<(&str, &[TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
+        typed: Option<(&str, &[TextRun], Option<&kentos_commands::ParagraphLayout>)>,
         cx: &mut Context<'_>,
     ) {
         if self.stage != Stage::Typing {

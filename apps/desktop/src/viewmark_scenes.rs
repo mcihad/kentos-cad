@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{Entity, NewViewMark, ViewMarkForm, ViewMarksCreate, ViewTarget, ViewsOp};
+use kentos_commands::{Entity, NewViewMark, ViewMarkForm, ViewMarksCreate, ViewTarget, ViewsOp};
 use kentos_domain::Slot;
 
 use crate::app::App;
@@ -18,8 +18,8 @@ use crate::tools_scenes::{click, hover, run, typed};
 use crate::tools_screens::Scene;
 use crate::wall_scenes::fit;
 
-fn p(x: f64, y: f64) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 {
+fn p(x: f64, y: f64) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 {
         x: crate::tools_scenes::E + x,
         y: crate::tools_scenes::N + y,
     }
@@ -88,7 +88,7 @@ fn marked(app: &mut App) {
     let view = app
         .named_views()
         .first()
-        .map(kentos_contracts::view_key)
+        .map(kentos_commands::view_key)
         .unwrap_or_default();
     let mark = |form, points, mark: &str, target| NewViewMark {
         form,

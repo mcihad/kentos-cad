@@ -37,7 +37,7 @@ use iced::time::Instant;
 use iced::widget::{container, shader, stack};
 use iced::{Element, Fill, Point, Rectangle, Vector, mouse, wgpu};
 
-use kentos_contracts::{DrawingFont, Entity, LayerNode};
+use kentos_commands::{DrawingFont, Entity, LayerNode};
 use kentos_interaction::{Cursor, Selection, ViewChange, Viewpoint};
 use kentos_render_wgpu::camera::{FIT_PADDING, MAX_SCALE, MIN_SCALE};
 use kentos_render_wgpu::scene::{self, lod};
@@ -66,7 +66,7 @@ impl Drawing for Document {
         self.model.entities()
     }
 
-    fn anchor(&self) -> kentos_contracts::Vec2 {
+    fn anchor(&self) -> kentos_commands::Vec2 {
         self.model.origin()
     }
 
@@ -341,14 +341,14 @@ pub struct Viewport {
     pub(crate) passive: bool,
     /// The view's theme (docs/adr/0523 §1): a layer state of the project it shows the drawing with, the drawing
     /// untouched; none, as the drawing is.
-    pub(crate) theme: Option<kentos_contracts::LayerState>,
+    pub(crate) theme: Option<kentos_commands::LayerState>,
     /// The tree as the theme shows it, by the drawing's session and generation and the theme it was made with.
     themed: RefCell<Option<KeptTheme>>,
 }
 
 type KeptTheme = (
     (u64, u64),
-    kentos_contracts::LayerState,
+    kentos_commands::LayerState,
     std::sync::Arc<kentos_domain::LayerTree>,
 );
 
@@ -622,7 +622,7 @@ impl Viewport {
             self.highlights(doc, selection, accent, &fixed, &curves, &clip, spatial);
         // The grid under everything (Izgara, F7).
         let grid = if self.grid_shown {
-            let u = doc.settings().ucs.unwrap_or(kentos_contracts::Ucs::WORLD);
+            let u = doc.settings().ucs.unwrap_or(kentos_commands::Ucs::WORLD);
             self.grid(canvas, origin, (Vec2::new(u.origin.x, u.origin.y), u.angle))
         } else {
             Arc::default()
@@ -1071,7 +1071,7 @@ impl Viewport {
 
     /// A named view (docs/adr/0285 §1): its middle in the middle of the area, its width and
     /// height as large as they fit, turned by its twist; the pointer stays where it is on the area.
-    pub fn show_view(&mut self, view: &kentos_contracts::NamedView) {
+    pub fn show_view(&mut self, view: &kentos_commands::NamedView) {
         let at = self.cursor.map(|c| self.camera.world_to_screen(c));
         self.camera.twist = kentos_render_wgpu::normal_twist(view.twist);
         self.camera.fit_size(
@@ -1084,12 +1084,12 @@ impl Viewport {
     }
 
     /// The view as a named view keeps it: its middle, the world width and height it shows and its twist.
-    pub fn named(&self, name: &str) -> kentos_contracts::NamedView {
+    pub fn named(&self, name: &str) -> kentos_commands::NamedView {
         let (width, height) = self.camera.view_size();
-        kentos_contracts::NamedView {
+        kentos_commands::NamedView {
             id: String::new(),
             name: name.to_owned(),
-            center: kentos_contracts::Vec2 {
+            center: kentos_commands::Vec2 {
                 x: self.camera.center.x,
                 y: self.camera.center.y,
             },

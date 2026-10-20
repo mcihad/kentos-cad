@@ -22,7 +22,7 @@ use iced::task::Handle;
 use kentos_cloud::{
     Loaded, Opened, ProjectSync, Replica, Revision, Source as Kept, given_back_text,
 };
-use kentos_contracts::ProjectStorage;
+use kentos_commands::ProjectStorage;
 use kentos_domain::Uuid;
 
 use crate::app::{App, Dialog, Message};
@@ -425,7 +425,7 @@ impl App {
         let sync = ProjectSync::new(&opened);
         let own = self.cloud.membership(&opened.info.tenant_id).is_some()
             || (self.cloud.me.is_none()
-                && opened.info.tenant_kind == kentos_contracts::TenantKind::Personal);
+                && opened.info.tenant_kind == kentos_commands::TenantKind::Personal);
         let workspace = words::workspace(opened.info.tenant_kind, &opened.info.tenant_name, own);
         let revision: Option<Revision> = match &opened.source {
             Kept::File { revision } => revision.clone(),
@@ -434,7 +434,7 @@ impl App {
         let (tenant, project) = (opened.tenant, opened.project);
         let archived = opened.archived();
         // A Veri girişi edits records through forms only (docs/adr/0411 §2): said once, on opening.
-        let entry = opened.info.access.role == kentos_contracts::ProjectRole::Entry;
+        let entry = opened.info.access.role == kentos_commands::ProjectRole::Entry;
         let name = opened.info.name.clone();
         let storage = opened.info.storage;
         // A file project's events are followed from the cursor it was read at (file_follow.rs).

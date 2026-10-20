@@ -1,7 +1,7 @@
 //! The constraints' solves as jobs (docs/adr/0337 §4): a stopped solve writes nothing, a job's staged solve is written
 //! only while what it moved is still as it saw it.
 
-use kentos_contracts::{CallEnvelope, CallOp, CommandResult, JobPhase};
+use kentos_commands::{CallEnvelope, CallOp, CommandResult, JobPhase};
 use kentos_domain::Document;
 use serde_json::{Value, json};
 
@@ -26,7 +26,7 @@ fn drawing() -> Document {
         "styles": {"items": [], "categories": []},
     });
     Document::from_snapshot(
-        kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
+        kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
     )
     .expect("opens")
 }
@@ -69,7 +69,7 @@ fn constrained() -> Document {
         &mut doc,
         None,
         envelope(
-            kentos_contracts::CAD_CONSTRAINTS_EDIT,
+            kentos_commands::CAD_CONSTRAINTS_EDIT,
             json!({"edit": {"kind": "add", "constraints": rules}}),
         ),
     );
@@ -83,7 +83,7 @@ fn constrained() -> Document {
 
 fn width_to(value: &str) -> CallEnvelope {
     envelope(
-        kentos_contracts::CAD_PARAMETERS_EDIT,
+        kentos_commands::CAD_PARAMETERS_EDIT,
         json!({"edits": [{"kind": "set", "name": "d1", "expression": value}]}),
     )
 }
@@ -105,7 +105,7 @@ fn a_stopped_solve_writes_nothing() {
     // An edit's follow: the top edge moved, the rest would follow.
     let top = uid(&doc, 3);
     let moved = envelope(
-        kentos_contracts::CAD_ENTITIES_TRANSFORM,
+        kentos_commands::CAD_ENTITIES_TRANSFORM,
         json!({"uids": [top], "transform": {"kind": "move", "dx": 0, "dy": 1}}),
     );
     let answer = call_in_job(&mut doc, moved.clone(), &stopped);
@@ -141,7 +141,7 @@ fn a_staged_solve_waits_for_the_drawing_it_saw() {
         .get(kentos_domain::Slot(1))
         .expect("the bottom edge")
         .clone();
-    let kentos_contracts::Entity::Line(l) = bottom else {
+    let kentos_commands::Entity::Line(l) = bottom else {
         panic!("a line")
     };
     assert!(((l.b.x - l.a.x).hypot(l.b.y - l.a.y) - 10.0).abs() < 1e-9);
@@ -152,7 +152,7 @@ fn a_staged_solve_waits_for_the_drawing_it_saw() {
         &mut doc,
         None,
         envelope(
-            kentos_contracts::CAD_ENTITIES_TRANSFORM,
+            kentos_commands::CAD_ENTITIES_TRANSFORM,
             json!({"uids": [right], "transform": {"kind": "move", "dx": 1, "dy": 0}}),
         ),
     );

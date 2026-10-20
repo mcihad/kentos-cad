@@ -109,7 +109,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 fn go(
     files: &dyn crate::files::Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let sources = &cloud.cloud.sources;
@@ -121,7 +121,7 @@ fn go(
     let at = place(files, r, &sources[0], "-seyrek")?;
     let size = r.number("size").unwrap_or(0.5);
     let n = r.number("n").unwrap_or(10.0).max(1.0) as u64;
-    let copc = at.format == kentos_contracts::CloudFormat::Copc;
+    let copc = at.format == kentos_commands::CloudFormat::Copc;
     let write_to = if copc { 0.6 } else { 1.0 };
     let mut out = Out::new(files, &at.written, plan.spec.clone())?;
     let mut keep: Vec<u8> = Vec::new();

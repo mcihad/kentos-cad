@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, ConflictField, ConflictKind, Entity, ReconcileConflict,
     ReconcileCounts, ReconcileSide, SourcesReconcile, SourcesReconciled, SourcesSync,
     SyncDirection,
@@ -175,7 +175,7 @@ fn run(
             format!(
                 "“{}” katmanının dosyayla son eşleşmesinden tabanı yok (bu sürümden önce bağlanmış ya da {} nesneden büyük); iki yanın değişiklikleri ayrılamaz. Önce yazın (cad.sources.sync write) ya da tablodan okuyun (read).",
                 link.layer,
-                kentos_contracts::MAX_BASE_ROWS
+                kentos_commands::MAX_BASE_ROWS
             ),
             "layer",
         ));

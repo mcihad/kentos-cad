@@ -10,7 +10,7 @@
 //! table ([`crate::Session::run`]); repeating the last command does not bring
 //! it back.
 
-use kentos_contracts::{CreateOperation, EntityBase, EntityGeometry};
+use kentos_commands::{CreateOperation, EntityBase, EntityGeometry};
 use kentos_geometry_core::geom::table::layout_of;
 use kentos_native_application::geometry::{drawing_font, entity_of, shape};
 
@@ -109,7 +109,7 @@ impl TablePlace {
         ) else {
             return;
         };
-        let kentos_contracts::Entity::Table(t) = &entity else {
+        let kentos_commands::Entity::Table(t) = &entity else {
             return;
         };
         self.ghost.areas = layout

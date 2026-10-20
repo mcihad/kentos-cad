@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, LayerNodeType};
+use kentos_commands::{AngleUnit, DxfWriteInput, DxfWriteLayer, Entity, LayerNodeType};
 use kentos_domain::Document;
 use kentos_project::format::Format;
 
@@ -83,10 +83,10 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     // Annotative annotations (docs/adr/0323 §5): DXF gets each as its own scale draws it.
     let scaled = entities
         .iter()
-        .filter(|e| kentos_contracts::annotative_of(e).is_some())
+        .filter(|e| kentos_commands::annotative_of(e).is_some())
         .count();
     if scaled > 0 {
-        notes.push(kentos_contracts::ReportItem {
+        notes.push(kentos_commands::ReportItem {
             what: "Ölçekli açıklama".into(),
             count: u32::try_from(scaled).unwrap_or(u32::MAX),
             reason: "Kendi ölçeğindeki hâliyle yazıldı; diğer ölçekleri ve oradaki yerleri DXF'e yazılmadı.".into(),
@@ -97,7 +97,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
     // are not written, so another program does not keep them.
     let constraints = doc.constraints();
     if !constraints.constraints.is_empty() {
-        notes.push(kentos_contracts::ReportItem {
+        notes.push(kentos_commands::ReportItem {
             what: "Kısıt".into(),
             count: u32::try_from(constraints.constraints.len()).unwrap_or(u32::MAX),
             reason: format!(
@@ -135,7 +135,7 @@ pub fn dxf_input(doc: &Document, chosen: &[(String, Vec<&Entity>)]) -> DxfWriteI
         .filter_map(|e| {
             let id = e.base().id;
             doc.uid(kentos_domain::Slot(id))
-                .map(|u| (id, kentos_contracts::EntityId(u.into_bytes())))
+                .map(|u| (id, kentos_commands::EntityId(u.into_bytes())))
         })
         .collect();
     DxfWriteInput {

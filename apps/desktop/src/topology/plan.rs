@@ -6,7 +6,7 @@
 
 use std::fmt;
 
-use kentos_contracts::TopologyRule;
+use kentos_commands::TopologyRule;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::topology_rules::{Finding, Kind, MeasureKind};
 use kentos_interaction::Format;

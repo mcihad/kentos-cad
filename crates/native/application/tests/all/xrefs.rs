@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{CallOp, Entity};
+use kentos_commands::{CallOp, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -40,7 +40,7 @@ fn doc() -> Document {
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 

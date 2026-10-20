@@ -19,7 +19,7 @@
 //! `cad.curves.construct`'s (docs/adr/0289), which refuses with the words the
 //! tool says; the previews are the same core's.
 
-use kentos_contracts::{
+use kentos_commands::{
     CircleCreate, ConstructedCurve, CurveConstruction, EdgeNear, MeasuredPoint,
 };
 use kentos_geometry_core::entity::tessellate_circle;

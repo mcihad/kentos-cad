@@ -14,7 +14,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, NewTag, TagEntity, TagFields, TagFinding,
     TagShape, TaggedKind, TagsCheck, TagsChecked, TagsCreate, TagsCreated, TagsEdit, TagsEdited,
     TagsPlan, Vec2,
@@ -46,7 +46,7 @@ fn tagged(doc: &Document) -> BTreeSet<String> {
 
 /// A tag's words' height on paper at the project's plot scale, metres.
 fn words_height(doc: &Document, size: Option<f64>) -> f64 {
-    size.unwrap_or(kentos_contracts::TAG_SIZE_MM) * doc.settings().plot_scale / 1000.0
+    size.unwrap_or(kentos_commands::TAG_SIZE_MM) * doc.settings().plot_scale / 1000.0
 }
 
 /// A tag of `target` from what was given, its words and point written as the document writes them.
@@ -67,7 +67,7 @@ fn tag_of(doc: &Document, of: &str, target: &Entity, n: &NewTag) -> Option<TagFi
         content: n.content.clone(),
         shape: n
             .shape
-            .unwrap_or_else(|| kentos_contracts::default_shape(target.kind())),
+            .unwrap_or_else(|| kentos_commands::default_shape(target.kind())),
         size: n.size,
         leader: n.leader.unwrap_or(false),
         text: doc.tag_text(target, n.content.as_deref()),
@@ -88,11 +88,11 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
             "tags",
         ));
     }
-    if input.tags.len() > kentos_contracts::MAX_TAGS {
+    if input.tags.len() > kentos_commands::MAX_TAGS {
         return Err(invalid(
             format!(
                 "Bir çağrıda en çok {} etiket yazılır; {} verildi.",
-                kentos_contracts::MAX_TAGS,
+                kentos_commands::MAX_TAGS,
                 input.tags.len()
             ),
             "tags",
@@ -232,11 +232,11 @@ fn check(doc: &Document, input: &TagsCreate) -> Result<Checked, Stop> {
                 "all.kinds",
             ));
         }
-        if made.len() > kentos_contracts::MAX_TAGS {
+        if made.len() > kentos_commands::MAX_TAGS {
             return Err(invalid(
                 format!(
                     "Bir çağrıda en çok {} etiket yazılır.",
-                    kentos_contracts::MAX_TAGS
+                    kentos_commands::MAX_TAGS
                 ),
                 "all",
             ));
@@ -302,8 +302,8 @@ pub mod create {
     pub fn execute(cx: &mut ExecutionContext<'_>, input: TagsCreate) -> CommandResult<TagsCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_TAGS_CREATE,
-            kentos_contracts::CAD_TAGS_CREATE_VERSION,
+            kentos_commands::CAD_TAGS_CREATE,
+            kentos_commands::CAD_TAGS_CREATE_VERSION,
             input,
             write_execute,
         )
@@ -443,8 +443,8 @@ pub mod edit {
     pub fn execute(cx: &mut ExecutionContext<'_>, input: TagsEdit) -> CommandResult<TagsEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_TAGS_EDIT,
-            kentos_contracts::CAD_TAGS_EDIT_VERSION,
+            kentos_commands::CAD_TAGS_EDIT,
+            kentos_commands::CAD_TAGS_EDIT_VERSION,
             input,
             write_execute,
         )
@@ -639,5 +639,5 @@ pub mod check_tags {
 
 /// The frame a new tag of `kind` takes when the tool names none.
 pub fn shape_for(kind: &str) -> TagShape {
-    kentos_contracts::default_shape(kind)
+    kentos_commands::default_shape(kind)
 }

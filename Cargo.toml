@@ -7,6 +7,7 @@ members = [
     # Platform-neutral libraries: the web app, the server and the desktop app share them.
     "crates/shared/geometry-core",
     "crates/shared/contracts",
+    "crates/shared/commands",
     "crates/shared/formats",
     # Point clouds (docs/adr/0207): LAS, LAZ, COPC and text clouds, their index, looks and
     # operations; a crate of its own so the formats worker does not carry LAZ.
@@ -92,6 +93,7 @@ members = [
 default-members = [
     "crates/shared/geometry-core",
     "crates/shared/contracts",
+    "crates/shared/commands",
     "crates/shared/formats",
     "crates/shared/pointcloud",
     "crates/shared/ncz",

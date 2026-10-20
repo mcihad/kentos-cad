@@ -25,7 +25,7 @@
 mod plan;
 mod site;
 
-use kentos_contracts::{CommandResult, CornerPick, EntitiesChamfer, EntitiesFillet, TrimPick};
+use kentos_commands::{CommandResult, CornerPick, EntitiesChamfer, EntitiesFillet, TrimPick};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::drawing::offset_along;
 use kentos_geometry_core::tools::editing::{fillet_radius_for, pulled_distance};

@@ -11,7 +11,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-use kentos_contracts::StacMethod;
+use kentos_commands::StacMethod;
 use kentos_services::stac::{Fetch, FetchError, Request};
 use serde::Deserialize;
 

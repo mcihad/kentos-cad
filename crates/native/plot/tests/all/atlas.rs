@@ -215,6 +215,7 @@ fn a_bound_file_that_changes_while_the_pages_are_made_refuses_the_run() {
         digest: String::new(),
         srid: Some(5253),
         extent: None,
+        key: None,
         writable: true,
     };
     snapshot.settings.sources.push(link);

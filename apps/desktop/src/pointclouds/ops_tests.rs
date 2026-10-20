@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{CloudFormat, DocumentSnapshotV1, Entity};
+use kentos_commands::{CloudFormat, DocumentSnapshotV1, Entity};
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
@@ -134,7 +134,7 @@ fn read_back(path: &Path) -> (kentos_pointcloud::source::Kind, u64, String) {
 }
 
 /// The clouds the drawing has on `layer`, by their files.
-fn clouds_on(app: &App, layer: &str) -> Vec<kentos_contracts::PointCloudFields> {
+fn clouds_on(app: &App, layer: &str) -> Vec<kentos_commands::PointCloudFields> {
     let doc = app.document.as_ref().expect("open");
     doc.model
         .entities()

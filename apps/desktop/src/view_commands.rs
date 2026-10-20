@@ -6,7 +6,7 @@
 use iced::Task;
 use iced::window;
 use kentos_cloud::Cloud;
-use kentos_contracts::{CONTRACTS_VERSION, Health};
+use kentos_commands::{CONTRACTS_VERSION, Health};
 use kentos_interaction::Level;
 use kentos_ui::widget::docking::Side;
 
@@ -185,7 +185,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{CONTRACTS_VERSION, Health};
+    use kentos_commands::{CONTRACTS_VERSION, Health};
 
     use kentos_ui::widget::docking::Side;
 
@@ -303,7 +303,7 @@ mod tests {
 fn screens() {
     use iced::Size;
     use iced::futures::StreamExt as _;
-    use kentos_contracts::Health;
+    use kentos_commands::Health;
     use kentos_ui::snapshot::Snapshot;
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");

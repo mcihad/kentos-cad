@@ -11,7 +11,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use kentos_contracts::{
+use kentos_commands::{
     CadElement, CadParameter, ConstraintDiagnosis, ConstraintId, ConstraintRule, ConstraintSet,
     Entity, EntityId, ParamUnits, ParameterKind, SolveStatus, eval_param_expr, param_expr_names,
     param_order, parse_param_expr,

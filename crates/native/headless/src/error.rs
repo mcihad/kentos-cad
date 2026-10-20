@@ -14,7 +14,7 @@ pub struct HeadlessError {
     /// `unwritable_result`. A file command's refusal (`Session::export_dxf`,
     /// `export_pdf`) keeps the command's code (`file_exists`,
     /// `invalid_file_path`, `nothing_to_export`, `no_sheets`, `unknown_sheet`,
-    /// `pdf_unwritable` …); every code's meaning is in `kentos_contracts::codes`.
+    /// `pdf_unwritable` …); every code's meaning is in `kentos_commands::codes`.
     pub code: &'static str,
     /// For people: the cause and how to fix it (CLAUDE.md §8).
     pub message: String,

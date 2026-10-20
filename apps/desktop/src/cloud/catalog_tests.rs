@@ -7,7 +7,7 @@
 use std::time::{Duration, Instant};
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{
+use kentos_commands::{
     CatalogSort, CatalogView, ProjectCatalogChange, ProjectDetails, ProjectPermission,
     ProjectPurged, ProjectState, ProjectStorage, ProjectSummary, ProjectType,
 };
@@ -529,7 +529,7 @@ fn trashing_the_open_project_here_leaves_it_with_the_drawing() {
 #[ignore = "pictures for the owner, run by hand"]
 fn screens() {
     use iced::Size;
-    use kentos_contracts::{Bounds, ProjectRole};
+    use kentos_commands::{Bounds, ProjectRole};
     use kentos_ui::snapshot::Snapshot;
 
     let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
@@ -592,7 +592,7 @@ fn screens() {
     ];
     // The history of the web's pictures (cloud-shots.mjs).
     let checkpoint =
-        |id: &str, name: &str, note: &str, kind, revision: &str| kentos_contracts::Checkpoint {
+        |id: &str, name: &str, note: &str, kind, revision: &str| kentos_commands::Checkpoint {
             id: id.into(),
             name: name.into(),
             note: (!note.is_empty()).then(|| note.into()),
@@ -610,20 +610,20 @@ fn screens() {
             "0199aaaa-0000-7000-8000-0000000000c1",
             "Belediyeye teslim",
             "İmar müdürlüğüne gönderilen sürüm.",
-            kentos_contracts::CheckpointKind::Snapshot,
+            kentos_commands::CheckpointKind::Snapshot,
             "1",
         ),
         checkpoint(
             "0199aaaa-0000-7000-8000-0000000000c2",
             "Teslim öncesi",
             "Son düzeltmelerden önce.",
-            kentos_contracts::CheckpointKind::Snapshot,
+            kentos_commands::CheckpointKind::Snapshot,
             "1",
         ),
     ];
-    let revisions: Vec<kentos_contracts::FileRevision> = (1..=5)
+    let revisions: Vec<kentos_commands::FileRevision> = (1..=5)
         .rev()
-        .map(|n| kentos_contracts::FileRevision {
+        .map(|n| kentos_commands::FileRevision {
             revision: n.to_string(),
             size: 1600 + 50 * n,
             sha256: "b".repeat(64),
@@ -674,7 +674,7 @@ fn screens() {
                         cloud(&mut app, Event::CatalogTab(Tab::History));
                         if let Some(id) = catalog(&app).history.request() {
                             let mut named = snapshots[0].clone();
-                            named.kind = kentos_contracts::CheckpointKind::Revision;
+                            named.kind = kentos_commands::CheckpointKind::Revision;
                             named.revision = "3".into();
                             cloud(
                                 &mut app,
@@ -682,7 +682,7 @@ fn screens() {
                                     id,
                                     result: Ok(crate::cloud::history::HistoryData {
                                         storage: ProjectStorage::File,
-                                        revisions: Some(kentos_contracts::FileRevisions {
+                                        revisions: Some(kentos_commands::FileRevisions {
                                             current: Some("5".into()),
                                             revisions: revisions.clone(),
                                         }),

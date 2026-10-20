@@ -23,7 +23,7 @@ use std::time::{Duration, Instant};
 
 use iced::advanced::renderer::Headless as _;
 use iced::{Event, Point, mouse};
-use kentos_contracts::{
+use kentos_commands::{
     CloudFormat, CloudRender, CloudSource, DocumentSnapshotV2, Entity, EntityBase, EntityId,
     PointCloudEntity, PointCloudFields, PointCloudStyle, PointShape, PointSizeUnit, Vec2,
 };

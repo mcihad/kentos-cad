@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{Entity, Workspace};
+use kentos_commands::{Entity, Workspace};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 
@@ -26,7 +26,7 @@ fn cad(selected: &[u32]) -> Bench {
     let mut b = bench(selected);
     let mut settings = b.doc.settings().clone();
     settings.workspace = Some(Workspace::Cad);
-    settings.angle_unit = kentos_contracts::AngleUnit::Deg;
+    settings.angle_unit = kentos_commands::AngleUnit::Deg;
     b.doc.set_settings(settings);
     b
 }

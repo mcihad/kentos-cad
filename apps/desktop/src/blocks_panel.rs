@@ -16,8 +16,8 @@ use iced::keyboard::key::Named;
 use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
 use iced::widget::{Canvas, Column, button, column, container, row, text, tooltip};
 use iced::{Center, Element, Fill, Point, Rectangle, Renderer, Size, Task, Theme, mouse};
-use kentos_contracts::BlockId;
-use kentos_contracts::blocks::{Placements, name_key};
+use kentos_commands::BlockId;
+use kentos_commands::blocks::{Placements, name_key};
 use kentos_domain::Slot;
 use kentos_interaction::blocks::{self as actions, Said};
 use kentos_interaction::pick::PickPoint;
@@ -99,7 +99,7 @@ pub enum Event {
     Exported(Option<BlockId>, Option<std::path::PathBuf>),
     Imported(Option<(String, String)>),
     /// The unit it is drawn in (blocks_files.rs, docs/adr/0315 §4): with `rescale` its numbers kept.
-    Units(BlockId, kentos_contracts::BlockUnits, bool),
+    Units(BlockId, kentos_commands::BlockUnits, bool),
     /// Öznitelikleri eşitle and Alanları güncelle (docs/adr/0317 §2, §1).
     Sync(BlockId),
     Fields(BlockId),
@@ -396,7 +396,7 @@ impl App {
                     self.spatial
                         .store()
                         .insert_local(f64::from(insert.0), p)
-                        .map(|q| kentos_contracts::Vec2 { x: q.x, y: q.y })
+                        .map(|q| kentos_commands::Vec2 { x: q.x, y: q.y })
                 }
                 _ => None,
             };
@@ -797,7 +797,7 @@ impl App {
     /// Birim ▸ (docs/adr/0315 §4): the unit it is drawn in, its size kept; or its numbers kept (Sayıları koru), for
     /// a block drawn in another unit than the one it was taken in; Birimsiz, its numbers the drawing's units.
     fn units_menu(&self, id: BlockId) -> Menu<Message> {
-        use kentos_contracts::BlockUnits as B;
+        use kentos_commands::BlockUnits as B;
         let now = self
             .document
             .as_ref()
@@ -934,7 +934,7 @@ impl App {
 
     /// Öznitelikleri eşitle (`fields` false) and Alanları güncelle through `cad.blocks.edit`.
     pub(crate) fn blocks_sync(&mut self, id: BlockId, fields: bool) {
-        use kentos_contracts::{BlockEditOperation, CommandResult};
+        use kentos_commands::{BlockEditOperation, CommandResult};
         let Some(doc) = self.document.as_mut() else { return };
         let name = doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
         let input = actions::input(
@@ -979,7 +979,7 @@ impl App {
 
     /// Başka blokla değiştir: `from`'s inserts place `to` (`cad.blocks.replace`).
     fn blocks_replace(&mut self, from: BlockId, to: BlockId) {
-        use kentos_contracts::{BlocksReplace, CommandResult};
+        use kentos_commands::{BlocksReplace, CommandResult};
         let Some(doc) = self.document.as_mut() else { return };
         let names = |id| doc.model.block(id).map(|b| b.name.clone()).unwrap_or_default();
         let (a, b) = (names(from), names(to));
@@ -1145,7 +1145,7 @@ impl<M> canvas::Program<M> for Thumb {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{BlockId, Entity};
+    use kentos_commands::{BlockId, Entity};
     use kentos_domain::Slot;
     use kentos_interaction::Vec2;
 

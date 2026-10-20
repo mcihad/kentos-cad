@@ -10,7 +10,7 @@
 //! distance is typed, and all of them are written in one step “Ekle” through
 //! `cad.entities.create`. Zemin (Z) is Ölçülendirme's (`Memory::dimension_mask`).
 
-use kentos_contracts::{DimensionStyle, EntityGeometry};
+use kentos_commands::{DimensionStyle, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::affine::Affine;
@@ -41,7 +41,7 @@ pub struct QuickDimension {
     height: f64,
     mask: bool,
     /// The dimension style's look (docs/adr/0183 §4); none for Standart.
-    look: kentos_contracts::DimensionLook,
+    look: kentos_commands::DimensionLook,
     /// The dimension styles as of the last call: a CAD project's Stil.
     styles: styles::Seen,
     /// Stil: a dimension style's name is being typed.

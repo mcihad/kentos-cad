@@ -4,8 +4,8 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{CallOp, Entity};
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{CallOp, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_formats::raster::source::open_bytes;
 use kentos_native_application::{ExecutionContext, registry};
@@ -49,7 +49,7 @@ fn doc(file: &Path) -> Document {
                        "sample": "u8", "file": file, "srid": 0, "style": { "render": "gray", "bands": [1] } }],
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 

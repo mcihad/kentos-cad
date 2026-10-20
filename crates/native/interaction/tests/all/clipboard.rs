@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Clip, Entity};
+use kentos_commands::{Clip, Entity};
 use kentos_domain::Slot;
 use kentos_interaction::clipboard::{self, Clipboard};
 use kentos_interaction::paste::Paste;

@@ -16,7 +16,7 @@
 //! and the switches; the command reads the values (a line weight only between objects drawn with lines, the kind's
 //! only between objects of one kind) and writes, leaving locked objects out with a warning.
 
-use kentos_contracts::{EntitiesMatch, Entity, MatchProperty};
+use kentos_commands::{EntitiesMatch, Entity, MatchProperty};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::dist;
 use kentos_native_application::geometry::shape;
@@ -237,10 +237,10 @@ impl Source {
         }
         if on(off, 2) {
             let kind = base.look.line_type.map_or(by_layer, |t| match t {
-                kentos_contracts::LineType::Continuous => "sürekli",
-                kentos_contracts::LineType::Dashed => "kesikli",
-                kentos_contracts::LineType::Dashdot => "kesik noktalı",
-                kentos_contracts::LineType::Dotted => "noktalı",
+                kentos_commands::LineType::Continuous => "sürekli",
+                kentos_commands::LineType::Dashed => "kesikli",
+                kentos_commands::LineType::Dashdot => "kesik noktalı",
+                kentos_commands::LineType::Dotted => "noktalı",
             });
             out.push(format!("Çizgi tipi: {kind}"));
         }

@@ -16,8 +16,8 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     ClosedPolylines, CommandResult, CommandWarning, DxfImported, DxfReadOptions, FileUnit,
     ImportDxf, ImportLayer, ImportResult, ImportedLayer, LayerNodeType, LayerStyle, RenamedBlock,
     UnitDecision, UnitSource, Workspace,
@@ -298,7 +298,7 @@ pub fn import_plan(
     input: &ImportDxf,
     layers: &[ImportLayer],
     file: &str,
-) -> Result<ImportPlan, Box<kentos_contracts::CommandError>> {
+) -> Result<ImportPlan, Box<kentos_commands::CommandError>> {
     plan_of(doc, input, layers, file).map_err(|stop| Box::new(stop.into_error()))
 }
 
@@ -450,8 +450,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportDxf) -> CommandResult<DxfIm
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportDxf) -> CommandResult<DxfImported> {
     crate::call::recorded(
         cx,
-        kentos_contracts::FILE_IMPORT_DXF,
-        kentos_contracts::FILE_IMPORT_DXF_VERSION,
+        kentos_commands::FILE_IMPORT_DXF,
+        kentos_commands::FILE_IMPORT_DXF_VERSION,
         input,
         |cx, input| write_execute(cx, input, None),
     )
@@ -468,8 +468,8 @@ pub fn execute_read(
 ) -> CommandResult<DxfImported> {
     crate::call::recorded(
         cx,
-        kentos_contracts::FILE_IMPORT_DXF,
-        kentos_contracts::FILE_IMPORT_DXF_VERSION,
+        kentos_commands::FILE_IMPORT_DXF,
+        kentos_commands::FILE_IMPORT_DXF_VERSION,
         input,
         move |cx, input| write_execute(cx, input, Some(read)),
     )
@@ -490,8 +490,8 @@ pub fn record_progressive(
     let input = serde_json::to_value(input).unwrap_or(Value::Null);
     crate::call::record_written(
         doc,
-        kentos_contracts::FILE_IMPORT_DXF,
-        kentos_contracts::FILE_IMPORT_DXF_VERSION,
+        kentos_commands::FILE_IMPORT_DXF,
+        kentos_commands::FILE_IMPORT_DXF_VERSION,
         &input,
         &step_name(file),
         created,

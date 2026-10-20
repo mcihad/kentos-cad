@@ -2,7 +2,7 @@
 //! ekle (the web's `paths.ts`; docs/adr/0218 §8–§11): the shapes are the
 //! core's (`ops::convert::paths`), the elevations carried by docs/adr/0142's rules.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::convert::paths::{
     Density, NoArea, densify_added, line_area, rings_as_lines, substring,
 };

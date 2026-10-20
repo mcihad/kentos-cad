@@ -191,7 +191,7 @@ fn relief_check(v: &Values) -> Option<String> {
 }
 
 pub fn color_relief() -> Tool {
-    let ramps: Vec<(&str, &str)> = kentos_contracts::RASTER_RAMPS
+    let ramps: Vec<(&str, &str)> = kentos_commands::RASTER_RAMPS
         .iter()
         .map(|r| (*r, *r))
         .collect();

@@ -153,7 +153,7 @@ fn insert_y(app: &mut App) {
 }
 
 /// The door block's id.
-pub(crate) fn door() -> kentos_contracts::BlockId {
+pub(crate) fn door() -> kentos_commands::BlockId {
     serde_json::from_value(json!(KAPI)).expect("an id")
 }
 
@@ -168,7 +168,7 @@ pub(crate) fn editing(app: &mut App) {
 /// A handle drawn on the block's layer, in the block's own coordinates.
 pub(crate) fn handle(app: &mut App) {
     let doc = app.document.as_mut().expect("the editor's drawing");
-    let line: kentos_contracts::LineCreate = serde_json::from_value(json!({
+    let line: kentos_commands::LineCreate = serde_json::from_value(json!({
         "layerId": crate::block_editor::BLOCK_LAYER, "a": p(0.06, 0.45), "b": p(0.3, 0.45)
     }))
     .expect("a line");
@@ -177,7 +177,7 @@ pub(crate) fn handle(app: &mut App) {
         line,
     );
     assert!(
-        matches!(done, kentos_contracts::CommandResult::Completed { .. }),
+        matches!(done, kentos_commands::CommandResult::Completed { .. }),
         "{done:?}"
     );
     app.spatial

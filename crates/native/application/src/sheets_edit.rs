@@ -7,7 +7,7 @@
 //! the drawing (docs/adr/0251 §3); the answer's `inverse` takes it back. The
 //! shared cases are in `fixtures/commands/v1/cad.sheets.edit.json`.
 
-use kentos_contracts::{CommandResult, SheetInfo, SheetMapInfo, SheetsEdit, SheetsEdited};
+use kentos_commands::{CommandResult, SheetInfo, SheetMapInfo, SheetsEdit, SheetsEdited};
 use kentos_domain::Document;
 use kentos_sheet::kinds::{ItemKind, MapView};
 use kentos_sheet::model::SheetBook;
@@ -203,8 +203,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &SheetsEdit) -> CommandResult<Shee
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SheetsEdit) -> CommandResult<SheetsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SHEETS_EDIT,
-        kentos_contracts::CAD_SHEETS_EDIT_VERSION,
+        kentos_commands::CAD_SHEETS_EDIT,
+        kentos_commands::CAD_SHEETS_EDIT_VERSION,
         input,
         write_execute,
     )

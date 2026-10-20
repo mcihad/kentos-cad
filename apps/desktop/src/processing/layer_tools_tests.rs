@@ -3,7 +3,7 @@
 //! the window as a user fills it, the Katmanlar list's check, and the
 //! pictures for the owner.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 

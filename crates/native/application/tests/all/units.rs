@@ -3,7 +3,7 @@
 //! dimension bound to its wall (it follows the scaled wall in the same step)
 //! and the journal's one row for the step.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, DrawingUnit, Entity, ProjectSheets, UnitGeometry,
     UnitsChange, UnitsChanged,
 };

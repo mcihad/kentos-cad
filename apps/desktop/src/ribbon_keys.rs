@@ -456,7 +456,7 @@ impl App {
 mod tests {
     use iced::keyboard::key::{NativeCode, Physical};
     use iced::keyboard::{Key, Modifiers, key::Named};
-    use kentos_contracts::Workspace;
+    use kentos_commands::Workspace;
     use serde_json::Value;
 
     use super::TipKey;

@@ -9,7 +9,7 @@
 //! reference's (fixtures/contours/v1/cases.json), bit for bit. The web plays
 //! the same file (apps/web/src/processing/surface.test.ts).
 
-use kentos_contracts::{CloudSource, RasterFields};
+use kentos_commands::{CloudSource, RasterFields};
 use kentos_formats::multidim::cube::{Cube, Part, Want};
 use kentos_formats::raster::source::{Reader, open_bytes};
 use kentos_processing::files::{

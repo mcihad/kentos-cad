@@ -10,7 +10,7 @@
 use crate::common;
 
 use common::{Bench, E, N};
-use kentos_contracts::{Entity, PathEntity, PointEntity, TextEntity, Vec2};
+use kentos_commands::{Entity, PathEntity, PointEntity, TextEntity, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_interaction::polygonize::label_value;
@@ -176,7 +176,7 @@ fn says_what_to_look_at_takes_adalar_and_the_name_and_leaves_the_rest_empty() {
     add(
         &mut b,
         Entity::Point(PointEntity {
-            base: kentos_contracts::EntityBase {
+            base: kentos_commands::EntityBase {
                 label: Some("sınır".into()),
                 ..common::base("cizim")
             },
@@ -351,7 +351,7 @@ fn a_label_is_a_texts_value_or_a_points_label_trimmed() {
     let named = add(
         &mut b,
         Entity::Point(PointEntity {
-            base: kentos_contracts::EntityBase {
+            base: kentos_commands::EntityBase {
                 label: Some("P12".into()),
                 ..common::base("cizim")
             },

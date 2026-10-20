@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     BoundaryForm, CommandResult, CommandWarning, EllipseEntity, Entity, EntityBase, EntityId,
     HatchAssoc, HatchEdit, HatchEntity, HatchRegion, HatchesEdit, HatchesEdited, HatchesPlan,
     NurbsEntity, PathEntity, RingGeometry, Vec2 as Point,
@@ -61,8 +61,8 @@ fn hatch_read(doc: &Document, uid: &str, path: &str) -> Result<HatchEntity, Stop
 
 /// Whether two hatches draw the same family of lines: user lines or crosses, or a pattern of the same name and
 /// definition (docs/adr/0331 §2).
-fn same_lines(a: &kentos_contracts::HatchPattern, b: &kentos_contracts::HatchPattern) -> bool {
-    use kentos_contracts::HatchPatternType as T;
+fn same_lines(a: &kentos_commands::HatchPattern, b: &kentos_commands::HatchPattern) -> bool {
+    use kentos_commands::HatchPatternType as T;
     a.kind == b.kind
         && match a.kind {
             T::Lines | T::Cross => true,
@@ -72,8 +72,8 @@ fn same_lines(a: &kentos_contracts::HatchPattern, b: &kentos_contracts::HatchPat
 }
 
 /// Whether a pattern draws lines (an origin anchors them).
-fn lined(p: &kentos_contracts::HatchPattern) -> bool {
-    use kentos_contracts::HatchPatternType as T;
+fn lined(p: &kentos_commands::HatchPattern) -> bool {
+    use kentos_commands::HatchPatternType as T;
     matches!(p.kind, T::Lines | T::Cross | T::Pattern)
 }
 
@@ -600,7 +600,7 @@ fn check(doc: &Document, store: &Store, input: &HatchesEdit) -> Result<Checked, 
                 // with no lines has no scales (docs/adr/0331 §3).
                 let annotative = match spec.annotative {
                     Some(true) => h.annotative.clone().or_else(|| {
-                        Some(Box::new(kentos_contracts::Annotative {
+                        Some(Box::new(kentos_commands::Annotative {
                             at: plot,
                             scales: Vec::new(),
                         }))
@@ -713,8 +713,8 @@ pub fn plan_in(doc: &Document, store: Option<&Store>, input: &HatchesEdit) -> Co
 pub fn execute(cx: &mut ExecutionContext<'_>, input: HatchesEdit) -> CommandResult<HatchesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_HATCHES_EDIT,
-        kentos_contracts::CAD_HATCHES_EDIT_VERSION,
+        kentos_commands::CAD_HATCHES_EDIT,
+        kentos_commands::CAD_HATCHES_EDIT_VERSION,
         input,
         write_execute,
     )

@@ -10,7 +10,7 @@
 //!   writes it through `cad.blocks.define` ([`define`]), one undo step
 //!   “Blok tanımla”; the web's window is `ui/blocks/BlockDefineDialog.ts`.
 
-use kentos_contracts::{BlockDefined, BlocksDefine, CommandResult};
+use kentos_commands::{BlockDefined, BlocksDefine, CommandResult};
 use kentos_domain::Document;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_native_application::{ExecutionContext, blocks_define};

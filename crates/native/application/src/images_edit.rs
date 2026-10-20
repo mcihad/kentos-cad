@@ -7,8 +7,8 @@
 
 use std::path::Path;
 
-use kentos_contracts::encoding::{base64_encode, sha256_hex};
-use kentos_contracts::{
+use kentos_commands::encoding::{base64_encode, sha256_hex};
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, ImageSourced, ImagesEdit, ImagesEdited, ImagesOperation, MAX_IMAGE_BYTES,
     codes,
 };
@@ -308,8 +308,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImagesEdit) -> CommandResult<Imag
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImagesEdit) -> CommandResult<ImagesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_IMAGES_EDIT,
-        kentos_contracts::CAD_IMAGES_EDIT_VERSION,
+        kentos_commands::CAD_IMAGES_EDIT,
+        kentos_commands::CAD_IMAGES_EDIT_VERSION,
         input,
         write_execute,
     )

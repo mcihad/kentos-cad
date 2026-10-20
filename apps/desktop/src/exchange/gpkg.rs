@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CallOp, CommandResult, ExportGpkg, GpkgImported, SourcesEdit, SourcesEditOp,
 };
 use kentos_domain::Slot;

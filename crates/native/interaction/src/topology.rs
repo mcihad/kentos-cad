@@ -21,7 +21,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{AreaPart, EditOperation, Entity, EntityEdit, EntityGeometry, RingGeometry};
+use kentos_commands::{AreaPart, EditOperation, Entity, EntityEdit, EntityGeometry, RingGeometry};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::arc::ArcGeom;
 use kentos_geometry_core::geom::intersect::Edge;
@@ -388,12 +388,12 @@ fn edge_path(edge: &Edge) -> Option<TopoPath> {
     }
 }
 
-fn v(p: &kentos_contracts::Vec2) -> Vec2 {
+fn v(p: &kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
-fn w(p: Vec2) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 { x: p.x, y: p.y }
+fn w(p: Vec2) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
 /// An object as the cleanup takes it (docs/adr/0148 §2), or none when it

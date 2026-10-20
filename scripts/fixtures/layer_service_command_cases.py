@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.layers.service.json: the shared cases of `cad.layers.service` v1 (docs/adr/0208 §15),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_layers.rs: the checks and
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_layers.rs: the checks and
 their order, the codes, the paths and the words; where a node goes; the step's name), without KentOS code. The web
 (apps/web/src/product/fixtures.test.ts) and the desktop (crates/native/application/tests/all/fixtures.rs) run them.
 
@@ -297,7 +297,7 @@ def build():
         "command": "cad.layers.service",
         "commandVersion": 1,
         "title": "Servis katmanı: harita servisi ve veri katmanı ekle, değiştir, sil (ADR 0208 §15)",
-        "note": "scripts/fixtures/layer_service_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_layers.rs) KentOS kodu olmadan kurulur. `$layer` komutun eklediği (plan: ekleyeceği) katmanın kimliğidir: ağaçta olmayan bir `layer-N`; `expect.layers` katman ağacının tamamı, `expect.connections` projenin bağlantılarıdır.",
+        "note": "scripts/fixtures/layer_service_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_layers.rs) KentOS kodu olmadan kurulur. `$layer` komutun eklediği (plan: ekleyeceği) katmanın kimliğidir: ağaçta olmayan bir `layer-N`; `expect.layers` katman ağacının tamamı, `expect.connections` projenin bağlantılarıdır.",
         "setup": SETUP,
         "cases": cases(),
     }

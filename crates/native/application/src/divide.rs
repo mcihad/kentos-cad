@@ -9,7 +9,7 @@
 //! core's (`division_places`); the points or inserts are written through
 //! `cad.entities.create`'s `divide` operation ([`crate::creating`]).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CreateOperation, DivideEnds, Division, EntitiesCreatePlan, EntitiesCreated,
     EntitiesDivide, Entity, EntityGeometry, MAX_DIVISION_POINTS, Vec2 as Point,
 };
@@ -77,7 +77,7 @@ fn refuse(code: &str, message: String, path: &str) -> Stop {
 }
 
 /// The checks, in the contract's order; the objects to create.
-fn check(doc: &Document, input: &EntitiesDivide) -> Result<kentos_contracts::EntitiesCreate, Stop> {
+fn check(doc: &Document, input: &EntitiesDivide) -> Result<kentos_commands::EntitiesCreate, Stop> {
     if !is_uid_text(&input.uid) {
         return Err(refuse(
             codes::INVALID_UID,
@@ -269,8 +269,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_DIVIDE,
-        kentos_contracts::CAD_ENTITIES_DIVIDE_VERSION,
+        kentos_commands::CAD_ENTITIES_DIVIDE,
+        kentos_commands::CAD_ENTITIES_DIVIDE_VERSION,
         input,
         |cx, input| match check(cx.doc, &input) {
             Ok(objects) => creating::execute(cx, objects),

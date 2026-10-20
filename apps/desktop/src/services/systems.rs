@@ -9,7 +9,7 @@
 use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::Arc;
 
-use kentos_contracts::ProjectSettings;
+use kentos_commands::ProjectSettings;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::crs::{Choice, System, transform_in};
 use kentos_render_wgpu::styled::Transform;

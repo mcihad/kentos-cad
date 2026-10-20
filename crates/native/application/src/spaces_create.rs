@@ -8,7 +8,7 @@
 //! `space_not_enclosed`; drawn; neither: `invalid_space`), its fields (`invalid_space`), its level (`level_not_found`);
 //! 3. the line weight; 4. the expected revision; 5. the layer; 6. the attributes.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, SpaceEntity, SpaceFields, SpacesCreate,
     SpacesCreated, SpacesPlan,
 };
@@ -53,8 +53,8 @@ pub fn plan_in(doc: &Document, input: &SpacesCreate) -> CommandResult<SpacesPlan
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesCreate) -> CommandResult<SpacesCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SPACES_CREATE,
-        kentos_contracts::CAD_SPACES_CREATE_VERSION,
+        kentos_commands::CAD_SPACES_CREATE,
+        kentos_commands::CAD_SPACES_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -105,12 +105,12 @@ fn check(doc: &Document, input: &SpacesCreate) -> Result<Checked, Stop> {
             "spaces",
         ));
     }
-    if input.spaces.len() > kentos_contracts::MAX_SPACES {
+    if input.spaces.len() > kentos_commands::MAX_SPACES {
         return Err(fail(
             codes::INVALID_SPACE,
             format!(
                 "Bir çağrıda en çok {} mahal yazılır; {} verildi.",
-                kentos_contracts::MAX_SPACES,
+                kentos_commands::MAX_SPACES,
                 input.spaces.len()
             ),
             "spaces",

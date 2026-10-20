@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandResult, CommandWarning, Entity, LayerNodeType, MAX_LINE_WEIGHT,
     check_value,
 };
@@ -237,7 +237,7 @@ pub(crate) fn unique_fit(doc: &Document, writes: &[UniqueWrite<'_>]) -> Result<(
                         format!(
                             "“{}” alanı katmanda tekil; “{}” başka bir kayıtta var. Başka bir değer verin.",
                             f.label(),
-                            kentos_contracts::display_value(f, &v)
+                            kentos_commands::display_value(f, &v)
                         ),
                         Some(format!("{}.{}", w.at, f.name)),
                     )));
@@ -262,7 +262,7 @@ pub(crate) fn new_defaults(doc: &Document, layer: &str, out: &mut BTreeMap<Strin
     }
     let subtype = subtypes.and_then(|s| s.of(&node.fields, |n| out.get(n).cloned()));
     for f in &node.fields {
-        let seen = kentos_contracts::LayerSubtypes::field_for(f, subtype);
+        let seen = kentos_commands::LayerSubtypes::field_for(f, subtype);
         let offered = |d: &str| {
             seen.values.is_none()
                 || (if f.holds_many() {
@@ -271,7 +271,7 @@ pub(crate) fn new_defaults(doc: &Document, layer: &str, out: &mut BTreeMap<Strin
                     vec![d]
                 })
                 .iter()
-                .all(|c| kentos_contracts::subtype_offers(f, subtype, c))
+                .all(|c| kentos_commands::subtype_offers(f, subtype, c))
         };
         if let Some(d) = seen.default.filter(|d| !d.is_empty() && offered(d)) {
             out.entry(f.name.clone()).or_insert(d);
@@ -303,7 +303,7 @@ pub(crate) fn combination_fit(
         .and_then(|s| s.of(&node.fields, |n| after.get(n).cloned()))
         .map(|t| t.code.as_str());
     let mut warnings = Vec::new();
-    for u in kentos_contracts::unmet(&node.contingents, &node.fields, subtype, |n| {
+    for u in kentos_commands::unmet(&node.contingents, &node.fields, subtype, |n| {
         after.get(n).cloned()
     }) {
         let changed = u.group.fields.iter().find_map(|k| {
@@ -313,7 +313,7 @@ pub(crate) fn combination_fit(
             (now != was && (before.is_some() || now.is_some())).then_some(f)
         });
         let Some(first) = changed else { continue };
-        let words = kentos_contracts::combination_words(u.group, &node.fields, &u.values);
+        let words = kentos_commands::combination_words(u.group, &node.fields, &u.values);
         if u.group.restrictive {
             return Err(Stop::failed(error(
                 codes::INVALID_COMBINATION,
@@ -357,7 +357,7 @@ pub(crate) fn subtype_fit(
     let anew = |name: &str| before.is_none_or(|b| b.get(name) != after.get(name));
     let mut kept: Vec<String> = Vec::new();
     for (f, codes) in
-        kentos_contracts::subtype_misfits(&node.fields, Some(subtype), |n| after.get(n).cloned())
+        kentos_commands::subtype_misfits(&node.fields, Some(subtype), |n| after.get(n).cloned())
     {
         if anew(&f.name) {
             return Err(Stop::failed(error(
@@ -373,7 +373,7 @@ pub(crate) fn subtype_fit(
         kept.push(f.label().to_owned());
     }
     for f in &node.fields {
-        let seen = kentos_contracts::LayerSubtypes::field_for(f, Some(subtype));
+        let seen = kentos_commands::LayerSubtypes::field_for(f, Some(subtype));
         let empty = after.get(&f.name).is_none_or(|v| v.trim().is_empty());
         if seen.required && !f.required && empty {
             if before.is_some() && anew(&f.name) {
@@ -463,7 +463,7 @@ pub(crate) fn not_finite(whose: &str, axis: &str, path: String) -> Stop {
 }
 
 /// The first coordinate of `p` that is NaN or ±∞, x before y (`whose`: “Merkezin”).
-pub(crate) fn point(p: kentos_contracts::Vec2, whose: &str, path: &str) -> Result<(), Stop> {
+pub(crate) fn point(p: kentos_commands::Vec2, whose: &str, path: &str) -> Result<(), Stop> {
     for (axis, value) in [("x", p.x), ("y", p.y)] {
         if !value.is_finite() {
             return Err(not_finite(whose, axis, format!("{path}.{axis}")));

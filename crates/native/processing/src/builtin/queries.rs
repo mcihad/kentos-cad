@@ -9,8 +9,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
-use kentos_contracts::fields::{LayerFieldKind, check_value};
+use kentos_commands::Entity;
+use kentos_commands::fields::{LayerFieldKind, check_value};
 use kentos_geometry_core::ops::spatial_query::Relation;
 
 use crate::types::RunContext;

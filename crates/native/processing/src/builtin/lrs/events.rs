@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, EntityBase, PointEntity, Vec2 as Point};
+use kentos_commands::{Entity, EntityBase, PointEntity, Vec2 as Point};
 use kentos_geometry_core::ops::lrs::{Event, EventIn, Fault, events_run, overlay};
 use serde_json::{Value, json};
 

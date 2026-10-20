@@ -17,7 +17,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     Cell, Combination, FieldGroup, LayerField, LayerNodeType, LayersContingents,
     contingents_problem,
 };
@@ -264,7 +264,7 @@ impl App {
             return Vec::new();
         };
         let mut out = Vec::new();
-        fn walk(nodes: &[kentos_contracts::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
+        fn walk(nodes: &[kentos_commands::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
                 let path = if at.is_empty() {
                     n.name.clone()
@@ -400,7 +400,7 @@ impl App {
 fn group_editor<'a>(
     g: &'a FieldGroup,
     fields: &[LayerField],
-    subtypes: Option<&kentos_contracts::LayerSubtypes>,
+    subtypes: Option<&kentos_commands::LayerSubtypes>,
 ) -> Element<'a, Message> {
     let name = text_input("Grubun adı", &g.name)
         .size(typography::body())

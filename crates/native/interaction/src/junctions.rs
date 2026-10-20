@@ -9,7 +9,7 @@
 //! `apps/web/src/tools/junctions.ts`; both play
 //! `fixtures/interaction/v1/junctions.json`.
 
-use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
+use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::ops::adjoin::junctions;

@@ -9,7 +9,7 @@
 //! waits for the next dimension. The point asked for is ringed; the
 //! dimension as it would be follows the cursor, its value beside it.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionEntity, DimensionPoint, DimensionStyle, DimensionsReassociate, Entity, PlaceOn,
     PointBinding, SubPlace, SubRef,
 };
@@ -125,7 +125,7 @@ fn ordinal(k: DimensionPoint) -> &'static str {
 
 fn with_point(d: &DimensionEntity, k: DimensionPoint, p: Vec2) -> DimensionEntity {
     let mut d = d.clone();
-    let p = kentos_contracts::Vec2 { x: p.x, y: p.y };
+    let p = kentos_commands::Vec2 { x: p.x, y: p.y };
     match k {
         DimensionPoint::A => d.a = p,
         DimensionPoint::B => d.b = p,

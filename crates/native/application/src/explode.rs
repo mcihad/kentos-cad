@@ -10,7 +10,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayId, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
     EntitiesEdited, EntitiesExplode, Entity, EntityEdit, ExplodeDensity, LayerNodeType,
     MAX_EXPLODE_VERTICES,
@@ -61,7 +61,7 @@ fn value_text(e: &Entity, f: &Format) -> String {
 fn block_piece(
     doc: &Document,
     from: &str,
-    geometry: kentos_contracts::EntityGeometry,
+    geometry: kentos_commands::EntityGeometry,
     piece: &CoreEntity,
 ) -> EntityEdit {
     let field = |name: &str| piece.rest.iter().find(|(k, _)| k == name).map(|(_, v)| v);
@@ -362,8 +362,8 @@ pub mod entities_explode {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_EXPLODE,
-            kentos_contracts::CAD_ENTITIES_EXPLODE_VERSION,
+            kentos_commands::CAD_ENTITIES_EXPLODE,
+            kentos_commands::CAD_ENTITIES_EXPLODE_VERSION,
             input,
             |cx, input| {
                 let checked = match check(cx.doc, cx.store, &input) {

@@ -8,7 +8,7 @@ pub mod grid;
 pub mod points;
 pub mod subdivide;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use serde_json::json;
 
 use crate::types::{ChangeSet, Feedback, RunResult, ScopeKind};

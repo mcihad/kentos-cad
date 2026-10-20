@@ -14,7 +14,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{
+use kentos_commands::{
     CadElement, CommandResult, ConstraintEdit, ConstraintRule, ConstraintSense, ConstraintsEdit,
     DistanceAxis, ElementRef, EntityId, NewConstraint, SubPlace,
 };

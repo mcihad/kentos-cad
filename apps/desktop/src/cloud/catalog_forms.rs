@@ -24,7 +24,7 @@ use iced::task::Handle;
 use iced::widget::text_editor;
 use kentos_cloud::ApiFailure;
 use kentos_cloud::saving::envelope;
-use kentos_contracts::{
+use kentos_commands::{
     CatalogView, PROJECT_CONVERT, PROJECT_CONVERT_VERSION, PROJECT_DUPLICATE,
     PROJECT_DUPLICATE_VERSION, PROJECT_METADATA_UPDATE, PROJECT_METADATA_UPDATE_VERSION,
     ProjectCatalogChange, ProjectConvert, ProjectDuplicate, ProjectDuplicated,

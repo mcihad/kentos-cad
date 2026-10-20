@@ -15,7 +15,7 @@
 //! are the copies where they would go: the last spacing's until the first
 //! point, then the cursor's.
 
-use kentos_contracts::ArrayLayout;
+use kentos_commands::ArrayLayout;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::jsmath::js_round;
 use kentos_geometry_core::tools::editing::grid_array_transforms;

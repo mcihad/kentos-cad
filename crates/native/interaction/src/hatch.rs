@@ -20,7 +20,7 @@
 //! (`regions_in`, its faces and cut kept while the drawing stays), the click
 //! its execute, one undo step named “Tarama”.
 
-use kentos_contracts::{EntitiesHatch, HatchRegion, HatchWay, NewLook, TrimBoundaries};
+use kentos_commands::{EntitiesHatch, HatchRegion, HatchWay, NewLook, TrimBoundaries};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};

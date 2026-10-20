@@ -25,7 +25,7 @@
 //! goes on from where the newest line, arc or polyline's way ends: an arc
 //! given clockwise ends at its stored start (`Memory::arc_drawn_back`).
 
-use kentos_contracts::{ArcCreate, CurveConstruction, Entity, MeasuredPoint, ObjectEnd, SubPlace};
+use kentos_commands::{ArcCreate, CurveConstruction, Entity, MeasuredPoint, ObjectEnd, SubPlace};
 use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geom::arc::{
     ArcGeom, DEFAULT_STEP, norm_angle, point_on_circle, tessellate_arc,

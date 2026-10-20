@@ -3,7 +3,7 @@
 //! the part that fits), edits inside an open transaction, −0 carried over as
 //! given, and a core shape turned into the command's geometry and back.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EditOperation, EntitiesEdit, Entity, EntityEdit,
     EntityGeometry, Vec2,
 };

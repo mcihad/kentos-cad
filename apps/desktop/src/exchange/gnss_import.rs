@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, Row, column, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::{Bounds, GnssRead, LineError};
+use kentos_commands::{Bounds, GnssRead, LineError};
 use kentos_geometry_core::crs::format_dd;
 use kentos_interaction::gnss::{self, Options, Placed, Plan};
 use kentos_interaction::{Level, fixed};

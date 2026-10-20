@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, MAX_DUPLICATES, RecordCopy, RecordsDuplicate,
     RecordsDuplicatePlan, RecordsDuplicated, RelationDelete,
 };
@@ -194,7 +194,7 @@ fn check(doc: &Document, input: &RecordsDuplicate) -> Result<Planned, Stop> {
 fn unique_fields(doc: &Document, layer: &str) -> Vec<(String, String)> {
     let node = doc.layers().get(layer);
     let mut out = Vec::new();
-    for form in kentos_contracts::forms_of_layer(&doc.settings().forms, layer) {
+    for form in kentos_commands::forms_of_layer(&doc.settings().forms, layer) {
         let bodies = std::iter::once(&form.draft).chain(form.releases.last().map(|r| &r.body));
         for body in bodies {
             for f in body.fields().into_iter().filter(|f| f.unique) {
@@ -246,8 +246,8 @@ pub fn execute(
 ) -> CommandResult<RecordsDuplicated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RECORDS_DUPLICATE,
-        kentos_contracts::CAD_RECORDS_DUPLICATE_VERSION,
+        kentos_commands::CAD_RECORDS_DUPLICATE,
+        kentos_commands::CAD_RECORDS_DUPLICATE_VERSION,
         input,
         write_execute,
     )

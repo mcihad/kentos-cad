@@ -6,7 +6,7 @@
 //! The packed layout reads back to the very shape the store puts
 //! (geometry-core's own pack tests), so both hosts put the same objects.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_geometry_core::api::json::{self, Json};
 use kentos_geometry_core::store::Packer;
 use kentos_interaction::spatial::record;

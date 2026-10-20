@@ -25,7 +25,7 @@
 //! holds, and one prepared against another revision may name objects that
 //! have changed since (docs/adr/0022).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EntitiesDelete, EntitiesDeletePlan, EntitiesDeleted,
     RelationFollowed,
 };
@@ -76,8 +76,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesDeleted> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_DELETE,
-        kentos_contracts::CAD_ENTITIES_DELETE_VERSION,
+        kentos_commands::CAD_ENTITIES_DELETE,
+        kentos_commands::CAD_ENTITIES_DELETE_VERSION,
         input,
         write_execute,
     )

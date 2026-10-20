@@ -2,7 +2,7 @@
 //! drawing's selection, Nokta editörü's rows and Aplikasyon's table; the
 //! file is the shared writer's, byte for byte, written where the user says.
 
-use kentos_contracts::{Entity, FieldWriteFormat, FieldWriteOptions};
+use kentos_commands::{Entity, FieldWriteFormat, FieldWriteOptions};
 use kentos_domain::Slot;
 
 use super::field_send::{Event as Send, State, field_point};

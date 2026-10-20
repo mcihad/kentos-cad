@@ -3,7 +3,7 @@
 //! long polyline, and an elliptical arc's places measured on its true length.
 //! The shared cases are `fixtures/commands/v1/cad.entities.divide.places.json`.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DivideBlock, DivideEnds, Division, DocumentSnapshotV1, EntitiesDivide, Entity,
     NewLook,
 };

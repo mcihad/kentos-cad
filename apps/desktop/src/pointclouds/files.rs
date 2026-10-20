@@ -14,7 +14,7 @@ use std::io::{BufWriter, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use kentos_contracts::{CloudFormat, CloudSource, RasterFields};
+use kentos_commands::{CloudFormat, CloudSource, RasterFields};
 use kentos_pointcloud::ops::convert::Input;
 use kentos_pointcloud::source::{Cloud, Opening, Run};
 use kentos_pointcloud::{Step, text};

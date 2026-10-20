@@ -6,7 +6,7 @@
 use crate::common;
 
 use common::{Bench, E, N};
-use kentos_contracts::{Entity, ParamValue};
+use kentos_commands::{Entity, ParamValue};
 use kentos_domain::Slot;
 use kentos_interaction::Format;
 

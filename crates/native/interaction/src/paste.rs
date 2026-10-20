@@ -11,7 +11,7 @@
 //! not bring it back. The ghosts are the web's: at most 400 objects' outlines,
 //! dashed, from a geometry store of the copies' own.
 
-use kentos_contracts::Clip;
+use kentos_commands::Clip;
 use kentos_geometry_core::geom::affine::translation;
 use kentos_geometry_core::store::Store;
 

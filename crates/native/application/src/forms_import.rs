@@ -4,7 +4,7 @@
 //! one undo step “Formu içe aktar”; the form itself is a project setting (as `cad.forms.edit`'s). The
 //! shared cases are `fixtures/commands/v1/cad.forms.import.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, FORM_PACKAGE_FORMAT, FORM_PACKAGE_VERSION, FieldBinding,
     FieldDomain, FormItem, FormSeverity, FormsImport, FormsImported, LayerField, LayerNodeType,
     MOST_FORMS, ProjectForm, body_problem, domains_problem, fields_problem, form_id_ok,
@@ -292,7 +292,7 @@ fn check(doc: &Document, input: &FormsImport) -> Result<Planned, Stop> {
         enforce: false,
         comments: Vec::new(),
     };
-    let (fields_after, _) = kentos_contracts::follow_domains(&fields_after, &domains);
+    let (fields_after, _) = kentos_commands::follow_domains(&fields_after, &domains);
     let errors = kentos_forms::preflight_in(
         &form.draft,
         &fields_after,
@@ -351,8 +351,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FormsImport) -> CommandResult<For
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsImport) -> CommandResult<FormsImported> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_IMPORT,
-        kentos_contracts::CAD_FORMS_IMPORT_VERSION,
+        kentos_commands::CAD_FORMS_IMPORT,
+        kentos_commands::CAD_FORMS_IMPORT_VERSION,
         input,
         write_execute,
     )

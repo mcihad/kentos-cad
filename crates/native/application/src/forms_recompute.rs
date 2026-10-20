@@ -5,7 +5,7 @@
 //! not settle) is left as it was and named in `failed`, with the warning `form_calc_failed`.
 //! The shared cases are `fixtures/commands/v1/cad.forms.recompute.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, FormSeverity, FormsRecompute, FormsRecomputed,
 };
 use kentos_domain::{Document, Slot};
@@ -124,8 +124,8 @@ pub fn execute(
 ) -> CommandResult<FormsRecomputed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_RECOMPUTE,
-        kentos_contracts::CAD_FORMS_RECOMPUTE_VERSION,
+        kentos_commands::CAD_FORMS_RECOMPUTE,
+        kentos_commands::CAD_FORMS_RECOMPUTE_VERSION,
         input,
         write_execute,
     )

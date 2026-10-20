@@ -1,7 +1,7 @@
 //! The desktop's typed settings (docs/adr/0023; TODOS.md SET-02..05): the
 //! user and device layers in a file of its own, the session layer in memory,
 //! the organisation's policy and the device's constraints as inputs, all
-//! resolved by the shared rules (`kentos_contracts::settings`) the web runs
+//! resolved by the shared rules (`kentos_commands::settings`) the web runs
 //! too.
 //!
 //! The file is `$XDG_CONFIG_HOME/kentos-cad/ayarlar.json` (else
@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kentos_contracts::{
+use kentos_commands::{
     Resolution, ResolvedSetting, SettingConstraint, SettingDiagnostic, SettingErrorCode,
     SettingScope, SettingsFile, SettingsLayer, SettingsLayers, SettingsMigration, SettingsPolicy,
     SettingsSchema, check_write, resolve, settings_schema,
@@ -649,7 +649,7 @@ mod tests {
             "graphics.msaa",
             Some(SettingConstraint {
                 allowed: vec![Value::from(1), Value::from(4)],
-                reason: kentos_contracts::ResolveReason::DeviceUnsupported,
+                reason: kentos_commands::ResolveReason::DeviceUnsupported,
                 detail: "Bu aygıt en çok 4× destekliyor.".into(),
             })
         ));

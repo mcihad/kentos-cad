@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, column, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::{Bounds, LineError, PhotoExif};
+use kentos_commands::{Bounds, LineError, PhotoExif};
 use kentos_geometry_core::crs::format_dd;
 use kentos_interaction::Level;
 use kentos_interaction::photos::{self, Photo, Placed, Plan};

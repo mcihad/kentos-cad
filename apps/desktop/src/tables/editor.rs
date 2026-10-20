@@ -17,7 +17,7 @@ use iced::widget::{
     Id, Space, button, column, container, mouse_area, pin, row, scrollable, stack, text_input,
 };
 use iced::{Center, Element, Fill, Length, Task, Theme};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, FieldSource, ProjectValue, TableAlign, TableEdit, TableEntity,
     TableGrid, TablesEdit, TablesOperation,
 };
@@ -667,7 +667,7 @@ impl App {
             self.dialog = None;
             return;
         }
-        if matches!(e.saved.source, Some(kentos_contracts::TableSource::Schedule { .. })) {
+        if matches!(e.saved.source, Some(kentos_commands::TableSource::Schedule { .. })) {
             self.save_schedule_editor();
             return;
         }
@@ -704,7 +704,7 @@ impl App {
 
     /// Kaydet on a schedule: each cell written to its row's objects, the sizes as a table's; one step, all or none.
     fn save_schedule_editor(&mut self) {
-        use kentos_contracts::{ScheduleOperation, SchedulesEdit};
+        use kentos_commands::{ScheduleOperation, SchedulesEdit};
         let Some(e) = self.table_editor.as_ref() else {
             return;
         };
@@ -1304,13 +1304,13 @@ impl App {
             .into(),
             Some(s) => {
                 let name = match s {
-                    kentos_contracts::TableSource::File { .. } => "tableFile",
-                    kentos_contracts::TableSource::Coordinates { .. } => "tableCoordinates",
-                    kentos_contracts::TableSource::Areas { .. } => "tableAreas",
-                    kentos_contracts::TableSource::Attributes { .. } => "tableAttributes",
-                    kentos_contracts::TableSource::Blocks { .. } => "tableBlocks",
-                    kentos_contracts::TableSource::Schedule { of, .. } => match of {
-                        kentos_contracts::ScheduleOf::Spaces => "scheduleSpaces",
+                    kentos_commands::TableSource::File { .. } => "tableFile",
+                    kentos_commands::TableSource::Coordinates { .. } => "tableCoordinates",
+                    kentos_commands::TableSource::Areas { .. } => "tableAreas",
+                    kentos_commands::TableSource::Attributes { .. } => "tableAttributes",
+                    kentos_commands::TableSource::Blocks { .. } => "tableBlocks",
+                    kentos_commands::TableSource::Schedule { of, .. } => match of {
+                        kentos_commands::ScheduleOf::Spaces => "scheduleSpaces",
                         _ => "scheduleOpenings",
                     },
                 };

@@ -4,7 +4,7 @@
 //! written into the object's attributes. The search is the core's
 //! (`ops::lrs::locate_run`, its routes' edges in a packed R-tree).
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::lrs::locate_run;
 use kentos_native_application::geometry::shape;

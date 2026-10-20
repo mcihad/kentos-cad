@@ -9,7 +9,7 @@
 //! (docs/adr/0142) write the vertices' elevations through the same command's
 //! operation `elevation`, the step “Kot ver”.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DimensionEntity, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity,
     EntityEdit, EntityGeometry, LeaderEntity, TextAlign, TextEntity,
 };
@@ -42,18 +42,18 @@ pub fn set_properties(doc: &mut Document, input: EntitiesSetProperties) -> Vec<S
 pub fn set_parameters(
     doc: &mut Document,
     slot: Slot,
-    values: Option<std::collections::BTreeMap<String, kentos_contracts::ParamValue>>,
+    values: Option<std::collections::BTreeMap<String, kentos_commands::ParamValue>>,
     reset: Option<Vec<String>>,
 ) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
     let operation = if values.is_some() {
-        kentos_contracts::ParametersOperation::Set
+        kentos_commands::ParametersOperation::Set
     } else {
-        kentos_contracts::ParametersOperation::Reset
+        kentos_commands::ParametersOperation::Reset
     };
-    let input = kentos_contracts::BlocksParameters {
+    let input = kentos_commands::BlocksParameters {
         operation,
         uids: vec![uid.to_string()],
         values,
@@ -68,13 +68,13 @@ pub fn set_parameters(
 
 /// A wall's own fields from Öznitelikler (docs/adr/0339 §6) through `cad.walls.edit`'s `set`, one undo step “Duvarı
 /// düzenle”; what to say: the command's warnings or refusal.
-pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_contracts::WallChange) -> Vec<String> {
+pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_commands::WallChange) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::WallsEdit {
+    let input = kentos_commands::WallsEdit {
         uids: vec![uid.to_string()],
-        operation: kentos_contracts::WallsOperation::Set(change),
+        operation: kentos_commands::WallsOperation::Set(change),
         expected_revision: None,
     };
     said(kentos_native_application::walls_edit::execute(&mut ExecutionContext::new(doc), input))
@@ -82,11 +82,11 @@ pub fn edit_wall(doc: &mut Document, slot: Slot, change: kentos_contracts::WallC
 
 /// A space's field, or its boundary found again, from Öznitelikler (docs/adr/0342 §5): `operation` through
 /// `cad.spaces.edit`; what to say.
-pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_contracts::SpacesOperation) -> Vec<String> {
+pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_commands::SpacesOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::SpacesEdit {
+    let input = kentos_commands::SpacesEdit {
         uids: vec![uid.to_string()],
         operation,
         expected_revision: None,
@@ -96,11 +96,11 @@ pub fn edit_space(doc: &mut Document, slot: Slot, operation: kentos_contracts::S
 
 /// A tag's template, frame, words' height or leader from Öznitelikler (docs/adr/0344 §5): through `cad.tags.edit`;
 /// what to say.
-pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_contracts::TagChange) -> Vec<String> {
+pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_commands::TagChange) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::TagsEdit {
+    let input = kentos_commands::TagsEdit {
         uids: vec![uid.to_string()],
         change,
         expected_revision: None,
@@ -110,11 +110,11 @@ pub fn edit_tag(doc: &mut Document, slot: Slot, change: kentos_contracts::TagCha
 
 /// A view mark's field or target from Öznitelikler (docs/adr/0345 §5): `operation` through `cad.viewmarks.edit`; what
 /// to say.
-pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_contracts::ViewMarksOperation) -> Vec<String> {
+pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_commands::ViewMarksOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::ViewMarksEdit {
+    let input = kentos_commands::ViewMarksEdit {
         uids: vec![uid.to_string()],
         operation,
         expected_revision: None,
@@ -124,11 +124,11 @@ pub fn edit_viewmark(doc: &mut Document, slot: Slot, operation: kentos_contracts
 
 /// A grid's, column's, stair's or ramp's field from Öznitelikler (docs/adr/0343 §5): `operation` through
 /// `cad.arch.edit`; what to say.
-pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_contracts::ArchOperation) -> Vec<String> {
+pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_commands::ArchOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::ArchEdit {
+    let input = kentos_commands::ArchEdit {
         uids: vec![uid.to_string()],
         operation,
         expected_revision: None,
@@ -137,11 +137,11 @@ pub fn edit_arch(doc: &mut Document, slot: Slot, operation: kentos_contracts::Ar
 }
 
 /// An opening's field or type from Öznitelikler (docs/adr/0341 §5): `operation` through `cad.openings.edit`; what to say.
-pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_contracts::OpeningsOperation) -> Vec<String> {
+pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_commands::OpeningsOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::OpeningsEdit {
+    let input = kentos_commands::OpeningsEdit {
         uids: vec![uid.to_string()],
         operation,
         expected_revision: None,
@@ -150,11 +150,11 @@ pub fn edit_opening(doc: &mut Document, slot: Slot, operation: kentos_contracts:
 }
 
 /// A wall's joins from Öznitelikler (docs/adr/0340 §6): `operation` through `cad.walls.edit`; what to say.
-pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_contracts::WallsOperation) -> Vec<String> {
+pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_commands::WallsOperation) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::WallsEdit {
+    let input = kentos_commands::WallsEdit {
         uids: vec![uid.to_string()],
         operation,
         expected_revision: None,
@@ -164,12 +164,12 @@ pub fn edit_wall_op(doc: &mut Document, slot: Slot, operation: kentos_contracts:
 
 /// Sınırı yeniden oluştur from Öznitelikler (docs/adr/0329 §4): the hatch's boundary written as `form` on its layer,
 /// the hatch then following it, through `cad.hatches.edit`; what to say: the command's warnings or refusal.
-pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_contracts::BoundaryForm) -> Vec<String> {
+pub fn recreate_boundary(doc: &mut Document, slot: Slot, form: kentos_commands::BoundaryForm) -> Vec<String> {
     let Some(uid) = doc.uid(slot) else {
         return Vec::new();
     };
-    let input = kentos_contracts::HatchesEdit {
-        edit: kentos_contracts::HatchEdit::Recreate {
+    let input = kentos_commands::HatchesEdit {
+        edit: kentos_commands::HatchEdit::Recreate {
             uid: uid.to_string(),
             form: Some(form),
             layer_id: None,
@@ -327,7 +327,7 @@ pub fn realign_texts(doc: &mut Document, slots: &[Slot], to: Option<TextAlign>) 
         let s = shape(&Entity::Text(t.clone()));
         let p = TextPlace::of(&s)?.realigned(to.and_then(core_align), font);
         Some(TextEntity {
-            p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+            p: kentos_commands::Vec2 { x: p.x, y: p.y },
             align: to,
             ..t.clone()
         })
@@ -538,14 +538,14 @@ pub fn apply_text_style(doc: &mut Document, slots: &[Slot], id: Option<&str>) ->
         .and_then(|id| settings.text_styles.iter().find(|s| s.id == id))
         .cloned();
     let scale = settings.plot_scale;
-    let same = |face: &kentos_contracts::TextFace| match &style {
+    let same = |face: &kentos_commands::TextFace| match &style {
         Some(s) => face.text_style.as_deref() == Some(s.id.as_str()),
         None => face.is_plain(),
     };
-    let look_of = |face: &kentos_contracts::TextFace, width_factor, height| {
-        kentos_contracts::apply_text_style(
+    let look_of = |face: &kentos_commands::TextFace, width_factor, height| {
+        kentos_commands::apply_text_style(
             style.as_ref(),
-            &kentos_contracts::TextLook {
+            &kentos_commands::TextLook {
                 face: face.clone(),
                 width_factor,
                 height,
@@ -586,10 +586,10 @@ pub fn apply_dimension_style(doc: &mut Document, slots: &[Slot], id: Option<&str
     let style = id
         .and_then(|id| settings.dimension_styles.iter().find(|s| s.id == id))
         .cloned();
-    let (look, height) = kentos_contracts::apply_dimension_style(
+    let (look, height) = kentos_commands::apply_dimension_style(
         style.as_ref(),
         settings.plot_scale,
-        settings.annotation_mm(kentos_contracts::AnnotationKind::Dimension),
+        settings.annotation_mm(kentos_commands::AnnotationKind::Dimension),
     );
     let changes: Vec<(Slot, Entity)> = slots
         .iter()
@@ -627,9 +627,9 @@ pub fn restore_styles(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
                     .text_style
                     .as_ref()
                     .and_then(|id| settings.text_styles.iter().find(|s| &s.id == id))?;
-                let look = kentos_contracts::apply_text_style(
+                let look = kentos_commands::apply_text_style(
                     Some(style),
-                    &kentos_contracts::TextLook {
+                    &kentos_commands::TextLook {
                         face: t.face.clone(),
                         width_factor: t.width_factor,
                         height: t.height,
@@ -709,7 +709,7 @@ pub(crate) fn said<T>(result: CommandResult<T>) -> Vec<String> {
 /// `cad.dimensions.reassociate`, as one step “Ölçüyü yeniden bağla”; those without references left out. What to say:
 /// the command's refusal.
 pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
-    use kentos_contracts::{DimensionPoint, DimensionsReassociate, PointBinding};
+    use kentos_commands::{DimensionPoint, DimensionsReassociate, PointBinding};
     use kentos_native_application::dimensions_reassociate;
     let inputs: Vec<DimensionsReassociate> = slots
         .iter()
@@ -754,9 +754,9 @@ pub fn free_dimensions(doc: &mut Document, slots: &[Slot]) -> Vec<String> {
 pub fn edit_dimensions(
     doc: &mut Document,
     slots: &[Slot],
-    make: impl FnOnce(Vec<String>) -> kentos_contracts::DimensionEdit,
+    make: impl FnOnce(Vec<String>) -> kentos_commands::DimensionEdit,
 ) -> Vec<String> {
-    use kentos_contracts::DimensionsEdit;
+    use kentos_commands::DimensionsEdit;
     use kentos_native_application::dimensions_edit;
     let uids: Vec<String> = slots
         .iter()

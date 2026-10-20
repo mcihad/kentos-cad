@@ -4,7 +4,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{BaseRow, Entity, MAX_BASE_ROWS, SourceBase, SourceLink};
+use kentos_commands::{BaseRow, Entity, MAX_BASE_ROWS, SourceBase, SourceLink};
 use kentos_domain::{Document, Uuid};
 use sha2::{Digest, Sha256};
 
@@ -16,7 +16,7 @@ pub(super) const ABSENT: u64 = 0;
 /// An object's hash: the first 8 bytes of the SHA-256 of its essence's canonical JSON (kind, geometry, attributes),
 /// never `ABSENT`.
 pub(super) fn hash_of(e: &Entity) -> u64 {
-    let text = kentos_contracts::canonical::canonical_json(&gp::essence(e));
+    let text = kentos_commands::canonical::canonical_json(&gp::essence(e));
     let d = Sha256::digest(text.as_bytes());
     let mut b = [0u8; 8];
     b.copy_from_slice(&d[..8]);
@@ -55,7 +55,7 @@ pub(super) fn take(doc: &mut Document, link: &SourceLink, table: Option<&[(Uuid,
             source: link.id.clone(),
             revision: link.revision.clone(),
             digest: link.digest.clone(),
-            rows: kentos_contracts::base_text(rows),
+            rows: kentos_commands::base_text(rows),
         }
     });
     let mut settings = doc.settings().clone();
@@ -72,7 +72,7 @@ pub(super) fn of(doc: &Document, link: &SourceLink) -> Option<HashMap<Uuid, (u64
         .source_bases
         .iter()
         .find(|b| b.source == link.id && b.revision == link.revision && b.digest == link.digest)?;
-    let rows = kentos_contracts::base_rows(&b.rows)?;
+    let rows = kentos_commands::base_rows(&b.rows)?;
     Some(
         rows.into_iter()
             .map(|(u, lh, th)| (Uuid::from_bytes(u), (lh, th)))

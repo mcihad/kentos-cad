@@ -3,7 +3,7 @@
 //! messages for the user, and restoring stored values (last run, history)
 //! safely after a tool's parameters changed.
 
-use kentos_contracts::LayerNodeType;
+use kentos_commands::LayerNodeType;
 use kentos_domain::LayerTree;
 use serde_json::{Value, json};
 
@@ -67,7 +67,7 @@ pub fn default_value(def: &ParamDef, d: &Defaults) -> Value {
             .or_else(|| d.networks.first())
             .map_or(
                 Value::Null,
-                |n| json!({ "network": n.id, "cost": kentos_contracts::LENGTH_COST }),
+                |n| json!({ "network": n.id, "cost": kentos_commands::LENGTH_COST }),
             ),
     }
 }
@@ -294,7 +294,7 @@ pub fn validate_with(
     tool: &Tool,
     values: &Values,
     layers: &LayerTree,
-    networks: &[kentos_contracts::NetworkDef],
+    networks: &[kentos_commands::NetworkDef],
 ) -> Vec<Issue> {
     let mut issues: Vec<Issue> = tool
         .parameters
@@ -328,7 +328,7 @@ fn check_param(
     p: &ParamDef,
     v: &Value,
     layers: &LayerTree,
-    networks: &[kentos_contracts::NetworkDef],
+    networks: &[kentos_commands::NetworkDef],
 ) -> Option<String> {
     let name = format!("“{}”", p.label);
     if v.is_null() {

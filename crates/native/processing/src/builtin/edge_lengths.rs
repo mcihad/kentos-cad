@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, EntityBase, TextEntity};
+use kentos_commands::{Entity, EntityBase, TextEntity};
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 

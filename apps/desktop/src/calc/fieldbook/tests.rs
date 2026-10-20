@@ -2,7 +2,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::SurveySettings;
+use kentos_commands::SurveySettings;
 
 use super::{Event, NAME, USE};
 use crate::app::{App, Message};

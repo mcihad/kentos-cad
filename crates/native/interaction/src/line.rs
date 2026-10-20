@@ -20,7 +20,7 @@
 //! The web's messages are kept word for word. Every calculation is the
 //! shared core's (`kentos-geometry-core`); none is written here.
 
-use kentos_contracts::{EntitiesDelete, LineCreate};
+use kentos_commands::{EntitiesDelete, LineCreate};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{bearing_grad, dist};
 use kentos_geometry_core::ops::cogo;

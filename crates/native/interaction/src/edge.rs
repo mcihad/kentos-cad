@@ -15,7 +15,7 @@
 //!
 //! None of the geometry is computed here.
 
-use kentos_contracts::{EditOperation, EntitiesEdit, EntitiesEdited, Entity, EntityEdit};
+use kentos_commands::{EditOperation, EntitiesEdit, EntitiesEdited, Entity, EntityEdit};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape};
 use kentos_geometry_core::store::tools::outline_paths;
@@ -132,7 +132,7 @@ pub(crate) fn write(
 
 /// A shape the core computed as the command takes it. `None` only for a
 /// dimension style or a hatch pattern the contract does not know.
-pub(crate) fn geometry(shape: &Shape) -> Option<kentos_contracts::EntityGeometry> {
+pub(crate) fn geometry(shape: &Shape) -> Option<kentos_commands::EntityGeometry> {
     edit_geometry(shape.clone())
 }
 
@@ -187,7 +187,7 @@ impl Outline {
 /// of a multi-part line, which stays one object.
 pub fn line_parts(doc: &kentos_domain::Document, slot: kentos_domain::Slot) -> Option<usize> {
     match doc.get(slot)? {
-        kentos_contracts::Entity::Polyline(p) => p
+        kentos_commands::Entity::Polyline(p) => p
             .parts
             .as_ref()
             .filter(|parts| !parts.is_empty())

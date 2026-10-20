@@ -18,7 +18,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EntitiesOrder, EntitiesOrderPlan, EntitiesOrdered, Entity, OrderTo,
 };
 use kentos_domain::{Document, Slot};
@@ -60,8 +60,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesOrdered> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_ORDER,
-        kentos_contracts::CAD_ENTITIES_ORDER_VERSION,
+        kentos_commands::CAD_ENTITIES_ORDER,
+        kentos_commands::CAD_ENTITIES_ORDER_VERSION,
         input,
         write_execute,
     )
@@ -148,7 +148,7 @@ fn reference_rule(input: &EntitiesOrder) -> Result<(), Stop> {
 fn check(
     doc: &Document,
     input: &EntitiesOrder,
-) -> Result<(Vec<Change>, Vec<kentos_contracts::CommandWarning>), Stop> {
+) -> Result<(Vec<Change>, Vec<kentos_commands::CommandWarning>), Stop> {
     checks::uids(&input.uids, "Sırası değişecek nesne verilmedi.")?;
     reference_rule(input)?;
     checks::revision(doc, input.expected_revision.as_deref())?;

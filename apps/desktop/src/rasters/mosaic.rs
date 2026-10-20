@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, MosaicOrder, MosaicResolution, RastersMosaic, RastersMosaicked,
 };
 use kentos_domain::NewLayer;
@@ -643,14 +643,14 @@ mod tests {
         app
     }
 
-    fn rasters(app: &App) -> Vec<kentos_contracts::RasterEntity> {
+    fn rasters(app: &App) -> Vec<kentos_commands::RasterEntity> {
         app.document
             .as_ref()
             .expect("a drawing")
             .model
             .entities()
             .filter_map(|e| match e {
-                kentos_contracts::Entity::Raster(r) => Some(r.clone()),
+                kentos_commands::Entity::Raster(r) => Some(r.clone()),
                 _ => None,
             })
             .collect()

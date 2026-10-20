@@ -24,8 +24,8 @@ impl App {
         let doc = self.document.as_mut()?;
         let answer = kentos_native_application::registry::run(
             &mut ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_RECORDS_CREATE,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_RECORDS_CREATE,
+            kentos_commands::CallOp::Execute,
             input,
         );
         match answer {
@@ -105,8 +105,8 @@ impl App {
         }
         let answer = kentos_native_application::registry::run(
             &mut ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_RECORDS_DUPLICATE,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_RECORDS_DUPLICATE,
+            kentos_commands::CallOp::Execute,
             serde_json::json!({ "uids": uids }),
         );
         match answer {

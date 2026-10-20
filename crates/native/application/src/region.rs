@@ -13,7 +13,7 @@
 //! `cad.entities.create`'s `boundary` and `hatch` operations
 //! ([`crate::creating`]).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesBoundary, EntitiesCreate,
     EntitiesCreatePlan, EntitiesCreated, EntitiesHatch, EntityGeometry, EntityId, HatchAssoc,
     HatchPattern as ContractPattern, HatchPatternSpec, HatchPatternType, HatchRegion, HatchWay,
@@ -239,7 +239,7 @@ pub fn faces_bridged(
     layer: Option<&str>,
     gap: f64,
 ) -> (FaceIndex, Vec<Bridge>) {
-    let on_layer = |e: &kentos_contracts::Entity| layer.is_none_or(|l| e.base().layer_id == l);
+    let on_layer = |e: &kentos_commands::Entity| layer.is_none_or(|l| e.base().layer_id == l);
     let lines: Vec<CoreEntity> = match set {
         Some(TrimBoundaries::Objects { uids }) => uids
             .iter()
@@ -419,8 +419,8 @@ pub mod entities_boundary {
     ) -> CommandResult<EntitiesCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_BOUNDARY,
-            kentos_contracts::CAD_ENTITIES_BOUNDARY_VERSION,
+            kentos_commands::CAD_ENTITIES_BOUNDARY,
+            kentos_commands::CAD_ENTITIES_BOUNDARY_VERSION,
             input,
             |cx, input| match check_boundary(cx.doc, cx.store, &input, &mut RegionCache::default())
             {
@@ -560,7 +560,7 @@ fn cut_part(
 /// The pattern a tool previews for the spec: [`pattern_of_spec`]'s, none where the command would refuse it.
 pub fn spec_pattern(
     spec: &HatchPatternSpec,
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> Option<ContractPattern> {
     pattern_of_spec(spec, settings).ok()
 }
@@ -570,12 +570,12 @@ pub fn spec_pattern(
 /// drawing (`basis`); Ölçekli only on paper.
 pub(crate) fn pattern_of_spec(
     spec: &HatchPatternSpec,
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> Result<ContractPattern, Stop> {
     let own = settings
         .hatch_patterns
         .iter()
-        .find(|d| kentos_contracts::same_hatch_pattern_name(&d.name, &spec.name));
+        .find(|d| kentos_commands::same_hatch_pattern_name(&d.name, &spec.name));
     let choice = choice_named(&spec.name);
     if own.is_none() && choice.is_none() {
         return Err(refuse(
@@ -612,8 +612,8 @@ pub(crate) fn pattern_of_spec(
             )
         })?,
     };
-    let world = spec.basis == Some(kentos_contracts::ScaleBasis::World);
-    if let Some(kentos_contracts::HatchOrigin::Point { at }) = &spec.origin {
+    let world = spec.basis == Some(kentos_commands::ScaleBasis::World);
+    if let Some(kentos_commands::HatchOrigin::Point { at }) = &spec.origin {
         checks::point(*at, "Desenin başlangıç noktasının", "pattern.origin.at")?;
     }
     if spec.annotative == Some(true) && world {
@@ -675,8 +675,8 @@ pub(crate) fn pattern_of_spec(
 }
 
 /// A box's corner or middle.
-fn corner_of(b: (Vec2, Vec2), c: kentos_contracts::BoxCorner) -> Point {
-    use kentos_contracts::BoxCorner as C;
+fn corner_of(b: (Vec2, Vec2), c: kentos_commands::BoxCorner) -> Point {
+    use kentos_commands::BoxCorner as C;
     let (lo, hi) = b;
     let (x, y) = match c {
         C::BottomLeft => (lo.x, lo.y),
@@ -708,11 +708,11 @@ pub fn box_of<'a>(rings: impl IntoIterator<Item = &'a [Vec2]>) -> Option<(Vec2, 
 /// The pattern's origin for a region of box `own` among regions of box `all` (docs/adr/0331 §2): the world's (none),
 /// a point, or a corner of the region's box or, `across`, of them all.
 pub fn origin_of(
-    spec: Option<&kentos_contracts::HatchOrigin>,
+    spec: Option<&kentos_commands::HatchOrigin>,
     own: Option<(Vec2, Vec2)>,
     all: Option<(Vec2, Vec2)>,
 ) -> Option<Point> {
-    use kentos_contracts::HatchOrigin as O;
+    use kentos_commands::HatchOrigin as O;
     match spec? {
         O::World => None,
         O::Point { at } => Some(*at),
@@ -1230,13 +1230,13 @@ fn check_hatch(
             ..
         } => {
             checks::point(*at, "Tıklanan noktanın", "region.at")?;
-            if also_at.len() > kentos_contracts::MAX_HATCH_POINTS {
+            if also_at.len() > kentos_commands::MAX_HATCH_POINTS {
                 return Err(refuse(
                     codes::INVALID_REGION,
                     format!(
                         "{} ek nokta verildi; en çok {} olur. Bölgeleri birkaç komutla tarayın.",
                         also_at.len(),
-                        kentos_contracts::MAX_HATCH_POINTS
+                        kentos_commands::MAX_HATCH_POINTS
                     ),
                     "region.alsoAt",
                 ));
@@ -1245,13 +1245,13 @@ fn check_hatch(
                 checks::point(*q, "Ek noktanın", &format!("region.alsoAt[{i}]"))?;
             }
             if let Some(g) = gap
-                && !(g.is_finite() && *g >= 0.0 && *g <= kentos_contracts::MAX_HATCH_GAP)
+                && !(g.is_finite() && *g >= 0.0 && *g <= kentos_commands::MAX_HATCH_GAP)
             {
                 return Err(refuse(
                     codes::INVALID_GAP,
                     format!(
                         "Boşluk toleransı {g}; 0 ile {} m arasında sonlu bir sayı olmalı.",
-                        kentos_contracts::MAX_HATCH_GAP
+                        kentos_commands::MAX_HATCH_GAP
                     ),
                     "region.gap",
                 ));
@@ -1284,7 +1284,7 @@ fn check_hatch(
         }
     };
     if let Some(x) = input.transparency
-        && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+        && !(x.is_finite() && (0.0..=kentos_commands::MAX_TRANSPARENCY).contains(&x))
     {
         return Err(refuse(
             codes::INVALID_TRANSPARENCY,
@@ -1335,7 +1335,7 @@ fn check_hatch(
     let all = box_of(rings.iter().map(Vec::as_slice));
     // Ölçekli (docs/adr/0331 §3): at the drawing's scale, its pattern as large on paper at each other.
     let annotative = (input.pattern.annotative == Some(true)).then(|| {
-        Box::new(kentos_contracts::Annotative {
+        Box::new(kentos_commands::Annotative {
             at: doc.settings().plot_scale,
             scales: Vec::new(),
         })
@@ -1528,13 +1528,13 @@ pub(crate) fn point_region_checks(doc: &Document, region: &HatchRegion, at: &str
         ));
     }
     if let Some(g) = gap
-        && !(g.is_finite() && *g >= 0.0 && *g <= kentos_contracts::MAX_HATCH_GAP)
+        && !(g.is_finite() && *g >= 0.0 && *g <= kentos_commands::MAX_HATCH_GAP)
     {
         return Err(refuse(
             codes::INVALID_GAP,
             format!(
                 "Boşluk toleransı {g}; 0 ile {} m arasında sonlu bir sayı olmalı.",
-                kentos_contracts::MAX_HATCH_GAP
+                kentos_commands::MAX_HATCH_GAP
             ),
             &format!("{at}.gap"),
         ));
@@ -1557,7 +1557,7 @@ pub(crate) fn hatch_ties_of(
     p: &Planned,
     region: &HatchRegion,
     associative: bool,
-) -> (Option<HatchAssoc>, Option<Vec<kentos_contracts::HatchLoop>>) {
+) -> (Option<HatchAssoc>, Option<Vec<kentos_commands::HatchLoop>>) {
     let (tie, sources) = match (&p.tie, region) {
         (Some(tie), _) => {
             let shapes = std::iter::once(tie.outer)
@@ -1671,8 +1671,8 @@ pub mod entities_hatch {
     ) -> CommandResult<EntitiesCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_HATCH,
-            kentos_contracts::CAD_ENTITIES_HATCH_VERSION,
+            kentos_commands::CAD_ENTITIES_HATCH,
+            kentos_commands::CAD_ENTITIES_HATCH_VERSION,
             input,
             |cx, input| match check_hatch(cx.doc, cx.store, &input, cx.job) {
                 Ok((_, objects, warnings)) => {
@@ -1728,14 +1728,14 @@ mod budget_tests {
             "pts":[{"x":0,"y":0},{"x":10,"y":0},{"x":10,"y":10},{"x":0,"y":10}]}],
             "styles":{"items":[],"categories":[]}});
         let mut doc = Document::from_snapshot(
-            kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
+            kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string()).expect("reads"),
         )
         .expect("opens");
         let at = doc.revision();
-        let envelope = kentos_contracts::CallEnvelope {
-            command: kentos_contracts::CAD_ENTITIES_HATCH.into(),
+        let envelope = kentos_commands::CallEnvelope {
+            command: kentos_commands::CAD_ENTITIES_HATCH.into(),
             version: None,
-            op: kentos_contracts::CallOp::Execute,
+            op: kentos_commands::CallOp::Execute,
             input: serde_json::json!({"region": {"kind": "point", "at": {"x": 5, "y": 5}}, "pattern": {"name": "ANSI31"},
                                       "layerId": "a"}),
             request_id: None,

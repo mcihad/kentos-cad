@@ -5,7 +5,7 @@
 //! keeps none). The document's `set_layer_snap` is an edit, not an undo step,
 //! as a lock is.
 
-use kentos_contracts::{LayerNode, LayerNodeType, LayerSnap};
+use kentos_commands::{LayerNode, LayerNodeType, LayerSnap};
 use kentos_domain::LayerTree;
 use kentos_ui::widget::Menu;
 use kentos_ui::widget::tree_view::Toggle;

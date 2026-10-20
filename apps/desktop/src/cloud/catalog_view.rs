@@ -12,7 +12,7 @@ use iced::widget::{
     text_input,
 };
 use iced::{Background, Border, Center, Element, Fill, Length, Theme, mouse};
-use kentos_contracts::{CatalogView, ProjectSummary};
+use kentos_commands::{CatalogView, ProjectSummary};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Choice, Select};

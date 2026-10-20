@@ -7,7 +7,7 @@
 use std::path::{Path, PathBuf};
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, TableRefresh, TableSource, TablesEdit, TablesEdited, TablesOperation,
 };
 use kentos_domain::{Slot, Uuid};

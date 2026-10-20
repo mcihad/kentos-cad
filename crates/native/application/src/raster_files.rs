@@ -141,7 +141,7 @@ pub struct Written {
     pub path: Option<PathBuf>,
     pub bytes: Option<Vec<u8>>,
     pub bands: u32,
-    pub sample: kentos_contracts::RasterSample,
+    pub sample: kentos_commands::RasterSample,
     pub alpha: bool,
 }
 

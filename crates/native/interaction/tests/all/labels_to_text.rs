@@ -10,7 +10,7 @@
 use crate::common;
 
 use common::{Bench, E, N};
-use kentos_contracts::{Entity, PathEntity, PointEntity, TextAlign, TextEntity, Vec2, Workspace};
+use kentos_commands::{Entity, PathEntity, PointEntity, TextAlign, TextEntity, Vec2, Workspace};
 use kentos_domain::Slot;
 use kentos_interaction::labels_to_text::read_scale;
 use kentos_interaction::{LabelSpot, Level, Spatial};
@@ -31,7 +31,7 @@ fn pt(x: f64, y: f64) -> Vec2 {
     Vec2 { x: E + x, y: N + y }
 }
 
-fn labelled(mut base: kentos_contracts::EntityBase, label: &str) -> kentos_contracts::EntityBase {
+fn labelled(mut base: kentos_commands::EntityBase, label: &str) -> kentos_commands::EntityBase {
     base.label = Some(label.to_owned());
     base
 }
@@ -366,7 +366,7 @@ fn an_object_whose_label_a_text_writes_shows_none_of_its_own() {
             align: Some(TextAlign::MiddleCenter),
             width_factor: None,
             mask: false,
-            label_of: Some(kentos_contracts::EntityId(*parcel.as_bytes())),
+            label_of: Some(kentos_commands::EntityId(*parcel.as_bytes())),
             label_scale: Some(1000.0),
             paragraph: Default::default(),
             face: Default::default(),

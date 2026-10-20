@@ -21,7 +21,7 @@ use iced::futures::StreamExt as _;
 use iced::futures::executor::block_on;
 use iced::{Size, Task};
 use kentos_cloud::SaveState;
-use kentos_contracts::{Entity, ProjectStorage};
+use kentos_commands::{Entity, ProjectStorage};
 use kentos_domain::{Slot, Uuid};
 use kentos_ui::snapshot::Snapshot;
 
@@ -336,7 +336,7 @@ fn upload(r: &mut Runner, name: &str, storage: ProjectStorage, shot: Option<&str
 /// “Çizim” at `x`, as Blok oluştur and Blok ekle write them: its id.
 fn define_block(r: &mut Runner, name: &str, x: f64) -> String {
     let id = Uuid::now_v7().to_string();
-    let block: kentos_contracts::BlockDefinition = serde_json::from_value(serde_json::json!({
+    let block: kentos_commands::BlockDefinition = serde_json::from_value(serde_json::json!({
         "id": id, "name": name, "base": { "x": 0, "y": 0 },
         "entities": [
             { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } },
@@ -368,7 +368,7 @@ fn rename_block(r: &mut Runner, id: &str, name: &str) {
         .expect("defined");
     assert!(
         doc.model
-            .update_block(kentos_contracts::BlockDefinition {
+            .update_block(kentos_commands::BlockDefinition {
                 name: name.into(),
                 ..block
             })
@@ -780,7 +780,7 @@ fn cloud_live() {
 fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
     use crate::cloud::share::{Event as Share, FIND_FIELD, Listed, Tab};
     use iced::advanced::widget::operation::{focusable, text_input};
-    use kentos_contracts::{GrantRole, InvitationState};
+    use kentos_commands::{GrantRole, InvitationState};
 
     r.cloud(Event::Share(Share::Open));
     r.until("erişimi olanlar", Duration::from_secs(15), |a| {
@@ -903,7 +903,7 @@ fn share_live(r: &mut Runner, mehmet: &str, stamp: &str) {
 fn forms_live(r: &mut Runner, file_project: &str, db_project: &str, stamp: &str) -> Vec<String> {
     use crate::cloud::catalog::List;
     use crate::cloud::catalog_forms::{Event as FormEvent, Form};
-    use kentos_contracts::CatalogView;
+    use kentos_commands::CatalogView;
 
     let listed = |id: String| {
         move |a: &App| {
@@ -1021,7 +1021,7 @@ fn catalog_live(
     use crate::cloud::catalog::{Details, List, Tab};
     use crate::cloud::catalog_actions::Act;
     use crate::cloud::catalog_history::{HistoryState, Point};
-    use kentos_contracts::CatalogView;
+    use kentos_commands::CatalogView;
 
     let listed = |id: String| {
         move |a: &App| {

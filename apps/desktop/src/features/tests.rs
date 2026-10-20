@@ -7,7 +7,7 @@ use crate::bottom::BottomTab;
 
 fn app_with_table() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../fixtures/interaction/v1/feature-table.kcad"
     ))
     .expect("the drawing reads");
@@ -148,7 +148,7 @@ fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_n
         .expect("a plan");
     // “12,5” is no number to the language: its result is empty and the old value stays.
     assert_eq!((plan.changed, plan.kept), (4, 1), "{plan:?}");
-    write(&mut app, W::Run(kentos_contracts::WritePolicy::All));
+    write(&mut app, W::Run(kentos_commands::WritePolicy::All));
     assert!(app.features.write.is_none());
     assert!(rows(&app)[0].contains("| 801 |"), "{:?}", rows(&app));
     let _ = app.update(Message::Run("edit.undo"));
@@ -167,7 +167,7 @@ fn alan_hesapla_previews_then_writes_in_one_step_and_a_paste_reports_what_does_n
         .expect("planned")
         .expect("a plan");
     assert_eq!((plan.changed, plan.invalid), (1, 1), "{plan:?}");
-    write(&mut app, W::Run(kentos_contracts::WritePolicy::Valid));
+    write(&mut app, W::Run(kentos_commands::WritePolicy::Valid));
     assert!(rows(&app)[0].contains("| 8 |"), "{:?}", rows(&app));
     assert!(rows(&app)[1].contains("| 12 |"), "{:?}", rows(&app));
 }

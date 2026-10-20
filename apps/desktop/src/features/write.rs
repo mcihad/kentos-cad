@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{Column, row, text_input};
 use iced::{Element, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EmptyResult, FieldRow, FieldsWrite, FieldsWriteOp, FieldsWritten, WritePolicy,
 };
 use kentos_domain::Slot;

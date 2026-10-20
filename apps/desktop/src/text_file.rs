@@ -102,7 +102,7 @@ impl App {
                         name,
                         path,
                         id,
-                        library: kentos_contracts::ProjectStyles {
+                        library: kentos_commands::ProjectStyles {
                             items: vec![item],
                             categories: Vec::new(),
                         },

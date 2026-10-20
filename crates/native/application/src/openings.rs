@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, NewOpening, OpeningAnchor, OpeningEntity, OpeningFields, OpeningForm, OpeningFrom,
     OpeningSide, OpeningTypeDef, Vec2, WallEnd, WallEntity, builtin_opening_types,
 };
@@ -181,7 +181,7 @@ pub(crate) fn centre_of(
     });
     if let Some(d) = n.distance {
         let at =
-            match kentos_contracts::wall_end_of(n.from.unwrap_or(OpeningFrom::Near), s, p.length) {
+            match kentos_commands::wall_end_of(n.from.unwrap_or(OpeningFrom::Near), s, p.length) {
                 WallEnd::Start => d + width / 2.0,
                 WallEnd::End => p.length - d - width / 2.0,
             };
@@ -300,6 +300,6 @@ pub(crate) fn clear_of_others(
 }
 
 /// An opening as the document stores it, given its base.
-pub(crate) fn entity(base: kentos_contracts::EntityBase, opening: OpeningFields) -> Entity {
+pub(crate) fn entity(base: kentos_commands::EntityBase, opening: OpeningFields) -> Entity {
     Entity::Opening(OpeningEntity { base, opening })
 }

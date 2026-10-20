@@ -6,7 +6,7 @@
 
 use iced::widget::{Column, column, container, text_input};
 use iced::{Element, Fill};
-use kentos_contracts::{
+use kentos_commands::{
     CrsTransformed, GeoidModel, HeightKind, HeightReference, StepKind, VERTICAL_SYSTEMS,
 };
 use kentos_ui::theme::typography;
@@ -104,7 +104,7 @@ pub fn read(t: &Texts, system: bool) -> Result<Read, (&'static str, String)> {
                 "Epok ondalık bir yıl olmalı (2023.5 gibi).".to_owned(),
             )
         })?;
-        if let Some(why) = kentos_contracts::epoch_problem(e) {
+        if let Some(why) = kentos_commands::epoch_problem(e) {
             return Err(("coordinateEpoch", format!("Epok: {why}.")));
         }
         if !system {
@@ -336,7 +336,7 @@ pub(super) fn view<'a>(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{GeoidModel, HeightKind, HeightReference};
+    use kentos_commands::{GeoidModel, HeightKind, HeightReference};
 
     use super::Edit;
     use crate::app::{App, Message};

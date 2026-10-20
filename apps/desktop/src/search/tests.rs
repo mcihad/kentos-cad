@@ -15,7 +15,7 @@ const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/data-sea
 fn app_on(drawing: &str) -> App {
     let (mut app, _) = App::boot(None);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(drawing).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(drawing).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -223,7 +223,7 @@ fn the_mark_is_the_open_drawings_only() {
     ev(&mut app, Event::Submit);
     assert!(app.data_mark().is_some());
     // Another drawing: the place is not on it.
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../fixtures/interaction/v1/empty.kcad"
     ))
     .expect("reads");

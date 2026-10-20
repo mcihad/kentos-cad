@@ -15,7 +15,7 @@
 use iced::widget::{button, column, container, row, stack, text};
 use iced::{Color, Element, Fill};
 
-use kentos_contracts::{DrawingFont, LayerNode, LayerNodeType};
+use kentos_commands::{DrawingFont, LayerNode, LayerNodeType};
 use kentos_interaction::Format;
 use kentos_render_wgpu::Rgba8;
 use kentos_ui::icon::Icon;
@@ -1615,10 +1615,10 @@ impl App {
         let mut layers_menu = Menu::new();
         if let Some(doc) = &self.document {
             let layers = doc.model.layers();
-            let mut stack: Vec<&kentos_contracts::LayerNode> =
+            let mut stack: Vec<&kentos_commands::LayerNode> =
                 layers.nodes().iter().rev().collect();
             while let Some(node) = stack.pop() {
-                if node.kind == kentos_contracts::LayerNodeType::Group {
+                if node.kind == kentos_commands::LayerNodeType::Group {
                     layers_menu =
                         layers_menu.header(crate::properties::layer_path(layers, &node.id));
                     stack.extend(node.children.iter().rev());

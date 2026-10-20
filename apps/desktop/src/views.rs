@@ -17,7 +17,7 @@
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{NamedView, ViewsEdit, ViewsEdited, ViewsOp};
+use kentos_commands::{NamedView, ViewsEdit, ViewsEdited, ViewsOp};
 use kentos_interaction::{Level, ViewChange};
 use kentos_native_application::{ExecutionContext, views_edit};
 use kentos_ui::theme::{Tokens, typography};
@@ -512,7 +512,7 @@ mod tests {
             .max_by_key(|e| e.base().id)
             .expect("the polyline")
             .clone();
-        let kentos_contracts::Entity::Polyline(p) = &newest else {
+        let kentos_commands::Entity::Polyline(p) = &newest else {
             panic!("a polyline: {newest:?}");
         };
         for (c, q) in corners.iter().zip(&p.pts) {

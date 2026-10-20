@@ -19,7 +19,7 @@ use std::fmt;
 
 use iced::widget::{Id, operation};
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     DOCUMENT_VERSION_2, DocumentSnapshotV2, DrawingFont, DrawingUnit, Workspace,
 };
 use kentos_interaction::Level;

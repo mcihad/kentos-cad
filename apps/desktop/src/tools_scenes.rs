@@ -348,7 +348,7 @@ pub(crate) fn open_edited(app: &mut App, objects: Objects, edit: impl FnOnce(&mu
     d["entities"] = Value::Array(objects.0);
     edit(&mut d);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(&d.to_string()).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
 }

@@ -21,7 +21,7 @@
 //! sil. The preview is the command's plan and the click its write, one
 //! computation, the shared core's, as Python and MCP get it.
 
-use kentos_contracts::{CommandResult, EntitiesOffset, OffsetBy};
+use kentos_commands::{CommandResult, EntitiesOffset, OffsetBy};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::offset::through_distance;
 use kentos_geometry_core::tools::point_text::js_trim;

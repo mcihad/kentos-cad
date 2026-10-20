@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{
+use kentos_commands::{
     ArcEntity, Entity, EntityGeometry, LineEntity, PathEntity, PointEntity, RingGeometry,
     TextEntity, Vec2,
 };
@@ -481,7 +481,7 @@ fn the_objects_it_takes_are_paths_with_their_elevations_and_come_back_the_same()
                 zs: None,
             }]),
             zs: None,
-            parts: Some(vec![kentos_contracts::AreaPart {
+            parts: Some(vec![kentos_commands::AreaPart {
                 ms: None,
                 pts: vec![pt(10.0, 0.0), pt(14.0, 0.0), pt(14.0, 4.0)],
                 bulges: None,

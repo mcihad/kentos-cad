@@ -38,7 +38,7 @@ pub mod traverse;
 
 use iced::widget::column;
 use iced::{Element, Task};
-use kentos_contracts::{CreateOperation, Entity};
+use kentos_commands::{CreateOperation, Entity};
 use kentos_interaction::calc::SurveyPoint;
 use kentos_interaction::pick::PickPoint;
 use kentos_interaction::{Format, Level, Vec2, fixed};
@@ -589,7 +589,7 @@ impl App {
                     .then(|| read::point_named(&doc.model, text))
                     .flatten()
                     .and_then(crate::exchange::field_send::field_point);
-                points.push(of_drawing.unwrap_or(kentos_contracts::FieldPoint {
+                points.push(of_drawing.unwrap_or(kentos_commands::FieldPoint {
                     name,
                     east: p.x,
                     north: p.y,

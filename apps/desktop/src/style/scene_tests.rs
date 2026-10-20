@@ -6,7 +6,7 @@
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use kentos_contracts::{
+use kentos_commands::{
     AngleUnit, AreaUnit, DocumentSnapshotV1, Entity, EntityBase, LayerNode, LayerNodeType,
     LayerStyle, LineType, PathEntity, ProjectSettings, ProjectStyles, Vec2,
 };
@@ -435,7 +435,7 @@ fn the_parts_draw_what_the_layer_built_whole_draws() {
 fn a_changed_definition_draws_its_inserts_again() {
     let library = kentos_native_style::system::library();
     let mut doc = drawing(10, None);
-    let block: kentos_contracts::BlockDefinition = serde_json::from_value(json!({
+    let block: kentos_commands::BlockDefinition = serde_json::from_value(json!({
         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0001", "name": "Rögar", "base": { "x": 0, "y": 0 },
         "entities": [{ "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } }]
     }))
@@ -451,7 +451,7 @@ fn a_changed_definition_draws_its_inserts_again() {
     let mut cache = StyledCache::default();
     let before = scene_of(&mut cache, &doc, &mut spatial, &library);
     // A new base point: the insert draws its line elsewhere.
-    let moved = kentos_contracts::BlockDefinition {
+    let moved = kentos_commands::BlockDefinition {
         base: Vec2 { x: 5.0, y: 5.0 },
         ..block
     };
@@ -473,7 +473,7 @@ fn a_changed_definition_draws_its_inserts_again() {
 fn a_block_s_pieces_take_the_insert_s_line_type_and_transparency() {
     let library = kentos_native_style::system::library();
     let mut doc = drawing(1, None);
-    let block: kentos_contracts::BlockDefinition = serde_json::from_value(json!({
+    let block: kentos_commands::BlockDefinition = serde_json::from_value(json!({
         "id": "0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d0002", "name": "Kapı", "base": { "x": 0, "y": 0 },
         "entities": [
             { "kind": "line", "id": 1, "layerId": "", "attrs": {}, "a": { "x": -2, "y": 0 }, "b": { "x": 2, "y": 0 } },

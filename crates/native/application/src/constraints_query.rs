@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, ConstraintsListed, ConstraintsQuery, EntityId, ListedConstraint, rule_label,
 };
 use kentos_domain::{Document, Uuid};

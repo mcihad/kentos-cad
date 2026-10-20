@@ -36,7 +36,7 @@ use iced::{Center, Color, Element, Fill, Theme};
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockId, DimensionEntity, EntitiesSetProperties, Entity, LeaderEntity, PropertiesOperation,
 };
 use kentos_domain::Slot;
@@ -67,18 +67,18 @@ pub enum Event {
     Weight(Vec<Slot>, Option<f64>),
     /// Çizgi tipi ▾, Çizgi tipi ölçeği ▾, Saydamlık ▾ (docs/adr/0260 §2, §3):
     /// the objects' own; none, their source's (a scale of 1).
-    LineType(Vec<Slot>, Option<kentos_contracts::LineType>),
+    LineType(Vec<Slot>, Option<kentos_commands::LineType>),
     /// A project line type with a pattern by its name (docs/adr/0313 §7); none: none.
     LinePattern(Vec<Slot>, Option<String>),
     LineTypeScale(Vec<Slot>, Option<f64>),
     Transparency(Vec<Slot>, Option<f64>),
     /// Maske ▾ of areas (docs/adr/0310 §5): a mask with its frame or without, or an ordinary area.
-    Wipeout(Vec<Slot>, Option<kentos_contracts::Wipeout>),
+    Wipeout(Vec<Slot>, Option<kentos_commands::Wipeout>),
     /// Desen ▾ of a hatch: one of Tarama's choices (docs/adr/0186 §7), its
     /// Ölçek and Açı carried over.
     Pattern(Slot, usize),
     /// Degrade biçimi ▾, Ters ▾ and İkinci renk ▾ of a gradient hatch.
-    GradientShape(Slot, kentos_contracts::GradientShape),
+    GradientShape(Slot, kentos_commands::GradientShape),
     GradientInverted(Slot, bool),
     GradientColour(Slot, String),
     /// Blok ▾ of an insert: the block it places (docs/adr/0144).
@@ -86,7 +86,7 @@ pub enum Event {
     /// Aynalı ▾ of an insert.
     InsertMirror(Slot, bool),
     /// A dynamic block's insert's value chosen (docs/adr/0319 §3): a flip, a visibility state, a lookup row.
-    Parameter(Slot, String, kentos_contracts::ParamValue),
+    Parameter(Slot, String, kentos_commands::ParamValue),
     /// Değerler ▾ › Hepsini varsayılana döndür.
     ParametersReset(Slot),
     /// Kaynak ▾'s Göm of a linked picture: its file read and kept in the
@@ -95,29 +95,29 @@ pub enum Event {
     /// Kaynak ▾'s Göm of a linked raster (docs/adr/0204 §8).
     EmbedRaster(Slot),
     /// A wall's own field chosen (Hiza, Stil, Uçlar, Kat, Evre): written through `cad.walls.edit` (docs/adr/0339 §6).
-    Wall(Slot, kentos_contracts::WallChange),
+    Wall(Slot, kentos_commands::WallChange),
     /// A wall's joins (docs/adr/0340 §6).
-    WallOp(Slot, kentos_contracts::WallsOperation),
+    WallOp(Slot, kentos_commands::WallsOperation),
     /// An opening's own field chosen, its type replaced (docs/adr/0341 §5): written through `cad.openings.edit`.
-    Opening(Slot, kentos_contracts::OpeningsOperation),
+    Opening(Slot, kentos_commands::OpeningsOperation),
     /// A space's own field chosen (Yöntem, Kat, Evre) or its boundary found again (docs/adr/0342 §5): written through
     /// `cad.spaces.edit`.
-    Space(Slot, kentos_contracts::SpacesOperation),
+    Space(Slot, kentos_commands::SpacesOperation),
     /// A grid's, column's, stair's or ramp's own field chosen, a column freed (docs/adr/0343 §5): written through
     /// `cad.arch.edit`.
-    Arch(Slot, kentos_contracts::ArchOperation),
+    Arch(Slot, kentos_commands::ArchOperation),
     /// A tag's frame or leader (docs/adr/0344 §5), through `cad.tags.edit`.
-    Tag(Slot, kentos_contracts::TagChange),
+    Tag(Slot, kentos_commands::TagChange),
     /// A view mark's side or target (docs/adr/0345 §5), through `cad.viewmarks.edit`.
-    ViewMark(Slot, kentos_contracts::ViewMarksOperation),
+    ViewMark(Slot, kentos_commands::ViewMarksOperation),
     /// Hiza ▾ of texts: each keeps where it is (docs/adr/0145 §6); none, the left of the baseline.
-    TextAlign(Vec<Slot>, Option<kentos_contracts::TextAlign>),
+    TextAlign(Vec<Slot>, Option<kentos_commands::TextAlign>),
     /// Zemin ▾ of texts.
     TextMask(Vec<Slot>, bool),
     /// Kapalı ▾ of a polyline: a closed line, no area (docs/adr/0258 §1).
     PolylineClosed(Vec<Slot>, bool),
     /// Ok ▾ of leaders (none: the filled arrow) and their Zemin ▾ (docs/adr/0146 §7).
-    LeaderArrow(Vec<Slot>, Option<kentos_contracts::LeaderArrow>),
+    LeaderArrow(Vec<Slot>, Option<kentos_commands::LeaderArrow>),
     LeaderMask(Vec<Slot>, bool),
     /// Zemin ▾ of dimensions, and Koordinat ▾ of ordinates: the axis's
     /// angle, 0 for Y and 90 for X (docs/adr/0147 §7).
@@ -139,14 +139,14 @@ pub enum Event {
     /// value's colour (docs/adr/0205 §6).
     DimensionLineColor(Vec<Slot>, Part, Option<String>),
     DimensionLineWeight(Vec<Slot>, Part, Option<f64>),
-    DimensionLineType(Vec<Slot>, Part, Option<kentos_contracts::LineType>),
+    DimensionLineType(Vec<Slot>, Part, Option<kentos_commands::LineType>),
     /// Bağlı nesne ▾ of a linked text: Nesneyi seç selects its object,
     /// Bağı kopar breaks the texts' links (docs/adr/0175 §4).
     SelectObject(Slot),
     Unlink(Vec<Slot>),
     /// A hatch's Sınır ▾: its boundary written again as an area or polylines, the hatch then following it
     /// (docs/adr/0329 §4).
-    RecreateBoundary(Slot, kentos_contracts::BoundaryForm),
+    RecreateBoundary(Slot, kentos_commands::BoundaryForm),
     /// Yazı stili ▾ and Ölçü stili ▾ (docs/adr/0183 §6): the style applied
     /// to the objects; none, Standart.
     TextStyle(Vec<Slot>, Option<String>),
@@ -289,7 +289,7 @@ pub enum Field {
 #[derive(Debug, Clone, PartialEq)]
 pub enum DimensionOp {
     /// The options as they become (none: none).
-    Options(Option<kentos_contracts::DimensionOptions>),
+    Options(Option<kentos_commands::DimensionOptions>),
     /// The value back in its place.
     Home,
     /// The lines whole again.
@@ -750,16 +750,16 @@ impl App {
                 model,
                 &slots,
                 if on {
-                    kentos_contracts::AnnotativeOperation::Make
+                    kentos_commands::AnnotativeOperation::Make
                 } else {
-                    kentos_contracts::AnnotativeOperation::Unmake
+                    kentos_commands::AnnotativeOperation::Unmake
                 },
                 Vec::new(),
             ),
             Event::AnnotativeReset(slots) => kentos_interaction::annotative::run(
                 model,
                 &slots,
-                kentos_contracts::AnnotativeOperation::Reset,
+                kentos_commands::AnnotativeOperation::Reset,
                 Vec::new(),
             ),
             Event::DimensionStyle(slots, id) => {
@@ -778,7 +778,7 @@ impl App {
             }
             Event::DimensionFree(slots) => properties::free_dimensions(model, &slots),
             Event::DimensionEdit(slots, op) => {
-                use kentos_contracts::DimensionEdit as E;
+                use kentos_commands::DimensionEdit as E;
                 properties::edit_dimensions(model, &slots, |uids| match op {
                     DimensionOp::Options(options) => E::Options { uids, options },
                     DimensionOp::Unbreak => E::Unbreak { uids },
@@ -1038,7 +1038,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             }
             let options = (!options.is_empty()).then_some(options);
             return properties::edit_dimensions(model, slots, |uids| {
-                kentos_contracts::DimensionEdit::Options { uids, options }
+                kentos_commands::DimensionEdit::Options { uids, options }
             });
         }
         Field::DimensionZa(slots) | Field::DimensionZb(slots) => {
@@ -1058,7 +1058,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         }
         Field::LeaderArrowSize(slots) => {
             let n = web_number(text);
-            if !kentos_contracts::leader_arrow_holds(n) {
+            if !kentos_commands::leader_arrow_holds(n) {
                 return Vec::new();
             }
             let size = (n != 1.0).then_some(n);
@@ -1076,7 +1076,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::OpeningSill(slot)
         | Field::OpeningHead(slot)
         | Field::OpeningNumber(slot) => {
-            use kentos_contracts::{OpeningChange, OpeningsOperation};
+            use kentos_commands::{OpeningChange, OpeningsOperation};
             let blank = text.trim().is_empty();
             let op = match field {
                 Field::OpeningNumber(_) => {
@@ -1115,7 +1115,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return properties::edit_opening(model, *slot, op);
         }
         Field::Arch(slot, which @ (ArchField::MarkNumber | ArchField::MarkSize)) => {
-            use kentos_contracts::{ViewMarkChange, ViewMarksOperation};
+            use kentos_commands::{ViewMarkChange, ViewMarksOperation};
             let t = kentos_interaction::js_trim(text);
             let c = if *which == ArchField::MarkNumber {
                 ViewMarkChange {
@@ -1135,7 +1135,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return properties::edit_viewmark(model, *slot, ViewMarksOperation::Set(Box::new(c)));
         }
         Field::Arch(slot, which @ (ArchField::TagContent | ArchField::TagSize)) => {
-            use kentos_contracts::TagChange;
+            use kentos_commands::TagChange;
             let t = kentos_interaction::js_trim(text);
             let c = if *which == ArchField::TagContent {
                 TagChange {
@@ -1155,7 +1155,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return properties::edit_tag(model, *slot, c);
         }
         Field::Arch(slot, which) => {
-            use kentos_contracts::{ArchChange, ArchOperation};
+            use kentos_commands::{ArchChange, ArchOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
             let n = web_number(text);
@@ -1198,7 +1198,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
         | Field::SpaceFloor(slot)
         | Field::SpaceWall(slot)
         | Field::SpaceCeiling(slot) => {
-            use kentos_contracts::{SpaceChange, SpacesOperation};
+            use kentos_commands::{SpaceChange, SpacesOperation};
             let t = kentos_interaction::js_trim(text);
             let words = (!t.is_empty()).then(|| t.to_owned());
             let change = match field {
@@ -1250,7 +1250,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 return properties::edit_wall(
                     model,
                     *slot,
-                    kentos_contracts::WallChange {
+                    kentos_commands::WallChange {
                         height: Some(None),
                         ..Default::default()
                     },
@@ -1260,15 +1260,15 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
                 return Vec::new();
             }
             let change = match field {
-                Field::WallWidth(_) => kentos_contracts::WallChange {
+                Field::WallWidth(_) => kentos_commands::WallChange {
                     width: Some(n),
                     ..Default::default()
                 },
-                Field::WallOffset(_) => kentos_contracts::WallChange {
+                Field::WallOffset(_) => kentos_commands::WallChange {
                     offset: Some(n),
                     ..Default::default()
                 },
-                _ => kentos_contracts::WallChange {
+                _ => kentos_commands::WallChange {
                     height: Some(Some(n)),
                     ..Default::default()
                 },
@@ -1310,8 +1310,8 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             return vec![format!(
                 "“{name}” için {} yazın.",
                 match p {
-                    kentos_contracts::BlockParameter::Angle { .. } => "derece olarak bir açı",
-                    kentos_contracts::BlockParameter::Linear { .. } => "bir sayı",
+                    kentos_commands::BlockParameter::Angle { .. } => "derece olarak bir açı",
+                    kentos_commands::BlockParameter::Linear { .. } => "bir sayı",
                     _ => "“doğu, kuzey” olarak iki sayı",
                 }
             )];
@@ -1494,7 +1494,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             true
         }
         (Field::InsertTurn(_), Entity::Insert(i)) if finite => {
-            i.rotation = kentos_contracts::blocks::turn_of(n);
+            i.rotation = kentos_commands::blocks::turn_of(n);
             true
         }
         // A picture keeps its shape: its width sets its height and the other way round (docs/adr/0192 §4).
@@ -1519,7 +1519,7 @@ fn commit(model: &mut kentos_domain::Document, field: &Field, text: &str) -> Vec
             true
         }
         (Field::ImageTurn(_), Entity::Image(i)) if finite => {
-            i.image.rotation = kentos_contracts::blocks::turn_of(n);
+            i.image.rotation = kentos_commands::blocks::turn_of(n);
             true
         }
         (Field::ImageClear(_), Entity::Image(i)) if finite && (0.0..=90.0).contains(&n) => {

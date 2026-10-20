@@ -16,7 +16,7 @@
 //! The angles are stored as given: equal angles are a full turn, as the
 //! document reads them, and no angle is refused for its size.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArcCreate, ArcCreated, ArcEntity, ArcPlan, CommandResult, CommandWarning, Entity, EntityBase,
 };
 use kentos_domain::Document;
@@ -57,8 +57,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ArcCreate) -> CommandResult<ArcPl
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ArcCreate) -> CommandResult<ArcCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ARC_CREATE,
-        kentos_contracts::CAD_ARC_CREATE_VERSION,
+        kentos_commands::CAD_ARC_CREATE,
+        kentos_commands::CAD_ARC_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -109,7 +109,7 @@ fn check(doc: &Document, input: &ArcCreate) -> Result<Vec<CommandWarning>, Stop>
 fn arc(input: ArcCreate, id: u32) -> Entity {
     Entity::Arc(ArcEntity {
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

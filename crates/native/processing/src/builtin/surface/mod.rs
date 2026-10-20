@@ -9,7 +9,7 @@ mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, EntityBase, PathEntity, RasterEntity, RasterFields, RasterSample, RasterStyle, Vec2,
 };
 use kentos_raster::contours::Line;
@@ -251,10 +251,10 @@ fn record_grids(
     spec: &Spec,
     g: &Grids,
     path: Option<&str>,
-) -> Vec<kentos_contracts::RecordGrid> {
+) -> Vec<kentos_commands::RecordGrid> {
     let srid = (f.srid > 0).then_some(f.srid);
     let w = g.source;
-    let mut out = vec![kentos_contracts::RecordGrid {
+    let mut out = vec![kentos_commands::RecordGrid {
         role: "input".into(),
         file: f.file.clone().or_else(|| f.url.clone()),
         affine: f.affine,
@@ -267,7 +267,7 @@ fn record_grids(
     }];
     if let Some(p) = path {
         let (affine, width, height) = g.result;
-        out.push(kentos_contracts::RecordGrid {
+        out.push(kentos_commands::RecordGrid {
             role: "output".into(),
             file: Some(p.to_owned()),
             affine,

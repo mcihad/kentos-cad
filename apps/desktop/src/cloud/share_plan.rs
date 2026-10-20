@@ -8,8 +8,8 @@
 
 use kentos_cloud::ApiFailure;
 #[cfg(test)]
-use kentos_contracts::InvitationAccepted;
-use kentos_contracts::{
+use kentos_commands::InvitationAccepted;
+use kentos_commands::{
     AccessBlock, AccessSource, GrantRole, InvitationChange, InvitationState, ProjectAccessHolder,
     ProjectAccessList, ProjectInvitation, ProjectRole, ProjectStorage, TenantKind,
 };

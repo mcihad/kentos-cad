@@ -10,7 +10,7 @@
 //!
 //! Enter, a quick right click or Esc ends; Esc first drops a half-made mark.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionMeasure, DimensionsCreate, EdgeNear, Entity, MeasuredPoint, NewLook,
 };
 use kentos_domain::{Document, Uuid};

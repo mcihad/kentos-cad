@@ -11,7 +11,7 @@
 //! events and asks, file.rs saves, cells.rs says the cell, view.rs asks the
 //! questions. Both platforms play fixtures/cloud/v1/file-revisions.json.
 
-use kentos_contracts::{EventRecord, FileRevisions, ProjectState};
+use kentos_commands::{EventRecord, FileRevisions, ProjectState};
 
 use super::cells_plan::FileState;
 use super::local_time::{Zone, when};

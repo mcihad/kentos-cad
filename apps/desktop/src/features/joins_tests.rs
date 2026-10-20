@@ -12,7 +12,7 @@ fn app_with_views() -> App {
         "../../../../fixtures/commands/v1/cad.joins.query.json"
     ))
     .expect("the cases read");
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&cases["setup"].to_string())
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&cases["setup"].to_string())
         .expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));

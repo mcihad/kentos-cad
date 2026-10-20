@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.styles.edit.json: the shared cases of `cad.styles.edit` v1 (docs/adr/0248 §4).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_styles.rs: the checks and
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_styles.rs: the checks and
 their order, the codes, paths and words) and from docs/adr/0183's meaning of a style table and of the objects that follow
 it, through the independent reference of those rules (scripts/fixtures/annotation_style_cases.py: the tables' rule, a
 style's face and look, an object following a changed style), without KentOS code:

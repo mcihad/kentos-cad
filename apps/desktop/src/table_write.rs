@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use iced::Task;
 use iced::futures::channel::mpsc;
-use kentos_contracts::{WorkbookFormat, WorkbookSheet, WorkbookWriteInput};
+use kentos_commands::{WorkbookFormat, WorkbookSheet, WorkbookWriteInput};
 use kentos_ui::widget::Menu;
 
 use crate::app::Message;

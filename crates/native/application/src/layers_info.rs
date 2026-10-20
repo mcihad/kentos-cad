@@ -11,7 +11,7 @@
 //! the expected revision; the layer is the drawing's, a layer, not drawn from
 //! a service.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, InfoCard, LayerNode, LayerNodeType, LayersInfo, LayersInfoPlan, LayersInformed,
     actions_problem,
 };
@@ -144,8 +144,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersInfo) -> CommandResult<Laye
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersInfo) -> CommandResult<LayersInformed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_INFO,
-        kentos_contracts::CAD_LAYERS_INFO_VERSION,
+        kentos_commands::CAD_LAYERS_INFO,
+        kentos_commands::CAD_LAYERS_INFO_VERSION,
         input,
         write_execute,
     )

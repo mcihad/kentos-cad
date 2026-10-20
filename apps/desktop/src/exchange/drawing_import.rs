@@ -33,8 +33,8 @@ use std::time::{Duration, Instant};
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, column, container, row};
 use iced::{Bottom, Center, Element, Fill, Length, Right, Task};
-use kentos_contracts::blocks::import_names;
-use kentos_contracts::{
+use kentos_commands::blocks::import_names;
+use kentos_commands::{
     ClosedPolylines, CommandResult, CommandWarning, DrawingUnit, FileUnit, ImportDxf, ImportLayer,
     ImportResult, LayerStyle, NczReadOptions, ReportItem, UnitDecision, UnitSource,
 };
@@ -120,7 +120,7 @@ fn factor_text(f: f64) -> String {
 /// unit (`drawing`; metres with a coordinate system).
 pub(crate) fn unit_said(d: &UnitDecision, drawing: DrawingUnit) -> String {
     let declared = d.declared.map(|code| {
-        kentos_contracts::units::insunits(code).map_or_else(
+        kentos_commands::units::insunits(code).map_or_else(
             || format!("tanınmayan bir birim kodu ({code})"),
             |(_, name)| format!("{name} ($INSUNITS {code})"),
         )
@@ -388,7 +388,7 @@ impl App {
             .as_ref()
             .map(|d| d.settings())
             .filter(|s| !s.has_system())
-            .map_or(DrawingUnit::M, kentos_contracts::ProjectSettings::unit)
+            .map_or(DrawingUnit::M, kentos_commands::ProjectSettings::unit)
     }
 
     /// Opens the window on `file` and reads it on a thread of its own.
@@ -431,7 +431,7 @@ impl App {
             (Some(d), Some(Window::DrawingImport(s))) => {
                 file_import::read_options(&d.model, s.file_unit, s.explode, s.closed)
             }
-            _ => kentos_contracts::DxfReadOptions::default(),
+            _ => kentos_commands::DxfReadOptions::default(),
         };
         let Some(Window::DrawingImport(s)) = &mut self.exchange else {
             return Task::none();

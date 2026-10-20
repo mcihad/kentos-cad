@@ -15,7 +15,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 
 use crate::app::{App, Message};
 use crate::document::Document;

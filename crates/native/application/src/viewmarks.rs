@@ -9,7 +9,7 @@
 //! fields (`invalid_viewmark`), its target in the project (`target_not_found`); 3. the line weight; 4. the expected
 //! revision; 5. the layer. A mark's words are written from its target as the document writes them.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, MarkReference, NewViewMark, TargetReference,
     Vec2, ViewMarkEntity, ViewMarkFields, ViewMarkForm, ViewMarkLabel, ViewMarksCreate,
     ViewMarksCreated, ViewMarksEdit, ViewMarksEdited, ViewMarksOperation, ViewMarksPlan,
@@ -111,11 +111,11 @@ fn check(doc: &Document, input: &ViewMarksCreate) -> Result<(Vec<CommandWarning>
             "marks",
         ));
     }
-    if input.marks.len() > kentos_contracts::MAX_VIEWMARKS {
+    if input.marks.len() > kentos_commands::MAX_VIEWMARKS {
         return Err(invalid(
             format!(
                 "Bir çağrıda en çok {} işaret yazılır; {} verildi.",
-                kentos_contracts::MAX_VIEWMARKS,
+                kentos_commands::MAX_VIEWMARKS,
                 input.marks.len()
             ),
             "marks",
@@ -193,8 +193,8 @@ pub mod create {
     ) -> CommandResult<ViewMarksCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_VIEWMARKS_CREATE,
-            kentos_contracts::CAD_VIEWMARKS_CREATE_VERSION,
+            kentos_commands::CAD_VIEWMARKS_CREATE,
+            kentos_commands::CAD_VIEWMARKS_CREATE_VERSION,
             input,
             write_execute,
         )
@@ -366,8 +366,8 @@ pub mod edit {
     ) -> CommandResult<ViewMarksEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_VIEWMARKS_EDIT,
-            kentos_contracts::CAD_VIEWMARKS_EDIT_VERSION,
+            kentos_commands::CAD_VIEWMARKS_EDIT,
+            kentos_commands::CAD_VIEWMARKS_EDIT_VERSION,
             input,
             write_execute,
         )

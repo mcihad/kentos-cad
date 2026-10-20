@@ -12,7 +12,7 @@ use iced::widget::{button, row, text};
 use iced::{Center, Element, Task};
 use serde_json::Value;
 
-use kentos_contracts::{ResolvedSetting, SettingErrorCode, SettingHost, SettingScope, same_value};
+use kentos_commands::{ResolvedSetting, SettingErrorCode, SettingHost, SettingScope, same_value};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::number::Unit;
@@ -294,7 +294,7 @@ impl App {
         let Some(draft) = &mut self.settings_draft else {
             return Task::none();
         };
-        match kentos_contracts::SettingsFile::from_json(&body, schema()) {
+        match kentos_commands::SettingsFile::from_json(&body, schema()) {
             Err(code) => {
                 draft.note = Some((true, format!("“{name}” alınamadı. {}", code.message())));
             }
@@ -310,15 +310,15 @@ impl App {
                     .filter(|d| !d.hosts.contains(&SettingHost::Desktop))
                     .map(|d| d.title.clone())
                     .collect();
-                let layers = kentos_contracts::SettingsLayers {
+                let layers = kentos_commands::SettingsLayers {
                     user: file.user,
                     device: file.device,
-                    ..kentos_contracts::SettingsLayers::default()
+                    ..kentos_commands::SettingsLayers::default()
                 };
-                let resolved = kentos_contracts::resolve(
+                let resolved = kentos_commands::resolve(
                     schema(),
                     &layers,
-                    &kentos_contracts::SettingsPolicy::default(),
+                    &kentos_commands::SettingsPolicy::default(),
                     &BTreeMap::new(),
                 );
                 for key in KEYS {
@@ -420,7 +420,7 @@ impl App {
                             crate::crs::title(c)
                         )
                     }),
-                "newProjects.workspace" => serde_json::from_value::<kentos_contracts::Workspace>(
+                "newProjects.workspace" => serde_json::from_value::<kentos_commands::Workspace>(
                     value.clone(),
                 )
                 .ok()
@@ -430,17 +430,17 @@ impl App {
                         crate::catalog::mode_of(Some(w))
                     )
                 }),
-                "newProjects.drawingUnit" => serde_json::from_value::<kentos_contracts::DrawingUnit>(
+                "newProjects.drawingUnit" => serde_json::from_value::<kentos_commands::DrawingUnit>(
                     value.clone(),
                 )
                 .ok()
                 .map(|u| {
                     let name = match u {
-                        kentos_contracts::DrawingUnit::Mm => "milimetre",
-                        kentos_contracts::DrawingUnit::Cm => "santimetre",
-                        kentos_contracts::DrawingUnit::M => "metre",
-                        kentos_contracts::DrawingUnit::In => "inç",
-                        kentos_contracts::DrawingUnit::Ft => "ayak",
+                        kentos_commands::DrawingUnit::Mm => "milimetre",
+                        kentos_commands::DrawingUnit::Cm => "santimetre",
+                        kentos_commands::DrawingUnit::M => "metre",
+                        kentos_commands::DrawingUnit::In => "inç",
+                        kentos_commands::DrawingUnit::Ft => "ayak",
                     };
                     format!(
                         "Yeni yerel CAD projeleri {name} biriminde başlayacak. Açık projenin birimi değişmedi."
@@ -566,7 +566,7 @@ struct Pick {
 }
 
 impl Pick {
-    fn choice(self) -> Option<&'static kentos_contracts::SettingChoice> {
+    fn choice(self) -> Option<&'static kentos_commands::SettingChoice> {
         schema()
             .get(self.key)
             .and_then(|d| d.choices.get(self.index))
@@ -588,7 +588,7 @@ impl fmt::Display for Pick {
 /// A setting's choices as a segmented control, the draft's value selected.
 /// A setting with many choices as a list (the drawing typefaces).
 pub(crate) fn listed(key: &'static str, current: &Value) -> Element<'static, Message> {
-    let choices: Vec<kentos_contracts::SettingChoice> = schema()
+    let choices: Vec<kentos_commands::SettingChoice> = schema()
         .get(key)
         .map(|d| d.choices.clone())
         .unwrap_or_default();
@@ -977,7 +977,7 @@ mod tests {
             (r.requested, r.reason),
             (
                 Value::from(8),
-                Some(kentos_contracts::ResolveReason::DeviceUnsupported)
+                Some(kentos_commands::ResolveReason::DeviceUnsupported)
             )
         );
         // 4× could not be made: back to the last working count, said once.

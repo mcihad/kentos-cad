@@ -12,7 +12,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry, RASTER_RAMPS,
     RasterDataset, RasterFields, RasterRender, RasterResampling, RasterStretch, RasterStyle,
 };
@@ -275,7 +275,7 @@ impl App {
                 st.bands = match r {
                     RasterRender::Rgb => {
                         let n = s.original.bands;
-                        if n >= 4 && s.original.sample == kentos_contracts::RasterSample::U8 {
+                        if n >= 4 && s.original.sample == kentos_commands::RasterSample::U8 {
                             vec![1, 2, 3, 4]
                         } else {
                             vec![1, 2, 3.min(n)]

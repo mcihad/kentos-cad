@@ -17,7 +17,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{Entity, JunctionRole, NetworkDef, NetworkDirection};
+use kentos_commands::{Entity, JunctionRole, NetworkDef, NetworkDirection};
 use kentos_geometry_core::ops::network::input::{
     EdgeValues, JunctionValues, TurnValues, from_store, turns_from_store,
 };

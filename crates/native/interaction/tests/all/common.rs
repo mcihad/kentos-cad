@@ -6,7 +6,7 @@
 //! the desktop snaps them (docs/adr/0029).
 #![allow(dead_code)]
 
-use kentos_contracts::{DocumentSnapshotV1, Entity};
+use kentos_commands::{DocumentSnapshotV1, Entity};
 use kentos_domain::Document;
 use kentos_interaction::object_tracking::ObjectTracking;
 use kentos_interaction::{
@@ -235,13 +235,13 @@ impl Bench {
 }
 
 /// A point as east and north differences from (E, N).
-pub fn rel(p: kentos_contracts::Vec2) -> [f64; 2] {
+pub fn rel(p: kentos_commands::Vec2) -> [f64; 2] {
     [p.x - E, p.y - N]
 }
 
 /// Objects added to a test drawing (docs/adr/0140): the fields every object has, on `layer`.
-pub fn base(layer: &str) -> kentos_contracts::EntityBase {
-    kentos_contracts::EntityBase {
+pub fn base(layer: &str) -> kentos_commands::EntityBase {
+    kentos_commands::EntityBase {
         look: Default::default(),
         id: 0,
         layer_id: layer.to_owned(),
@@ -255,8 +255,8 @@ pub fn base(layer: &str) -> kentos_contracts::EntityBase {
     }
 }
 
-fn wire(p: [f64; 2]) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 {
+fn wire(p: [f64; 2]) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 {
         x: E + p[0],
         y: N + p[1],
     }
@@ -265,7 +265,7 @@ fn wire(p: [f64; 2]) -> kentos_contracts::Vec2 {
 impl Bench {
     /// A line from `a` to `b` (east and north differences from (E, N)) on `layer`.
     pub fn add_line(&mut self, layer: &str, a: [f64; 2], b: [f64; 2]) -> kentos_domain::Slot {
-        let line = Entity::Line(kentos_contracts::LineEntity {
+        let line = Entity::Line(kentos_commands::LineEntity {
             ma: None,
             mb: None,
             base: base(layer),
@@ -279,7 +279,7 @@ impl Bench {
 
     /// An open polyline (`closed` false) or a closed area through `pts` on `layer`.
     pub fn add_path(&mut self, layer: &str, pts: &[[f64; 2]], closed: bool) -> kentos_domain::Slot {
-        let path = kentos_contracts::PathEntity {
+        let path = kentos_commands::PathEntity {
             ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
@@ -305,7 +305,7 @@ impl Bench {
         pts: &[[f64; 2]],
         bulges: &[f64],
     ) -> kentos_domain::Slot {
-        let path = kentos_contracts::PathEntity {
+        let path = kentos_commands::PathEntity {
             ms: None,
             base: base(layer),
             pts: pts.iter().map(|p| wire(*p)).collect(),
@@ -321,7 +321,7 @@ impl Bench {
 
     /// A point with an elevation at `at` (east and north differences from (E, N)) on `layer`.
     pub fn add_point_z(&mut self, layer: &str, at: [f64; 2], z: f64) -> kentos_domain::Slot {
-        let point = Entity::Point(kentos_contracts::PointEntity {
+        let point = Entity::Point(kentos_commands::PointEntity {
             base: base(layer),
             p: wire(at),
             z: Some(z),
@@ -332,7 +332,7 @@ impl Bench {
 
     /// A circle about `c` (east and north differences from (E, N)) on `layer`.
     pub fn add_circle(&mut self, layer: &str, c: [f64; 2], r: f64) -> kentos_domain::Slot {
-        let circle = Entity::Circle(kentos_contracts::CircleEntity {
+        let circle = Entity::Circle(kentos_commands::CircleEntity {
             base: base(layer),
             c: wire(c),
             r,
@@ -349,7 +349,7 @@ impl Bench {
         a0: f64,
         a1: f64,
     ) -> kentos_domain::Slot {
-        let arc = Entity::Arc(kentos_contracts::ArcEntity {
+        let arc = Entity::Arc(kentos_commands::ArcEntity {
             base: base(layer),
             c: wire(c),
             r,

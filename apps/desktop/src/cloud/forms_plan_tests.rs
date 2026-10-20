@@ -3,7 +3,7 @@
 //! answers scripts/fixtures/forms_cases.py wrote apart from either program.
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{MembershipView, ProjectStorage, ProjectType};
+use kentos_commands::{MembershipView, ProjectStorage, ProjectType};
 use serde_json::Value;
 
 use super::forms_plan::{self as plan, Metadata, convert, duplicate, fields, metadata, rename};

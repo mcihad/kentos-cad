@@ -11,7 +11,7 @@
 //! Hedef steps through the project's targets (`cad.viewmarks.references`): none, the named views, the sheets' map
 //! frames. A mark written with a number that ends in a digit or is one letter gives the next mark the next number.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, FinishGrid, FinishSurface, GridOrigin, NewViewMark, SpacesFinish,
     ViewMarkForm, ViewMarksCreate, ViewTarget,
 };

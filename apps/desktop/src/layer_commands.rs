@@ -4,7 +4,7 @@
 //! `cad.layers.states`. A refusal is said in the command's words, its
 //! warnings too; the panel says what it did itself.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerSetOperation, LayerStatesDone, LayersChanged, LayersEdit, LayersEdited,
     LayersSet, LayersStates,
 };

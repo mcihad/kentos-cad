@@ -2,7 +2,7 @@
 //! take when the drawing holds 100 000 other objects, for a curve through 2 000 points and one of 10 000 control
 //! points. The shared cases are `fixtures/commands/v1/cad.curves.edit.json`.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, CurveEdit, CurvesEdit, DocumentSnapshotV1, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};

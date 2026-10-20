@@ -30,7 +30,7 @@ fn app_with_store(name: &str) -> (App, kentos_sheet_ui::Store) {
 }
 
 /// The key an older build kept the drawing's book under (its project's id, else its file's name).
-fn key_of(doc: &kentos_contracts::DocumentSnapshotV2, file: &str) -> String {
+fn key_of(doc: &kentos_commands::DocumentSnapshotV2, file: &str) -> String {
     let id = doc
         .project_id
         .map(|p| kentos_domain::Uuid::from_bytes(p.0).to_string());

@@ -4,7 +4,7 @@
 //! sides (lines, open polylines' end edges; docs/adr/0295) or neighbouring
 //! edges of one path.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::tools::editing::{CornerSite, corner_near, shared_corner};

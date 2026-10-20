@@ -7,7 +7,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{AuditedRecord, CommandResult, FormSeverity, FormsAudit, FormsAudited};
+use kentos_commands::{AuditedRecord, CommandResult, FormSeverity, FormsAudit, FormsAudited};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;
@@ -132,8 +132,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FormsAudit) -> CommandResult<Form
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsAudit) -> CommandResult<FormsAudited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_AUDIT,
-        kentos_contracts::CAD_FORMS_AUDIT_VERSION,
+        kentos_commands::CAD_FORMS_AUDIT,
+        kentos_commands::CAD_FORMS_AUDIT_VERSION,
         input,
         |cx, input| respond(cx.doc, &input),
     )

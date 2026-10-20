@@ -912,7 +912,7 @@ fn network<'a>(def: &'a ParamDef, env: &Env<'a, '_>) -> Element<'a, Message> {
     let kept = cost.clone();
     let pick = Select::new(
         networks.iter().map(|n| {
-            Choice::new(n.name.clone()).detail(if n.kind == kentos_contracts::NetworkKind::Road {
+            Choice::new(n.name.clone()).detail(if n.kind == kentos_commands::NetworkKind::Road {
                 "Yol ağı"
             } else {
                 "Şebeke"

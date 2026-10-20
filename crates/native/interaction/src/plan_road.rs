@@ -23,7 +23,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{CreateOperation, EditOperation, EntityEdit, EntityGeometry};
+use kentos_commands::{CreateOperation, EditOperation, EntityEdit, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
@@ -847,7 +847,7 @@ impl Stages for RoadJunctions {
 // ── Refüj kapat ─────────────────────────────────────────────────────────
 
 /// A line's or an open, one-part polyline's path, as the core takes a ring's.
-fn path_of(e: &kentos_contracts::Entity) -> Option<Ring> {
+fn path_of(e: &kentos_commands::Entity) -> Option<Ring> {
     match shape(e) {
         Shape::Line { a, b } => Some(Ring {
             pts: vec![a, b],

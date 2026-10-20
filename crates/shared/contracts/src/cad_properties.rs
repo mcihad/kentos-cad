@@ -268,7 +268,7 @@ pub struct EntitiesSetPropertiesPlan {
 
 /// A field that is absent (`None`: unchanged), null (`Some(None)`: removed)
 /// or a value (`Some(Some(v))`). Plain serde reads null as absent.
-pub(crate) mod nullable {
+pub mod nullable {
     use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
     pub fn serialize<S: Serializer, T: Serialize>(

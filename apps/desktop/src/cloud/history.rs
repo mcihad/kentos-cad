@@ -5,7 +5,7 @@
 //! button from promising what it would refuse, and say which right is
 //! missing.
 
-use kentos_contracts::{
+use kentos_commands::{
     Checkpoint, CheckpointKind, EventRecord, FileRevisions, PROJECT_CHECKPOINT_EVENT,
     PROJECT_FILE_COMMITTED, ProjectPermission, ProjectStorage,
 };

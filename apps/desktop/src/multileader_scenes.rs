@@ -24,7 +24,7 @@ fn command(app: &mut App, name: &str, input: Value) {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         name,
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         input,
     )
     .expect("runs");

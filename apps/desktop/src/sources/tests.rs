@@ -6,7 +6,7 @@
 use std::path::Path;
 use std::sync::Arc;
 
-use kentos_contracts::{DocumentSnapshotV2, ProjectStorage};
+use kentos_commands::{DocumentSnapshotV2, ProjectStorage};
 
 use super::view::Line;
 use super::{Event, ProjectDrawing, Read, SourceFolders, folder_key, project_key, read_folder};

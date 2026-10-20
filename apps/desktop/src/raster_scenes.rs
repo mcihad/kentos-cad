@@ -27,7 +27,7 @@ const Y0: f64 = 4_420_600.0;
 /// The drawing, beside its rasters' folder, the view fitted to `bounds`.
 fn opened(app: &mut App, bounds: [f64; 4]) {
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/interaction/v1/rasters.kcad");
     let doc = Document::new(snapshot, Some(path)).expect("opens");
@@ -294,7 +294,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                 opened(app, [X0 - 360.0, Y0 - 540.0, X0 + 800.0, Y0 + 20.0]);
                 select(app, "tarama");
                 run(app, "raster.georef");
-                app.calc.raster_fit.method = kentos_contracts::GeorefMethod::ThinPlate;
+                app.calc.raster_fit.method = kentos_commands::GeorefMethod::ThinPlate;
                 fit_rows(app, &FIT_ROWS);
             },
             tiles_made,

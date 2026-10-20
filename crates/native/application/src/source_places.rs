@@ -7,8 +7,8 @@
 
 use std::path::{Component, Path, PathBuf};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{ProjectSettings, SourceKind};
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{ProjectSettings, SourceKind};
 use kentos_domain::Document;
 
 /// `file`'s path from `folder`, `/` between its parts; none when the two are not on the same root (another drive)
@@ -169,7 +169,7 @@ mod tests {
             PathBuf::from("/is/ortak/k.gpkg")
         );
         for case in ["veri/k.gpkg", "../ortak/k.gpkg", "../../k.gpkg"] {
-            assert_eq!(kentos_contracts::relative_problem(case), None, "{case}");
+            assert_eq!(kentos_commands::relative_problem(case), None, "{case}");
         }
     }
 }

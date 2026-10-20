@@ -6,7 +6,7 @@
 //! what is wrong); Alanları tanı fills a part's fields from its layer's
 //! names by the core's rules (`ops::geocode::fields`, §13.1).
 
-use kentos_contracts::{
+use kentos_commands::{
     ADDRESS_MIN_SCORE, ADDRESS_MIN_SCORES, ADDRESS_REACH, ADDRESS_REACH_LIMIT, AddressLocator,
     AreaLevel, AreaSource, DoorSource, StreetSource,
 };

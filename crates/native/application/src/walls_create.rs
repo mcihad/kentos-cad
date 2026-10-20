@@ -6,7 +6,7 @@
 //! input's order (`walls::build`: its numbers, its style, its fields as the file checks them, its faces, its level);
 //! 3. the line weight; 4. the expected revision; 5. the layer; 6. each wall's attributes by the layer's fields.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, WallEntity, WallFields, WallStyleDef,
     WallsCreate, WallsCreated, WallsPlan,
 };
@@ -59,8 +59,8 @@ pub fn plan_in(doc: &Document, input: &WallsCreate) -> CommandResult<WallsPlan> 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: WallsCreate) -> CommandResult<WallsCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_WALLS_CREATE,
-        kentos_contracts::CAD_WALLS_CREATE_VERSION,
+        kentos_commands::CAD_WALLS_CREATE,
+        kentos_commands::CAD_WALLS_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -116,12 +116,12 @@ fn check(doc: &Document, input: &WallsCreate) -> Result<Checked, Stop> {
             Some("walls".into()),
         )));
     }
-    if input.walls.len() > kentos_contracts::MAX_WALLS {
+    if input.walls.len() > kentos_commands::MAX_WALLS {
         return Err(Stop::failed(error(
             codes::INVALID_WALL,
             format!(
                 "Bir çağrıda en çok {} duvar yazılır; {} verildi.",
-                kentos_contracts::MAX_WALLS,
+                kentos_commands::MAX_WALLS,
                 input.walls.len()
             ),
             Some("walls".into()),
@@ -164,13 +164,13 @@ fn check(doc: &Document, input: &WallsCreate) -> Result<Checked, Stop> {
 /// The wall as the document stores it; its `id` is the document's to give (0 in a plan).
 fn entity(
     input: &WallsCreate,
-    n: &kentos_contracts::NewWall,
+    n: &kentos_commands::NewWall,
     wall: WallFields,
     attrs: Attrs,
 ) -> Entity {
     Entity::Wall(WallEntity {
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

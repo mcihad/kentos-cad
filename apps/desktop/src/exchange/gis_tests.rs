@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 
 use super::gis_import::{self, Source};
 use super::tests::{count, fixture, run, said, send};
@@ -295,7 +295,7 @@ fn a_geojson_export_writes_what_the_reader_takes_back() {
     let bytes = std::fs::read(&path).expect("written");
     let back = kentos_formats::geojson::read(
         &bytes,
-        &kentos_contracts::GeoJsonReadOptions {
+        &kentos_commands::GeoJsonReadOptions {
             layer: "cizim".into(),
             max_entities: 0,
         },
@@ -353,7 +353,7 @@ fn a_geojson_export_writes_an_insert_as_its_blocks_objects() {
     );
     let back = kentos_formats::geojson::read(
         &std::fs::read(&path).expect("written"),
-        &kentos_contracts::GeoJsonReadOptions {
+        &kentos_commands::GeoJsonReadOptions {
             layer: "bloklar".into(),
             max_entities: 0,
         },

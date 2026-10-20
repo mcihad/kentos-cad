@@ -5,7 +5,7 @@
 //! the apps' time slider reads them (§4). Moments cross as milliseconds since
 //! 1970 (`f64`, open ends ±∞); `kentos.temporal` makes `datetime`s of them.
 
-use kentos_contracts::{LayerNodeType, LayerTime};
+use kentos_commands::{LayerNodeType, LayerTime};
 use kentos_domain::Slot;
 use kentos_geometry_core::time::{self, Mode, Read, Rule, Step, Time, Unit, Window};
 use kentos_headless::HeadlessError;

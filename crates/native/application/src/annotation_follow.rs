@@ -10,7 +10,7 @@
 
 use crate::geometry::{edit_geometry_of, shape};
 use crate::{ExecutionContext, edit};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, ScaleChange, follow_annotation_scale,
 };
 use kentos_domain::{Document, Slot};

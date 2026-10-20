@@ -9,7 +9,7 @@
 //! then the longer overlap, then `i`, then `j`; a line already taken is passed. The wall runs along `i` over the overlap,
 //! moved `d / 2` towards `j`, `d` wide, centred.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, NewWall, Vec2, WallEntity, WallFields,
     WallJustify, WallStyleDef, WallsFromLines, WallsFromLinesDone, WallsFromLinesPlan,
     WallsFromMode,
@@ -256,7 +256,7 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
     let style_fits = |width: f64| match &input.style {
         Some(key) => walls::find_style(doc, key).is_none_or(|(s, _)| {
             s.components.is_empty()
-                || kentos_contracts::component_thicknesses(width, &s.components).is_some()
+                || kentos_commands::component_thicknesses(width, &s.components).is_some()
         }),
         None => true,
     };
@@ -310,8 +310,8 @@ fn check(doc: &Document, input: &WallsFromLines) -> Result<Work, Stop> {
             }
             let max_width = input
                 .max_width
-                .unwrap_or(kentos_contracts::DEFAULT_PAIR_WIDTH);
-            let angle = input.angle.unwrap_or(kentos_contracts::DEFAULT_PAIR_ANGLE);
+                .unwrap_or(kentos_commands::DEFAULT_PAIR_WIDTH);
+            let angle = input.angle.unwrap_or(kentos_commands::DEFAULT_PAIR_ANGLE);
             let paired = pairs(&lines, max_width, angle);
             let mut kept = 0;
             for p in &paired {
@@ -477,8 +477,8 @@ pub fn execute(
 ) -> CommandResult<WallsFromLinesDone> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_WALLS_FROM_LINES,
-        kentos_contracts::CAD_WALLS_FROM_LINES_VERSION,
+        kentos_commands::CAD_WALLS_FROM_LINES,
+        kentos_commands::CAD_WALLS_FROM_LINES_VERSION,
         input,
         write_execute,
     )

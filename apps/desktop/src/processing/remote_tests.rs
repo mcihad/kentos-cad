@@ -5,7 +5,7 @@
 //! natural order; Doğruluk analizi its matrix without touching the drawing;
 //! Bantlara ayır one raster a band.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use serde_json::{Value, json};
 
 use super::RunStatus;

@@ -20,7 +20,7 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::{ApiFailure, Cloud as Client, Replica, ReplicaError};
-use kentos_contracts::{Me, ProjectStorage};
+use kentos_commands::{Me, ProjectStorage};
 use kentos_domain::Uuid;
 use serde_json::Value;
 

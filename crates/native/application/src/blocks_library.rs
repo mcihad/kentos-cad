@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     BLOCKS_FORMAT, BLOCKS_VERSION, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit,
     BlocksEditPlan, BlocksEdited, CommandResult, Entity,
 };
@@ -132,7 +132,7 @@ fn check(
             };
             let blocks = with_inserted(doc, &ids);
             let file = serde_json::json!({ "format": BLOCKS_FORMAT, "version": BLOCKS_VERSION, "blocks": blocks });
-            planned.library = Some(kentos_contracts::canonical::canonical_json(&file));
+            planned.library = Some(kentos_commands::canonical::canonical_json(&file));
         }
         BlockEditOperation::Import => {
             // The file's text, or a library KentOS gives by its name (docs/adr/0318 §4).

@@ -5,7 +5,7 @@
 //! catalog writes it (`status`-tagged), or by the protocol a `CallAnswer`
 //! (docs/adr/0253).
 
-use kentos_contracts::{CallAnswer, CallEnvelope, CallOp, FILE_COMMANDS};
+use kentos_commands::{CallAnswer, CallEnvelope, CallOp, FILE_COMMANDS};
 use kentos_domain::Document;
 use kentos_geometry_core::store::Store;
 use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, call, registry};
@@ -99,12 +99,12 @@ pub fn call_envelope(
     }
     if registry::version_of(&envelope.command).is_none() {
         let e = refusal(&envelope.command);
-        return CallAnswer::of(kentos_contracts::CommandResult::Failed {
-            error: kentos_contracts::CommandError {
+        return CallAnswer::of(kentos_commands::CommandResult::Failed {
+            error: kentos_commands::CommandError {
                 code: e.code.to_owned(),
                 message: e.message,
                 path: Some("command".into()),
-                ..kentos_contracts::CommandError::default()
+                ..kentos_commands::CommandError::default()
             },
         });
     }
@@ -113,7 +113,7 @@ pub fn call_envelope(
 
 /// Why a command is not run here: the server's, or unknown.
 fn refusal(command: &str) -> HeadlessError {
-    let listed = kentos_contracts::catalog::catalog()
+    let listed = kentos_commands::catalog::catalog()
         .commands
         .into_iter()
         .find(|c| c.id == command);

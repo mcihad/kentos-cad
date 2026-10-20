@@ -5,7 +5,7 @@
 //! note's text (docs/adr/0402 §6). The shared cases are
 //! `fixtures/commands/v1/cad.forms.validate.json`.
 
-use kentos_contracts::{CommandResult, FormsValidate, FormsValidated};
+use kentos_commands::{CommandResult, FormsValidate, FormsValidated};
 use kentos_domain::Document;
 use kentos_forms::Prepared;
 
@@ -30,7 +30,7 @@ fn answer(doc: &Document, input: &FormsValidate) -> Result<FormsValidated, Stop>
         && form.releases.last().is_some_and(|r| {
             r.fields
                 .as_ref()
-                .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, fields))
+                .is_some_and(|d| *d != kentos_commands::bound_fields_digest(&r.body, fields))
         });
     let mut issues = forms::preflight_of(doc, body, &form.layer, &variables);
     let mut items = Vec::new();
@@ -107,8 +107,8 @@ pub fn execute(
 ) -> CommandResult<FormsValidated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_VALIDATE,
-        kentos_contracts::CAD_FORMS_VALIDATE_VERSION,
+        kentos_commands::CAD_FORMS_VALIDATE,
+        kentos_commands::CAD_FORMS_VALIDATE_VERSION,
         input,
         |cx, input| respond(cx.doc, &input),
     )

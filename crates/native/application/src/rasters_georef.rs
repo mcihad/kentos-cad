@@ -9,8 +9,8 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::{base64_decode, base64_encode, sha256_hex, sha256_reader_hex};
-use kentos_contracts::{
+use kentos_commands::encoding::{base64_decode, base64_encode, sha256_hex, sha256_reader_hex};
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, GeorefMethod, GeorefOutput, GeorefResidual,
     GeorefSource, MAX_GEOREF_POINTS, RasterEntity, RasterFields, RasterGeoref, RasterRender,
     RasterResampling, RasterSample, RasterStretch, RasterStyle, RastersGeoref, RastersGeoreffed,
@@ -423,7 +423,7 @@ pub struct Fitted {
 pub fn fit(
     doc: &Document,
     input: &RastersGeoref,
-) -> Result<Fitted, Box<kentos_contracts::CommandError>> {
+) -> Result<Fitted, Box<kentos_commands::CommandError>> {
     fitted(doc, input).map_err(|s| Box::new(s.into_error()))
 }
 
@@ -432,7 +432,7 @@ pub fn fit(
 pub fn prepare(
     doc: &Document,
     input: &RastersGeoref,
-) -> Result<Prepared, Box<kentos_contracts::CommandError>> {
+) -> Result<Prepared, Box<kentos_commands::CommandError>> {
     check(doc, input).map_err(|s| Box::new(s.into_error()))
 }
 
@@ -829,7 +829,7 @@ fn same_file(a: &Path, b: &Path) -> bool {
 /// The host's resampled raster read and held to the plan's grid.
 fn made_of(
     doc: &Document,
-    m: &kentos_contracts::GeorefMade,
+    m: &kentos_commands::GeorefMade,
     drawing: Option<&str>,
     grid: Option<&Grid>,
 ) -> Result<(MadeAt, SourceHeader, bool, String), Stop> {
@@ -952,8 +952,8 @@ pub fn execute(
 ) -> CommandResult<RastersGeoreffed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RASTERS_GEOREF,
-        kentos_contracts::CAD_RASTERS_GEOREF_VERSION,
+        kentos_commands::CAD_RASTERS_GEOREF,
+        kentos_commands::CAD_RASTERS_GEOREF_VERSION,
         input,
         write_execute,
     )

@@ -9,7 +9,7 @@ mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, RasterEntity, RasterFields, RasterSample};
+use kentos_commands::{Entity, RasterEntity, RasterFields, RasterSample};
 use kentos_domain::Slot;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::Shape;
@@ -305,7 +305,7 @@ fn raster_object(
     (bands, sample): (u32, RasterSample),
     path: &str,
     srid: u32,
-    style: kentos_contracts::RasterStyle,
+    style: kentos_commands::RasterStyle,
     layer: &str,
 ) -> Entity {
     Entity::Raster(RasterEntity {

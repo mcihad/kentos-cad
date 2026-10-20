@@ -1,6 +1,6 @@
 //! Komut geçmişi's calls (docs/adr/0284) on the desktop.
 
-use kentos_contracts::{ReplayJournal, ReplayOutcome};
+use kentos_commands::{ReplayJournal, ReplayOutcome};
 use kentos_native_application::ExecutionContext;
 use serde_json::json;
 
@@ -100,7 +100,7 @@ fn a_tool_s_command_is_in_the_history_with_its_python_and_replay() {
     let undone = app.row_now(&entry).expect("its row").status;
     assert_eq!(
         undone,
-        kentos_contracts::CallStatus::Undone,
+        kentos_commands::CallStatus::Undone,
         "read as the drawing has it now"
     );
     assert!(super::text::outcome(app.row_now(&entry).expect("row")).ends_with("geri alındı"));
@@ -172,7 +172,7 @@ fn an_edit_without_a_command_has_no_buttons() {
         .history
         .entries
         .iter()
-        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Edit))
+        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_commands::CallKind::Edit))
         .expect("the settings' edit")
         .clone();
     let Call::Row(row) = &edit.call else {
@@ -191,7 +191,7 @@ fn an_edit_without_a_command_has_no_buttons() {
         .history
         .entries
         .iter()
-        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_contracts::CallKind::Command))
+        .find(|e| matches!(&e.call, Call::Row(r) if r.kind == kentos_commands::CallKind::Command))
         .expect("Daire's call")
         .clone();
     assert!(app.call_buttons(&call, false).is_some());

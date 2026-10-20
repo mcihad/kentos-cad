@@ -5,7 +5,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 
 /// A text at (2, 3) on the traces' empty drawing, selected.

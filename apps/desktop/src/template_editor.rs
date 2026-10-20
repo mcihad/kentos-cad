@@ -989,7 +989,7 @@ mod tests {
     //! selected object, the symbol picked in the Stil yöneticisi, and Kaydet
     //! closed while the form has problems.
 
-    use kentos_contracts::ProjectStyles;
+    use kentos_commands::ProjectStyles;
     use kentos_native_style::library::Source;
     use serde_json::json;
 

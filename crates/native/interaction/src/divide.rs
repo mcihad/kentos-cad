@@ -22,7 +22,7 @@
 //! execute the write on the active layer, as one undo step “Böl”:
 //! “4 nokta kondu.”, “4 blok kondu.”
 
-use kentos_contracts::{CommandResult, DivideBlock, DivideEnds, EntitiesDivide, Entity, NewLook};
+use kentos_commands::{CommandResult, DivideBlock, DivideEnds, EntitiesDivide, Entity, NewLook};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::path::{nearest_s, path_of};
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -151,13 +151,13 @@ impl Divide {
     }
 
     /// The division the session remembers, as the command takes it.
-    fn division(m: &Memory) -> kentos_contracts::Division {
+    fn division(m: &Memory) -> kentos_commands::Division {
         if m.divide_by_step {
-            kentos_contracts::Division::Step {
+            kentos_commands::Division::Step {
                 length: m.divide_step,
             }
         } else {
-            kentos_contracts::Division::Parts {
+            kentos_commands::Division::Parts {
                 count: m.divide_parts,
             }
         }

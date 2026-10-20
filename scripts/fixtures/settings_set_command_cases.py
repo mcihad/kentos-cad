@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.settings.set.json: the shared cases of `cad.settings.set` v1 (docs/adr/0248 §5).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_settings.rs: the keys, the
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_settings.rs: the keys, the
 checks and their order, the codes, paths and words) and from the ADRs' meaning of each key, without KentOS code:
 
 - a coordinate system is assigned, never a transformation: the objects stay where they are (CLAUDE.md §5); it takes

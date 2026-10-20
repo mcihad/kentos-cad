@@ -5,7 +5,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, TextEntity, TextFinding, TextFindingKind, TextsCheck, TextsChecked,
 };
 use kentos_domain::{Document, Slot};

@@ -14,7 +14,7 @@
 //! leaves. A factor or length not above zero warns and is not taken. The
 //! ghosts and the factor beside the cursor are the web's.
 
-use kentos_contracts::Transform;
+use kentos_commands::Transform;
 use kentos_geometry_core::geom::affine::{Affine, scaling};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::editing::scale_factor;

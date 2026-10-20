@@ -4,7 +4,7 @@
 //! found on its ellipse. The shared cases are
 //! `fixtures/commands/v1/cad.entities.lengthen.json`.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesLengthen, Entity, LengthenChange, LengthenEnd, Vec2,
 };
 use kentos_domain::{Document, Slot};

@@ -6,7 +6,7 @@
 //! and turn. Black is the drawing's ink (it shows on a dark screen as on paper); a white fill is the paper and is left
 //! out.
 
-use kentos_contracts::DocumentSnapshotV2;
+use kentos_commands::DocumentSnapshotV2;
 use kentos_formats::pdf::{PdfLeft, PdfPage};
 use serde_json::{Value, json};
 
@@ -117,7 +117,7 @@ pub fn drawing(page: &PdfPage, name: &str) -> Result<(DocumentSnapshotV2, PdfLef
         "entities": entities.into_iter().enumerate().map(|(k, mut e)| { e["id"] = json!(k + 1); e }).collect::<Vec<_>>(),
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&v1.to_string()).map_err(|e| e.to_string())?;
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&v1.to_string()).map_err(|e| e.to_string())?;
     let doc = kentos_domain::Document::from_snapshot(snapshot)?;
     Ok((doc.to_snapshot_v2(), page.left.clone()))
 }

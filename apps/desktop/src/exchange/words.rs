@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, button, column, container, row, text};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{Bounds, ReportItem, SourceFact};
+use kentos_commands::{Bounds, ReportItem, SourceFact};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::style;

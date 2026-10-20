@@ -8,7 +8,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, Vec2 as Wire,
 };
 use kentos_domain::{Document, Slot};

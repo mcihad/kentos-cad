@@ -9,7 +9,7 @@
 //! tool stops, as Yinelenen anahtar says (docs/adr/0439 §4); unmatched
 //! targets and unused rows are counted and said. One undo step.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::statistics::join_plan;
 use serde_json::{Value, json};

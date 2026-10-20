@@ -3,7 +3,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{AngleUnit, FieldBookRead};
+use kentos_commands::{AngleUnit, FieldBookRead};
 use kentos_domain::Document as Model;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::survey::fieldbook::TraverseTransfer;
@@ -386,7 +386,7 @@ impl Form {
     /// that are no face, the tolerances and what is above them, k.
     pub(super) fn summary_lines(
         &self,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
         unit: AngleUnit,
     ) -> Vec<(Line, String)> {
         let mut lines = Vec::new();

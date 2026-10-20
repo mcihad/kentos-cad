@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{BlocksParameters, ParametersOperation};
+use kentos_commands::{BlocksParameters, ParametersOperation};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::block_dynamic::{GripKind, ParamGrip};
 use kentos_geometry_core::entity::{ParamValue as CoreValue, Params, Shape};
@@ -62,13 +62,13 @@ fn kept(slot: Slot, cx: &Context<'_>) -> Params {
 }
 
 /// A core value as the command takes it.
-fn value_of(v: &CoreValue) -> kentos_contracts::ParamValue {
-    use kentos_contracts::ParamValue as V;
+fn value_of(v: &CoreValue) -> kentos_commands::ParamValue {
+    use kentos_commands::ParamValue as V;
     match v {
         CoreValue::Flag(b) => V::Flag(*b),
         CoreValue::Number(x) => V::Number(*x),
         CoreValue::Text(t) => V::Text(t.clone()),
-        CoreValue::Point(p) => V::Point(kentos_contracts::Vec2 { x: p.x, y: p.y }),
+        CoreValue::Point(p) => V::Point(kentos_commands::Vec2 { x: p.x, y: p.y }),
     }
 }
 
@@ -85,7 +85,7 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, Param
         .copied()
         .filter(|&s| {
             doc.get(s).is_some_and(|e| {
-                matches!(e, kentos_contracts::Entity::Insert(_))
+                matches!(e, kentos_commands::Entity::Insert(_))
                     && !doc.layers().is_locked(&e.base().layer_id)
             })
         })
@@ -107,7 +107,7 @@ pub(crate) fn grip_at(screen: [f64; 2], cx: &Context<'_>) -> Option<(Slot, Param
 fn write(
     slot: Slot,
     uid: Option<Uuid>,
-    values: BTreeMap<String, kentos_contracts::ParamValue>,
+    values: BTreeMap<String, kentos_commands::ParamValue>,
     cx: &mut Context<'_>,
 ) -> bool {
     let Some(uid) = uid.filter(|u| cx.doc.slot_of(*u) == Some(slot)) else {
@@ -132,7 +132,7 @@ fn write(
 pub(crate) fn flip(slot: Slot, name: &str, cx: &mut Context<'_>) {
     let on = kept(slot, cx).of(name) == Some(&CoreValue::Flag(true));
     let uid = cx.doc.uid(slot);
-    let values = BTreeMap::from([(name.to_owned(), kentos_contracts::ParamValue::Flag(!on))]);
+    let values = BTreeMap::from([(name.to_owned(), kentos_commands::ParamValue::Flag(!on))]);
     if write(slot, uid, values, cx) {
         cx.say(
             Level::Success,

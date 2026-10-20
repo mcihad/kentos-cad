@@ -8,7 +8,7 @@
 //! (`invalid_uid`, `entity_not_found`, `no_such_place`, `piece_gone`); an extension's end an open end; Paralel's
 //! object has a straight edge; Hat üzerinde's points apart.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, MeasuredPoint, ObjectEnd, PointConstruction, PointsConstruct, PointsConstructed,
 };
 use kentos_domain::Document;
@@ -61,7 +61,7 @@ pub fn answer(doc: &Document, input: &PointsConstruct) -> CommandResult<PointsCo
             output: PointsConstructed {
                 points: points
                     .into_iter()
-                    .map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y })
+                    .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
                     .collect(),
             },
             warnings: Vec::new(),
@@ -84,7 +84,7 @@ fn frame(doc: &Document) -> Frame {
 
 fn construct(doc: &Document, input: &PointsConstruct) -> Result<Vec<Vec2>, Stop> {
     let n = input.constructions.len();
-    if n == 0 || n > kentos_contracts::MAX_CONSTRUCTIONS {
+    if n == 0 || n > kentos_commands::MAX_CONSTRUCTIONS {
         return Err(refuse(
             codes::NO_CONSTRUCTIONS,
             format!("{n} yapım verildi: bir ile 10 000 arasında yapım verin."),

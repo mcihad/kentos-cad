@@ -4,7 +4,7 @@
 //! columns to the crossing of two grids; Bağı kopar frees them where they stand. The shared cases are
 //! `fixtures/commands/v1/cad.arch.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchChange, ArchEdit, ArchEdited, ArchOperation, CommandResult, CommandWarning, Entity,
 };
 use kentos_domain::{Document, Slot};
@@ -207,7 +207,7 @@ fn changed(e: &Entity, c: &ArchChange) -> Entity {
     e
 }
 
-fn arch_mut(e: &mut Entity) -> Option<&mut kentos_contracts::ArchInfo> {
+fn arch_mut(e: &mut Entity) -> Option<&mut kentos_commands::ArchInfo> {
     match e {
         Entity::Grid(g) => Some(&mut g.grid.arch),
         Entity::Column(c) => Some(&mut c.column.arch),
@@ -307,7 +307,7 @@ fn check(doc: &Document, input: &ArchEdit) -> Result<Work, Stop> {
             let mut label = start.clone();
             for (k, (at, slot, e, _)) in found.iter().enumerate() {
                 if k > 0 {
-                    label = kentos_contracts::next_label(&label);
+                    label = kentos_commands::next_label(&label);
                 }
                 let mut e = (*e).clone();
                 match &mut e {
@@ -416,8 +416,8 @@ pub fn plan_in(doc: &Document, input: &ArchEdit) -> CommandResult<ArchEdited> {
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ArchEdit) -> CommandResult<ArchEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ARCH_EDIT,
-        kentos_contracts::CAD_ARCH_EDIT_VERSION,
+        kentos_commands::CAD_ARCH_EDIT,
+        kentos_commands::CAD_ARCH_EDIT_VERSION,
         input,
         write_execute,
     )

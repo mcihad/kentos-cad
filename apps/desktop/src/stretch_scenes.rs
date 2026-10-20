@@ -13,7 +13,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionRefs, Entity, EntityId, HatchAssoc, SubPlace, SubRef, Vec2 as Point,
 };
 use kentos_domain::Slot;
@@ -85,7 +85,7 @@ fn tie(app: &mut App) {
         };
         let _ = doc.update(
             Slot(2),
-            Entity::Hatch(kentos_contracts::HatchEntity {
+            Entity::Hatch(kentos_commands::HatchEntity {
                 boundary: None,
                 assoc: Some(tied),
                 ..h
@@ -102,7 +102,7 @@ fn tie(app: &mut App) {
             };
             let _ = doc.update(
                 Slot(slot),
-                Entity::Dimension(kentos_contracts::DimensionEntity {
+                Entity::Dimension(kentos_commands::DimensionEntity {
                     refs: Some(Box::new(refs)),
                     ..d
                 }),

@@ -20,7 +20,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, column, container, row, text_editor};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::{Convention, CrsDefinition, CrsSystem, RegistryDatum};
+use kentos_commands::{Convention, CrsDefinition, CrsSystem, RegistryDatum};
 use kentos_geometry_core::crs as core;
 use kentos_project::definition_form::{
     self, AFFINE, DatumPick, ELLIPSOIDS, FitRow, Form, Kind, PARAMETERS, PlaneFit, PlaneKind,
@@ -1344,12 +1344,12 @@ mod tests {
 
         let based = CrsDefinition {
             name: "İç içe".to_owned(),
-            system: CrsSystem::Local(kentos_contracts::LocalDefinition {
-                base: kentos_contracts::CrsBase {
+            system: CrsSystem::Local(kentos_commands::LocalDefinition {
+                base: kentos_commands::CrsBase {
                     srid: None,
                     definition: Some(Box::new(d.clone())),
                 },
-                plane: kentos_contracts::CrsPlane::Similarity {
+                plane: kentos_commands::CrsPlane::Similarity {
                     east: 1.0,
                     north: 2.0,
                     rotation: 0.0,

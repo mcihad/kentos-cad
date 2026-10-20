@@ -923,7 +923,7 @@ impl Command {
 /// for, and whether it can be chosen yet.
 #[derive(Debug, Clone)]
 pub struct Mode {
-    pub id: kentos_contracts::Workspace,
+    pub id: kentos_commands::Workspace,
     pub label: &'static str,
     pub title: &'static str,
     pub description: &'static str,
@@ -934,12 +934,12 @@ pub struct Mode {
 
 /// The type a project not asked its type yet, or of an announced type,
 /// shows as (the web's `FALLBACK_WORKSPACE`, docs/adr/0165 §1).
-pub const FALLBACK_MODE: kentos_contracts::Workspace = kentos_contracts::Workspace::Gis;
+pub const FALLBACK_MODE: kentos_commands::Workspace = kentos_commands::Workspace::Gis;
 
 /// The type the interface shows for a project's setting: its own when it
 /// can be chosen, else CBS (the web's `effectiveWorkspace`).
-pub fn effective_mode(workspace: Option<kentos_contracts::Workspace>) -> &'static Mode {
-    use kentos_contracts::Workspace;
+pub fn effective_mode(workspace: Option<kentos_commands::Workspace>) -> &'static Mode {
+    use kentos_commands::Workspace;
     let modes = catalog().modes();
     let wanted = workspace
         .filter(|w| *w != Workspace::LegacyHybrid)
@@ -952,13 +952,13 @@ pub fn effective_mode(workspace: Option<kentos_contracts::Workspace>) -> &'stati
 }
 
 /// The name of the mode a project works in (see [`effective_mode`]).
-pub fn mode_of(workspace: Option<kentos_contracts::Workspace>) -> &'static str {
+pub fn mode_of(workspace: Option<kentos_commands::Workspace>) -> &'static str {
     effective_mode(workspace).label
 }
 
 /// A mode's command id (`workspace.cad`).
-pub fn mode_command(mode: kentos_contracts::Workspace) -> &'static str {
-    use kentos_contracts::Workspace;
+pub fn mode_command(mode: kentos_commands::Workspace) -> &'static str {
+    use kentos_commands::Workspace;
     match mode {
         Workspace::Cad => "workspace.cad",
         // A project whose type is not asked shows as CBS (docs/adr/0165 §1).
@@ -1082,7 +1082,7 @@ pub struct Catalog {
     /// The ribbon of every ready type, as the web builds it with the type's
     /// filter (`app/workspaces.ts`): what it hides left out, its own tab
     /// names (CAD's Harita is Ölçme).
-    mode_tabs: Vec<(kentos_contracts::Workspace, Vec<Tab>)>,
+    mode_tabs: Vec<(kentos_commands::Workspace, Vec<Tab>)>,
     quick: Vec<&'static str>,
     modes: Vec<Mode>,
     /// The menu bar's menus by id: their blocks of command ids, in order.
@@ -1149,7 +1149,7 @@ impl Catalog {
 
     /// The ribbon tabs of a project type (CBS's when the type has none of
     /// its own), the contextual ones left out.
-    pub fn tabs_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
+    pub fn tabs_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
             .iter()
             .find(|(m, _)| *m == mode)
@@ -1160,7 +1160,7 @@ impl Catalog {
 
     /// The contextual ribbon tabs of a project type (the web's Seçim, shown
     /// while something is selected).
-    pub fn contextual_in(&self, mode: kentos_contracts::Workspace) -> impl Iterator<Item = &Tab> {
+    pub fn contextual_in(&self, mode: kentos_commands::Workspace) -> impl Iterator<Item = &Tab> {
         self.mode_tabs
             .iter()
             .find(|(m, _)| *m == mode)
@@ -1185,7 +1185,7 @@ impl Catalog {
     fn load(text: &str, additions: &str) -> Result<Self, String> {
         let mut raw: RawInventory =
             serde_json::from_str(text).map_err(|e| format!("web envanteri okunamadı: {e}"))?;
-        let added: kentos_contracts::CatalogAdditions = serde_json::from_str(additions)
+        let added: kentos_commands::CatalogAdditions = serde_json::from_str(additions)
             .map_err(|e| format!("katalog ekleri okunamadı: {e}"))?;
         // Before the commands and panels take their icons; the additions' icons are new names.
         icons::keep_web_set(
@@ -1422,10 +1422,10 @@ fn place_methods(tabs: &mut [Tab], methods: &[Entry]) {
 }
 
 /// A command of the additions (docs/adr/0228 §4): it runs on the desktop unless it waits.
-fn added_command(c: &kentos_contracts::AddedCommand) -> Command {
+fn added_command(c: &kentos_commands::AddedCommand) -> Command {
     let standing = match c.status {
-        kentos_contracts::AddedStatus::Implemented => Standing::Ported,
-        kentos_contracts::AddedStatus::Pending => Standing::Pending,
+        kentos_commands::AddedStatus::Implemented => Standing::Ported,
+        kentos_commands::AddedStatus::Pending => Standing::Pending,
     };
     let title = leak(c.title.clone());
     let description = leak(c.description.clone());
@@ -1451,8 +1451,8 @@ fn added_command(c: &kentos_contracts::AddedCommand) -> Command {
 fn place_additions(
     mode: &str,
     tabs: &mut Vec<Tab>,
-    added: &[kentos_contracts::AddedTab],
-    places: &[kentos_contracts::RibbonAddition],
+    added: &[kentos_commands::AddedTab],
+    places: &[kentos_commands::RibbonAddition],
 ) {
     // The file's own tabs first, empty, after the tab named (docs/adr/0339 §6).
     for t in added.iter().filter(|t| t.modes.iter().any(|m| m == mode)) {
@@ -1995,7 +1995,7 @@ mod tests {
     fn the_additions_hold_against_the_inventory() {
         use std::collections::HashSet;
         let raw: serde_json::Value = serde_json::from_str(INVENTORY).expect("the inventory parses");
-        let added: kentos_contracts::CatalogAdditions =
+        let added: kentos_commands::CatalogAdditions =
             serde_json::from_str(ADDITIONS).expect("the additions parse");
         let commands: HashSet<&str> = raw["commands"]
             .as_array()
@@ -2026,7 +2026,7 @@ mod tests {
         let command = |id: &str| commands.contains(id);
         let icon = |name: &str| icon_names.contains(name);
         assert_eq!(
-            added.problem(&kentos_contracts::KnownCatalog {
+            added.problem(&kentos_commands::KnownCatalog {
                 command: &command,
                 icon: &icon,
                 panels: &panels,
@@ -2056,11 +2056,11 @@ mod tests {
             assert!(matches!(got.icon, Icon::Svg(_)), "{} takes its icon", c.id);
             assert_eq!(
                 got.standing == Standing::Ported,
-                c.status == kentos_contracts::AddedStatus::Implemented
+                c.status == kentos_commands::AddedStatus::Implemented
             );
         }
         // Adres: after Altlık in CBS's Harita, last in CAD's Ekle; Adres ara in both types' Paneller.
-        use kentos_contracts::Workspace;
+        use kentos_commands::Workspace;
         let labels = |mode: Workspace, tab: &str| -> Vec<&str> {
             catalog
                 .tabs_in(mode)

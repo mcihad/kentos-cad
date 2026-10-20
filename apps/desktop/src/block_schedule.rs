@@ -6,7 +6,7 @@
 
 use iced::widget::{Column, Row, column, container, row, scrollable, text, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     AttributeFilter, AttributeOp, BlockId, BlockReport, BlocksQueried, BlocksQuery, CellKind,
     CommandResult, ScheduleCell, WorkbookColumn, WorkbookFormat, WorkbookSheet,
 };

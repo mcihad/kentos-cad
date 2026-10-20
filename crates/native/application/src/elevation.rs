@@ -5,7 +5,7 @@
 //! are carried by the same rules (docs/adr/0224 §2). The web's is
 //! `apps/web/src/product/elevation.ts`; both pass the shared cases.
 
-use kentos_contracts::{Entity, Vec2 as Point};
+use kentos_commands::{Entity, Vec2 as Point};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::elevation::{Carry, Elevated, carry_elevations};
 

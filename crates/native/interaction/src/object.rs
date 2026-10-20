@@ -40,7 +40,7 @@
 //! writes one undo step through `cad.entities.edit`, the turn the core's
 //! (`TextPlace::readable`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesEditPlan, EntitiesExplode, EntitiesJoin, Entity,
     EntityEdit, ExplodeDensity, TextEntity, TrimBoundaries,
 };
@@ -230,14 +230,14 @@ impl ObjectAction {
                 let turned = if t.path.is_some() {
                     let placed = place.along(font)?.readable()?;
                     TextEntity {
-                        p: kentos_contracts::Vec2 {
+                        p: kentos_commands::Vec2 {
                             x: placed.p.x,
                             y: placed.p.y,
                         },
                         rotation: placed.rotation,
                         align: placed
                             .align
-                            .and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+                            .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
                         path: Some(kentos_native_application::geometry::contract_curve(
                             placed.curve,
                         )),
@@ -246,7 +246,7 @@ impl ObjectAction {
                 } else {
                     let (p, rotation) = place.readable(font)?;
                     TextEntity {
-                        p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+                        p: kentos_commands::Vec2 { x: p.x, y: p.y },
                         rotation,
                         ..t.clone()
                     }
@@ -605,7 +605,7 @@ impl Stages for ObjectAction {
             "A" => m.explode_way = 2,
             "P" => m.explode_way = 0,
             _ if m.explode_way == 1 => match js_trim(text).parse::<u32>() {
-                Ok(n) if (1..=kentos_contracts::MAX_EXPLODE_VERTICES).contains(&n) => {
+                Ok(n) if (1..=kentos_commands::MAX_EXPLODE_VERTICES).contains(&n) => {
                     m.explode_count = n;
                 }
                 _ => {

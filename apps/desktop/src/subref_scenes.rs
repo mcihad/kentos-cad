@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{BlockDefinition, Entity};
+use kentos_commands::{BlockDefinition, Entity};
 use kentos_domain::Slot;
 use serde_json::json;
 

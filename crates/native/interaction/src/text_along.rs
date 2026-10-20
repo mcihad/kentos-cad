@@ -19,7 +19,7 @@
 //!   (`textTurn`); Düzleştir (Z) makes the selected curved texts straight at
 //!   once (`textStraighten`). Through `cad.entities.edit`, one step each.
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationKind, EditOperation, Entity, EntityEdit, TextAlign, TextEntity, TextPath,
 };
 use kentos_domain::Slot;
@@ -124,7 +124,7 @@ fn letters_length(
     text: &str,
     height: f64,
     width_factor: f64,
-    face: &kentos_contracts::TextFace,
+    face: &kentos_commands::TextFace,
     font: Font,
 ) -> f64 {
     let core = core_face(face);
@@ -262,7 +262,7 @@ impl TextAlong {
         let (p, rotation, path) = piece(curve, at, length, share)?;
         Some(TextEntity {
             annotative: None,
-            base: kentos_contracts::EntityBase {
+            base: kentos_commands::EntityBase {
                 look: Default::default(),
                 id: 0,
                 layer_id: String::new(),
@@ -579,7 +579,7 @@ impl Tool for TextAlong {
         if let (Some(at), Some(words)) = (self.at, text.map(js_trim).filter(|t| !t.is_empty()))
             && let Some(t) = self.placed(words, at, cx)
         {
-            let geometry = kentos_contracts::EntityGeometry::Text {
+            let geometry = kentos_commands::EntityGeometry::Text {
                 layout: None,
                 annotative: None,
                 p: t.p,
@@ -597,7 +597,7 @@ impl Tool for TextAlong {
             };
             if points::write_objects(
                 vec![geometry],
-                Some(kentos_contracts::CreateOperation::TextAlong),
+                Some(kentos_commands::CreateOperation::TextAlong),
                 cx,
             )
             .is_some()

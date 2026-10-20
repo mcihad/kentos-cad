@@ -4,7 +4,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, LineEntity, Vec2 as Point};
+use kentos_commands::{Entity, LineEntity, Vec2 as Point};
 use kentos_domain::Slot;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::jsmath::{TAU, cos, sin, tan};

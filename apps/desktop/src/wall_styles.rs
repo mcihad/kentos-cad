@@ -15,7 +15,7 @@ use std::collections::HashMap;
 use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationStyleKind, ComponentHatch, Entity, StyleEditOperation, StylesEdit, WallCaps,
     WallComponent, WallDetail, WallFields, WallStyleDef, builtin_wall_styles, wall_styles_problem,
 };
@@ -311,13 +311,13 @@ impl App {
                 input,
             );
             match result {
-                kentos_contracts::CommandResult::Completed { output, .. } => {
+                kentos_commands::CommandResult::Completed { output, .. } => {
                     followed += output.followed;
                     locked += output.locked;
                 }
-                kentos_contracts::CommandResult::Failed { error }
-                | kentos_contracts::CommandResult::Conflict { error }
-                | kentos_contracts::CommandResult::NeedsInput { error } => {
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
                     refused = Some(error.message);
                     break;
                 }
@@ -377,7 +377,7 @@ impl App {
                     components: Vec::new(),
                     caps: WallCaps::Closed,
                     fill: None,
-                    width: Some(kentos_contracts::DEFAULT_WALL_WIDTH),
+                    width: Some(kentos_commands::DEFAULT_WALL_WIDTH),
                 });
                 // Projeye al keeps KentOS's id, as a wall made with it would (docs/adr/0339 §2).
                 if !take {
@@ -657,7 +657,7 @@ impl App {
             .padding([5, 8])
             .size(typography::body())
             .style(style::field::input);
-        let fixed = kentos_contracts::fixed_width(&s.components);
+        let fixed = kentos_commands::fixed_width(&s.components);
         let width = text_input("", &w.width_typed)
             .on_input(|t| msg(Event::Width(t)))
             .padding([5, 8])
@@ -895,23 +895,23 @@ impl canvas::Program<Message> for Sample {
             return vec![frame.into_geometry()];
         };
         let width =
-            kentos_contracts::fixed_width(&style.components).unwrap_or_else(|| style.new_width());
+            kentos_commands::fixed_width(&style.components).unwrap_or_else(|| style.new_width());
         // NaN is no width either.
         if width.partial_cmp(&0.0) != Some(std::cmp::Ordering::Greater)
-            || kentos_contracts::component_thicknesses(width, &style.components).is_none()
+            || kentos_commands::component_thicknesses(width, &style.components).is_none()
         {
             return vec![frame.into_geometry()];
         }
         let length = (width * 5.0).max(1.0);
         let fields = WallFields {
             pts: vec![
-                kentos_contracts::Vec2 { x: 0.0, y: 0.0 },
-                kentos_contracts::Vec2 { x: length, y: 0.0 },
+                kentos_commands::Vec2 { x: 0.0, y: 0.0 },
+                kentos_commands::Vec2 { x: length, y: 0.0 },
             ],
             bulges: None,
             closed: false,
             width,
-            justify: kentos_contracts::WallJustify::Left,
+            justify: kentos_commands::WallJustify::Left,
             offset: 0.0,
             style: Some(style.id.clone()),
             components: style.components.clone(),

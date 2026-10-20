@@ -7,7 +7,7 @@
 //! is `apps/web/src/tools/adjoinTool.ts`; both play
 //! `fixtures/interaction/v1/adjoin.json`.
 
-use kentos_contracts::CreateOperation;
+use kentos_commands::CreateOperation;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::bulge::has_bulges;
 use kentos_geometry_core::ops::adjoin::Neighbours;

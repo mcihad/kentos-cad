@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.layers.renderer.json: the shared cases of Katman stili's command (docs/adr/0213 §5),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_layers.rs: the checks and their
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_layers.rs: the checks and their
 order, the codes, the paths and the words; the step's name) and the renderer's rules as docs/adr/0213 §5 lists them (what
 each kind must have, the ranges, the words of a refusal), without KentOS code. The web (apps/web/src/product/
 fixtures.test.ts), the desktop (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/

@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 use std::sync::Arc;
 
 use iced::Task;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_native_style::legend::{
     LegendGroup, LegendLayer, LegendSources, legend_layers, legend_layout, legend_of, texts,
 };

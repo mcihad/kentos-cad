@@ -7,7 +7,7 @@
 
 use iced::widget::{Column, Id, button, column, container, row, text_input};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::VariableKind;
+use kentos_commands::VariableKind;
 use kentos_expression::{Value, Variable};
 use kentos_project::variable_form::{self, FALSE, Row, TRUE};
 use kentos_ui::icon::icon;
@@ -294,7 +294,7 @@ fn builtin_row<'a>(name: String, hint: String, value: String) -> Element<'a, Mes
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{ProjectVariable, VariableKind, VariableValue};
+    use kentos_commands::{ProjectVariable, VariableKind, VariableValue};
 
     use super::Edit;
     use crate::app::{App, Message};

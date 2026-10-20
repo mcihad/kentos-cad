@@ -14,7 +14,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::DrawingUnit;
+use kentos_commands::DrawingUnit;
 
 use crate::app::App;
 use crate::files_testing::make_cad;
@@ -30,7 +30,7 @@ fn units(app: &mut App) {
     s.srid = 0;
     s.second_srid = None;
     s.drawing_unit = Some(DrawingUnit::Mm);
-    s.angle_unit = kentos_contracts::AngleUnit::Deg;
+    s.angle_unit = kentos_commands::AngleUnit::Deg;
     s.plot_scale = 20.0;
     doc.model.set_settings(s);
     app.viewport.camera.fit(
@@ -656,7 +656,7 @@ mod tests {
         assert_eq!(app.selection.ids(), [slot]);
         assert_eq!(
             sub.place,
-            kentos_contracts::SubPlace::Vertex {
+            kentos_commands::SubPlace::Vertex {
                 part: 0,
                 ring: 0,
                 index: 2
@@ -677,7 +677,7 @@ mod tests {
         assert_ne!(wall, slot);
         assert!(matches!(
             sub.place,
-            kentos_contracts::SubPlace::Along { .. }
+            kentos_commands::SubPlace::Along { .. }
         ));
     }
 
@@ -699,7 +699,7 @@ mod tests {
         app.with_tool(|s, cx| s.input("100", cx));
         let doc = app.document.as_ref().expect("open");
         let slot = app.selection.ids().first().copied().unwrap_or(Slot(0));
-        let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(slot) else {
+        let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(slot) else {
             panic!("the parcel");
         };
         // A quarter turn about the corner (12, 9): (0, 0) goes to (21, −3).

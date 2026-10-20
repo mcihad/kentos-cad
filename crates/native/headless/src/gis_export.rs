@@ -4,8 +4,8 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     CommandWarning, DEFAULT_DERIVATION_TOLERANCE, ExportGis, GisExported, LayerNodeType, codes,
     derivation_tolerance_ok,
 };

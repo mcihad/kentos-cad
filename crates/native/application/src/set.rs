@@ -27,7 +27,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EntitiesPropertiesSet, EntitiesSetProperties,
     EntitiesSetPropertiesPlan, Entity, LayerNodeType, PropertiesOperation, attachments_problem,
 };
@@ -77,8 +77,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesPropertiesSet> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_SET,
-        kentos_contracts::CAD_ENTITIES_SET_VERSION,
+        kentos_commands::CAD_ENTITIES_SET,
+        kentos_commands::CAD_ENTITIES_SET_VERSION,
         input,
         write_execute,
     )
@@ -165,7 +165,7 @@ fn changed(
     e: &Entity,
     input: &EntitiesSetProperties,
     attrs: Option<&BTreeMap<String, Option<String>>>,
-    nearest: &kentos_contracts::LineType,
+    nearest: &kentos_commands::LineType,
 ) -> Option<Entity> {
     let mut next = e.clone();
     let mut unlinked = false;
@@ -274,7 +274,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     }
     checks::line_weight(input.line_weight.flatten(), "lineWeight")?;
     if let Some(x) = input.line_type_scale.flatten()
-        && !(x.is_finite() && x > 0.0 && x <= kentos_contracts::MAX_LINE_TYPE_SCALE)
+        && !(x.is_finite() && x > 0.0 && x <= kentos_commands::MAX_LINE_TYPE_SCALE)
     {
         return Err(Stop::failed(error(
             codes::INVALID_LINE_TYPE_SCALE,
@@ -283,7 +283,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
         )));
     }
     if let Some(x) = input.transparency.flatten()
-        && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+        && !(x.is_finite() && (0.0..=kentos_commands::MAX_TRANSPARENCY).contains(&x))
     {
         return Err(Stop::failed(error(
             codes::INVALID_TRANSPARENCY,
@@ -306,7 +306,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             .settings()
             .line_types
             .iter()
-            .any(|t| kentos_contracts::same_line_type_name(&t.name, name))
+            .any(|t| kentos_commands::same_line_type_name(&t.name, name))
     {
         return Err(Stop::failed(error(
             codes::LINE_TYPE_NOT_FOUND,
@@ -391,7 +391,7 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
     // A constant attribute's value is its block's (docs/adr/0317 §1): an insert takes none of its own.
     if let Some(attrs) = attrs {
         for (_, _, e, _) in &found {
-            let kentos_contracts::Entity::Insert(i) = e else {
+            let kentos_commands::Entity::Insert(i) = e else {
                 continue;
             };
             let Some(block) = doc.block(i.block) else {
@@ -431,9 +431,9 @@ fn check(doc: &Document, input: &EntitiesSetProperties) -> Result<Checked, Stop>
             doc.settings()
                 .line_types
                 .iter()
-                .find(|t| kentos_contracts::same_line_type_name(&t.name, name))
+                .find(|t| kentos_commands::same_line_type_name(&t.name, name))
         })
-        .map_or(kentos_contracts::LineType::Continuous, |t| t.nearest());
+        .map_or(kentos_commands::LineType::Continuous, |t| t.nearest());
     let changes: Vec<Change> = found
         .iter()
         .zip(&given)

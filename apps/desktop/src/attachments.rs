@@ -20,7 +20,7 @@ use std::sync::Arc;
 
 use iced::widget::{Column, button, column, container, row, text_editor, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{Attachment, AttachmentKind, EntitiesSetProperties, PropertiesOperation};
+use kentos_commands::{Attachment, AttachmentKind, EntitiesSetProperties, PropertiesOperation};
 use kentos_domain::Slot;
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
@@ -604,7 +604,7 @@ impl App {
                 note: None,
             });
         }
-        if let Some(problem) = kentos_contracts::attachments_problem(&list) {
+        if let Some(problem) = kentos_commands::attachments_problem(&list) {
             self.warn(format!("Eklenemedi: {problem}."));
             return;
         }

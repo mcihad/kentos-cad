@@ -9,7 +9,7 @@
 //! expected revision; the layer is the drawing's and a layer; each of the
 //! mask's targets is another layer of the drawing.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersCompose, LayersComposePlan, LayersComposed,
 };
 use kentos_domain::Document;
@@ -136,8 +136,8 @@ pub fn execute(
 ) -> CommandResult<LayersComposed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_COMPOSE,
-        kentos_contracts::CAD_LAYERS_COMPOSE_VERSION,
+        kentos_commands::CAD_LAYERS_COMPOSE,
+        kentos_commands::CAD_LAYERS_COMPOSE_VERSION,
         input,
         write_execute,
     )

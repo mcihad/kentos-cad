@@ -3,7 +3,7 @@
 //! and what a step that does not touch the table pays for the document's computed tables, in a drawing of 100 000
 //! parcels. The shared cases are `fixtures/commands/v1/cad.tables.edit.json`.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, Entity, TableEdit, TablesEdit, TablesOperation,
 };
 use kentos_domain::{Document, Slot};
@@ -120,7 +120,7 @@ fn timing() {
     let style = t.elapsed().as_secs_f64() * 1e3;
     // A step on a parcel: the document looks at its computed tables before it is recorded.
     let uid = doc.uid(Slot(50_000)).expect("known").to_string();
-    let input = kentos_domain::contracts::EntitiesDelete {
+    let input = kentos_commands::EntitiesDelete {
         uids: vec![uid],
         expected_revision: None,
     };

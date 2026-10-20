@@ -107,7 +107,7 @@ fn play(
     let text = std::fs::read_to_string(traces::folder().join(&trace.document))
         .map_err(|e| format!("{}: {e}", trace.document))?;
     let doc = Document::new(
-        kentos_contracts::DocumentSnapshotV1::from_json(&text).map_err(|e| e.to_string())?,
+        kentos_commands::DocumentSnapshotV1::from_json(&text).map_err(|e| e.to_string())?,
         None,
     )?;
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));

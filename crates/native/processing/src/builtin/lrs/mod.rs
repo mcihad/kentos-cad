@@ -14,7 +14,7 @@ pub mod routes;
 
 use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{AreaPart, Entity, EntityBase, PathEntity, Vec2 as Point};
+use kentos_commands::{AreaPart, Entity, EntityBase, PathEntity, Vec2 as Point};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::lrs::{Route, RoutePart};
 use serde_json::{Value, json};

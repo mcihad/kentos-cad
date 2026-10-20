@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, EntityBase, PathEntity, Vec2};
+use kentos_commands::{Entity, EntityBase, PathEntity, Vec2};
 use kentos_native_application::expression_unit::Unit;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::info_templates::compile_template;

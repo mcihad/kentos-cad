@@ -29,7 +29,7 @@ fn opened(app: &mut App) {
     let file: Value =
         serde_json::from_str(&std::fs::read_to_string(path).expect("the cases")).expect("JSON");
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&file["setup"].to_string()).expect("reads");
+        kentos_commands::DocumentSnapshotV1::from_json(&file["setup"].to_string()).expect("reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     make_cad(app);
@@ -47,7 +47,7 @@ fn opened(app: &mut App) {
 fn layer(app: &mut App) {
     opened(app);
     let _ = app.update(Message::StyleImpact(crate::style_impact::Event::Open(
-        kentos_contracts::ImpactTarget::Layer,
+        kentos_commands::ImpactTarget::Layer,
         "duvar".into(),
     )));
 }
@@ -59,7 +59,7 @@ fn line_type(app: &mut App) {
         "EKSEN".into(),
     )));
     let _ = app.update(Message::StyleImpact(crate::style_impact::Event::Open(
-        kentos_contracts::ImpactTarget::LineType,
+        kentos_commands::ImpactTarget::LineType,
         "EKSEN".into(),
     )));
 }

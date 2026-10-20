@@ -24,7 +24,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Bounds, CallEnvelope, JobStatus, ReplayJournal};
+use kentos_commands::{Bounds, CallEnvelope, JobStatus, ReplayJournal};
 use kentos_domain::Document;
 use kentos_native_application::jobs::Job;
 use kentos_native_application::replay::{journal_of, replay_with};
@@ -84,7 +84,7 @@ impl Jobs {
     pub fn cancel(&mut self, doc: &mut Document, id: &str) -> Result<JobStatus, HeadlessError> {
         let job = self.get(id)?;
         let status = job.status(doc);
-        if status.phase == kentos_contracts::JobPhase::Done {
+        if status.phase == kentos_commands::JobPhase::Done {
             return Err(HeadlessError::new(
                 "already_committed",
                 "İş yazıldıktan sonra durdurulmak istendi; yazılan kalır. Geri almak için Geri al'ı kullanın.",

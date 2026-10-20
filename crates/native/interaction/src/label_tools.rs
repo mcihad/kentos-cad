@@ -18,7 +18,7 @@
 //! Unplaced labels (drawn while Yerleşmeyen etiketleri göster is on) are
 //! taken too: moving one is how it gets a place.
 
-use kentos_contracts::{LabelPin, LabelPinChange, LabelsMode, LabelsPin};
+use kentos_commands::{LabelPin, LabelPinChange, LabelsMode, LabelsPin};
 use kentos_domain::Slot;
 use kentos_geometry_core::labels::engine::{HIDDEN, PINNED, UNPLACED};
 use kentos_geometry_core::store::placing::LabelHit;
@@ -191,7 +191,7 @@ fn pinned_at(cx: &Context<'_>, slot: Slot, middle: Vec2, angle: f64) -> Option<L
     let anchor = cx.spatial.label_anchor(slot)?;
     Some(LabelPin {
         class: None,
-        at: Some(kentos_contracts::Vec2 {
+        at: Some(kentos_commands::Vec2 {
             x: middle.x - anchor.x,
             y: middle.y - anchor.y,
         }),

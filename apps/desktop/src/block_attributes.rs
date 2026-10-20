@@ -13,7 +13,7 @@
 use iced::widget::tooltip::Position;
 use iced::widget::{Column, button, text};
 use iced::{Element, Task};
-use kentos_contracts::{BlockId, Vec2};
+use kentos_commands::{BlockId, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::blocks as actions;
 use kentos_ui::icon::{Icon, icon};
@@ -102,7 +102,7 @@ impl Opt {
         }
     }
 
-    fn of(self, o: &kentos_contracts::AttributeOptions) -> bool {
+    fn of(self, o: &kentos_commands::AttributeOptions) -> bool {
         match self {
             Opt::Invisible => o.invisible,
             Opt::Constant => o.constant,
@@ -113,7 +113,7 @@ impl Opt {
         }
     }
 
-    fn flip(self, o: &mut kentos_contracts::AttributeOptions) {
+    fn flip(self, o: &mut kentos_commands::AttributeOptions) {
         let b = match self {
             Opt::Invisible => &mut o.invisible,
             Opt::Constant => &mut o.constant,
@@ -195,7 +195,7 @@ impl Table for Window {
 }
 
 impl Window {
-    fn definitions(&self) -> Vec<kentos_contracts::AttributeDefinition> {
+    fn definitions(&self) -> Vec<kentos_commands::AttributeDefinition> {
         self.rows
             .iter()
             .map(|r| table::definition_of(r, self.base))
@@ -239,14 +239,14 @@ impl App {
                 .collect(),
             extent: table::outline_extent(&outlines),
             // As high as a text Yazı writes: typed in this drawing, else the project's (docs/adr/0205 §2).
-            height: kentos_contracts::paper_height(
+            height: kentos_commands::paper_height(
                 self.memory
                     .heights
-                    .get(kentos_contracts::AnnotationKind::Text)
+                    .get(kentos_commands::AnnotationKind::Text)
                     .unwrap_or_else(|| {
                         model
                             .settings()
-                            .annotation_mm(kentos_contracts::AnnotationKind::Text)
+                            .annotation_mm(kentos_commands::AnnotationKind::Text)
                     }),
                 model.settings().plot_scale,
             ),
@@ -558,7 +558,7 @@ fn options_view(w: &Window) -> Element<'_, Message> {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{BlockId, DocumentSnapshotV1};
+    use kentos_commands::{BlockId, DocumentSnapshotV1};
     use kentos_domain::Slot;
 
     use super::{ATTRIBUTES_TITLE, Event};
@@ -594,7 +594,7 @@ mod tests {
         app.block_attributes.as_ref().map(|w| w.answer.clone())
     }
 
-    fn attributes(app: &App, id: BlockId) -> Vec<kentos_contracts::AttributeDefinition> {
+    fn attributes(app: &App, id: BlockId) -> Vec<kentos_commands::AttributeDefinition> {
         let model = &app.document.as_ref().expect("open").model;
         model.block(id).expect("the block").attributes.clone()
     }

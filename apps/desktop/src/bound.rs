@@ -6,7 +6,7 @@
 //! changed is refused and said (`source_changed`).
 
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, SourceLink, SourcesDescribe, SourcesEdit, SourcesEditOp, SourcesSync,
     SyncDirection, SyncTopology,
 };
@@ -79,7 +79,7 @@ impl App {
                     self.warn(NO_BOUND);
                     return Task::none();
                 };
-                if link.kind != kentos_contracts::SourceKind::Geopackage {
+                if link.kind != kentos_commands::SourceKind::Geopackage {
                     self.warn(
                         "Veritabanına bağlı katmanın adresi PostGIS'e bağlan ile değiştirilir.",
                     );
@@ -262,7 +262,7 @@ impl App {
     /// What a write of several layers did, said layer by layer, then the mapped relations' rows.
     pub(crate) fn together_words(
         &self,
-        output: &kentos_contracts::SourcesSynced,
+        output: &kentos_commands::SourcesSynced,
         path: &str,
     ) -> String {
         let count = |a: u32, m: u32, r: u32| -> String {

@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 
 use super::gnss_import::{Event as Gnss, State};
 use super::tests::{count, run, send};
@@ -31,7 +31,7 @@ fn gnss(app: &mut App, e: Gnss) {
 }
 
 /// The open drawing's points named `name`.
-fn point(app: &App, name: &str) -> kentos_contracts::PointEntity {
+fn point(app: &App, name: &str) -> kentos_commands::PointEntity {
     app.document
         .as_ref()
         .expect("open")

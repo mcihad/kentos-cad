@@ -32,7 +32,7 @@
 //! layers are left out before the command. The area algebra is the shared
 //! core's (exact: arcs stay arcs, input corners keep their coordinates).
 
-use kentos_contracts::{
+use kentos_commands::{
     AreaPart, EditOperation, EntitiesEdited, Entity, EntityEdit, EntityGeometry,
 };
 use kentos_domain::{Document, Slot, Uuid};
@@ -172,7 +172,7 @@ fn contract_parts(x: &Whole) -> Vec<(f64, AreaPart)> {
     std::iter::once(own)
         .chain(p.parts.iter().flatten().cloned())
         .map(|part| {
-            let size = area_of_entity(&shape(&Entity::Polygon(kentos_contracts::PathEntity {
+            let size = area_of_entity(&shape(&Entity::Polygon(kentos_commands::PathEntity {
                 ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),
@@ -435,7 +435,7 @@ impl AreaAction {
     /// likewise (docs/adr/0174).
     fn parts_split_run(&self, targets: &[Slot], cx: &mut Context<'_>) {
         let doc = &*cx.doc;
-        let areas: Vec<(Slot, &kentos_contracts::PathEntity)> = targets
+        let areas: Vec<(Slot, &kentos_commands::PathEntity)> = targets
             .iter()
             .filter_map(|&s| match doc.get(s) {
                 Some(Entity::Polygon(p)) if p.parts.as_ref().is_some_and(|q| !q.is_empty()) => {

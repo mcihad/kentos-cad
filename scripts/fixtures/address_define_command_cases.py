@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.addresses.define.json: the shared cases of `cad.addresses.define` v1 (docs/adr/0229
-§14), their expectations built here from the contract's rules (crates/shared/contracts/src/cad_addresses.rs: the checks
+§14), their expectations built here from the contract's rules (crates/shared/commands/src/cad_addresses.rs: the checks
 and their order, the codes, the paths and the words), without KentOS code. A locator that breaks a rule takes its words
 from fixtures/geocode/v1/rules.json (the contract's, held by Rust). The desktop
 (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.
@@ -169,7 +169,7 @@ def build():
         "command": "cad.addresses.define",
         "commandVersion": 1,
         "title": "Adres verisi: projenin adres verisini yaz ya da sil (ADR 0229 §14)",
-        "note": "scripts/fixtures/address_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_addresses.rs) KentOS kodu olmadan kurulur, kuralı bozan tanımların sözleri fixtures/geocode/v1/rules.json'dan. `expect.addressLocators` projenin adres verileridir. Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
+        "note": "scripts/fixtures/address_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_addresses.rs) KentOS kodu olmadan kurulur, kuralı bozan tanımların sözleri fixtures/geocode/v1/rules.json'dan. `expect.addressLocators` projenin adres verileridir. Adres verisi proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
         "setup": SETUP,
         "cases": cases(),
     }

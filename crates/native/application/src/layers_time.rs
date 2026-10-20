@@ -7,7 +7,7 @@
 //! The checks, in the contract's order: the setting's rules; the expected
 //! revision; the layer is the drawing's, a layer, not drawn from a service.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersTime, LayersTimePlan, LayersTimed,
 };
 use kentos_domain::Document;
@@ -98,8 +98,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersTime) -> CommandResult<Laye
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersTime) -> CommandResult<LayersTimed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_TIME,
-        kentos_contracts::CAD_LAYERS_TIME_VERSION,
+        kentos_commands::CAD_LAYERS_TIME,
+        kentos_commands::CAD_LAYERS_TIME_VERSION,
         input,
         write_execute,
     )

@@ -8,7 +8,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{CallKind, CallStatus, DocumentSnapshotV1, ReplayOutcome};
+use kentos_commands::{CallKind, CallStatus, DocumentSnapshotV1, ReplayOutcome};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::replay::{journal_of, replay};
 use serde_json::Value;

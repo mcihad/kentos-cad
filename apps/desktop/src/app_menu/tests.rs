@@ -6,7 +6,7 @@ use iced::Task;
 use iced::keyboard::Modifiers;
 use iced::keyboard::key::{Key, Named, NativeCode, Physical};
 use kentos_cloud::ApiFailure;
-use kentos_contracts::ProjectStorage;
+use kentos_commands::ProjectStorage;
 
 use super::{Event, Focus, Pane, Projects, State};
 use crate::app::{App, Dialog, Message, Picker, Then};

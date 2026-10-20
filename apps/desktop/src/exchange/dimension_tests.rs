@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{DimensionEntity, DimensionStyle, Entity};
+use kentos_commands::{DimensionEntity, DimensionStyle, Entity};
 
 use super::tests::{count, fixture, run, said, send, shot};
 use super::{Event, drawing_import, dxf_export};

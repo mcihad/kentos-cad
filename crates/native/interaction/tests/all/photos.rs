@@ -4,7 +4,7 @@
 //! photos left out exactly, the positions within the fixture's tolerance.
 //! The web checks the same file (`apps/web/src/model/photoImport.test.ts`).
 
-use kentos_contracts::{Entity, PhotoExif};
+use kentos_commands::{Entity, PhotoExif};
 use kentos_interaction::photos::{Photo, entities, place};
 use serde_json::Value;
 

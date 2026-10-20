@@ -20,7 +20,7 @@
 //! them: `transform_outlines`), the line from the anchor to the cursor, the
 //! tag beside the cursor. None of the geometry is computed here.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayLayout, EntitiesArray, EntitiesArrayed, EntitiesTransform, EntitiesTransformed, Transform,
 };
 use kentos_domain::Slot;

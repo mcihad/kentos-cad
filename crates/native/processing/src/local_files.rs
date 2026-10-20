@@ -10,7 +10,7 @@ use std::io::{BufWriter, Read, Seek, SeekFrom, Write};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, PoisonError};
 
-use kentos_contracts::{CloudSource, RasterFields};
+use kentos_commands::{CloudSource, RasterFields};
 use kentos_domain::Document;
 use kentos_formats::raster::source::Reader;
 use kentos_formats::raster::{ByteStore, Step, tiff};
@@ -98,7 +98,7 @@ impl LocalFiles {
                     .ok_or_else(|| format!("“{id}” kimlikli raster projenin kitaplığında yok."))?;
                 let data = url
                     .split_once(";base64,")
-                    .and_then(|(_, d)| kentos_contracts::encoding::base64_decode(d))
+                    .and_then(|(_, d)| kentos_commands::encoding::base64_decode(d))
                     .ok_or_else(|| format!("“{id}” kimlikli gömülü raster okunamadı."))?;
                 Ok(Bytes::Memory(Arc::new(data)))
             }

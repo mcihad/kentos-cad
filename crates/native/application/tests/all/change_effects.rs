@@ -2,7 +2,7 @@
 //! drawing, and its undo (an undo step or not), its dirty flag and the parts of the project it wrote (objects,
 //! blocks, the layer tree, the settings, the style library, the sheet book) are the row's.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CHANGE_EFFECTS, CallOp, DocumentSnapshotV1, EffectPart, EffectUndo,
 };
 use kentos_domain::{Document, Slot};

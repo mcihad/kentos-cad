@@ -3,7 +3,7 @@
 //! values from the drawing's geometry store (every `$` value, the centroid
 //! and the box too), and a field's values.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_expression::rows::As;
 use kentos_expression::world::{World, WorldLayer};

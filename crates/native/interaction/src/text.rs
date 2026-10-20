@@ -21,7 +21,7 @@
 //! The text is written through `cad.entities.create` (docs/adr/0057): the
 //! active layer, one undo step (“Ekle”), “Yazı eklendi: “…”” said.
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationKind, EntityGeometry, MAX_WIDTH_FACTOR, TextAlign, width_factor_ok,
 };
 use kentos_geometry_core::geometry::dist;

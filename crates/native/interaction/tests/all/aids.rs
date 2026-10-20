@@ -52,7 +52,7 @@ fn ortho_comes_before_polar_tracking() {
     assert_eq!(aid(&mut b, shifted(10.0, 10.1)), Aid::Polar);
     b.click(10.0, 10.1);
     b.confirm();
-    let kentos_contracts::Entity::Polyline(path) = b.newest() else {
+    let kentos_commands::Entity::Polyline(path) = b.newest() else {
         panic!("a polyline");
     };
     let end = common::rel(path.pts[1]);

@@ -4,7 +4,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{CallOp, LayerField, LayerFieldKind, SourceLink};
+use kentos_commands::{CallOp, LayerField, LayerFieldKind, SourceLink};
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -33,7 +33,7 @@ fn doc() -> Document {
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 
@@ -278,7 +278,7 @@ fn a_project_keeps_at_most_a_thousand_bound_layers() {
     settings.sources = (1..=1000)
         .map(|n| SourceLink {
             id: format!("kaynak-{n}"),
-            kind: kentos_contracts::SourceKind::Geopackage,
+            kind: kentos_commands::SourceKind::Geopackage,
             path: format!("/veri/{n}.gpkg"),
             relative: None,
             table: "t".into(),
@@ -388,7 +388,7 @@ fn without_a_provider_a_database_is_not_reached() {
         "activeLayer": "bagli", "entities": [], "styles": { "items": [], "categories": [] }
     });
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     let mut d = Document::from_snapshot(snapshot).expect("setup");
     let unreachable = |answer: Value, at: &str| {
         assert_eq!(answer["error"]["code"], "source_unreachable", "{answer}");

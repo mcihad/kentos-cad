@@ -5,7 +5,7 @@
 //! tool binds with. It writes nothing. The shared cases are `fixtures/commands/v1/cad.snap.find.json`
 //! (`scripts/fixtures/snap_find_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, FoundSnap, SnapFind, SnapFound, SnapKindName, Vec2 as Point,
 };
 use kentos_domain::dimension_ties::{contract_place, core_blocks};
@@ -86,7 +86,7 @@ pub fn answer(doc: &Document, store: Option<&Store>, input: &SnapFind) -> Comman
     // A point on a PDF underlay's lines is read off paper (docs/adr/0351 §6): said, never passed as CAD geometry.
     let paper = snaps.iter().filter(|s| !s.path.is_empty() && s.uid.as_deref().is_some_and(|u| on_underlay(doc, u))).count();
     let warnings = if paper > 0 {
-        vec![kentos_contracts::CommandWarning {
+        vec![kentos_commands::CommandWarning {
             code: codes::UNDERLAY_MEASURE.into(),
             message: format!(
                 "{paper} kenet bir PDF altlığının çizgisinde: yeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir."
@@ -112,7 +112,7 @@ pub fn on_underlay(doc: &Document, uid: &str) -> bool {
         .and_then(|u| doc.slot_of(u))
         .and_then(|s| doc.get(s))
         .and_then(|e| match e {
-            kentos_contracts::Entity::Insert(i) => doc.block(i.block),
+            kentos_commands::Entity::Insert(i) => doc.block(i.block),
             _ => None,
         })
         .is_some_and(|b| b.xref.as_ref().is_some_and(|x| x.page.is_some()))
@@ -190,7 +190,7 @@ fn found(doc: &Document, h: SnapHit) -> FoundSnap {
     let placed = slot.and_then(|s| doc.get(s)).and_then(|e| {
         let core = core_entity(e);
         // An insert's own insertion point is its place; its pieces' points are inside it.
-        if matches!(e, kentos_contracts::Entity::Insert(_)) && h.kind != SnapKind::Insertion {
+        if matches!(e, kentos_commands::Entity::Insert(_)) && h.kind != SnapKind::Insertion {
             place_in(&core_blocks(doc.blocks()), &core, h.kind, h.point)
         } else {
             place_at(&core, h.kind, h.point).map(|p| (Vec::new(), p))

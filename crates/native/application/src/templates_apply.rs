@@ -7,7 +7,7 @@
 //! Checks, in order: the template's name (`unknown_template`), the unit (`invalid_template_unit`: mm or cm), the expected
 //! revision.
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockEditOperation, BlocksEdit, CommandResult, CommandWarning, DrawingUnit, StandardsApply,
     TemplateSheet, TemplatesApplied, TemplatesApply, WorkTemplate, builtin_template,
     builtin_wall_styles,
@@ -248,8 +248,8 @@ pub fn plan_in(doc: &Document, input: &TemplatesApply) -> CommandResult<Template
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TemplatesApply) -> CommandResult<TemplatesApplied> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_TEMPLATES_APPLY,
-        kentos_contracts::CAD_TEMPLATES_APPLY_VERSION,
+        kentos_commands::CAD_TEMPLATES_APPLY,
+        kentos_commands::CAD_TEMPLATES_APPLY_VERSION,
         input,
         write_execute,
     )

@@ -33,7 +33,7 @@ use std::time::Instant;
 
 use iced::Task;
 use iced::futures::channel::oneshot;
-use kentos_contracts::{
+use kentos_commands::{
     AddressLocator, CommandResult, EntitiesCreate, EntitiesSetProperties, EntitiesTransform,
     Entity, EntityGeometry, NewObject, PropertiesOperation, Transform, Vec2 as Wire,
 };
@@ -64,7 +64,7 @@ pub(crate) const ADDRESS_FIELD: &str = "address-box";
 pub const PANEL_HEIGHT: f64 = 260.0;
 
 /// The score under which an online provider's best candidate is said unmatched (§10, as a batch's).
-pub const ONLINE_MIN_SCORE: u32 = kentos_contracts::ADDRESS_MIN_SCORE;
+pub const ONLINE_MIN_SCORE: u32 = kentos_commands::ADDRESS_MIN_SCORE;
 
 /// The table's columns.
 pub const COLUMNS: [&str; 7] = ["Sıra", "Adres", "Tür", "Puan", "Mahalle", "İlçe", "Kaynak"];
@@ -176,7 +176,7 @@ struct Stamp {
     def: AddressLocator,
     mark: ChangeMark,
     members: HashSet<u32>,
-    filters: Vec<Option<kentos_contracts::LayerFilter>>,
+    filters: Vec<Option<kentos_commands::LayerFilter>>,
 }
 
 /// The tab's state and the windows', kept for as long as the app lives.
@@ -206,7 +206,7 @@ pub(crate) struct State {
     pub(crate) providers: Option<providers::Window>,
 }
 
-fn filters_of(def: &AddressLocator, doc: &Document) -> Vec<Option<kentos_contracts::LayerFilter>> {
+fn filters_of(def: &AddressLocator, doc: &Document) -> Vec<Option<kentos_commands::LayerFilter>> {
     def.layers()
         .iter()
         .map(|l| doc.layers().get(l).and_then(|n| n.filter.clone()))
@@ -912,7 +912,7 @@ impl App {
         let shown = self.document.as_ref().is_some_and(|d| {
             crate::services::overlay::shown(&d.model)
                 .iter()
-                .any(|(_, s)| s.kind == kentos_contracts::ServiceKind::Google)
+                .any(|(_, s)| s.kind == kentos_commands::ServiceKind::Google)
         });
         online().set_google_shown(shown);
     }

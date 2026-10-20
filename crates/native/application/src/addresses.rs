@@ -9,7 +9,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::{AddressLocator, AreaLevel, Entity};
+use kentos_commands::{AddressLocator, AreaLevel, Entity};
 use kentos_domain::Document;
 use kentos_geometry_core::ops::geocode::{
     AreaInput, DoorInput, Input, Level, Locator, StreetInput,

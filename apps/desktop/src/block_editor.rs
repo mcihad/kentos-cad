@@ -17,7 +17,7 @@
 
 use iced::widget::{row, text};
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     BlockEditOperation, BlockId, BlocksEdit, CommandResult, Entity, LayerNode, LayerNodeType,
 };
 use kentos_native_application::{ExecutionContext, blocks_edit};
@@ -97,7 +97,7 @@ fn editor_document(original: &Document, block: BlockId) -> Result<(Document, Str
     snapshot.active_layer = BLOCK_LAYER.to_owned();
     snapshot.uids = entities
         .iter()
-        .map(|_| kentos_contracts::EntityId(*kentos_domain::Uuid::now_v7().as_bytes()))
+        .map(|_| kentos_commands::EntityId(*kentos_domain::Uuid::now_v7().as_bytes()))
         .collect();
     snapshot.entities = entities;
     snapshot.name = format!("Blok düzenleyici: {}", def.name);
@@ -109,7 +109,7 @@ fn editor_document(original: &Document, block: BlockId) -> Result<(Document, Str
 }
 
 /// An object's base, to renumber and move it.
-pub(crate) fn base_mut(e: &mut Entity) -> &mut kentos_contracts::EntityBase {
+pub(crate) fn base_mut(e: &mut Entity) -> &mut kentos_commands::EntityBase {
     e.base_mut()
 }
 

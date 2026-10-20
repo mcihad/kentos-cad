@@ -5,7 +5,7 @@
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, WallJoinIssue, WallsJoins};
+use kentos_commands::{CommandResult, WallJoinIssue, WallsJoins};
 use kentos_interaction::Level;
 use kentos_ui::icon::icon;
 use kentos_ui::widget::{Dialog as Frame, overlay};

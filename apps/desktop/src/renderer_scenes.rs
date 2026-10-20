@@ -40,7 +40,7 @@ const ORANTILI: [f64; 4] = [2960.0, -120.0, 3660.0, 560.0];
 /// The drawing open, the CBS ribbon's Harita on.
 fn opened(app: &mut App) {
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.tab = "map";

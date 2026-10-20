@@ -12,7 +12,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CloudRender, CommandResult, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry,
     MAX_POINT_SIZE, MIN_POINT_SIZE, PointCloudFields, PointCloudStyle, PointShape, PointSizeUnit,
     RASTER_RAMPS,

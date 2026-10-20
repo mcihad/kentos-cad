@@ -16,7 +16,7 @@
 //! The splice and the end directions are the shared core's
 //! (`ops::continuation`); none is computed here.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit, EntityGeometry};
+use kentos_commands::{EditOperation, Entity, EntityEdit, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::ops::continuation::{Ends, continue_path, path_ends};

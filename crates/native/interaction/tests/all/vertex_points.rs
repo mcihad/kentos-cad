@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Entity, EntityBase, PathEntity, PointEntity, Vec2};
+use kentos_commands::{Entity, EntityBase, PathEntity, PointEntity, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::{Level, MarkerShape, ViewChange};
 

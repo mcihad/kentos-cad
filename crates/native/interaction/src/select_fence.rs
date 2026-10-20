@@ -74,7 +74,7 @@ impl SelectFence {
             return Flow::Stay;
         }
         let fence = std::mem::take(&mut self.pts);
-        let region = kentos_contracts::SelectRegion::Fence {
+        let region = kentos_commands::SelectRegion::Fence {
             points: fence
                 .iter()
                 .copied()

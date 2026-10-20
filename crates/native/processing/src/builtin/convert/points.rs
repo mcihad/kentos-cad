@@ -3,7 +3,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::{Shape, area_parts};
 use kentos_geometry_core::ops::convert::points::{Which, centroid, interior_point, vertex_points};

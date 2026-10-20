@@ -25,7 +25,7 @@
 //! refusal (a triangle's corner, a lock) is said; else “<step>: tamam.”.
 //! The transforms are the host's: it starts the tool and gives it the grip.
 
-use kentos_contracts::{EntitiesVertex, StretchTopology, SubPlace, VertexAction};
+use kentos_commands::{EntitiesVertex, StretchTopology, SubPlace, VertexAction};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, area_parts};
 use kentos_geometry_core::geom::bulge::{bulge_at, is_arc_bulge};

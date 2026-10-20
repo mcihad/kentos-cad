@@ -8,7 +8,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, StacItemInfo, StacNext, StacPrepare, StacPrepared, StacQa,
     StacSearch, StacSearchRecord, StacSearched,
 };
@@ -192,7 +192,7 @@ fn defaults(item: &StacItemInfo) -> (BTreeSet<String>, Option<String>) {
 }
 
 /// What an asset's row says beside its bands.
-fn note_of(a: &kentos_contracts::StacAssetInfo) -> String {
+fn note_of(a: &kentos_commands::StacAssetInfo) -> String {
     let mut notes = Vec::new();
     if !kentos_services::stac::href::is_http(&a.href) {
         notes.push("http değil");
@@ -209,7 +209,7 @@ fn note_of(a: &kentos_contracts::StacAssetInfo) -> String {
     notes.join(", ")
 }
 
-fn scale_of(a: &kentos_contracts::StacAssetInfo) -> String {
+fn scale_of(a: &kentos_commands::StacAssetInfo) -> String {
     match a.raster_bands.first() {
         Some(b) if b.scale.is_some() || b.offset.is_some() => format!(
             "{} · {}",
@@ -221,7 +221,7 @@ fn scale_of(a: &kentos_contracts::StacAssetInfo) -> String {
 }
 
 /// The rows of an item worth listing: the bands and the data (not thumbnails and metadata).
-fn listed(item: &StacItemInfo) -> impl Iterator<Item = &kentos_contracts::StacAssetInfo> {
+fn listed(item: &StacItemInfo) -> impl Iterator<Item = &kentos_commands::StacAssetInfo> {
     item.assets.iter().filter(|a| {
         !a.raster_bands.is_empty()
             || !a.bands.is_empty()
@@ -810,11 +810,11 @@ fn seconds_of(d: &str) -> String {
 }
 
 /// A mask rule in words.
-fn mask_words(m: &kentos_contracts::StacMask) -> String {
+fn mask_words(m: &kentos_commands::StacMask) -> String {
     let join = |v: &[u32]| v.iter().map(u32::to_string).collect::<Vec<_>>().join(", ");
     match m {
-        kentos_contracts::StacMask::Values { values } => format!("sınıf {}", join(values)),
-        kentos_contracts::StacMask::Bits { bits } => format!("bit {}", join(bits)),
+        kentos_commands::StacMask::Values { values } => format!("sınıf {}", join(values)),
+        kentos_commands::StacMask::Bits { bits } => format!("bit {}", join(bits)),
     }
 }
 
@@ -844,14 +844,14 @@ mod tests {
         app
     }
 
-    fn rasters(app: &App) -> Vec<kentos_contracts::RasterEntity> {
+    fn rasters(app: &App) -> Vec<kentos_commands::RasterEntity> {
         app.document
             .as_ref()
             .expect("a drawing")
             .model
             .entities()
             .filter_map(|e| match e {
-                kentos_contracts::Entity::Raster(r) => Some(r.clone()),
+                kentos_commands::Entity::Raster(r) => Some(r.clone()),
                 _ => None,
             })
             .collect()

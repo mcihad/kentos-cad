@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 

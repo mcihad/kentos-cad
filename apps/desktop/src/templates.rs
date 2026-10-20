@@ -14,7 +14,7 @@
 //! template from starting, and says so.
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationKind, BlockId, CommandResult, EntitiesSetProperties, PropertiesOperation, TextAlign,
 };
 use kentos_interaction::templates::{
@@ -533,7 +533,7 @@ mod tests {
     //! and Son komutu yinele. The shared trace is
     //! fixtures/interaction/v1/template-draw.json.
 
-    use kentos_contracts::ProjectStyles;
+    use kentos_commands::ProjectStyles;
     use serde_json::json;
 
     use crate::app::{App, Message};

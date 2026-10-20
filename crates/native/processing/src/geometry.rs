@@ -5,7 +5,7 @@
 //! numbering, the texts beside numbered corners, edge-length labels. This
 //! only packs and reads: no coordinate is computed here.
 
-use kentos_contracts::{Entity, Vec2};
+use kentos_commands::{Entity, Vec2};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::spatial_query::Relation;

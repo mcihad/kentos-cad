@@ -22,7 +22,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
-use kentos_contracts::{BlockDefinition, BlockId, Entity, LayerNode, LayerStyle};
+use kentos_commands::{BlockDefinition, BlockId, Entity, LayerNode, LayerStyle};
 use kentos_domain::{ChangeMark, Changes, Slot, SlotMap};
 use kentos_geometry_core::store::Store;
 use kentos_native_style::batches::{DecodeOptions, StyledLayer, decode, merged_order};
@@ -64,9 +64,9 @@ struct Layer {
     /// Its objects changed while it was hidden.
     stale: bool,
     /// Its time setting when built (docs/adr/0210 §6): another one gives its objects other times.
-    time: Option<kentos_contracts::LayerTime>,
+    time: Option<kentos_commands::LayerTime>,
     /// Its filter when built (docs/adr/0211 §3): another one lets other objects through.
-    filter: Option<kentos_contracts::LayerFilter>,
+    filter: Option<kentos_commands::LayerFilter>,
 }
 
 /// What of a shown layer is built again: all of it, or some of its parts.
@@ -116,7 +116,7 @@ pub struct StyledCache {
     /// The view the walls were drawn at (docs/adr/0339 §4): when the store's changes, their parts again.
     wall_view: Option<kentos_geometry_core::geom::wall::View>,
     /// The view's theme the layers were shown with (docs/adr/0523 §1).
-    theme: Option<kentos_contracts::LayerState>,
+    theme: Option<kentos_commands::LayerState>,
 }
 
 /// What a view-dependent layer was built for.
@@ -276,7 +276,7 @@ fn compositions(
 }
 
 /// The services of the layers drawn now (shown, with their groups), bottom first.
-pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_contracts::ServiceLayer> {
+pub(crate) fn shown_service_layers(nodes: &[LayerNode]) -> Vec<&kentos_commands::ServiceLayer> {
     shown_layers(nodes)
         .into_iter()
         .filter_map(|n| n.service.as_ref())
@@ -343,7 +343,7 @@ impl StyledCache {
         drawing: u64,
         doc: &kentos_domain::Document,
         nodes: &[LayerNode],
-        theme: Option<&kentos_contracts::LayerState>,
+        theme: Option<&kentos_commands::LayerState>,
         store: &Store,
         library: &StyleLibrary,
         look: &Look,
@@ -413,7 +413,7 @@ impl StyledCache {
         // parts holding an insert of it, or of one placing it, are built again.
         let changed = changed_blocks(&self.blocks, doc.blocks());
         if !all && !changed.is_empty() {
-            let reached = kentos_contracts::blocks::reaching(doc.blocks(), &changed);
+            let reached = kentos_commands::blocks::reaching(doc.blocks(), &changed);
             for e in doc.entities() {
                 if let Entity::Insert(i) = e
                     && reached.contains(&i.block)
@@ -916,7 +916,7 @@ impl StyledCache {
         &mut self,
         doc: &kentos_domain::Document,
         node: &LayerNode,
-        service: &kentos_contracts::ServiceLayer,
+        service: &kentos_commands::ServiceLayer,
     ) -> Arc<StyledLayerPart> {
         use kentos_native_style::batches::{BatchKind, FillPaintBatch, StyledBatch, Unit};
         let connection = service

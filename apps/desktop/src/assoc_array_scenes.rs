@@ -27,7 +27,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{ArrayLayout, CommandResult, EntitiesArray, Entity, Vec2};
+use kentos_commands::{ArrayLayout, CommandResult, EntitiesArray, Entity, Vec2};
 use kentos_domain::Slot;
 use kentos_native_application::{ExecutionContext, array};
 

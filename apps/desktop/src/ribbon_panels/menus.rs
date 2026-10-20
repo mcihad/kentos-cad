@@ -4,7 +4,7 @@
 
 use iced::widget::{column, container, row, space, text};
 use iced::{Color, Element, Fill};
-use kentos_contracts::LineType;
+use kentos_commands::LineType;
 use kentos_ui::icon::Icon;
 use kentos_ui::label;
 use kentos_ui::theme::{Tokens, typography};

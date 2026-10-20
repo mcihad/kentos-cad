@@ -54,8 +54,8 @@ fn a_typed_turn_is_the_projects_unit_and_way_and_u_and_k_need_no_point() {
     // UCS'e göre: the UCS's x axis horizontal; the world's is north up.
     let mut b = Bench::new("viewTwist");
     let mut s = b.doc.settings().clone();
-    s.ucs = Some(kentos_contracts::Ucs::new(
-        kentos_contracts::Vec2 { x: 0.0, y: 0.0 },
+    s.ucs = Some(kentos_commands::Ucs::new(
+        kentos_commands::Vec2 { x: 0.0, y: 0.0 },
         0.75,
     ));
     b.doc.set_settings(s);

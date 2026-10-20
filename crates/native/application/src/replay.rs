@@ -16,7 +16,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CallEnvelope, CallKind, CallOp, CallRecord, CallStatus, CommandResult, REPLAY_FORMAT,
     REPLAY_VERSION, ReplayJournal, ReplayOutcome, ReplayReport, ReplayStep,
 };
@@ -47,7 +47,7 @@ fn skipped(row: &CallRecord, note: &str) -> ReplayStep {
 }
 
 /// The codes of a list of warnings, sorted.
-fn codes_of(warnings: &[kentos_contracts::CommandWarning]) -> Vec<String> {
+fn codes_of(warnings: &[kentos_commands::CommandWarning]) -> Vec<String> {
     let mut codes: Vec<String> = warnings.iter().map(|w| w.code.clone()).collect();
     codes.sort();
     codes

@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockId, CommandResult, Entity, IMPACT_UIDS, ImpactOwn, ImpactTarget, LayerNode, StyleImpact,
     StylesImpact,
 };
@@ -216,7 +216,7 @@ fn impact(doc: &Document, input: &StylesImpact) -> Result<StyleImpact, Stop> {
                 .settings()
                 .line_types
                 .iter()
-                .find(|t| kentos_contracts::same_line_type_name(&t.name, id))
+                .find(|t| kentos_commands::same_line_type_name(&t.name, id))
                 .ok_or_else(|| {
                     fail(
                         codes::LINE_TYPE_NOT_FOUND,
@@ -225,7 +225,7 @@ fn impact(doc: &Document, input: &StylesImpact) -> Result<StyleImpact, Stop> {
                 })?;
             out.name = def.name.clone();
             let named =
-                |p: Option<&str>| p.is_some_and(|p| kentos_contracts::same_line_type_name(p, id));
+                |p: Option<&str>| p.is_some_and(|p| kentos_commands::same_line_type_name(p, id));
             let mut all = Vec::new();
             leaves(doc.layers().nodes(), &mut all);
             let layers: Vec<&LayerNode> = all
@@ -260,7 +260,7 @@ fn impact(doc: &Document, input: &StylesImpact) -> Result<StyleImpact, Stop> {
                                 && base
                                     .look
                                     .by_layer
-                                    .contains(&kentos_contracts::LookPart::LineType))
+                                    .contains(&kentos_commands::LookPart::LineType))
                     })
                     .count() as u32;
                 if pieces > 0 {
@@ -296,7 +296,7 @@ fn impact(doc: &Document, input: &StylesImpact) -> Result<StyleImpact, Stop> {
             let face = style.face();
             let height = style.height_at(doc.settings().plot_scale);
             let mut own = Own::new(&["font", "bold", "italic", "oblique", "widthFactor", "height"]);
-            let count = |t: &kentos_contracts::TextEntity, own: &mut Own| {
+            let count = |t: &kentos_commands::TextEntity, own: &mut Own| {
                 if t.face.font != face.font {
                     own.add("font");
                 }

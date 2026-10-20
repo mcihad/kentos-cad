@@ -15,9 +15,9 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::blocks::name_key;
-use kentos_contracts::units::Scale;
-use kentos_contracts::{
+use kentos_commands::blocks::name_key;
+use kentos_commands::units::Scale;
+use kentos_commands::{
     BlockDefinition, BlockInserted, BlockUnits, BlocksInsert, BlocksInsertPlan, CommandResult,
     CommandWarning, Entity, EntityBase, InsertEntity,
 };
@@ -64,8 +64,8 @@ pub fn plan_in(doc: &Document, input: &BlocksInsert) -> CommandResult<BlocksInse
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksInsert) -> CommandResult<BlockInserted> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_INSERT,
-        kentos_contracts::CAD_BLOCKS_INSERT_VERSION,
+        kentos_commands::CAD_BLOCKS_INSERT,
+        kentos_commands::CAD_BLOCKS_INSERT_VERSION,
         input,
         write_execute,
     )
@@ -159,11 +159,11 @@ fn check(doc: &Document, input: &BlocksInsert) -> Result<Checked, Stop> {
         "rotation",
     )?;
     let scale = input.scale.unwrap_or(1.0);
-    if !kentos_contracts::blocks::scale_ok(scale) {
+    if !kentos_commands::blocks::scale_ok(scale) {
         return Err(invalid_scale("Ölçek", "scale"));
     }
     if let Some(y) = input.y_scale
-        && !kentos_contracts::blocks::scale_ok(y)
+        && !kentos_commands::blocks::scale_ok(y)
     {
         return Err(invalid_scale("Y ölçeği", "yScale"));
     }

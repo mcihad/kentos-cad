@@ -25,7 +25,7 @@
 
 use iced::widget::{column, container, row, text};
 use iced::{Center, Color, Element, Fill};
-use kentos_contracts::{LayerNode, LayerNodeType, LineType};
+use kentos_commands::{LayerNode, LayerNodeType, LineType};
 use kentos_interaction::DraftColor;
 use kentos_native_style::library::ItemKind;
 use kentos_native_style::object_template::{listed, tool_label};
@@ -378,7 +378,7 @@ impl App {
             .collect();
         let (line_type, weight) = (self.draft.line_type, self.draft.line_weight);
         let scale = doc.settings().plot_scale;
-        let cad = self.work_mode() == kentos_contracts::Workspace::Cad;
+        let cad = self.work_mode() == kentos_commands::Workspace::Cad;
         let s = typography::scaled;
         let fields_width = move |level: Level| match level {
             0 => s(188.0),

@@ -7,7 +7,7 @@
 //!   its corners, Enter closes it and writes; Geri al (G) takes the last corner back.
 //! - Mahali böl: a space, then the cut line's two points; the pieces are drawn, the second point writes.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, NewSpace, SpaceMethod, SpacePart, SpaceRing, SpacesCreate, SpacesEdit,
     SpacesOperation,
 };

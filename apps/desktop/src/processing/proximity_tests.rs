@@ -3,7 +3,7 @@
 //! table under the form and its counts written in one step, En yakını bul's
 //! fields, and the pictures for the owner.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::json;
 

@@ -44,7 +44,7 @@ fn shown(app: &mut App) {
     {
         let doc = app.document.as_mut().expect("a drawing");
         let mut settings = doc.settings().clone();
-        settings.workspace = Some(kentos_contracts::Workspace::Gis);
+        settings.workspace = Some(kentos_commands::Workspace::Gis);
         settings.plot_scale = 500.0;
         doc.model.set_settings(settings);
     }

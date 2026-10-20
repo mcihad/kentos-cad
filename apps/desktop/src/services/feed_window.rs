@@ -15,7 +15,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use iced::widget::{Column, button, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, FeatureFeed, FeedKind, LayerServiceOperation, LayersService,
 };
 use kentos_services::feed::{DEFAULT_MOST, Ending, FeedChoice, FeedConnecting, Taking};
@@ -96,7 +96,7 @@ pub struct Taken {
     /// How the take ended: only `Complete` is all of the service's objects (docs/adr/0513).
     pub ending: Ending,
     /// What the pages' readers left out, summed.
-    pub skipped: Vec<kentos_contracts::ReportItem>,
+    pub skipped: Vec<kentos_commands::ReportItem>,
 }
 
 #[derive(Clone, Debug)]
@@ -395,8 +395,8 @@ impl App {
         &self,
         id: Option<&String>,
     ) -> Option<(
-        kentos_contracts::ServiceConnection,
-        Option<kentos_contracts::ConnectionSecret>,
+        kentos_commands::ServiceConnection,
+        Option<kentos_commands::ConnectionSecret>,
     )> {
         let id = id?;
         let c = self
@@ -637,7 +637,7 @@ impl App {
                                 .collect()
                         })
                         .collect();
-                    let fields = kentos_contracts::fields::infer_fields(
+                    let fields = kentos_commands::fields::infer_fields(
                         rows.iter().map(Vec::as_slice),
                         kentos_geometry_core::text::natural::natural_cmp,
                     );
@@ -842,14 +842,14 @@ impl App {
         }
         let items = w.items();
         if !items.is_empty() {
-            let needle = kentos_contracts::fields::fold(w.search.trim());
+            let needle = kentos_commands::fields::fold(w.search.trim());
             let mut list = Column::new().spacing(1);
             for it in items
                 .iter()
                 .filter(|i| {
                     needle.is_empty()
-                        || kentos_contracts::fields::fold(&i.title).contains(&needle)
-                        || kentos_contracts::fields::fold(&i.id).contains(&needle)
+                        || kentos_commands::fields::fold(&i.title).contains(&needle)
+                        || kentos_commands::fields::fold(&i.id).contains(&needle)
                 })
                 .take(400)
             {
@@ -1046,7 +1046,7 @@ fn replace_objects(
         }) {
             Some(i) => {
                 let mut f = fresh[i].clone();
-                *f.base_mut() = kentos_contracts::EntityBase {
+                *f.base_mut() = kentos_commands::EntityBase {
                     attrs: f.base().attrs.clone(),
                     ..e.base().clone()
                 };
@@ -1074,8 +1074,8 @@ pub(crate) fn take_all(
     feed: &FeatureFeed,
     project: &super::systems::ProjectSystem,
     conn: Option<&(
-        kentos_contracts::ServiceConnection,
-        Option<kentos_contracts::ConnectionSecret>,
+        kentos_commands::ServiceConnection,
+        Option<kentos_commands::ConnectionSecret>,
     )>,
     most: u32,
     geojson: bool,
@@ -1102,7 +1102,7 @@ pub(crate) fn take_all(
         let body = super::net::send_text(req, conn.map(|(c, s)| (c, s.as_ref())), &feed.url, 4)?;
         let (mut result, more) = taking.answer(&body, "")?;
         dropped += kentos_services::features::transform(&mut result, |p| {
-            (pair.to_project)(p.x, p.y).map(|(x, y)| kentos_contracts::Vec2 { x, y })
+            (pair.to_project)(p.x, p.y).map(|(x, y)| kentos_commands::Vec2 { x, y })
         });
         entities.extend(result.entities);
         progress(entities.len() as u64);

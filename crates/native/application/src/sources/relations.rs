@@ -8,7 +8,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::{LayerField, ProjectRelation, SourceKind, SourceLink};
+use kentos_commands::{LayerField, ProjectRelation, SourceKind, SourceLink};
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage::relations::{KENTOS_RELATION, Key, MapEdit, Relation};
 use kentos_geopackage::{GeoPackage, Layer};
@@ -105,8 +105,8 @@ pub(super) fn listed(
     file: &GeoPackage,
     layers: &[Layer],
     table: &str,
-) -> Vec<kentos_contracts::SourceRelation> {
-    use kentos_contracts::{SourceRelation, SourceRelationKind};
+) -> Vec<kentos_commands::SourceRelation> {
+    use kentos_commands::{SourceRelation, SourceRelationKind};
     let Ok(all) = file.relations() else {
         return Vec::new();
     };

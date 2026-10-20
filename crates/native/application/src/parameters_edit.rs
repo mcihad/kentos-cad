@@ -9,7 +9,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     BoundChange, CadParameter, CommandResult, ConstraintRule, ConstraintSet, ParameterEdit,
     ParameterValue, ParametersEdit, ParametersEditPlan, ParametersEdited, param_expr_names,
     parameter_name_valid, parse_param_expr, rename_in_expression,
@@ -68,8 +68,8 @@ pub fn execute(
 ) -> CommandResult<ParametersEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_PARAMETERS_EDIT,
-        kentos_contracts::CAD_PARAMETERS_EDIT_VERSION,
+        kentos_commands::CAD_PARAMETERS_EDIT,
+        kentos_commands::CAD_PARAMETERS_EDIT_VERSION,
         input,
         write_execute,
     )

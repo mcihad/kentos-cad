@@ -6,7 +6,7 @@
 
 use iced::widget::{Column, row, text};
 use iced::{Element, Task};
-use kentos_contracts::{CommandResult, ImpactTarget, StyleImpact, StylesImpact};
+use kentos_commands::{CommandResult, ImpactTarget, StyleImpact, StylesImpact};
 use kentos_native_application::{ExecutionContext, styles_impact};
 use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};

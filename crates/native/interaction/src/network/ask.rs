@@ -4,7 +4,7 @@
 //! network from the drawing when it must and answers with the core's typed
 //! answers (`ops::network::session`).
 
-use kentos_contracts::NetworkDef;
+use kentos_commands::NetworkDef;
 use kentos_geometry_core::ops::network::{
     Checked, Place, Refusal, Reorder, Routed, Served, TraceAnswer, TraceKind,
 };

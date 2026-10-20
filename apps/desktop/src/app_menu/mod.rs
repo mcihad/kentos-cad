@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use iced::Task;
 use kentos_cloud::{ApiFailure, CatalogQuery};
-use kentos_contracts::{CatalogView, ProjectPage, ProjectSummary};
+use kentos_commands::{CatalogView, ProjectPage, ProjectSummary};
 use kentos_ui::icon::Icon;
 
 use crate::app::{App, Message, Then};

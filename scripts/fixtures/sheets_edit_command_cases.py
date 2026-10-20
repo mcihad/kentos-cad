@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.sheets.edit.json: the shared cases of `cad.sheets.edit` v1 (docs/adr/0252 §2).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_sheets.rs: the checks and
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_sheets.rs: the checks and
 their order, the codes, paths and words), the sheet core's operations as its model writes them (kentos.sheet/1:
 crates/shared/sheet/src/model.rs, ops.rs, docs/sheet/design.md) and docs/adr/0251 §3, without KentOS code:
 

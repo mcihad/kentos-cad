@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::Bench;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{Level, MarkerShape, Tone};
 
@@ -311,9 +311,9 @@ fn reverse_leaves_what_has_no_direction_and_says_so() {
 }
 
 fn circle() -> Entity {
-    Entity::Circle(kentos_contracts::CircleEntity {
+    Entity::Circle(kentos_commands::CircleEntity {
         base: common::base("cizim"),
-        c: kentos_contracts::Vec2 {
+        c: kentos_commands::Vec2 {
             x: common::E + 30.0,
             y: common::N + 30.0,
         },

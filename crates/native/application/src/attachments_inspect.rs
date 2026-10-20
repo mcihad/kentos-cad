@@ -7,7 +7,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{
+use kentos_commands::{
     Attachment, AttachmentFacts, AttachmentSource, AttachmentsInspect, AttachmentsInspected,
     CommandResult, InspectedObject, MOST_INSPECTED,
 };
@@ -152,7 +152,7 @@ fn asset_bytes(doc: &Document, id: &str) -> Option<Vec<u8>> {
     })?;
     let data = item.get("data")?.as_str()?;
     let (_, b64) = data.split_once(";base64,")?;
-    kentos_contracts::encoding::base64_decode(b64)
+    kentos_commands::encoding::base64_decode(b64)
 }
 
 /// What one attachment is.
@@ -201,7 +201,7 @@ fn facts(doc: &Document, a: &Attachment, folder: Option<&Path>) -> AttachmentFac
     };
     if let Some(b) = &bytes {
         out.size = Some(b.len() as u64);
-        out.sha256 = Some(kentos_contracts::encoding::sha256_hex(b));
+        out.sha256 = Some(kentos_commands::encoding::sha256_hex(b));
         if matches!(out.mime.as_deref(), Some("image/jpeg" | "image/tiff")) {
             let exif = kentos_formats::exif::read(b);
             out.taken = exif.taken;

@@ -14,7 +14,7 @@
 
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, FieldChoice, FieldRename, LayerEditOperation, LayerField, LayerFieldKind,
     LayerNodeType, LayersEdit, check_value, fields_problem,
 };
@@ -74,8 +74,8 @@ pub struct FieldRow {
     /// A listed text field holds several codes (docs/adr/0408 §1).
     pub multiple: bool,
     /// Bölünce and Birleşince (docs/adr/0419).
-    pub split: Option<kentos_contracts::SplitPolicy>,
-    pub merge: Option<kentos_contracts::MergePolicy>,
+    pub split: Option<kentos_commands::SplitPolicy>,
+    pub merge: Option<kentos_commands::MergePolicy>,
     /// The project's value list it links (docs/adr/0430); its values or bounds are that list's.
     pub domain: Option<String>,
     /// Tekil, the range's ends left out and the unit (docs/adr/0438 §3, §4).
@@ -144,7 +144,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
         // A date typed as 7.10.2026 is kept in its one form; what does not read stays, to be said.
         let canonical = |t: &str| {
             if r.kind.is_temporal() {
-                kentos_contracts::check_value(&LayerField::new("aralık", r.kind), t)
+                kentos_commands::check_value(&LayerField::new("aralık", r.kind), t)
                     .unwrap_or_else(|_| t.to_owned())
             } else {
                 t.to_owned()
@@ -185,7 +185,7 @@ pub fn field_of(r: &FieldRow) -> LayerField {
 /// kept in its one form; what does not read stays, for the window to say.
 fn set_day(w: &mut Window, i: usize, typed: String, from: bool) {
     let day = (!typed.trim().is_empty()).then(|| {
-        kentos_contracts::check_value(&LayerField::new("gün", LayerFieldKind::Date), &typed)
+        kentos_commands::check_value(&LayerField::new("gün", LayerFieldKind::Date), &typed)
             .unwrap_or(typed.clone())
     });
     if let Some(c) = w
@@ -299,8 +299,8 @@ pub enum Event {
     MaxExclusive(bool),
     Unit(String),
     /// Bölünce and Birleşince of a row (docs/adr/0419).
-    Split(usize, Option<kentos_contracts::SplitPolicy>),
-    Merge(usize, Option<kentos_contracts::MergePolicy>),
+    Split(usize, Option<kentos_commands::SplitPolicy>),
+    Merge(usize, Option<kentos_commands::MergePolicy>),
     ListAdd,
     ListRemove(usize),
     /// Birden çok değer seçilebilir (docs/adr/0408 §1).
@@ -364,7 +364,7 @@ impl App {
         &self,
         layer: &str,
         name: &str,
-    ) -> Vec<kentos_contracts::FieldUse> {
+    ) -> Vec<kentos_commands::FieldUse> {
         let Some(doc) = &self.document else {
             return Vec::new();
         };
@@ -755,10 +755,10 @@ impl App {
         for u in &uses {
             let mut line = row![
                 icon(from_web(Some(match u.how {
-                    kentos_contracts::FieldUseHow::Key => "formEdit",
-                    kentos_contracts::FieldUseHow::Name => "layerFields",
-                    kentos_contracts::FieldUseHow::Expression => "expression",
-                    kentos_contracts::FieldUseHow::Template => "text",
+                    kentos_commands::FieldUseHow::Key => "formEdit",
+                    kentos_commands::FieldUseHow::Name => "layerFields",
+                    kentos_commands::FieldUseHow::Expression => "expression",
+                    kentos_commands::FieldUseHow::Template => "text",
                 })))
                 .size(14.0),
                 label::body(u.place.clone()),
@@ -777,7 +777,7 @@ impl App {
         if r.name != from {
             let follows = uses
                 .iter()
-                .filter(|u| !u.kept && u.how != kentos_contracts::FieldUseHow::Key)
+                .filter(|u| !u.kept && u.how != kentos_commands::FieldUseHow::Key)
                 .count();
             let mut said = format!(
                 "“{from}” adı “{}” olunca {follows} yer yeni adla güncellenecek; alanın anahtarıyla bağlı olanlar bağlı kalır.",
@@ -1047,7 +1047,7 @@ impl App {
         );
         // Projenin listesi (docs/adr/0430): the project's lists of this field's kind.
         let row_kind = w.rows.get(c.row).map(|r| r.kind);
-        let fitting: Vec<&kentos_contracts::FieldDomain> = domains
+        let fitting: Vec<&kentos_commands::FieldDomain> = domains
             .iter()
             .filter(|d| Some(d.kind) == row_kind)
             .collect();
@@ -1078,7 +1078,7 @@ impl App {
             };
             let shown_day = |d: &Option<String>| {
                 d.as_deref().map_or_else(String::new, |d| {
-                    kentos_contracts::display_value(
+                    kentos_commands::display_value(
                         &LayerField::new("gün", LayerFieldKind::Date),
                         d,
                     )
@@ -1250,7 +1250,7 @@ impl App {
 
 /// Bölünce and Birleşince of the chosen row (docs/adr/0419): only what its kind takes.
 fn policy_box<'a>(w: &Window) -> Element<'a, Message> {
-    use kentos_contracts::{MergePolicy, SplitPolicy};
+    use kentos_commands::{MergePolicy, SplitPolicy};
     let Some((i, r)) = w.chosen.and_then(|i| w.rows.get(i).map(|r| (i, r))) else {
         return iced::widget::space().into();
     };
@@ -1323,14 +1323,14 @@ impl App {
         };
         let result = kentos_native_application::fields_migrate::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::FieldsMigrate {
+            kentos_commands::FieldsMigrate {
                 layer: layer.to_owned(),
                 fields: Vec::new(),
                 expected_revision: None,
             },
         );
         let (said, done) = match result {
-            kentos_contracts::CommandResult::Completed { output, warnings } => {
+            kentos_commands::CommandResult::Completed { output, warnings } => {
                 let changed: u32 = output.fields.iter().map(|f| f.changed).sum();
                 let unfit: u32 = output.fields.iter().map(|f| f.unfit).sum();
                 let mut text = if changed == 0 {
@@ -1359,9 +1359,9 @@ impl App {
                 };
                 ((kind, text), changed > 0)
             }
-            kentos_contracts::CommandResult::Failed { error }
-            | kentos_contracts::CommandResult::Conflict { error }
-            | kentos_contracts::CommandResult::NeedsInput { error } => {
+            kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } => {
                 ((Kind::Error, error.message), false)
             }
             _ => return Task::none(),

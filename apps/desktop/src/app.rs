@@ -14,7 +14,7 @@ use iced::widget::operation;
 use iced::{Subscription, Task, Theme, event, keyboard, window};
 use serde_json::Value;
 
-use kentos_contracts::{ResolveReason, SettingConstraint};
+use kentos_commands::{ResolveReason, SettingConstraint};
 use kentos_interaction::{
     Clipboard, Draft, Level, Memory, Selection, Session, SnapHit, Spatial, snap_kinds,
 };
@@ -320,7 +320,7 @@ pub enum Then {
         project: kentos_domain::Uuid,
     },
     /// Buluta yükle, on the storage it starts with.
-    Upload(kentos_contracts::ProjectStorage),
+    Upload(kentos_commands::ProjectStorage),
     /// The drawing's own cloud project again, from the server.
     Reopen,
     /// The new project the Yeni proje window built (project/new.rs).
@@ -666,7 +666,7 @@ pub enum Message {
     /// The interface's look from the Görünüm tab (appearance.rs).
     Appearance(crate::appearance::Event),
     /// The server's answer to `server.check` (view_commands.rs).
-    ServerChecked(Result<kentos_contracts::Health, String>),
+    ServerChecked(Result<kentos_commands::Health, String>),
     /// A layer ticked or unticked on the Çakışma cell's menu (docs/adr/0162 §1).
     OverlapLayer(String),
     /// Sıradakini seç's list: the chip's candidate to choose (docs/adr/0187 §1).
@@ -989,8 +989,8 @@ pub struct App {
     /// The designer's section library and kept drafts on this device (forms/library.rs, docs/adr/0441).
     pub(crate) form_files: crate::forms::library::FormFiles,
     pub(crate) form_clipboard: Option<(
-        kentos_contracts::FormItem,
-        Vec<kentos_contracts::LayerField>,
+        kentos_commands::FormItem,
+        Vec<kentos_commands::LayerField>,
     )>,
     /// Formla düzenle (forms/entry.rs, docs/adr/0401).
     pub(crate) form_entry: Option<crate::forms::entry::Entry>,
@@ -1133,7 +1133,7 @@ pub struct App {
     pub server_checking: bool,
     /// The last server check's answer: its health, or why there was none
     /// (KentOS CAD hakkında names the server by it).
-    pub(crate) server_health: Option<Result<kentos_contracts::Health, String>>,
+    pub(crate) server_health: Option<Result<kentos_commands::Health, String>>,
     // Sheet layouts (sheets.rs, docs/sheet/design.md §11).
     pub sheets: kentos_sheet_ui::Designer,
     pub(crate) sheet_maps: crate::sheets::SheetMaps,
@@ -2566,7 +2566,7 @@ impl App {
                 if let [slot] = self.selection.ids()
                     && matches!(
                         self.document.as_ref().and_then(|d| d.model.get(*slot)),
-                        Some(kentos_contracts::Entity::Table(_))
+                        Some(kentos_commands::Entity::Table(_))
                     )
                 {
                     let slot = *slot;
@@ -2689,25 +2689,25 @@ impl App {
             "ucs.previous" => self.ucs_previous(),
             // Ölçekli açıklamalar (annotative.rs, docs/adr/0323 §4).
             "annotation.make" => {
-                self.annotative_selection(kentos_contracts::AnnotativeOperation::Make)
+                self.annotative_selection(kentos_commands::AnnotativeOperation::Make)
             }
             "annotation.unmake" => {
-                self.annotative_selection(kentos_contracts::AnnotativeOperation::Unmake)
+                self.annotative_selection(kentos_commands::AnnotativeOperation::Unmake)
             }
             "annotation.reset" => {
-                self.annotative_selection(kentos_contracts::AnnotativeOperation::Reset)
+                self.annotative_selection(kentos_commands::AnnotativeOperation::Reset)
             }
             // Sırala (draw_order.rs, docs/adr/0260 §5).
-            "edit.bringToFront" => self.order_selection(kentos_contracts::OrderTo::Front),
-            "edit.sendToBack" => self.order_selection(kentos_contracts::OrderTo::Back),
+            "edit.bringToFront" => self.order_selection(kentos_commands::OrderTo::Front),
+            "edit.sendToBack" => self.order_selection(kentos_commands::OrderTo::Back),
             "edit.textsToFront" => self.order_kinds(
                 &crate::draw_order::WORDS,
-                kentos_contracts::OrderTo::Front,
+                kentos_commands::OrderTo::Front,
                 "Yazıları öne getir",
             ),
             "edit.hatchesToBack" => self.order_kinds(
-                &[kentos_contracts::SelectKind::Hatch],
-                kentos_contracts::OrderTo::Back,
+                &[kentos_commands::SelectKind::Hatch],
+                kentos_commands::OrderTo::Back,
                 "Taramaları arkaya gönder",
             ),
             // Zaman and Senaryo (temporal/, docs/adr/0210 §10).
@@ -2852,20 +2852,20 @@ impl App {
             "dimension.space" => self.dimensions_edit(|uids| {
                 let mut uids = uids.into_iter();
                 let base = uids.next().unwrap_or_default();
-                kentos_contracts::DimensionEdit::Space {
+                kentos_commands::DimensionEdit::Space {
                     base,
                     uids: uids.collect(),
                     spacing: None,
                 }
             }),
             "dimension.break" => {
-                self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Break {
+                self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Break {
                     uids,
                     objects: None,
                 })
             }
             "dimension.unbreak" => {
-                self.dimensions_edit(|uids| kentos_contracts::DimensionEdit::Unbreak { uids })
+                self.dimensions_edit(|uids| kentos_commands::DimensionEdit::Unbreak { uids })
             }
             "block.sync" => {
                 if let Some(id) = self.block_at_hand() {
@@ -2887,7 +2887,7 @@ impl App {
                     .map(|d| d.model.layers().active().to_owned())
                 {
                     return self.style_impact_event(crate::style_impact::Event::Open(
-                        kentos_contracts::ImpactTarget::Layer,
+                        kentos_commands::ImpactTarget::Layer,
                         active,
                     ));
                 }
@@ -3066,7 +3066,7 @@ impl App {
             "style.layerStyle" => doc.is_some_and(|d| {
                 d.layers()
                     .get(d.layers().active())
-                    .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+                    .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer)
             }),
             // Symbols for the selected objects; taking them away when one has its own.
             "style.assign" => doc.is_some() && !self.selection.is_empty(),
@@ -3306,7 +3306,7 @@ mod tests {
 
     fn with_demo() -> App {
         let (mut app, _) = App::boot(None);
-        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
             "../../../fixtures/document/v1/sample.json"
         ))
         .expect("the web's demo file reads");

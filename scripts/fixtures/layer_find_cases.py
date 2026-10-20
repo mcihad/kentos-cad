@@ -5,7 +5,7 @@
 
 The name pattern is AutoCAD's `wcmatch`, written here again from its documentation (`*`, `?`, `#`, `@`, `.`, `[..]`,
 `[~..]`, `` ` ``, `,`, a leading `~`), letters folded as Turkish writes them; the properties and the rules from the
-contract (crates/shared/contracts/src/cad_layer_find.rs) and the ADR, the tree and the objects as plain JSON, without
+contract (crates/shared/commands/src/cad_layer_find.rs) and the ADR, the tree and the objects as plain JSON, without
 KentOS code. The tree, its helpers and the steps' form are layer_tree_command_cases.py's. The desktop
 (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.
 

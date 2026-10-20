@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 
 use iced::widget::{column, container, pin, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{TextField, Vec2, dimension_layout};
 use kentos_ui::theme::{Tokens, typography};
@@ -329,7 +329,7 @@ impl App {
 #[cfg(test)]
 mod tests {
     use iced::Point;
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
 
     use super::Event;
     use crate::app::{App, Message};
@@ -435,20 +435,20 @@ mod tests {
     /// The sample with a leader on `cizim` (shown) away from its other
     /// objects: the tip, a vertex up and to the right, the note “Mevcut bina”.
     fn with_leader(app: &mut App) -> kentos_domain::Slot {
-        let at = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
+        let at = |x: f64, y: f64| kentos_commands::Vec2 { x, y };
         let doc = app.document.as_mut().expect("open");
         if !doc.model.layers().is_visible("cizim") {
             doc.model.toggle_layer_visible("cizim");
         }
         let slot = doc
             .model
-            .add(Entity::Leader(kentos_contracts::LeaderEntity {
+            .add(Entity::Leader(kentos_commands::LeaderEntity {
                 tip: None,
                 leader_style: None,
                 blocks: Vec::new(),
                 arms: Vec::new(),
                 annotative: None,
-                base: kentos_contracts::EntityBase {
+                base: kentos_commands::EntityBase {
                     look: Default::default(),
                     id: 0,
                     layer_id: "cizim".to_owned(),

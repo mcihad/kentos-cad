@@ -212,7 +212,7 @@ build-desktop: ## Masaüstü uygulamasını, arayüz kütüphanesini ve vitrini 
 	$(HEAVY) cargo build -p kentos-ui -p kentos-ui-showcase -p kentos-desktop
 
 catalog: ## Ürün komutu katalogunu yeniden yazar (ADR 0013; farkı okuyup commit edin)
-	$(HEAVY) env KENTOS_WRITE_CATALOG=1 cargo test -q -p kentos-contracts catalog
+	$(HEAVY) env KENTOS_WRITE_CATALOG=1 cargo test -q -p kentos-commands catalog
 
 inventory: ## Web özellik envanterini yeniden yazar (docs/inventory)
 	$(HEAVY) pnpm inventory

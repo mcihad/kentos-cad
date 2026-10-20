@@ -4,7 +4,7 @@
 //! the command's plan; Yöntem, Derece and Kapat reach the command's input.
 
 use crate::common::{Bench, E, N};
-use kentos_contracts::{CommandResult, Entity, NurbsBy, NurbsCreate, Vec2};
+use kentos_commands::{CommandResult, Entity, NurbsBy, NurbsCreate, Vec2};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, nurbs};
 
@@ -136,11 +136,11 @@ fn the_preview_is_the_commands_plan() {
 fn edited_by_command(
     doc: &kentos_domain::Document,
     slot: kentos_domain::Slot,
-    edit: kentos_contracts::CurveEdit,
+    edit: kentos_commands::CurveEdit,
 ) -> Entity {
     use kentos_native_application::curves_edit;
     let mut doc = doc.clone();
-    let input = kentos_contracts::CurvesEdit {
+    let input = kentos_commands::CurvesEdit {
         uid: doc.uid(slot).expect("an id").to_string(),
         edit,
         expected_revision: None,
@@ -155,7 +155,7 @@ fn edited_by_command(
 
 #[test]
 fn a_polyline_becomes_a_curve_whose_points_are_edited_through_the_command() {
-    use kentos_contracts::CurveEdit;
+    use kentos_commands::CurveEdit;
     let mut b = Bench::new("nurbs");
     let layer = b.doc.layers().active().to_owned();
     let slot = b.add_bulged(

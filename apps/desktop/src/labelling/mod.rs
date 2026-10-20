@@ -20,7 +20,7 @@ use std::collections::{HashMap, HashSet};
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, text, text_editor};
 use iced::{Bottom, Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LabelClass, LabelObstacle, LabelsReport, LabelPlacement, LabelStyle, LabelsMode, LayerLabels,
     LayerNodeType, LayersLabels, ObstacleKind, default_label, layer_labels_problem, style_problem,
 };

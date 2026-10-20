@@ -4,7 +4,7 @@
 use crate::common;
 
 use common::Bench;
-use kentos_contracts::{AngleUnit, DrawingUnit, Entity, ProjectSettings, Workspace};
+use kentos_commands::{AngleUnit, DrawingUnit, Entity, ProjectSettings, Workspace};
 
 fn millimetres(tool: &str) -> Bench {
     let mut b = Bench::new(tool);

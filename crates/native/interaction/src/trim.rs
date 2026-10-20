@@ -36,7 +36,7 @@
 //! view's rectangle), `edgeMode` and `eraseUncut`, run with the tool's store;
 //! the preview is the command's plan. Sil is `cad.entities.delete`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EntitiesDelete, EntitiesTrim, EntitiesTrimPlan, EntitiesTrimmed, TrimBoundaries,
     TrimEdgeMode, TrimPick, TrimWindow,
 };

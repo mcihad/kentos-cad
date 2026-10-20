@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{DrawingUnit, LengthStyle};
+use kentos_commands::{DrawingUnit, LengthStyle};
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};

@@ -14,8 +14,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::blocks::{name_key, name_ok};
-use kentos_contracts::{
+use kentos_commands::blocks::{name_key, name_ok};
+use kentos_commands::{
     BlockDefinition, BlockId, BlocksFreeze, BlocksFrozen, BlocksProxied, BlocksProxy,
     CommandResult, CommandWarning, Entity, FrozenBlock, InsertProxy, ParamValue,
 };
@@ -95,7 +95,7 @@ fn said(v: &ParamValue) -> String {
 pub fn plain_for_export(
     blocks: &[std::sync::Arc<BlockDefinition>],
     entities: &mut [Entity],
-) -> (Vec<BlockDefinition>, Vec<kentos_contracts::ReportItem>) {
+) -> (Vec<BlockDefinition>, Vec<kentos_commands::ReportItem>) {
     let mut taken: Vec<String> = blocks.iter().map(|b| name_key(&b.name)).collect();
     let mut ids: Vec<BlockId> = blocks.iter().map(|b| b.id).collect();
     let mut made: Vec<(BlockId, BTreeMap<String, ParamValue>, BlockDefinition)> = Vec::new();
@@ -192,7 +192,7 @@ pub fn plain_for_export(
                     names.iter().map(|n| format!("“{n}”")).collect::<Vec<_>>().join(", ")
                 )
             };
-            Some(kentos_contracts::ReportItem {
+            Some(kentos_commands::ReportItem {
                 what: "Dinamik blok".into(),
                 count: all,
                 reason: format!(
@@ -264,8 +264,8 @@ pub fn proxy_execute(
 ) -> CommandResult<BlocksProxied> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_PROXY,
-        kentos_contracts::CAD_BLOCKS_PROXY_VERSION,
+        kentos_commands::CAD_BLOCKS_PROXY,
+        kentos_commands::CAD_BLOCKS_PROXY_VERSION,
         input,
         |cx, input| match proxied(cx.doc, &input) {
             Ok(output) => CommandResult::Completed {
@@ -301,7 +301,7 @@ pub fn proxy_plan(cx: &ExecutionContext<'_>, input: &BlocksProxy) -> CommandResu
 type Group<'a> = (
     BlockId,
     BTreeMap<String, ParamValue>,
-    Vec<(Slot, &'a kentos_contracts::InsertEntity, String)>,
+    Vec<(Slot, &'a kentos_commands::InsertEntity, String)>,
 );
 
 struct Frozen {
@@ -499,8 +499,8 @@ pub fn freeze_execute(
 ) -> CommandResult<BlocksFrozen> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_FREEZE,
-        kentos_contracts::CAD_BLOCKS_FREEZE_VERSION,
+        kentos_commands::CAD_BLOCKS_FREEZE,
+        kentos_commands::CAD_BLOCKS_FREEZE_VERSION,
         input,
         |cx, input| {
             let f = match frozen(cx.doc, &input, || BlockId(*Uuid::now_v7().as_bytes())) {

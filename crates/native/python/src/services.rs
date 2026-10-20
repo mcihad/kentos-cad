@@ -6,7 +6,7 @@
 //! back, as the apps do. Nothing here touches a drawing: Python writes with
 //! `cad.layers.service` and `cad.entities.create`.
 
-use kentos_contracts::{
+use kentos_commands::{
     ConnectionSecret, FeatureFeed, FeedKind, ImportResult, ProjectSettings, ReportItem,
     ServiceConnection, ServiceKind, ServiceLayer,
 };
@@ -239,7 +239,7 @@ pub fn services_to_project(result: &str, settings: &str, srid: u32) -> PyResult<
         Some((ours, theirs, choices)) => kentos_services::features::transform(&mut r, |p| {
             transform_in(&theirs, &ours, Vec2 { x: p.x, y: p.y }, &choices)
                 .ok()
-                .map(|t| kentos_contracts::Vec2 {
+                .map(|t| kentos_commands::Vec2 {
                     x: t.point.x,
                     y: t.point.y,
                 })
@@ -503,7 +503,7 @@ impl PyFeedTaking {
 #[pyfunction]
 pub fn services_new_objects(entities: &str) -> PyResult<String> {
     let list: Vec<serde_json::Value> = parse(entities, "nesneler")?;
-    let mut out: Vec<kentos_contracts::NewObject> = Vec::with_capacity(list.len());
+    let mut out: Vec<kentos_commands::NewObject> = Vec::with_capacity(list.len());
     for e in list {
         let serde_json::Value::Object(fields) = e else {
             return Err(refused("invalid_input", "Bir nesne JSON nesnesi değil."));
@@ -539,7 +539,7 @@ pub fn services_infer_fields(rows: &str) -> PyResult<String> {
     let rows: Vec<std::collections::BTreeMap<String, String>> = parse(rows, "öznitelikler")?;
     let rows: Vec<Vec<(String, String)>> =
         rows.into_iter().map(|r| r.into_iter().collect()).collect();
-    let fields = kentos_contracts::fields::infer_fields(rows.iter().map(Vec::as_slice), |a, b| {
+    let fields = kentos_commands::fields::infer_fields(rows.iter().map(Vec::as_slice), |a, b| {
         kentos_geometry_core::text::natural::natural_cmp(a, b)
     });
     text(&fields)

@@ -7,7 +7,7 @@
 use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
 use iced::widget::{Canvas, Column, button, container, row, text};
 use iced::{Center, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, HatchPattern, HatchPatternDef, HatchPatternType, HatchPatternUnit,
     HatchPatternsEdit, HatchPatternsEdited, HatchPatternsOperation,
 };

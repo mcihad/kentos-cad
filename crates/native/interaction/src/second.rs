@@ -11,7 +11,7 @@
 //! first, in the user's notation (`display.geographic`) with fixed digits:
 //! `40°45′12.3456″K, 29°55′01.2345″D` or `40.7534293°K, 29.9170096°D`.
 
-use kentos_contracts::ProjectSettings;
+use kentos_commands::ProjectSettings;
 use kentos_geometry_core::crs::measure::{NoPlane, PlaneMeasures, Ring, plane_measures_in};
 use kentos_geometry_core::crs::{
     self as core, Transformed, Unreached, format_dd, format_dms, transform_in,
@@ -210,7 +210,7 @@ pub fn accuracy_text(t: &Transformed) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_contracts::{
+    use kentos_commands::{
         AngleUnit, AreaUnit, Convention, CrsBase, CrsDefinition, CrsPlane, CrsSystem,
         DatumTransform, GridChoice, Helmert, LocalDefinition, RegistryDatum, Workspace,
     };

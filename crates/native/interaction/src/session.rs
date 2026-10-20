@@ -473,13 +473,13 @@ impl Session {
             arch_tools::GRID_NUMBER_ID => Box::new(arch_tools::GridNumberTool::new()),
             tag_tools::TAG_ID => Box::new(tag_tools::TagTool::new()),
             tag_tools::TAG_ALL_ID => Box::new(tag_tools::TagAllTool::new()),
-            tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(kentos_contracts::ScheduleOf::Openings)),
-            tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_contracts::ScheduleOf::Spaces)),
-            viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Section)),
-            viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Elevation)),
-            viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_contracts::ViewMarkForm::Detail)),
-            viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(kentos_contracts::FinishSurface::Floor)),
-            viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(kentos_contracts::FinishSurface::Ceiling)),
+            tag_tools::SCHEDULE_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Openings)),
+            tag_tools::SCHEDULE_SPACES_ID => Box::new(tag_tools::ScheduleTool::new(kentos_commands::ScheduleOf::Spaces)),
+            viewmark_tools::SECTION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Section)),
+            viewmark_tools::ELEVATION_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Elevation)),
+            viewmark_tools::DETAIL_ID => Box::new(viewmark_tools::ViewMarkTool::new(kentos_commands::ViewMarkForm::Detail)),
+            viewmark_tools::FLOOR_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Floor)),
+            viewmark_tools::CEILING_ID => Box::new(viewmark_tools::FinishTool::new(kentos_commands::FinishSurface::Ceiling)),
             path::POLYLINE_ID => Box::new(Path::polyline()),
             path::MEASURE_ID => Box::new(Path::new(path::Shape::MeasureLength)),
             path::AREA_ID => Box::new(Path::new(path::Shape::MeasureArea)),
@@ -1532,7 +1532,7 @@ impl Session {
     /// The paragraph editor's answer for the running tool (Çok satırlı yazı, docs/adr/0182 §4).
     pub fn paragraph_typed(
         &mut self,
-        typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
+        typed: Option<(&str, &[kentos_commands::TextRun], Option<&kentos_commands::ParagraphLayout>)>,
         cx: &mut Context<'_>,
     ) {
         if let Some(tool) = self.tool.as_mut() {
@@ -1833,7 +1833,7 @@ pub(crate) fn named_point_at(doc: &kentos_domain::Document, name: &str) -> Resul
     let found: Vec<Vec2> = doc
         .entities()
         .filter_map(|e| match e {
-            kentos_contracts::Entity::Point(q)
+            kentos_commands::Entity::Point(q)
                 if q.base.label.as_deref().map(crate::js_trim) == Some(name) =>
             {
                 Some(Vec2::new(q.p.x, q.p.y))

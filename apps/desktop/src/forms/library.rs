@@ -6,7 +6,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{FormBody, FormItem, LayerField};
+use kentos_commands::{FormBody, FormItem, LayerField};
 use serde::{Deserialize, Serialize};
 
 /// The library's sections at most; the oldest version of a name goes first past it.
@@ -246,7 +246,7 @@ fn chrono_free_stamp() -> u64 {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_contracts::{FormField, LayerFieldKind};
+    use kentos_commands::{FormField, LayerFieldKind};
 
     fn group() -> FormItem {
         FormItem::Group {

@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, FieldEdit, FieldSource, FieldsEdit, FieldsEdited,
     TextEntity, TextField, TextsPlan, text_fields_problem,
 };
@@ -113,7 +113,7 @@ pub(crate) fn written(doc: &Document, uid: Uuid, t: &TextEntity) -> TextEntity {
     for f in &t.paragraph.fields {
         if let FieldSource::Object {
             uid: of,
-            value: kentos_contracts::ObjectValue::Text,
+            value: kentos_commands::ObjectValue::Text,
             ..
         } = &f.source
         {
@@ -229,7 +229,7 @@ fn check(doc: &Document, input: &FieldsEdit) -> Result<Checked, Stop> {
                 FieldEdit::Format { format, .. } => {
                     if let Some(words) = format
                         .as_ref()
-                        .and_then(kentos_contracts::FieldFormat::problem)
+                        .and_then(kentos_commands::FieldFormat::problem)
                     {
                         return Err(fail(codes::INVALID_TEXT_FIELD, words, "edit.format"));
                     }
@@ -318,8 +318,8 @@ pub fn plan_in(doc: &Document, input: &FieldsEdit) -> CommandResult<TextsPlan> {
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FieldsEdit) -> CommandResult<FieldsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FIELDS_EDIT,
-        kentos_contracts::CAD_FIELDS_EDIT_VERSION,
+        kentos_commands::CAD_FIELDS_EDIT,
+        kentos_commands::CAD_FIELDS_EDIT_VERSION,
         input,
         write_execute,
     )

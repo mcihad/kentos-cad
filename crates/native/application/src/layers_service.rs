@@ -17,7 +17,7 @@
 //! the kind the operation changes; a connection named is the project's
 //! (after the input's).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayerServiceOperation, LayersService,
     LayersServicePlan, LayersServiced, ProjectSettings, ServiceConnection, connections_problem,
     fields_problem,
@@ -272,8 +272,8 @@ pub fn execute(
 ) -> CommandResult<LayersServiced> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_SERVICE,
-        kentos_contracts::CAD_LAYERS_SERVICE_VERSION,
+        kentos_commands::CAD_LAYERS_SERVICE,
+        kentos_commands::CAD_LAYERS_SERVICE_VERSION,
         input,
         write_execute,
     )

@@ -28,7 +28,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan,
     EntitiesEdited, Entity, EntityBase, EntityEdit, EntityGeometry, HatchAssoc, RingGeometry, Vec2,
 };
@@ -87,8 +87,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_EDIT,
-        kentos_contracts::CAD_ENTITIES_EDIT_VERSION,
+        kentos_commands::CAD_ENTITIES_EDIT,
+        kentos_commands::CAD_ENTITIES_EDIT_VERSION,
         input,
         write_execute,
     )
@@ -572,10 +572,10 @@ fn check(doc: &Document, input: &EntitiesEdit) -> Result<Checked, Stop> {
                 }
                 // An annotation keeps its scales (docs/adr/0323 §4): cad.annotations.scales changes them,
                 // and one that cannot be annotative any more (a text given a curve) has none.
-                if let Some(scales) = kentos_contracts::annotative_of(entity)
+                if let Some(scales) = kentos_commands::annotative_of(entity)
                     && std::mem::discriminant(entity) == std::mem::discriminant(&next)
-                    && kentos_contracts::why_not_annotative(&next).is_none()
-                    && let Some(field) = kentos_contracts::annotative_field(&mut next)
+                    && kentos_commands::why_not_annotative(&next).is_none()
+                    && let Some(field) = kentos_commands::annotative_field(&mut next)
                     && field.is_none()
                 {
                     *field = Some(Box::new(scales.clone()));
@@ -952,7 +952,7 @@ pub(crate) fn check_geometry(
             // Its exact boundary in the contract's form, its curves ending at its points (docs/adr/0328 §1); the
             // ring is then drawn from it.
             if let Some(b) = boundary {
-                let words = kentos_contracts::boundary_problem(b).or_else(|| {
+                let words = kentos_commands::boundary_problem(b).or_else(|| {
                     kentos_domain::hatch_boundaries::drawn(b)
                         .is_none()
                         .then(|| "Tarama sınırının eğrileri kenarlarının uçlarında başlayıp bitmiyor ya da sınır bir alan kapatmıyor.".to_owned())
@@ -1077,7 +1077,7 @@ pub(crate) fn check_geometry(
             .as_deref()
             .filter(|w| w.iter().any(|[a, b]| *a != 0.0 || *b != 0.0));
         if let Some(why) =
-            kentos_contracts::path_extras_problem(pts.len(), *closed, given, parts.is_some(), false)
+            kentos_commands::path_extras_problem(pts.len(), *closed, given, parts.is_some(), false)
         {
             return Err(Stop::failed(error(
                 codes::INVALID_POLYLINE,
@@ -1100,7 +1100,7 @@ pub(crate) fn check_geometry(
         fit_tolerance,
         ..
     } = g
-        && let Some(why) = kentos_contracts::nurbs_problem(
+        && let Some(why) = kentos_commands::nurbs_problem(
             *degree,
             ctrl,
             knots,
@@ -1161,14 +1161,14 @@ pub(crate) fn check_geometry(
         arrow_size: Some(size),
         ..
     } = g
-        && !kentos_contracts::leader_arrow_holds(*size)
+        && !kentos_commands::leader_arrow_holds(*size)
     {
         return Err(Stop::failed(error(
             codes::INVALID_ARROW_SIZE,
             format!(
                 "Kılavuzun ok boyu notun yüksekliğinin {} ile {} katı olmalı; {size} verildi. Bu aralıkta verin ya da alanı kaldırın (notun yüksekliği kadar).",
-                kentos_contracts::MIN_LEADER_ARROW,
-                kentos_contracts::MAX_LEADER_ARROW
+                kentos_commands::MIN_LEADER_ARROW,
+                kentos_commands::MAX_LEADER_ARROW
             ),
             at(".arrowSize"),
         )));
@@ -1178,13 +1178,13 @@ pub(crate) fn check_geometry(
         width_factor: Some(w),
         ..
     } = g
-        && !kentos_contracts::width_factor_ok(*w)
+        && !kentos_commands::width_factor_ok(*w)
     {
         return Err(Stop::failed(error(
             codes::INVALID_WIDTH_FACTOR,
             format!(
                 "Yazının genişlik çarpanı 0'dan büyük, en çok {} olmalı; {w} verildi. Çarpanı bu aralıkta verin ya da alanı kaldırın (1).",
-                kentos_contracts::MAX_WIDTH_FACTOR
+                kentos_commands::MAX_WIDTH_FACTOR
             ),
             at(".widthFactor"),
         )));
@@ -1200,7 +1200,7 @@ pub(crate) fn check_geometry(
     } = g
     {
         // An empty layout is the edit's way to take one away (docs/adr/0324 §3), not a layout to check.
-        let paragraph = kentos_contracts::Paragraph {
+        let paragraph = kentos_commands::Paragraph {
             fields: Vec::new(),
             layout: layout.clone().filter(|l| !l.is_plain()),
             box_width: *box_width,
@@ -1218,7 +1218,7 @@ pub(crate) fn check_geometry(
         if let EntityGeometry::Text {
             path: Some(path), ..
         } = g
-            && let Some(words) = kentos_contracts::text_path_problem(path, text, &paragraph, false)
+            && let Some(words) = kentos_commands::text_path_problem(path, text, &paragraph, false)
         {
             return Err(Stop::failed(error(codes::INVALID_PATH, words, at(".path"))));
         }
@@ -1236,7 +1236,7 @@ pub(crate) fn check_geometry(
         ..
     } = g
     {
-        let shape = kentos_contracts::TableShape {
+        let shape = kentos_commands::TableShape {
             height: *height,
             rows,
             columns,
@@ -1268,7 +1268,7 @@ pub(crate) fn check_geometry(
         && (styles.is_some() || formulas.is_some() || fields.is_some())
     {
         let (none_s, none_f, none_d) = (Vec::new(), Vec::new(), Vec::new());
-        let problem = kentos_contracts::cells_problem_of(
+        let problem = kentos_commands::cells_problem_of(
             rows.len(),
             columns.len(),
             merges,
@@ -1384,7 +1384,7 @@ pub(crate) fn check_styles<'a>(
 }
 
 /// Whether every number of a picture is finite.
-fn image_finite(i: &kentos_contracts::ImageFields) -> bool {
+fn image_finite(i: &kentos_commands::ImageFields) -> bool {
     [i.p.x, i.p.y, i.width, i.height, i.rotation]
         .iter()
         .chain(i.opacity.iter())
@@ -1396,7 +1396,7 @@ fn image_finite(i: &kentos_contracts::ImageFields) -> bool {
 }
 
 /// Whether every number of a raster is finite: its affine, its opacity and its look's.
-pub fn raster_finite(r: &kentos_contracts::RasterFields) -> bool {
+pub fn raster_finite(r: &kentos_commands::RasterFields) -> bool {
     let s = &r.style;
     r.affine
         .iter()
@@ -1411,7 +1411,7 @@ pub fn raster_finite(r: &kentos_contracts::RasterFields) -> bool {
 }
 
 /// Whether every number of a point cloud is finite: its bounds, its files', its opacity and its look's.
-pub fn cloud_finite(c: &kentos_contracts::PointCloudFields) -> bool {
+pub fn cloud_finite(c: &kentos_commands::PointCloudFields) -> bool {
     let s = &c.style;
     c.bounds
         .iter()

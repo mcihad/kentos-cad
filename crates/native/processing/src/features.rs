@@ -6,7 +6,7 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use kentos_contracts::{Entity, RasterEntity};
+use kentos_commands::{Entity, RasterEntity};
 use kentos_domain::{Document, Slot};
 use kentos_expression::Variable;
 use kentos_geometry_core::geometry::Bounds;
@@ -284,7 +284,7 @@ pub fn resolve_layers<'d>(ids: &[String], host: &'d dyn Scene) -> Vec<crate::typ
     let mut wanted: HashSet<&str> = HashSet::new();
     for id in ids {
         match layers.get(id) {
-            Some(node) if node.kind == kentos_contracts::LayerNodeType::Group => {
+            Some(node) if node.kind == kentos_commands::LayerNodeType::Group => {
                 wanted.extend(layers.leaves_of(id).into_iter().map(|l| l.id.as_str()));
             }
             Some(_) => {

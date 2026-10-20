@@ -12,7 +12,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, Row, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CoordColumn, CoordDelimiter, CoordRead, CoordReadOptions, DecimalMark, HeaderMode,
     ImportResult, LabelPlacement, LabelStyle, LayerStyle, PointStyle, PointSymbol,
 };

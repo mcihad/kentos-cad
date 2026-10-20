@@ -17,7 +17,7 @@
 //!   examples, a click on another object makes it the example; Enter, Esc or
 //!   a right click ends.
 
-use kentos_contracts::{SelectRegion, SimilarCriteria};
+use kentos_commands::{SelectRegion, SimilarCriteria};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::point_text::js_trim;
 

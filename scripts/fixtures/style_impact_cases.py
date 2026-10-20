@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.styles.impact.json: the shared cases of `cad.styles.impact` v1 (docs/adr/0314 §4).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_style_impact.rs) and the
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_style_impact.rs) and the
 look's rules of docs/adr/0312 §4 and docs/adr/0183, without KentOS code:
 
 - a layer: its objects that take at least one of colour, line type (or pattern), weight and transparency from it

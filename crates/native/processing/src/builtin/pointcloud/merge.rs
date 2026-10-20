@@ -79,15 +79,15 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    list: &[&kentos_contracts::PointCloudEntity],
-    sources: &[kentos_contracts::CloudSource],
+    list: &[&kentos_commands::PointCloudEntity],
+    sources: &[kentos_commands::CloudSource],
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let ins = inputs(files, sources)?;
     let plan =
         kentos_pointcloud::ops::convert::plan(&ins, r.text("format") != "las").map_err(|e| e.0)?;
     let at = place(files, r, &sources[0], "-birlesik")?;
-    let copc = at.format == kentos_contracts::CloudFormat::Copc;
+    let copc = at.format == kentos_commands::CloudFormat::Copc;
     let write_to = if copc { 0.6 } else { 1.0 };
     let mut out = Out::new(files, &at.written, plan.spec.clone())?;
     let rounded = pass(

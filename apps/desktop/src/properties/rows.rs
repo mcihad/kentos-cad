@@ -5,7 +5,7 @@
 
 use std::borrow::Cow;
 
-use kentos_contracts::{DimensionStyle, Entity, GradientShape, HatchPatternType};
+use kentos_commands::{DimensionStyle, Entity, GradientShape, HatchPatternType};
 use kentos_domain::{LayerTree, Slot};
 use kentos_interaction::elevation::{self, Summary as Elevations};
 use kentos_interaction::{
@@ -315,7 +315,7 @@ fn document_section(doc: &Document) -> Section {
 /// a layer whose objects came from a service: where from and when.
 pub(crate) fn service_section(
     doc: &Document,
-    node: &kentos_contracts::LayerNode,
+    node: &kentos_commands::LayerNode,
     failure: Option<String>,
 ) -> Option<Section> {
     let settings = doc.settings();
@@ -330,7 +330,7 @@ pub(crate) fn service_section(
                         "{} ({}){}",
                         c.name,
                         c.auth.label(),
-                        if c.auth == kentos_contracts::AuthKind::None || here {
+                        if c.auth == kentos_commands::AuthKind::None || here {
                             ""
                         } else {
                             ", değerleri bu cihazda yok"
@@ -364,7 +364,7 @@ pub(crate) fn service_section(
         }
         if let Some(st) = &s.style {
             rows.push(Row::text(
-                if s.kind == kentos_contracts::ServiceKind::Google {
+                if s.kind == kentos_commands::ServiceKind::Google {
                     "Harita türü"
                 } else {
                     "Stil"
@@ -376,9 +376,9 @@ pub(crate) fn service_section(
             rows.push(Row::text("Sistem", system(srid)));
         } else if matches!(
             s.kind,
-            kentos_contracts::ServiceKind::Xyz
-                | kentos_contracts::ServiceKind::Google
-                | kentos_contracts::ServiceKind::Vector
+            kentos_commands::ServiceKind::Xyz
+                | kentos_commands::ServiceKind::Google
+                | kentos_commands::ServiceKind::Vector
         ) {
             rows.push(Row::text("Sistem", system(3857)));
         }
@@ -530,7 +530,7 @@ fn pick(label: String, chosen: bool, message: Message) -> Choice {
 fn line_type_row(
     doc: &Document,
     ids: &[Slot],
-    current: Option<Option<kentos_contracts::LineType>>,
+    current: Option<Option<kentos_commands::LineType>>,
     pattern: Option<Option<&str>>,
 ) -> Row {
     let text = match (current, pattern) {
@@ -548,7 +548,7 @@ fn line_type_row(
         ),
         Choice::Separator,
     ];
-    items.extend(kentos_contracts::LineType::ALL.into_iter().map(|t| {
+    items.extend(kentos_commands::LineType::ALL.into_iter().map(|t| {
         pick(
             crate::ribbon_panels::line_type_text(Some(t)).to_owned(),
             plain && current == Some(Some(t)),
@@ -563,7 +563,7 @@ fn line_type_row(
                 t.name.clone(),
                 pattern
                     .flatten()
-                    .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
+                    .is_some_and(|p| kentos_commands::same_line_type_name(p, &t.name)),
                 Message::Properties(Event::LinePattern(ids.to_vec(), Some(t.name.clone()))),
             )
         }));
@@ -644,8 +644,8 @@ fn transparency_row(ids: &[Slot], current: Option<Option<f64>>) -> Row {
 }
 
 /// Maske ▾ of areas (docs/adr/0310 §5): none, framed or frameless; `current` none when they differ.
-fn wipeout_row(ids: &[Slot], current: Option<Option<kentos_contracts::Wipeout>>) -> Row {
-    use kentos_contracts::Wipeout;
+fn wipeout_row(ids: &[Slot], current: Option<Option<kentos_commands::Wipeout>>) -> Row {
+    use kentos_commands::Wipeout;
     let name = |w: Option<Wipeout>| match w {
         None => "Yok",
         Some(Wipeout { frame: true }) => "Çerçeveli",
@@ -811,7 +811,7 @@ fn elevation_row(
     rows
 }
 
-fn v(p: kentos_contracts::Vec2) -> Vec2 {
+fn v(p: kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
@@ -869,7 +869,7 @@ fn yes_no(on: bool) -> &'static str {
 
 /// A polyline's one width for every edge, 0 without widths; none when its edges' differ
 /// (docs/adr/0258 §2).
-fn constant_width(line: &kentos_contracts::PathEntity) -> Option<f64> {
+fn constant_width(line: &kentos_commands::PathEntity) -> Option<f64> {
     let Some(widths) = &line.widths else {
         return Some(0.0);
     };
@@ -956,7 +956,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
     let metres = |label: &'static str, value: f64| len(label, value).unit(f.length_unit_label());
     // An area: one row in m² (or a local project's unit squared), or m² and the project's unit.
     let area = |m2: f64| -> Vec<Row> {
-        if f.area_unit_label() == "m²" || f.unit != kentos_contracts::DrawingUnit::M {
+        if f.area_unit_label() == "m²" || f.unit != kentos_commands::DrawingUnit::M {
             vec![Row::figure("Alan", f.area_bare(m2)).unit(f.area_unit_label())]
         } else {
             vec![
@@ -1167,7 +1167,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // written through `cad.walls.edit`; its length along its path and its body's area.
         Entity::Wall(w) => {
             let x = &w.wall;
-            let change = |c: kentos_contracts::WallChange| Message::Properties(Event::Wall(slot, c));
+            let change = |c: kentos_commands::WallChange| Message::Properties(Event::Wall(slot, c));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
                 label,
                 swatch: None,
@@ -1185,20 +1185,20 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     items,
                 })
             };
-            let fixed = kentos_contracts::fixed_width(&x.components).is_some();
+            let fixed = kentos_commands::fixed_width(&x.components).is_some();
             geo.push(metres("Genişlik", x.width).editor(if fixed { None } else { number(Field::WallWidth(slot)) }));
-            let justify = kentos_contracts::WallJustify::ALL
+            let justify = kentos_commands::WallJustify::ALL
                 .iter()
                 .map(|&j| {
                     let icon = match j {
-                        kentos_contracts::WallJustify::Left => "wallLeft",
-                        kentos_contracts::WallJustify::Center => "wallCenter",
-                        kentos_contracts::WallJustify::Right => "wallRight",
+                        kentos_commands::WallJustify::Left => "wallLeft",
+                        kentos_commands::WallJustify::Center => "wallCenter",
+                        kentos_commands::WallJustify::Right => "wallRight",
                     };
                     pick(
                         j.label().to_owned(),
                         j == x.justify,
-                        change(kentos_contracts::WallChange {
+                        change(kentos_commands::WallChange {
                             justify: Some(j),
                             ..Default::default()
                         }),
@@ -1217,7 +1217,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let mut styles = vec![pick(
                 kentos_interaction::wall::NO_STYLE.to_owned(),
                 x.style.is_none(),
-                change(kentos_contracts::WallChange {
+                change(kentos_commands::WallChange {
                     style: Some(None),
                     ..Default::default()
                 }),
@@ -1227,7 +1227,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 pick(
                     s.name.clone(),
                     x.style.as_deref() == Some(s.id.as_str()),
-                    change(kentos_contracts::WallChange {
+                    change(kentos_commands::WallChange {
                         style: Some(Some(s.id.clone())),
                         ..Default::default()
                     }),
@@ -1241,15 +1241,15 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 id: kentos_interaction::wall::WALL_STYLES,
             });
             geo.push(Row::text("Stil", style_name.clone()).editor(select(style_name, styles)));
-            let open = x.caps == kentos_contracts::WallCaps::Open;
+            let open = x.caps == kentos_commands::WallCaps::Open;
             let caps = [(false, "Kapalı"), (true, "Açık")]
                 .into_iter()
                 .map(|(o, l)| {
-                    let caps = if o { kentos_contracts::WallCaps::Open } else { kentos_contracts::WallCaps::Closed };
+                    let caps = if o { kentos_commands::WallCaps::Open } else { kentos_commands::WallCaps::Closed };
                     pick(
                         l.to_owned(),
                         o == open,
-                        change(kentos_contracts::WallChange {
+                        change(kentos_commands::WallChange {
                             caps: Some(caps),
                             ..Default::default()
                         }),
@@ -1260,24 +1260,24 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let caps_text = if open { "Açık" } else { "Kapalı" };
             geo.push(Row::text("Uçlar", caps_text).editor(select(caps_text.to_owned(), caps)));
             // Its ends' joins and its cleanup (docs/adr/0340 §6).
-            let op = |o: kentos_contracts::WallsOperation| Message::Properties(Event::WallOp(slot, o));
-            let join_icon = |j: kentos_contracts::WallJoin| match j {
-                kentos_contracts::WallJoin::Auto => "wallJoinAuto",
-                kentos_contracts::WallJoin::None => "wallJoinNone",
-                kentos_contracts::WallJoin::Miter => "wallJoinMiter",
-                kentos_contracts::WallJoin::Butt => "wallJoinButt",
-                kentos_contracts::WallJoin::Through => "wallJoinThrough",
+            let op = |o: kentos_commands::WallsOperation| Message::Properties(Event::WallOp(slot, o));
+            let join_icon = |j: kentos_commands::WallJoin| match j {
+                kentos_commands::WallJoin::Auto => "wallJoinAuto",
+                kentos_commands::WallJoin::None => "wallJoinNone",
+                kentos_commands::WallJoin::Miter => "wallJoinMiter",
+                kentos_commands::WallJoin::Butt => "wallJoinButt",
+                kentos_commands::WallJoin::Through => "wallJoinThrough",
             };
             if !x.closed {
                 for (title, now, at_end) in [("Başlangıç birleşimi", x.joins.start, false), ("Son birleşimi", x.joins.end, true)] {
-                    let items = kentos_contracts::WallJoin::ALL
+                    let items = kentos_commands::WallJoin::ALL
                         .iter()
                         .map(|&j| {
                             let (start, end) = if at_end { (None, Some(j)) } else { (Some(j), None) };
                             pick(
                                 j.label().to_owned(),
                                 j == now,
-                                op(kentos_contracts::WallsOperation::Joins { start, end, cleanup: None }),
+                                op(kentos_commands::WallsOperation::Joins { start, end, cleanup: None }),
                                 Some(join_icon(j)),
                             )
                         })
@@ -1291,7 +1291,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                     pick(
                         l.to_owned(),
                         c == x.cleanup,
-                        op(kentos_contracts::WallsOperation::Joins { start: None, end: None, cleanup: Some(c) }),
+                        op(kentos_commands::WallsOperation::Joins { start: None, end: None, cleanup: Some(c) }),
                         None,
                     )
                 })
@@ -1314,7 +1314,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
             let mut level_items = vec![pick(
                 "Yok".to_owned(),
                 x.arch.level.is_none(),
-                change(kentos_contracts::WallChange {
+                change(kentos_commands::WallChange {
                     level: Some(None),
                     ..Default::default()
                 }),
@@ -1324,7 +1324,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 pick(
                     l.name.clone(),
                     x.arch.level.as_deref() == Some(l.id.as_str()),
-                    change(kentos_contracts::WallChange {
+                    change(kentos_commands::WallChange {
                         level: Some(Some(l.id.clone())),
                         ..Default::default()
                     }),
@@ -1338,21 +1338,21 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 id: "arch.settings",
             });
             geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
-            let phase_name = x.arch.phase.map_or("Yok", kentos_contracts::ArchPhase::label);
+            let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
             let mut phases = vec![pick(
                 "Yok".to_owned(),
                 x.arch.phase.is_none(),
-                change(kentos_contracts::WallChange {
+                change(kentos_commands::WallChange {
                     phase: Some(None),
                     ..Default::default()
                 }),
                 None,
             )];
-            phases.extend(kentos_contracts::ArchPhase::ALL.iter().map(|&p| {
+            phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
                 pick(
                     p.label().to_owned(),
                     x.arch.phase == Some(p),
-                    change(kentos_contracts::WallChange {
+                    change(kentos_commands::WallChange {
                         phase: Some(Some(p)),
                         ..Default::default()
                     }),
@@ -1375,7 +1375,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // A space (docs/adr/0342 §5): its number, name, usage, method, level, phase, height, finishes, measures and
         // boundary, each written through `cad.spaces.edit`; why it lost its walls.
         Entity::Space(sp) => {
-            use kentos_contracts::{SpaceChange, SpaceMethod, SpacesOperation};
+            use kentos_commands::{SpaceChange, SpaceMethod, SpacesOperation};
             let x = &sp.space;
             let set = |c: SpaceChange| Message::Properties(Event::Space(slot, SpacesOperation::Set(c)));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
@@ -1441,14 +1441,14 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 id: "arch.settings",
             });
             geo.push(Row::text("Kat", level_name.clone()).editor(select(level_name, level_items)));
-            let phase_name = x.arch.phase.map_or("Yok", kentos_contracts::ArchPhase::label);
+            let phase_name = x.arch.phase.map_or("Yok", kentos_commands::ArchPhase::label);
             let mut phases = vec![pick(
                 "Yok".to_owned(),
                 x.arch.phase.is_none(),
                 set(SpaceChange { phase: Some(None), ..Default::default() }),
                 None,
             )];
-            phases.extend(kentos_contracts::ArchPhase::ALL.iter().map(|&p| {
+            phases.extend(kentos_commands::ArchPhase::ALL.iter().map(|&p| {
                 pick(
                     p.label().to_owned(),
                     x.arch.phase == Some(p),
@@ -1498,7 +1498,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
         // An opening (docs/adr/0341 §5): its form, type, width, place along its wall, side, hinge, leaves, operation,
         // swing, frame, sill, head and number, each written through `cad.openings.edit`; its wall, or why it is in none.
         Entity::Opening(o) => {
-            use kentos_contracts::{OpeningChange, OpeningForm, OpeningHand, OpeningOperation, OpeningSide, OpeningsOperation};
+            use kentos_commands::{OpeningChange, OpeningForm, OpeningHand, OpeningOperation, OpeningSide, OpeningsOperation};
             let x = &o.opening;
             let set = |c: OpeningChange| Message::Properties(Event::Opening(slot, OpeningsOperation::Set(c)));
             let pick = |label: String, chosen: bool, message: Message, icon: Option<&'static str>| Choice::Pick {
@@ -1530,7 +1530,7 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
                 })
                 .collect();
             geo.push(Row::text("Biçim", x.form.label()).editor(select(x.form.label().to_owned(), forms)));
-            let types = kentos_contracts::builtin_opening_types();
+            let types = kentos_commands::builtin_opening_types();
             let type_name = x
                 .style
                 .as_deref()
@@ -2084,8 +2084,8 @@ fn entity_sections(doc: &Document, e: &Entity) -> Vec<Section> {
 
 /// The Form row of a layer that has a form (docs/adr/0401 §9): the form's name and whether it is
 /// published, with Formla düzenle and Formlar….
-fn form_rows(settings: &kentos_contracts::ProjectSettings, layer: &str) -> Vec<Row> {
-    let forms: Vec<&kentos_contracts::ProjectForm> =
+fn form_rows(settings: &kentos_commands::ProjectSettings, layer: &str) -> Vec<Row> {
+    let forms: Vec<&kentos_commands::ProjectForm> =
         settings.forms.iter().filter(|f| f.layer == layer).collect();
     let Some(form) = forms
         .iter()
@@ -2130,14 +2130,14 @@ fn form_rows(settings: &kentos_contracts::ProjectSettings, layer: &str) -> Vec<R
 /// same rules.
 fn field_rows(
     slot: Slot,
-    base: &kentos_contracts::EntityBase,
-    fields: &[kentos_contracts::LayerField],
-    subtypes: Option<&kentos_contracts::LayerSubtypes>,
-    groups: &[kentos_contracts::FieldGroup],
+    base: &kentos_commands::EntityBase,
+    fields: &[kentos_commands::LayerField],
+    subtypes: Option<&kentos_commands::LayerSubtypes>,
+    groups: &[kentos_commands::FieldGroup],
     locked: bool,
     labels: &[(String, std::collections::BTreeMap<String, String>)],
 ) -> Vec<Row> {
-    use kentos_contracts::{LayerFieldKind, MULTIPLE_JOIN, check_value, display_value};
+    use kentos_commands::{LayerFieldKind, MULTIPLE_JOIN, check_value, display_value};
     let mut rows = Vec::new();
     for f in fields {
         let raw = base.attrs.get(&f.name).cloned().unwrap_or_default();
@@ -2169,7 +2169,7 @@ fn field_rows(
                 // A retired value only for the record holding it (docs/adr/0418), narrowed to the
                 // record's subtype (docs/adr/0422).
                 Some(list) if !list.is_empty() => {
-                    kentos_contracts::offered_on(subtypes, groups, fields, f, |n| {
+                    kentos_commands::offered_on(subtypes, groups, fields, f, |n| {
                         base.attrs.get(n).cloned()
                     })
                     .into_iter()
@@ -2238,7 +2238,7 @@ fn field_rows(
 /// apart with an asterisk; typed to add or remove) and Sıfırla; none when none of them can be (a text along a curve,
 /// a linked text).
 fn scale_rows(objects: &[&Entity], slots: &[Slot], locked: bool) -> Vec<Row> {
-    use kentos_contracts::{annotative_of, why_not_annotative};
+    use kentos_commands::{annotative_of, why_not_annotative};
     if objects.iter().all(|e| why_not_annotative(e).is_some()) {
         return Vec::new();
     }
@@ -2360,7 +2360,7 @@ fn override_rows(lists: &[&[String]], slots: &[Slot], locked: bool) -> Vec<Row> 
 }
 
 fn style_rows(
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
     text: bool,
     ids: &[Option<&String>],
     slots: &[Slot],
@@ -2384,7 +2384,7 @@ fn style_rows(
     };
     let name_of = |id: Option<&String>| {
         id.and_then(|id| styles.iter().find(|(i, _)| i == id))
-            .map_or(kentos_contracts::STANDARD_STYLE.to_owned(), |(_, n)| {
+            .map_or(kentos_commands::STANDARD_STYLE.to_owned(), |(_, n)| {
                 n.clone()
             })
     };
@@ -2407,7 +2407,7 @@ fn style_rows(
             Event::DimensionStyle(slots.to_vec(), id)
         }),
     };
-    let items = std::iter::once(pick(kentos_contracts::STANDARD_STYLE.to_owned(), None))
+    let items = std::iter::once(pick(kentos_commands::STANDARD_STYLE.to_owned(), None))
         .chain(
             styles
                 .iter()
@@ -2432,9 +2432,9 @@ fn style_rows(
 /// text or the texts of a selection: their common value, or “Çeşitli”. A new
 /// alignment keeps each text where it is; the texts are written in one step
 /// “Değiştir”. On a locked layer they only show. The web's `textRows`.
-fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bool) -> Vec<Row> {
+fn text_rows(texts: &[&kentos_commands::TextEntity], slots: &[Slot], locked: bool) -> Vec<Row> {
     const MIXED: &str = "Çeşitli";
-    let common = |of: &dyn Fn(&kentos_contracts::TextEntity) -> String| {
+    let common = |of: &dyn Fn(&kentos_commands::TextEntity) -> String| {
         let first = of(texts[0]);
         texts.iter().all(|t| of(t) == first).then_some(first)
     };
@@ -2505,7 +2505,7 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
         None => Row::text("Satır aralığı", MIXED),
     };
     // Its indents, tab stops and columns (docs/adr/0324 §3), the indents and gap in its height.
-    let layout = |t: &kentos_contracts::TextEntity| t.paragraph.layout.as_deref().cloned().unwrap_or_default();
+    let layout = |t: &kentos_commands::TextEntity| t.paragraph.layout.as_deref().cloned().unwrap_or_default();
     let heights = |label: &'static str, value: Option<String>| match value {
         Some(v) => Row::figure(label, v).unit("× yükseklik"),
         None => Row::text(label, MIXED),
@@ -2561,7 +2561,7 @@ fn text_rows(texts: &[&kentos_contracts::TextEntity], slots: &[Slot], locked: bo
 /// (ui/properties/textRows.ts) is the same.
 fn link_rows(
     model: &kentos_domain::Document,
-    texts: &[&kentos_contracts::TextEntity],
+    texts: &[&kentos_commands::TextEntity],
     slots: &[Slot],
     locked: bool,
 ) -> Vec<Row> {
@@ -2616,8 +2616,8 @@ fn link_rows(
 
 /// A text's fields (docs/adr/0325 §4): each its source and value, or why it is broken; its menu selects the source
 /// object and takes the field out (its letters stay as text).
-fn text_field_rows(model: &kentos_domain::Document, t: &kentos_contracts::TextEntity, slot: Slot, locked: bool) -> Vec<Row> {
-    use kentos_contracts::FieldSource;
+fn text_field_rows(model: &kentos_domain::Document, t: &kentos_commands::TextEntity, slot: Slot, locked: bool) -> Vec<Row> {
+    use kentos_commands::FieldSource;
     t.paragraph
         .fields
         .iter()
@@ -2682,7 +2682,7 @@ fn text_field_rows(model: &kentos_domain::Document, t: &kentos_contracts::TextEn
 /// styles, Yok first), and for one leader its arm count, each bound tip with Bağı çöz, its content blocks' count.
 fn multileader_rows(
     model: &kentos_domain::Document,
-    leaders: &[&kentos_contracts::LeaderEntity],
+    leaders: &[&kentos_commands::LeaderEntity],
     slots: &[Slot],
     locked: bool,
 ) -> Vec<Row> {
@@ -2748,7 +2748,7 @@ fn multileader_rows(
 /// Aralık (user lines'), İkinci renk, Degrade biçimi and Ters (a
 /// gradient's), İlişkili with İlişkiyi kopar. The web's `hatchRows`.
 fn hatch_rows(
-    h: &kentos_contracts::HatchEntity,
+    h: &kentos_commands::HatchEntity,
     slot: Slot,
     locked: bool,
     plot_scale: f64,
@@ -2907,13 +2907,13 @@ fn hatch_rows(
                 "Sınırı yeniden oluştur: alan".to_owned(),
                 None,
                 false,
-                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Area),
+                Event::RecreateBoundary(slot, kentos_commands::BoundaryForm::Area),
             ),
             pick(
                 "Sınırı yeniden oluştur: çoklu çizgi".to_owned(),
                 None,
                 false,
-                Event::RecreateBoundary(slot, kentos_contracts::BoundaryForm::Polyline),
+                Event::RecreateBoundary(slot, kentos_commands::BoundaryForm::Polyline),
             ),
         ],
     });
@@ -2930,19 +2930,19 @@ fn hatch_rows(
 }
 
 fn leader_rows(
-    leaders: &[&kentos_contracts::LeaderEntity],
+    leaders: &[&kentos_commands::LeaderEntity],
     slots: &[Slot],
     locked: bool,
     f: &Format,
 ) -> Vec<Row> {
     const MIXED: &str = "Çeşitli";
     let first = leaders[0];
-    let same = |of: &dyn Fn(&kentos_contracts::LeaderEntity) -> bool| leaders.iter().all(|l| of(l));
+    let same = |of: &dyn Fn(&kentos_commands::LeaderEntity) -> bool| leaders.iter().all(|l| of(l));
     let note = same(&|l| l.text == first.text).then(|| first.text.clone().unwrap_or_default());
     let height = same(&|l| l.height == first.height).then_some(first.height);
     let turn = same(&|l| l.rotation == first.rotation).then_some(first.rotation);
     let arrow = same(&|l| l.arrow == first.arrow).then_some(first.arrow);
-    let size = |l: &kentos_contracts::LeaderEntity| l.arrow_size.unwrap_or(1.0);
+    let size = |l: &kentos_commands::LeaderEntity| l.arrow_size.unwrap_or(1.0);
     let arrow_size = same(&|l| size(l) == size(first)).then_some(size(first));
     let mask = same(&|l| l.mask == first.mask).then_some(first.mask);
     let on_off = |on: bool| if on { "Açık" } else { "Kapalı" };
@@ -3020,7 +3020,7 @@ fn looks_numeric(value: &str) -> bool {
 fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)) -> Vec<Section> {
     let ids: Vec<Slot> = objects.iter().map(|e| Slot(e.base().id)).collect();
     let first = objects[0].base();
-    let same = |f: &dyn Fn(&kentos_contracts::EntityBase) -> Option<&str>| {
+    let same = |f: &dyn Fn(&kentos_commands::EntityBase) -> Option<&str>| {
         objects
             .iter()
             .all(|e| f(e.base()) == f(first))
@@ -3179,7 +3179,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         }
     }
     // The selection's texts: their Hiza, Genişlik çarpanı and Zemin, common or Çeşitli (docs/adr/0145 §6).
-    let texts: Vec<&kentos_contracts::TextEntity> = objects
+    let texts: Vec<&kentos_commands::TextEntity> = objects
         .iter()
         .filter_map(|e| match e {
             Entity::Text(t) => Some(t),
@@ -3225,7 +3225,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         });
     }
     // The selection's leaders: their note, height, turn, arrowhead and mask, common or “Çeşitli” (docs/adr/0146 §7).
-    let leaders: Vec<&kentos_contracts::LeaderEntity> = objects
+    let leaders: Vec<&kentos_commands::LeaderEntity> = objects
         .iter()
         .filter_map(|e| match e {
             Entity::Leader(l) => Some(l),
@@ -3249,7 +3249,7 @@ fn many_sections(doc: &Document, objects: &[&Entity], (length, area): (f64, f64)
         });
     }
     // The selection's dimensions: their Zemin, and an ordinate's axis, a slope's elevations, common or “Çeşitli” (docs/adr/0147 §7).
-    let dims: Vec<&kentos_contracts::DimensionEntity> = objects
+    let dims: Vec<&kentos_commands::DimensionEntity> = objects
         .iter()
         .filter_map(|e| match e {
             Entity::Dimension(d) => Some(d),

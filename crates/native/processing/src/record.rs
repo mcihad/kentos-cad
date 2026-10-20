@@ -10,7 +10,7 @@
 //!
 //! The record itself is a value: changing a source afterwards changes nothing in it.
 
-use kentos_contracts::ProcessingRecord;
+use kentos_commands::ProcessingRecord;
 use kentos_domain::Document;
 
 /// What running a record's values again on a drawing meets.

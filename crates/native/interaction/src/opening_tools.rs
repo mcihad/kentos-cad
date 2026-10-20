@@ -10,7 +10,7 @@
 //! - Açıklığı taşı: the opening, then a place by a wall (its own or another).
 //! - Numarala: Önek (Ö) and Başlangıç (B); Enter numbers the openings selected, or every opening.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, NewOpening, OpeningFlip, OpeningForm, OpeningHand, OpeningSide,
     OpeningsCreate, OpeningsEdit, OpeningsOperation, builtin_opening_types,
 };
@@ -41,9 +41,9 @@ const NEAR_WALL: f64 = 1.0;
 fn type_icon(
     form: OpeningForm,
     leaves: u8,
-    operation: kentos_contracts::OpeningOperation,
+    operation: kentos_commands::OpeningOperation,
 ) -> &'static str {
-    use kentos_contracts::OpeningOperation as Op;
+    use kentos_commands::OpeningOperation as Op;
     match (form, leaves, operation) {
         (OpeningForm::Door, _, Op::Slide) => "doorSliding",
         (OpeningForm::Door, 2, _) => "doorDouble",

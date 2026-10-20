@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     AreaPart, CommandResult, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity,
     EntityEdit, EntityGeometry, PointCreate, PointEntity, PropertiesOperation, RingGeometry,
 };
@@ -124,11 +124,11 @@ fn same_name(name: &str) -> String {
     format!("{PREFIX}“{name}” adında başka bir nokta da var.")
 }
 
-fn wire(p: kentos_geometry_core::Vec2) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 { x: p.x, y: p.y }
+fn wire(p: kentos_geometry_core::Vec2) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
-fn wires(pts: &[kentos_geometry_core::Vec2]) -> Vec<kentos_contracts::Vec2> {
+fn wires(pts: &[kentos_geometry_core::Vec2]) -> Vec<kentos_commands::Vec2> {
     pts.iter().map(|p| wire(*p)).collect()
 }
 
@@ -212,7 +212,7 @@ pub fn with_paths(e: &Entity, ps: &[Elevated]) -> Option<EntityGeometry> {
 }
 
 /// A command's refusal: its error, when it wrote nothing.
-pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_contracts::CommandError> {
+pub(crate) fn refusal<T>(result: CommandResult<T>) -> Option<kentos_commands::CommandError> {
     match result {
         CommandResult::Failed { error }
         | CommandResult::Conflict { error }
@@ -476,7 +476,7 @@ pub fn write_draft(
     };
     let input = PointCreate {
         layer_id: layer_id.to_owned(),
-        p: kentos_contracts::Vec2 { x, y },
+        p: kentos_commands::Vec2 { x, y },
         z,
         label: (!name.is_empty()).then(|| name.clone()),
         color: color.map(str::to_owned),

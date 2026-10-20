@@ -22,7 +22,7 @@ pub mod tile;
 use std::collections::BTreeMap;
 use std::sync::Arc;
 
-use kentos_contracts::{
+use kentos_commands::{
     CloudFormat, CloudSource, Entity, EntityBase, PointCloudEntity, PointCloudFields,
     PointCloudStyle,
 };

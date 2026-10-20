@@ -15,7 +15,7 @@
 //!
 //! While it waits for the second point the frame follows the pointer.
 
-use kentos_contracts::{CreateOperation, EntityGeometry, ImageFields, Vec2 as Point};
+use kentos_commands::{CreateOperation, EntityGeometry, ImageFields, Vec2 as Point};
 use kentos_geometry_core::geom::image::Frame;
 use kentos_geometry_core::ops::image::placed;
 use kentos_geometry_core::tools::point_text::js_trim;

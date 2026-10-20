@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, text, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{EntitiesSetProperties, Entity, PropertiesOperation};
+use kentos_commands::{EntitiesSetProperties, Entity, PropertiesOperation};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::cogo::{self, Field, Finding, Item, Status};

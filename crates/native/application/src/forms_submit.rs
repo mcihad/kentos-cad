@@ -10,7 +10,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     ChildSubmitted, CommandResult, Entity, EntityBase, FormChild, FormsSubmit, FormsSubmitted,
     RecordChange, RecordEntity,
 };
@@ -29,7 +29,7 @@ struct Checked {
     entity: Entity,
     version: Option<u32>,
     label: String,
-    warnings: Vec<kentos_contracts::CommandWarning>,
+    warnings: Vec<kentos_commands::CommandWarning>,
     children: Vec<Child>,
     /// The fields the snapshot leaves out (the workflow's state and log).
     skip: Vec<String>,
@@ -145,7 +145,7 @@ fn check(doc: &Document, input: &FormsSubmit) -> Result<Checked, Stop> {
         .map_err(|issues| {
             let issues: Vec<_> = issues
                 .into_iter()
-                .filter(|i| i.severity == kentos_contracts::FormSeverity::Error)
+                .filter(|i| i.severity == kentos_commands::FormSeverity::Error)
                 .collect();
             let first = &issues[0];
             let path = first
@@ -331,7 +331,7 @@ fn child(
     } else {
         attrs.insert(
             link.name.clone(),
-            next.join(kentos_contracts::MULTIPLE_JOIN),
+            next.join(kentos_commands::MULTIPLE_JOIN),
         );
     }
     // The values: through the child layer's form when it has one, else by its fields' rules.
@@ -368,7 +368,7 @@ fn child(
                 .map_err(|issues| {
                     let first = issues
                         .iter()
-                        .find(|i| i.severity == kentos_contracts::FormSeverity::Error)
+                        .find(|i| i.severity == kentos_commands::FormSeverity::Error)
                         .or(issues.first());
                     let message = first.map_or_else(String::new, |i| i.message.clone());
                     let key = first
@@ -388,7 +388,7 @@ fn child(
                         Some(k),
                     ));
                 };
-                match kentos_contracts::check_value(f, v) {
+                match kentos_commands::check_value(f, v) {
                     Ok(x) if x.is_empty() => {
                         out.remove(&f.name);
                     }
@@ -562,7 +562,7 @@ fn commit_plan(
     doc: &Document,
     input: &FormsSubmit,
     c: &Checked,
-) -> Result<Option<(kentos_contracts::SourcesSynced, Vec<kentos_contracts::CommandWarning>)>, Stop> {
+) -> Result<Option<(kentos_commands::SourcesSynced, Vec<kentos_commands::CommandWarning>)>, Stop> {
     if !input.commit {
         return Ok(None);
     }
@@ -606,8 +606,8 @@ pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsSubmit) -> CommandResu
     let dry = cx.dry();
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_SUBMIT,
-        kentos_contracts::CAD_FORMS_SUBMIT_VERSION,
+        kentos_commands::CAD_FORMS_SUBMIT,
+        kentos_commands::CAD_FORMS_SUBMIT_VERSION,
         input,
         move |cx, input| write_execute(cx, input, dry),
     )
@@ -655,7 +655,7 @@ fn write_execute(
 /// Whether the object `child` already refers to `parent` through `r`'s field.
 fn linked_to(
     doc: &Document,
-    r: &kentos_contracts::ProjectRelation,
+    r: &kentos_commands::ProjectRelation,
     child: &str,
     parent: &str,
 ) -> bool {

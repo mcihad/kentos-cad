@@ -10,7 +10,7 @@ use crate::common;
 use std::collections::BTreeMap;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{CircleEntity, Entity, EntityBase, Vec2 as Wire};
+use kentos_commands::{CircleEntity, Entity, EntityBase, Vec2 as Wire};
 use kentos_domain::Slot;
 use kentos_interaction::{Format, GripSet, Level, Vec2};
 
@@ -373,7 +373,7 @@ fn the_grip_menu_edits_a_vertex_or_an_edge_through_the_command() {
 /// do, and the headings count in that part.
 #[test]
 fn the_grip_menu_edits_the_part_its_grip_is_on() {
-    use kentos_contracts::AreaPart;
+    use kentos_commands::AreaPart;
     use kentos_interaction::grip_menu::{self, GripAction};
     let mut b = bench(&[4]);
     let Some(Entity::Polygon(mut area)) = b.doc.get(Slot(4)).cloned() else {

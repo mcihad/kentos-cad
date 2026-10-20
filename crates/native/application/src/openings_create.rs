@@ -9,7 +9,7 @@
 //! its place on one edge within its wall's ends (`opening_off_wall`); 3. clear of its wall's other openings and the
 //! call's (`openings_overlap`); 4. the line weight; 5. the expected revision; 6. the layer; 7. the attributes.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, OpeningFields, OpeningForm, OpeningsCreate,
     OpeningsCreated, OpeningsPlan,
 };
@@ -60,8 +60,8 @@ pub fn execute(
 ) -> CommandResult<OpeningsCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_OPENINGS_CREATE,
-        kentos_contracts::CAD_OPENINGS_CREATE_VERSION,
+        kentos_commands::CAD_OPENINGS_CREATE,
+        kentos_commands::CAD_OPENINGS_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -112,12 +112,12 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
             "openings",
         ));
     }
-    if input.openings.len() > kentos_contracts::MAX_OPENINGS {
+    if input.openings.len() > kentos_commands::MAX_OPENINGS {
         return Err(fail(
             codes::INVALID_OPENING,
             format!(
                 "Bir çağrıda en çok {} açıklık yazılır; {} verildi.",
-                kentos_contracts::MAX_OPENINGS,
+                kentos_commands::MAX_OPENINGS,
                 input.openings.len()
             ),
             "openings",
@@ -148,7 +148,7 @@ fn check(doc: &Document, input: &OpeningsCreate) -> Result<Checked, Stop> {
         let (centre, side) = openings::centre_of(n, f.width, &line, &at)?;
         f.at = centre;
         f.side = n.side.or(side).unwrap_or_default();
-        f.place = vec![kentos_contracts::Vec2 { x: 0.0, y: 0.0 }; 4];
+        f.place = vec![kentos_commands::Vec2 { x: 0.0, y: 0.0 }; 4];
         openings::valid(&f, &at)?;
         made.push(openings::placed(&f, &line, &at)?);
     }

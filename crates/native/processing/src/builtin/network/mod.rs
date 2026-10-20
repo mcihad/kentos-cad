@@ -9,7 +9,7 @@ pub mod closest_facility;
 pub mod od_matrix;
 pub mod service_areas;
 
-use kentos_contracts::{Entity, NetworkDef};
+use kentos_commands::{Entity, NetworkDef};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::NetworkSession;
 use kentos_geometry_core::vec2::Vec2;
@@ -33,7 +33,7 @@ pub fn network_param(description: &str) -> ParamDef {
         "network",
         "Ağ",
         ParamKind::Network {
-            prefers: kentos_contracts::NetworkKind::Road,
+            prefers: kentos_commands::NetworkKind::Road,
         },
     )
     .describe(description)
@@ -109,7 +109,7 @@ pub fn run_network(
     let time = match v.values.get("time").and_then(Value::as_str).map(js_trim) {
         None | Some("") => None,
         Some(t) => Some(
-            kentos_contracts::clock_of(t)
+            kentos_commands::clock_of(t)
                 .ok_or_else(|| format!("Kalkış saati “{t}” okunamadı; 07:30 gibi yazın."))?,
         ),
     };
@@ -148,14 +148,14 @@ pub fn run_network(
 /// A way as a polyline's geometry: its points, and its bulges when it has an arc (the web's `lineGeometry`).
 pub fn line_geometry(
     l: &kentos_geometry_core::ops::network::Line,
-) -> kentos_contracts::EntityGeometry {
+) -> kentos_commands::EntityGeometry {
     let arcs = l.bulges.iter().any(|b| *b != 0.0);
-    kentos_contracts::EntityGeometry::Polyline {
+    kentos_commands::EntityGeometry::Polyline {
         ms: None,
         pts: l
             .pts
             .iter()
-            .map(|p| kentos_contracts::Vec2 { x: p[0], y: p[1] })
+            .map(|p| kentos_commands::Vec2 { x: p[0], y: p[1] })
             .collect(),
         bulges: arcs.then(|| l.bulges.clone()),
         zs: None,

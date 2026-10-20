@@ -17,7 +17,7 @@ use std::collections::{HashMap, HashSet};
 
 use iced::Task;
 use iced::futures::channel::oneshot;
-use kentos_contracts::{Entity, NetworkDef};
+use kentos_commands::{Entity, NetworkDef};
 use kentos_domain::{ChangeMark, Changes, Document};
 use kentos_geometry_core::ops::network::input::{from_store, turns_from_store};
 use kentos_interaction::Level;

@@ -20,7 +20,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::charts::model::{Aggregate, ChartKind, Spec};
 use kentos_ui::snapshot::Snapshot;

@@ -25,7 +25,7 @@
 //! rectangle is written sharp. With the overlap control or Topoloji changing
 //! the area, it is written as any new area is (`points::write_area_by`).
 
-use kentos_contracts::{RectangleCorners, RectangleCreate, RectangleFrame};
+use kentos_commands::{RectangleCorners, RectangleCreate, RectangleFrame};
 use kentos_geometry_core::geom::shapes::rect_side_for_area;
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::jsmath::PI;

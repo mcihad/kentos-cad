@@ -12,7 +12,7 @@ publish.workspace = true
 # expressions' measures come from the shared geometry core, the expression
 # language from the style core: the same code the web reaches through WASM.
 [dependencies]
-kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 kentos-expression = { path = "../../shared/expression" }
 kentos-geometry-core = { path = "../../shared/geometry-core" }

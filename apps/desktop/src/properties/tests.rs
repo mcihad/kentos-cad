@@ -5,7 +5,7 @@
 use std::collections::BTreeMap;
 
 use iced::keyboard::Modifiers;
-use kentos_contracts::{
+use kentos_commands::{
     DimensionEntity, Entity, EntityBase, HatchEntity, HatchPattern, HatchPatternType, LineEntity,
     TextEntity, Vec2 as Wire,
 };
@@ -270,9 +270,9 @@ fn a_local_project_reads_and_takes_its_unit() {
     let mut app = objects();
     {
         let doc = app.document.as_mut().expect("open");
-        let settings = kentos_contracts::ProjectSettings {
+        let settings = kentos_commands::ProjectSettings {
             srid: 0,
-            drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+            drawing_unit: Some(kentos_commands::DrawingUnit::Mm),
             ..doc.model.settings().clone()
         };
         doc.model.set_settings(settings);
@@ -482,7 +482,7 @@ fn a_linked_text_names_its_object_and_bagi_kopar_breaks_the_link() {
             align: None,
             width_factor: None,
             mask: false,
-            label_of: label_of.map(|u| kentos_contracts::EntityId(*u.as_bytes())),
+            label_of: label_of.map(|u| kentos_commands::EntityId(*u.as_bytes())),
             label_scale: label_of.map(|_| 1000.0),
             paragraph: Default::default(),
             face: Default::default(),
@@ -548,10 +548,10 @@ fn block_of(
     slot: u32,
     name: &str,
     replace: bool,
-) -> (kentos_contracts::BlockId, Option<u32>) {
+) -> (kentos_commands::BlockId, Option<u32>) {
     let model = &mut app.document.as_mut().expect("open").model;
     let uid = model.uid(Slot(slot)).expect("an object").to_string();
-    let input = kentos_contracts::BlocksDefine {
+    let input = kentos_commands::BlocksDefine {
         name: name.to_owned(),
         base: Wire { x: E, y: N },
         uids: vec![uid],
@@ -606,7 +606,7 @@ fn an_insert_takes_its_block_place_scale_turn_and_mirroring() {
     assert_eq!(i.block, block_of_name(&app, "Direk"));
 }
 
-fn block_of_name(app: &App, name: &str) -> kentos_contracts::BlockId {
+fn block_of_name(app: &App, name: &str) -> kentos_commands::BlockId {
     let model = &app.document.as_ref().expect("open").model;
     model
         .blocks()
@@ -788,7 +788,7 @@ fn line_z(app: &mut App, za: Option<f64>, zb: Option<f64>) -> u32 {
 fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
     add(
         app,
-        Entity::Polyline(kentos_contracts::PathEntity {
+        Entity::Polyline(kentos_commands::PathEntity {
             ms: None,
             base: base("cizim"),
             pts: vec![wire(0.0, 40.0), wire(10.0, 40.0), wire(20.0, 40.0)],
@@ -806,7 +806,7 @@ fn path_z(app: &mut App, zs: Option<Vec<Option<f64>>>) -> u32 {
 fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f64>>>) -> u32 {
     add(
         app,
-        Entity::Polygon(kentos_contracts::PathEntity {
+        Entity::Polygon(kentos_commands::PathEntity {
             ms: None,
             base: base("parsel"),
             pts: vec![
@@ -816,7 +816,7 @@ fn area_z(app: &mut App, zs: Option<Vec<Option<f64>>>, hole: Option<Vec<Option<f
                 wire(0.0, 60.0),
             ],
             bulges: None,
-            holes: Some(vec![kentos_contracts::RingGeometry {
+            holes: Some(vec![kentos_commands::RingGeometry {
                 pts: vec![
                     wire(4.0, 53.0),
                     wire(8.0, 53.0),
@@ -977,7 +977,7 @@ fn a_point_keeps_its_row_as_it_was() {
     let mut app = objects();
     let spot = add(
         &mut app,
-        Entity::Point(kentos_contracts::PointEntity {
+        Entity::Point(kentos_commands::PointEntity {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: Some(12.5),
@@ -1149,7 +1149,7 @@ fn several_objects_show_their_elevation_only_when_every_vertex_has_the_same() {
     let line = line_z(&mut app, Some(5.0), Some(5.0));
     let spot = add(
         &mut app,
-        Entity::Point(kentos_contracts::PointEntity {
+        Entity::Point(kentos_commands::PointEntity {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: Some(5.0),
@@ -1170,7 +1170,7 @@ fn several_objects_show_their_elevation_only_when_every_vertex_has_the_same() {
     // A vertex without one among vertices that have it: Çeşitli too, and a point without a z is one.
     let bare_spot = add(
         &mut app,
-        Entity::Point(kentos_contracts::PointEntity {
+        Entity::Point(kentos_commands::PointEntity {
             base: base("nokta"),
             p: wire(2.0, 2.0),
             z: None,
@@ -1188,7 +1188,7 @@ fn several_objects_show_their_elevation_only_when_every_vertex_has_the_same() {
     let circle = |app: &mut App, x: f64| {
         add(
             app,
-            Entity::Circle(kentos_contracts::CircleEntity {
+            Entity::Circle(kentos_commands::CircleEntity {
                 base: base("cizim"),
                 c: wire(x, 70.0),
                 r: 1.0,
@@ -1213,7 +1213,7 @@ fn a_cell_of_several_objects_sets_every_vertex_of_each_of_them_in_one_step() {
     let line = line_z(&mut app, Some(10.0), Some(20.0));
     let spot = add(
         &mut app,
-        Entity::Point(kentos_contracts::PointEntity {
+        Entity::Point(kentos_commands::PointEntity {
             base: base("nokta"),
             p: wire(1.0, 2.0),
             z: None,
@@ -1372,11 +1372,11 @@ fn a_multi_part_area_counts_every_part() {
         panic!("the parcel");
     };
     let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
-    p.parts = Some(vec![kentos_contracts::AreaPart {
+    p.parts = Some(vec![kentos_commands::AreaPart {
         ms: None,
         pts: vec![at(30.0, 0.0), at(40.0, 0.0), at(40.0, 10.0), at(30.0, 10.0)],
         bulges: None,
-        holes: Some(vec![kentos_contracts::RingGeometry {
+        holes: Some(vec![kentos_commands::RingGeometry {
             pts: vec![at(34.0, 4.0), at(34.0, 6.0), at(36.0, 6.0), at(36.0, 4.0)],
             bulges: None,
             zs: None,
@@ -1403,14 +1403,14 @@ fn multi_part_lines_and_points_count_every_part() {
     let Some(Entity::Line(line)) = doc.model.get(Slot(1)).cloned() else {
         panic!("the line");
     };
-    let road = Entity::Polyline(kentos_contracts::PathEntity {
+    let road = Entity::Polyline(kentos_commands::PathEntity {
         ms: None,
         base: line.base.clone(),
         pts: vec![at(-24.0, -12.0), at(-8.0, -12.0)],
         bulges: None,
         holes: None,
         zs: None,
-        parts: Some(vec![kentos_contracts::AreaPart {
+        parts: Some(vec![kentos_commands::AreaPart {
             ms: None,
             pts: vec![at(0.0, -20.0), at(0.0, -10.0), at(5.0, -10.0)],
             bulges: None,
@@ -1426,11 +1426,11 @@ fn multi_part_lines_and_points_count_every_part() {
     };
     marks.z = Some(100.0);
     marks.parts = Some(vec![
-        kentos_contracts::PointPart {
+        kentos_commands::PointPart {
             p: at(25.0, -8.0),
             z: Some(100.0),
         },
-        kentos_contracts::PointPart {
+        kentos_commands::PointPart {
             p: at(30.0, -8.0),
             z: Some(102.5),
         },
@@ -1632,7 +1632,7 @@ fn two_texts(app: &mut App) -> (u32, u32) {
     let b = add(
         app,
         Entity::Text(TextEntity {
-            align: Some(kentos_contracts::TextAlign::MiddleCenter),
+            align: Some(kentos_commands::TextAlign::MiddleCenter),
             width_factor: Some(0.8),
             mask: true,
             ..text(
@@ -1737,15 +1737,15 @@ fn a_new_alignment_keeps_each_text_where_it_is() {
         &mut app,
         Event::TextAlign(
             vec![Slot(a), Slot(b)],
-            Some(kentos_contracts::TextAlign::TopRight),
+            Some(kentos_commands::TextAlign::TopRight),
         ),
     );
     let (ta, tb) = (text_of(&app, a), text_of(&app, b));
     assert_eq!(
         (ta.align, tb.align),
         (
-            Some(kentos_contracts::TextAlign::TopRight),
-            Some(kentos_contracts::TextAlign::TopRight)
+            Some(kentos_commands::TextAlign::TopRight),
+            Some(kentos_commands::TextAlign::TopRight)
         )
     );
     assert_eq!([text_box(&app, &ta), text_box(&app, &tb)], before);
@@ -1759,7 +1759,7 @@ fn a_new_alignment_keeps_each_text_where_it_is() {
             pa,
             pb,
             None,
-            Some(kentos_contracts::TextAlign::MiddleCenter)
+            Some(kentos_commands::TextAlign::MiddleCenter)
         )
     );
     // The left of the baseline takes the field away; the text still stays.
@@ -1823,7 +1823,7 @@ fn width_factor_and_mask_are_written_to_the_texts() {
 
 /// Two leaders: a filled arrow with its note, an open one masked, on Çizim.
 fn two_leaders(app: &mut App) -> (u32, u32) {
-    let leader = |x: f64, text: &str, arrow, mask| kentos_contracts::LeaderEntity {
+    let leader = |x: f64, text: &str, arrow, mask| kentos_commands::LeaderEntity {
         tip: None,
         leader_style: None,
         blocks: Vec::new(),
@@ -1853,14 +1853,14 @@ fn two_leaders(app: &mut App) -> (u32, u32) {
         Entity::Leader(leader(
             20.0,
             "Ø150 PVC",
-            Some(kentos_contracts::LeaderArrow::Open),
+            Some(kentos_commands::LeaderArrow::Open),
             true,
         )),
     );
     (a, b)
 }
 
-fn leader_of(app: &App, slot: u32) -> kentos_contracts::LeaderEntity {
+fn leader_of(app: &App, slot: u32) -> kentos_commands::LeaderEntity {
     match entity(app, slot) {
         Entity::Leader(l) => l,
         other => panic!("a leader: {other:?}"),
@@ -1892,13 +1892,13 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
     let (sa, sb) = (Slot(a), Slot(b));
     event(
         &mut app,
-        Event::LeaderArrow(vec![sa, sb], Some(kentos_contracts::LeaderArrow::Dot)),
+        Event::LeaderArrow(vec![sa, sb], Some(kentos_commands::LeaderArrow::Dot)),
     );
     assert_eq!(
         (leader_of(&app, a).arrow, leader_of(&app, b).arrow),
         (
-            Some(kentos_contracts::LeaderArrow::Dot),
-            Some(kentos_contracts::LeaderArrow::Dot)
+            Some(kentos_commands::LeaderArrow::Dot),
+            Some(kentos_commands::LeaderArrow::Dot)
         )
     );
     assert_eq!(value(&app, "Kılavuz", "Ok"), "Dolu nokta");
@@ -1966,7 +1966,7 @@ fn a_leaders_rows_write_its_note_height_turn_arrowhead_and_mask() {
 }
 
 /// A dimension of `style` from (E + a, N) to (E + b, N), on Çizim.
-fn dimension(style: kentos_contracts::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
+fn dimension(style: kentos_commands::DimensionStyle, a: [f64; 2], b: [f64; 2]) -> DimensionEntity {
     DimensionEntity {
         annotative: None,
         text_shift: None,
@@ -2008,7 +2008,7 @@ fn dimension_of(app: &App, slot: u32) -> DimensionEntity {
 /// have the value left out. The web's `dimensionRows.test.ts`.
 #[test]
 fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
-    use kentos_contracts::DimensionStyle::{ArcLength, Ordinate, Slope};
+    use kentos_commands::DimensionStyle::{ArcLength, Ordinate, Slope};
     let mut app = objects();
     // A quarter arc of radius 10 about (E, N + 40), east to north, 3 m out.
     let arc = add(
@@ -2146,13 +2146,13 @@ fn a_dimensions_rows_write_its_mask_axis_and_elevations() {
 /// none taking it away. The web's `dimensionRows.test.ts`.
 #[test]
 fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
-    use kentos_contracts::DimensionStyle::Aligned;
-    use kentos_contracts::LineType;
+    use kentos_commands::DimensionStyle::Aligned;
+    use kentos_commands::LineType;
     let mut app = objects();
     let d1 = add(
         &mut app,
         Entity::Dimension(DimensionEntity {
-            look: kentos_contracts::DimensionLook {
+            look: kentos_commands::DimensionLook {
                 dim_line_color: Some("#E5484D".into()),
                 ext_weight: Some(0.35),
                 ext_line_type: Some(LineType::Dashed),
@@ -2164,7 +2164,7 @@ fn a_dimensions_line_rows_write_its_colours_weights_and_types() {
     let d2 = add(
         &mut app,
         Entity::Dimension(DimensionEntity {
-            look: kentos_contracts::DimensionLook {
+            look: kentos_commands::DimensionLook {
                 dim_line_color: Some("#e5484d".into()),
                 text_color: Some("#123456".into()),
                 ..Default::default()

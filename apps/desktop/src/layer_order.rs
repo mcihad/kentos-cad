@@ -2,7 +2,7 @@
 //! after or into another row, and Sıra ▸ of a row's menu (Yukarı taşı, Aşağı taşı, En üste taşı, En alta taşı,
 //! Gruptan çıkar). Each is one undo step “Katmanı taşı”; a locked node or group refuses it in the command's words.
 
-use kentos_contracts::{LayerEditOperation, LayersEdit};
+use kentos_commands::{LayerEditOperation, LayersEdit};
 use kentos_interaction::Level;
 use kentos_ui::widget::tree_view::Place;
 
@@ -139,7 +139,7 @@ mod tests {
 
     /// The tree's ids by group, top first: each node as `group/id`.
     fn order(app: &App) -> Vec<String> {
-        fn walk(nodes: &[kentos_contracts::LayerNode], above: &str, out: &mut Vec<String>) {
+        fn walk(nodes: &[kentos_commands::LayerNode], above: &str, out: &mut Vec<String>) {
             for n in nodes {
                 out.push(format!("{above}/{}", n.id));
                 walk(&n.children, &n.id, out);

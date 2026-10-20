@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, DerivationEntry, DerivationStatus, GisDerivation, GisDerived,
     GisTableRole,
 };

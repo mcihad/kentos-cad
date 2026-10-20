@@ -17,7 +17,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use kentos_ui::snapshot::Snapshot;
 use serde_json::{Value, json};

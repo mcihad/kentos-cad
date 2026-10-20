@@ -9,7 +9,7 @@
 //! action; the command's refusal is said and the tool waits for another value; written, it ends. Nothing is
 //! computed here but the side of the pointer.
 
-use kentos_contracts::{CommandResult, EntitiesVertex};
+use kentos_commands::{CommandResult, EntitiesVertex};
 use kentos_geometry_core::entity::entity_outline;
 use kentos_native_application::{ExecutionContext, entities_vertex};
 

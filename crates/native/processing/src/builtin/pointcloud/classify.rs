@@ -5,7 +5,7 @@
 //! vegetation (3), to the middle limit medium (4), to the high limit high
 //! (5). Two passes (`ops::height`).
 
-use kentos_contracts::CloudRender;
+use kentos_commands::CloudRender;
 use kentos_pointcloud::ops::height::{Height, Params};
 use serde_json::json;
 
@@ -84,7 +84,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let d = Params::default();
@@ -105,7 +105,7 @@ fn go(
     let mut h = Height::new(cloud.cloud.rect(), p)
         .ok_or("Sınıflamanın değerleri geçersiz ya da ızgara çok büyük.")?;
     let at = place(files, r, &sources[0], "-sinifli")?;
-    let copc = at.format == kentos_contracts::CloudFormat::Copc;
+    let copc = at.format == kentos_commands::CloudFormat::Copc;
     let write_to = if copc { 0.6 } else { 1.0 };
     pass(
         files,

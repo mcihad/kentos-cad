@@ -6,7 +6,7 @@
 use std::collections::{BTreeMap, HashSet};
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::{Document, NewLayer, Slot, default_style};
 use kentos_expression::world::{World, WorldLayer};
 use kentos_expression::{Schema, Unit, Variable, compile_with};
@@ -1161,11 +1161,11 @@ fn look_of(
     doc: &Document,
     id: Option<&str>,
 ) -> Option<(
-    kentos_contracts::LayerStyle,
-    Vec<kentos_contracts::fields::LayerField>,
+    kentos_commands::LayerStyle,
+    Vec<kentos_commands::fields::LayerField>,
 )> {
     let node = doc.layers().get(id?)?;
-    (node.kind == kentos_contracts::LayerNodeType::Layer)
+    (node.kind == kentos_commands::LayerNodeType::Layer)
         .then(|| (node.style.clone(), node.fields.clone()))
 }
 

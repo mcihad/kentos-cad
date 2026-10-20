@@ -21,7 +21,7 @@ pub mod scenario;
 use std::time::{Duration, Instant};
 
 use iced::Task;
-use kentos_contracts::{LayerNode, LayerNodeType, scenario_pairs};
+use kentos_commands::{LayerNode, LayerNodeType, scenario_pairs};
 use kentos_geometry_core::time::{self, Step, Unit, Window};
 use kentos_interaction::Level;
 
@@ -93,7 +93,7 @@ pub fn with_rasters(
     let layers = model.layers();
     let mut out = (count, extent);
     for e in model.entities() {
-        let kentos_contracts::Entity::Raster(r) = e else {
+        let kentos_commands::Entity::Raster(r) = e else {
             continue;
         };
         let Some(d) = r.raster.dataset.as_ref().filter(|d| d.follow_time) else {
@@ -340,7 +340,7 @@ impl App {
             d.model.layers().leaves().iter().any(|l| {
                 l.time
                     .as_ref()
-                    .is_some_and(kentos_contracts::LayerTime::recorded)
+                    .is_some_and(kentos_commands::LayerTime::recorded)
             })
         })
     }

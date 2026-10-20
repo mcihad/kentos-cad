@@ -4,7 +4,7 @@
 //! opened, and refusals are said in the server's words.
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{
+use kentos_commands::{
     CatalogView, ProjectCatalogChange, ProjectDuplicated, ProjectStorage, ProjectType,
 };
 

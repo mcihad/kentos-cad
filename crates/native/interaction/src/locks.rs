@@ -310,7 +310,7 @@ mod tests {
 
     /// A CBS project in grads.
     fn cbs() -> Format {
-        Format::of(&kentos_contracts::ProjectSettings {
+        Format::of(&kentos_commands::ProjectSettings {
             leader_styles: Vec::new(),
             wall_styles: Vec::new(),
             arch: None,
@@ -330,10 +330,10 @@ mod tests {
             srid: 5256,
             length_decimals: 3,
             area_decimals: 2,
-            area_unit: kentos_contracts::AreaUnit::M2,
-            angle_unit: kentos_contracts::AngleUnit::Grad,
+            area_unit: kentos_commands::AreaUnit::M2,
+            angle_unit: kentos_commands::AngleUnit::Grad,
             plot_scale: 1000.0,
-            workspace: Some(kentos_contracts::Workspace::Gis),
+            workspace: Some(kentos_commands::Workspace::Gis),
             drawing_font: None,
             drawing_unit: None,
             second_srid: None,

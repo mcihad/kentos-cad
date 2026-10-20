@@ -5,7 +5,7 @@
 use std::time::Instant;
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{CommandResult, DocumentSnapshotV1, StandardsApply, StandardsCheck};
+use kentos_commands::{CommandResult, DocumentSnapshotV1, StandardsApply, StandardsCheck};
 use kentos_native_application::{ExecutionContext, standards};
 use serde_json::json;
 

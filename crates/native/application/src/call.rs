@@ -13,8 +13,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_contracts::canonical::{canonical_json, id_of};
-use kentos_contracts::{
+use kentos_commands::canonical::{canonical_json, id_of};
+use kentos_commands::{
     AlgorithmInfo, Bounds, CallAnswer, CallContext, CallEnvelope, CallExpectations, CallKind,
     CallOp, CallRecord, CallStatus, CommandError, CommandResult, CommandSummary, CommandWarning,
     FileEffect, JOURNAL_IDS, JOURNAL_INPUT_LIMIT, NUMERIC_POLICY, NodeChanges, ProjectPart,
@@ -236,7 +236,7 @@ where
 pub fn uids_in(value: &Value) -> BTreeSet<String> {
     fn walk(v: &Value, out: &mut BTreeSet<String>) {
         match v {
-            Value::String(s) if kentos_contracts::uuid_from_text(s).is_some() => {
+            Value::String(s) if kentos_commands::uuid_from_text(s).is_some() => {
                 out.insert(s.clone());
             }
             Value::Array(items) => items.iter().for_each(|i| walk(i, out)),
@@ -310,7 +310,7 @@ fn row_of(
     base: u64,
 ) -> CallRecord {
     let text = canonical_json(input);
-    let digest = kentos_contracts::encoding::sha256_hex(text.as_bytes())[..32].to_owned();
+    let digest = kentos_commands::encoding::sha256_hex(text.as_bytes())[..32].to_owned();
     let (created, changed, removed, truncated) = id_lists(report);
     CallRecord {
         relax_constraints: false,
@@ -341,7 +341,7 @@ fn row_of(
 }
 
 /// The box of an object, metres.
-fn bounds_of(entity: &kentos_contracts::Entity) -> Option<Bounds> {
+fn bounds_of(entity: &kentos_commands::Entity) -> Option<Bounds> {
     let b = entity_bounds(&shape(entity));
     (b.min_x.is_finite() && b.max_x >= b.min_x).then_some(Bounds {
         min_x: b.min_x,
@@ -365,8 +365,8 @@ fn union(a: Option<Bounds>, b: Option<Bounds>) -> Option<Bounds> {
 }
 
 /// The blocks an object's inserts name, nested definitions too.
-fn blocks_named(doc: &Document, entity: &kentos_contracts::Entity, out: &mut BTreeSet<String>) {
-    if let kentos_contracts::Entity::Insert(insert) = entity
+fn blocks_named(doc: &Document, entity: &kentos_commands::Entity, out: &mut BTreeSet<String>) {
+    if let kentos_commands::Entity::Insert(insert) = entity
         && out.insert(insert.block.to_text())
         && let Some(block) = doc.block(insert.block)
     {
@@ -502,8 +502,8 @@ fn summarize(
         if summary.sources.blocks.contains_key(&id) || new_blocks.contains(&id) {
             continue;
         }
-        if let Some(stamp) = kentos_contracts::uuid_from_text(&id)
-            .map(kentos_contracts::BlockId)
+        if let Some(stamp) = kentos_commands::uuid_from_text(&id)
+            .map(kentos_commands::BlockId)
             .and_then(|b| doc.block_stamp(b))
         {
             summary.sources.blocks.insert(id, stamp);
@@ -687,7 +687,7 @@ fn call_fault(envelope: &CallEnvelope) -> Option<CallAnswer> {
         ));
     }
     for (k, v) in &e.objects {
-        if kentos_contracts::uuid_from_text(k).is_none() {
+        if kentos_commands::uuid_from_text(k).is_none() {
             return invalid(
                 "Beklenen nesnelerin anahtarı kalıcı kimlik (küçük harfli, tireli UUID) olmalı.",
                 &format!("expected.objects.{k}"),
@@ -701,7 +701,7 @@ fn call_fault(envelope: &CallEnvelope) -> Option<CallAnswer> {
         }
     }
     for (k, v) in &e.blocks {
-        if kentos_contracts::uuid_from_text(k).is_none() || !is_hex(v, 16) {
+        if kentos_commands::uuid_from_text(k).is_none() || !is_hex(v, 16) {
             return invalid(
                 "Beklenen blokların anahtarı tanımın kimliği, değeri 16 haneli damga olmalı.",
                 &format!("expected.blocks.{k}"),
@@ -753,8 +753,8 @@ fn expectation_fault(doc: &Document, e: &CallExpectations) -> Option<CallAnswer>
         }
     }
     for (id, stamp) in &e.blocks {
-        let now = kentos_contracts::uuid_from_text(id)
-            .map(kentos_contracts::BlockId)
+        let now = kentos_commands::uuid_from_text(id)
+            .map(kentos_commands::BlockId)
             .and_then(|b| doc.block_stamp(b));
         if now.as_deref() != Some(stamp.as_str()) {
             first.get_or_insert_with(|| format!("expected.blocks.{id}"));

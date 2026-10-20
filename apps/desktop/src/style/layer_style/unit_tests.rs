@@ -5,7 +5,7 @@
 //! when the project's unit changes. The style crate's tests (`units.rs`) hold the
 //! numbers; these drive the window and the drawing area end to end.
 
-use kentos_contracts::{
+use kentos_commands::{
     DrawingUnit, Entity, EntityBase, PathEntity, PointEntity, ProjectSettings, Vec2,
 };
 use kentos_domain::NewLayer;

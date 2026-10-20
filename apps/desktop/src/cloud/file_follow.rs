@@ -21,7 +21,7 @@ use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::ApiFailure;
 use kentos_cloud::follow;
-use kentos_contracts::{EventPage, FileRevisions, ProjectInfo, ProjectState, ProjectStorage};
+use kentos_commands::{EventPage, FileRevisions, ProjectInfo, ProjectState, ProjectStorage};
 use kentos_domain::Uuid;
 
 use crate::app::{App, Dialog, Message};
@@ -442,7 +442,7 @@ impl App {
         let write = info
             .access
             .permissions
-            .contains(&kentos_contracts::ProjectPermission::FeatureWrite);
+            .contains(&kentos_commands::ProjectPermission::FeatureWrite);
         let Some(source) = self.document.as_mut().and_then(|d| d.cloud_source_mut()) else {
             return;
         };

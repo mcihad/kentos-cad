@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{Entity, ExportReport, GeoJsonLayer, GeoJsonWriteInput};
+use kentos_commands::{Entity, ExportReport, GeoJsonLayer, GeoJsonWriteInput};
 use kentos_interaction::Level;
 use kentos_ui::label;
 use kentos_ui::widget::segmented::Segmented;
@@ -85,7 +85,7 @@ pub(super) fn bulged(e: &Entity) -> bool {
         b.as_ref()
             .is_some_and(|b| b.iter().any(|v| v.abs() > 1e-12))
     };
-    let holes = |holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+    let holes = |holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         holes
             .as_ref()
             .is_some_and(|holes| holes.iter().any(|r| arcs(&r.bulges)))
@@ -545,7 +545,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
 
     /// An arc in a later part, or in its hole, makes the area curved (docs/adr/0143).
     #[test]

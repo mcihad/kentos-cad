@@ -9,7 +9,7 @@
 //! `cad.entities.edit` (step “Paralel kaydır”) and the tool waits for the
 //! next edge. Esc and Ctrl+Z let the edge go; Esc with none leaves.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{EditOperation, Entity, EntityEdit};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::edge_shift::{self as rules, Picked};

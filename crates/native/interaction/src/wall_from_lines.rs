@@ -8,7 +8,7 @@
 //! - the walls to come are shown from the command's plan, the lines left beside the cursor; Enter, Uygula or a quick
 //!   right click writes them through `cad.walls.convert` in one undo step “Çizgiden duvar”.
 
-use kentos_contracts::{CommandResult, WallJustify, WallsFromLines, WallsFromMode};
+use kentos_commands::{CommandResult, WallJustify, WallsFromLines, WallsFromMode};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, walls_from_lines};
@@ -44,7 +44,7 @@ pub struct WallFromLines {
     plan: Plan,
     seen: Memory,
     format: Format,
-    offer: Vec<kentos_contracts::WallStyleDef>,
+    offer: Vec<kentos_commands::WallStyleDef>,
 }
 
 /// The options a plan depends on, as numbers.
@@ -69,7 +69,7 @@ impl WallFromLines {
         let style = wall::chosen(m, cx.doc.settings());
         let fixed = style
             .as_ref()
-            .and_then(|s| kentos_contracts::fixed_width(&s.components))
+            .and_then(|s| kentos_commands::fixed_width(&s.components))
             .is_some();
         WallsFromLines {
             uids: self.uids.clone(),

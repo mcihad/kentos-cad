@@ -11,7 +11,7 @@
 //! the array stays picked for the next change. Enter or Esc drops the option asked for, then the array; with
 //! neither, Enter leaves.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayEdit as Edit, ArrayId, ArrayLayout, ArraysEdit, AssocArray, CommandResult, Entity,
 };
 use kentos_domain::{Document, Slot, Uuid};

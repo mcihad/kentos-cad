@@ -2,7 +2,7 @@
 //! and the server's wire form, each with its persistent id) and an object's
 //! measures from the shared geometry core (TODOS.md AI-05, AI-06).
 
-use kentos_contracts::{AngleUnit, Bounds, DrawingUnit, Entity, ProjectSettings, Workspace};
+use kentos_commands::{AngleUnit, Bounds, DrawingUnit, Entity, ProjectSettings, Workspace};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::crs::System;
 use kentos_geometry_core::crs::ground::ground_measures;
@@ -238,7 +238,7 @@ pub struct Conventions {
     /// windows take and show points; absent, the world's. The wire stays
     /// the world: a caller working in the UCS turns its points itself.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub ucs: Option<kentos_contracts::UcsNow>,
+    pub ucs: Option<kentos_commands::UcsNow>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -281,7 +281,7 @@ pub fn conventions(settings: &ProjectSettings) -> Conventions {
             }
         },
         angle_unit: settings.angle_unit,
-        ucs: settings.ucs.map(|u| kentos_contracts::UcsNow {
+        ucs: settings.ucs.map(|u| kentos_commands::UcsNow {
             origin: u.origin,
             angle: u.angle,
             name: settings
@@ -481,11 +481,11 @@ fn item(doc: &Document, uid: &str, way: &Way) -> Result<MeasureItem, HeadlessErr
     })
 }
 
-fn pt(v: kentos_contracts::Vec2) -> P {
+fn pt(v: kentos_commands::Vec2) -> P {
     P::new(v.x, v.y)
 }
 
-fn ring(pts: &[kentos_contracts::Vec2], bulges: Option<&Vec<f64>>) -> Ring {
+fn ring(pts: &[kentos_commands::Vec2], bulges: Option<&Vec<f64>>) -> Ring {
     Ring {
         pts: pts.iter().copied().map(pt).collect(),
         bulges: bulges.cloned(),

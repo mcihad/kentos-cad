@@ -3,7 +3,7 @@
 //! fixtures/text/v1/styles.json (scripts/fixtures/annotation_style_cases.py);
 //! the web's `dimensionValue` holds to the same.
 
-use kentos_contracts::{DimensionLook, DrawingUnit};
+use kentos_commands::{DimensionLook, DrawingUnit};
 use kentos_interaction::Format;
 use serde_json::Value;
 
@@ -63,7 +63,7 @@ fn a_dimensions_value_with_its_options_is_written_as_the_cases_say() {
         let f = Format {
             unit: serde_json::from_value::<DrawingUnit>(project["unit"].clone()).expect("a unit"),
             length_decimals: project["lengthDecimals"].as_u64().expect("decimals") as usize,
-            angle_unit: kentos_contracts::AngleUnit::Deg,
+            angle_unit: kentos_commands::AngleUnit::Deg,
             style,
             ..Format::default()
         };

@@ -7,7 +7,7 @@
 use crate::common;
 
 use common::Bench;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 
 const BLOCKS: &str = include_str!("../../../../../fixtures/interaction/v1/blocks.kcad");

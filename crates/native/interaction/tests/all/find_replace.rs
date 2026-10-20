@@ -6,7 +6,7 @@
 use crate::common;
 
 use common::{Bench, E, N, base};
-use kentos_contracts::{Entity, TextEntity};
+use kentos_commands::{Entity, TextEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::text::edit::Find;
 use kentos_interaction::find_replace::{Blocked, Query, matches, write};
@@ -26,7 +26,7 @@ fn scene() -> Bench {
             .add(Entity::Text(TextEntity {
                 annotative: None,
                 base: base(layer),
-                p: kentos_contracts::Vec2 { x: E, y: N + y },
+                p: kentos_commands::Vec2 { x: E, y: N + y },
                 text: words.to_owned(),
                 height: 2.0,
                 rotation: 0.0,
@@ -151,7 +151,7 @@ fn what_may_be_written_goes_in_one_step_the_rest_stays() {
     let Some(Entity::Text(t)) = b.doc.get(Slot(1)) else {
         panic!("a text");
     };
-    assert_eq!(t.align, Some(kentos_contracts::TextAlign::MiddleCenter));
+    assert_eq!(t.align, Some(kentos_commands::TextAlign::MiddleCenter));
     assert_eq!(b.doc.undo().as_deref(), Some("Bul ve değiştir"));
     assert_eq!(words(&b, 1), "Ada 101");
     assert_eq!(write(&mut b.doc, &[]), (0, Vec::new()));

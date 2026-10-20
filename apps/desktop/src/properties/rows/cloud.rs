@@ -2,7 +2,7 @@
 //! (linked, an address or embedded; a virtual cloud's count), format, points,
 //! bounds, density, system, its index, look and transparency.
 
-use kentos_contracts::{CloudFormat, CloudRender, PointCloudEntity};
+use kentos_commands::{CloudFormat, CloudRender, PointCloudEntity};
 use kentos_domain::Slot;
 use kentos_interaction::{Format, fixed};
 
@@ -35,11 +35,11 @@ pub(crate) fn format_name(f: CloudFormat) -> &'static str {
 /// A source's header as `cad.pointclouds.describe` reads it (docs/adr/0536), read once a session for each file.
 fn described(
     doc: &Document,
-    s: &kentos_contracts::CloudSource,
-) -> kentos_contracts::CloudSourceDescribed {
+    s: &kentos_commands::CloudSource,
+) -> kentos_commands::CloudSourceDescribed {
     use std::collections::HashMap;
     use std::sync::{Mutex, OnceLock, PoisonError};
-    static SEEN: OnceLock<Mutex<HashMap<String, kentos_contracts::CloudSourceDescribed>>> =
+    static SEEN: OnceLock<Mutex<HashMap<String, kentos_commands::CloudSourceDescribed>>> =
         OnceLock::new();
     let key = format!("{:?}|{:?}|{:?}|{:?}", s.file, s.asset, s.url, doc.path);
     let seen = SEEN.get_or_init(|| Mutex::new(HashMap::new()));
@@ -63,7 +63,7 @@ fn described(
 
 /// The rows of a single source's header (docs/adr/0536): the file's version and format, the vertical system, the
 /// acquisition day, the GPS time, the extra dimensions and who wrote it.
-fn header_rows(d: &kentos_contracts::CloudSourceDescribed) -> Vec<Row> {
+fn header_rows(d: &kentos_commands::CloudSourceDescribed) -> Vec<Row> {
     if !d.read {
         return vec![Row::text(
             "Başlık",

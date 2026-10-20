@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, container};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{FontMatch, FontsReport};
+use kentos_commands::{FontMatch, FontsReport};
 use kentos_ui::widget::table::{self, Table};
 use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};

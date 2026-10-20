@@ -20,7 +20,7 @@ use std::path::PathBuf;
 
 use iced::widget::{button, column, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::ProjectSettings;
+use kentos_commands::ProjectSettings;
 use kentos_geometry_core::crs::{
     self as core, Unreached, format_dd, format_dms, parse_angle, transform_in,
 };

@@ -3,7 +3,7 @@
 //! çevir, Seçime yakınlaştır). What the Öznitelikler panel shows of it and
 //! edits there is `properties/` (docs/adr/0063).
 
-use kentos_contracts::SelectRegion;
+use kentos_commands::SelectRegion;
 use kentos_domain::Slot;
 use kentos_interaction::ViewChange;
 use kentos_interaction::selectable;
@@ -166,7 +166,7 @@ pub fn kind_title(kind: &str) -> &'static str {
 #[cfg(test)]
 pub(crate) mod tests {
     use iced::{Point, Rectangle, Size};
-    use kentos_contracts::DocumentSnapshotV1;
+    use kentos_commands::DocumentSnapshotV1;
     use kentos_domain::Slot;
     use serde_json::Value;
 

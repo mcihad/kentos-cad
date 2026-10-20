@@ -11,7 +11,7 @@
 use crate::common;
 
 use common::{Bench, Camera, E, N, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::store::snap::NO_OBJECT;
 use kentos_interaction::{SnapKind, Vec2, View, default_snap_kinds, screen_scale};
 

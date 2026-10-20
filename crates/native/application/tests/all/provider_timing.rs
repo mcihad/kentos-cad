@@ -11,7 +11,7 @@
 use std::path::PathBuf;
 use std::time::Instant;
 
-use kentos_contracts::{CallOp, DocumentSnapshotV1};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_domain::Document;
 use kentos_geopackage::geom::{Coord, Curve, Geometry};
 use kentos_geopackage::{
@@ -150,7 +150,7 @@ fn provider_timing() {
         );
     }
     let file = std::fs::File::open(&path).expect("opens");
-    let (bytes, sha) = kentos_contracts::encoding::sha256_reader_hex(file).expect("reads");
+    let (bytes, sha) = kentos_commands::encoding::sha256_reader_hex(file).expect("reads");
     println!("dosya {} bayt, SHA-256 {sha}", bytes);
     report("başlangıç", 0.0);
 

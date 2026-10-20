@@ -15,7 +15,7 @@
 //!
 //! The plan and the write are the command's: the tool gives it the scope and the options.
 
-use kentos_contracts::{
+use kentos_commands::{
     CleanupIgnore, CleanupReport, CommandResult, EntitiesCleanup, EntitiesCleanupPlan,
 };
 use kentos_domain::Uuid;
@@ -214,7 +214,7 @@ impl Tool for Cleanup {
 
     fn prompt(&self) -> Prompt {
         let (tol, [overlaps, end_to_end, straight, look]) = self.seen.unwrap_or((
-            kentos_contracts::CLEANUP_TOLERANCE,
+            kentos_commands::CLEANUP_TOLERANCE,
             [true, false, true, false],
         ));
         if self.asking {
@@ -305,7 +305,7 @@ impl Tool for Cleanup {
             let Some((_, metres)) = points::plain_value(text, cx) else {
                 return false;
             };
-            if !(0.0..=kentos_contracts::MAX_CLEANUP_TOLERANCE).contains(&metres) {
+            if !(0.0..=kentos_commands::MAX_CLEANUP_TOLERANCE).contains(&metres) {
                 cx.say(Level::Warn, "Tolerans 0 ile 10 m arasında olmalı.");
                 return true;
             }

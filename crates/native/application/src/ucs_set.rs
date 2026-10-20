@@ -4,7 +4,7 @@
 //! (`tools::ucs::object_frame`). The shared cases are
 //! `fixtures/commands/v1/cad.ucs.set.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, MOST_NAMED_UCS, NamedUcs, ProjectSettings, UCS_REACH, UCS_SAME,
     Ucs, UcsChanged, UcsNow, UcsSet, UcsTo, Vec2, ucs_name_ok,
 };
@@ -108,8 +108,8 @@ fn unknown(name: &str) -> Stop {
 }
 
 /// What an object's kind is called in a refusal.
-fn kind_word(e: &kentos_contracts::Entity) -> &'static str {
-    use kentos_contracts::Entity as E;
+fn kind_word(e: &kentos_commands::Entity) -> &'static str {
+    use kentos_commands::Entity as E;
     match e {
         E::Dimension(_) => "Ölçü",
         E::Leader(_) => "Kılavuz",
@@ -273,8 +273,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &UcsSet) -> CommandResult<UcsChang
 pub fn execute(cx: &mut ExecutionContext<'_>, input: UcsSet) -> CommandResult<UcsChanged> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_UCS_SET,
-        kentos_contracts::CAD_UCS_SET_VERSION,
+        kentos_commands::CAD_UCS_SET,
+        kentos_commands::CAD_UCS_SET_VERSION,
         input,
         write_execute,
     )

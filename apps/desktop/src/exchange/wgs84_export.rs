@@ -14,7 +14,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{Entity, ExportReport, GpxWriteInput, KmlLayer, KmlWriteInput};
+use kentos_commands::{Entity, ExportReport, GpxWriteInput, KmlLayer, KmlWriteInput};
 use kentos_geometry_core::crs as core;
 use kentos_interaction::Level;
 use kentos_ui::label;

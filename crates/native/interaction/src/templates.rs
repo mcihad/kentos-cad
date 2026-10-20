@@ -9,7 +9,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{LayerNode, LayerNodeType, LineType};
+use kentos_commands::{LayerNode, LayerNodeType, LineType};
 use kentos_domain::{Document, NewLayer, Refusal, labels};
 
 /// What every object drawn with a template takes besides its geometry: its

@@ -21,7 +21,7 @@ use iced::futures::stream;
 use iced::task::Handle;
 use iced::widget::text_editor;
 use kentos_cloud::{ApiFailure, Uploaded, project_create, upload_new_watched};
-use kentos_contracts::{MembershipView, ProjectInfo, ProjectStorage, ProjectType};
+use kentos_commands::{MembershipView, ProjectInfo, ProjectStorage, ProjectType};
 use kentos_domain::{Slot, Uuid};
 use kentos_expression::js::text::trim;
 

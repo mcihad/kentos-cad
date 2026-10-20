@@ -53,7 +53,7 @@ impl SelectContaining {
     fn click(&mut self, at: Vec2, add: bool, cx: &mut Context<'_>) {
         let areas = cx.spatial.containing(at);
         // The query with the kinds the selection filter holds (docs/adr/0187 §5, 0275); the areas for the log.
-        let region = kentos_contracts::SelectRegion::Containing {
+        let region = kentos_commands::SelectRegion::Containing {
             at: crate::selectable::point(at),
         };
         let kept = crate::selectable::query(cx, region);

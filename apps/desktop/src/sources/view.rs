@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 
 use iced::widget::{button, column, container, mouse_area, row, space, text, tooltip};
 use iced::{Center, Element, Fill, Length, Theme};
-use kentos_contracts::{LayerNode, LayerNodeType, ProjectStorage, ProjectSummary};
+use kentos_commands::{LayerNode, LayerNodeType, ProjectStorage, ProjectSummary};
 use kentos_interaction::sources::SourceFile;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};

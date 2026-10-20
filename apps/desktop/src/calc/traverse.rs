@@ -380,7 +380,7 @@ impl Form {
         &self,
         r: &TraverseResult,
         format: &Format,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
     ) -> Vec<(Line, String)> {
         let mut lines = Vec::new();
         match r.angle_misclosure {
@@ -734,15 +734,15 @@ struct Checked {
     coord: Option<(String, bool)>,
 }
 
-fn checked(r: &TraverseResult, settings: &kentos_contracts::ProjectSettings) -> Checked {
+fn checked(r: &TraverseResult, settings: &kentos_commands::ProjectSettings) -> Checked {
     use kentos_interaction::survey::Unit;
     use kentos_interaction::survey::traverse::closure;
     let unit = settings.angle_unit;
     let texts = kentos_project::survey_form::texts(settings.survey.as_ref(), unit);
     let survey = settings.survey.clone().unwrap_or_default();
     let core = match unit {
-        kentos_contracts::AngleUnit::Grad => Unit::GRAD,
-        kentos_contracts::AngleUnit::Deg => Unit::DEG,
+        kentos_commands::AngleUnit::Grad => Unit::GRAD,
+        kentos_commands::AngleUnit::Deg => Unit::DEG,
     };
     let c = closure(
         core,
@@ -776,7 +776,7 @@ fn verdict(c: &Option<(String, bool)>) -> Vec<String> {
 /// Ölçme, docs/adr/0169 §3); without one, the surveyor judges them.
 pub(super) fn closure_lines(
     r: &TraverseResult,
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> Vec<(Line, String)> {
     let c = checked(r, settings);
     if !c.given {

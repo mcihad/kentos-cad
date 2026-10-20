@@ -5,7 +5,7 @@
 //! transform command read objects through here. Nothing is computed: each
 //! field is carried over as it is, float64 bit for bit.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArcEntity, AreaPart, BlockId, CircleEntity, ConstructionEntity, DimensionEntity,
     DimensionStyle, DrawingFont, EllipseEntity, Entity, EntityBase, EntityGeometry, EntityId,
     GradientShape, HatchAssoc, HatchEntity, HatchGradient, HatchPattern as ContractPattern,
@@ -31,7 +31,7 @@ use kentos_geometry_core::text::paragraph::{Run, Script};
 use kentos_geometry_core::text::{Font, TextAlign};
 
 /// A multi-line text's runs as the core takes them (docs/adr/0182); none for none.
-pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
+pub fn core_runs(runs: &[kentos_commands::TextRun]) -> Option<Vec<Run>> {
     (!runs.is_empty()).then(|| {
         runs.iter()
             .map(|r| Run {
@@ -41,9 +41,9 @@ pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
                 italic: r.italic,
                 underline: r.underline,
                 script: r.script.map(|s| match s {
-                    kentos_contracts::TextScript::Super => Script::Super,
-                    kentos_contracts::TextScript::Sub => Script::Sub,
-                    kentos_contracts::TextScript::Stack => Script::Stack,
+                    kentos_commands::TextScript::Super => Script::Super,
+                    kentos_commands::TextScript::Sub => Script::Sub,
+                    kentos_commands::TextScript::Stack => Script::Stack,
                 }),
                 color: r.color.clone(),
             })
@@ -52,19 +52,19 @@ pub fn core_runs(runs: &[kentos_contracts::TextRun]) -> Option<Vec<Run>> {
 }
 
 /// The core's runs as the contract writes them.
-pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
+pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_commands::TextRun> {
     runs.unwrap_or_default()
         .into_iter()
-        .map(|r| kentos_contracts::TextRun {
+        .map(|r| kentos_commands::TextRun {
             start: r.start,
             end: r.end,
             bold: r.bold,
             italic: r.italic,
             underline: r.underline,
             script: r.script.map(|s| match s {
-                Script::Super => kentos_contracts::TextScript::Super,
-                Script::Sub => kentos_contracts::TextScript::Sub,
-                Script::Stack => kentos_contracts::TextScript::Stack,
+                Script::Super => kentos_commands::TextScript::Super,
+                Script::Sub => kentos_commands::TextScript::Sub,
+                Script::Stack => kentos_commands::TextScript::Stack,
             }),
             color: r.color,
         })
@@ -73,7 +73,7 @@ pub fn contract_runs(runs: Option<Vec<Run>>) -> Vec<kentos_contracts::TextRun> {
 
 /// A multi-line text's indents, tabs and columns as the core takes them (docs/adr/0324 §1); none for none.
 pub fn core_layout(
-    l: Option<&kentos_contracts::ParagraphLayout>,
+    l: Option<&kentos_commands::ParagraphLayout>,
 ) -> Option<Box<kentos_geometry_core::text::paragraph::Flow>> {
     l.map(|l| {
         Box::new(kentos_geometry_core::text::paragraph::Flow {
@@ -92,13 +92,13 @@ pub fn core_layout(
 /// The core's layout as the contract writes it: an indent of 0 is left out.
 pub fn contract_layout(
     f: Option<&kentos_geometry_core::text::paragraph::Flow>,
-) -> Option<Box<kentos_contracts::ParagraphLayout>> {
+) -> Option<Box<kentos_commands::ParagraphLayout>> {
     f.map(|f| {
-        Box::new(kentos_contracts::ParagraphLayout {
+        Box::new(kentos_commands::ParagraphLayout {
             indent: (f.first != 0.0).then_some(f.first),
             left_indent: (f.left != 0.0).then_some(f.left),
             tabs: f.tabs.clone(),
-            columns: f.columns.map(|c| kentos_contracts::TextColumns {
+            columns: f.columns.map(|c| kentos_commands::TextColumns {
                 count: c.count,
                 gap: c.gap,
                 height: c.height,
@@ -119,7 +119,7 @@ pub fn contract_source(source: Option<Json>) -> Option<TableSource> {
 }
 
 /// A table's cell styles as the core takes them (docs/adr/0327 §1).
-pub fn core_looks(styles: &[kentos_contracts::CellStyle]) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
+pub fn core_looks(styles: &[kentos_commands::CellStyle]) -> Option<Vec<kentos_geometry_core::entity::CellLook>> {
     (!styles.is_empty()).then(|| {
         styles
             .iter()
@@ -161,7 +161,7 @@ pub fn core_table(t: &TableEntity) -> Shape {
     }
 }
 
-fn core_range(m: &kentos_contracts::CellRange) -> kentos_geometry_core::entity::CellRange {
+fn core_range(m: &kentos_commands::CellRange) -> kentos_geometry_core::entity::CellRange {
     kentos_geometry_core::entity::CellRange {
         row: m.row as usize,
         col: m.col as usize,
@@ -170,9 +170,9 @@ fn core_range(m: &kentos_contracts::CellRange) -> kentos_geometry_core::entity::
     }
 }
 
-fn contract_range(m: kentos_geometry_core::entity::CellRange) -> kentos_contracts::CellRange {
+fn contract_range(m: kentos_geometry_core::entity::CellRange) -> kentos_commands::CellRange {
     let n = |x: usize| u32::try_from(x).unwrap_or(u32::MAX);
-    kentos_contracts::CellRange {
+    kentos_commands::CellRange {
         row: n(m.row),
         col: n(m.col),
         rows: n(m.rows),
@@ -190,7 +190,7 @@ fn contract_aligns(aligns: Option<Vec<String>>) -> Option<Vec<TableAlign>> {
 }
 
 /// A text's face as the core takes it (docs/adr/0183 §2).
-pub fn core_face(f: &kentos_contracts::TextFace) -> Face {
+pub fn core_face(f: &kentos_commands::TextFace) -> Face {
     Face {
         style: f.text_style.clone(),
         font: f.font.map(|d| Font::from_id(d.id())),
@@ -201,8 +201,8 @@ pub fn core_face(f: &kentos_contracts::TextFace) -> Face {
 }
 
 /// The core's face as the contract writes it.
-pub fn contract_face(f: Face) -> kentos_contracts::TextFace {
-    kentos_contracts::TextFace {
+pub fn contract_face(f: Face) -> kentos_commands::TextFace {
+    kentos_commands::TextFace {
         overrides: Vec::new(),
         text_style: f.style,
         font: f.font.and_then(|c| DrawingFont::from_id(c.id())),
@@ -213,7 +213,7 @@ pub fn contract_face(f: Face) -> kentos_contracts::TextFace {
 }
 
 /// A dimension's look as the core takes it (docs/adr/0183 §3).
-pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
+pub fn core_look(l: &kentos_commands::DimensionLook) -> Look {
     Look {
         style: l.dim_style.clone(),
         arrow: l.arrow.and_then(|a| Arrow::from_name(a.name())),
@@ -221,7 +221,7 @@ pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
         ext_offset: l.ext_offset,
         ext_beyond: l.ext_beyond,
         text_gap: l.text_gap,
-        centre: l.text_place == Some(kentos_contracts::DimensionTextPlace::Centre),
+        centre: l.text_place == Some(kentos_commands::DimensionTextPlace::Centre),
         decimals: l.decimals,
         unit: l.unit.map(|u| u.mark().to_owned()),
         prefix: l.prefix.clone(),
@@ -250,7 +250,7 @@ pub fn core_look(l: &kentos_contracts::DimensionLook) -> Look {
 }
 
 /// A dimension's look as the core reads it, with its own moved value and breaks (docs/adr/0321 §1).
-pub fn core_dimension_look(d: &kentos_contracts::DimensionEntity) -> Look {
+pub fn core_dimension_look(d: &kentos_commands::DimensionEntity) -> Look {
     let mut look = core_look(&d.look);
     with_place(&mut look, d.text_shift, &d.breaks);
     look
@@ -259,8 +259,8 @@ pub fn core_dimension_look(d: &kentos_contracts::DimensionEntity) -> Look {
 /// `look` with a moved value and breaks.
 pub fn with_place(
     look: &mut Look,
-    shift: Option<kentos_contracts::TextShift>,
-    breaks: &[kentos_contracts::DimensionBreak],
+    shift: Option<kentos_commands::TextShift>,
+    breaks: &[kentos_commands::DimensionBreak],
 ) {
     let mut more = look.more.take().map(|m| *m).unwrap_or_default();
     more.shift = shift.map(|s| (s.along, s.across));
@@ -268,9 +268,9 @@ pub fn with_place(
         .iter()
         .map(|b| {
             let line = match b.line {
-                kentos_contracts::BreakLine::Dimension => 0,
-                kentos_contracts::BreakLine::First => 1,
-                kentos_contracts::BreakLine::Second => 2,
+                kentos_commands::BreakLine::Dimension => 0,
+                kentos_commands::BreakLine::First => 1,
+                kentos_commands::BreakLine::Second => 2,
             };
             (line, b.t)
         })
@@ -282,23 +282,23 @@ pub fn with_place(
 pub fn place_of(
     look: &Look,
 ) -> (
-    Option<kentos_contracts::TextShift>,
-    Vec<kentos_contracts::DimensionBreak>,
+    Option<kentos_commands::TextShift>,
+    Vec<kentos_commands::DimensionBreak>,
 ) {
     let Some(m) = look.more.as_deref() else {
         return (None, Vec::new());
     };
     let shift = m
         .shift
-        .map(|(along, across)| kentos_contracts::TextShift { along, across });
+        .map(|(along, across)| kentos_commands::TextShift { along, across });
     let breaks = m
         .breaks
         .iter()
-        .map(|&(line, t)| kentos_contracts::DimensionBreak {
+        .map(|&(line, t)| kentos_commands::DimensionBreak {
             line: match line {
-                0 => kentos_contracts::BreakLine::Dimension,
-                1 => kentos_contracts::BreakLine::First,
-                _ => kentos_contracts::BreakLine::Second,
+                0 => kentos_commands::BreakLine::Dimension,
+                1 => kentos_commands::BreakLine::First,
+                _ => kentos_commands::BreakLine::Second,
             },
             t,
         })
@@ -307,8 +307,8 @@ pub fn place_of(
 }
 
 /// The core's look as the contract writes it.
-pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
-    use kentos_contracts::DrawingUnit;
+pub fn contract_look(l: Look) -> kentos_commands::DimensionLook {
+    use kentos_commands::DrawingUnit;
     let lines = l.lines.map(|b| *b).unwrap_or_default();
     let options = l
         .more
@@ -316,19 +316,19 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
         .and_then(|m| m.options.as_ref())
         .and_then(|o| serde_json::from_str(&kentos_geometry_core::api::json::to_string(o)).ok())
         .map(Box::new);
-    kentos_contracts::DimensionLook {
+    kentos_commands::DimensionLook {
         overrides: Vec::new(),
         dim_style: l.style,
         arrow: l
             .arrow
-            .and_then(|a| kentos_contracts::DimensionArrow::from_name(a.name())),
+            .and_then(|a| kentos_commands::DimensionArrow::from_name(a.name())),
         arrow_size: l.arrow_size,
         ext_offset: l.ext_offset,
         ext_beyond: l.ext_beyond,
         text_gap: l.text_gap,
         text_place: l
             .centre
-            .then_some(kentos_contracts::DimensionTextPlace::Centre),
+            .then_some(kentos_commands::DimensionTextPlace::Centre),
         decimals: l.decimals,
         unit: l.unit.as_deref().and_then(|u| match u {
             "mm" => Some(DrawingUnit::Mm),
@@ -346,13 +346,13 @@ pub fn contract_look(l: Look) -> kentos_contracts::DimensionLook {
         dim_line_type: lines
             .dim_line_type
             .as_deref()
-            .and_then(kentos_contracts::LineType::from_name),
+            .and_then(kentos_commands::LineType::from_name),
         ext_color: lines.ext_color,
         ext_weight: lines.ext_weight,
         ext_line_type: lines
             .ext_line_type
             .as_deref()
-            .and_then(kentos_contracts::LineType::from_name),
+            .and_then(kentos_commands::LineType::from_name),
         text_color: lines.text_color,
         options,
     }
@@ -374,7 +374,7 @@ fn ring(r: &RingGeometry) -> Ring {
 }
 
 /// A multi-point object's points past its first as the core takes them (docs/adr/0174).
-fn core_points(parts: &Option<Vec<kentos_contracts::PointPart>>) -> Option<Vec<CorePoint>> {
+fn core_points(parts: &Option<Vec<kentos_commands::PointPart>>) -> Option<Vec<CorePoint>> {
     parts.as_ref().map(|ps| {
         ps.iter()
             .map(|q| CorePoint { p: v(&q.p), z: q.z })
@@ -383,10 +383,10 @@ fn core_points(parts: &Option<Vec<kentos_contracts::PointPart>>) -> Option<Vec<C
 }
 
 /// The core's points of a multi-point object back (docs/adr/0174).
-fn points_back(parts: Option<Vec<CorePoint>>) -> Option<Vec<kentos_contracts::PointPart>> {
+fn points_back(parts: Option<Vec<CorePoint>>) -> Option<Vec<kentos_commands::PointPart>> {
     parts.map(|ps| {
         ps.into_iter()
-            .map(|q| kentos_contracts::PointPart { p: p(q.p), z: q.z })
+            .map(|q| kentos_commands::PointPart { p: p(q.p), z: q.z })
             .collect()
     })
 }
@@ -638,7 +638,7 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         return None;
     };
     let dataset = match dataset {
-        Some(d) => Some(kentos_contracts::RasterDataset::from_json_text(
+        Some(d) => Some(kentos_commands::RasterDataset::from_json_text(
             &kentos_geometry_core::api::json::to_string(&d),
         )?),
         None => None,
@@ -655,7 +655,7 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
         file,
         url,
         srid: whole(srid)?,
-        style: kentos_contracts::RasterStyle::from_json_text(
+        style: kentos_commands::RasterStyle::from_json_text(
             &kentos_geometry_core::api::json::to_string(&style),
         )?,
         opacity,
@@ -667,11 +667,11 @@ pub fn contract_raster(shape: Shape) -> Option<RasterFields> {
 
 /// A point cloud's fields as the geometry core takes them (docs/adr/0207 §3):
 /// its files and look as the contract's JSON, which the core carries.
-pub fn core_cloud(c: &kentos_contracts::PointCloudFields) -> Shape {
+pub fn core_cloud(c: &kentos_commands::PointCloudFields) -> Shape {
     Shape::PointCloud {
         bounds: c.bounds,
         count: c.count as f64,
-        sources: Json::parse(&kentos_contracts::sources_json_text(&c.sources))
+        sources: Json::parse(&kentos_commands::sources_json_text(&c.sources))
             .unwrap_or(Json::Null),
         srid: f64::from(c.srid),
         style: Json::parse(&c.style.to_json_text()).unwrap_or(Json::Null),
@@ -681,7 +681,7 @@ pub fn core_cloud(c: &kentos_contracts::PointCloudFields) -> Shape {
 
 /// A point cloud the core carried as the contract holds it; none for another
 /// shape, or numbers, files and a look the contract cannot hold.
-pub fn contract_cloud(shape: Shape) -> Option<kentos_contracts::PointCloudFields> {
+pub fn contract_cloud(shape: Shape) -> Option<kentos_commands::PointCloudFields> {
     let Shape::PointCloud {
         bounds,
         count,
@@ -694,14 +694,14 @@ pub fn contract_cloud(shape: Shape) -> Option<kentos_contracts::PointCloudFields
         return None;
     };
     let whole = |v: f64| (v >= 0.0 && v.fract() == 0.0 && v.is_finite()).then_some(v as u64);
-    Some(kentos_contracts::PointCloudFields {
-        sources: kentos_contracts::sources_from_json_text(
+    Some(kentos_commands::PointCloudFields {
+        sources: kentos_commands::sources_from_json_text(
             &kentos_geometry_core::api::json::to_string(&sources),
         )?,
         bounds,
         count: whole(count)?,
         srid: u32::try_from(whole(srid)?).ok()?,
-        style: kentos_contracts::PointCloudStyle::from_json_text(
+        style: kentos_commands::PointCloudStyle::from_json_text(
             &kentos_geometry_core::api::json::to_string(&style),
         )?,
         opacity,
@@ -911,7 +911,7 @@ pub fn route(entity: &Entity) -> Option<Route> {
 }
 
 /// A text's curve for the core (docs/adr/0196).
-pub fn core_curve(c: &kentos_contracts::TextPath) -> kentos_geometry_core::text::along::Curve {
+pub fn core_curve(c: &kentos_commands::TextPath) -> kentos_geometry_core::text::along::Curve {
     kentos_geometry_core::text::along::Curve {
         pts: points(&c.pts),
         bulges: c.bulges.clone(),
@@ -919,8 +919,8 @@ pub fn core_curve(c: &kentos_contracts::TextPath) -> kentos_geometry_core::text:
 }
 
 /// A core curve as the contract's.
-pub fn contract_curve(c: kentos_geometry_core::text::along::Curve) -> kentos_contracts::TextPath {
-    kentos_contracts::TextPath {
+pub fn contract_curve(c: kentos_geometry_core::text::along::Curve) -> kentos_commands::TextPath {
+    kentos_commands::TextPath {
         pts: back(c.pts),
         bulges: c.bulges,
     }
@@ -1170,10 +1170,10 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
             e.text = text;
             e.height = height;
             e.rotation = rotation;
-            e.align = align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name()));
+            e.align = align.and_then(|a| kentos_commands::TextAlign::from_name(a.name()));
             e.width_factor = width_factor;
             e.mask = mask == Some(true);
-            e.paragraph = kentos_contracts::Paragraph {
+            e.paragraph = kentos_commands::Paragraph {
                 // Its fields stay; the document shifts them with its letters (docs/adr/0325 §2).
                 fields: std::mem::take(&mut e.paragraph.fields),
                 layout: contract_layout(flow.as_deref()),
@@ -1251,12 +1251,12 @@ pub fn with_shape(entity: &Entity, shape: Shape) -> Option<Entity> {
         ) => {
             // The arrowhead is the object's own: the core carries its name and size through unchanged.
             // Its arms' points; each arm keeps what its tip follows (docs/adr/0326 §1).
-            let tips: Vec<Option<kentos_contracts::SubRef>> = e.arms.iter().map(|a| a.tip.clone()).collect();
+            let tips: Vec<Option<kentos_commands::SubRef>> = e.arms.iter().map(|a| a.tip.clone()).collect();
             e.arms = arms
                 .unwrap_or_default()
                 .into_iter()
                 .enumerate()
-                .map(|(i, a)| kentos_contracts::LeaderArm { pts: back(a.pts), tip: tips.get(i).cloned().flatten() })
+                .map(|(i, a)| kentos_commands::LeaderArm { pts: back(a.pts), tip: tips.get(i).cloned().flatten() })
                 .collect();
             e.pts = back(pts);
             e.text = text;
@@ -1543,7 +1543,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             label_scale: None,
             // A spacing of 1 is no spacing (docs/adr/0182): one spelling.
             // An empty layout is no layout: one spelling.
-            paragraph: kentos_contracts::Paragraph {
+            paragraph: kentos_commands::Paragraph {
                 fields: Vec::new(),
                 layout: layout.filter(|l| !l.is_plain()),
                 box_width,
@@ -1648,7 +1648,7 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
             arms: arms
                 .unwrap_or_default()
                 .into_iter()
-                .map(|pts| kentos_contracts::LeaderArm { pts, tip: None })
+                .map(|pts| kentos_commands::LeaderArm { pts, tip: None })
                 .collect(),
             annotative,
             base,
@@ -1699,9 +1699,9 @@ pub fn entity_of(geometry: &EntityGeometry, base: EntityBase) -> Entity {
         EntityGeometry::Image(image) => Entity::Image(ImageEntity { base, image }),
         EntityGeometry::Raster(raster) => Entity::Raster(RasterEntity { base, raster }),
         EntityGeometry::PointCloud(cloud) => {
-            Entity::PointCloud(kentos_contracts::PointCloudEntity { base, cloud })
+            Entity::PointCloud(kentos_commands::PointCloudEntity { base, cloud })
         }
-        EntityGeometry::Wall(wall) => Entity::Wall(kentos_contracts::WallEntity { base, wall }),
+        EntityGeometry::Wall(wall) => Entity::Wall(kentos_commands::WallEntity { base, wall }),
     }
 }
 
@@ -1718,7 +1718,7 @@ pub fn edit_geometry_of(entity: &Entity, shape: Shape) -> Option<EntityGeometry>
         | EntityGeometry::Dimension { annotative, .. }
         | EntityGeometry::Leader { annotative, .. }
         | EntityGeometry::Hatch { annotative, .. },
-    ) = (kentos_contracts::annotative_of(entity), &mut g)
+    ) = (kentos_commands::annotative_of(entity), &mut g)
     {
         *annotative = Some(Box::new(scales.clone()));
     }
@@ -1843,7 +1843,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
             text,
             height,
             rotation,
-            align: align.and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+            align: align.and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
             width_factor,
             mask: mask == Some(true),
             box_width,
@@ -2019,7 +2019,7 @@ pub fn edit_geometry(shape: Shape) -> Option<EntityGeometry> {
 
 /// A text's laid out lines (docs/adr/0182 §2), each one's first letter and the one past its last: what Satırlara
 /// ayır reads its paragraphs' lines from (docs/adr/0325 §3).
-pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_contracts::TextEntity) -> Vec<(usize, usize)> {
+pub fn text_lines(doc: &kentos_domain::Document, t: &kentos_commands::TextEntity) -> Vec<(usize, usize)> {
     let s = shape(&Entity::Text(t.clone()));
     let font = drawing_font(doc.settings().drawing_font);
     kentos_geometry_core::entity::TextPlace::of(&s)

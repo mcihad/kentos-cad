@@ -10,7 +10,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use kentos_contracts::{
+use kentos_commands::{
     CellKind, Entity, LayerField, LayerFieldKind, WorkbookColumn, WorkbookSheet, check_value,
     display_value, js_trim,
 };
@@ -79,10 +79,10 @@ pub fn show_labels(table: &mut FeatureTable, labels: &[(String, BTreeMap<String,
             let label = |code: &str| codes.get(code).cloned().unwrap_or_else(|| code.to_owned());
             let shown = if many {
                 cell.shown
-                    .split(kentos_contracts::MULTIPLE_JOIN)
+                    .split(kentos_commands::MULTIPLE_JOIN)
                     .map(label)
                     .collect::<Vec<_>>()
-                    .join(kentos_contracts::MULTIPLE_JOIN)
+                    .join(kentos_commands::MULTIPLE_JOIN)
             } else {
                 label(&cell.shown)
             };
@@ -288,7 +288,7 @@ pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> Work
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kentos_contracts::{EntityBase, FieldChoice, PointEntity, Vec2};
+    use kentos_commands::{EntityBase, FieldChoice, PointEntity, Vec2};
 
     fn point(attrs: &[(&str, &str)]) -> Entity {
         Entity::Point(PointEntity {

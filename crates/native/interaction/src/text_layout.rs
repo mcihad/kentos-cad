@@ -1,7 +1,7 @@
 //! A multi-line text's indents, tab stops and columns from Öznitelikler (docs/adr/0324 §3): each row's value read,
 //! the texts changed in one step “Değiştir” through `cad.entities.edit`, the command's refusal said as it is.
 
-use kentos_contracts::{ParagraphLayout, TextColumns, TextEntity};
+use kentos_commands::{ParagraphLayout, TextColumns, TextEntity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::TextPlace;
 use kentos_native_application::geometry::shape;
@@ -63,7 +63,7 @@ pub fn set_columns(doc: &mut Document, slots: &[Slot], count: u32) -> Vec<String
                 if let Some(lay) = one.paragraph.layout.as_deref_mut() {
                     lay.columns = None;
                 }
-                let s = shape(&kentos_contracts::Entity::Text(one));
+                let s = shape(&kentos_commands::Entity::Text(one));
                 let tall = TextPlace::of(&s).map_or(t.height, |p| {
                     let laid = p.layout(font);
                     laid.depth.max(1) as f64 * laid.pitch
@@ -117,7 +117,7 @@ pub fn parse_tabs(text: &str) -> Result<Vec<f64>, String> {
 /// Tab stops as Öznitelikler shows them: “4; 8; 12”, or MTEXT's own.
 pub fn tabs_text(stops: &[f64]) -> String {
     if stops.is_empty() {
-        return format!("Her {} yükseklikte", kentos_contracts::DEFAULT_TAB);
+        return format!("Her {} yükseklikte", kentos_commands::DEFAULT_TAB);
     }
     stops
         .iter()

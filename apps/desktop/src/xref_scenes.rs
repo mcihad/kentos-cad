@@ -57,7 +57,7 @@ fn on_inserts(app: &mut App) {
         .map(|d| {
             d.model
                 .entities()
-                .filter(|e| matches!(e, kentos_contracts::Entity::Insert(_)))
+                .filter(|e| matches!(e, kentos_commands::Entity::Insert(_)))
                 .map(|e| f64::from(e.base().id))
                 .collect()
         })
@@ -108,10 +108,10 @@ fn notice(app: &mut App) {
     attached(app, plan.clone(), "Plan", Mode::Attach);
     if let Some(doc) = app.document.as_mut() {
         let mut settings = doc.model.settings().clone();
-        settings.named_views.push(kentos_contracts::NamedView {
+        settings.named_views.push(kentos_commands::NamedView {
             id: String::new(),
             name: "Salon".into(),
-            center: kentos_contracts::Vec2 { x: 5.0, y: 4.0 },
+            center: kentos_commands::Vec2 { x: 5.0, y: 4.0 },
             width: 14.0,
             height: 10.0,
             twist: 0.0,
@@ -152,7 +152,7 @@ fn others(app: &mut App) {
           "attachments": [{ "name": "Tapu", "file": at("interaction/v1/belgeler/tapu-101-5.pdf") },
                           { "name": "Ruhsat", "url": "https://belediye.example/ruhsat/42" }] }
     ]);
-    if let (Some(doc), Ok(list)) = (app.document.as_mut(), serde_json::from_value::<Vec<kentos_contracts::Entity>>(objects)) {
+    if let (Some(doc), Ok(list)) = (app.document.as_mut(), serde_json::from_value::<Vec<kentos_commands::Entity>>(objects)) {
         for e in list {
             let _ = doc.model.add(e);
         }
@@ -175,7 +175,7 @@ fn pictures(app: &mut App) -> kentos_domain::Slot {
           "rotation": 0.2, "file": "/proje/fotograflar/cephe.png" }
     ]);
     let mut slots = Vec::new();
-    if let (Some(doc), Ok(list)) = (app.document.as_mut(), serde_json::from_value::<Vec<kentos_contracts::Entity>>(objects)) {
+    if let (Some(doc), Ok(list)) = (app.document.as_mut(), serde_json::from_value::<Vec<kentos_commands::Entity>>(objects)) {
         for e in list {
             if let Ok(slot) = doc.model.add(e) {
                 slots.push(slot);

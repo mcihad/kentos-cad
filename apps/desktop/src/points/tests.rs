@@ -12,7 +12,7 @@ use crate::bottom::BottomTab;
 
 fn app_with_points() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../fixtures/interaction/v1/point-editor.kcad"
     ))
     .expect("the drawing reads");
@@ -28,7 +28,7 @@ fn names(app: &App) -> Vec<String> {
         .shown
         .iter()
         .map(|&s| match doc.model.get(s) {
-            Some(kentos_contracts::Entity::Point(p)) => p.base.label.clone().unwrap_or_default(),
+            Some(kentos_commands::Entity::Point(p)) => p.base.label.clone().unwrap_or_default(),
             _ => String::new(),
         })
         .collect()
@@ -99,8 +99,8 @@ fn a_click_selects_the_row_ctrl_turns_one_over_shift_takes_a_run() {
 /// typed in it, the drawing keeps metres (the web's `pointEdit.test.ts`).
 #[test]
 fn a_local_project_edits_its_points_in_its_unit() {
-    use kentos_contracts::{DrawingUnit, Entity, ProjectSettings};
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    use kentos_commands::{DrawingUnit, Entity, ProjectSettings};
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../fixtures/interaction/v1/point-editor.kcad"
     ))
     .expect("the drawing reads");
@@ -148,8 +148,8 @@ fn a_local_project_edits_its_points_in_its_unit() {
 
 #[test]
 fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
-    let p = kentos_contracts::PointEntity {
-        base: kentos_contracts::EntityBase {
+    let p = kentos_commands::PointEntity {
+        base: kentos_commands::EntityBase {
             look: Default::default(),
             id: 4,
             layer_id: "nokta".into(),
@@ -165,7 +165,7 @@ fn a_point_reads_its_label_place_elevation_kod_layer_and_selection() {
             label_pins: Vec::new(),
             attachments: Vec::new(),
         },
-        p: kentos_contracts::Vec2 {
+        p: kentos_commands::Vec2 {
             x: 487001.5,
             y: 4420002.25,
         },
@@ -340,12 +340,12 @@ pub(super) fn same(a: &serde_json::Value, e: &serde_json::Value, path: &str) -> 
 
 /// An object as the cases compare it: its kind, label, attributes, and a
 /// point's place and elevation or line work's paths.
-fn view(e: &kentos_contracts::Entity) -> serde_json::Value {
+fn view(e: &kentos_commands::Entity) -> serde_json::Value {
     use serde_json::json;
     let b = e.base();
     let mut v = json!({ "kind": e.kind(), "label": b.label, "attrs": b.attrs });
     match e {
-        kentos_contracts::Entity::Point(p) => {
+        kentos_commands::Entity::Point(p) => {
             v["at"] = json!([p.p.x, p.p.y]);
             v["z"] = json!(p.z);
         }
@@ -391,7 +391,7 @@ fn every_edit_is_written_as_the_reference_writes_it() {
             "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": c["active"], "entities": c["objects"],
             "styles": { "items": [], "categories": [] }
         });
-        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string())
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string())
             .expect("the case's drawing");
         let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("opens");
         let text = |v: &Value| v.as_str().unwrap_or_default().to_owned();
@@ -456,7 +456,7 @@ fn a_cell_is_edited_in_place_and_satir_ekle_writes_rows() {
     };
     let point = |app: &App, slot: Slot| match app.document.as_ref().and_then(|d| d.model.get(slot))
     {
-        Some(kentos_contracts::Entity::Point(p)) => p.clone(),
+        Some(kentos_commands::Entity::Point(p)) => p.clone(),
         _ => panic!("a point"),
     };
     // Y of the first row: its whole value.
@@ -683,7 +683,7 @@ fn a_rows_menu_takes_that_row_alone_when_it_is_not_selected() {
     ev(&mut app, Event::Window(WindowEvent::Layer("kot".into())));
     ev(&mut app, Event::Window(WindowEvent::Apply));
     let layer = match app.document.as_ref().and_then(|d| d.model.get(shown[4])) {
-        Some(kentos_contracts::Entity::Point(p)) => p.base.layer_id.clone(),
+        Some(kentos_commands::Entity::Point(p)) => p.base.layer_id.clone(),
         _ => String::new(),
     };
     assert_eq!(layer, "kot");
@@ -780,7 +780,7 @@ fn the_import_offers_the_names_brought_again_and_the_last_keeps_the_files() {
         doc.model
             .entities()
             .filter_map(|e| match e {
-                kentos_contracts::Entity::Point(p) if p.base.label.as_deref() == Some(n) => {
+                kentos_commands::Entity::Point(p) if p.base.label.as_deref() == Some(n) => {
                     Some((p.p.x, p.p.y, p.z))
                 }
                 _ => None,

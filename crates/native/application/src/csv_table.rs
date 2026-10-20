@@ -6,8 +6,8 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     CsvExported, CsvGeometry, CsvGeometryIn, CsvSeparator, Entity, ExportCsv, ImportCsv,
     LayerFieldKind,
 };
@@ -97,7 +97,7 @@ fn num(v: f64) -> String {
 pub fn export(doc: &Document, input: &ExportCsv) -> Result<Made, (String, String, String)> {
     let ids = crate::shapefile::layer_ids(doc, &input.layers).map_err(|(i, id)| {
         (
-            kentos_contracts::codes::LAYER_NOT_FOUND.to_owned(),
+            kentos_commands::codes::LAYER_NOT_FOUND.to_owned(),
             format!("“{id}” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin."),
             format!("layers[{i}]"),
         )
@@ -257,7 +257,7 @@ pub fn export(doc: &Document, input: &ExportCsv) -> Result<Made, (String, String
     }
     if rows == 0 {
         return Err((
-            kentos_contracts::codes::NOTHING_TO_EXPORT.to_owned(),
+            kentos_commands::codes::NOTHING_TO_EXPORT.to_owned(),
             "Katmanlarda CSV'ye yazılacak nesne yok.".into(),
             "layers".into(),
         ));

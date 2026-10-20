@@ -3,7 +3,7 @@
 //! vertices. The shared cases are `fixtures/commands/v1/cad.entities.cleanup.json`.
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{CommandResult, DocumentSnapshotV1, EntitiesCleanup};
+use kentos_commands::{CommandResult, DocumentSnapshotV1, EntitiesCleanup};
 use kentos_native_application::{ExecutionContext, entities_cleanup};
 use serde_json::json;
 

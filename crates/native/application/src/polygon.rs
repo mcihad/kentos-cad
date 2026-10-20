@@ -24,7 +24,7 @@
 //! a hole outside the ring) is not checked, as the drawing tools and the file
 //! reader do not check it either.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, PathEntity, PolygonCreate, PolygonCreated,
     PolygonPlan, Vec2,
 };
@@ -72,8 +72,8 @@ pub fn execute(
 ) -> CommandResult<PolygonCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_POLYGON_CREATE,
-        kentos_contracts::CAD_POLYGON_CREATE_VERSION,
+        kentos_commands::CAD_POLYGON_CREATE,
+        kentos_commands::CAD_POLYGON_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -219,7 +219,7 @@ fn polygon(input: PolygonCreate, id: u32) -> Entity {
     Entity::Polygon(PathEntity {
         ms: None,
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 wipeout: input.wipeout,
                 ..Default::default()

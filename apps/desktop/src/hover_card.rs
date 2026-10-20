@@ -25,7 +25,7 @@ use std::time::Duration;
 use iced::widget::text::Wrapping;
 use iced::widget::{container, row};
 use iced::{Center, Color, Element, Padding, Point, Right, Vector};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Document as Model;
 use kentos_interaction::elevation::space_length;
 use kentos_interaction::{Format, measures};
@@ -338,7 +338,7 @@ impl App {
 #[cfg(test)]
 mod tests {
     use iced::Color;
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
     use kentos_domain::Slot;
     use kentos_interaction::Format;
 
@@ -388,7 +388,7 @@ mod tests {
         let Entity::Polygon(mut two) = parcel.clone() else {
             panic!("an area");
         };
-        two.parts = Some(vec![kentos_contracts::AreaPart {
+        two.parts = Some(vec![kentos_commands::AreaPart {
             ms: None,
             pts: two.pts.clone(),
             bulges: None,
@@ -417,7 +417,7 @@ mod tests {
     /// multi-point object's points, and their elevation only when they share one.
     #[test]
     fn a_multi_part_polyline_says_its_parts_and_a_multi_point_object_its_points() {
-        use kentos_contracts::{
+        use kentos_commands::{
             AreaPart, EntityBase, PathEntity, PointEntity, PointPart, Vec2 as Wire,
         };
 
@@ -490,7 +490,7 @@ mod tests {
     /// docs/adr/0142: beside the length or the perimeter, the one in space, when every vertex has an elevation.
     #[test]
     fn the_length_in_space_follows_the_plan_one_when_every_vertex_has_an_elevation() {
-        use kentos_contracts::{EntityBase, LineEntity, PathEntity, RingGeometry, Vec2 as Wire};
+        use kentos_commands::{EntityBase, LineEntity, PathEntity, RingGeometry, Vec2 as Wire};
 
         let app = app_with_drawing();
         let doc = app.document.as_ref().expect("open");
@@ -724,7 +724,7 @@ fn screens() {
                     }
                     // The pointer resting inside the parcel.
                     let doc = app.document.as_ref().expect("open");
-                    let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(parcel) else {
+                    let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(parcel) else {
                         panic!("the parcel");
                     };
                     let inside = kentos_interaction::Vec2::new(

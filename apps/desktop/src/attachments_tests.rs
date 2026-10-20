@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{AttachmentKind, Entity};
+use kentos_commands::{AttachmentKind, Entity};
 use kentos_domain::Slot;
 
 use crate::app::{App, Dialog, Message, Picker};
@@ -20,7 +20,7 @@ fn scene() -> App {
     app
 }
 
-fn attachments(app: &App, slot: Slot) -> Vec<kentos_contracts::Attachment> {
+fn attachments(app: &App, slot: Slot) -> Vec<kentos_commands::Attachment> {
     app.document
         .as_ref()
         .and_then(|d| d.model.get(slot))

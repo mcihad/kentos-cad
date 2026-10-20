@@ -17,8 +17,8 @@
 //! 4. the block rules with the new definition (its name once; nesting);
 //! 5. with `replace`: the insert's layer, then no object on a locked layer.
 
-use kentos_contracts::blocks::{self as rules};
-use kentos_contracts::{
+use kentos_commands::blocks::{self as rules};
+use kentos_commands::{
     BlockDefined, BlockDefinition, BlockId, BlocksDefine, BlocksDefinePlan, CommandResult,
     CommandWarning, Entity, EntityBase, InsertEntity, Vec2,
 };
@@ -64,8 +64,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksDefine) -> CommandResult<Bl
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksDefine) -> CommandResult<BlockDefined> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_DEFINE,
-        kentos_contracts::CAD_BLOCKS_DEFINE_VERSION,
+        kentos_commands::CAD_BLOCKS_DEFINE,
+        kentos_commands::CAD_BLOCKS_DEFINE_VERSION,
         input,
         write_execute,
     )
@@ -170,19 +170,19 @@ fn check(doc: &Document, input: &BlocksDefine) -> Result<Checked, Stop> {
 /// A unitless definition's numbers made the drawing's units (docs/adr/0315 §4): its geometry, metres as the
 /// drawing's, divided by the drawing unit's metres; the factor an insert takes back here (1 for any other).
 pub(crate) fn unitless_factor(doc: &Document, block: &mut BlockDefinition) -> f64 {
-    if block.units != Some(kentos_contracts::BlockUnits::Unitless) {
+    if block.units != Some(kentos_commands::BlockUnits::Unitless) {
         return 1.0;
     }
     let unit = crate::units_change::unit_of(doc);
-    crate::blocks_edit::rescaled(block, kentos_contracts::units::Scale::to_unit(unit));
-    kentos_contracts::units::Scale::from_unit(unit).apply(1.0)
+    crate::blocks_edit::rescaled(block, kentos_commands::units::Scale::to_unit(unit));
+    kentos_commands::units::Scale::from_unit(unit).apply(1.0)
 }
 
 /// Objects of the drawing as a block holds them to look as they were drawn (docs/adr/0315 §2, AutoCAD's BLOCK):
 /// each on its own layer, every part of its look without a value of its own following that layer (`byLayer`)
 /// instead of the insert.
 pub(crate) fn as_drawn(mut objects: Vec<Entity>) -> Vec<Entity> {
-    use kentos_contracts::LookPart;
+    use kentos_commands::LookPart;
     for e in &mut objects {
         let base = base_mut(e);
         if base.layer_id.is_empty() {

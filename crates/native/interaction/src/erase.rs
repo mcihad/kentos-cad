@@ -12,7 +12,7 @@
 //! with the command's warning; when every one is locked the command refuses
 //! and nothing is deleted. One undo step, “Sil”. The messages are the web's.
 
-use kentos_contracts::EntitiesDelete;
+use kentos_commands::EntitiesDelete;
 use kentos_domain::Slot;
 use kentos_native_application::{ExecutionContext, delete};
 

@@ -26,7 +26,7 @@ const LOGO: &[u8] = include_bytes!("../../../fixtures/interaction/v1/logo.png");
 /// The traces' drawing, the view around the site and the parcel.
 fn opened(app: &mut App) {
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.tab = "insert";
@@ -94,13 +94,13 @@ fn clipped(app: &mut App) {
     click(app, [10.0, 10.0]);
     let _ = app.update(Message::Run("tool.cancel"));
     if let Some(doc) = app.document.as_mut()
-        && let Some(kentos_contracts::Entity::Image(mut i)) = doc.model.get(Slot(1)).cloned()
+        && let Some(kentos_commands::Entity::Image(mut i)) = doc.model.get(Slot(1)).cloned()
     {
         i.image.opacity = Some(0.7);
         let _ = kentos_interaction::properties::set_geometry(
             &mut doc.model,
             Slot(1),
-            &kentos_contracts::Entity::Image(i),
+            &kentos_commands::Entity::Image(i),
         );
     }
     app.selection.set([Slot(1)]);

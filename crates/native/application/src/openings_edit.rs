@@ -7,7 +7,7 @@
 //! An opening that would run off its wall or into another, a field that makes none, a wall that is gone where one is
 //! needed: nothing is written. Their jambs follow from their walls in the same step (`kentos_domain::opening_follow`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, OpeningChange, OpeningEntity, OpeningFields, OpeningFlip, OpeningsEdit,
     OpeningsEdited, OpeningsOperation,
 };
@@ -320,12 +320,12 @@ fn check(doc: &Document, input: &OpeningsEdit) -> Result<Work, Stop> {
                     &format!("operation.offsets[{k}]"),
                 )?;
             }
-            if list.len() * offsets.len() > kentos_contracts::MAX_OPENINGS {
+            if list.len() * offsets.len() > kentos_commands::MAX_OPENINGS {
                 return Err(fail(
                     codes::INVALID_OPENING,
                     format!(
                         "Bir çağrıda en çok {} açıklık kopyalanır.",
-                        kentos_contracts::MAX_OPENINGS
+                        kentos_commands::MAX_OPENINGS
                     ),
                     "operation.offsets",
                 ));
@@ -459,8 +459,8 @@ pub fn execute(
 ) -> CommandResult<OpeningsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_OPENINGS_EDIT,
-        kentos_contracts::CAD_OPENINGS_EDIT_VERSION,
+        kentos_commands::CAD_OPENINGS_EDIT,
+        kentos_commands::CAD_OPENINGS_EDIT_VERSION,
         input,
         write_execute,
     )

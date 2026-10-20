@@ -4,7 +4,7 @@
 //! Duvarlardan bul finds a space's boundary again from the walls. The answer says the ids kept, added and removed.
 //! The shared cases are `fixtures/commands/v1/cad.spaces.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, SpaceChange, SpaceEntity, SpaceFields, SpacesEdit, SpacesEdited,
     SpacesOperation,
 };
@@ -281,8 +281,8 @@ pub fn plan_in(doc: &Document, input: &SpacesEdit) -> CommandResult<SpacesEdited
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesEdit) -> CommandResult<SpacesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SPACES_EDIT,
-        kentos_contracts::CAD_SPACES_EDIT_VERSION,
+        kentos_commands::CAD_SPACES_EDIT,
+        kentos_commands::CAD_SPACES_EDIT_VERSION,
         input,
         write_execute,
     )

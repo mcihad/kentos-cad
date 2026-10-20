@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
-use kentos_contracts::CloudFormat;
+use kentos_commands::CloudFormat;
 use kentos_pointcloud::copc::Key;
 use kentos_pointcloud::index::{BinOut, Builder, Cube, Distribute, Plan};
 use kentos_pointcloud::record::{Layout, standard_len, wide_format, widen};

@@ -11,7 +11,7 @@
 //! revision; the network removed is the project's. A layer the drawing does
 //! not have is a warning.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, NetworkDef, NetworkDefine, NetworkDefineOperation,
     NetworkDefined, ProjectSettings, networks_problem,
 };
@@ -119,8 +119,8 @@ pub fn execute(
 ) -> CommandResult<NetworkDefined> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_NETWORK_DEFINE,
-        kentos_contracts::CAD_NETWORK_DEFINE_VERSION,
+        kentos_commands::CAD_NETWORK_DEFINE,
+        kentos_commands::CAD_NETWORK_DEFINE_VERSION,
         input,
         write_execute,
     )

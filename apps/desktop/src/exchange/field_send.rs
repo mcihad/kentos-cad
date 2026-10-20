@@ -8,7 +8,7 @@
 
 use iced::widget::{Column, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{Entity, FieldPoint, FieldWrite, FieldWriteFormat, FieldWriteOptions};
+use kentos_commands::{Entity, FieldPoint, FieldWrite, FieldWriteFormat, FieldWriteOptions};
 use kentos_interaction::Level;
 use kentos_ui::icon::{Tone, icon};
 use kentos_ui::widget::select::{Choice, Select};

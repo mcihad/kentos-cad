@@ -5,7 +5,7 @@
 use std::time::Instant;
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, LayersFind, LayersTranslate, TranslateRule,
 };
 use kentos_native_application::{ExecutionContext, layers_find, layers_translate};

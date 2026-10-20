@@ -20,7 +20,7 @@
 //! takes the run back to where it was. The preview is the command's own
 //! computation (`construct::continue_dimension`, `baseline_dimension`).
 
-use kentos_contracts::{DimensionMeasure, DimensionsCreate, Entity, MeasuredPoint, NewLook};
+use kentos_commands::{DimensionMeasure, DimensionsCreate, Entity, MeasuredPoint, NewLook};
 use kentos_domain::{Document, Uuid};
 use kentos_geometry_core::geom::dimension::{DimensionGeom, layout_dimension};
 use kentos_geometry_core::store::snap::SnapHit;

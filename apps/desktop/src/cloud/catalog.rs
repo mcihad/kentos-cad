@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::{ApiFailure, CatalogQuery, Kept};
-use kentos_contracts::{
+use kentos_commands::{
     CatalogSort, CatalogView, ProjectDetails, ProjectPage, ProjectState, ProjectStorage,
     ProjectSummary, ProjectType, TenantKind,
 };

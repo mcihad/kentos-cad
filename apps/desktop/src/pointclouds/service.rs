@@ -11,7 +11,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
 
-use kentos_contracts::{CloudFormat, PointCloudStyle};
+use kentos_commands::{CloudFormat, PointCloudStyle};
 use kentos_geometry_core::geom::pointcloud::Octree;
 use kentos_pointcloud::copc::Key;
 use kentos_pointcloud::source::{Cloud, Kind, Opening};

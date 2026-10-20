@@ -2,7 +2,7 @@
 //! (`Document::set_settings`: an edit, no undo step), as the forms are. The shared cases are
 //! `fixtures/commands/v1/cad.relations.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNodeType, MOST_RELATIONS, ProjectRelation, ProjectSettings, RelationsEdit,
     RelationsEdited, RelationsOp, form_id_ok, relation_problem,
 };
@@ -108,7 +108,7 @@ pub const MOST_CASCADE_DEPTH: usize = 8;
 /// than [`MOST_CASCADE_DEPTH`] (a layer's own composition, a tree of its records, is neither): the
 /// first such relation's name and why.
 fn cascade_problem(relations: &[ProjectRelation]) -> Option<String> {
-    use kentos_contracts::RelationDelete;
+    use kentos_commands::RelationDelete;
     let edges: Vec<(&str, &str, &str)> = relations
         .iter()
         .filter(|r| r.on_delete == RelationDelete::Cascade && r.parent != r.child)
@@ -286,8 +286,8 @@ pub fn execute(
 ) -> CommandResult<RelationsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RELATIONS_EDIT,
-        kentos_contracts::CAD_RELATIONS_EDIT_VERSION,
+        kentos_commands::CAD_RELATIONS_EDIT,
+        kentos_commands::CAD_RELATIONS_EDIT_VERSION,
         input,
         write_execute,
     )

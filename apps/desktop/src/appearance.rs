@@ -264,7 +264,7 @@ impl App {
         match self.backdrop {
             // A CAD project's drawing is dark whatever the theme (docs/adr/0165 §5).
             Backdrop::ByType
-                if self.work_mode() == kentos_contracts::Workspace::Cad
+                if self.work_mode() == kentos_commands::Workspace::Cad
                     && self.mode == Mode::Light =>
             {
                 Canvas::Slate
@@ -814,7 +814,7 @@ pub(crate) mod tests {
     /// under today's keys: the look comes back as it was (docs/adr/0126).
     #[test]
     fn an_older_settings_file_keeps_its_look() {
-        use kentos_contracts::{SettingsFile, settings_schema};
+        use kentos_commands::{SettingsFile, settings_schema};
         let text = r##"{"format":"kentos.settings","version":1,"user":{"appearance.accentColor":"turkuaz","appearance.typeface":"inter","appearance.monoTypeface":"jetbrains","appearance.textSize":15,"appearance.theme":"night"}}"##;
         let (file, diagnostics) = SettingsFile::from_json(text, &settings_schema()).expect("reads");
         assert!(diagnostics.is_empty(), "{diagnostics:?}");

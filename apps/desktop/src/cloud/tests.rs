@@ -8,7 +8,7 @@ use std::path::PathBuf;
 use std::time::{Duration, Instant};
 
 use kentos_cloud::{ApiFailure, Cloud as Client, DraftStore, Opened, Revision, SaveState, Source};
-use kentos_contracts::{
+use kentos_commands::{
     AccessSource, CatalogView, CommitResult, ConflictReason, DocumentSnapshotV1, Entity,
     EventFeature, EventPage, EventRecord, FeatureConflict, FeatureOp, FeatureRecord, FileCommitted,
     Me, MembershipView, PointEntity, ProjectAccessView, ProjectChanges, ProjectInfo, ProjectPage,
@@ -103,7 +103,7 @@ fn permissions(write: bool) -> Vec<ProjectPermission> {
 pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) -> ProjectInfo {
     let mut s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
     // A CBS project: one without a type would be asked it on opening (docs/adr/0165 §1).
-    s.settings.workspace = Some(kentos_contracts::Workspace::Gis);
+    s.settings.workspace = Some(kentos_commands::Workspace::Gis);
     ProjectInfo {
         constraints: Default::default(),
         blocks: Vec::new(),
@@ -141,13 +141,13 @@ pub(crate) fn info(storage: ProjectStorage, write: bool, state: ProjectState) ->
 /// The sample drawing as the server would send it: the same persistent ids every time.
 fn server_drawing() -> kentos_domain::Document {
     let mut s = DocumentSnapshotV1::from_json(SAMPLE).expect("reads");
-    s.settings.workspace = Some(kentos_contracts::Workspace::Gis);
+    s.settings.workspace = Some(kentos_commands::Workspace::Gis);
     let mut doc = kentos_domain::Document::from_snapshot(s).expect("opens");
     let mut v2 = doc.to_snapshot_v2();
     for (i, uid) in v2.uids.iter_mut().enumerate() {
         let mut id = [0x77u8; 16];
         id[8..].copy_from_slice(&(i as u64 + 1).to_be_bytes());
-        *uid = kentos_contracts::EntityId(id);
+        *uid = kentos_commands::EntityId(id);
     }
     v2.name = "Ada 101".into();
     doc = kentos_domain::Document::from_snapshot_v2(v2).expect("opens");
@@ -237,9 +237,9 @@ fn answer(app: &App, version: &str) -> CommitResult {
         .iter()
         .map(|c| {
             let id = match c {
-                kentos_contracts::FeatureChange::Create { id, .. }
-                | kentos_contracts::FeatureChange::Update { id, .. }
-                | kentos_contracts::FeatureChange::Delete { id } => id.clone(),
+                kentos_commands::FeatureChange::Create { id, .. }
+                | kentos_commands::FeatureChange::Update { id, .. }
+                | kentos_commands::FeatureChange::Delete { id } => id.clone(),
             };
             (id, version.to_owned())
         })
@@ -300,7 +300,7 @@ pub(crate) fn summary(id: &str, name: &str, storage: ProjectStorage) -> ProjectS
         catalog_version: "1".into(),
         created_at: "2026-09-20T09:00:00Z".into(),
         creator_name: "Ayşe Yılmaz".into(),
-        area_unit: kentos_contracts::AreaUnit::M2,
+        area_unit: kentos_commands::AreaUnit::M2,
         storage,
         favorite: false,
         opened_at: None,
@@ -1323,7 +1323,7 @@ fn a_deletion_seen_while_following_ends_sending() {
     database(&mut app);
     let _ = app.cloud_tick(Instant::now() + Duration::from_secs(4));
     let mut deleted = event("10", "web-başkası", Vec::new());
-    deleted.kind = kentos_contracts::PROJECT_DELETED.into();
+    deleted.kind = kentos_commands::PROJECT_DELETED.into();
     events(
         &mut app,
         Ok(EventPage {
@@ -1608,7 +1608,7 @@ fn the_upload_takes_the_catalog_s_type_description_and_tags() {
     let u = app.cloud.upload.as_ref().expect("the window");
     assert_eq!(
         u.project_type,
-        kentos_contracts::ProjectType::Cad,
+        kentos_commands::ProjectType::Cad,
         "the web's default"
     );
     let key = |app: &App| {
@@ -1620,14 +1620,14 @@ fn the_upload_takes_the_catalog_s_type_description_and_tags() {
     let before = key(&app);
     cloud(
         &mut app,
-        Event::UploadType(kentos_contracts::ProjectType::Subdivision),
+        Event::UploadType(kentos_commands::ProjectType::Subdivision),
     );
     assert_ne!(key(&app), before, "a new upload");
     let before = key(&app);
     cloud(&mut app, Event::UploadTags("Kadıköy, 2026".into()));
     assert_ne!(key(&app), before);
     let u = app.cloud.upload.as_ref().expect("the window");
-    assert_eq!(u.project_type, kentos_contracts::ProjectType::Subdivision);
+    assert_eq!(u.project_type, kentos_commands::ProjectType::Subdivision);
     assert_eq!(
         crate::cloud::forms_plan::parse_tags(&u.tags),
         ["Kadıköy", "2026"]
@@ -1808,7 +1808,7 @@ fn a_drawing_changed_while_it_went_up_stays_as_it_is() {
             id,
             result: Ok((
                 made,
-                kentos_cloud::Uploaded::Database(kentos_contracts::ProjectImported {
+                kentos_cloud::Uploaded::Database(kentos_commands::ProjectImported {
                     objects: "13".into(),
                     data_revision: "1".into(),
                     meta_version: "1".into(),
@@ -2091,7 +2091,7 @@ fn an_ended_project_is_marked_in_the_copy_and_says_why_in_the_offline_list() {
     let mut app = keeping(&dir);
     database(&mut app);
     let mut deleted = event("10", "web-başkası", Vec::new());
-    deleted.kind = kentos_contracts::PROJECT_DELETED.into();
+    deleted.kind = kentos_commands::PROJECT_DELETED.into();
     events(
         &mut app,
         Ok(EventPage {
@@ -2268,10 +2268,10 @@ fn an_open_the_server_does_not_answer_comes_from_the_copy() {
 // ── The open project's actions (actions.rs) ──────────────────────────────
 
 /// The catalog's answer to a lifecycle command on the open project.
-fn catalog_change(name: &str, purge_after: Option<&str>) -> kentos_contracts::ProjectCatalogChange {
+fn catalog_change(name: &str, purge_after: Option<&str>) -> kentos_commands::ProjectCatalogChange {
     let mut project = summary(PROJECT, name, ProjectStorage::File);
     project.purge_after = purge_after.map(str::to_owned);
-    kentos_contracts::ProjectCatalogChange {
+    kentos_commands::ProjectCatalogChange {
         project,
         changed: true,
         event_seq: None,
@@ -2627,7 +2627,7 @@ fn upload_screens() {
                     cloud(&mut app, Event::UploadName("Kadıköy 1244 ada".into()));
                     cloud(
                         &mut app,
-                        Event::UploadType(kentos_contracts::ProjectType::Subdivision),
+                        Event::UploadType(kentos_commands::ProjectType::Subdivision),
                     );
                     cloud(&mut app, Event::UploadTags("Kadıköy, 2026".into()));
                 }

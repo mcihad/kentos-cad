@@ -8,7 +8,7 @@
 //! layers left and counted. The shared cases are in
 //! `fixtures/commands/v1/cad.styles.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     ANNOTATION_STYLES_FORMAT, AnnotationStyleKind, CommandResult, DimensionStyleDef, LeaderStyleDef,
     StyleEditOperation, StylesEdit, StylesEdited, TextStyleDef, WallStyleDef, dimension_styles_problem,
     leader_styles_problem, text_styles_problem, wall_styles_problem,
@@ -306,7 +306,7 @@ fn export(doc: &Document, input: &StylesEdit) -> Result<Planned, Stop> {
         added: Vec::new(),
         replaced: Vec::new(),
         skipped: Vec::new(),
-        library: Some(kentos_contracts::canonical::canonical_json(&file)),
+        library: Some(kentos_commands::canonical::canonical_json(&file)),
     })
 }
 
@@ -536,8 +536,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &StylesEdit) -> CommandResult<Styl
 pub fn execute(cx: &mut ExecutionContext<'_>, input: StylesEdit) -> CommandResult<StylesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_STYLES_EDIT,
-        kentos_contracts::CAD_STYLES_EDIT_VERSION,
+        kentos_commands::CAD_STYLES_EDIT,
+        kentos_commands::CAD_STYLES_EDIT_VERSION,
         input,
         write_execute,
     )

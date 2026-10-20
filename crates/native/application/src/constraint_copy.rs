@@ -10,7 +10,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CadParameter, CommandWarning, ConstraintId, ConstraintRule, EntityId, ParamUnits,
 };
 use kentos_domain::{Document, Uuid};

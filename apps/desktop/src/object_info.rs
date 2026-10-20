@@ -10,7 +10,7 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 
-use kentos_contracts::{Entity, InfoCard, LayerAction};
+use kentos_commands::{Entity, InfoCard, LayerAction};
 use kentos_domain::Slot;
 use kentos_expression::template::{TargetKind, target_kind};
 use kentos_geometry_core::crs::{Datum, System, transform_in};

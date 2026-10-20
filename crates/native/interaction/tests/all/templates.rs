@@ -3,7 +3,7 @@
 //! over the document's own tree and lock rule, and opening a missing layer
 //! inside its groups as one undo step. The web's are `model/objectTemplate.test.ts`.
 
-use kentos_contracts::{DocumentSnapshotV1, LineType};
+use kentos_commands::{DocumentSnapshotV1, LineType};
 use kentos_domain::Document;
 use kentos_interaction::templates::{
     LayerAnswer, Stamp, TemplateLayer, find_layer, locked_text, open_layer,

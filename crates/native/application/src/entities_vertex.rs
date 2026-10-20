@@ -9,7 +9,7 @@
 //! `bulge_of_radius`), on a straight or an arc edge, and Kenar genişliği (`width`): a polyline edge's start and end
 //! widths, PEDIT's vertex Width, written with the geometry.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesVertex, EntitiesVertexPlan,
     EntitiesVertexed, EntityEdit, SubPlace, VertexAction,
 };
@@ -77,8 +77,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesVertexed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_VERTEX,
-        kentos_contracts::CAD_ENTITIES_VERTEX_VERSION,
+        kentos_commands::CAD_ENTITIES_VERTEX,
+        kentos_commands::CAD_ENTITIES_VERTEX_VERSION,
         input,
         write_execute,
     )

@@ -142,7 +142,7 @@ fn a_method_s_name_starts_its_tool_with_the_method() {
     }
     // Every method's name answers to its method alone (one ribbon's splits).
     let methods = catalog()
-        .tabs_in(kentos_contracts::Workspace::Cad)
+        .tabs_in(kentos_commands::Workspace::Cad)
         .flat_map(|tab| tab.panels.iter())
         .flat_map(|panel| panel.items.iter())
         .filter_map(|item| match item {

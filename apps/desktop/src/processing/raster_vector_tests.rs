@@ -8,7 +8,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{DocumentSnapshotV1, Entity, RasterSample};
+use kentos_commands::{DocumentSnapshotV1, Entity, RasterSample};
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};

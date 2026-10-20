@@ -11,7 +11,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, text, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, EntitiesCreate, Entity, LayerNode, LayerNodeType};
+use kentos_commands::{CommandResult, EntitiesCreate, Entity, LayerNode, LayerNodeType};
 use kentos_domain::{NewLayer, Slot};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::geometry::Bounds;
@@ -230,7 +230,7 @@ fn objects_under<'e>(
     };
     let mut nodes = Vec::new();
     walk(tree, &[], &mut nodes);
-    let rules: std::collections::HashMap<&str, &kentos_contracts::LayerTime> = nodes
+    let rules: std::collections::HashMap<&str, &kentos_commands::LayerTime> = nodes
         .iter()
         .filter(|(n, _)| n.kind == LayerNodeType::Layer && layers.contains(&n.id))
         .filter_map(|(n, _)| n.time.as_ref().map(|t| (n.id.as_str(), t)))
@@ -298,7 +298,7 @@ fn fields_of(sides: &[&Side<'_>]) -> Vec<String> {
 
 /// A project's coordinate system as the comparison checks it: the EPSG code,
 /// or its own definition.
-fn system_of(settings: &kentos_contracts::ProjectSettings) -> String {
+fn system_of(settings: &kentos_commands::ProjectSettings) -> String {
     match &settings.custom_crs {
         Some(def) => serde_json::to_string(def).unwrap_or_default(),
         None => settings.srid.to_string(),

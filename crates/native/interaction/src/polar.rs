@@ -15,7 +15,7 @@
 //! of the box of the objects it copies (the locked ones left out), as the
 //! command places them; the geometry store measures it.
 
-use kentos_contracts::ArrayLayout;
+use kentos_commands::ArrayLayout;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::tools::editing::polar_array_transforms;

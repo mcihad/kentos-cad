@@ -31,7 +31,7 @@ use std::rc::Rc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::Task;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_native_style::classify::{
     self, CLASS_COUNT_DEFAULT, DEFAULT_RAMP, Evaluated, ExprScope, Method, OTHER_COLOR, Present,
     categories_of, class_count, classes_present, graduated_of, js_number, new_category,
@@ -378,8 +378,8 @@ pub struct LayerStyleWindow {
     /// The renderer the layer has now (None: its simple look).
     applied: Option<Value>,
     /// Katman çizimi's draft (docs/adr/0226 §3, §4) and what the layer has.
-    pub compose: Option<kentos_contracts::LayerCompose>,
-    applied_compose: Option<kentos_contracts::LayerCompose>,
+    pub compose: Option<kentos_commands::LayerCompose>,
+    applied_compose: Option<kentos_commands::LayerCompose>,
     /// The last thing the window said, and whether it warns.
     said: Option<(String, bool)>,
     /// Closing asked about the changes not applied (the web's `askUnsaved`).
@@ -395,7 +395,7 @@ impl LayerStyleWindow {
         let node = doc
             .layers()
             .get(id)
-            .filter(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+            .filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)
             .ok_or("Katman stili yalnızca katmanlar için açılır; bir grup seçili.")?;
         let entities: Vec<&Entity> = doc.by_layer(id).collect();
         let present = classes_present(&entities);
@@ -577,7 +577,7 @@ impl LayerStyleWindow {
     /// “Katman stili”. Returns false when the command refuses it (the layer gone, a value out
     /// of its range: the footer says which).
     pub fn apply(&mut self, doc: &mut kentos_domain::Document) -> bool {
-        use kentos_contracts::{CommandResult, LayersRenderer};
+        use kentos_commands::{CommandResult, LayersRenderer};
         use kentos_native_application::{ExecutionContext, layers_renderer};
         let r = self.renderer();
         // What the layer has (a renderer this version cannot read, kept): nothing to write.
@@ -616,7 +616,7 @@ impl LayerStyleWindow {
     /// Writes Katman çizimi with `cad.layers.compose` when it changed, one undo step of its own
     /// (docs/adr/0226 §3, §4).
     fn apply_compose(&mut self, doc: &mut kentos_domain::Document) -> bool {
-        use kentos_contracts::{CommandResult, LayersCompose};
+        use kentos_commands::{CommandResult, LayersCompose};
         use kentos_native_application::{ExecutionContext, layers_compose};
         if self.compose == self.applied_compose {
             return true;

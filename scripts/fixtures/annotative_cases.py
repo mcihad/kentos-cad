@@ -17,7 +17,7 @@ start); at a scale it does not take part in it is not drawn. When the plot
 scale changes, its own geometry becomes the representation at the new scale
 and every other scale keeps drawing as it did. The checks, their order,
 codes, paths and messages are written by hand from the contract
-(crates/shared/contracts/src/cad_annotations.rs, annotative.rs).
+(crates/shared/commands/src/cad_annotations.rs, annotative.rs).
 """
 import copy
 import json

@@ -15,7 +15,7 @@ path = "src/main.rs"
 
 [dependencies]
 kentos-postgis = { path = "../postgis" }
-kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-headless = { path = "../headless" }
 # STAC searches (docs/adr/0528 §2): the host registers the cloud client's HTTP fetcher with the commands.

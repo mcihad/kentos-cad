@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 
@@ -235,9 +235,9 @@ fn the_path_is_a_line_an_arc_a_circle_or_a_polyline_and_not_a_copied_object() {
     let mut b = empty();
     let object = b.add_line("cizim", [0.0, 0.0], [0.0, 1.0]);
     b.doc
-        .add(Entity::Circle(kentos_contracts::CircleEntity {
+        .add(Entity::Circle(kentos_commands::CircleEntity {
             base: common::base("cizim"),
-            c: kentos_contracts::Vec2 {
+            c: kentos_commands::Vec2 {
                 x: common::E + 10.0,
                 y: common::N,
             },

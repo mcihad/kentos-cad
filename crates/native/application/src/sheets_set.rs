@@ -4,7 +4,7 @@
 //! ground box (`shows`), a view mark among them pointing at it (`marked`), a frame whose ground is not known (`unknown`).
 //! Read-only. The shared cases are `fixtures/commands/v1/cad.sheets.set.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     AffectReason, AffectedFrame, CommandResult, Entity, OTHER_SERIES, SetFrame, SetSheet,
     SheetSeries, SheetsSet, SheetsSetResult, Vec2, ViewTarget, series_of, series_title,
 };

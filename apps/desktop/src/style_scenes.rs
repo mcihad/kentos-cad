@@ -14,7 +14,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit, TextStyleDef,
 };
 use kentos_domain::Slot;

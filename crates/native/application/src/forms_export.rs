@@ -2,7 +2,7 @@
 //! its draft) with the fields it binds or reads and the value lists they link; read-only. The shared
 //! cases are `fixtures/commands/v1/cad.forms.export.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, FORM_PACKAGE_FORMAT, FORM_PACKAGE_VERSION, FieldDomain, FormPackage, FormsExport,
 };
 use kentos_domain::Document;

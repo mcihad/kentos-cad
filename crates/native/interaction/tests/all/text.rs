@@ -6,7 +6,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::{Level, ViewChange};
 
 const TOOLS: &str = include_str!("../../../../../fixtures/interaction/v1/tools.kcad");
@@ -24,7 +24,7 @@ fn a_click_asks_for_the_field_and_enter_adds_the_text() {
         panic!("a text field asked for: {:?}", b.views);
     };
     assert_eq!(
-        rel(kentos_contracts::Vec2 {
+        rel(kentos_commands::Vec2 {
             x: field.at.x,
             y: field.at.y
         }),
@@ -160,17 +160,17 @@ fn enter_leaves_where_the_text_starts_and_steps_back_from_a_question() {
 fn a_texts_extras_stay_when_its_words_change() {
     let mut b = Bench::new("text");
     let aligned = |text: &str, width_factor: f64| {
-        Entity::Text(kentos_contracts::TextEntity {
+        Entity::Text(kentos_commands::TextEntity {
             annotative: None,
             base: common::base("cizim"),
-            p: kentos_contracts::Vec2 {
+            p: kentos_commands::Vec2 {
                 x: common::E + 3.0,
                 y: common::N + 1.0,
             },
             text: text.to_owned(),
             height: 2.5,
             rotation: 30.0,
-            align: Some(kentos_contracts::TextAlign::MiddleCenter),
+            align: Some(kentos_commands::TextAlign::MiddleCenter),
             width_factor: Some(width_factor),
             mask: true,
             label_of: None,
@@ -192,7 +192,7 @@ fn a_texts_extras_stay_when_its_words_change() {
     assert_eq!(
         (t.align, t.width_factor, t.mask),
         (
-            Some(kentos_contracts::TextAlign::MiddleCenter),
+            Some(kentos_commands::TextAlign::MiddleCenter),
             Some(0.8),
             true
         )
@@ -310,7 +310,7 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
     let field = write(&mut b, [10.0, 20.0], "Ada 101");
     assert_eq!(
         (field.align, field.width_factor, field.initial),
-        (Some(kentos_contracts::TextAlign::BaselineRight), 0.8, None)
+        (Some(kentos_commands::TextAlign::BaselineRight), 0.8, None)
     );
     let Entity::Text(t) = b.newest() else {
         panic!("a text");
@@ -320,7 +320,7 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
         (
             "Ada 101",
             [10.0, 20.0],
-            Some(kentos_contracts::TextAlign::BaselineRight),
+            Some(kentos_commands::TextAlign::BaselineRight),
             Some(0.8),
             true
         )
@@ -358,7 +358,7 @@ fn hiza_genişlik_zemin_and_artır_are_kept_and_written() {
 /// Hiza's names read as the web's `textAlignFromName` reads them.
 #[test]
 fn hiza_names_are_read_together_or_apart_with_or_without_marks() {
-    use kentos_contracts::TextAlign::*;
+    use kentos_commands::TextAlign::*;
     use kentos_interaction::text::{align_from_name, align_name};
     for (typed, want) in [
         ("sağüst", Some(Some(TopRight))),
@@ -388,7 +388,7 @@ fn hiza_names_are_read_together_or_apart_with_or_without_marks() {
 const TEXTS: &str = include_str!("../../../../../fixtures/interaction/v1/texts.kcad");
 
 /// A text of the Okunur yap drawing by its slot.
-fn text_at(b: &Bench, slot: u32) -> kentos_contracts::TextEntity {
+fn text_at(b: &Bench, slot: u32) -> kentos_commands::TextEntity {
     match b.doc.get(kentos_domain::Slot(slot)) {
         Some(Entity::Text(t)) => t.clone(),
         other => panic!("a text at {slot}: {other:?}"),
@@ -408,7 +408,7 @@ fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
         .set([1, 2, 3, 4].map(kentos_domain::Slot).to_vec());
     b.start("readable");
     assert!(!b.session.is_running(), "it acts at once and leaves");
-    let near = |t: &kentos_contracts::TextEntity, [x, y]: [f64; 2]| {
+    let near = |t: &kentos_commands::TextEntity, [x, y]: [f64; 2]| {
         let [dx, dy] = rel(t.p);
         assert!(
             (dx - x).hypot(dy - y) < 1e-9,
@@ -428,7 +428,7 @@ fn okunur_yap_turns_what_reads_upside_down_and_leaves_the_rest() {
     assert_eq!(turns, [0.0, 20.0, 30.0, 180.0]);
     assert_eq!(
         text_at(&b, 1).align,
-        Some(kentos_contracts::TextAlign::MiddleCenter)
+        Some(kentos_commands::TextAlign::MiddleCenter)
     );
     let said: Vec<&str> = b.said(before).into_iter().map(|(_, t)| t).collect();
     assert_eq!(

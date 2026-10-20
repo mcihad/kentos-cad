@@ -7,7 +7,7 @@
 //! line through the click. The preview is the representation at that scale. Enter, a quick right click or Esc ends;
 //! Esc first lets the object go.
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationsScales, AnnotativeOperation, AtScale, Entity, annotative_of, at_scale, same_scale,
 };
 use kentos_domain::{Document, Slot};
@@ -176,8 +176,8 @@ fn pick(p: &Pointer, cx: &Context<'_>) -> Option<Slot> {
 }
 
 /// A dimension as the core lays it out.
-fn dimension_geom(d: &kentos_contracts::DimensionEntity) -> DimensionGeom {
-    let v = |p: &kentos_contracts::Vec2| Vec2::new(p.x, p.y);
+fn dimension_geom(d: &kentos_commands::DimensionEntity) -> DimensionGeom {
+    let v = |p: &kentos_commands::Vec2| Vec2::new(p.x, p.y);
     DimensionGeom {
         a: v(&d.a),
         b: v(&d.b),
@@ -248,7 +248,7 @@ impl AnnotativePlace {
             entry.offset = input.offset;
         }
         let mut probe = e.clone();
-        let field = kentos_contracts::annotative_field(&mut probe)?;
+        let field = kentos_commands::annotative_field(&mut probe)?;
         let a = field.as_mut()?;
         for s in &mut a.scales {
             if same_scale(s.scale, *scale) {

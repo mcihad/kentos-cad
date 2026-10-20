@@ -12,7 +12,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchInfo, CommandResult, Entity, OpeningRow, QuantityTotals, SpaceMethod, SpaceRow,
     SpacesQuantified, SpacesQuantities, WallRow,
 };

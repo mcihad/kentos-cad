@@ -6,7 +6,7 @@
 //! to the pieces with the largest remainders, the earlier first on a tie (CLAUDE.md §23.2: a total
 //! is kept, its leftover not given to the last piece by chance).
 
-use kentos_contracts::{LayerField, LayerFieldKind, MergePolicy, SplitPolicy};
+use kentos_commands::{LayerField, LayerFieldKind, MergePolicy, SplitPolicy};
 
 /// A value in whole units of `field`'s last digit; none when it is not one of its numbers.
 fn units(field: &LayerField, value: &str) -> Option<i128> {

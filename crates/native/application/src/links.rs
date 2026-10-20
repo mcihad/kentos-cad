@@ -4,7 +4,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::AssetVia;
+use kentos_commands::AssetVia;
 
 use crate::source_places::resolve;
 

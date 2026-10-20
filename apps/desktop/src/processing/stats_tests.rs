@@ -4,7 +4,7 @@
 //! table without touching the drawing; Sıcak nokta writes every block's copy
 //! in its class's colour; DBSCAN numbers the accidents' clusters.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use serde_json::json;
 
 use super::RunStatus;

@@ -7,8 +7,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::canonical::{canonical_json, id_of, stamp_of};
-use kentos_contracts::{BlockId, CallAnswer, CallEnvelope, DocumentSnapshotV2, uuid_from_text};
+use kentos_commands::canonical::{canonical_json, id_of, stamp_of};
+use kentos_commands::{BlockId, CallAnswer, CallEnvelope, DocumentSnapshotV2, uuid_from_text};
 use kentos_domain::{Document, Uuid};
 use kentos_native_application::call::call;
 use kentos_native_application::registry;

@@ -3,7 +3,7 @@
 //! into a drawing without them, the same definitions.
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{CallOp, DocumentSnapshotV1};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_native_application::{ExecutionContext, registry};
 use kentos_style_library::file::parse_style_file;
 use serde_json::{Value, json};
@@ -47,7 +47,7 @@ fn a_library_export_is_canonical_and_reads_back_with_what_it_draws() {
     let value: Value = serde_json::from_str(text).expect("JSON");
     assert_eq!(
         text,
-        kentos_domain::contracts::canonical::canonical_json(&value)
+        kentos_commands::canonical::canonical_json(&value)
     );
     assert!(value.get("exported").is_none(), "no time in it");
     let file = parse_style_file(text).expect("the reader takes it");
@@ -76,7 +76,7 @@ fn a_blocks_export_reads_back_into_a_drawing_without_them() {
     let value: Value = serde_json::from_str(text).expect("JSON");
     assert_eq!(
         text,
-        kentos_domain::contracts::canonical::canonical_json(&value)
+        kentos_commands::canonical::canonical_json(&value)
     );
     let names: Vec<&str> = value["blocks"]
         .as_array()

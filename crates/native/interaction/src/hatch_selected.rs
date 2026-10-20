@@ -9,7 +9,7 @@
 //! the regions are its own (`regions_in`), shown outlined before; Enter
 //! writes them all in one step, “Tarama”.
 
-use kentos_contracts::{EntitiesHatch, HatchRegion, NewLook};
+use kentos_commands::{EntitiesHatch, HatchRegion, NewLook};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arrangement::Ring;

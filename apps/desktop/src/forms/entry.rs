@@ -31,8 +31,8 @@ use iced::widget::{
     Column, Row, button, container, row, scrollable, space, text_editor, text_input,
 };
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::FormsFill;
-use kentos_contracts::{
+use kentos_commands::FormsFill;
+use kentos_commands::{
     FormBody, FormIssue, FormItem, FormItemState, FormSeverity, FormWidget, FormsSubmit,
     LayerField, LayerFieldKind,
 };
@@ -156,14 +156,14 @@ pub struct Entry {
     pages: BTreeMap<String, usize>,
     /// The children linked or unlinked in this window, by the related item (docs/adr/0440 §2): written
     /// with the record by Kaydet, dropped by Vazgeç.
-    links: Vec<(String, kentos_contracts::FormChild)>,
+    links: Vec<(String, kentos_commands::FormChild)>,
     /// A related table's or cards' page shown, by the item (docs/adr/0440 §6).
     related_pages: BTreeMap<String, usize>,
     /// The record's snapshot as it stands in this window and the one its log's last step was taken on
     /// (docs/adr/0440 §4): what a reviewer compares.
     snapshot: Option<String>,
     /// A paged list's whole list for the record, by its item (docs/adr/0439 §1): what its search searches.
-    whole: BTreeMap<String, Vec<kentos_contracts::FieldChoice>>,
+    whole: BTreeMap<String, Vec<kentos_commands::FieldChoice>>,
     /// The record's place among the layer's records and their count (docs/adr/0408 §3); none in
     /// the preview and with many records.
     place: Option<(usize, usize)>,
@@ -184,7 +184,7 @@ pub struct Entry {
     commit: bool,
     field_notes: BTreeMap<String, String>,
     /// Bilgi: the record's attachments as `cad.attachments.inspect` read them (docs/adr/0442 §7).
-    facts: Option<Vec<kentos_contracts::AttachmentFacts>>,
+    facts: Option<Vec<kentos_commands::AttachmentFacts>>,
     /// The language its words are shown in (docs/adr/0443 §5): a translation's tag; none: the form's own.
     pub(crate) language: Option<String>,
     /// How many times Sonraki sorun went on (docs/adr/0443 §6): the next press goes to the issue after.
@@ -553,7 +553,7 @@ impl Entry {
             .or_else(|| own.cloned())
     }
 
-    fn said(&self, id: &str) -> Option<&kentos_contracts::ItemWords> {
+    fn said(&self, id: &str) -> Option<&kentos_commands::ItemWords> {
         let tag = self.language.as_ref()?;
         self.body.translations.get(tag)?.items.get(id)
     }
@@ -898,7 +898,7 @@ impl App {
     #[allow(clippy::too_many_arguments)]
     fn entry_of(
         &self,
-        f: &kentos_contracts::ProjectForm,
+        f: &kentos_commands::ProjectForm,
         body: FormBody,
         draft: bool,
         uid: String,
@@ -1187,7 +1187,7 @@ impl App {
                     }
                     None => e.links.push((
                         item.to_owned(),
-                        kentos_contracts::FormChild {
+                        kentos_commands::FormChild {
                             relation,
                             uid: uid.to_owned(),
                             values: BTreeMap::new(),
@@ -1241,9 +1241,9 @@ impl App {
             (true, true) => Some(
                 [held, vec![record]]
                     .concat()
-                    .join(kentos_contracts::MULTIPLE_JOIN),
+                    .join(kentos_commands::MULTIPLE_JOIN),
             ),
-            (true, false) => (!held.is_empty()).then(|| held.join(kentos_contracts::MULTIPLE_JOIN)),
+            (true, false) => (!held.is_empty()).then(|| held.join(kentos_commands::MULTIPLE_JOIN)),
             (false, true) => Some(record),
             (false, false) => None,
         };
@@ -1257,8 +1257,8 @@ impl App {
         };
         let answer = kentos_native_application::registry::run(
             &mut ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_ENTITIES_SET,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
             input,
         );
         let refused = match answer {
@@ -1330,8 +1330,8 @@ impl App {
         };
         let answer = kentos_native_application::registry::run(
             &mut ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_POINT_CREATE,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_POINT_CREATE,
+            kentos_commands::CallOp::Execute,
             input,
         );
         let made = match answer {
@@ -1550,7 +1550,7 @@ impl App {
             }
             Event::OpenRelated(uid) => return self.open_related(&uid),
             Event::RunAction(item) => {
-                use kentos_contracts::ActionKind as K;
+                use kentos_commands::ActionKind as K;
                 let Some(FormItem::Action {
                     kind,
                     tool,
@@ -1575,9 +1575,9 @@ impl App {
                         }
                         self.open_processing(&tool, None);
                         let place = match runs {
-                            kentos_contracts::ActionRuns::Auto => None,
-                            kentos_contracts::ActionRuns::Here => Some("client"),
-                            kentos_contracts::ActionRuns::Background => Some("worker"),
+                            kentos_commands::ActionRuns::Auto => None,
+                            kentos_commands::ActionRuns::Here => Some("client"),
+                            kentos_commands::ActionRuns::Background => Some("worker"),
                         };
                         if let Some(place) = place {
                             let _ = self.update(Message::Processing(
@@ -1632,7 +1632,7 @@ impl App {
                     .as_ref()
                     .and_then(|p| p.parent())
                     .map(|p| p.display().to_string());
-                let input = kentos_contracts::AttachmentsInspect {
+                let input = kentos_commands::AttachmentsInspect {
                     uids: vec![e.uid.clone()],
                     folder,
                 };
@@ -1644,7 +1644,7 @@ impl App {
                     &mut kentos_native_application::ExecutionContext::new(&mut d.model),
                     input,
                 );
-                if let kentos_contracts::CommandResult::Completed { output, .. } = result
+                if let kentos_commands::CommandResult::Completed { output, .. } = result
                     && let Some(e) = self.form_entry.as_mut()
                 {
                     e.facts = output.objects.into_iter().next().map(|o| o.attachments);
@@ -1856,7 +1856,7 @@ impl App {
                 name.is_some_and(|n| e.after.get(&n) != e.before.get(&n))
             })
             .collect();
-        let input = kentos_contracts::FormsTransition {
+        let input = kentos_commands::FormsTransition {
             form: e.form.clone(),
             draft: e.draft,
             uid: e.uid.clone(),
@@ -1895,9 +1895,9 @@ impl App {
             input,
         );
         // The words of the new state, read before the entry is closed.
-        let words_of = |done: &kentos_contracts::FormsTransitioned| state_words(&done.to);
+        let words_of = |done: &kentos_commands::FormsTransitioned| state_words(&done.to);
         match result {
-            kentos_contracts::CommandResult::Completed { output, .. } => {
+            kentos_commands::CommandResult::Completed { output, .. } => {
                 let to = words_of(&output);
                 self.form_entry = None;
                 self.dialog = None;
@@ -2044,14 +2044,14 @@ impl App {
         };
         let result = forms_submit::execute(&mut ExecutionContext::new(&mut doc.model), input);
         // Changed since the window opened: the bar says what, the values typed stay.
-        if let kentos_contracts::CommandResult::Conflict { error } = &result
+        if let kentos_commands::CommandResult::Conflict { error } = &result
             && matches!(
                 error.code.as_str(),
-                kentos_contracts::codes::RECORD_CHANGED | kentos_contracts::codes::FORM_RELEASE_CHANGED
+                kentos_commands::codes::RECORD_CHANGED | kentos_commands::codes::FORM_RELEASE_CHANGED
             )
         {
             let words = error.message.clone();
-            let release = error.code == kentos_contracts::codes::FORM_RELEASE_CHANGED;
+            let release = error.code == kentos_commands::codes::FORM_RELEASE_CHANGED;
             if let Some(e) = self.form_entry.as_mut() {
                 e.conflict = Some(words.clone());
                 e.overwrite = false;
@@ -2175,7 +2175,7 @@ impl App {
             && release.as_ref().is_some_and(|r| {
                 r.fields
                     .as_ref()
-                    .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, &e.fields))
+                    .is_some_and(|d| *d != kentos_commands::bound_fields_digest(&r.body, &e.fields))
             });
         if stale {
             lines.push("Katmanın alanları bu yayından sonra değişti.".into());
@@ -2831,10 +2831,10 @@ impl App {
                         && e.members.is_empty()
                         && !(kind.writes() && read_only);
                     let glyph = match kind {
-                        kentos_contracts::ActionKind::Tool => Icon::Play,
-                        kentos_contracts::ActionKind::Recompute => Icon::Redo,
-                        kentos_contracts::ActionKind::Step => Icon::ChevronRight,
-                        kentos_contracts::ActionKind::Show => Icon::Target,
+                        kentos_commands::ActionKind::Tool => Icon::Play,
+                        kentos_commands::ActionKind::Recompute => Icon::Redo,
+                        kentos_commands::ActionKind::Step => Icon::ChevronRight,
+                        kentos_commands::ActionKind::Show => Icon::Target,
                     };
                     let button = iced::widget::button(
                         row![
@@ -3056,11 +3056,11 @@ impl App {
         e: &'a Entry,
         id: &str,
         title: Option<&str>,
-        accept: kentos_contracts::AttachmentAccept,
+        accept: kentos_commands::AttachmentAccept,
         min: Option<u32>,
         max: Option<u32>,
     ) -> Element<'a, Message> {
-        use kentos_contracts::{AttachmentAccept, AttachmentKind};
+        use kentos_commands::{AttachmentAccept, AttachmentKind};
         let photos = accept == AttachmentAccept::Photo;
         let documents = accept == AttachmentAccept::Document;
         let views = self
@@ -3243,7 +3243,7 @@ impl App {
         if let (Some(d), Some(FormItem::Related {
             layer,
             field,
-            view: kentos_contracts::RelatedView::Chart,
+            view: kentos_commands::RelatedView::Chart,
             columns,
             ..
         })) = (doc, crate::forms::designer::find(&e.body.items, id))
@@ -3254,7 +3254,7 @@ impl App {
         if let (Some(d), Some(FormItem::Related {
             layer,
             field,
-            view: view @ (kentos_contracts::RelatedView::Table | kentos_contracts::RelatedView::Cards),
+            view: view @ (kentos_commands::RelatedView::Table | kentos_commands::RelatedView::Cards),
             columns,
             ..
         })) = (doc, crate::forms::designer::find(&e.body.items, id))
@@ -3271,7 +3271,7 @@ impl App {
                 .take(RELATED_PAGE)
                 .cloned()
                 .collect();
-            col = col.push(if *view == kentos_contracts::RelatedView::Cards {
+            col = col.push(if *view == kentos_commands::RelatedView::Cards {
                 related_cards(d, layer, field, columns, &shown_uids, e, id, live)
             } else {
                 related_table(d, layer, field, columns, &uids, &shown_uids, e, id, live)
@@ -3432,7 +3432,7 @@ fn collapsed_groups(items: &[FormItem]) -> BTreeSet<String> {
 
 /// A field's control by its widget; read-only shows the value without an edit.
 /// An attachment's facts on one line: its type, size, moment and place, and its digest's start.
-fn facts_line(f: &kentos_contracts::AttachmentFacts) -> String {
+fn facts_line(f: &kentos_commands::AttachmentFacts) -> String {
     if f.missing {
         return "Bulunamadı: dosya ya da kitaplıktaki fotoğraf yok.".into();
     }
@@ -3475,7 +3475,7 @@ fn said_note(e: &Entry, key: &str) -> Option<String> {
 
 fn entry_control<'a>(
     e: &'a Entry,
-    item: &'a kentos_contracts::FormField,
+    item: &'a kentos_commands::FormField,
     field: &'a LayerField,
     read_only: bool,
 ) -> Element<'a, Message> {
@@ -3489,7 +3489,7 @@ fn entry_control<'a>(
         .or_else(|| {
             e.after.get(&field.name).map(|v| match field.kind {
                 LayerFieldKind::DateTime | LayerFieldKind::Time => {
-                    kentos_contracts::display_value(field, v)
+                    kentos_commands::display_value(field, v)
                 }
                 _ => v.clone(),
             })
@@ -3563,7 +3563,7 @@ fn entry_control<'a>(
         _ => Vec::new(),
     };
     // The value's code: as typed, a label's code, or the record's.
-    let code = kentos_contracts::check_value(
+    let code = kentos_commands::check_value(
         &LayerField {
             required: false,
             ..field.clone()
@@ -3614,7 +3614,7 @@ fn entry_control<'a>(
                         }
                     })
                     .collect();
-                let toggle = set(next.join(kentos_contracts::MULTIPLE_JOIN));
+                let toggle = set(next.join(kentos_commands::MULTIPLE_JOIN));
                 col = col.push(
                     row![
                         check_box(
@@ -3641,9 +3641,9 @@ fn entry_control<'a>(
                     row![
                         check_box(
                             Check::Checked,
-                            (!read_only).then(|| set(next.join(kentos_contracts::MULTIPLE_JOIN))),
+                            (!read_only).then(|| set(next.join(kentos_commands::MULTIPLE_JOIN))),
                         ),
-                        label::body(kentos_contracts::display_value(field, h)).style(muted),
+                        label::body(kentos_commands::display_value(field, h)).style(muted),
                     ]
                     .spacing(8)
                     .align_y(Center),
@@ -3666,14 +3666,14 @@ fn entry_control<'a>(
                     .filter(|c| codes.contains(c))
                     .collect();
                 out.extend(codes.iter().filter(|c| !choices.iter().any(|(x, _)| x == *c)));
-                out.join(kentos_contracts::MULTIPLE_JOIN)
+                out.join(kentos_commands::MULTIPLE_JOIN)
             };
             let mut chips = Row::new().spacing(4);
             for h in &held {
                 let words = choices
                     .iter()
                     .find(|(c, _)| c == h)
-                    .map_or_else(|| kentos_contracts::display_value(field, h), |(_, l)| l.clone());
+                    .map_or_else(|| kentos_commands::display_value(field, h), |(_, l)| l.clone());
                 let rest: Vec<&str> = held.iter().filter(|x| *x != h).map(String::as_str).collect();
                 let face = row![label::caption(words)].spacing(4).align_y(Center);
                 let face = if read_only {
@@ -4153,13 +4153,13 @@ fn related_table<'a>(
     id: &str,
     live: bool,
 ) -> Element<'a, Message> {
-    let fields: Vec<kentos_contracts::LayerField> = d
+    let fields: Vec<kentos_commands::LayerField> = d
         .model
         .layers()
         .get(layer)
         .map(|n| n.fields.clone())
         .unwrap_or_default();
-    let shown: Vec<kentos_contracts::LayerField> = if columns.is_empty() {
+    let shown: Vec<kentos_commands::LayerField> = if columns.is_empty() {
         fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
     } else {
         columns
@@ -4167,10 +4167,10 @@ fn related_table<'a>(
             .filter_map(|c| fields.iter().find(|f| f.key() == c).cloned())
             .collect()
     };
-    let numeric = |f: &kentos_contracts::LayerField| {
+    let numeric = |f: &kentos_commands::LayerField| {
         matches!(f.kind, LayerFieldKind::Integer | LayerFieldKind::Decimal)
     };
-    let cell = |text: String, f: Option<&kentos_contracts::LayerField>| -> Element<'a, Message> {
+    let cell = |text: String, f: Option<&kentos_commands::LayerField>| -> Element<'a, Message> {
         let t = label::body(text);
         if f.is_some_and(numeric) {
             container(t).width(Fill).align_x(iced::alignment::Horizontal::Right).into()
@@ -4221,7 +4221,7 @@ fn related_table<'a>(
         let mut line = Row::new().spacing(8).align_y(Center);
         for f in &shown {
             let raw = x.base().attrs.get(&f.name).cloned().unwrap_or_default();
-            line = line.push(cell(kentos_contracts::display_value(f, &raw), Some(f)));
+            line = line.push(cell(kentos_commands::display_value(f, &raw), Some(f)));
         }
         let tool = |glyph: Icon, tip: &'static str, on: Option<Message>| {
             kentos_ui::widget::tip(
@@ -4276,7 +4276,7 @@ fn related_chart<'a>(
     columns: &[String],
     uids: &[String],
 ) -> Element<'a, Message> {
-    let fields: Vec<kentos_contracts::LayerField> = d
+    let fields: Vec<kentos_commands::LayerField> = d
         .model
         .layers()
         .get(layer)
@@ -4316,7 +4316,7 @@ fn related_chart<'a>(
         let words = if value.is_empty() {
             "(boş)".to_owned()
         } else {
-            kentos_contracts::display_value(&by, &value)
+            kentos_commands::display_value(&by, &value)
         };
         let share = n as f32 / most;
         rows = rows.push(
@@ -4345,13 +4345,13 @@ fn related_cards<'a>(
     id: &str,
     live: bool,
 ) -> Element<'a, Message> {
-    let fields: Vec<kentos_contracts::LayerField> = d
+    let fields: Vec<kentos_commands::LayerField> = d
         .model
         .layers()
         .get(layer)
         .map(|n| n.fields.clone())
         .unwrap_or_default();
-    let shown: Vec<kentos_contracts::LayerField> = if columns.is_empty() {
+    let shown: Vec<kentos_commands::LayerField> = if columns.is_empty() {
         fields.iter().filter(|f| f.key() != link).take(4).cloned().collect()
     } else {
         columns
@@ -4374,7 +4374,7 @@ fn related_cards<'a>(
             body = body.push(
                 row![
                     container(label::caption(f.label().to_owned()).style(muted)).width(120),
-                    label::body(kentos_contracts::display_value(f, &raw)),
+                    label::body(kentos_commands::display_value(f, &raw)),
                 ]
                 .spacing(8),
             );
@@ -4422,7 +4422,7 @@ fn ordered_codes(codes: &[&str], list: &[String]) -> String {
     }
     let rank = |c: &str| list.iter().position(|x| x == c).unwrap_or(usize::MAX);
     out.sort_by_key(|c| rank(c));
-    out.join(kentos_contracts::MULTIPLE_JOIN)
+    out.join(kentos_commands::MULTIPLE_JOIN)
 }
 
 #[cfg(test)]

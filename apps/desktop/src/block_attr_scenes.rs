@@ -124,7 +124,7 @@ fn drawn(app: &mut App) {
     );
 }
 
-fn door() -> kentos_contracts::BlockId {
+fn door() -> kentos_commands::BlockId {
     serde_json::from_value(json!(KAPI)).expect("an id")
 }
 

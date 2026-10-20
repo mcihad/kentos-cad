@@ -8,7 +8,7 @@
 
 use iced::widget::{Id, column, operation, row, text_input};
 use iced::{Center, Element, Task};
-use kentos_contracts::{CommandResult, ScaleChange, SettingsSet};
+use kentos_commands::{CommandResult, ScaleChange, SettingsSet};
 use kentos_interaction::Level;
 use kentos_interaction::annotation_scale::follow_annotation_change;
 use kentos_native_application::{ExecutionContext, settings_set};

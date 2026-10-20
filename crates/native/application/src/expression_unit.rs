@@ -11,7 +11,7 @@
 //! metres, or a portable symbol's own units. The web's is `readingUnit`
 //! (`model/projectSettings.ts`).
 
-use kentos_contracts::ProjectSettings;
+use kentos_commands::ProjectSettings;
 pub use kentos_expression::Unit;
 
 /// The project's drawing unit, for an expression whose values are readings.

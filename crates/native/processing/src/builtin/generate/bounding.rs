@@ -31,7 +31,7 @@ fn objects(description: &str) -> ParamDef {
     .describe(description)
 }
 
-fn written(add: Vec<kentos_contracts::Entity>, summary: String) -> RunResult {
+fn written(add: Vec<kentos_commands::Entity>, summary: String) -> RunResult {
     let count = add.len();
     RunResult {
         changes: Some(ChangeSet {

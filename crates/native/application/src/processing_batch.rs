@@ -3,7 +3,7 @@
 //! not at all. `plan` runs it on a copy of the drawing. A stop asked while it runs (as a job, docs/adr/0253 §9) is
 //! heard between the rows and takes back what the earlier rows did.
 
-use kentos_contracts::{CommandResult, ProcessingBatch, ProcessingBatched};
+use kentos_commands::{CommandResult, ProcessingBatch, ProcessingBatched};
 
 use crate::ExecutionContext;
 use crate::jobs::Progress;
@@ -82,7 +82,7 @@ pub fn execute(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{CommandResult, DocumentSnapshotV1, ProcessingBatch};
+    use kentos_commands::{CommandResult, DocumentSnapshotV1, ProcessingBatch};
     use kentos_domain::Document;
 
     use crate::ExecutionContext;

@@ -4,7 +4,7 @@
 //! corners) and the outward direction at a corner come from the geometry
 //! core (`processing::numbering`, docs/adr/0008 S4).
 
-use kentos_contracts::Vec2;
+use kentos_commands::Vec2;
 
 use crate::geometry::CoreCorner;
 use crate::text::{js_number, utf16_len};

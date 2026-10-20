@@ -16,7 +16,7 @@ use std::rc::Rc;
 use iced::widget::text::Wrapping;
 use iced::widget::{button, column, container, mouse_area, row, space};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{EntitiesSetProperties, JoinSide, JoinView, PropertiesOperation, js_trim};
+use kentos_commands::{EntitiesSetProperties, JoinSide, JoinView, PropertiesOperation, js_trim};
 use kentos_domain::{Slot, Uuid};
 use kentos_native_application::joins_query::{JoinRead, read};
 use kentos_ui::icon::icon;

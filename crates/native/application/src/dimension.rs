@@ -4,7 +4,7 @@
 //! `invalid_dimension` with the place to mend; the web's
 //! `product/dimension.ts` says the same.
 
-use kentos_contracts::{DimensionStyle, EntityGeometry, Vec2};
+use kentos_commands::{DimensionStyle, EntityGeometry, Vec2};
 use kentos_geometry_core::geom::dimension::{DimensionFault, DimensionGeom, dimension_fault};
 
 use crate::checks::{Stop, error};

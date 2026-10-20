@@ -18,7 +18,7 @@
 //! “Uzat-kısalt”: “Uzunluk 10.000 m → 12.000 m.” The tool asks only which end
 //! (the core's `near_end`) and how the length changes.
 
-use kentos_contracts::{CommandResult, EntitiesLengthen, Entity, LengthenChange, LengthenEnd};
+use kentos_commands::{CommandResult, EntitiesLengthen, Entity, LengthenChange, LengthenEnd};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::lengthen::{length_of, near_end};
 use kentos_geometry_core::tools::point_text::parse_number;

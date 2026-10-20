@@ -17,7 +17,7 @@ right after (before) the reference's; the layer's other objects drawn after
 room, so every other pair keeps its order; objects already right above
 (under) it do not change. The checks, their order, codes, paths and
 messages are written by hand from the contract
-(crates/shared/contracts/src/cad_order.rs).
+(crates/shared/commands/src/cad_order.rs).
 
 `--check` rebuilds the file in memory and compares it with the one on disk.
 """

@@ -26,7 +26,7 @@ const DRAWING: &str = include_str!("../../../fixtures/interaction/v1/topology.kc
 
 /// Opens the trace's drawing, as the app would open the file: the view fits it.
 fn open(app: &mut App) {
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("reads");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
 }

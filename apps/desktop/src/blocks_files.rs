@@ -7,7 +7,7 @@
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     BlockEditOperation, BlockFileMode, BlockId, BlocksEdit, BlocksEdited, CommandResult,
     ExportBlock, ImportBlock,
 };
@@ -95,7 +95,7 @@ impl App {
     pub(crate) fn blocks_units(
         &mut self,
         id: BlockId,
-        units: kentos_contracts::BlockUnits,
+        units: kentos_commands::BlockUnits,
         rescale: bool,
     ) {
         let Some(name) = self
@@ -240,7 +240,7 @@ impl App {
     /// Ölçü aralığı, Ölçüyü kır and Kırmayı kaldır on the selected dimensions (docs/adr/0321 §4), the first the base.
     pub(crate) fn dimensions_edit(
         &mut self,
-        make: impl FnOnce(Vec<String>) -> kentos_contracts::DimensionEdit,
+        make: impl FnOnce(Vec<String>) -> kentos_commands::DimensionEdit,
     ) {
         let Some(doc) = self.document.as_mut() else {
             return;
@@ -253,7 +253,7 @@ impl App {
     }
 
     pub(crate) fn blocks_freeze(&mut self) {
-        use kentos_contracts::{CommandResult, Entity};
+        use kentos_commands::{CommandResult, Entity};
         let Some(doc) = self.document.as_mut() else {
             return;
         };
@@ -269,7 +269,7 @@ impl App {
             self.warn("Dinamik bir bloğun yerleştirmesini seçin; Sabit bloğa çevir onu çizdiği hâliyle düz bir bloğa geçirir.");
             return;
         }
-        let input = kentos_contracts::BlocksFreeze {
+        let input = kentos_commands::BlocksFreeze {
             uids,
             name: None,
             expected_revision: None,
@@ -310,7 +310,7 @@ impl App {
         let mut ids = self.selection.ids().iter();
         let selected = match (ids.next(), ids.next()) {
             (Some(slot), None) => match doc.model.get(*slot) {
-                Some(kentos_contracts::Entity::Insert(i)) => Some(i.block),
+                Some(kentos_commands::Entity::Insert(i)) => Some(i.block),
                 _ => None,
             },
             _ => None,
@@ -422,7 +422,7 @@ impl App {
                 let inserts = doc
                     .model
                     .entities()
-                    .filter(|e| matches!(e, kentos_contracts::Entity::Insert(i) if i.block == id))
+                    .filter(|e| matches!(e, kentos_commands::Entity::Insert(i) if i.block == id))
                     .count();
                 if output.changed.contains(&id) {
                     self.say(

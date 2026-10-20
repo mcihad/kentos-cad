@@ -13,8 +13,8 @@ use std::fmt;
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::blocks::placed_blocks;
-use kentos_contracts::{DxfAnnotations, DxfForm, Entity, ExportReport};
+use kentos_commands::blocks::placed_blocks;
+use kentos_commands::{DxfAnnotations, DxfForm, Entity, ExportReport};
 use kentos_interaction::{Format, Level};
 use kentos_ui::label;
 use kentos_ui::widget::segmented::Segmented;
@@ -122,7 +122,7 @@ impl State {
 /// An area with a hole in any of its parts (docs/adr/0143; the web's `hasIslands`).
 fn islanded(e: &Entity) -> bool {
     let some =
-        |h: &Option<Vec<kentos_contracts::RingGeometry>>| h.as_ref().is_some_and(|h| !h.is_empty());
+        |h: &Option<Vec<kentos_commands::RingGeometry>>| h.as_ref().is_some_and(|h| !h.is_empty());
     matches!(e, Entity::Polygon(p) if some(&p.holes) || p.parts.iter().flatten().any(|q| some(&q.holes)))
 }
 
@@ -418,9 +418,9 @@ impl App {
         let without_kind = list
             .iter()
             .filter(|e| {
-                matches!(e, kentos_contracts::Entity::Dimension(d) if matches!(
+                matches!(e, kentos_commands::Entity::Dimension(d) if matches!(
                     d.style,
-                    Some(kentos_contracts::DimensionStyle::Azimuth | kentos_contracts::DimensionStyle::Slope)
+                    Some(kentos_commands::DimensionStyle::Azimuth | kentos_commands::DimensionStyle::Slope)
                 ))
             })
             .count();
@@ -432,13 +432,13 @@ impl App {
         // A text's mask is KentOS's alone: DXF's TEXT has none (docs/adr/0145 §7).
         let masked = list
             .iter()
-            .filter(|e| matches!(e, kentos_contracts::Entity::Text(t) if t.mask))
+            .filter(|e| matches!(e, kentos_commands::Entity::Text(t) if t.mask))
             .count();
         // A leader is a LEADER and its note's MTEXT; its open and dot arrowheads KentOS's data (docs/adr/0146 §8).
-        let leaders: Vec<&kentos_contracts::LeaderEntity> = list
+        let leaders: Vec<&kentos_commands::LeaderEntity> = list
             .iter()
             .filter_map(|e| match e {
-                kentos_contracts::Entity::Leader(l) => Some(l),
+                kentos_commands::Entity::Leader(l) => Some(l),
                 _ => None,
             })
             .collect();
@@ -447,7 +447,7 @@ impl App {
             .filter(|l| {
                 matches!(
                     l.arrow,
-                    Some(kentos_contracts::LeaderArrow::Open | kentos_contracts::LeaderArrow::Dot)
+                    Some(kentos_commands::LeaderArrow::Open | kentos_commands::LeaderArrow::Dot)
                 )
             })
             .count();
@@ -507,7 +507,7 @@ impl App {
             let blocks = placed_blocks(doc.model.blocks(), list.iter().copied());
             // A block with attribute definitions goes with ATTDEFs, its inserts with ATTRIBs (docs/adr/0144 §7).
             let attributed = list.iter().any(|e| match e {
-                kentos_contracts::Entity::Insert(i) => doc
+                kentos_commands::Entity::Insert(i) => doc
                     .model
                     .block(i.block)
                     .is_some_and(|b| !b.attributes.is_empty()),
@@ -532,7 +532,7 @@ impl App {
         // A linked text is a plain text in DXF (docs/adr/0175 §4).
         let linked = list
             .iter()
-            .filter(|e| matches!(e, kentos_contracts::Entity::Text(t) if t.label_of.is_some()))
+            .filter(|e| matches!(e, kentos_commands::Entity::Text(t) if t.label_of.is_some()))
             .count();
         if linked > 0 {
             lines.push(words::text_line(Line::Info, format!("{linked} bağlı yazı düz yazı olarak yazılır: nesnesine bağı DXF'e geçmez, geri okununca kendi başına bir yazıdır.")));
@@ -581,7 +581,7 @@ pub fn dimension_text(
     prefix: &str,
     unit: &str,
     value: f64,
-    look: &kentos_contracts::DimensionLook,
+    look: &kentos_commands::DimensionLook,
 ) -> String {
     format.dimension_in(prefix, unit, value, look)
 }
@@ -625,7 +625,7 @@ fn dxf_export_forms(s: &State) -> Element<'_, Message> {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
 
     /// An area whose only hole is in a later part has islands (docs/adr/0143).
     #[test]

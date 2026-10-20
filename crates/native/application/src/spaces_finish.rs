@@ -11,7 +11,7 @@
 //! (`unknown_pattern`); 5. the expected revision; 6. the layer (`layer_not_found`, `not_a_layer`, `layer_locked`), and an
 //! earlier hatch on a locked layer (`layer_locked`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CEILING_LAYER, CommandResult, CommandWarning, Entity, EntityBase, EntityId, FLOOR_LAYER,
     FinishGrid, FinishSurface, GridOrigin, HatchAssoc, HatchEntity, HatchPattern, HatchPatternSpec,
     HatchPatternType, PatternLine, SpaceEntity, SpacesFinish, SpacesFinished, Vec2,
@@ -72,7 +72,7 @@ fn pattern_known(doc: &Document, name: &str) -> bool {
             .settings()
             .hatch_patterns
             .iter()
-            .any(|d| kentos_contracts::same_hatch_pattern_name(&d.name, name))
+            .any(|d| kentos_commands::same_hatch_pattern_name(&d.name, name))
 }
 
 /// A ceiling grid's pattern: two families of lines, along x `dy` apart and along y `dx` apart, in metres, turned by its
@@ -410,8 +410,8 @@ pub fn plan_in(doc: &Document, input: &SpacesFinish) -> CommandResult<SpacesFini
 pub fn execute(cx: &mut ExecutionContext<'_>, input: SpacesFinish) -> CommandResult<SpacesFinished> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SPACES_FINISH,
-        kentos_contracts::CAD_SPACES_FINISH_VERSION,
+        kentos_commands::CAD_SPACES_FINISH,
+        kentos_commands::CAD_SPACES_FINISH_VERSION,
         input,
         write_execute,
     )

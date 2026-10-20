@@ -5,7 +5,7 @@
 //! docs/adr/0254 §6), built once and rebuilt only when the view, the drawing
 //! (its layers too) or the boundary layer changes.
 
-use kentos_contracts::TrimBoundaries;
+use kentos_commands::TrimBoundaries;
 use kentos_geometry_core::geom::arrangement::Area;
 use kentos_geometry_core::geom::region::FaceIndex;
 use kentos_native_application::region;

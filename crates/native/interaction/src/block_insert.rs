@@ -19,8 +19,8 @@
 //!   Yerleştir writes the insert with them ([`Tool::values_given`]), Vazgeç
 //!   drops the point and the tool waits for the next.
 
-use kentos_contracts::blocks::turn_of;
-use kentos_contracts::{BlockId, BlocksInsert};
+use kentos_commands::blocks::turn_of;
+use kentos_commands::{BlockId, BlocksInsert};
 use kentos_native_application::{ExecutionContext, blocks_insert};
 use kentos_geometry_core::tools::point_text::js_trim;
 

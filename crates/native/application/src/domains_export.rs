@@ -2,7 +2,7 @@
 //! package, read-only; `cad.domains.edit`'s import takes it into another project. The shared cases are
 //! `fixtures/commands/v1/cad.domains.export.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DOMAINS_PACKAGE, DOMAINS_PACKAGE_VERSION, DomainsExport, DomainsPackage,
 };
 use kentos_domain::Document;
@@ -30,7 +30,7 @@ fn package(doc: &Document, input: &DomainsExport) -> Result<DomainsPackage, Stop
             };
             if !out
                 .iter()
-                .any(|x: &kentos_contracts::FieldDomain| x.id == d.id)
+                .any(|x: &kentos_commands::FieldDomain| x.id == d.id)
             {
                 out.push(d.clone());
             }

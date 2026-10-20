@@ -8,7 +8,7 @@
 use std::time::{Duration, Instant};
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{
+use kentos_commands::{
     AccessSource, AuthConfig, CatalogView, GrantRole, InvitationChange, InvitationState,
     ProjectAccessChange, ProjectAccessHolder, ProjectAccessList, ProjectInvitation,
     ProjectInvitations, ProjectPermission, ProjectRole, ProjectStorage, ShareCandidate,

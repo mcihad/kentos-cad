@@ -11,7 +11,7 @@
 use iced::widget::tooltip::Position;
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandResult, Entity, GeorefMade, GeorefMethod, GeorefPoint, RasterFields, RasterGeoref,
     RasterResampling, RastersGeoref,
 };

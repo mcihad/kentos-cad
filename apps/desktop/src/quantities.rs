@@ -6,7 +6,7 @@
 
 use iced::widget::{Column, Row, column, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CellKind, CommandResult, Entity, SpacesEdit, SpacesOperation, SpacesQuantified,
     SpacesQuantities, WorkbookColumn, WorkbookFormat, WorkbookSheet,
 };
@@ -78,11 +78,11 @@ struct Table {
 }
 
 /// A method's short name, a column of its own.
-fn short(m: kentos_contracts::SpaceMethod) -> &'static str {
+fn short(m: kentos_commands::SpaceMethod) -> &'static str {
     match m {
-        kentos_contracts::SpaceMethod::Net => "Net",
-        kentos_contracts::SpaceMethod::Centerline => "Eksen",
-        kentos_contracts::SpaceMethod::Gross => "Brüt",
+        kentos_commands::SpaceMethod::Net => "Net",
+        kentos_commands::SpaceMethod::Centerline => "Eksen",
+        kentos_commands::SpaceMethod::Gross => "Brüt",
     }
 }
 
@@ -192,7 +192,7 @@ impl App {
                     .map_or_else(|| id.clone(), |(_, n)| n)
             })
         };
-        let by = |r: &kentos_contracts::SpaceRow, m: &str| {
+        let by = |r: &kentos_commands::SpaceRow, m: &str| {
             r.by_method
                 .as_ref()
                 .and_then(|b| b.get(m))
@@ -265,13 +265,13 @@ impl App {
                 .collect(),
         };
         // A wall style's name: the project's, else KentOS's own.
-        let styles: Vec<kentos_contracts::WallStyleDef> = self
+        let styles: Vec<kentos_commands::WallStyleDef> = self
             .document
             .as_ref()
             .map(|d| d.model.settings().wall_styles.clone())
             .unwrap_or_default()
             .into_iter()
-            .chain(kentos_contracts::builtin_wall_styles())
+            .chain(kentos_commands::builtin_wall_styles())
             .collect();
         let style_name = |s: &Option<String>| {
             s.as_deref().map_or_else(String::new, |id| {
@@ -332,7 +332,7 @@ impl App {
                 })
                 .collect(),
         };
-        let types = kentos_contracts::builtin_opening_types();
+        let types = kentos_commands::builtin_opening_types();
         let type_name = |s: &Option<String>| {
             s.as_deref().map_or_else(String::new, |id| {
                 types

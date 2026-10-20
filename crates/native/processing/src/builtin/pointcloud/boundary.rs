@@ -81,7 +81,7 @@ fn ring(pts: &[[f64; 2]]) -> Vec<Vec2> {
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let c = &cloud.cloud;

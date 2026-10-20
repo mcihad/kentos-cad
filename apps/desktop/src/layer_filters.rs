@@ -21,7 +21,7 @@ use std::time::Duration;
 
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, EntityId, LayerFilter, LayerNodeType, LayersFilter};
+use kentos_commands::{CommandResult, EntityId, LayerFilter, LayerNodeType, LayersFilter};
 use kentos_domain::Uuid;
 use kentos_interaction::Level;
 use kentos_native_application::layer_filter::compile_filter;

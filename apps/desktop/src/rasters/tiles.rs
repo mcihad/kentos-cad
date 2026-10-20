@@ -22,7 +22,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
 
 use iced::futures::{SinkExt, Stream};
-use kentos_contracts::{RasterRender, RasterSample, RasterStretch, RasterStyle};
+use kentos_commands::{RasterRender, RasterSample, RasterStretch, RasterStyle};
 use kentos_formats::multidim::cube::{Cube, CubeInfo, Part, Want as CubeWant};
 use kentos_formats::multidim::netcdf;
 use kentos_formats::raster::source::{BlockNeed, PYRAMID_FIRST, Put, Reader, decode_block};

@@ -5,7 +5,7 @@
 //! The checks, in the contract's order: the expected revision; the layer is the drawing's, a layer,
 //! not drawn from a service; the subtypes fit its fields (`subtypes_problem`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersComposePlan, LayersComposed, LayersSubtypes,
     subtypes_problem,
 };
@@ -99,8 +99,8 @@ pub fn execute(
 ) -> CommandResult<LayersComposed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_SUBTYPES,
-        kentos_contracts::CAD_LAYERS_SUBTYPES_VERSION,
+        kentos_commands::CAD_LAYERS_SUBTYPES,
+        kentos_commands::CAD_LAYERS_SUBTYPES_VERSION,
         input,
         write_execute,
     )

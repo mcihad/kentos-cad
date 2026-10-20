@@ -2,7 +2,7 @@
 //! the style core's language (`kentos_style_core::expr`), evaluated for each
 //! object with what it reads of it, and the dialog's one-line preview.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_expression::exec::{Slot, Source};
 use kentos_expression::geometry::Shapes;
 use kentos_expression::host::objects_source_of;
@@ -25,7 +25,7 @@ use crate::types::Returns;
 /// Corners of a path or area (holes included, every part of a multi-part
 /// area: docs/adr/0143), for `$köşe`.
 pub fn vertex_count(e: &Entity) -> Option<f64> {
-    let ring = |pts: usize, holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+    let ring = |pts: usize, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         pts + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
     };
     let n = match e {

@@ -250,7 +250,7 @@ fn screens() {
             send(
                 &mut app,
                 Event::ShpExport(super::shp_export::Event::Encoding(super::shp_export::Code(
-                    kentos_contracts::ShpEncoding::Windows1254,
+                    kentos_commands::ShpEncoding::Windows1254,
                 ))),
             );
             picture(&mut app, &format!("shp-{mode}-2-1254"));
@@ -287,7 +287,7 @@ fn screens() {
             let _ = app.update(Message::DialogClosed);
             let out = scratch(&format!("gpkg-paket-{mode}-{width}")).join("teslim");
             let doc = app.document.as_ref().expect("a drawing");
-            let input = kentos_contracts::PackageProject {
+            let input = kentos_commands::PackageProject {
                 path: out.display().to_string(),
                 name: Some("kadastro".into()),
                 from: None,
@@ -403,16 +403,16 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
         "{:?}",
         app.log.lines().last().map(|l| l.text.clone())
     );
-    let out = kentos_contracts::ProjectPackaged {
+    let out = kentos_commands::ProjectPackaged {
         path: "/teslim/paket".into(),
         project: "/teslim/paket/proje.kcad".into(),
         project_bytes: 10,
         project_sha256: "0".repeat(64),
         files: Vec::new(),
-        left: vec![kentos_contracts::PackageLeft {
-            kind: kentos_contracts::PackagedKind::Picture,
+        left: vec![kentos_commands::PackageLeft {
+            kind: kentos_commands::PackagedKind::Picture,
             path: "/yok/kayip.jpg".into(),
-            why: kentos_contracts::LeftWhy::Missing,
+            why: kentos_commands::LeftWhy::Missing,
             at: String::new(),
         }],
         manifest: "/teslim/paket/paket.json".into(),
@@ -420,7 +420,7 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
         faces: Vec::new(),
         bytes: 10,
     };
-    let warning = kentos_contracts::CommandWarning {
+    let warning = kentos_commands::CommandWarning {
         code: "package_left".into(),
         message: "1 bağ pakete kopyalanmadı".into(),
         path: None,
@@ -439,7 +439,7 @@ fn a_moved_file_is_bound_again_and_a_package_is_said() {
 /// A part of komsu.gpkg (docs/adr/0531) bound over a copy, parcel A's bump stretched a metre east; the rest of the
 /// table (B, C outside the area) bound as a second layer once written, to show where it went.
 fn neighbours_scene(name: &str) -> (App, PathBuf) {
-    use kentos_contracts::CallOp;
+    use kentos_commands::CallOp;
     use kentos_native_application::{ExecutionContext, registry};
     let file = scratch(name).join("komsu.gpkg");
     std::fs::copy(gpkg("komsu.gpkg"), &file).expect("copied");
@@ -508,7 +508,7 @@ fn a_part_writes_its_neighbours_while_topology_is_on() {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(whole),
         "file.import.gpkg",
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         serde_json::json!({ "path": file.display().to_string(), "tables": ["parsel"] }),
     )
     .expect("runs");
@@ -577,7 +577,7 @@ fn neighbour_screens() {
                 let answer = kentos_native_application::registry::run(
                     &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
                     command,
-                    kentos_contracts::CallOp::Execute,
+                    kentos_commands::CallOp::Execute,
                     input,
                 )
                 .expect("runs");
@@ -586,7 +586,7 @@ fn neighbour_screens() {
             let answer = kentos_native_application::registry::run(
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
                 "file.import.gpkg",
-                kentos_contracts::CallOp::Execute,
+                kentos_commands::CallOp::Execute,
                 serde_json::json!({ "path": file.display().to_string(), "tables": ["parsel"],
                                     "layers": { "parsel": "import-parsel" } }),
             )
@@ -629,7 +629,7 @@ fn neighbour_screens() {
 /// uzlas.gpkg (docs/adr/0538) bound over a copy, the layer edited as the shared cases edit it, then the copy changed
 /// as QGIS changed it (uzlas-qgis.gpkg): both sides changed since they last matched.
 fn reconcile_scene(name: &str) -> (App, PathBuf) {
-    use kentos_contracts::CallOp;
+    use kentos_commands::CallOp;
     use kentos_native_application::{ExecutionContext, registry};
     let file = scratch(name).join("uzlas.gpkg");
     std::fs::copy(gpkg("uzlas.gpkg"), &file).expect("copied");
@@ -683,7 +683,7 @@ fn reconcile_scene(name: &str) -> (App, PathBuf) {
 #[test]
 fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together() {
     use crate::source_reconcile::Event as R;
-    use kentos_contracts::ReconcileSide;
+    use kentos_commands::ReconcileSide;
     let (mut app, file) = reconcile_scene("gpkg-uzlas");
     let before = std::fs::read(&file).expect("read");
     let _ = app.update(Message::Bound(crate::bound::Event::Write(Some(
@@ -715,7 +715,7 @@ fn a_write_over_a_changed_file_opens_the_reconcile_and_puts_both_sides_together(
 fn reconcile_screens() {
     use crate::source_reconcile::Event as R;
     use iced::Size;
-    use kentos_contracts::ReconcileSide;
+    use kentos_commands::ReconcileSide;
     use kentos_ui::snapshot::Snapshot;
 
     let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");

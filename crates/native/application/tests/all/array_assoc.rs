@@ -3,7 +3,7 @@
 //! items following their path takes when the path changes, and the undo of
 //! that step. The shared cases are `fixtures/commands/v1/cad.entities.array.assoc.json`.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     ArrayLayout, CommandResult, DocumentSnapshotV1, EntitiesArray, Entity, Vec2,
 };
 use kentos_domain::{Document, Slot};
@@ -113,7 +113,7 @@ fn timing() {
 #[test]
 #[ignore = "a timing, run on purpose"]
 fn edit_timing() {
-    use kentos_domain::contracts::{ArrayEdit, ArraysEdit};
+    use kentos_commands::{ArrayEdit, ArraysEdit};
     use kentos_native_application::arrays_edit;
     use std::time::Instant;
     let mut doc = drawing();
@@ -200,7 +200,7 @@ fn edit_timing() {
 #[test]
 #[ignore = "a timing, run on purpose"]
 fn explode_timing() {
-    use kentos_domain::contracts::EntitiesExplode;
+    use kentos_commands::EntitiesExplode;
     use kentos_native_application::entities_explode;
     use std::time::Instant;
     let mut doc = drawing();

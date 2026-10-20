@@ -15,7 +15,7 @@
 //!
 //! While it waits for the point the lines' boxes follow the pointer.
 
-use kentos_contracts::{AnnotationKind, CreateOperation, EntityGeometry};
+use kentos_commands::{AnnotationKind, CreateOperation, EntityGeometry};
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::{core_face, drawing_font};

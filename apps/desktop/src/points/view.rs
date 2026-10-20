@@ -6,7 +6,7 @@
 
 use iced::widget::{button, container, mouse_area, row, space, text};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_interaction::Format;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -98,7 +98,7 @@ fn batch_items(
 
 /// A row's menu's header when the row is not selected: the point by its
 /// name (the web's `rowHeader`).
-pub fn row_header(p: &kentos_contracts::PointEntity) -> String {
+pub fn row_header(p: &kentos_commands::PointEntity) -> String {
     match p
         .base
         .label

@@ -5,7 +5,7 @@
 
 use std::path::Path;
 
-use kentos_contracts::{CommandResult, CommandWarning, GisDerivation, GisDerived};
+use kentos_commands::{CommandResult, CommandWarning, GisDerivation, GisDerived};
 
 use crate::ExecutionContext;
 use crate::checks::{Stop, error};

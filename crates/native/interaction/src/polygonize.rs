@@ -20,7 +20,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{CreateOperation, Entity, EntityGeometry, NewObject};
+use kentos_commands::{CreateOperation, Entity, EntityGeometry, NewObject};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, TextPlace, polygon_ring};
 use kentos_geometry_core::ops::areas::polygon_of_area;
@@ -377,7 +377,7 @@ impl Polygonize {
             return Flow::Exit;
         }
         let attribute = plan.attribute.clone();
-        let input = kentos_contracts::EntitiesCreate {
+        let input = kentos_commands::EntitiesCreate {
             layer_id: cx.doc.layers().active().to_owned(),
             objects: plan
                 .areas
@@ -441,7 +441,7 @@ impl Polygonize {
 /// The area's rings with the elevations their corners carry from the line
 /// work (docs/adr/0142); none where none does (the web's `withElevations`).
 fn with_elevations(g: &mut EntityGeometry, sources: &[Elevated]) {
-    let zs = |pts: &[kentos_contracts::Vec2]| {
+    let zs = |pts: &[kentos_commands::Vec2]| {
         let pts: Vec<Vec2> = pts.iter().map(|p| Vec2::new(p.x, p.y)).collect();
         let out = carry_elevations(&pts, true, None, sources, Carry::Along);
         out.iter().any(Option::is_some).then_some(out)

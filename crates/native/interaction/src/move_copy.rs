@@ -19,7 +19,7 @@
 //! per move or copy, “Taşı” or “Kopyala”; says “2 nesne taşındı: ΔY 12.500
 //! ΔX -7.250”. The ghosts and the length beside the cursor are the web's.
 
-use kentos_contracts::{ArrayLayout, Transform};
+use kentos_commands::{ArrayLayout, Transform};
 use kentos_geometry_core::geom::affine::{Affine, translation};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::editing::line_array_transforms;

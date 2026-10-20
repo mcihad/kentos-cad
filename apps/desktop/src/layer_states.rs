@@ -24,7 +24,7 @@
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{LayerState, LayerStatesOperation, LayersStates};
+use kentos_commands::{LayerState, LayerStatesOperation, LayersStates};
 use kentos_domain::layer_states::{self, LayerStateParts};
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -164,7 +164,7 @@ impl App {
             self.warn(locked);
             return;
         }
-        let file: kentos_contracts::LayerStatesFile = match std::fs::read_to_string(path)
+        let file: kentos_commands::LayerStatesFile = match std::fs::read_to_string(path)
             .map_err(|e| e.to_string())
             .and_then(|t| serde_json::from_str(&t).map_err(|e| e.to_string()))
         {

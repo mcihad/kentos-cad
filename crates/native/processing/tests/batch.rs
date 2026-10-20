@@ -6,7 +6,7 @@
 use std::cell::{Cell, RefCell};
 use std::collections::BTreeMap;
 
-use kentos_contracts::{BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun};
+use kentos_commands::{BatchRow, DocumentSnapshotV1, ProcessingBatch, ProcessingRun};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::processing_host::{BatchEnd, BatchFlow, tools};
 use kentos_processing::record::{Rerun, rerun_kind};

@@ -6,7 +6,7 @@
 //! a `.kstil` file is untrusted data, its drawings are cleaned. The shared cases are
 //! `fixtures/commands/v1/cad.library.edit.json` (`scripts/fixtures/library_command_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, LayerNode, LayersRenderer, LibraryConflict, LibraryEdit, LibraryEdited,
     LibraryOperation, ProjectStyles,
 };
@@ -356,7 +356,7 @@ fn edited(doc: &Document, input: &LibraryEdit) -> Result<(StyleLibrary, LibraryE
             if let Some(o) = file.as_object_mut() {
                 o.remove("exported");
             }
-            out.kstil = Some(kentos_contracts::canonical::canonical_json(&file));
+            out.kstil = Some(kentos_commands::canonical::canonical_json(&file));
         }
         Op::Assign => {
             let Some((item, _)) = lib.get(&id).filter(|(_, s)| *s == Source::Project) else {
@@ -422,8 +422,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LibraryEdit) -> CommandResult<Lib
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LibraryEdit) -> CommandResult<LibraryEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LIBRARY_EDIT,
-        kentos_contracts::CAD_LIBRARY_EDIT_VERSION,
+        kentos_commands::CAD_LIBRARY_EDIT,
+        kentos_commands::CAD_LIBRARY_EDIT_VERSION,
         input,
         write,
     )

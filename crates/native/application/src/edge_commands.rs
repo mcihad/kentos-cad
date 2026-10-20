@@ -7,7 +7,7 @@ macro_rules! trim_like {
     ($name:ident, $act:expr, $id:path, $version:path, $doc:literal) => {
         #[doc = $doc]
         pub mod $name {
-            use kentos_contracts::{
+            use kentos_commands::{
                 CommandResult, EntitiesTrim, EntitiesTrimPlan, EntitiesTrimmed,
             };
 
@@ -41,7 +41,7 @@ macro_rules! corner_like {
     ($name:ident, $input:ty, $id:path, $version:path, $doc:literal) => {
         #[doc = $doc]
         pub mod $name {
-            use kentos_contracts::{CommandResult, EntitiesCornerPlan, EntitiesCornered};
+            use kentos_commands::{CommandResult, EntitiesCornerPlan, EntitiesCornered};
 
             use crate::ExecutionContext;
             use crate::corner;
@@ -72,28 +72,28 @@ macro_rules! corner_like {
 trim_like!(
     entities_trim,
     crate::trim::Act::Trim,
-    kentos_contracts::CAD_ENTITIES_TRIM,
-    kentos_contracts::CAD_ENTITIES_TRIM_VERSION,
+    kentos_commands::CAD_ENTITIES_TRIM,
+    kentos_commands::CAD_ENTITIES_TRIM_VERSION,
     "`cad.entities.trim` v1: Buda."
 );
 trim_like!(
     entities_extend,
     crate::trim::Act::Extend,
-    kentos_contracts::CAD_ENTITIES_EXTEND,
-    kentos_contracts::CAD_ENTITIES_EXTEND_VERSION,
+    kentos_commands::CAD_ENTITIES_EXTEND,
+    kentos_commands::CAD_ENTITIES_EXTEND_VERSION,
     "`cad.entities.extend` v1: Uzat."
 );
 corner_like!(
     entities_fillet,
-    kentos_contracts::EntitiesFillet,
-    kentos_contracts::CAD_ENTITIES_FILLET,
-    kentos_contracts::CAD_ENTITIES_FILLET_VERSION,
+    kentos_commands::EntitiesFillet,
+    kentos_commands::CAD_ENTITIES_FILLET,
+    kentos_commands::CAD_ENTITIES_FILLET_VERSION,
     "`cad.entities.fillet` v1: Köşe yuvarla."
 );
 corner_like!(
     entities_chamfer,
-    kentos_contracts::EntitiesChamfer,
-    kentos_contracts::CAD_ENTITIES_CHAMFER,
-    kentos_contracts::CAD_ENTITIES_CHAMFER_VERSION,
+    kentos_commands::EntitiesChamfer,
+    kentos_commands::CAD_ENTITIES_CHAMFER,
+    kentos_commands::CAD_ENTITIES_CHAMFER_VERSION,
     "`cad.entities.chamfer` v1: Pah."
 );

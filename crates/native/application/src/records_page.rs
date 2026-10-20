@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, MOST_PAGED, PAGED, PagedRecord, PagedSource, ProjectRelation,
     RecordsPage, RecordsPaged, RelationSide,
 };
@@ -59,10 +59,10 @@ fn layer_of<'a>(
     doc: &'a Document,
     id: &str,
     path: &str,
-) -> Result<&'a kentos_contracts::LayerNode, Stop> {
+) -> Result<&'a kentos_commands::LayerNode, Stop> {
     doc.layers()
         .get(id)
-        .filter(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+        .filter(|n| n.kind == kentos_commands::LayerNodeType::Layer)
         .ok_or_else(|| {
             fail(
                 codes::LAYER_NOT_FOUND,
@@ -252,7 +252,7 @@ fn run(doc: &Document, input: &RecordsPage) -> Result<RecordsPaged, Stop> {
         .query
         .as_deref()
         .map(|q| {
-            kentos_contracts::fields::fold(q)
+            kentos_commands::fields::fold(q)
                 .split_whitespace()
                 .map(str::to_owned)
                 .collect()
@@ -262,7 +262,7 @@ fn run(doc: &Document, input: &RecordsPage) -> Result<RecordsPaged, Stop> {
         .into_iter()
         .filter(|(_, e)| {
             words.is_empty() || {
-                let text = kentos_contracts::fields::fold(
+                let text = kentos_commands::fields::fold(
                     &e.base()
                         .attrs
                         .values()

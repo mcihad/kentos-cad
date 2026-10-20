@@ -12,7 +12,7 @@ use std::fmt;
 
 use iced::widget::{Column, row};
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CoordDelimiter, CoordPoint, CoordWriteInput, Entity, ExportReport, TextEncoding, Vec2,
 };
 use kentos_domain::Slot;
@@ -424,7 +424,7 @@ impl App {
 mod tests {
     use std::collections::BTreeMap;
 
-    use kentos_contracts::{EntityBase, PointEntity};
+    use kentos_commands::{EntityBase, PointEntity};
 
     use super::*;
 

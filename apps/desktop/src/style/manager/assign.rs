@@ -5,7 +5,7 @@
 //! of Katman stili; a slot's own symbol kept in Kitaplığım.
 
 use iced::Task;
-use kentos_contracts::{EntitiesSetProperties, Entity, PropertiesOperation};
+use kentos_commands::{EntitiesSetProperties, Entity, PropertiesOperation};
 use kentos_domain::Slot;
 use kentos_native_style::library::{Source, new_item_id};
 use kentos_native_style::renderer::GeometryClass;

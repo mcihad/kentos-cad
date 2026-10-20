@@ -25,7 +25,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesStretch,
     EntitiesStretchPlan, EntitiesStretched, Entity, EntityEdit, EntityId, SubRef,
 };
@@ -125,8 +125,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesStretched> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_STRETCH,
-        kentos_contracts::CAD_ENTITIES_STRETCH_VERSION,
+        kentos_commands::CAD_ENTITIES_STRETCH,
+        kentos_commands::CAD_ENTITIES_STRETCH_VERSION,
         input,
         write_execute,
     )
@@ -524,7 +524,7 @@ fn found(
     }
     if targets.is_empty() {
         // The objects left out for their locked layer are named (docs/adr/0253 §7).
-        return Err(Stop::failed(kentos_contracts::CommandError {
+        return Err(Stop::failed(kentos_commands::CommandError {
             uids: locked,
             ..error(
                 codes::NOTHING_TO_STRETCH,

@@ -4,7 +4,7 @@
 
 use std::time::Instant;
 
-use kentos_domain::contracts::{CommandResult, DocumentSnapshotV1, EntitiesOrder, OrderTo};
+use kentos_commands::{CommandResult, DocumentSnapshotV1, EntitiesOrder, OrderTo};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::{ExecutionContext, entities_order};
 use serde_json::json;

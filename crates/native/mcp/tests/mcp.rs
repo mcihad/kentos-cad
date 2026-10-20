@@ -801,8 +801,8 @@ fn stand_in_desktop(path: &std::path::Path) -> std::thread::JoinHandle<()> {
             name: "Masaüstü".into(),
             srid: 5256,
             plot_scale: 1000.0,
-            workspace: kentos_contracts::Workspace::Cad,
-            drawing_font: kentos_contracts::DrawingFont::Barlow,
+            workspace: kentos_commands::Workspace::Cad,
+            drawing_font: kentos_commands::DrawingFont::Barlow,
             province: None,
             drawing_unit: None,
         })

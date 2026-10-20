@@ -6,13 +6,13 @@
 //! server, Python and MCP. The shared cases are
 //! `fixtures/commands/v1/cad.units.change.json`.
 //!
-//! What a scale multiplies is the contracts' rule (`kentos_contracts::units`),
+//! What a scale multiplies is the contracts' rule (`kentos_commands::units`),
 //! the one DXF's units take; the unit, the home view and the anchor are
 //! written by the step's own op (`Document::set_unit_state`), so undo gives
 //! them back with the objects.
 
-use kentos_contracts::units::{Scale, scale_block, scale_bounds, scale_entity};
-use kentos_contracts::{
+use kentos_commands::units::{Scale, scale_block, scale_bounds, scale_entity};
+use kentos_commands::{
     CommandError, CommandResult, CommandWarning, DrawingUnit, Entity, UnitGeometry, UnitsChange,
     UnitsChanged, Vec2,
 };
@@ -221,8 +221,8 @@ pub fn plan_in(doc: &Document, input: &UnitsChange) -> CommandResult<UnitsChange
 pub fn execute(cx: &mut ExecutionContext<'_>, input: UnitsChange) -> CommandResult<UnitsChanged> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_UNITS_CHANGE,
-        kentos_contracts::CAD_UNITS_CHANGE_VERSION,
+        kentos_commands::CAD_UNITS_CHANGE,
+        kentos_commands::CAD_UNITS_CHANGE_VERSION,
         input,
         write_execute,
     )

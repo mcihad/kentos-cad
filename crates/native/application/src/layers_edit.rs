@@ -11,11 +11,11 @@
 //! `set_layer_fields` (docs/adr/0199 §3), `layer_purge` (docs/adr/0177 §5);
 //! a copy's objects are written by `cad.entities.create`, a merge's moved by
 //! `cad.entities.set`, in the same step. The checks are in the contract's
-//! order (`kentos_contracts::LayersEdit`).
+//! order (`kentos_commands::LayersEdit`).
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockId, CommandResult, CommandWarning, EntitiesCreate, EntitiesSetProperties, Entity,
     LayerEditOperation, LayerNode, LayerNodeType, LayersEdit, LayersEdited, NewObject,
     PropertiesOperation, fields_problem, layer_color_ok,
@@ -292,7 +292,7 @@ fn check(doc: &Document, input: &LayersEdit) -> Result<(), Stop> {
             .settings()
             .line_types
             .iter()
-            .any(|t| kentos_contracts::same_line_type_name(&t.name, name))
+            .any(|t| kentos_commands::same_line_type_name(&t.name, name))
     {
         return Err(fail(
             codes::LINE_TYPE_NOT_FOUND,
@@ -341,8 +341,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersEdit) -> CommandResult<Laye
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersEdit) -> CommandResult<LayersEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_EDIT,
-        kentos_contracts::CAD_LAYERS_EDIT_VERSION,
+        kentos_commands::CAD_LAYERS_EDIT,
+        kentos_commands::CAD_LAYERS_EDIT_VERSION,
         input,
         write_execute,
     )
@@ -401,7 +401,7 @@ fn passed_on<T, U>(result: CommandResult<T>, fallback: &str) -> CommandResult<U>
 
 /// A layer's pattern as the input gives it (docs/adr/0313 §1): a name with its nearest built-in type (unless the
 /// line type is given), none, or a built-in type given alone taking it away.
-fn pattern_into(doc: &Document, style: &mut kentos_contracts::LayerStyle, input: &LayersEdit) {
+fn pattern_into(doc: &Document, style: &mut kentos_commands::LayerStyle, input: &LayersEdit) {
     match &input.line_pattern {
         Some(p) => {
             style.line_pattern.clone_from(p);
@@ -410,7 +410,7 @@ fn pattern_into(doc: &Document, style: &mut kentos_contracts::LayerStyle, input:
                     doc.settings()
                         .line_types
                         .iter()
-                        .find(|t| kentos_contracts::same_line_type_name(&t.name, name))
+                        .find(|t| kentos_commands::same_line_type_name(&t.name, name))
                 })
             {
                 style.line_type = t.nearest();

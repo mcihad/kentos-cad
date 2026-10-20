@@ -5,7 +5,7 @@
 //! a summary (each object's count, least, mean and most). The search is the
 //! run's store's (`Store::nearest`). Edits nothing.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::json;
 

@@ -97,7 +97,7 @@ impl App {
             .filter_map(|s| doc.model.uid(*s))
             .map(|u| u.to_string())
             .collect();
-        let region = kentos_contracts::SelectRegion::Objects { uids };
+        let region = kentos_commands::SelectRegion::Objects { uids };
         selectable::query_in(&doc.model, &self.spatial, self.draft.select_kinds, region)
             .map_or_else(Vec::new, |found| found.slots)
     }

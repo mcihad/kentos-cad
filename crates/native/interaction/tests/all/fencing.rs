@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{Level, MarkerShape, Tone};
 
@@ -403,9 +403,9 @@ fn both_sides_of_a_circle_are_inside_and_outside() {
     let mut b = Bench::new("offset");
     b.add_line("cizim", [-30.0, -30.0], [-29.0, -30.0]);
     b.doc
-        .add(Entity::Circle(kentos_contracts::CircleEntity {
+        .add(Entity::Circle(kentos_commands::CircleEntity {
             base: common::base("cizim"),
-            c: kentos_contracts::Vec2 {
+            c: kentos_commands::Vec2 {
                 x: common::E,
                 y: common::N,
             },

@@ -314,12 +314,12 @@ impl IntersectPoint {
     /// Writes the point, and asks for the next one.
     fn finish(&mut self, at: Option<Vec2>, cx: &mut Context<'_>) {
         let Some(p) = at else { return };
-        let point = kentos_contracts::EntityGeometry::Point {
+        let point = kentos_commands::EntityGeometry::Point {
             p: points::wire(p),
             z: None,
             parts: None,
         };
-        let operation = Some(kentos_contracts::CreateOperation::IntersectPoint);
+        let operation = Some(kentos_commands::CreateOperation::IntersectPoint);
         if let Some(out) = points::write_objects(vec![point], operation, cx) {
             let slot = out
                 .created

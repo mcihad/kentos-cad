@@ -242,7 +242,7 @@ pub enum Event {
     /// Grafik for the run's table (docs/adr/0227 §4): the bottom panel's Grafik tab shows it.
     ChartTable,
     /// Kaydet ▾ for the run's table (docs/adr/0223 §2): written in a format.
-    SaveTableAs(kentos_contracts::WorkbookFormat),
+    SaveTableAs(kentos_commands::WorkbookFormat),
     /// Sonuçları seç, or Seçime yakınlaştır after a selecting tool.
     Results,
     /// Geri al after a run.
@@ -481,14 +481,14 @@ impl App {
                 };
                 let label = window.tool.label.clone();
                 // A tool's table has no field kinds: a plain number is written as a number, anything else as text.
-                let sheet = kentos_contracts::WorkbookSheet {
+                let sheet = kentos_commands::WorkbookSheet {
                     name: label.clone(),
                     columns: table
                         .columns
                         .iter()
-                        .map(|name| kentos_contracts::WorkbookColumn {
+                        .map(|name| kentos_commands::WorkbookColumn {
                             name: name.clone(),
-                            kind: kentos_contracts::CellKind::Auto,
+                            kind: kentos_commands::CellKind::Auto,
                             decimals: None,
                         })
                         .collect(),

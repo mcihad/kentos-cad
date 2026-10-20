@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, TagFinding, TagsCheck};
+use kentos_commands::{CommandResult, TagFinding, TagsCheck};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};

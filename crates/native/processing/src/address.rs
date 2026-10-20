@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::AddressLocator;
+use kentos_commands::AddressLocator;
 use kentos_domain::Document;
 use kentos_geometry_core::crs::{Choice, Datum, System, transform_in};
 use kentos_geometry_core::ops::geocode::{Found, Parsed, Place, Status};

@@ -12,7 +12,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::CallOp;
+use kentos_commands::CallOp;
 use kentos_domain::Slot;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -57,7 +57,7 @@ fn world(name: &str, tag: &str) -> Document {
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     let mut d = Document::new(snapshot, None).expect("opens");
     let path = file.display().to_string();
     for table in ["malik", "parsel", "bina"] {
@@ -213,14 +213,14 @@ mod tests {
         let mut app = app_with_drawing();
         text(&mut app);
         let w = app.relations_window.as_ref().expect("the window");
-        assert!(w.has_filed("parsel-malik", kentos_contracts::RelationState::Text));
+        assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Text));
         let _ = app.update(Message::Relations(relations::Event::Map));
         let w = app.relations_window.as_ref().expect("the window");
-        assert!(w.has_filed("parsel-malik", kentos_contracts::RelationState::Mapped));
+        assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Mapped));
         assert!(said(&app, "GeoPackage ilişkisi olarak eşlendi"));
         let _ = app.update(Message::Relations(relations::Event::Unmap));
         let w = app.relations_window.as_ref().expect("the window");
-        assert!(w.has_filed("parsel-malik", kentos_contracts::RelationState::Text));
+        assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Text));
     }
 
     #[test]
@@ -228,7 +228,7 @@ mod tests {
         let mut app = app_with_drawing();
         foreign(&mut app);
         let w = app.relations_window.as_ref().expect("the window");
-        assert!(w.has_filed("parsel-malik", kentos_contracts::RelationState::Foreign));
+        assert!(w.has_filed("parsel-malik", kentos_commands::RelationState::Foreign));
         // Pressing Map would be refused (the window shows no button for it).
         let _ = app.update(Message::Relations(relations::Event::Map));
         assert!(said(&app, "başka bir temsille ilişkili"));

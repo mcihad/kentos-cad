@@ -18,7 +18,7 @@ use iced::widget::{text, text_input};
 use iced::{Element, Task};
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{ApiFailure, SaveState};
-use kentos_contracts::{
+use kentos_commands::{
     EmptyInput, PROJECT_RENAME, PROJECT_RENAME_VERSION, PROJECT_TRASH, PROJECT_TRASH_VERSION,
     ProjectCatalogChange, ProjectPermission, ProjectRename, ProjectStorage,
 };
@@ -83,29 +83,29 @@ pub enum Settle {
     /// The catalog's archive or trash of the open project (catalog_actions.rs).
     Catalog(
         crate::cloud::catalog_actions::Act,
-        Box<kentos_contracts::ProjectSummary>,
+        Box<kentos_commands::ProjectSummary>,
     ),
     /// A checkpoint of the open project, named once its edits went (catalog_history.rs).
     Checkpoint(
         Box<(
-            kentos_contracts::ProjectSummary,
-            kentos_contracts::CheckpointCreate,
+            kentos_commands::ProjectSummary,
+            kentos_commands::CheckpointCreate,
         )>,
     ),
     /// Proje bilgileri's new name of the open database project; the rest of
     /// the patch goes once it went (catalog_forms.rs).
     Metadata(
         Box<(
-            kentos_contracts::ProjectSummary,
-            kentos_contracts::ProjectMetadataUpdate,
+            kentos_commands::ProjectSummary,
+            kentos_commands::ProjectMetadataUpdate,
             String,
         )>,
     ),
     /// The open project in the other storage mode, once its edits went (catalog_forms.rs).
     Convert(
         Box<(
-            kentos_contracts::ProjectSummary,
-            kentos_contracts::ProjectConvert,
+            kentos_commands::ProjectSummary,
+            kentos_commands::ProjectConvert,
         )>,
     ),
 }

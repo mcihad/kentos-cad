@@ -10,7 +10,7 @@
 //! are `fixtures/commands/v1/cad.standards.{check,apply}.json`
 //! (`scripts/fixtures/standards_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, DimensionStyleDef, DrawingFont, DrawingStandard, LayerNode,
     LayerNodeType, LayerStyle, LayersTranslate, LineType, StandardIssue, StandardIssueKind,
     StandardsApplied, StandardsApply, StandardsCheck, StandardsReport, TextStyleDef, TranslateRule,
@@ -645,8 +645,8 @@ pub fn execute_apply(
 ) -> CommandResult<StandardsApplied> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_STANDARDS_APPLY,
-        kentos_contracts::CAD_STANDARDS_APPLY_VERSION,
+        kentos_commands::CAD_STANDARDS_APPLY,
+        kentos_commands::CAD_STANDARDS_APPLY_VERSION,
         input,
         write_execute,
     )

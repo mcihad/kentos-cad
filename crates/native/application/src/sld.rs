@@ -4,7 +4,7 @@
 //! renderer's references, and the geometry its objects have; and an SLD's renderer goes to the layer through
 //! `cad.layers.renderer`'s write, one undo step “Katman stili”.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, ImportSld, LayerNodeType, LayerStyle, LayersRenderer,
     LineType, PointSymbol, SldImported,
 };
@@ -106,7 +106,7 @@ fn library_symbol(doc: &Document, id: &str) -> Option<Value> {
 pub fn export(
     doc: &Document,
     layer: &str,
-) -> Result<(String, Written), Box<kentos_contracts::CommandError>> {
+) -> Result<(String, Written), Box<kentos_commands::CommandError>> {
     let Some(node) = doc.layers().get(layer) else {
         return Err(Box::new(error(
             codes::LAYER_NOT_FOUND,

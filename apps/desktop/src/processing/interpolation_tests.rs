@@ -9,7 +9,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{DocumentSnapshotV1, Entity, RasterSample};
+use kentos_commands::{DocumentSnapshotV1, Entity, RasterSample};
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};
@@ -56,7 +56,7 @@ fn layer(app: &App, name: &str) -> (String, usize) {
     (id, at)
 }
 
-fn rasters_on(app: &App, layer: &str) -> Vec<kentos_contracts::RasterFields> {
+fn rasters_on(app: &App, layer: &str) -> Vec<kentos_commands::RasterFields> {
     app.document
         .as_ref()
         .expect("open")

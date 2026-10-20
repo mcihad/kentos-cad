@@ -11,7 +11,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 
 use crate::app::{App, Message};

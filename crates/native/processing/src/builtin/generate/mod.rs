@@ -10,7 +10,7 @@ pub mod triangulation;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::vec2::Vec2;
 use serde_json::{Value, json};
 

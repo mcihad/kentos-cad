@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{Entity, LayerNodeType};
+use kentos_commands::{Entity, LayerNodeType};
 
 use super::{Event, Window, coord_export, coord_import, drawing_import, dxf_export};
 use crate::app::{App, Dialog, Message, Picker};
@@ -235,9 +235,9 @@ fn a_local_projects_dxf_goes_in_and_out_in_its_unit() {
     let mut app = app_with_drawing();
     {
         let model = &mut app.document.as_mut().expect("open").model;
-        let settings = kentos_contracts::ProjectSettings {
+        let settings = kentos_commands::ProjectSettings {
             srid: 0,
-            drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+            drawing_unit: Some(kentos_commands::DrawingUnit::Mm),
             ..model.settings().clone()
         };
         model.set_settings(settings);
@@ -273,8 +273,8 @@ fn a_local_projects_dxf_goes_in_and_out_in_its_unit() {
     assert!(text.contains("$INSUNITS\r\n 70\r\n4\r\n"), "millimetres");
     let back = kentos_formats::dxf::read(
         &bytes,
-        &kentos_contracts::DxfReadOptions {
-            unit: Some(kentos_contracts::DrawingUnit::Mm),
+        &kentos_commands::DxfReadOptions {
+            unit: Some(kentos_commands::DrawingUnit::Mm),
             ..Default::default()
         },
     )
@@ -353,7 +353,7 @@ fn a_coordinate_list_export_writes_every_point_exactly() {
     assert_eq!(text.lines().count(), points.len());
     let back = kentos_formats::coords::read(
         text.as_bytes(),
-        &kentos_contracts::CoordReadOptions {
+        &kentos_commands::CoordReadOptions {
             entities: true,
             ..Default::default()
         },
@@ -696,9 +696,9 @@ fn unit_screens() {
             app.apply_settings();
             {
                 let model = &mut app.document.as_mut().expect("open").model;
-                let settings = kentos_contracts::ProjectSettings {
+                let settings = kentos_commands::ProjectSettings {
                     srid: 0,
-                    drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+                    drawing_unit: Some(kentos_commands::DrawingUnit::Mm),
                     ..model.settings().clone()
                 };
                 model.set_settings(settings);
@@ -709,9 +709,9 @@ fn unit_screens() {
 
             // Dosyanın birimi (docs/adr/0257 §4): declared, declared none and chosen, ignored by a
             // project with a coordinate system, blocks in another unit.
-            let local = |app: &mut App, unit: Option<kentos_contracts::DrawingUnit>| {
+            let local = |app: &mut App, unit: Option<kentos_commands::DrawingUnit>| {
                 let model = &mut app.document.as_mut().expect("open").model;
-                let settings = kentos_contracts::ProjectSettings {
+                let settings = kentos_commands::ProjectSettings {
                     srid: 0,
                     drawing_unit: unit,
                     ..model.settings().clone()
@@ -727,7 +727,7 @@ fn unit_screens() {
                 &format!("aktar-{mode}-23-dxf-birim-bildirilen"),
                 size,
             );
-            local(&mut app, Some(kentos_contracts::DrawingUnit::Mm));
+            local(&mut app, Some(kentos_commands::DrawingUnit::Mm));
             app.picker = Picker::File(fixture("dxf-units/unitless.dxf"));
             run(&mut app, "file.import.dxf");
             shot(
@@ -739,7 +739,7 @@ fn unit_screens() {
             send(
                 &mut app,
                 Event::DrawingImport(drawing_import::Event::FileUnit(Some(
-                    kentos_contracts::FileUnit::Cm,
+                    kentos_commands::FileUnit::Cm,
                 ))),
             );
             shot(
@@ -781,7 +781,7 @@ fn unit_screens() {
             send(
                 &mut app,
                 Event::DrawingImport(drawing_import::Event::Closed(Some(
-                    kentos_contracts::ClosedPolylines::Line,
+                    kentos_commands::ClosedPolylines::Line,
                 ))),
             );
             shot(
@@ -821,13 +821,13 @@ fn closed_polylines_go_in_as_the_window_says() {
             })
             .collect()
     };
-    let import = |cad: bool, chosen: Option<kentos_contracts::ClosedPolylines>| {
+    let import = |cad: bool, chosen: Option<kentos_commands::ClosedPolylines>| {
         let mut app = app_with_drawing();
         {
             let model = &mut app.document.as_mut().expect("open").model;
-            let settings = kentos_contracts::ProjectSettings {
+            let settings = kentos_commands::ProjectSettings {
                 srid: 0,
-                drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+                drawing_unit: Some(kentos_commands::DrawingUnit::Mm),
                 ..model.settings().clone()
             };
             model.set_settings(settings);
@@ -851,7 +851,7 @@ fn closed_polylines_go_in_as_the_window_says() {
         assert_eq!(app.dialog, None, "the window closes after the import");
         (app, noted)
     };
-    use kentos_contracts::ClosedPolylines::{Area, Line};
+    use kentos_commands::ClosedPolylines::{Area, Line};
     // The room, the open wide wall, the closed wide wall.
     let areas = [
         (true, false, false),
@@ -884,7 +884,7 @@ fn a_dxf_goes_in_by_its_command_in_the_unit_chosen() {
     let mut app = app_with_drawing();
     {
         let model = &mut app.document.as_mut().expect("open").model;
-        let settings = kentos_contracts::ProjectSettings {
+        let settings = kentos_commands::ProjectSettings {
             srid: 0,
             drawing_unit: None,
             ..model.settings().clone()
@@ -905,7 +905,7 @@ fn a_dxf_goes_in_by_its_command_in_the_unit_chosen() {
     send(
         &mut app,
         Event::DrawingImport(drawing_import::Event::FileUnit(Some(
-            kentos_contracts::FileUnit::Mm,
+            kentos_commands::FileUnit::Mm,
         ))),
     );
     assert!(decided(&app).contains("source: Chosen"), "read again");
@@ -998,7 +998,7 @@ fn a_blocks_attributes_go_out_to_dxf_and_come_back() {
         .find(|b| b.name == "ROGAR")
         .expect("ROGAR written");
     assert_eq!(written.attributes, rogar.attributes);
-    let mine: Vec<&kentos_contracts::InsertEntity> = model
+    let mine: Vec<&kentos_commands::InsertEntity> = model
         .entities()
         .filter_map(|e| match e {
             Entity::Insert(i) if i.block == rogar.id => Some(i),

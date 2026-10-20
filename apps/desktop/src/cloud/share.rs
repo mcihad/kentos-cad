@@ -23,7 +23,7 @@ use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::ApiFailure;
 use kentos_cloud::saving::envelope;
-use kentos_contracts::{
+use kentos_commands::{
     AuthConfig, CommandEnvelope, GrantRole, InvitationChange, PROJECT_ACCESS_REVOKE,
     PROJECT_ACCESS_REVOKE_VERSION, PROJECT_INVITATION_REVOKE, PROJECT_INVITATION_REVOKE_VERSION,
     PROJECT_INVITE, PROJECT_INVITE_VERSION, PROJECT_SHARE, PROJECT_SHARE_VERSION,

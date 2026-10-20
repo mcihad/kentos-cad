@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{Entity, HatchPatternType};
+use kentos_commands::{Entity, HatchPatternType};
 use kentos_interaction::Level;
 
 const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objects.kcad");
@@ -471,7 +471,7 @@ fn divide_places_blocks_aligned_the_ends_and_a_first_distance() {
     assert_eq!(b.last_text(), Some("5 blok kondu."));
     let inserts: Vec<_> = (0..b.doc.len() as u32 + 8)
         .filter_map(|s| match b.doc.get(kentos_domain::Slot(s)) {
-            Some(kentos_contracts::Entity::Insert(i)) => Some(i.clone()),
+            Some(kentos_commands::Entity::Insert(i)) => Some(i.clone()),
             _ => None,
         })
         .collect();

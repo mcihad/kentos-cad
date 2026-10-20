@@ -9,7 +9,7 @@
 
 use iced::Element;
 use iced::widget::column;
-use kentos_contracts::Workspace;
+use kentos_commands::Workspace;
 use kentos_ui::label;
 use kentos_ui::widget::{Dialog, overlay};
 
@@ -131,7 +131,7 @@ impl App {
 mod tests {
     use std::path::PathBuf;
 
-    use kentos_contracts::Workspace;
+    use kentos_commands::Workspace;
 
     use super::Event;
     use crate::app::{App, Dialog, Message};

@@ -21,7 +21,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CornerPick, EditOperation, EntitiesChamfer, EntitiesFillet, EntitiesReverse, EntityEdit,
 };
 use kentos_domain::Slot;

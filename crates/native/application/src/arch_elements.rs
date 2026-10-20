@@ -12,7 +12,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchInfo, ColumnEntity, ColumnFields, ColumnsCreate, ColumnsCreated, ColumnsPlan,
     CommandResult, CommandWarning, Entity, EntityBase, GridEntity, GridFields, GridsCreate,
     GridsCreated, GridsPlan, RampEntity, RampFields, RampsCreate, RampsCreated, RampsPlan,
@@ -248,12 +248,12 @@ fn finish(
 }
 
 fn too_many(n: usize, code: &str, what: &str, path: &str) -> Result<(), Stop> {
-    if n > kentos_contracts::MAX_ARCH_ELEMENTS {
+    if n > kentos_commands::MAX_ARCH_ELEMENTS {
         return Err(fail(
             code,
             format!(
                 "Bir çağrıda en çok {} {what} yazılır; {n} verildi.",
-                kentos_contracts::MAX_ARCH_ELEMENTS
+                kentos_commands::MAX_ARCH_ELEMENTS
             ),
             path,
         ));
@@ -273,7 +273,7 @@ fn last_grid_label(doc: &Document) -> Option<String> {
 
 fn next_of(prev: &Option<String>) -> String {
     prev.as_deref()
-        .map_or_else(|| "A".to_owned(), kentos_contracts::next_label)
+        .map_or_else(|| "A".to_owned(), kentos_commands::next_label)
 }
 
 fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
@@ -357,7 +357,7 @@ fn grids_check(doc: &Document, input: &GridsCreate) -> Result<Checked, Stop> {
         for k in 0..=s.spacings.len() {
             if k > 0 {
                 offset += s.spacings[k - 1];
-                label = kentos_contracts::next_label(&label);
+                label = kentos_commands::next_label(&label);
             }
             let shift = |p: Vec2| Vec2 {
                 x: p.x + nx * offset,
@@ -411,7 +411,7 @@ fn columns_check(doc: &Document, input: &ColumnsCreate) -> Result<Checked, Stop>
             return own.clone();
         }
         let t = tag.clone()?;
-        tag = Some(kentos_contracts::next_label(&t));
+        tag = Some(kentos_commands::next_label(&t));
         Some(t)
     };
     let mut made: Vec<Made> = Vec::new();
@@ -720,8 +720,8 @@ macro_rules! create_command {
             ) -> CommandResult<$created> {
                 crate::call::recorded(
                     cx,
-                    kentos_contracts::$id,
-                    kentos_contracts::$version,
+                    kentos_commands::$id,
+                    kentos_commands::$version,
                     input,
                     write_execute,
                 )

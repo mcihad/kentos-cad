@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use std::time::Instant;
 
-use kentos_contracts::{
+use kentos_commands::{
     BatchRowRan, CommandError, CommandWarning, GpkgExported, GpkgTableExported, ProcessingBatch,
     ProcessingBatched, ProcessingRan, ProcessingRecord, ProcessingRun, ProcessingTool,
     ProcessingTools, ProcessingToolsListed, RecordStep, RecordTotal, RunInput, RunSink, ToolNote,
@@ -349,7 +349,7 @@ impl Host for Headless<'_> {
     }
 }
 
-fn node_ids(nodes: &[kentos_contracts::LayerNode], out: &mut BTreeSet<String>) {
+fn node_ids(nodes: &[kentos_commands::LayerNode], out: &mut BTreeSet<String>) {
     for n in nodes {
         out.insert(n.id.clone());
         node_ids(&n.children, out);
@@ -607,7 +607,7 @@ fn batch_size(input: &ProcessingBatch) -> Result<(), Box<CommandError>> {
 }
 
 /// A row's name in the answer: the label it gave, else “Satır N” (N from 1).
-fn row_label(i: usize, row: &kentos_contracts::BatchRow) -> String {
+fn row_label(i: usize, row: &kentos_commands::BatchRow) -> String {
     row.label
         .as_deref()
         .map(str::trim)
@@ -616,7 +616,7 @@ fn row_label(i: usize, row: &kentos_contracts::BatchRow) -> String {
 }
 
 /// A row as the run it is: the batch's values with the row's own over them, the batch's selection and view.
-fn row_run(input: &ProcessingBatch, row: &kentos_contracts::BatchRow) -> ProcessingRun {
+fn row_run(input: &ProcessingBatch, row: &kentos_commands::BatchRow) -> ProcessingRun {
     let mut parameters = input.parameters.clone();
     for (k, v) in &row.parameters {
         parameters.insert(k.clone(), v.clone());
@@ -635,7 +635,7 @@ fn row_run(input: &ProcessingBatch, row: &kentos_contracts::BatchRow) -> Process
 fn in_row(
     mut e: Box<CommandError>,
     i: usize,
-    row: &kentos_contracts::BatchRow,
+    row: &kentos_commands::BatchRow,
 ) -> Box<CommandError> {
     if let Some(path) = e.path.take() {
         let own = path
@@ -733,7 +733,7 @@ fn definition_digest(model: &Model) -> String {
             }
         }
     }
-    kentos_contracts::encoding::sha256_hex(v.to_string().as_bytes())
+    kentos_commands::encoding::sha256_hex(v.to_string().as_bytes())
 }
 
 /// The tool's version: bumped when what it computes from the same values changes (docs/adr/0529 §2). Every tool is at
@@ -759,7 +759,7 @@ fn record_of(
     tool: &Tool,
     model: Option<&Model>,
     ran: &RunRecord,
-    grids: Vec<kentos_contracts::RecordGrid>,
+    grids: Vec<kentos_commands::RecordGrid>,
 ) -> ProcessingRecord {
     let steps = if model.is_some() {
         ran.steps
@@ -1313,7 +1313,7 @@ fn write_sink(
     let exported = GpkgExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
-        sha256: kentos_contracts::encoding::sha256_hex(&bytes),
+        sha256: kentos_commands::encoding::sha256_hex(&bytes),
         tables: written
             .tables
             .into_iter()

@@ -5,7 +5,7 @@
 //! window. A CAD project's interface only: a CBS project's tools write as
 //! they always did (§4). The web's twin is `apps/web/src/tools/styleOption.ts`.
 
-use kentos_contracts::{
+use kentos_commands::{
     DimensionLook, DimensionStyleDef, ProjectSettings, STANDARD_STYLE, TextFace, TextStyleDef,
     Workspace,
 };
@@ -150,7 +150,7 @@ pub fn take_text(typed: &str, cx: &mut Context<'_>) -> bool {
             if let Some(mm) = height {
                 cx.memory
                     .heights
-                    .set(kentos_contracts::AnnotationKind::Text, Some(mm));
+                    .set(kentos_commands::AnnotationKind::Text, Some(mm));
             }
             cx.memory.text_width_factor = factor.unwrap_or(1.0);
             true
@@ -230,5 +230,5 @@ pub fn dimension_look(cx: &Context<'_>, standard: f64) -> (DimensionLook, f64) {
 /// Standart's value height at the project's scale, metres: the project's
 /// Ölçü height (docs/adr/0205 §1).
 pub fn standard_dimension_height(settings: &ProjectSettings) -> f64 {
-    settings.annotation_height(kentos_contracts::AnnotationKind::Dimension)
+    settings.annotation_height(kentos_commands::AnnotationKind::Dimension)
 }

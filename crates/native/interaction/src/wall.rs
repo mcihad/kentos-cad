@@ -11,7 +11,7 @@
 //! work: its plan is the preview (the faces and the boundaries between components over the body, lightly filled), its
 //! execute the write, one undo step “Duvar” on the active layer in the current colour, weight and line type.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, NewWall, WallJustify, WallStyleDef, WallsCreate, builtin_wall_styles,
     fixed_width,
 };
@@ -52,7 +52,7 @@ pub fn style_key(id: &str) -> u64 {
 }
 
 /// The styles the tool offers: the project's, then KentOS's own the project has not taken.
-pub fn offered(settings: &kentos_contracts::ProjectSettings) -> Vec<WallStyleDef> {
+pub fn offered(settings: &kentos_commands::ProjectSettings) -> Vec<WallStyleDef> {
     let mut all = settings.wall_styles.clone();
     for s in builtin_wall_styles() {
         if !all.iter().any(|p| p.id == s.id) {
@@ -65,7 +65,7 @@ pub fn offered(settings: &kentos_contracts::ProjectSettings) -> Vec<WallStyleDef
 /// The style the session chose, when one of [`offered`] still has its id.
 pub fn chosen(
     memory: &Memory,
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> Option<WallStyleDef> {
     chosen_in(memory, &offered(settings)).cloned()
 }
@@ -307,7 +307,7 @@ pub fn drawn(pts: &[Vec2], bulges: &[f64], closed: bool, cx: &Context<'_>) -> Dr
 
 /// A planned wall as the preview draws it, added to `out`: its body lightly filled, its faces, the boundaries between
 /// its components dashed and an open wall's caps; a wall that cannot be drawn says why.
-pub fn add(e: &kentos_contracts::Entity, out: &mut Drawn) {
+pub fn add(e: &kentos_commands::Entity, out: &mut Drawn) {
     let kentos_geometry_core::entity::Shape::Wall {
         pts,
         bulges,

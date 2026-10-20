@@ -4,7 +4,7 @@
 //! and a lookup row chosen; a parameter its expression computes is shown, not set. Every change goes through
 //! `cad.blocks.parameters` (`set`), the rule's refusal said; Değerler ▾ resets them all (`reset`).
 
-use kentos_contracts::{BlockParameter, InsertEntity, ParamValue};
+use kentos_commands::{BlockParameter, InsertEntity, ParamValue};
 use kentos_domain::Slot;
 use kentos_interaction::fixed;
 
@@ -39,7 +39,7 @@ pub(crate) fn typed(p: &BlockParameter, text: &str) -> Option<ParamValue> {
                 .filter(|s| !s.trim().is_empty())
                 .collect();
             match parts.as_slice() {
-                [x, y] => Some(ParamValue::Point(kentos_contracts::Vec2 {
+                [x, y] => Some(ParamValue::Point(kentos_commands::Vec2 {
                     x: n(x)?,
                     y: n(y)?,
                 })),

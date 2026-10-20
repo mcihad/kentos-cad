@@ -25,7 +25,7 @@
 //!   layer in that step when the drawing lacks it, selects them and leaves;
 //!   Esc leaves.
 
-use kentos_contracts::{
+use kentos_commands::{
     CreateOperation, EntitiesCreate, Entity, EntityGeometry, LabelsMode, NewObject, TextAlign,
     TextFace, TextPath,
 };
@@ -214,7 +214,7 @@ impl LabelsToText {
             Some((uid, scale))
         };
         let linked = cx.memory.labels_linked;
-        let v = |p: Vec2| kentos_contracts::Vec2 { x: p.x, y: p.y };
+        let v = |p: Vec2| kentos_commands::Vec2 { x: p.x, y: p.y };
         let bare = |geometry: EntityGeometry| NewObject {
             line_type: None,
             geometry,

@@ -5,7 +5,7 @@
 //! The checks, in the contract's order: the expected revision; the layer is the drawing's, a layer,
 //! not drawn from a service; the rules fit its fields (`layer_rules_problem`) and compile.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersComposePlan, LayersComposed, LayersRules,
     layer_rules_problem,
 };
@@ -109,8 +109,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersRules) -> CommandResult<Lay
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersRules) -> CommandResult<LayersComposed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_RULES,
-        kentos_contracts::CAD_LAYERS_RULES_VERSION,
+        kentos_commands::CAD_LAYERS_RULES,
+        kentos_commands::CAD_LAYERS_RULES_VERSION,
         input,
         write_execute,
     )

@@ -6,7 +6,7 @@
 //! their streams and writes their watersheds; Havzalar finds the streams
 //! the road crosses.
 
-use kentos_contracts::{Entity, RasterSample};
+use kentos_commands::{Entity, RasterSample};
 use serde_json::{Value, json};
 
 use super::{Event, RunStatus};

@@ -8,7 +8,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::{Document as Model, Slot};
 use kentos_render_wgpu::styled::Bitmap;
 use serde_json::{Value, json};
@@ -118,15 +118,15 @@ pub fn embed(model: &mut Model, slot: Slot, drawing: Option<&Path>) -> Vec<Strin
     };
     edit(
         model,
-        kentos_contracts::ImagesOperation::Embed { uids: Some(vec![uid.to_string()]) },
+        kentos_commands::ImagesOperation::Embed { uids: Some(vec![uid.to_string()]) },
         drawing,
     )
 }
 
 /// Runs `cad.images.edit`: its refusal or warnings, said.
-pub fn edit(model: &mut Model, operation: kentos_contracts::ImagesOperation, drawing: Option<&Path>) -> Vec<String> {
-    use kentos_contracts::CommandResult;
-    let input = kentos_contracts::ImagesEdit {
+pub fn edit(model: &mut Model, operation: kentos_commands::ImagesOperation, drawing: Option<&Path>) -> Vec<String> {
+    use kentos_commands::CommandResult;
+    let input = kentos_commands::ImagesEdit {
         operation,
         drawing: drawing.map(|p| p.display().to_string()),
         expected_revision: None,

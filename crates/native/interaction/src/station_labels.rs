@@ -25,7 +25,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{AnnotationKind, CreateOperation, EntityGeometry};
+use kentos_commands::{AnnotationKind, CreateOperation, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::lrs::{self, Route as Measures};
@@ -86,7 +86,7 @@ struct Route {
 
 impl Route {
     /// The object at `slot` as a route Km yaz walks; none when it has no way.
-    fn of(slot: Slot, e: &kentos_contracts::Entity) -> Option<Route> {
+    fn of(slot: Slot, e: &kentos_commands::Entity) -> Option<Route> {
         let shape = kentos_native_application::geometry::shape(e);
         route_of(&shape)?;
         let measures = kentos_native_application::geometry::route(e)
@@ -111,7 +111,7 @@ pub struct StationLabels {
     seen: Option<(Memory, Format, styles::Seen, bool, bool, Option<Slot>)>,
     /// What the plan was written with: the texts' height (m), face and width.
     height: f64,
-    face: kentos_contracts::TextFace,
+    face: kentos_commands::TextFace,
     width_factor: f64,
 }
 
@@ -149,7 +149,7 @@ impl StationLabels {
             plan: None,
             seen: None,
             height: 1.0,
-            face: kentos_contracts::TextFace::default(),
+            face: kentos_commands::TextFace::default(),
             width_factor: 1.0,
         }
     }
@@ -264,7 +264,7 @@ impl StationLabels {
                     rotation: t.rotation,
                     align: t
                         .align
-                        .and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+                        .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
                     width_factor: (self.width_factor != 1.0).then_some(self.width_factor),
                     mask: false,
                     box_width: None,

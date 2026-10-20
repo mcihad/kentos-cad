@@ -2,7 +2,7 @@
 //! (`Document::set_settings`: an edit, no undo step), as the named views are; the designer keeps its
 //! own undo. The shared cases are `fixtures/commands/v1/cad.forms.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, FormBody, FormIssue, FormRelease, FormsEdit, FormsEdited,
     FormsOp, LayerNodeType, MOST_FORM_RELEASES, MOST_FORM_TEXT, MOST_FORMS, ProjectForm,
     ProjectSettings, body_digest, body_problem, form_id_ok, form_name_ok,
@@ -112,7 +112,7 @@ type Next = (
     ProjectSettings,
     Option<ProjectForm>,
     Vec<CommandWarning>,
-    Option<kentos_contracts::FormBreaking>,
+    Option<kentos_commands::FormBreaking>,
 );
 
 fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
@@ -294,7 +294,7 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     });
                 }
             }
-            let bound = kentos_contracts::bound_fields_digest(
+            let bound = kentos_commands::bound_fields_digest(
                 &s.forms[i].draft,
                 forms::fields(doc, &s.forms[i].layer),
             );
@@ -397,18 +397,18 @@ fn next(doc: &Document, input: &FormsEdit) -> Result<Next, Stop> {
                     "edit.item",
                 ));
             }
-            if form.comments.len() >= kentos_contracts::MOST_FORM_COMMENTS {
+            if form.comments.len() >= kentos_commands::MOST_FORM_COMMENTS {
                 return Err(fail(
                     codes::INVALID_FORM,
                     format!(
                         "Bir formda en çok {} yorum olur; çözülenlerden birini silin.",
-                        kentos_contracts::MOST_FORM_COMMENTS
+                        kentos_commands::MOST_FORM_COMMENTS
                     ),
                     "edit",
                 ));
             }
             let next_id = form.comments.iter().map(|c| c.id).max().unwrap_or(0) + 1;
-            form.comments.push(kentos_contracts::FormComment {
+            form.comments.push(kentos_commands::FormComment {
                 id: next_id,
                 item: item.clone(),
                 author: author.clone(),
@@ -451,7 +451,7 @@ fn answer(
     form: Option<ProjectForm>,
     changed: bool,
     revision: String,
-    breaking: Option<kentos_contracts::FormBreaking>,
+    breaking: Option<kentos_commands::FormBreaking>,
 ) -> FormsEdited {
     let issues: Vec<FormIssue> = form.as_ref().map_or_else(Vec::new, |f| {
         forms::preflight_of(doc, &f.draft, &f.layer, &forms::variables(doc))
@@ -502,8 +502,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FormsEdit) -> CommandResult<Forms
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsEdit) -> CommandResult<FormsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_EDIT,
-        kentos_contracts::CAD_FORMS_EDIT_VERSION,
+        kentos_commands::CAD_FORMS_EDIT,
+        kentos_commands::CAD_FORMS_EDIT_VERSION,
         input,
         write_execute,
     )

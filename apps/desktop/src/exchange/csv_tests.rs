@@ -9,7 +9,7 @@ use super::tests::{count, run, said, send};
 use super::{Event, Window};
 use crate::app::{App, Message, Picker};
 use crate::files_testing::{app_with_drawing, scratch};
-use kentos_contracts::{CsvGeometry, CsvSeparator};
+use kentos_commands::{CsvGeometry, CsvSeparator};
 
 fn csv(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))

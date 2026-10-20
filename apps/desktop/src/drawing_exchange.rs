@@ -14,7 +14,7 @@ use std::sync::atomic::AtomicBool;
 use iced::futures::channel::mpsc;
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{DocumentSnapshotV2, EntityId};
+use kentos_commands::{DocumentSnapshotV2, EntityId};
 use kentos_domain::exchange::{self, Picks, Same, TAKEN_SETTINGS};
 use kentos_interaction::Level;
 use kentos_native_application::exchange_write::{Counts, changes_tree, put_blocks, put_nodes};
@@ -533,7 +533,7 @@ impl App {
         }
         // The annotations at the old general height follow a scale or heights taken (docs/adr/0205 §3).
         let before = doc.model.settings();
-        let change = kentos_contracts::ScaleChange {
+        let change = kentos_commands::ScaleChange {
             from_scale: before.plot_scale,
             to_scale: settings.plot_scale,
             from: before.annotation.clone().unwrap_or_default(),
@@ -707,7 +707,7 @@ impl App {
     /// Dosyadan blok ekle (docs/adr/0193 §3): the drawing in `path` as one block through `file.import.block`
     /// (docs/adr/0316 §3), then Blok ekle with it.
     fn insert_file_block(&mut self, path: &Path) -> Task<Message> {
-        use kentos_contracts::{BlockFileMode, CommandResult, ImportBlock};
+        use kentos_commands::{BlockFileMode, CommandResult, ImportBlock};
         use kentos_native_application::{ExecutionContext, file_import_block};
         let locked = self.tree_locked();
         let Some(doc) = self.document.as_mut() else {
@@ -900,7 +900,7 @@ impl App {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::LayerNode;
+    use kentos_commands::LayerNode;
     use kentos_domain::Slot;
 
     use super::*;

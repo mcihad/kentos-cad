@@ -3,7 +3,7 @@
 //! the device's time; the cases are in Europe/Istanbul (UTC+3 all year).
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{
+use kentos_commands::{
     AccessBlock, GrantRole, InvitationAccepted, InvitationChange, InvitationState,
     ProjectAccessHolder, ProjectAccessList, ProjectInvitation, ProjectRole, ProjectStorage,
 };

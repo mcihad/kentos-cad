@@ -19,8 +19,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use kentos_contracts::identity::uuid_v5;
-use kentos_contracts::{Entity, LayerField, LayerFieldKind, MAX_INTEGER};
+use kentos_commands::identity::uuid_v5;
+use kentos_commands::{Entity, LayerField, LayerFieldKind, MAX_INTEGER};
 use kentos_domain::{Document, Uuid};
 use kentos_geopackage as gpkg;
 use kentos_geopackage::{ColumnKind, Coord, Curve, DataType, GeoPackage, Geometry, Query, Value};
@@ -419,7 +419,7 @@ pub fn read_in(
 ) -> Result<Read, String> {
     // The file's digest read a piece at a time: a large file is not held whole beside its rows (plan/gis.md CBS-42).
     let (size, sha256) = std::fs::File::open(path)
-        .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
         .map_err(|e| format!("“{}” okunamadı: {e}", path.display()))?;
     let gp = GeoPackage::open(path, false).map_err(|e| e.0)?;
     let layers = gp.layers().map_err(|e| e.0)?;
@@ -599,7 +599,7 @@ pub struct Written {
     pub renamed: Vec<(String, String, String)>,
 }
 
-fn c2(p: &kentos_contracts::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
+fn c2(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
     Coord {
         x: p.x,
         y: p.y,
@@ -614,7 +614,7 @@ fn at<T: Copy>(v: &Option<Vec<Option<T>>>, i: usize) -> Option<T> {
 
 /// A path's vertices and bulges as a curve: straight runs as lines, each bulged edge an arc through its middle.
 fn curve_of(
-    pts: &[kentos_contracts::Vec2],
+    pts: &[kentos_commands::Vec2],
     bulges: Option<&Vec<f64>>,
     zs: &Option<Vec<Option<f64>>>,
     ms: &Option<Vec<Option<f64>>>,
@@ -670,10 +670,10 @@ fn curve_of(
 }
 
 fn rings_of(
-    pts: &[kentos_contracts::Vec2],
+    pts: &[kentos_commands::Vec2],
     bulges: Option<&Vec<f64>>,
     zs: &Option<Vec<Option<f64>>>,
-    holes: Option<&Vec<kentos_contracts::RingGeometry>>,
+    holes: Option<&Vec<kentos_commands::RingGeometry>>,
 ) -> Vec<Curve> {
     let mut out = vec![curve_of(pts, bulges, zs, &None, true)];
     for h in holes.into_iter().flatten() {
@@ -691,7 +691,7 @@ enum Row {
 }
 
 fn row_of(e: &Entity) -> Row {
-    use kentos_contracts::Entity as E;
+    use kentos_commands::Entity as E;
     match e {
         E::Record(_) => Row::Record,
         E::Point(p) => {

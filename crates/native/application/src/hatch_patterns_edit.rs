@@ -6,7 +6,7 @@
 //! step. The shared cases are `fixtures/commands/v1/cad.hatchpatterns.edit.json`
 //! (`scripts/fixtures/hatch_pattern_file_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, HatchPatternDef, HatchPatternsEdit, HatchPatternsEdited, HatchPatternsOperation,
     PatLineProblem, hatch_patterns_problem, same_hatch_pattern_name,
 };
@@ -130,8 +130,8 @@ pub fn execute(
 ) -> CommandResult<HatchPatternsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_HATCH_PATTERNS_EDIT,
-        kentos_contracts::CAD_HATCH_PATTERNS_EDIT_VERSION,
+        kentos_commands::CAD_HATCH_PATTERNS_EDIT,
+        kentos_commands::CAD_HATCH_PATTERNS_EDIT_VERSION,
         input,
         |cx, input| {
             if let Err(stop) = check(cx.doc, &input) {
@@ -157,7 +157,7 @@ fn write(doc: &mut Document, input: &HatchPatternsEdit) -> HatchPatternsEdited {
         pat: None,
         revision: String::new(),
     };
-    let put = |settings: &mut kentos_contracts::ProjectSettings,
+    let put = |settings: &mut kentos_commands::ProjectSettings,
                d: HatchPatternDef,
                replace: bool,
                out: &mut HatchPatternsEdited| {

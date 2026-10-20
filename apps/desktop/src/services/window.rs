@@ -12,7 +12,7 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     LayerNodeType, LayerServiceOperation, LayersService, ServiceKind, ServiceLayer,
 };
 use kentos_services::connect::{Choice as Picked, Connecting, Item, suggested_srid};
@@ -230,7 +230,7 @@ impl Window {
 
 /// Where a new service goes in the top of the tree: an opaque one under
 /// everything, a clear one over the services at the bottom (the basemaps).
-fn place_for(nodes: &[kentos_contracts::LayerNode], clear: bool) -> Option<u32> {
+fn place_for(nodes: &[kentos_commands::LayerNode], clear: bool) -> Option<u32> {
     if !clear {
         return None;
     }
@@ -540,7 +540,7 @@ impl App {
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         ) {
-            kentos_contracts::CommandResult::Completed { .. } => {
+            kentos_commands::CommandResult::Completed { .. } => {
                 self.service_window = None;
                 self.dialog = None;
                 self.say(
@@ -567,9 +567,9 @@ impl App {
                     self.warn(why);
                 }
             }
-            kentos_contracts::CommandResult::Failed { error }
-            | kentos_contracts::CommandResult::Conflict { error }
-            | kentos_contracts::CommandResult::NeedsInput { error } => {
+            kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } => {
                 if let Some(w) = &mut self.service_window {
                     w.said = Some((Kind::Error, error.message));
                 }
@@ -732,13 +732,13 @@ impl App {
         // The service's layers, searchable.
         if let Some(o) = w.offer() {
             let many = kind == ServiceKind::Wms || kind == ServiceKind::Arcgis;
-            let needle = kentos_contracts::fields::fold(w.search.trim());
+            let needle = kentos_commands::fields::fold(w.search.trim());
             let mut list = Column::new().spacing(1);
             let mut shown = 0;
             for it in &o.items {
                 if !needle.is_empty()
-                    && !kentos_contracts::fields::fold(&it.title).contains(&needle)
-                    && !kentos_contracts::fields::fold(&it.id).contains(&needle)
+                    && !kentos_commands::fields::fold(&it.title).contains(&needle)
+                    && !kentos_commands::fields::fold(&it.id).contains(&needle)
                 {
                     continue;
                 }
@@ -994,8 +994,8 @@ pub(crate) fn connect_now(
     kind: ServiceKind,
     url: &str,
     conn: Option<(
-        &kentos_contracts::ServiceConnection,
-        Option<&kentos_contracts::ConnectionSecret>,
+        &kentos_commands::ServiceConnection,
+        Option<&kentos_commands::ConnectionSecret>,
     )>,
 ) -> Result<Box<Connecting>, String> {
     let (mut c, mut next) = Connecting::start(kind, url)?;

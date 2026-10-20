@@ -5,7 +5,7 @@
 //! answered is said. Nesnenin üstüne and altına are tools
 //! (`kentos_interaction::draw_order`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EntitiesOrder, EntitiesSelect, OrderTo, SelectKind, SelectRegion,
 };
 use kentos_native_application::{ExecutionContext, entities_order, entities_select};

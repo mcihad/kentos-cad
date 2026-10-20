@@ -9,7 +9,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::NetworkKind;
+use kentos_commands::NetworkKind;
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::{Reorder, Routed};
 
@@ -56,8 +56,8 @@ struct Seen {
     cost: usize,
     costs: Vec<String>,
     format: Option<Format>,
-    def: Option<kentos_contracts::NetworkDef>,
-    list: Vec<kentos_contracts::NetworkDef>,
+    def: Option<kentos_commands::NetworkDef>,
+    list: Vec<kentos_commands::NetworkDef>,
     reorder: Option<Reorder>,
     time: Option<u32>,
 }

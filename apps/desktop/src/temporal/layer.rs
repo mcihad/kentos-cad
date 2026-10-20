@@ -11,7 +11,7 @@
 
 use iced::widget::{Column, container, row, text};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{CommandResult, LayerTime, LayersTime};
+use kentos_commands::{CommandResult, LayerTime, LayersTime};
 use kentos_geometry_core::time::{self, Rule, Unit};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_time};

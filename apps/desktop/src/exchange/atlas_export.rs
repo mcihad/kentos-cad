@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, container, row, scrollable, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{AtlasExported, CommandResult, CommandWarning, ExportAtlas};
+use kentos_commands::{AtlasExported, CommandResult, CommandWarning, ExportAtlas};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 use kentos_plot::atlas::{AtlasInput, AtlasPlanned};

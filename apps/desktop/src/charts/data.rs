@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{Entity, LayerNodeType};
+use kentos_commands::{Entity, LayerNodeType};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::charts::Work;
 use kentos_geometry_core::ops::charts::data::DataSet;

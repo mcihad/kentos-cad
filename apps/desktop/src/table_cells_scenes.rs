@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::DxfForm;
+use kentos_commands::DxfForm;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -29,7 +29,7 @@ fn command(app: &mut App, name: &str, input: Value) {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         name,
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         input,
     )
     .expect("runs");

@@ -6,7 +6,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::Level;
 
 const PI: f64 = std::f64::consts::PI;

@@ -10,7 +10,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, Row, column, container, row, text_editor, text_input};
 use iced::{Background, Border, Center, Element, Fill, Length, Theme};
-use kentos_contracts::{Checkpoint, FileRevision, ProjectState, ProjectStorage, ProjectSummary};
+use kentos_commands::{Checkpoint, FileRevision, ProjectState, ProjectStorage, ProjectSummary};
 use kentos_ui::icon::Icon;
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Choice, Confirm, Dialog, Select, Tip, overlay, tip};
@@ -200,7 +200,7 @@ impl App {
     fn checkpoint_row<'a>(
         &self,
         c: &'a Checkpoint,
-        perms: &[kentos_contracts::ProjectPermission],
+        perms: &[kentos_commands::ProjectPermission],
         me: Option<&str>,
         archived: bool,
         held: bool,
@@ -279,7 +279,7 @@ impl App {
         let p = c.picked()?;
         if let Some(cp) = &c.history.removing {
             let details = [
-                if cp.kind == kentos_contracts::CheckpointKind::Revision {
+                if cp.kind == kentos_commands::CheckpointKind::Revision {
                     "Adlandırdığı revizyon kalır; yalnız ad ve not silinir."
                 } else {
                     "Saklanan anlık görüntünün dosyası da silinir; bu işlem geri alınamaz."
@@ -380,7 +380,7 @@ impl App {
                 }
                 let name_ok = {
                     let n = kentos_interaction::js_trim(&f.name);
-                    !n.is_empty() && n.chars().count() <= kentos_contracts::CHECKPOINT_NAME_MAX
+                    !n.is_empty() && n.chars().count() <= kentos_commands::CHECKPOINT_NAME_MAX
                 };
                 Dialog::new("Kontrol noktası oluştur")
                     .push(body)
@@ -489,7 +489,7 @@ impl App {
 fn revision_row<'a>(
     r: &'a FileRevision,
     marks: &[&'static str],
-    perms: &[kentos_contracts::ProjectPermission],
+    perms: &[kentos_commands::ProjectPermission],
     held: bool,
 ) -> Element<'a, Message> {
     let zone = Zone::system();

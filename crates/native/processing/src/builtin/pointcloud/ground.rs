@@ -6,7 +6,7 @@
 //! slope of the surface is ground (2), a 2 that is not becomes 1, other
 //! classes stay. Two passes: the cells, then the classes written.
 
-use kentos_contracts::CloudRender;
+use kentos_commands::CloudRender;
 use kentos_pointcloud::ops::ground::{Ground, Params};
 use serde_json::json;
 
@@ -99,7 +99,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let d = Params::default();
@@ -124,7 +124,7 @@ fn go(
     let mut g = Ground::new(cloud.cloud.rect(), p)
         .ok_or("Zemin süzgecinin ızgarası kurulamadı: hücre çok küçük ya da değerler geçersiz.")?;
     let at = place(files, r, &sources[0], "-zemin")?;
-    let copc = at.format == kentos_contracts::CloudFormat::Copc;
+    let copc = at.format == kentos_commands::CloudFormat::Copc;
     let write_to = if copc { 0.6 } else { 1.0 };
     pass(
         files,

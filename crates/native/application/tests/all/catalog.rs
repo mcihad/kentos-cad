@@ -5,7 +5,7 @@
 //! (apps/web/src/product/registry.test.ts) are held to theirs the same way.
 use std::collections::BTreeSet;
 
-use kentos_contracts::{CommandHost, FILE_COMMANDS, catalog};
+use kentos_commands::{CommandHost, FILE_COMMANDS, catalog};
 use kentos_native_application::DESKTOP_COMMANDS;
 
 #[test]

@@ -17,7 +17,7 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{Selection, Spatial};
 use kentos_render_wgpu::scene::{self, Highlight};
@@ -190,7 +190,7 @@ fn objects_of<'a>(
 #[cfg(test)]
 mod tests {
     use iced::{Point, Rectangle};
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
     use kentos_render_wgpu::RenderSettings;
     use kentos_render_wgpu::Vec2;
     use kentos_ui::theme::Mode;
@@ -251,7 +251,7 @@ mod tests {
     fn highlight_costs_on_a_large_drawing() {
         use iced::advanced::renderer::Headless;
         use iced::widget::canvas::{self, LineDash, Path, Stroke};
-        use kentos_contracts::{EntityBase, LineEntity, PathEntity, Vec2 as Wire};
+        use kentos_commands::{EntityBase, LineEntity, PathEntity, Vec2 as Wire};
         use std::time::Instant;
 
         let Some(renderer) = iced::futures::executor::block_on(<iced::Renderer as Headless>::new(

@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{CommandWarning, ExportShp, ShpEncoding, ShpExported};
+use kentos_commands::{CommandWarning, ExportShp, ShpEncoding, ShpExported};
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};

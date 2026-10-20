@@ -19,7 +19,7 @@ use iced::alignment::Vertical;
 use iced::widget::canvas::{self, Frame, LineJoin, Stroke};
 use iced::widget::text;
 use iced::{Color, Element, Fill, Font, Pixels, Point, Rectangle, Renderer, Theme, Vector, mouse};
-use kentos_contracts::{DrawingFont, ServiceKind, ServiceLayer};
+use kentos_commands::{DrawingFont, ServiceKind, ServiceLayer};
 use kentos_domain::Document;
 use kentos_render_wgpu::Camera;
 use kentos_render_wgpu::styled::service_tiles::{display_zoom, in_view};

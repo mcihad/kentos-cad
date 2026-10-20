@@ -4,7 +4,7 @@
 //! WKT 1 as GDAL writes it (fixtures/crs/v1/esri-prj.json, `scripts/fixtures/esri_prj.py`), which ArcGIS and QGIS read
 //! back to its EPSG code; a project's own definition as OGC WKT 1 (read as a custom system); none for a local project.
 
-use kentos_contracts::{BlockDefinition, Entity, LayerNodeType, ShpEncoding};
+use kentos_commands::{BlockDefinition, Entity, LayerNodeType, ShpEncoding};
 use kentos_domain::Document;
 use kentos_formats::shp::write::{self, DbfEncoding, Input, Layer, Written};
 

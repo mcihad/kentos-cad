@@ -12,8 +12,8 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     AssetVia, BlockDefinition, BlockId, CommandResult, CommandWarning, DocumentSnapshotV2, Entity, EntityBase, InsertEntity,
     MAX_UNDERLAY_FADE, UnderlayLook, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefSource, XrefState, XrefsEdit, XrefsEdited, XrefsList,
     XrefsListed, XrefsOperation,
@@ -55,10 +55,10 @@ fn canonical(p: &Path) -> PathBuf {
 
 /// The reference named `name` (case folded), with its source.
 fn find<'d>(doc: &'d Document, name: &str) -> Result<(&'d BlockDefinition, XrefSource), Stop> {
-    let key = kentos_contracts::blocks::name_key(name);
+    let key = kentos_commands::blocks::name_key(name);
     doc.blocks()
         .iter()
-        .find(|b| b.xref.is_some() && kentos_contracts::blocks::name_key(&b.name) == key)
+        .find(|b| b.xref.is_some() && kentos_commands::blocks::name_key(&b.name) == key)
         .and_then(|b| Some((&**b, b.xref.clone()?)))
         .ok_or_else(|| {
             fail(
@@ -383,7 +383,7 @@ fn check(doc: &Document, input: &XrefsEdit) -> Result<(Plan, Vec<CommandWarning>
         }
         XrefsOperation::Paths { paths } => {
             checks::revision(doc, input.expected_revision.as_deref())?;
-            Plan::Paths(kentos_contracts::sanitized_xref_paths(paths.clone()))
+            Plan::Paths(kentos_commands::sanitized_xref_paths(paths.clone()))
         }
         XrefsOperation::Bind { name, mode } => {
             let (def, x) = find(doc, name)?;
@@ -614,7 +614,7 @@ pub mod edit {
     }
 
     pub fn execute(cx: &mut ExecutionContext<'_>, input: XrefsEdit) -> CommandResult<XrefsEdited> {
-        crate::call::recorded(cx, kentos_contracts::CAD_XREFS_EDIT, kentos_contracts::CAD_XREFS_EDIT_VERSION, input, |cx, input| {
+        crate::call::recorded(cx, kentos_commands::CAD_XREFS_EDIT, kentos_commands::CAD_XREFS_EDIT_VERSION, input, |cx, input| {
             match write(cx.doc, &input) {
                 Ok((output, warnings)) => CommandResult::Completed { output, warnings },
                 Err(stop) => stop.into(),
@@ -642,10 +642,10 @@ fn affected_by(doc: &Document, uids: &[String]) -> (Vec<String>, Vec<String>) {
         return (Vec::new(), Vec::new());
     }
     let mut sheets: Vec<String> = Vec::new();
-    let input = kentos_contracts::SheetsSet { uids: Some(uids.to_vec()) };
+    let input = kentos_commands::SheetsSet { uids: Some(uids.to_vec()) };
     if let Ok(set) = crate::sheets_set::set_of(doc, &input) {
         for a in set.affected.unwrap_or_default() {
-            if !a.reasons.contains(&kentos_contracts::AffectReason::Shows) {
+            if !a.reasons.contains(&kentos_commands::AffectReason::Shows) {
                 continue;
             }
             if let Some(s) = set.sheets.iter().find(|s| s.id == a.sheet)

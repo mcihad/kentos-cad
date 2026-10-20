@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, NumberPlace, TextAlign, TextEdit, TextEntity, TextField,
     TextRun, TextsEdit, TextsEdited, TextsPlan, Vec2,
 };
@@ -475,8 +475,8 @@ pub fn plan_in(doc: &Document, input: &TextsEdit) -> CommandResult<TextsPlan> {
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TextsEdit) -> CommandResult<TextsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_TEXTS_EDIT,
-        kentos_contracts::CAD_TEXTS_EDIT_VERSION,
+        kentos_commands::CAD_TEXTS_EDIT,
+        kentos_commands::CAD_TEXTS_EDIT_VERSION,
         input,
         write_execute,
     )

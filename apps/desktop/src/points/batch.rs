@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesDelete, EntitiesEdit, EntitiesSetProperties, Entity,
     EntityEdit, EntityGeometry, PointEntity, PropertiesOperation,
 };
@@ -580,7 +580,7 @@ fn run_dedupe(doc: &mut Document, slots: &[Slot], op: &Op, follow: bool) -> Outc
             let mut changes = vec![EntityEdit::Update {
                 uid: uid(doc, m.slot),
                 geometry: EntityGeometry::Point {
-                    p: kentos_contracts::Vec2 {
+                    p: kentos_commands::Vec2 {
                         x: m.to.x,
                         y: m.to.y,
                     },

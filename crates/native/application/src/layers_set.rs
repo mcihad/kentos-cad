@@ -6,7 +6,7 @@
 //! the file but is no edit. The shared cases are in
 //! `fixtures/commands/v1/cad.layers.set.json`.
 
-use kentos_contracts::{CommandResult, LayerNodeType, LayerSetOperation, LayersChanged, LayersSet};
+use kentos_commands::{CommandResult, LayerNodeType, LayerSetOperation, LayersChanged, LayersSet};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;
@@ -157,8 +157,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersSet) -> CommandResult<Layer
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersSet) -> CommandResult<LayersChanged> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_SET,
-        kentos_contracts::CAD_LAYERS_SET_VERSION,
+        kentos_commands::CAD_LAYERS_SET,
+        kentos_commands::CAD_LAYERS_SET_VERSION,
         input,
         write_execute,
     )

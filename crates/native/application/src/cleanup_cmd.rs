@@ -6,7 +6,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CLEANUP_TOLERANCE, CleanupIgnore, CleanupReport, CommandResult, CommandWarning, EditOperation,
     EntitiesCleaned, EntitiesCleanup, EntitiesCleanupPlan, EntitiesEdit, Entity, EntityEdit,
     EntityGeometry, LineEntity, MAX_CLEANUP_TOLERANCE, PathEntity, Vec2,
@@ -644,8 +644,8 @@ pub mod entities_cleanup {
     ) -> CommandResult<EntitiesCleaned> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_CLEANUP,
-            kentos_contracts::CAD_ENTITIES_CLEANUP_VERSION,
+            kentos_commands::CAD_ENTITIES_CLEANUP,
+            kentos_commands::CAD_ENTITIES_CLEANUP_VERSION,
             input,
             |cx, input| {
                 let Checked {

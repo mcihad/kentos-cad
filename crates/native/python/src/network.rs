@@ -7,7 +7,7 @@
 //! `HostError` with the apps' words. Nothing here writes: Python writes what it
 //! keeps with `cad.entities.create`.
 
-use kentos_contracts::NetworkDef;
+use kentos_commands::NetworkDef;
 use kentos_geometry_core::api::json::{ToJson, to_string};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::ops::network::{NetworkSession, Refusal, Reorder, TraceKind, points_of};
@@ -243,7 +243,7 @@ impl PyNetwork {
         format!(
             "<kentos._native.Network {:?}, {} ağı>",
             self.def.name,
-            if self.def.kind == kentos_contracts::NetworkKind::Road {
+            if self.def.kind == kentos_commands::NetworkKind::Road {
                 "yol"
             } else {
                 "şebeke"

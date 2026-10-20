@@ -5,7 +5,7 @@
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use kentos_contracts::{
+use kentos_commands::{
     CatalogSort, CatalogView, ConflictReason, ProjectRole, ProjectStorage, TenantKind,
 };
 

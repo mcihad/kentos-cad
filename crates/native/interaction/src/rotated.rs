@@ -9,7 +9,7 @@
 //! (`shapes::rectangle_ring`); the side the pointer is on is the core's
 //! `sideDistance`.
 
-use kentos_contracts::{RectangleCreate, RectangleFrame};
+use kentos_commands::{RectangleCreate, RectangleFrame};
 use kentos_geometry_core::geom::shapes::side_distance;
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_native_application::{ExecutionContext, shapes};

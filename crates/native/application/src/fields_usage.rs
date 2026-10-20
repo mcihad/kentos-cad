@@ -5,7 +5,7 @@
 //! The checks, in order: the layer is the drawing's, a layer, not drawn from a service; the field is
 //! the layer's, by its exact name.
 
-use kentos_contracts::{CommandResult, FieldsUsage, FieldsUsed, LayerField, LayerNodeType};
+use kentos_commands::{CommandResult, FieldsUsage, FieldsUsed, LayerField, LayerNodeType};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;

@@ -34,7 +34,8 @@ time = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true }
-# The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature.
+# The contracts' JSON Schema feature; the command catalog (tests/catalog.rs) is built in kentos-commands (docs/adr/0540).
 kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 # The template commands' catalog entries (tests/sheet_templates.rs).
 kentos-sheet = { path = "../../shared/sheet", default-features = false, features = ["schema"] }

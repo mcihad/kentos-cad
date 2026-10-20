@@ -6,7 +6,7 @@
 //! checks after the shape's own. The shared cases are `fixtures/commands/v1/cad.rectangle.create.json` and
 //! `cad.polygon.regular.json` (`scripts/fixtures/shape_command_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, PolygonCreate, PolygonCreated, PolygonPlan, RectangleCorners, RectangleCreate,
     RectangleFrame, RegularFrame, RegularPolygonCreate, Vec2 as Wire,
 };
@@ -186,7 +186,7 @@ fn regular_ring_in(input: &RegularPolygonCreate) -> Result<Vec<Vec2>, Stop> {
     };
     checks::point(*a, which.0, &format!("frame.{}", which.2))?;
     checks::point(*b, which.1, &format!("frame.{}", which.3))?;
-    if !(3..=kentos_contracts::MOST_SIDES).contains(&input.sides) {
+    if !(3..=kentos_commands::MOST_SIDES).contains(&input.sides) {
         return Err(refuse(
             codes::INVALID_COUNT,
             "Kenar sayısı 3 ile 1024 arasında olmalı.",
@@ -215,14 +215,14 @@ fn regular_ring_in(input: &RegularPolygonCreate) -> Result<Vec<Vec2>, Stop> {
 /// The rectangle's ring as the command writes it, or the command's refusal: the tools' preview.
 pub fn rectangle_ring(
     input: &RectangleCreate,
-) -> Result<Ring, Box<kentos_contracts::CommandError>> {
+) -> Result<Ring, Box<kentos_commands::CommandError>> {
     rectangle_ring_in(input).map_err(|stop| Box::new(stop.into_error()))
 }
 
 /// The regular polygon's ring as the command writes it, or the command's refusal: the tool's preview.
 pub fn regular_ring(
     input: &RegularPolygonCreate,
-) -> Result<Vec<Vec2>, Box<kentos_contracts::CommandError>> {
+) -> Result<Vec<Vec2>, Box<kentos_commands::CommandError>> {
     regular_ring_in(input).map_err(|stop| Box::new(stop.into_error()))
 }
 
@@ -286,8 +286,8 @@ pub fn execute_rectangle(
 ) -> CommandResult<PolygonCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RECTANGLE_CREATE,
-        kentos_contracts::CAD_RECTANGLE_CREATE_VERSION,
+        kentos_commands::CAD_RECTANGLE_CREATE,
+        kentos_commands::CAD_RECTANGLE_CREATE_VERSION,
         input,
         |cx, input| match rectangle_ring_in(&input) {
             Ok(ring) => polygon::write(cx, rectangle_polygon(&input, ring)),
@@ -325,8 +325,8 @@ pub fn execute_regular(
 ) -> CommandResult<PolygonCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_POLYGON_REGULAR,
-        kentos_contracts::CAD_POLYGON_REGULAR_VERSION,
+        kentos_commands::CAD_POLYGON_REGULAR,
+        kentos_commands::CAD_POLYGON_REGULAR_VERSION,
         input,
         |cx, input| match regular_ring_in(&input) {
             Ok(pts) => polygon::write(cx, regular_polygon_input(&input, pts)),

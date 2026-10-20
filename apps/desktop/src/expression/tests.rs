@@ -20,7 +20,7 @@ const PARCELS: &str = include_str!("../../../../fixtures/processing/v1/parcels.k
 fn app_with_parcels() -> App {
     let (mut app, _) = App::boot(None);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(PARCELS).expect("the parcels read");
+        kentos_commands::DocumentSnapshotV1::from_json(PARCELS).expect("the parcels read");
     let doc = Document::new(snapshot, None).expect("the parcels open");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -551,11 +551,11 @@ const QUERIES: &str = include_str!("../../../../fixtures/processing/v1/queries.k
 /// builder open on `expression`.
 fn calculate_on_parcels(expression: &str) -> App {
     use crate::processing::Event as P;
-    use kentos_contracts::{ProjectVariable, VariableKind, VariableValue};
+    use kentos_commands::{ProjectVariable, VariableKind, VariableValue};
 
     let (mut app, _) = App::boot(None);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(QUERIES).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(QUERIES).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("the drawing opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     let doc = app.document.as_mut().expect("a drawing");

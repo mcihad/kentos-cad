@@ -308,7 +308,7 @@ impl App {
     pub(crate) fn variables_of(
         &self,
         name: &str,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
     ) -> Vec<Variable> {
         let utc = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -934,7 +934,7 @@ impl App {
                 .iter()
                 .find_map(|f| crate::forms::designer::find(&f.draft.items, item))
                 .and_then(|i| match i {
-                    kentos_contracts::FormItem::Field(f) => {
+                    kentos_commands::FormItem::Field(f) => {
                         fields.iter().find(|l| l.key() == f.field)
                     }
                     _ => None,

@@ -12,7 +12,7 @@ use std::collections::HashMap;
 
 use crate::geometry::{edit_geometry, shape};
 use crate::{ExecutionContext, edit};
-use kentos_contracts::{
+use kentos_commands::{
     DimensionStyleDef, EditOperation, EntitiesEdit, Entity, EntityEdit, LeaderStyleDef, TextLook, TextStyleDef,
     follow_dimension_style, follow_leader_style, follow_text_style,
 };
@@ -74,7 +74,7 @@ fn follow(doc: &mut Document, operation: EditOperation, updates: Vec<(Slot, Enti
         expected_revision: None,
     };
     match edit::execute(&mut ExecutionContext::new(doc), input) {
-        kentos_contracts::CommandResult::Completed { warnings, .. } => Saved {
+        kentos_commands::CommandResult::Completed { warnings, .. } => Saved {
             changed: n,
             locked,
             said: warnings.into_iter().map(|w| w.message).collect(),
@@ -105,7 +105,7 @@ pub fn save_leader_styles(doc: &mut Document, next: Vec<LeaderStyleDef>) -> Save
             continue;
         };
         let next = match after.get(&old.id) {
-            None => kentos_contracts::LeaderEntity { leader_style: None, ..l.clone() },
+            None => kentos_commands::LeaderEntity { leader_style: None, ..l.clone() },
             Some(now) if now == old => continue,
             Some(now) => follow_leader_style(old, now, l, scale),
         };
@@ -132,10 +132,10 @@ pub type WallFollowers = (Vec<(Slot, Entity)>, usize);
 /// ends and fill, and the width they fix (its own when one component takes the rest); a wall of a style removed keeps
 /// its look without the link. Walls on locked layers are counted, not changed. A wall the new components do not fit,
 /// or whose faces they make undrawable, is the refusal (its code and words).
-pub fn wall_followers(doc: &Document, next: &[kentos_contracts::WallStyleDef]) -> Result<WallFollowers, (&'static str, String)> {
-    let before: HashMap<&str, &kentos_contracts::WallStyleDef> =
+pub fn wall_followers(doc: &Document, next: &[kentos_commands::WallStyleDef]) -> Result<WallFollowers, (&'static str, String)> {
+    let before: HashMap<&str, &kentos_commands::WallStyleDef> =
         doc.settings().wall_styles.iter().map(|s| (s.id.as_str(), s)).collect();
-    let after: HashMap<&str, &kentos_contracts::WallStyleDef> = next.iter().map(|s| (s.id.as_str(), s)).collect();
+    let after: HashMap<&str, &kentos_commands::WallStyleDef> = next.iter().map(|s| (s.id.as_str(), s)).collect();
     let (mut updates, mut locked) = (Vec::new(), 0);
     for e in doc.entities() {
         let Entity::Wall(w) = e else { continue };
@@ -150,7 +150,7 @@ pub fn wall_followers(doc: &Document, next: &[kentos_contracts::WallStyleDef]) -
                 next.wall.components = now.components.clone();
                 next.wall.caps = now.caps;
                 next.wall.fill = now.fill.clone();
-                if let Some(width) = kentos_contracts::fixed_width(&now.components) {
+                if let Some(width) = kentos_commands::fixed_width(&now.components) {
                     next.wall.width = width;
                 }
             }
@@ -178,7 +178,7 @@ pub fn wall_followers(doc: &Document, next: &[kentos_contracts::WallStyleDef]) -
 
 /// Saves the wall styles (docs/adr/0339 §2): the table, then the walls that follow them in one step “Duvar stili”;
 /// those on locked layers left and counted. The command has refused a table its walls cannot take.
-pub fn save_wall_styles(doc: &mut Document, next: Vec<kentos_contracts::WallStyleDef>) -> Saved {
+pub fn save_wall_styles(doc: &mut Document, next: Vec<kentos_commands::WallStyleDef>) -> Saved {
     let (updates, locked) = wall_followers(doc, &next).unwrap_or_default();
     let mut settings = doc.settings().clone();
     settings.wall_styles = next;

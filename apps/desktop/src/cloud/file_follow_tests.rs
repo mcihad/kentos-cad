@@ -4,7 +4,7 @@
 //! revision uploads nothing; the conflict's four answers; a resync never
 //! reopens the drawing; a deleted project ends saving there.
 
-use kentos_contracts::{
+use kentos_commands::{
     ConflictReason, EventPage, EventRecord, FeatureConflict, FileCommitted, FileRevision,
     FileRevisions, ProjectState, ProjectStorage,
 };

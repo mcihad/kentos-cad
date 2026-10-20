@@ -13,7 +13,7 @@
 use std::collections::HashSet;
 use std::convert::Infallible;
 
-use kentos_contracts::{
+use kentos_commands::{
     Clip, CommandResult, EntitiesCopy, EntitiesDelete, EntitiesPaste, Entity, LayerNode,
     LayerNodeType, PasteReport,
 };

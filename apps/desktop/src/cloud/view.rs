@@ -7,7 +7,7 @@ use iced::widget::{
 };
 use iced::{Element, Fill, Length};
 
-use kentos_contracts::ProjectStorage;
+use kentos_commands::ProjectStorage;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::{Banner, Choice, Dialog, Form, RadioGroup, Select, overlay, progress};
 use kentos_ui::{label, style};
@@ -291,7 +291,7 @@ impl App {
         let shown = 12;
         let mut rows = Column::new().spacing(4);
         for c in list.iter().take(shown) {
-            let what = if c.reason == kentos_contracts::ConflictReason::Project {
+            let what = if c.reason == kentos_commands::ConflictReason::Project {
                 "Proje bilgileri (katman ağacı, ayarlar, ad, stiller)".to_owned()
             } else {
                 describe(doc, &c.id, c.server.as_ref().map(|r| &r.entity))
@@ -366,7 +366,7 @@ impl App {
 pub(super) fn describe(
     doc: &crate::document::Document,
     id: &str,
-    server: Option<&kentos_contracts::Entity>,
+    server: Option<&kentos_commands::Entity>,
 ) -> String {
     if let Some(block) = kentos_cloud::sync::block_of_key(id) {
         return match doc.model.block(block) {

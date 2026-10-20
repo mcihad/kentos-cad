@@ -10,8 +10,8 @@
 use std::collections::{BTreeMap, HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, ImportPdf, ImportedLayer, LayerNodeType, PdfCurveOutput, PdfImported,
     PdfLeftOut, PdfTaken,
 };
@@ -76,8 +76,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportPdf) -> CommandResult<PdfIm
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportPdf) -> CommandResult<PdfImported> {
     crate::call::recorded(
         cx,
-        kentos_contracts::FILE_IMPORT_PDF,
-        kentos_contracts::FILE_IMPORT_PDF_VERSION,
+        kentos_commands::FILE_IMPORT_PDF,
+        kentos_commands::FILE_IMPORT_PDF_VERSION,
         input,
         |cx, input| match run(cx.doc, &input) {
             Ok((output, warnings)) => CommandResult::Completed { output, warnings },

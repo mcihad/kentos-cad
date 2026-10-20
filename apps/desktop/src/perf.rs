@@ -25,7 +25,7 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::time::Instant;
 
-use kentos_contracts::{
+use kentos_commands::{
     AngleUnit, AreaUnit, DocumentSnapshotV2, Entity, EntityBase, EntityId, LayerNode,
     LayerNodeType, LayerStyle, LineType, PathEntity, ProjectSettings, ProjectStyles, Vec2,
 };

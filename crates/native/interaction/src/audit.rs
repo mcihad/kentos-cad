@@ -13,7 +13,7 @@
 //!
 //! The plan and the write are the command's: the tool gives it the options.
 
-use kentos_contracts::{
+use kentos_commands::{
     AuditPurge, CommandResult, DrawingAudit, DrawingAudited, ResourceKind, UnusedResource,
 };
 use kentos_domain::Uuid;

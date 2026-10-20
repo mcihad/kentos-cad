@@ -11,7 +11,7 @@ pub mod nearest;
 pub mod neighbors;
 pub mod shortest_line;
 
-use kentos_contracts::{AngleUnit, Entity};
+use kentos_commands::{AngleUnit, Entity};
 use kentos_geometry_core::display::fixed;
 use serde_json::json;
 

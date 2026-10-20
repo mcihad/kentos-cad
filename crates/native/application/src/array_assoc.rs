@@ -7,7 +7,7 @@
 //! maps the independent copies take, so the plan's copies are what the items
 //! show.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayId, ArrayItem, ArrayLayout, AssocArray, BlockDefinition, BlockId, CommandError, Entity,
     EntityId, Vec2,
 };

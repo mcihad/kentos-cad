@@ -7,7 +7,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::io::{Read, Seek, SeekFrom};
 
-use kentos_contracts::{
+use kentos_commands::{
     CloudDescribed, CloudExtra, CloudFormat, CloudPoint, CloudSource, CloudSourceDescribed,
     CommandResult, CommandWarning, Entity, POINTCLOUD_MOST_COUNTED, PointCloudEntity,
     PointCloudsDescribe, PointCloudsDescribed, PointCloudsQueried, PointCloudsQuery,

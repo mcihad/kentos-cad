@@ -9,7 +9,7 @@
 
 use iced::widget::{Column, button, column, container, row, text_input};
 use iced::{Center, Element, Fill, Length, Task, Theme};
-use kentos_contracts::{TableFileRead, TableGrid, TableSource, TextLook};
+use kentos_commands::{TableFileRead, TableGrid, TableSource, TextLook};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::ops::table::{Cells, ScheduleKind};
 use kentos_interaction::Level;
@@ -254,7 +254,7 @@ impl App {
             let slots = table::in_order(model, self.selection.ids());
             self.table_insert.objects = slots
                 .into_iter()
-                .filter(|s| !matches!(model.get(*s), Some(kentos_contracts::Entity::Table(_))))
+                .filter(|s| !matches!(model.get(*s), Some(kentos_commands::Entity::Table(_))))
                 .filter_map(|s| model.uid(s))
                 .collect();
             self.table_insert.style = self.memory.text_style.map(|id| id.to_string());
@@ -262,11 +262,11 @@ impl App {
             let mm = self
                 .memory
                 .heights
-                .get(kentos_contracts::AnnotationKind::Table)
+                .get(kentos_commands::AnnotationKind::Table)
                 .unwrap_or_else(|| {
                     model
                         .settings()
-                        .annotation_mm(kentos_contracts::AnnotationKind::Table)
+                        .annotation_mm(kentos_commands::AnnotationKind::Table)
                 });
             self.table_insert.height_mm = kentos_processing::text::js_number(mm);
         }
@@ -361,7 +361,7 @@ impl App {
             .as_ref()
             .and_then(|id| settings.text_styles.iter().find(|s| &s.id == id));
         let mm = number(&w.height_mm).filter(|v| *v > 0.0)?;
-        let look = kentos_contracts::apply_text_style(
+        let look = kentos_commands::apply_text_style(
             style,
             &TextLook {
                 face: Default::default(),
@@ -396,7 +396,7 @@ impl App {
                 if let Some(mm) = number(&t).filter(|v| *v > 0.0) {
                     self.memory
                         .heights
-                        .set(kentos_contracts::AnnotationKind::Table, Some(mm));
+                        .set(kentos_commands::AnnotationKind::Table, Some(mm));
                 }
                 self.table_insert.height_mm = t;
             }
@@ -695,7 +695,7 @@ impl App {
             let ids: Vec<Option<String>> = std::iter::once(None)
                 .chain(settings.text_styles.iter().map(|s| Some(s.id.clone())))
                 .collect();
-            let names: Vec<Choice> = std::iter::once(Choice::new(kentos_contracts::STANDARD_STYLE))
+            let names: Vec<Choice> = std::iter::once(Choice::new(kentos_commands::STANDARD_STYLE))
                 .chain(
                     settings
                         .text_styles
@@ -861,7 +861,7 @@ impl App {
                             kentos_interaction::Vec2::new(0.0, 0.0),
                             source.as_deref().cloned(),
                         );
-                        if let kentos_contracts::EntityGeometry::Table { rows, columns, .. } = &t {
+                        if let kentos_commands::EntityGeometry::Table { rows, columns, .. } = &t {
                             lines.push(words::text_line(
                                 Kind::Ok,
                                 format!(

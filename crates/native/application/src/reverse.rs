@@ -18,7 +18,7 @@
 //! 4. not every object on a locked layer (those that are, left out and counted);
 //! 5. at least one object with a direction of its own (each without one, a warning).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesEditPlan, EntitiesEdited,
     EntitiesReverse, EntityEdit,
 };
@@ -109,8 +109,8 @@ pub mod entities_reverse {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_REVERSE,
-            kentos_contracts::CAD_ENTITIES_REVERSE_VERSION,
+            kentos_commands::CAD_ENTITIES_REVERSE,
+            kentos_commands::CAD_ENTITIES_REVERSE_VERSION,
             input,
             |cx, input| {
                 let checked = check(cx.doc, &input);

@@ -27,7 +27,7 @@
 //! Artır is kept for the run, not in [`crate::tool::Memory`]: the ribbon's
 //! methods (Sabit, Artır, Sıfırla) each start the tool the way they say.
 
-use kentos_contracts::{EditOperation, EntityEdit};
+use kentos_commands::{EditOperation, EntityEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::point_text::js_trim;
 

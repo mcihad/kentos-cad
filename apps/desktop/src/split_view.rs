@@ -108,7 +108,7 @@ impl App {
         // A theme the project no longer has is let go.
         if let Some(doc) = &self.document {
             let states = &doc.settings().layer_states;
-            let gone = |t: &Option<kentos_contracts::LayerState>| {
+            let gone = |t: &Option<kentos_commands::LayerState>| {
                 t.as_ref()
                     .is_some_and(|t| !states.iter().any(|s| s.id == t.id))
             };

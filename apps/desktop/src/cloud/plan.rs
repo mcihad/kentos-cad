@@ -6,7 +6,7 @@
 //! Pure: the window draws it, and fixtures/cloud/v1/catalog.json pins it for
 //! both platforms. Dates are the device's local time (local_time.rs).
 
-use kentos_contracts::{
+use kentos_commands::{
     CatalogSort, CatalogView, ProjectPermission, ProjectState, ProjectStorage, ProjectSummary,
     ProjectType,
 };

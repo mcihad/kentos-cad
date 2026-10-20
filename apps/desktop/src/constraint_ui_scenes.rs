@@ -11,7 +11,7 @@
 //! Test code only.
 
 use iced::Point;
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, ConstraintEdit, ConstraintRule, ConstraintsEdit, DistanceAxis, SubPlace,
 };
 use kentos_native_application::{ExecutionContext, constraints_edit};

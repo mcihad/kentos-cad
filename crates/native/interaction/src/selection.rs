@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::SubPlace;
+use kentos_commands::SubPlace;
 use kentos_domain::Slot;
 
 use crate::Vec2;

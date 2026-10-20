@@ -8,7 +8,7 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use kentos_contracts::{CloudFormat, CloudSource, EntityBase, PointCloudEntity, PointCloudFields};
+use kentos_commands::{CloudFormat, CloudSource, EntityBase, PointCloudEntity, PointCloudFields};
 use kentos_pointcloud::ops::tile::{name, tile_of};
 use serde_json::json;
 
@@ -231,7 +231,7 @@ fn go(
                 bounds[k + 3] = bounds[k + 3].max(s.bounds[k + 3]);
             }
         }
-        kentos_contracts::Entity::PointCloud(PointCloudEntity {
+        kentos_commands::Entity::PointCloud(PointCloudEntity {
             base: EntityBase {
                 look: Default::default(),
                 id: 0,

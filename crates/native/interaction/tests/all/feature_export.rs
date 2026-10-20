@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, EntityBase, LayerField, PathEntity, PointEntity, Vec2, WorkbookSheet,
 };
 use kentos_interaction::feature_table::{feature_table_of, workbook_sheet};

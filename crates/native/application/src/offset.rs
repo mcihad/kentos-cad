@@ -29,7 +29,7 @@
 //! tolerance of the curve's parallel), `self_intersecting` when its edges
 //! cross; the copy is written all the same.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesOffset, EntitiesOffsetMade,
     EntitiesOffsetPlan, Entity, EntityEdit, OffsetBy,
 };
@@ -109,8 +109,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesOffsetMade> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_OFFSET,
-        kentos_contracts::CAD_ENTITIES_OFFSET_VERSION,
+        kentos_commands::CAD_ENTITIES_OFFSET,
+        kentos_commands::CAD_ENTITIES_OFFSET_VERSION,
         input,
         write_execute,
     )

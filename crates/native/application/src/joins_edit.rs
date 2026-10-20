@@ -5,7 +5,7 @@
 //! the count; the relation a view is made of; each layer the drawing's and a layer; each key and field the
 //! layer's (`$uid` always; a layer without typed fields takes any attribute).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, JoinView, JoinsEdit, JoinsEdited, JoinsOp, LayerNodeType, MOST_JOIN_VIEWS,
     ProjectSettings, UID_KEY, form_id_ok, join_view_problem,
 };
@@ -240,8 +240,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &JoinsEdit) -> CommandResult<Joins
 pub fn execute(cx: &mut ExecutionContext<'_>, input: JoinsEdit) -> CommandResult<JoinsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_JOINS_EDIT,
-        kentos_contracts::CAD_JOINS_EDIT_VERSION,
+        kentos_commands::CAD_JOINS_EDIT,
+        kentos_commands::CAD_JOINS_EDIT_VERSION,
         input,
         write_execute,
     )

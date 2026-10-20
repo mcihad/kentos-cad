@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeSet, HashMap};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, DrawingFont, Entity, FontMatch, FontsReport, FontsReported,
     MAX_FONT_NAME, NamedFont, StyleFont,
 };

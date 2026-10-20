@@ -17,7 +17,7 @@
 //! the corridor and its area are the shared core's (`parallel_sides`,
 //! `corridor_area`, `net_area`); none is computed here.
 
-use kentos_contracts::{CreateOperation, EntityGeometry};
+use kentos_commands::{CreateOperation, EntityGeometry};
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::bulge::bulge_path_outline;

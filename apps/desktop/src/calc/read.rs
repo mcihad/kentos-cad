@@ -3,7 +3,7 @@
 //! and Kutupsal alım's and Aplikasyon's checks before and around the core's
 //! computation. The windows show the errors; the tests read them here.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Document as Model;
 use kentos_geometry_core::crs::ground::Grid;
 use kentos_interaction::survey::polar::{
@@ -183,10 +183,10 @@ fn is_number(t: &str) -> bool {
 }
 
 /// The project's angle unit as the core takes it.
-pub fn unit_name(unit: kentos_contracts::AngleUnit) -> &'static str {
+pub fn unit_name(unit: kentos_commands::AngleUnit) -> &'static str {
     match unit {
-        kentos_contracts::AngleUnit::Deg => "deg",
-        kentos_contracts::AngleUnit::Grad => "grad",
+        kentos_commands::AngleUnit::Deg => "deg",
+        kentos_commands::AngleUnit::Grad => "grad",
     }
 }
 

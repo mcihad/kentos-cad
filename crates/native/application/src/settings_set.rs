@@ -11,7 +11,7 @@
 
 use std::sync::OnceLock;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DrawingUnit, Entity, HeightKind, LengthStyle, MAX_PLOT_SCALE,
     MAX_SHOWN_DECIMALS, ProjectSettings, ScaleChange, SettingsChanged, SettingsSet, Workspace,
 };
@@ -140,7 +140,7 @@ fn check_input(input: &SettingsSet) -> Result<(), Stop> {
     if let Some(why) = input
         .coordinate_epoch
         .filter(|e| *e != 0.0)
-        .and_then(kentos_contracts::epoch_problem)
+        .and_then(kentos_commands::epoch_problem)
     {
         return Err(fail(
             codes::INVALID_EPOCH,
@@ -326,8 +326,8 @@ pub fn execute(
 ) -> CommandResult<SettingsChanged> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SETTINGS_SET,
-        kentos_contracts::CAD_SETTINGS_SET_VERSION,
+        kentos_commands::CAD_SETTINGS_SET,
+        kentos_commands::CAD_SETTINGS_SET_VERSION,
         input,
         write_execute,
     )

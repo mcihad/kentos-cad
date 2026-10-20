@@ -24,7 +24,7 @@ fn on_level(app: &mut App) {
         return;
     };
     let mut settings = doc.model.settings().clone();
-    settings.arch.get_or_insert_with(Default::default).levels = vec![kentos_contracts::ArchLevel {
+    settings.arch.get_or_insert_with(Default::default).levels = vec![kentos_commands::ArchLevel {
         id: "zemin".into(),
         name: "Zemin kat".into(),
         elevation: 0.0,
@@ -34,15 +34,15 @@ fn on_level(app: &mut App) {
     let walls: Vec<String> = doc
         .model
         .entities()
-        .filter(|e| matches!(e, kentos_contracts::Entity::Wall(_)))
+        .filter(|e| matches!(e, kentos_commands::Entity::Wall(_)))
         .filter_map(|e| doc.model.uid(Slot(e.base().id)))
         .map(|u| u.to_string())
         .collect();
     let _ = kentos_native_application::walls_edit::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        kentos_contracts::WallsEdit {
+        kentos_commands::WallsEdit {
             uids: walls,
-            operation: kentos_contracts::WallsOperation::Set(kentos_contracts::WallChange {
+            operation: kentos_commands::WallsOperation::Set(kentos_commands::WallChange {
                 level: Some(Some("zemin".into())),
                 ..Default::default()
             }),
@@ -69,9 +69,9 @@ pub(crate) fn spaces(app: &mut App) {
         let uids = kentos_interaction::properties::uids_of(&doc.model, &[Slot(12), Slot(13)]);
         let _ = kentos_native_application::spaces_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::SpacesEdit {
+            kentos_commands::SpacesEdit {
                 uids,
-                operation: kentos_contracts::SpacesOperation::Set(kentos_contracts::SpaceChange {
+                operation: kentos_commands::SpacesOperation::Set(kentos_commands::SpaceChange {
                     level: Some(Some("zemin".into())),
                     ..Default::default()
                 }),

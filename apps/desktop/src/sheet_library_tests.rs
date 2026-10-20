@@ -39,12 +39,12 @@ fn app_with_demo() -> App {
         return crate::files_testing::app_with_drawing();
     };
     let text = std::fs::read_to_string(&path).expect("the demo drawing");
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads");
     let mut doc = crate::document::Document::new(snapshot, None).expect("opens");
     doc.model.set_name("Ornek_1244-1249_Ada.kcad");
     // As the web's pictures: the CAD mode, the drawing area on the drawing's home view.
     let mut settings = doc.settings().clone();
-    settings.workspace = Some(kentos_contracts::Workspace::Cad);
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
     doc.model.set_settings(settings);
     let home = doc.model.home_view();
     let (mut app, _) = App::boot(None);

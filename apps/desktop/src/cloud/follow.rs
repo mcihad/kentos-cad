@@ -25,7 +25,7 @@ use std::time::Instant;
 use iced::Task;
 use kentos_cloud::follow::{self, EVENTS_PAGE};
 use kentos_cloud::{ApiFailure, Incoming, Remote, SaveState, Taken, given_back_text};
-use kentos_contracts::{BlockRecord, ConflictReason, EventPage, ProjectInfo};
+use kentos_commands::{BlockRecord, ConflictReason, EventPage, ProjectInfo};
 
 use crate::app::{App, Dialog, Message, Then};
 use crate::cloud::live::conflict_text;

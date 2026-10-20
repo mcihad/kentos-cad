@@ -151,7 +151,7 @@ mod tests {
     use std::time::Duration;
 
     use iced::{Point, Rectangle, Size, Vector};
-    use kentos_contracts::{Entity, EntityBase, PointEntity, Vec2};
+    use kentos_commands::{Entity, EntityBase, PointEntity, Vec2};
     use kentos_domain::Slot;
     use kentos_interaction::Level;
 

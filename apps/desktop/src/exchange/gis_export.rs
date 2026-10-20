@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{CommandWarning, ExportGis, GisAnnotations, GisExported, GisTableRole};
+use kentos_commands::{CommandWarning, ExportGis, GisAnnotations, GisExported, GisTableRole};
 use kentos_interaction::Level;
 use kentos_ui::widget::segmented::Segmented;
 use kentos_ui::widget::{Dialog, overlay};

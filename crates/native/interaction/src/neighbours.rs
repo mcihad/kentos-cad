@@ -113,7 +113,7 @@ pub fn lines(n: &Neighbours) -> Vec<(Level, String)> {
 /// `own` has one, for an object of a kind without corners, and for a point
 /// without Noktalar da (the web's `cornerCount`).
 pub(crate) fn corner_count(cx: &Context<'_>, own: Slot, at: Vec2) -> Option<usize> {
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
     if !cx.draft.topology {
         return None;
     }

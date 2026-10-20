@@ -11,7 +11,7 @@ use iced::keyboard::Modifiers;
 use iced::time::Instant;
 use iced::{Point, Rectangle, Task, event, mouse, window};
 
-use kentos_contracts::{DocumentSnapshotV1, Entity};
+use kentos_commands::{DocumentSnapshotV1, Entity};
 use kentos_geometry_core::text::paragraph::Toggle;
 use kentos_render_wgpu::Vec2;
 
@@ -88,15 +88,15 @@ pub struct Seen {
     /// A multi-line text's box width, line spacing and runs (docs/adr/0182); none for other kinds.
     pub box_width: Option<f64>,
     pub line_spacing: Option<f64>,
-    pub runs: Vec<kentos_contracts::TextRun>,
+    pub runs: Vec<kentos_commands::TextRun>,
     /// Its own symbol, colour and line weight, and its layer's name (docs/adr/0176 §3).
     pub symbol: Option<String>,
     pub color: Option<String>,
     pub line_weight: Option<f64>,
     pub layer: String,
     /// A text's style and face, a dimension's style and look (docs/adr/0183); none for other kinds.
-    pub face: Option<kentos_contracts::TextFace>,
-    pub look: Option<kentos_contracts::DimensionLook>,
+    pub face: Option<kentos_commands::TextFace>,
+    pub look: Option<kentos_commands::DimensionLook>,
     /// A table's cells and look (docs/adr/0184); none for other kinds.
     pub table: Option<TableSeen>,
     /// A hatch's pattern and how many objects it follows (docs/adr/0186); none for other kinds.
@@ -111,7 +111,7 @@ pub struct TableSeen {
     pub cells: Vec<Vec<String>>,
     pub rows: Vec<f64>,
     pub columns: Vec<f64>,
-    pub merges: Vec<kentos_contracts::CellRange>,
+    pub merges: Vec<kentos_commands::CellRange>,
     pub aligns: Option<Vec<String>>,
     pub header: bool,
     pub grid: Option<String>,
@@ -468,7 +468,7 @@ pub struct Observation {
     /// The layers' Katman çizimi by path, where they have one (docs/adr/0226 §3, §4).
     pub layer_compose: std::collections::BTreeMap<String, serde_json::Value>,
     /// Every object's label pins, by its id, where it has any (docs/adr/0212 §2).
-    pub label_pins: BTreeMap<u32, Vec<kentos_contracts::LabelPin>>,
+    pub label_pins: BTreeMap<u32, Vec<kentos_commands::LabelPin>>,
     /// The colour and line weight new objects take now.
     pub current_color: Option<String>,
     pub current_weight: Option<f64>,
@@ -1454,7 +1454,7 @@ fn layer_counts(
 ) -> std::collections::BTreeMap<String, String> {
     let layers = doc.model.layers();
     let mut out = std::collections::BTreeMap::new();
-    let mut stack: Vec<&kentos_contracts::LayerNode> = layers.nodes().iter().collect();
+    let mut stack: Vec<&kentos_commands::LayerNode> = layers.nodes().iter().collect();
     while let Some(node) = stack.pop() {
         let (shown, total, filtered) = app.layer_counted(doc, node);
         out.insert(
@@ -1472,7 +1472,7 @@ fn layer_counts(
 
 /// The paths of the tree's nodes that `which` takes, in tree order.
 /// The layers' compositions in tree order, as `layer_paths` lists the layers that have one.
-fn composed(nodes: &[kentos_contracts::LayerNode]) -> Vec<serde_json::Value> {
+fn composed(nodes: &[kentos_commands::LayerNode]) -> Vec<serde_json::Value> {
     let mut out = Vec::new();
     for node in nodes {
         if let Some(c) = &node.compose {
@@ -1485,12 +1485,12 @@ fn composed(nodes: &[kentos_contracts::LayerNode]) -> Vec<serde_json::Value> {
 
 fn layer_paths(
     layers: &kentos_domain::LayerTree,
-    which: impl Fn(&kentos_contracts::LayerNode) -> bool,
+    which: impl Fn(&kentos_commands::LayerNode) -> bool,
 ) -> Vec<String> {
     fn walk(
-        nodes: &[kentos_contracts::LayerNode],
+        nodes: &[kentos_commands::LayerNode],
         layers: &kentos_domain::LayerTree,
-        which: &dyn Fn(&kentos_contracts::LayerNode) -> bool,
+        which: &dyn Fn(&kentos_commands::LayerNode) -> bool,
         out: &mut Vec<String>,
     ) {
         for node in nodes {

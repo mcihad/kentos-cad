@@ -10,7 +10,7 @@
 //!   (R), Basamak (D), Sahanlık (H); a ramp's Yükseklik (Y) and Eğim (E). Their checks are said, never refused.
 //! - Aksları numarala: Başlangıç (B), then the grids clicked in order; Enter writes.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchEdit, ArchOperation, ColumnCrossings, ColumnShape, ColumnsCreate, CommandResult, Entity,
     GridSeries, GridsCreate, NewColumn, NewGrid, NewRamp, NewStair, RampsCreate, SeriesSide,
     StairsCreate,
@@ -507,7 +507,7 @@ impl ColumnTool {
             if let Some(t) = &self.tag {
                 let mut next = t.clone();
                 for _ in 0..n {
-                    next = kentos_contracts::next_label(&next);
+                    next = kentos_commands::next_label(&next);
                 }
                 self.tag = Some(next);
             }
@@ -737,7 +737,7 @@ impl FlightTool {
     fn line(&self, with_hover: bool) -> Vec<Vec2> {
         let mut pts = self.pts.clone();
         if with_hover
-            && pts.len() < kentos_contracts::MAX_FLIGHT_POINTS
+            && pts.len() < kentos_commands::MAX_FLIGHT_POINTS
             && let Some(h) = self.hover
         {
             pts.push(h);
@@ -896,7 +896,7 @@ impl Tool for FlightTool {
 
     fn accept_point(&mut self, p: Vec2, cx: &mut Context<'_>) -> bool {
         self.pts.push(p);
-        if self.pts.len() == kentos_contracts::MAX_FLIGHT_POINTS {
+        if self.pts.len() == kentos_commands::MAX_FLIGHT_POINTS {
             let pts = std::mem::take(&mut self.pts);
             self.run(&pts, cx, true);
         }

@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.layers.filter.json: the shared cases of `cad.layers.filter` v1 (docs/adr/0211 §5),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_layers.rs, layer_filter.rs: the
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_layers.rs, layer_filter.rs: the
 checks and their order, the codes, the paths and the words; the step's name) and from the ADR's meaning of a filter
 (§3: a condition passes when it is true; a list passes the ids it names; both, both), without KentOS code: each case's
 condition is written below as Python over the objects' attributes and their exact areas. The web

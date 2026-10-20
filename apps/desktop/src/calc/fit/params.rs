@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-use kentos_contracts::Transform;
+use kentos_commands::Transform;
 use kentos_domain::Document as Model;
 use kentos_geometry_core::ops::fit::scale_turn;
 use kentos_interaction::{Format, Vec2};
@@ -181,11 +181,11 @@ impl Params {
     pub fn transform(&self) -> Transform {
         let to = self.to();
         Transform::Affine {
-            from: kentos_contracts::Vec2 {
+            from: kentos_commands::Vec2 {
                 x: self.base.x,
                 y: self.base.y,
             },
-            to: kentos_contracts::Vec2 { x: to.x, y: to.y },
+            to: kentos_commands::Vec2 { x: to.x, y: to.y },
             m: scale_turn(self.scale_y, self.scale_x, self.rotation),
         }
     }

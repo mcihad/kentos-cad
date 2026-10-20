@@ -13,7 +13,7 @@
 //!   §2): the drawing changes, no undo step. A hidden
 //!   layer's objects leave the selection.
 
-use kentos_contracts::{CommandResult, LayerNodeType, LayerSetOperation, LayersSet};
+use kentos_commands::{CommandResult, LayerNodeType, LayerSetOperation, LayersSet};
 use kentos_domain::Slot;
 use kentos_native_application::geometry::shape;
 use kentos_native_application::{ExecutionContext, layers_set};
@@ -347,7 +347,7 @@ fn set_flag(doc: &mut kentos_domain::Document, op: LayerSetOperation, id: &str, 
 }
 
 /// The ids of the shown nodes, in tree order.
-fn visible_nodes(nodes: &[kentos_contracts::LayerNode], out: &mut Vec<String>) {
+fn visible_nodes(nodes: &[kentos_commands::LayerNode], out: &mut Vec<String>) {
     for node in nodes {
         if node.visible {
             out.push(node.id.clone());

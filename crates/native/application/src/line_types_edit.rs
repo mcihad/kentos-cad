@@ -6,7 +6,7 @@
 //! step. The shared cases are `fixtures/commands/v1/cad.linetypes.edit.json`
 //! (`scripts/fixtures/line_type_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LinLineProblem, LineTypeDef, LineTypesEdit, LineTypesEdited,
     LineTypesOperation, line_types_problem, same_line_type_name,
 };
@@ -125,7 +125,7 @@ fn check(doc: &Document, input: &LineTypesEdit) -> Result<(), Stop> {
         }
         LineTypesOperation::Scale => {
             if !input.scale.is_some_and(|s| {
-                s.is_finite() && s > 0.0 && s <= kentos_contracts::MAX_LINE_TYPE_SCALE
+                s.is_finite() && s > 0.0 && s <= kentos_commands::MAX_LINE_TYPE_SCALE
             }) {
                 return Err(fail(
                     codes::INVALID_LINE_TYPE_SCALE,
@@ -185,8 +185,8 @@ pub fn execute(
 ) -> CommandResult<LineTypesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LINE_TYPES_EDIT,
-        kentos_contracts::CAD_LINE_TYPES_EDIT_VERSION,
+        kentos_commands::CAD_LINE_TYPES_EDIT,
+        kentos_commands::CAD_LINE_TYPES_EDIT_VERSION,
         input,
         |cx, input| {
             if let Err(stop) = check(cx.doc, &input) {
@@ -213,7 +213,7 @@ fn write(doc: &mut Document, input: &LineTypesEdit) -> LineTypesEdited {
         scale: settings.line_type_scale,
         revision: String::new(),
     };
-    let put = |settings: &mut kentos_contracts::ProjectSettings,
+    let put = |settings: &mut kentos_commands::ProjectSettings,
                t: LineTypeDef,
                replace: bool,
                out: &mut LineTypesEdited| {

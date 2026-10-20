@@ -11,7 +11,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{CommandWarning, EntityId, SolveStatus};
+use kentos_commands::{CommandWarning, EntityId, SolveStatus};
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::constraints::{Status, moved_parts};
@@ -24,17 +24,17 @@ use crate::geometry::shape;
 /// The commands that cut, join or turn objects round: their parts are not the ones the constraints were written for,
 /// so they never solve; the constraints they leave unmet go.
 pub const CUTTING: &[&str] = &[
-    kentos_contracts::CAD_ENTITIES_TRIM,
-    kentos_contracts::CAD_ENTITIES_EXTEND,
-    kentos_contracts::CAD_ENTITIES_BREAK,
-    kentos_contracts::CAD_ENTITIES_JOIN,
-    kentos_contracts::CAD_ENTITIES_DIVIDE,
-    kentos_contracts::CAD_ENTITIES_EXPLODE,
-    kentos_contracts::CAD_ENTITIES_FILLET,
-    kentos_contracts::CAD_ENTITIES_CHAMFER,
-    kentos_contracts::CAD_ENTITIES_CLEANUP,
-    kentos_contracts::CAD_ENTITIES_REVERSE,
-    kentos_contracts::CAD_UNITS_CHANGE,
+    kentos_commands::CAD_ENTITIES_TRIM,
+    kentos_commands::CAD_ENTITIES_EXTEND,
+    kentos_commands::CAD_ENTITIES_BREAK,
+    kentos_commands::CAD_ENTITIES_JOIN,
+    kentos_commands::CAD_ENTITIES_DIVIDE,
+    kentos_commands::CAD_ENTITIES_EXPLODE,
+    kentos_commands::CAD_ENTITIES_FILLET,
+    kentos_commands::CAD_ENTITIES_CHAMFER,
+    kentos_commands::CAD_ENTITIES_CLEANUP,
+    kentos_commands::CAD_ENTITIES_REVERSE,
+    kentos_commands::CAD_UNITS_CHANGE,
 ];
 
 /// What following a write did.
@@ -132,7 +132,7 @@ pub(crate) fn follow(
             if solved.outcome.status == Status::Cancelled {
                 return Err(Stop::Cancelled);
             }
-            let ids = |list: &[kentos_contracts::ConstraintId]| {
+            let ids = |list: &[kentos_commands::ConstraintId]| {
                 list.iter().map(ToString::to_string).collect::<Vec<_>>()
             };
             let d = &solved.diagnosis;

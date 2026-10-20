@@ -6,7 +6,7 @@
 //! plays the flow with the mouse; the rules themselves are the core's
 //! (fixtures/topology-rules/v1).
 
-use kentos_contracts::{TopologyRuleKind, TopologySettings};
+use kentos_commands::{TopologyRuleKind, TopologySettings};
 use kentos_domain::Slot;
 
 use super::plan::{self, Filter};
@@ -20,7 +20,7 @@ const DRAWING: &str = include_str!("../../../../fixtures/interaction/v1/topology
 fn app() -> App {
     let (mut app, _) = App::boot(None);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -88,7 +88,7 @@ fn a_fix_is_one_undo_step_and_the_check_runs_again() {
     assert_eq!(count, "14 bulgu (açık 14, istisna 0)", "{rows:#?}");
     let doc = &mut app.document.as_mut().expect("open").model;
     // The second parcel ends where the third begins.
-    let Some(kentos_contracts::Entity::Polygon(p)) = doc.get(Slot(2)) else {
+    let Some(kentos_commands::Entity::Polygon(p)) = doc.get(Slot(2)) else {
         panic!("a polygon");
     };
     assert!(p.pts.iter().all(|q| q.x <= 487_040.0 + 1e-9), "{:?}", p.pts);
@@ -276,7 +276,7 @@ fn move_road(app: &mut App) {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(doc),
         "cad.entities.transform",
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         serde_json::json!({ "uids": [uid], "transform": { "kind": "move", "dx": 0.4, "dy": 0.0 } }),
     );
     assert!(answer.is_ok());

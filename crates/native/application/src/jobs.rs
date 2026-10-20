@@ -17,7 +17,7 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 
-use kentos_contracts::{
+use kentos_commands::{
     CallAnswer, CallEnvelope, CallOp, CommandError, CommandResult, JobPhase, JobStatus, codes,
 };
 use kentos_domain::Document;
@@ -70,7 +70,7 @@ pub struct Effect {
     pub command: String,
     pub version: u32,
     pub input: serde_json::Value,
-    pub effects: Vec<kentos_contracts::FileEffect>,
+    pub effects: Vec<kentos_commands::FileEffect>,
     pub state: crate::call::CallState,
 }
 

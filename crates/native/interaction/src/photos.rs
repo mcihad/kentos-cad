@@ -12,7 +12,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     Attachment, Entity, EntityBase, LineError, PhotoExif, PointEntity, Vec2 as Wire,
 };
 use kentos_geometry_core::crs::{Choice, Datum, System, Unreached, transform_in};

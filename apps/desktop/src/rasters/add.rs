@@ -18,7 +18,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, button, column, container, row, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CreateOperation, EntitiesCreate, EntityGeometry, NewObject, RasterFields,
     RasterStyle,
 };
@@ -359,7 +359,7 @@ impl App {
                 if address.is_empty() {
                     return Task::none();
                 }
-                if let Some(why) = kentos_contracts::url_problem(&address) {
+                if let Some(why) = kentos_commands::url_problem(&address) {
                     self.raster_add_status(why);
                     return Task::none();
                 }

@@ -12,7 +12,7 @@ publish.workspace = true
 # window write the same way (TODOS.md §14–15, docs/adr/0130).
 [dependencies]
 # The catalog with its JSON Schemas (the `schema` feature): discovery for Python and AI.
-kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }
 kentos-project = { path = "../project" }

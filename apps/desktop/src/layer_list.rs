@@ -16,7 +16,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, container};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{LayerNode, LayerNodeType};
+use kentos_commands::{LayerNode, LayerNodeType};
 use kentos_geometry_core::display::fixed;
 use kentos_interaction::Level;
 use kentos_ui::widget::table::{self, Table};
@@ -298,7 +298,7 @@ impl App {
 mod tests {
     use std::path::PathBuf;
 
-    use kentos_contracts::LayerNode;
+    use kentos_commands::LayerNode;
     use serde_json::Value;
 
     /// The shared cases (fixtures/layers/v1/list.json, written by

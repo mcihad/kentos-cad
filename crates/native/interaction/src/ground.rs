@@ -6,7 +6,7 @@
 //! said before, its own line last (the status bar shows the last), and a
 //! project without a coordinate system has no ellipsoid.
 
-use kentos_contracts::ProjectSettings;
+use kentos_commands::ProjectSettings;
 use kentos_geometry_core::crs::ground::{Grid, ground_measures, has_point_scale};
 use kentos_geometry_core::crs::measure::Ring;
 use kentos_geometry_core::display::fixed;

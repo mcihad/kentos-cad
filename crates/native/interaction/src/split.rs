@@ -22,7 +22,7 @@
 //! The pieces are the shared core's (`split_at_crossings`, `split_equal`,
 //! `split_by_length`).
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{EditOperation, Entity, EntityEdit};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::path::{nearest_s, path_of, point_at_s};

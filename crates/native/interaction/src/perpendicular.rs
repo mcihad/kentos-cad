@@ -19,7 +19,7 @@
 //! offsets are the shared core's (`side_offsets`, `side_point`,
 //! `radial_point`).
 
-use kentos_contracts::{CreateOperation, Entity, EntityGeometry};
+use kentos_commands::{CreateOperation, Entity, EntityGeometry};
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::intersect::{Edge, closest_on_edge};

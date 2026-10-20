@@ -5,7 +5,7 @@
 use std::cell::RefCell;
 use std::sync::Arc;
 
-use kentos_contracts::{ClipFrame, Entity};
+use kentos_commands::{ClipFrame, Entity};
 use kentos_interaction::Vec2;
 
 /// The frames' rings, each in world coordinates.

@@ -8,7 +8,7 @@
 //! alignment and width factor (docs/adr/0145) have no cells: the row keeps
 //! them. Both pass fixtures/blocks/v1/attribute-table.json.
 
-use kentos_contracts::{AttributeDefinition, TextAlign, Vec2};
+use kentos_commands::{AttributeDefinition, TextAlign, Vec2};
 use kentos_interaction::{fixed, js_trim};
 
 use crate::calc::grid::Col;
@@ -94,7 +94,7 @@ pub struct Exact {
 pub struct Row {
     pub cells: [String; 7],
     pub exact: Exact,
-    pub options: kentos_contracts::AttributeOptions,
+    pub options: kentos_commands::AttributeOptions,
     pub box_text: String,
 }
 

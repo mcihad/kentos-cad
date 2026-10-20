@@ -16,7 +16,7 @@
 //!   first goes back to the value).
 //! - `#ad` gives a point reference as a click would (docs/adr/0188 §3).
 
-use kentos_contracts::AngleUnit;
+use kentos_commands::AngleUnit;
 use kentos_geometry_core::geom::survey::{
     along_line, clockwise_angle, distance_intersection, line_intersection, side_offsets, side_point,
 };

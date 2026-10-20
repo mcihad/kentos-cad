@@ -9,7 +9,7 @@ use std::fmt;
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, FieldEdit, FieldFormat, FieldSource, FieldUnit, FieldsEdit, NumberPlace,
     ObjectValue, ProjectValue, TextEdit, TextFindingKind, TextsCheck, TextsChecked, TextsEdit,
 };
@@ -209,7 +209,7 @@ impl FieldWindow {
                     .and_then(|s| doc.model.uid(s))
                     .ok_or("Alanın nesnesini çizimden seçin.")?;
                 FieldSource::Object {
-                    uid: kentos_contracts::EntityId(*object.as_bytes()),
+                    uid: kentos_commands::EntityId(*object.as_bytes()),
                     value: OBJECT_VALUES[self.value],
                     name,
                 }

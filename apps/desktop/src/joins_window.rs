@@ -19,7 +19,7 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{JoinKeep, JoinView, JoinsEdit, JoinsOp, UID_KEY};
+use kentos_commands::{JoinKeep, JoinView, JoinsEdit, JoinsOp, UID_KEY};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, joins_edit};
 use kentos_ui::theme::{Tokens, typography};

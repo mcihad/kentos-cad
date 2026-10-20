@@ -6,7 +6,7 @@
 //! JSON; `kentos.address` makes dataclasses of them. Online providers are
 //! not here (§1): their terms are accepted in the apps, on a device.
 
-use kentos_contracts::AddressLocator;
+use kentos_commands::AddressLocator;
 use kentos_geometry_core::ops::geocode::check::check;
 use kentos_geometry_core::ops::geocode::locator::Texts;
 use kentos_geometry_core::ops::geocode::parse::from_columns;

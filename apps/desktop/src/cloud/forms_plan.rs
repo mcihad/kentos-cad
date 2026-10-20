@@ -7,7 +7,7 @@
 //! both platforms play it (`forms_plan_tests.rs`).
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{MembershipView, ProjectMetadataUpdate, ProjectStorage, ProjectType};
+use kentos_commands::{MembershipView, ProjectMetadataUpdate, ProjectStorage, ProjectType};
 use kentos_expression::js::text::{is_space, trim};
 
 use super::actions::reason;

@@ -1,7 +1,7 @@
 //! `cad.forms.compare` v1 (Sürümleri karşılaştır, docs/adr/0427): what changed from one version of a
 //! form to another, read-only. The shared cases are `fixtures/commands/v1/cad.forms.compare.json`.
 
-use kentos_contracts::{CommandResult, FormBody, FormsCompare, FormsCompared};
+use kentos_commands::{CommandResult, FormBody, FormsCompare, FormsCompared};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;

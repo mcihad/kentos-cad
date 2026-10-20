@@ -8,7 +8,7 @@
 
 use iced::widget::{Column, column, row, text_input};
 use iced::{Center, Element};
-use kentos_contracts::AngleUnit;
+use kentos_commands::AngleUnit;
 use kentos_project::survey_form::{self, Field};
 use kentos_ui::theme::typography;
 use kentos_ui::widget::{Banner, Switch};
@@ -190,7 +190,7 @@ pub(super) fn view<'a>(
 mod tests {
     use std::f64::consts::PI;
 
-    use kentos_contracts::{AngleUnit, SurveySettings};
+    use kentos_commands::{AngleUnit, SurveySettings};
     use kentos_project::survey_form::Field;
 
     use crate::app::{App, Message};

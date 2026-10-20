@@ -5,7 +5,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{BatchRow, ProcessingBatch};
+use kentos_commands::{BatchRow, ProcessingBatch};
 use kentos_domain::Document;
 use serde_json::{Value, json};
 
@@ -247,7 +247,7 @@ pub fn input(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::DocumentSnapshotV1;
+    use kentos_commands::DocumentSnapshotV1;
 
     use super::*;
     use crate::registry::Registry;

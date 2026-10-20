@@ -12,7 +12,7 @@
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 
-use kentos_contracts::{
+use kentos_commands::{
     CircleCreate, CircleCreated, CircleEntity, CirclePlan, CommandResult, CommandWarning, Entity,
     EntityBase,
 };
@@ -54,8 +54,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &CircleCreate) -> CommandResult<Ci
 pub fn execute(cx: &mut ExecutionContext<'_>, input: CircleCreate) -> CommandResult<CircleCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_CIRCLE_CREATE,
-        kentos_contracts::CAD_CIRCLE_CREATE_VERSION,
+        kentos_commands::CAD_CIRCLE_CREATE,
+        kentos_commands::CAD_CIRCLE_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -97,7 +97,7 @@ fn check(doc: &Document, input: &CircleCreate) -> Result<Vec<CommandWarning>, St
 fn circle(input: CircleCreate, id: u32) -> Entity {
     Entity::Circle(CircleEntity {
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

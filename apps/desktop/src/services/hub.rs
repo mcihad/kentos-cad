@@ -12,7 +12,7 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Condvar, Mutex, OnceLock, PoisonError};
 
-use kentos_contracts::{ServiceConnection, ServiceLayer};
+use kentos_commands::{ServiceConnection, ServiceLayer};
 use kentos_geometry_core::geom::tiles::TileRef;
 use kentos_render_wgpu::styled::{ServiceTile, ServiceView, VectorTile};
 use kentos_services::attribution::Credit;

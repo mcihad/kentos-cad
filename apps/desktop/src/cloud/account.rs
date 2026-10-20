@@ -12,7 +12,7 @@
 use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::{ApiFailure, Cloud as Client};
-use kentos_contracts::Me;
+use kentos_commands::Me;
 use serde_json::Value;
 
 use crate::app::{App, Dialog, Message, Then};
@@ -23,7 +23,7 @@ use crate::document::Source;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Next {
     Catalog,
-    Upload(kentos_contracts::ProjectStorage),
+    Upload(kentos_commands::ProjectStorage),
 }
 
 /// The sign-in window.

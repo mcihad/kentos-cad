@@ -17,7 +17,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::FormItem;
+use kentos_commands::FormItem;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 
@@ -61,9 +61,9 @@ pub(crate) fn form(published: bool) -> Value {
     ]});
     let mut f = json!({ "id": "bina-denetimi", "name": "Bina denetimi", "layer": "bina", "draft": body.clone() });
     if published {
-        let typed: kentos_contracts::FormBody =
+        let typed: kentos_commands::FormBody =
             serde_json::from_value(body.clone()).expect("a body");
-        f["releases"] = json!([{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body, "note": "İlk yayın" }]);
+        f["releases"] = json!([{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body, "note": "İlk yayın" }]);
     }
     f
 }
@@ -115,9 +115,9 @@ fn calc_form() -> Value {
         { "type": "field", "id": "tarih", "field": "Tarih", "defaultExpr": "@tarih" },
         { "type": "field", "id": "kayit", "field": "Kayıt", "defaultExpr": "@kullanici" }
     ]});
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     json!({ "id": "bina-hesabi", "name": "Bina hesabı", "layer": "bina", "draft": body.clone(), "enforce": true,
-            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+            "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] })
 }
 
 /// A file of the shared fixtures, by its path from the repository's root.
@@ -138,9 +138,9 @@ fn tree_form() -> Value {
         { "type": "attachments", "id": "fotograflar", "label": "Fotoğraflar", "accept": "photo", "min": 1, "max": 3 },
         { "type": "attachments", "id": "belgeler", "label": "Belgeler", "accept": "document", "visibleWhen": "Boy > 10" }
     ]});
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     json!({ "id": "agac", "name": "Ağaç envanteri", "layer": "agac", "draft": body.clone(),
-            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+            "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] })
 }
 
 /// A park's trees under the inventory form: the first with two photos and a report, the second
@@ -291,9 +291,9 @@ fn properties_down(s: &mut kentos_ui::snapshot::Snapshot, app: &mut App) {
 /// A published form of `layer` with `items`.
 fn published(id: &str, name: &str, layer: &str, items: Value) -> Value {
     let body = json!({ "revision": 1, "items": items });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     json!({ "id": id, "name": name, "layer": layer, "draft": body.clone(),
-            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+            "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] })
 }
 
 /// Three buildings and two owners (docs/adr/0409): an owner holds several buildings by their ids
@@ -363,8 +363,8 @@ fn owners(app: &mut App) {
         if let Some(doc) = app.document.as_mut() {
             let _ = kentos_native_application::registry::run(
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-                kentos_contracts::CAD_ENTITIES_SET,
-                kentos_contracts::CallOp::Execute,
+                kentos_commands::CAD_ENTITIES_SET,
+                kentos_commands::CallOp::Execute,
                 json!({ "uids": [owner], "attrs": { "Binalar": held }, "operation": "attributes" }),
             );
         }
@@ -698,8 +698,8 @@ fn units_table(app: &mut App) {
     if let Some(doc) = app.document.as_mut() {
         let _ = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_ENTITIES_SET,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
             json!({ "uids": children, "attrs": { "Bina": parent }, "operation": "attributes" }),
         );
     }
@@ -812,9 +812,9 @@ fn workflow_buildings(app: &mut App) {
             { "label": "Geri gönder", "from": ["gonderildi"], "to": "iade", "reason": "Gerekçe" },
             { "label": "Düzelt", "from": ["onaylandi"], "to": "iade", "reason": "Gerekçe" }
         ] } });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "denetim", "name": "Bina denetimi", "layer": "bina", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -994,9 +994,9 @@ fn chosen_facilities(app: &mut App) {
         { "type": "field", "id": "il", "field": "İl", "widget": "search", "placeholder": "İl adı yazın" },
         { "type": "field", "id": "hizmet", "field": "Hizmetler", "widget": "chips" }
     ] });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "tesis", "name": "Tesis kaydı", "layer": "tesis", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -1168,9 +1168,9 @@ fn sources(app: &mut App) {
         { "type": "field", "id": "malik", "field": "Malik", "readOnly": true },
         { "type": "field", "id": "kaynak", "field": "Kaynak", "readOnly": true }
     ] });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "bina", "name": "Bina", "layer": "bina", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -1290,10 +1290,10 @@ fn meters(app: &mut App) {
         { "type": "field", "id": "no", "field": "no", "required": true },
         { "type": "field", "id": "tur", "field": "tur" } ] });
     let form = |id: &str, name: &str, layer: &str, body: &Value| {
-        let typed: kentos_contracts::FormBody =
+        let typed: kentos_commands::FormBody =
             serde_json::from_value(body.clone()).expect("a body");
         json!({ "id": id, "name": name, "layer": layer, "draft": body.clone(),
-            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body.clone() }] })
+            "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body.clone() }] })
     };
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
@@ -1418,10 +1418,10 @@ pub(crate) fn meters_rebodied(app: &mut App, items: Value) {
     let mut body = form.draft.clone();
     body.items = serde_json::from_value(items).expect("items");
     form.draft = body.clone();
-    form.releases = vec![kentos_contracts::FormRelease {
+    form.releases = vec![kentos_commands::FormRelease {
         fields: None,
         version: 1,
-        digest: kentos_contracts::body_digest(&body),
+        digest: kentos_commands::body_digest(&body),
         body,
         note: None,
     }];
@@ -1521,9 +1521,9 @@ fn noted_buildings(app: &mut App) {
     workflow_buildings(app);
     let doc = app.document.as_mut().expect("a drawing");
     let mut fields = doc.model.layers().get("bina").expect("bina").fields.clone();
-    fields.push(kentos_contracts::LayerField::new(
+    fields.push(kentos_commands::LayerField::new(
         "Notlar",
-        kentos_contracts::LayerFieldKind::Text,
+        kentos_commands::LayerFieldKind::Text,
     ));
     let _ = doc.model.set_layer_fields("bina", fields, &[]);
     let mut settings = doc.model.settings().clone();
@@ -1532,10 +1532,10 @@ fn noted_buildings(app: &mut App) {
         w.notes = Some("Notlar".into());
     }
     let body = form.draft.clone();
-    form.releases = vec![kentos_contracts::FormRelease {
+    form.releases = vec![kentos_commands::FormRelease {
         fields: None,
         version: 1,
-        digest: kentos_contracts::body_digest(&body),
+        digest: kentos_commands::body_digest(&body),
         body,
         note: None,
     }];
@@ -1583,8 +1583,8 @@ fn new_release(app: &mut App) {
     body.items.retain(|i| i.id() != "gerekce");
     let _ = kentos_native_application::forms_edit::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        kentos_contracts::FormsEdit {
-            edit: kentos_contracts::FormsOp::Update {
+        kentos_commands::FormsEdit {
+            edit: kentos_commands::FormsOp::Update {
                 id: "denetim".into(),
                 body,
             },
@@ -1593,8 +1593,8 @@ fn new_release(app: &mut App) {
     );
     let _ = kentos_native_application::forms_edit::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        kentos_contracts::FormsEdit {
-            edit: kentos_contracts::FormsOp::Publish {
+        kentos_commands::FormsEdit {
+            edit: kentos_commands::FormsOp::Publish {
                 id: "denetim".into(),
                 note: None,
             },
@@ -1621,7 +1621,7 @@ fn step_action(app: &mut App) {
     designer(app, designer::Event::AddAction);
     designer(
         app,
-        designer::Event::ActionKind(kentos_contracts::ActionKind::Step),
+        designer::Event::ActionKind(kentos_commands::ActionKind::Step),
     );
     designer(
         app,
@@ -1744,9 +1744,9 @@ fn located_parcel(app: &mut App) {
             { "type": "field", "id": "nitelik", "field": "Nitelik" }] },
         { "type": "location", "id": "konum", "label": "Konum" }
     ] });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "parsel", "name": "Parsel kaydı", "layer": "kadastro", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -1783,25 +1783,25 @@ fn dated_parcel(app: &mut App) {
         .expect("kadastro")
         .fields
         .clone();
-    fields.push(kentos_contracts::LayerField {
+    fields.push(kentos_commands::LayerField {
         min: Some("2000-01-01".into()),
         max: Some("2026-12-31".into()),
-        ..kentos_contracts::LayerField::new("Tescil", kentos_contracts::LayerFieldKind::Date)
+        ..kentos_commands::LayerField::new("Tescil", kentos_commands::LayerFieldKind::Date)
     });
     let _ = doc.model.set_layer_fields("kadastro", fields, &[]);
     let mut settings = doc.model.settings().clone();
     if let Some(f) = settings.forms.first_mut()
-        && let Some(kentos_contracts::FormItem::Group { items, .. }) = f.draft.items.first_mut()
+        && let Some(kentos_commands::FormItem::Group { items, .. }) = f.draft.items.first_mut()
     {
         items.push(
             serde_json::from_value(json!({ "type": "field", "id": "tescil", "field": "Tescil" }))
                 .expect("an item"),
         );
         let body = f.draft.clone();
-        f.releases = vec![kentos_contracts::FormRelease {
+        f.releases = vec![kentos_commands::FormRelease {
             fields: None,
             version: 1,
-            digest: kentos_contracts::body_digest(&body),
+            digest: kentos_commands::body_digest(&body),
             body,
             note: None,
         }];
@@ -1856,9 +1856,9 @@ fn stepped_survey(app: &mut App) {
             { "type": "field", "id": "kullanim-ozet", "field": "Kullanım", "mirror": true },
             { "type": "field", "id": "not", "field": "Not", "widget": "textArea" }] }
     ] });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "yapi", "name": "Yapı tespiti", "layer": "yapi", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -1943,9 +1943,9 @@ fn permits(app: &mut App) {
         { "type": "field", "id": "aciklama", "field": "Açıklama", "checks": [
             { "rule": "uzunluk(Açıklama) >= 5", "message": "Açıklama en az 5 karakter olmalı.", "on": "save" }] }
     ] });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     let form = json!({ "id": "ruhsat", "name": "Ruhsat", "layer": "ruhsat", "draft": body.clone(),
-        "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] });
+        "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] });
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.model.settings().clone();
     settings.forms = vec![serde_json::from_value(form).expect("a form")];
@@ -2148,11 +2148,11 @@ fn field_policies(app: &mut App) {
     let _ = app.update(Message::LayerFields(Event::Choose(2)));
     let _ = app.update(Message::LayerFields(Event::Split(
         2,
-        Some(kentos_contracts::SplitPolicy::Ratio),
+        Some(kentos_commands::SplitPolicy::Ratio),
     )));
     let _ = app.update(Message::LayerFields(Event::Merge(
         2,
-        Some(kentos_contracts::MergePolicy::Sum),
+        Some(kentos_commands::MergePolicy::Sum),
     )));
 }
 
@@ -2227,8 +2227,8 @@ fn floors(app: &mut App) {
         if let Some(doc) = app.document.as_mut() {
             let _ = kentos_native_application::registry::run(
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-                kentos_contracts::CAD_ENTITIES_SET,
-                kentos_contracts::CallOp::Execute,
+                kentos_commands::CAD_ENTITIES_SET,
+                kentos_commands::CallOp::Execute,
                 json!({ "uids": [floor], "attrs": { "Bina": building }, "operation": "attributes" }),
             );
         }
@@ -2383,9 +2383,9 @@ fn address_form() -> Value {
         ]},
         { "type": "related", "id": "sayaclar", "label": "Binanın sayaçları", "layer": "sayac", "field": "bina" }
     ]});
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     json!({ "id": "adres", "name": "Bina adresi", "layer": "bina", "draft": body.clone(),
-            "releases": [{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }] })
+            "releases": [{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }] })
 }
 
 /// Buildings with the address form; the provinces, districts, neighbourhoods, parcels and meters on their own layers;
@@ -2492,8 +2492,8 @@ fn address_buildings(app: &mut App) {
             .collect();
         let _ = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_ENTITIES_SET,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
             json!({ "uids": uids, "attrs": { "bina": building }, "operation": "attributes" }),
         );
     }
@@ -2535,7 +2535,7 @@ fn relations_window(app: &mut App) {
         relations::Event::Parent("bina".into()),
         relations::Event::Child("sayac".into()),
         relations::Event::Field("bina".into()),
-        relations::Event::Policy(kentos_contracts::RelationDelete::Cascade),
+        relations::Event::Policy(kentos_commands::RelationDelete::Cascade),
     ] {
         let _ = app.update(Message::Relations(event));
     }
@@ -2553,8 +2553,8 @@ fn records_audit(app: &mut App) {
             .unwrap_or_default();
         let _ = kentos_native_application::registry::run(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::CAD_ENTITIES_SET,
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CAD_ENTITIES_SET,
+            kentos_commands::CallOp::Execute,
             json!({ "uids": [uid], "attrs": { "Durum": "iyi", "Kod": "B-3", "Kat": "2" }, "operation": "attributes" }),
         );
     }
@@ -2568,18 +2568,18 @@ fn slider_editing(app: &mut App) {
     if let Some(doc) = app.document.as_mut() {
         let mut s = doc.model.settings().clone();
         for f in &mut s.forms {
-            if let Some(kentos_contracts::FormItem::Field(k)) =
+            if let Some(kentos_commands::FormItem::Field(k)) =
                 items_mut_find(&mut f.draft.items, "kat")
             {
-                k.widget = Some(kentos_contracts::FormWidget::Slider);
+                k.widget = Some(kentos_commands::FormWidget::Slider);
             }
             for r in &mut f.releases {
-                if let Some(kentos_contracts::FormItem::Field(k)) =
+                if let Some(kentos_commands::FormItem::Field(k)) =
                     items_mut_find(&mut r.body.items, "kat")
                 {
-                    k.widget = Some(kentos_contracts::FormWidget::Slider);
+                    k.widget = Some(kentos_commands::FormWidget::Slider);
                 }
-                r.digest = kentos_contracts::body_digest(&r.body);
+                r.digest = kentos_commands::body_digest(&r.body);
             }
         }
         doc.model.set_settings(s);
@@ -2590,9 +2590,9 @@ fn slider_editing(app: &mut App) {
 
 /// The item `id` anywhere in `items`, to change.
 fn items_mut_find<'a>(
-    items: &'a mut [kentos_contracts::FormItem],
+    items: &'a mut [kentos_commands::FormItem],
     id: &str,
-) -> Option<&'a mut kentos_contracts::FormItem> {
+) -> Option<&'a mut kentos_commands::FormItem> {
     for i in items.iter_mut() {
         if i.id() == id {
             return Some(i);
@@ -2691,7 +2691,7 @@ fn designing_issues(app: &mut App) {
     designer(app, designer::Event::SelectItem("onay".into()));
     designer(
         app,
-        designer::Event::Widget(Some(kentos_contracts::FormWidget::Number)),
+        designer::Event::Widget(Some(kentos_commands::FormWidget::Number)),
     );
 }
 
@@ -3028,10 +3028,10 @@ mod tests {
             .unwrap(),
         );
         form.draft = body.clone();
-        form.releases = vec![kentos_contracts::FormRelease {
+        form.releases = vec![kentos_commands::FormRelease {
             fields: None,
             version: 1,
-            digest: kentos_contracts::body_digest(&body),
+            digest: kentos_commands::body_digest(&body),
             body,
             note: None,
         }];
@@ -3212,8 +3212,8 @@ mod tests {
         let doc = app.document.as_ref().unwrap();
         let kat = &doc.model.layers().get("bina").unwrap().fields[2];
         assert_eq!(kat.name, "Kat");
-        assert_eq!(kat.split, Some(kentos_contracts::SplitPolicy::Ratio));
-        assert_eq!(kat.merge, Some(kentos_contracts::MergePolicy::Sum));
+        assert_eq!(kat.split, Some(kentos_commands::SplitPolicy::Ratio));
+        assert_eq!(kat.merge, Some(kentos_commands::MergePolicy::Sum));
     }
 
     #[test]
@@ -3854,7 +3854,7 @@ mod tests {
             .unwrap(),
         );
         assert!(
-            matches!(refused, kentos_contracts::CommandResult::Failed { error } if error.code == "rule_broken")
+            matches!(refused, kentos_commands::CommandResult::Failed { error } if error.code == "rule_broken")
         );
     }
 
@@ -3956,7 +3956,7 @@ mod tests {
             w.body.as_ref().unwrap(),
         );
         let kinds: Vec<_> = changes.iter().map(|c| c.kind).collect();
-        use kentos_contracts::FormChangeKind as K;
+        use kentos_commands::FormChangeKind as K;
         assert!(
             kinds.contains(&K::Added) && kinds.contains(&K::Removed) && kinds.contains(&K::Changed),
             "{changes:?}"
@@ -3970,7 +3970,7 @@ mod tests {
         let w = app.forms_window.as_ref().unwrap();
         let body = w.body.as_ref().unwrap();
         let rule = match &body.items[1] {
-            kentos_contracts::FormItem::Tab { visible_when, .. } => visible_when.clone(),
+            kentos_commands::FormItem::Tab { visible_when, .. } => visible_when.clone(),
             _ => None,
         };
         assert_eq!(rule.as_deref(), Some("[Tür] içinde ('sanayi', 'depo')"));
@@ -3980,7 +3980,7 @@ mod tests {
         let body = app.forms_window.as_ref().unwrap().body.as_ref().unwrap();
         assert!(matches!(
             &body.items[1],
-            kentos_contracts::FormItem::Tab {
+            kentos_commands::FormItem::Tab {
                 visible_when: None,
                 ..
             }
@@ -4030,14 +4030,14 @@ mod tests {
         let _ = app.update(Message::Contingents(Event::Cell(
             5,
             0,
-            kentos_contracts::Cell::Code {
+            kentos_commands::Cell::Code {
                 code: "ahsap".into(),
             },
         )));
         let _ = app.update(Message::Contingents(Event::Cell(
             5,
             1,
-            kentos_contracts::Cell::Code { code: "duz".into() },
+            kentos_commands::Cell::Code { code: "duz".into() },
         )));
         let _ = app.update(Message::Contingents(Event::Save));
         assert!(app.contingents.is_none(), "Kaydet closes the window");
@@ -4141,7 +4141,7 @@ mod tests {
             &field,
         )
         .into_iter()
-        .filter(|u| u.how != kentos_contracts::FieldUseHow::Key && !u.kept)
+        .filter(|u| u.how != kentos_commands::FieldUseHow::Key && !u.kept)
         .map(|u| u.place)
         .collect();
         assert_eq!(read.len(), 5, "{read:#?}");
@@ -4428,7 +4428,7 @@ mod tests {
             .and_then(|w| w.body.as_ref())
             .and_then(|b| designer::find(&b.items, "kat"))
         {
-            Some(kentos_contracts::FormItem::Field(f)) => f.label.clone(),
+            Some(kentos_commands::FormItem::Field(f)) => f.label.clone(),
             _ => None,
         };
         assert_eq!(label(&app).as_deref(), Some("Kat adedi"));
@@ -4664,7 +4664,7 @@ mod tests {
             .map(|d| d.model.settings().relations.clone())
             .unwrap_or_default();
         assert_eq!(kept.len(), 1);
-        assert_eq!(kept[0].on_delete, kentos_contracts::RelationDelete::Cascade);
+        assert_eq!(kept[0].on_delete, kentos_commands::RelationDelete::Cascade);
 
         app.selection.set([Slot(1)]);
         run(&mut app, "data.formEdit");
@@ -4711,8 +4711,8 @@ mod tests {
         if let Some(doc) = app.document.as_mut() {
             let _ = kentos_native_application::registry::run(
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-                kentos_contracts::CAD_ENTITIES_DELETE,
-                kentos_contracts::CallOp::Execute,
+                kentos_commands::CAD_ENTITIES_DELETE,
+                kentos_commands::CallOp::Execute,
                 json!({ "uids": [building] }),
             );
         }

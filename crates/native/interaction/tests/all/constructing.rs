@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Entity, EntityBase, PointEntity, Vec2 as Wire};
+use kentos_commands::{Entity, EntityBase, PointEntity, Vec2 as Wire};
 use kentos_interaction::{Level, MarkerShape, Tone};
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");

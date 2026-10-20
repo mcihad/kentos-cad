@@ -2,7 +2,7 @@
 //! changes existing records' attributes alone; adding, moving or deleting an object is taken back
 //! whole with the reason.
 
-use kentos_domain::contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::{Document, ObjectPolicy, Slot};
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -26,7 +26,7 @@ fn run(doc: &mut Document, command: &str, input: Value) -> Value {
     registry::run(
         &mut ExecutionContext::new(doc),
         command,
-        kentos_domain::contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         input,
     )
     .expect("a known command")

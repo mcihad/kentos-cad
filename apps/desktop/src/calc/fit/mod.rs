@@ -32,7 +32,7 @@ pub use params::{Method, Param};
 
 use std::collections::HashMap;
 
-use kentos_contracts::{Entity, Transform};
+use kentos_commands::{Entity, Transform};
 use kentos_domain::{Document as Model, Slot};
 use kentos_geometry_core::ops::fit::{self as solver, FitError, FitKind, FitPair};
 use kentos_interaction::{Format, Vec2, fixed, js_trim};
@@ -568,11 +568,11 @@ fn named_points(model: &Model, layer: &str) -> Vec<(String, Vec<Vec2>)> {
 
 /// The solution as `cad.entities.transform`'s transform (its centred form).
 fn transform_of(fit: &solver::Fit) -> Option<Transform> {
-    let from = kentos_contracts::Vec2 {
+    let from = kentos_commands::Vec2 {
         x: fit.from.x,
         y: fit.from.y,
     };
-    let to = kentos_contracts::Vec2 {
+    let to = kentos_commands::Vec2 {
         x: fit.to.x,
         y: fit.to.y,
     };

@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.layers.info.json: the shared cases of `cad.layers.info` v1 (docs/adr/0225 §4–§6),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_layers.rs, layer_info.rs: the
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_layers.rs, layer_info.rs: the
 checks and their order, the codes, the paths and the words; the step's name) and from the ADR's templates (§6: `{…}` an
 expression, `{{` and `}}` plain braces, positions 1-based), without KentOS code. The expression language's own words
 for the few broken expressions below are its lexer's and its world rule's (docs/adr/0100, 0214). The web

@@ -6,8 +6,8 @@
 
 use std::path::Path;
 
-use kentos_contracts::encoding::sha256_reader_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_reader_hex;
+use kentos_commands::{
     AssetCounts, AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, AssetsChecked, BlockId, CommandResult,
     Entity, SourceKind, TableSource,
 };

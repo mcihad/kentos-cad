@@ -29,7 +29,7 @@ const N: f64 = 4_400_000.0;
 fn app() -> App {
     let (mut app, _) = App::boot(None);
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = crate::document::Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app
@@ -118,7 +118,7 @@ fn nokta_ekle_writes_one_step_and_tasi_moves_the_selected_point() {
     ev(&mut app, Event::MovePoint);
     let doc = &mut app.document.as_mut().expect("a drawing").model;
     let moved = doc.get(slot).expect("the point");
-    let kentos_contracts::Entity::Point(p) = moved else {
+    let kentos_commands::Entity::Point(p) = moved else {
         panic!("a point");
     };
     assert_eq!((p.p.x, p.p.y), (E + 210.0, N + 105.0));

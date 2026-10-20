@@ -2,7 +2,7 @@
 //! through `cad.arch.edit`, their level and phase, and a stair's or ramp's checks (information, never a refusal); a
 //! tag's of docs/adr/0344 §5, written through `cad.tags.edit`.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchChange, ArchInfo, ArchOperation, ArchPhase, ColumnShape, Entity, GridBubbles, TagChange, TagShape,
 };
 use kentos_domain::Slot;
@@ -127,7 +127,7 @@ fn arch_rows(
 }
 
 /// The checks as rows: each a short warning and its whole words beneath as a note.
-fn checks(warnings: Vec<kentos_contracts::CommandWarning>) -> Vec<Row> {
+fn checks(warnings: Vec<kentos_commands::CommandWarning>) -> Vec<Row> {
     if warnings.is_empty() {
         return vec![Row::text("Denetim", "Uyuyor")];
     }
@@ -406,7 +406,7 @@ pub(super) fn rows(doc: &Document, slot: Slot, e: &Entity, locked: bool, f: &For
             }
         }
         Entity::ViewMark(m) => {
-            use kentos_contracts::{ViewMarkChange, ViewMarkForm, ViewMarksOperation};
+            use kentos_commands::{ViewMarkChange, ViewMarkForm, ViewMarksOperation};
             let x = &m.mark;
             let op = |o: ViewMarksOperation| Message::Properties(Event::ViewMark(slot, o));
             out.push(Row::text("Biçim", x.form.label()));

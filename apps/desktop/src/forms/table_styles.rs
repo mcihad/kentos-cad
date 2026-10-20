@@ -18,7 +18,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Color, Element, Fill, Task, Theme};
-use kentos_contracts::{LayerNodeType, LayersTable, TableStyle, table_styles_problem};
+use kentos_commands::{LayerNodeType, LayersTable, TableStyle, table_styles_problem};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_table};
 use kentos_ui::icon::icon;
@@ -259,7 +259,7 @@ impl App {
             return Vec::new();
         };
         let mut out = Vec::new();
-        fn walk(nodes: &[kentos_contracts::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
+        fn walk(nodes: &[kentos_commands::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
                 let path = if at.is_empty() {
                     n.name.clone()
@@ -404,7 +404,7 @@ impl App {
         &'a self,
         at: usize,
         r: &TableStyle,
-        fields: &[kentos_contracts::LayerField],
+        fields: &[kentos_commands::LayerField],
     ) -> Element<'a, Message> {
         let names: Vec<String> = fields.iter().map(|f| f.name.clone()).collect();
         let mut choices = vec![Choice::new(ROW)];

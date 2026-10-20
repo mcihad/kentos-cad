@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use iced::Task;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::geom::pointcloud::near;
 use kentos_interaction::{Format, Level};
 use kentos_pointcloud::copc::Key;

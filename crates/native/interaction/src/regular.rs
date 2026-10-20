@@ -19,7 +19,7 @@
 //! (`shapes::regular_ring`). With the overlap control or Topoloji changing the
 //! area, it is written as any new area is (`points::write_area_by`).
 
-use kentos_contracts::{RegularFrame, RegularPolygonCreate};
+use kentos_commands::{RegularFrame, RegularPolygonCreate};
 use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geometry::{dist, signed_area};
 use kentos_geometry_core::tools::drawing::regular_radius_point;

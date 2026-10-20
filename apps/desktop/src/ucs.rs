@@ -5,7 +5,7 @@
 //! ten; Önceki gives the last back as an explicit frame. The history is the
 //! session's, never the drawing's: another drawing starts it anew.
 
-use kentos_contracts::{CommandResult, Ucs, UcsSet, UcsTo};
+use kentos_commands::{CommandResult, Ucs, UcsSet, UcsTo};
 use kentos_native_application::{ExecutionContext, ucs_set};
 
 use crate::app::App;

@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::EntityGeometry;
+use kentos_commands::EntityGeometry;
 use serde_json::{Value, json};
 
 use super::{
@@ -118,8 +118,8 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
                 ]);
                 let g = EntityGeometry::Line {
                     ms: None,
-                    a: kentos_contracts::Vec2 { x: a.x, y: a.y },
-                    b: kentos_contracts::Vec2 { x: b.x, y: b.y },
+                    a: kentos_commands::Vec2 { x: a.x, y: a.y },
+                    b: kentos_commands::Vec2 { x: b.x, y: b.y },
                     zs: None,
                 };
                 if let Some(e) = edit_object(&g, &layer, attrs) {

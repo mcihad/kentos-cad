@@ -24,7 +24,7 @@
 //! added); the expected revision; the objects; their layers unlocked; the
 //! corner is one; the size fits it.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, CornerPick, EditOperation, EntitiesChamfer, EntitiesCornerPlan,
     EntitiesCornered, EntitiesEdit, EntitiesFillet, Entity, EntityEdit,
 };

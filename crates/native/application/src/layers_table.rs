@@ -6,7 +6,7 @@
 //! drawing's, a layer, not drawn from a service; each rule's field is the layer's and its condition
 //! compiles as the table's filter does (`$sıra` and `$ölçek` refused).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayersComposePlan, LayersComposed, LayersTable,
     table_styles_problem,
 };
@@ -140,8 +140,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LayersTable) -> CommandResult<Lay
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LayersTable) -> CommandResult<LayersComposed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_TABLE,
-        kentos_contracts::CAD_LAYERS_TABLE_VERSION,
+        kentos_commands::CAD_LAYERS_TABLE,
+        kentos_commands::CAD_LAYERS_TABLE_VERSION,
         input,
         write_execute,
     )

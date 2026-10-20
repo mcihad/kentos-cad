@@ -8,8 +8,8 @@
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::table_formula::{self, Axis};
-use kentos_contracts::{
+use kentos_commands::table_formula::{self, Axis};
+use kentos_commands::{
     CellField, CellFormula, CellRange, CellStyle, CommandResult, CommandWarning, Entity, FieldFormat,
     MAX_TABLE_SIZE, SourceOverrides, TableEdit, TableEntity, TableRefresh, TableReport, TableSource,
     TablesEdit, TablesEdited, TablesOperation, TablesPlan, cells_problem,
@@ -482,11 +482,11 @@ fn edited(doc: &Document, mut t: TableEntity, e: &TableEdit, path: &str) -> Resu
         TableEdit::ColumnAlign { from, count, align } => {
             let (f, k) = span_in(t.columns.len(), *from, *count, "sütun", path)?;
             let m = t.columns.len();
-            let mut aligns = t.aligns.take().unwrap_or_else(|| vec![kentos_contracts::TableAlign::Left; m]);
+            let mut aligns = t.aligns.take().unwrap_or_else(|| vec![kentos_commands::TableAlign::Left; m]);
             for a in &mut aligns[f..f + k] {
                 *a = *align;
             }
-            t.aligns = (!aligns.iter().all(|a| *a == kentos_contracts::TableAlign::Left)).then_some(aligns);
+            t.aligns = (!aligns.iter().all(|a| *a == kentos_commands::TableAlign::Left)).then_some(aligns);
             Ok(t)
         }
         TableEdit::Header { on } => {
@@ -856,8 +856,8 @@ pub fn plan_in(doc: &Document, input: &TablesEdit) -> CommandResult<TablesPlan> 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: TablesEdit) -> CommandResult<TablesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_TABLES_EDIT,
-        kentos_contracts::CAD_TABLES_EDIT_VERSION,
+        kentos_commands::CAD_TABLES_EDIT,
+        kentos_commands::CAD_TABLES_EDIT_VERSION,
         input,
         write_execute,
     )

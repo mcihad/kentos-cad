@@ -7,7 +7,7 @@
 //! (docs/adr/0210): without one every time is shown. The desktop gives its
 //! own store, kept in step with the document (`ExecutionContext::with_store`).
 
-use kentos_contracts::{Entity, LayerNode};
+use kentos_commands::{Entity, LayerNode};
 use kentos_domain::{Document, LayerTree};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::store::{LayerFlags, Store};

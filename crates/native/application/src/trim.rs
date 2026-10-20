@@ -23,7 +23,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesEdit, EntitiesTrim, EntitiesTrimPlan,
     EntitiesTrimmed, Entity, EntityEdit, TrimBoundaries, TrimEdgeMode,
 };
@@ -534,7 +534,7 @@ fn holed(e: &Entity) -> bool {
     matches!(e, Entity::Polygon(p) if p.holes.as_ref().is_some_and(|h| !h.is_empty()))
 }
 
-fn rect(a: kentos_contracts::Vec2, b: kentos_contracts::Vec2) -> Bounds {
+fn rect(a: kentos_commands::Vec2, b: kentos_commands::Vec2) -> Bounds {
     Bounds {
         min_x: a.x.min(b.x),
         min_y: a.y.min(b.y),

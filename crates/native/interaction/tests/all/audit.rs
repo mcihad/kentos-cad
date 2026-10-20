@@ -7,7 +7,7 @@
 use crate::common;
 
 use common::Bench;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::Tone;
 

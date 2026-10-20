@@ -15,7 +15,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     AttributeDefinition, AttributeSync, BlockDefinition, BlockId, Entity, InsertEntity, Vec2,
 };
 use kentos_domain::{Document, Slot};

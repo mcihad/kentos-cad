@@ -13,7 +13,7 @@
 //! `cad.curves.edit`, one undo step “Eğriyi düzenle”, and the curve stays picked for the next change. Enter or Esc
 //! drops the option asked for, then the curve; with neither, Enter leaves.
 
-use kentos_contracts::{CommandResult, CurveEdit, CurvesEdit, Entity};
+use kentos_commands::{CommandResult, CurveEdit, CurvesEdit, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geom::nurbs::OwnedNurbs;
 use kentos_geometry_core::geometry::dist;
@@ -83,7 +83,7 @@ fn kind_of(e: &Entity) -> Option<Kind> {
     }
 }
 
-fn pt(p: &kentos_contracts::Vec2) -> Vec2 {
+fn pt(p: &kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 

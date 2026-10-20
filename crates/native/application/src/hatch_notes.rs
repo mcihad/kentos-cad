@@ -4,7 +4,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{CommandWarning, Entity, EntityId};
+use kentos_commands::{CommandWarning, Entity, EntityId};
 use kentos_domain::{Document, StepReport, Uuid};
 
 use crate::codes;

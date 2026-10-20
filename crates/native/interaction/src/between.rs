@@ -20,7 +20,7 @@
 //! step (“Ekle”): “3 nokta kondu.” Where they fall is the shared core's
 //! (`construct::points_between`).
 
-use kentos_contracts::EntityGeometry;
+use kentos_commands::EntityGeometry;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::construct::{Between, points_between};
 use kentos_geometry_core::tools::point_text::{js_trim, parse_number};
@@ -179,7 +179,7 @@ impl PointsBetween {
             .collect();
         if points::write_objects(
             objects,
-            Some(kentos_contracts::CreateOperation::PointsBetween),
+            Some(kentos_commands::CreateOperation::PointsBetween),
             cx,
         )
         .is_some()

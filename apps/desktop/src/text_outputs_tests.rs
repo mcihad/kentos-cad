@@ -3,7 +3,7 @@
 //! tabs and a stacked fraction, written into the project file, a DXF and a sheet's PDF and read back: the file and the
 //! DXF give the same text, runs and layout; the PDF's words (poppler's `pdftotext`) are the letters as typed.
 
-use kentos_contracts::{Entity, TextEntity, TextScript};
+use kentos_commands::{Entity, TextEntity, TextScript};
 use serde_json::{Value, json};
 
 use crate::app::{App, Message};
@@ -19,7 +19,7 @@ fn command(app: &mut App, name: &str, input: Value) -> Value {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         name,
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         input,
     )
     .expect("runs");
@@ -43,10 +43,10 @@ fn texts(list: &[Entity]) -> Vec<TextEntity> {
 /// A text's letters, formats, width, slant and layout.
 type Kept = (
     String,
-    Vec<kentos_contracts::TextRun>,
+    Vec<kentos_commands::TextRun>,
     Option<f64>,
     Option<f64>,
-    Option<Box<kentos_contracts::ParagraphLayout>>,
+    Option<Box<kentos_commands::ParagraphLayout>>,
 );
 
 /// What a text should keep through a file.
@@ -127,7 +127,7 @@ fn a_text_s_letters_and_formats_come_back_from_every_output() {
     let all: Vec<&Entity> = model.entities().collect();
     let input = kentos_headless::export::dxf_input(model, &[(layer.clone(), all)]);
     let (dxf, _) = kentos_formats::dxf::write(&input);
-    let imported = kentos_formats::dxf::read(&dxf, &kentos_contracts::DxfReadOptions::default())
+    let imported = kentos_formats::dxf::read(&dxf, &kentos_commands::DxfReadOptions::default())
         .expect("reads");
     let read = texts(&imported.entities);
     assert_eq!(

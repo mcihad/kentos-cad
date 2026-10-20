@@ -2,7 +2,7 @@
 //! Turkish title, its input in plain words, what it wrote, its warnings and
 //! its error with their codes. Pure: the layers' names come from the caller.
 
-use kentos_contracts::{CallKind, CallRecord, CallStatus, CommandWarning, ProjectPart};
+use kentos_commands::{CallKind, CallRecord, CallStatus, CommandWarning, ProjectPart};
 use kentos_domain::{RefusedAs, RefusedCall};
 use serde_json::Value;
 
@@ -627,7 +627,7 @@ mod tests {
             version: 1,
             input: json!({}),
             refused: RefusedAs::Failed,
-            error: Some(kentos_contracts::CommandError {
+            error: Some(kentos_commands::CommandError {
                 code: "layer_locked".into(),
                 message: "Katman kilitli.".into(),
                 ..Default::default()

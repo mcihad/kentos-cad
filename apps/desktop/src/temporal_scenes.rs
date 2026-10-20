@@ -22,7 +22,7 @@ const Y0: f64 = 4_420_000.0;
 /// The drawing, the view on its parcels, the road and the scenario's park.
 pub(crate) fn opened(app: &mut App) {
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
     app.tab = "map";
@@ -69,7 +69,7 @@ fn recorded(app: &mut App) {
         let answer = registry::run(
             &mut ExecutionContext::new(&mut doc.model),
             "cad.entities.set",
-            kentos_contracts::CallOp::Execute,
+            kentos_commands::CallOp::Execute,
             serde_json::json!({ "uids": [uid], "attrs": attrs, "operation": "attributes" }),
         )
         .expect("runs");
@@ -78,7 +78,7 @@ fn recorded(app: &mut App) {
     let answer = registry::run(
         &mut ExecutionContext::new(&mut doc.model),
         "cad.layers.time",
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         serde_json::json!({ "layer": "parsel", "time": {
             "start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no",
             "recordedStart": "kayit_tarihi", "recordedEnd": "kayit_bitis" } }),

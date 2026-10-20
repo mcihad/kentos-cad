@@ -12,7 +12,7 @@ pub mod split;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_native_application::geometry::unlinked;
 
 use crate::text::js_trim;

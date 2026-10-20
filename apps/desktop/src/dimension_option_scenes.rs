@@ -9,7 +9,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{
+use kentos_commands::{
     AltUnits, CommandResult, DimensionEdit, DimensionFit, DimensionOptions, DimensionTolerance, DimensionZeros,
     DimensionsEdit, DrawingUnit, ToleranceKind,
 };

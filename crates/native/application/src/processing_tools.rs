@@ -1,7 +1,7 @@
 //! `cad.processing.tools` (docs/adr/0508): İşlemler's tools and their parameters, for a script or an agent to choose
 //! one and give its values. It reads the drawing only for the defaults.
 
-use kentos_contracts::{CommandResult, ProcessingTools, ProcessingToolsListed};
+use kentos_commands::{CommandResult, ProcessingTools, ProcessingToolsListed};
 
 use crate::ExecutionContext;
 use crate::processing_host::host;

@@ -15,7 +15,7 @@
 
 use std::collections::{BTreeSet, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CadElement, CadParameter, CommandResult, Constraint, ConstraintEdit, ConstraintId,
     ConstraintRule, ConstraintSense, ConstraintSet, ConstraintsEdit, ConstraintsEditPlan,
     ConstraintsEdited, DistanceAxis, ElementRef, EntityId, ParameterKind, SolveStatus,
@@ -87,8 +87,8 @@ pub fn execute(
 ) -> CommandResult<ConstraintsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_CONSTRAINTS_EDIT,
-        kentos_contracts::CAD_CONSTRAINTS_EDIT_VERSION,
+        kentos_commands::CAD_CONSTRAINTS_EDIT,
+        kentos_commands::CAD_CONSTRAINTS_EDIT_VERSION,
         input,
         write_execute,
     )
@@ -238,7 +238,7 @@ fn sensed(doc: &Document, mut rule: ConstraintRule) -> ConstraintRule {
                 let centre = ElementRef {
                     uid: b.uid,
                     element: CadElement::Point {
-                        place: kentos_contracts::SubPlace::Center,
+                        place: kentos_commands::SubPlace::Center,
                     },
                 };
                 *left = measure(&probe(centre, *a)).is_none_or(|d| d >= 0.0);
@@ -249,13 +249,13 @@ fn sensed(doc: &Document, mut rule: ConstraintRule) -> ConstraintRule {
                     ElementRef {
                         uid: a.uid,
                         element: CadElement::Point {
-                            place: kentos_contracts::SubPlace::Center,
+                            place: kentos_commands::SubPlace::Center,
                         },
                     },
                     ElementRef {
                         uid: b.uid,
                         element: CadElement::Point {
-                            place: kentos_contracts::SubPlace::Center,
+                            place: kentos_commands::SubPlace::Center,
                         },
                     },
                 );
@@ -398,7 +398,7 @@ fn check_shape(edit: &ConstraintEdit) -> Result<(), Stop> {
                         codes::INVALID_CONSTRAINT,
                         format!(
                             "{} kısıtının parçaları kuralına uymuyor: paralel, dik, doğrudaş ve açı iki kenar; eş merkezli iki daire; yarıçap ve çap daire; simetrik iki nokta ve bir kenar ister.",
-                            kentos_contracts::rule_label(&c.rule)
+                            kentos_commands::rule_label(&c.rule)
                         ),
                         &format!("{at}.rule"),
                     ));
@@ -705,7 +705,7 @@ pub(crate) fn check(
                     codes::INVALID_CONSTRAINT,
                     format!(
                         "{} kısıtının tek çözümü var; çevrilen kısıtlar teğet, kenara uzaklık, yatay ya da düşey uzaklık ve açıdır.",
-                        kentos_contracts::rule_label(&set.constraints[i].rule)
+                        kentos_commands::rule_label(&set.constraints[i].rule)
                     ),
                     "edit.id",
                 ));

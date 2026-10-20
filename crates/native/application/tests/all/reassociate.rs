@@ -3,7 +3,7 @@
 //! bound dimension follows its wall; a deleted vertex breaks its point; the
 //! command gives it a place again and it follows once more.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DimensionPoint, DimensionsReassociate, DocumentSnapshotV1, Entity, PlaceOn,
     PointBinding, SubPlace, Vec2,
 };
@@ -58,7 +58,7 @@ fn bind(doc: &mut Document, wall: Slot, dim: Slot, bindings: &[(DimensionPoint, 
     }
 }
 
-fn dimension(doc: &Document, slot: Slot) -> kentos_domain::contracts::DimensionEntity {
+fn dimension(doc: &Document, slot: Slot) -> kentos_commands::DimensionEntity {
     match doc.get(slot) {
         Some(Entity::Dimension(d)) => d.clone(),
         other => panic!("not a dimension: {other:?}"),
@@ -133,7 +133,7 @@ fn a_copy_of_a_bound_dimension_is_free() {
 /// references stay; a grip that moves a bound point lets that point go.
 #[test]
 fn an_edit_without_references_keeps_them_and_a_moved_point_goes_free() {
-    use kentos_domain::contracts::{EditOperation, EntitiesEdit, EntityEdit};
+    use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
     use kentos_native_application::edit;
     use kentos_native_application::geometry::{edit_geometry, shape};
     let (mut doc, wall, dim) = drawing();

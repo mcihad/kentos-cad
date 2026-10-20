@@ -50,7 +50,7 @@ pub use session::{NewDrawing, Session, new_drawing};
 
 /// The command catalog as JSON: every product command, its version, title,
 /// summary, hosts, permissions, input and output schemas and examples
-/// (`kentos_contracts::catalog`, the file the web and the server read).
+/// (`kentos_commands::catalog`, the file the web and the server read).
 pub fn catalog() -> serde_json::Value {
-    serde_json::to_value(kentos_contracts::catalog::catalog()).unwrap_or(serde_json::Value::Null)
+    serde_json::to_value(kentos_commands::catalog::catalog()).unwrap_or(serde_json::Value::Null)
 }

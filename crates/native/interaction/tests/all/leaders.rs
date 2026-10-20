@@ -7,13 +7,13 @@
 use crate::common;
 
 use common::{Bench, E, N, base};
-use kentos_contracts::{Entity, HatchPatternType, TextAlign};
+use kentos_commands::{Entity, HatchPatternType, TextAlign};
 use kentos_domain::Slot;
 
 const LEADERS: &str = include_str!("../../../../../fixtures/interaction/v1/leaders.kcad");
 
 /// A point from the scene's origin, (500000, 4400000).
-fn rel(p: kentos_contracts::Vec2) -> [f64; 2] {
+fn rel(p: kentos_commands::Vec2) -> [f64; 2] {
     [p.x - 500_000.0, p.y - 4_400_000.0]
 }
 
@@ -87,8 +87,8 @@ fn with_leader() -> (Bench, Slot) {
         "../../../../../fixtures/interaction/v1/objects.kcad"
     ));
     b.draft.snap = false;
-    let at = |x: f64, y: f64| kentos_contracts::Vec2 { x: E + x, y: N + y };
-    let leader = Entity::Leader(kentos_contracts::LeaderEntity {
+    let at = |x: f64, y: f64| kentos_commands::Vec2 { x: E + x, y: N + y };
+    let leader = Entity::Leader(kentos_commands::LeaderEntity {
         tip: None,
         leader_style: None,
         blocks: Vec::new(),
@@ -151,7 +151,7 @@ fn field(b: &Bench) -> kentos_interaction::TextField {
     field
 }
 
-fn leaders_drawn(b: &Bench) -> Vec<kentos_contracts::LeaderEntity> {
+fn leaders_drawn(b: &Bench) -> Vec<kentos_commands::LeaderEntity> {
     b.doc
         .entities()
         .filter_map(|e| match e {
@@ -161,7 +161,7 @@ fn leaders_drawn(b: &Bench) -> Vec<kentos_contracts::LeaderEntity> {
         .collect()
 }
 
-fn at(p: kentos_contracts::Vec2) -> [f64; 2] {
+fn at(p: kentos_commands::Vec2) -> [f64; 2] {
     [p.x - E, p.y - N]
 }
 
@@ -182,14 +182,14 @@ fn the_tool_opens_the_note_past_the_landing_and_writes_the_leader_in_one_step() 
     // The landing 5 m east of (6, 5), the note 1.25 m on: its middle left at (12.25, 5).
     let f = field(&b);
     assert_eq!(
-        at(kentos_contracts::Vec2 {
+        at(kentos_commands::Vec2 {
             x: f.at.x,
             y: f.at.y
         }),
         [12.25, 5.0]
     );
     assert_eq!((f.height, f.rotation), (2.5, 0.0));
-    assert_eq!(f.align, Some(kentos_contracts::TextAlign::MiddleLeft));
+    assert_eq!(f.align, Some(kentos_commands::TextAlign::MiddleLeft));
     assert!(f.empty, "an empty field's Enter answers");
     assert_eq!(
         b.session.prompt().text(),
@@ -226,13 +226,13 @@ fn a_note_to_the_left_opens_on_its_middle_right_and_the_empty_field_writes_the_a
     // The landing 5 m west of (20, 6), the note 1.25 m on: its middle right at (13.75, 6).
     let f = field(&b);
     assert_eq!(
-        at(kentos_contracts::Vec2 {
+        at(kentos_commands::Vec2 {
             x: f.at.x,
             y: f.at.y
         }),
         [13.75, 6.0]
     );
-    assert_eq!(f.align, Some(kentos_contracts::TextAlign::MiddleRight));
+    assert_eq!(f.align, Some(kentos_commands::TextAlign::MiddleRight));
     b.run(|s, cx| s.text_typed(Some(""), cx));
     let [l] = &leaders_drawn(&b)[..] else {
         panic!("one leader");
@@ -281,13 +281,13 @@ fn ok_chooses_the_arrowhead_zemin_masks_the_note_geri_takes_the_last_vertex_back
     assert!(b.type_text("Boş kare"));
     assert_eq!(
         b.memory.leader_arrow,
-        Some(kentos_contracts::LeaderArrow::BoxBlank)
+        Some(kentos_commands::LeaderArrow::BoxBlank)
     );
     assert!(b.type_text("O"));
     assert!(b.type_text("dayanak üçgeni"));
     assert_eq!(
         b.memory.leader_arrow,
-        Some(kentos_contracts::LeaderArrow::DatumFilled)
+        Some(kentos_commands::LeaderArrow::DatumFilled)
     );
     assert!(b.type_text("O"));
     assert!(b.type_text("Acik"));
@@ -308,7 +308,7 @@ fn ok_chooses_the_arrowhead_zemin_masks_the_note_geri_takes_the_last_vertex_back
     );
     assert_eq!(
         (l.arrow, l.mask),
-        (Some(kentos_contracts::LeaderArrow::Open), true)
+        (Some(kentos_commands::LeaderArrow::Open), true)
     );
     // A name that names none is said, and the tool waits on.
     assert!(b.type_text("O"));
@@ -356,7 +356,7 @@ fn ok_boyu_sets_the_arrowhead_size_the_leader_keeps() {
 #[test]
 fn yukseklik_is_its_own_and_esc_steps_back() {
     // docs/adr/0205 §2: the project's Kılavuz height until one is typed in this drawing; Yazı's is not it.
-    use kentos_contracts::AnnotationKind;
+    use kentos_commands::AnnotationKind;
     let mut b = tool();
     assert!(b.type_text("Y"));
     assert_eq!(

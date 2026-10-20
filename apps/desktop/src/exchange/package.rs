@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_contracts::{CommandWarning, PackageProject, ProjectPackaged};
+use kentos_commands::{CommandWarning, PackageProject, ProjectPackaged};
 use kentos_interaction::Level;
 
 use super::{Event as Exchange, message, off_thread};
@@ -82,7 +82,7 @@ impl App {
                         "Paket yapıldı: {} ve {} dosya ({mb:.1} MB{}); içindekiler paket.json'da. Klasör başka bilgisayarda açılınca dış başvurular, bağlı dosyalar ve katmanlar kaynaklarını bulur.",
                         out.project,
                         out.files.len(),
-                        match out.files.iter().filter(|f| f.kind == kentos_contracts::PackagedKind::Xref).count() {
+                        match out.files.iter().filter(|f| f.kind == kentos_commands::PackagedKind::Xref).count() {
                             0 => String::new(),
                             n => format!(", {n} dış başvuru kaynağı"),
                         }

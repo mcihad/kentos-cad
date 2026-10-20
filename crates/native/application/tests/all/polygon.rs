@@ -3,7 +3,7 @@
 //! command inside an open transaction.
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, PolygonCreate, PolygonCreated, Vec2,
 };
 use kentos_native_application::{ExecutionContext, polygon};

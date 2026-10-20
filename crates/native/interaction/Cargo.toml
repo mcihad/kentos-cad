@@ -12,7 +12,7 @@ publish.workspace = true
 # shared core; a finished object is written through a product command
 # (native/application, docs/adr/0022) over the native document.
 [dependencies]
-kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-geometry-core = { path = "../../shared/geometry-core" }
 kentos-domain = { path = "../domain" }
 kentos-native-application = { path = "../application" }

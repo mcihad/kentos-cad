@@ -5,7 +5,7 @@
 
 use iced::widget::{Id, operation, row, text_input};
 use iced::{Center, Element, Task};
-use kentos_contracts::Workspace;
+use kentos_commands::Workspace;
 use kentos_interaction::Level;
 use kentos_project::wizard::{CAD_SCALES, GIS_SCALES, scale_text};
 use kentos_ui::widget::Menu;

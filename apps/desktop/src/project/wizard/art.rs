@@ -6,7 +6,7 @@
 
 use iced::widget::svg;
 use iced::{Color, Element, Fill, Theme};
-use kentos_contracts::Workspace;
+use kentos_commands::Workspace;
 use kentos_ui::theme::Tokens;
 
 use crate::app::Message;

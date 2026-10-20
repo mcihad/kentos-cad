@@ -12,7 +12,7 @@
 //! Every change is one undo step of `cad.hatches.edit` named after it; the hatch stays picked for the next. Enter or
 //! Esc drops the hatch; with none, Enter leaves.
 
-use kentos_contracts::{
+use kentos_commands::{
     BoundaryForm, Entity, HatchEdit as Edit, HatchRegion, HatchWay, HatchesEdit, TrimBoundaries,
 };
 use kentos_domain::Slot;
@@ -135,7 +135,7 @@ impl HatchEditor {
         self.drawn = match self.picked.and_then(|s| cx.doc.get(s)) {
             // Its ring and each hole closed, apart: the core's outline runs a hatch's holes on from its ring.
             Some(Entity::Hatch(h)) => {
-                let ring = |pts: &[kentos_contracts::Vec2]| {
+                let ring = |pts: &[kentos_commands::Vec2]| {
                     let pts: Vec<Vec2> = pts.iter().map(|q| Vec2::new(q.x, q.y)).collect();
                     Stroke::solid(pts, true).width(2.5).tone(Tone::Snap)
                 };

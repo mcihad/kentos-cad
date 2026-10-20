@@ -10,8 +10,8 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use kentos_domain::contracts::ChangesetApply;
-use kentos_domain::contracts::{
+use kentos_commands::ChangesetApply;
+use kentos_commands::{
     AddressesDefine, BlockId, BlocksDefine, BlocksEdit, CAD_BLOCKS_DEFINE, CAD_BLOCKS_EDIT,
     CAD_ENTITIES_SET, DimensionsReassociate, EntitiesChamfer, EntitiesCreate, EntitiesFillet,
     AnnotationsScales, EntitiesOffset, EntitiesOrder, EntitiesSetProperties, EntitiesTrim, LabelsPin, LayersCompose,
@@ -20,14 +20,14 @@ use kentos_domain::contracts::{
     NetworkDefine, NurbsCreate, OffsetBy, ScenariosEdit, SettingsSet, SheetsEdit, StandardsApply,
     StandardsCheck, StylesEdit, StylesImpact, UcsSet, UcsTo, ViewsEdit, ViewsOp,
 };
-use kentos_domain::contracts::{
+use kentos_commands::{
     ArcCreate, ArrayLayout, CAD_ARC_CREATE, CAD_CIRCLE_CREATE, CAD_ENTITIES_ARRAY,
     CAD_ENTITIES_DELETE, CAD_ENTITIES_EDIT, CAD_ENTITIES_TRANSFORM, CAD_LINE_CREATE,
     CAD_POINT_CREATE, CAD_POLYGON_CREATE, CAD_POLYLINE_CREATE, CircleCreate, DocumentSnapshotV1,
     EntitiesArray, EntitiesDelete, EntitiesEdit, EntitiesTransform, EntityEdit, EntityGeometry,
     LineCreate, PointCreate, PolygonCreate, PolylineCreate, Transform,
 };
-use kentos_domain::contracts::{
+use kentos_commands::{
     DimensionMeasure, DimensionsCreate, Division, EntitiesBoundary, EntitiesBreak, EntitiesDivide,
     EntitiesHatch, EntitiesJoin, EntitiesStretch, HatchRegion, ImportDxf, ImportGpkg, ImportPdf, MeasuredPoint,
     UnitsChange,
@@ -65,13 +65,13 @@ use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
     file_import_block, hatch_patterns_edit, library_edit, line_types_edit, styles_impact,
 };
-use kentos_domain::contracts::{
+use kentos_commands::{
     FormsAudit, FormsCompare, FormsEdit, FormsRecompute, FormsTest, FormsTransition, DomainsEdit, DomainsExport, FieldsMigrate, AttachmentsInspect, SchemaDescribe, FormsExport, FormsImport, FormsFill, FormsSubmit, FormsValidate, RecordsCreate, RecordsDuplicate, RelationsEdit,
 };
 use kentos_native_application::{
     forms_audit, forms_compare, forms_edit, forms_recompute, forms_test, forms_transition, domains_edit, domains_export, fields_migrate, attachments_inspect, schema_describe, forms_export, forms_import, forms_fill, forms_submit, forms_validate, records, records_duplicate, relations_edit,
 };
-use kentos_domain::contracts::{JoinsEdit, JoinsQuery};
+use kentos_commands::{JoinsEdit, JoinsQuery};
 use kentos_native_application::{joins_edit, joins_query};
 use serde_json::{Value, json};
 
@@ -372,7 +372,7 @@ fn with_uids(text: &str, state: &State, at: &str) -> Outcome<String> {
 
 /// The number of a point list at `rest` (`pts[1].y`, after any ring prefix).
 fn point_number<'a>(
-    pts: &'a mut [kentos_domain::contracts::Vec2],
+    pts: &'a mut [kentos_commands::Vec2],
     rest: &str,
 ) -> Option<&'a mut f64> {
     let (i, axis) = rest.strip_prefix("pts[")?.split_once("].")?;
@@ -397,19 +397,19 @@ trait Input {
 }
 
 // The constraint commands' numbers are in expressions, not the input's numbers (docs/adr/0335).
-impl Input for kentos_domain::contracts::ConstraintsEdit {
+impl Input for kentos_commands::ConstraintsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ParametersEdit {
+impl Input for kentos_commands::ParametersEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ConstraintsQuery {
+impl Input for kentos_commands::ConstraintsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -634,7 +634,7 @@ fn list_number<'a>(list: &'a mut [f64], name: &str, rest: &str) -> Option<&'a mu
 
 /// `name[i].x` of a list of points, as `pts[i].x`.
 fn named_point<'a>(
-    pts: &'a mut [kentos_domain::contracts::Vec2],
+    pts: &'a mut [kentos_commands::Vec2],
     name: &str,
     rest: &str,
 ) -> Option<&'a mut f64> {
@@ -642,10 +642,10 @@ fn named_point<'a>(
     point_number(pts, &format!("pts{after}"))
 }
 
-impl Input for kentos_domain::contracts::NurbsCreate {
+impl Input for kentos_commands::NurbsCreate {
     /// `by.ctrl[1].y`, `by.pts[0].x`, `by.weights[2]`, `by.knots[3]`, `lineWeight` (docs/adr/0259).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::NurbsBy;
+        use kentos_commands::NurbsBy;
         if path == "lineWeight" {
             return self.line_weight.as_mut();
         }
@@ -664,7 +664,7 @@ impl Input for kentos_domain::contracts::NurbsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::WallsCreate {
+impl Input for kentos_commands::WallsCreate {
     /// `walls[0].pts[1].y`, `walls[0].bulges[0]`, `walls[0].width`, `.offset`, `.height`, `lineWeight` (docs/adr/0339).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -681,7 +681,7 @@ impl Input for kentos_domain::contracts::WallsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::WallsFromLines {
+impl Input for kentos_commands::WallsFromLines {
     /// `width`, `maxWidth`, `angle`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -693,7 +693,7 @@ impl Input for kentos_domain::contracts::WallsFromLines {
     }
 }
 
-impl Input for kentos_domain::contracts::SpacesCreate {
+impl Input for kentos_commands::SpacesCreate {
     /// `spaces[0].seed.x` and `.y`, `.height`, `lineWeight` (docs/adr/0342).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -710,10 +710,10 @@ impl Input for kentos_domain::contracts::SpacesCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::SpacesEdit {
+impl Input for kentos_commands::SpacesEdit {
     /// Değiştir's `operation.height`; Böl's `operation.line[k].x` and `.y`; Duvarlardan bul's `operation.seed.x`, `.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::SpacesOperation as Op;
+        use kentos_commands::SpacesOperation as Op;
         match &mut self.operation {
             Op::Set(c) if path == "operation.height" => c.height.as_mut()?.as_mut(),
             Op::Split { line } => named_point(line, "operation.line", path),
@@ -727,7 +727,7 @@ impl Input for kentos_domain::contracts::SpacesEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::GridsCreate {
+impl Input for kentos_commands::GridsCreate {
     /// `grids[0].pts[k].x` and `.y`, `series.spacings[k]`, `lineWeight` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -743,7 +743,7 @@ impl Input for kentos_domain::contracts::GridsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::ColumnsCreate {
+impl Input for kentos_commands::ColumnsCreate {
     /// `columns[0].width`, `.at.x` and `.y`, `lineWeight` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -760,7 +760,7 @@ impl Input for kentos_domain::contracts::ColumnsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::StairsCreate {
+impl Input for kentos_commands::StairsCreate {
     /// `stairs[0].tread`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -776,7 +776,7 @@ impl Input for kentos_domain::contracts::StairsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::RampsCreate {
+impl Input for kentos_commands::RampsCreate {
     /// `ramps[0].rise`, `.width`, `.pts[k].x` and `.y`, `lineWeight` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -792,7 +792,7 @@ impl Input for kentos_domain::contracts::RampsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::TagsCreate {
+impl Input for kentos_commands::TagsCreate {
     /// `tags[0].at.x` and `.y`, `tags[0].size`, `lineWeight` (docs/adr/0344).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -809,7 +809,7 @@ impl Input for kentos_domain::contracts::TagsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::TagsEdit {
+impl Input for kentos_commands::TagsEdit {
     /// `change.size` (docs/adr/0344).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -819,13 +819,13 @@ impl Input for kentos_domain::contracts::TagsEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::TagsCheck {
+impl Input for kentos_commands::TagsCheck {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ViewMarksCreate {
+impl Input for kentos_commands::ViewMarksCreate {
     /// `marks[0].points[k].x` and `.y`, `.at.x`, `.radius`, `.angle`, `.size`, `lineWeight` (docs/adr/0345).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -844,10 +844,10 @@ impl Input for kentos_domain::contracts::ViewMarksCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::ViewMarksEdit {
+impl Input for kentos_commands::ViewMarksEdit {
     /// `operation.size`, `.angle`, `.radius` (docs/adr/0345).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        let kentos_domain::contracts::ViewMarksOperation::Set(c) = &mut self.operation else {
+        let kentos_commands::ViewMarksOperation::Set(c) = &mut self.operation else {
             return None;
         };
         match path {
@@ -859,15 +859,15 @@ impl Input for kentos_domain::contracts::ViewMarksEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::ViewMarksReferences {
+impl Input for kentos_commands::ViewMarksReferences {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::XrefsEdit {
+impl Input for kentos_commands::XrefsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::XrefsOperation as O;
+        use kentos_commands::XrefsOperation as O;
         match (&mut self.operation, path) {
             (O::Attach { at: Some(p), .. }, "operation.at.x") => Some(&mut p.x),
             (O::Attach { at: Some(p), .. }, "operation.at.y") => Some(&mut p.y),
@@ -878,85 +878,85 @@ impl Input for kentos_domain::contracts::XrefsEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::XrefsList {
+impl Input for kentos_commands::XrefsList {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::AssetsCheck {
+impl Input for kentos_commands::AssetsCheck {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::InsertsClip {
+impl Input for kentos_commands::InsertsClip {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ImagesEdit {
+impl Input for kentos_commands::ImagesEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::RastersMosaic {
+impl Input for kentos_commands::RastersMosaic {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::StacSearch {
+impl Input for kentos_commands::StacSearch {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::StacPrepare {
+impl Input for kentos_commands::StacPrepare {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::PointCloudsDescribe {
+impl Input for kentos_commands::PointCloudsDescribe {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::TimeQuery {
+impl Input for kentos_commands::TimeQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::PointCloudsQuery {
+impl Input for kentos_commands::PointCloudsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::RastersGeoref {
+impl Input for kentos_commands::RastersGeoref {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SheetsSet {
+impl Input for kentos_commands::SheetsSet {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::TemplatesApply {
+impl Input for kentos_commands::TemplatesApply {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SpacesFinish {
+impl Input for kentos_commands::SpacesFinish {
     /// `scale`, `grid.dx`, `.dy`, `.angle` (docs/adr/0345).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -969,7 +969,7 @@ impl Input for kentos_domain::contracts::SpacesFinish {
     }
 }
 
-impl Input for kentos_domain::contracts::SchedulesCreate {
+impl Input for kentos_commands::SchedulesCreate {
     /// `at.x` and `.y`, `height`, `lineWeight` (docs/adr/0344).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -982,16 +982,16 @@ impl Input for kentos_domain::contracts::SchedulesCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::SchedulesEdit {
+impl Input for kentos_commands::SchedulesEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ArchEdit {
+impl Input for kentos_commands::ArchEdit {
     /// Değiştir's `operation.width`, `.riserHeight`, `.tread`, `.rise` (docs/adr/0343).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::ArchOperation as Op;
+        use kentos_commands::ArchOperation as Op;
         match &mut self.operation {
             Op::Set(c) => match path {
                 "operation.width" => c.width.as_mut(),
@@ -1005,13 +1005,13 @@ impl Input for kentos_domain::contracts::ArchEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::SpacesQuantities {
+impl Input for kentos_commands::SpacesQuantities {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::OpeningsCreate {
+impl Input for kentos_commands::OpeningsCreate {
     /// `openings[0].at`, `.distance`, `.width`, `.swing`, `.point.x` and `.y`, `lineWeight` (docs/adr/0341).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if path == "lineWeight" {
@@ -1031,11 +1031,11 @@ impl Input for kentos_domain::contracts::OpeningsCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::OpeningsEdit {
+impl Input for kentos_commands::OpeningsEdit {
     /// Değiştir's `operation.width`, `.swing`, `.frame`, `.sill`, `.head`; Taşı's `operation.by` and `.at`; Başka
     /// duvara's `operation.point.x` and `.y`; Kopyala's `operation.offsets[k]` (docs/adr/0341).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::OpeningsOperation as Op;
+        use kentos_commands::OpeningsOperation as Op;
         match &mut self.operation {
             Op::Set(c) => match path {
                 "operation.width" => c.width.as_mut(),
@@ -1061,16 +1061,16 @@ impl Input for kentos_domain::contracts::OpeningsEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::WallsJoins {
+impl Input for kentos_commands::WallsJoins {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::WallsEdit {
+impl Input for kentos_commands::WallsEdit {
     /// `operation.width`, `operation.offset`, `operation.height`; `operation.at.x` and `.y` of Böl.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::WallsOperation;
+        use kentos_commands::WallsOperation;
         let c = match &mut self.operation {
             WallsOperation::Split { at } => {
                 return match path {
@@ -1186,7 +1186,7 @@ impl Input for EntitiesTrim {
     /// `picks[0].at.x`, `boundaries.max.y` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if let Some(rest) = path.strip_prefix("boundaries.") {
-            let Some(kentos_domain::contracts::TrimBoundaries::Area { min, max }) =
+            let Some(kentos_commands::TrimBoundaries::Area { min, max }) =
                 &mut self.boundaries
             else {
                 return None;
@@ -1231,10 +1231,10 @@ impl Input for EntitiesTrim {
 
 /// `min.x` … `max.y` of a rectangle given as `TrimBoundaries::Area`.
 fn area_number<'a>(
-    b: &'a mut Option<kentos_domain::contracts::TrimBoundaries>,
+    b: &'a mut Option<kentos_commands::TrimBoundaries>,
     rest: &str,
 ) -> Option<&'a mut f64> {
-    let Some(kentos_domain::contracts::TrimBoundaries::Area { min, max }) = b else {
+    let Some(kentos_commands::TrimBoundaries::Area { min, max }) = b else {
         return None;
     };
     match rest {
@@ -1246,7 +1246,7 @@ fn area_number<'a>(
     }
 }
 
-impl Input for kentos_domain::contracts::SnapFind {
+impl Input for kentos_commands::SnapFind {
     /// `at.x`, `at.y`, `aperture`, `from.x`, `from.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -1261,7 +1261,7 @@ impl Input for kentos_domain::contracts::SnapFind {
 }
 
 /// A coordinate of a point by its axis name.
-fn axis<'a>(p: &'a mut kentos_domain::contracts::Vec2, a: &str) -> Option<&'a mut f64> {
+fn axis<'a>(p: &'a mut kentos_commands::Vec2, a: &str) -> Option<&'a mut f64> {
     match a {
         "x" => Some(&mut p.x),
         "y" => Some(&mut p.y),
@@ -1269,10 +1269,10 @@ fn axis<'a>(p: &'a mut kentos_domain::contracts::Vec2, a: &str) -> Option<&'a mu
     }
 }
 
-impl Input for kentos_domain::contracts::RectangleCreate {
+impl Input for kentos_commands::RectangleCreate {
     /// `frame.a.x` … `frame.length`, `frame.width`, `frame.area`, `rotation`, `corners.radius`, `corners.distance`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::{RectangleCorners as C, RectangleFrame as F};
+        use kentos_commands::{RectangleCorners as C, RectangleFrame as F};
         if path == "rotation" {
             return Some(self.rotation.get_or_insert(0.0));
         }
@@ -1306,10 +1306,10 @@ impl Input for kentos_domain::contracts::RectangleCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::RegularPolygonCreate {
+impl Input for kentos_commands::RegularPolygonCreate {
     /// `frame.center.x`, `frame.a.y` …
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::RegularFrame as F;
+        use kentos_commands::RegularFrame as F;
         match (&mut self.frame, path) {
             (F::Inscribed { center, .. } | F::Circumscribed { center, .. }, "frame.center.x") => {
                 Some(&mut center.x)
@@ -1321,7 +1321,7 @@ impl Input for kentos_domain::contracts::RegularPolygonCreate {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesVertex {
+impl Input for kentos_commands::EntitiesVertex {
     /// `radius`, `through.x`, `through.y`, `widths[0]`, `widths[1]` (docs/adr/0288).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -1335,7 +1335,7 @@ impl Input for kentos_domain::contracts::EntitiesVertex {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesPick {
+impl Input for kentos_commands::EntitiesPick {
     /// `at.x`, `at.y`, `tolerance`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -1348,16 +1348,16 @@ impl Input for kentos_domain::contracts::EntitiesPick {
 }
 
 // Ids and a pattern: no number a case makes NaN (docs/adr/0501).
-impl Input for kentos_domain::contracts::EntitiesRelate {
+impl Input for kentos_commands::EntitiesRelate {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesSelect {
+impl Input for kentos_commands::EntitiesSelect {
     /// The region's `region.a.x` … `region.radius`, `region.tolerance`, `region.points[i].x`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::SelectRegion as R;
+        use kentos_commands::SelectRegion as R;
         let rest = path.strip_prefix("region.")?;
         let (head, x) = rest.split_once('.').unwrap_or((rest, ""));
         match (&mut self.region, head) {
@@ -1384,17 +1384,17 @@ impl Input for kentos_domain::contracts::EntitiesSelect {
 
 /// A coordinate of a point given by its coordinates.
 fn measured_number<'a>(
-    p: &'a mut kentos_domain::contracts::MeasuredPoint,
+    p: &'a mut kentos_commands::MeasuredPoint,
     axis: &str,
 ) -> Option<&'a mut f64> {
     match (p, axis) {
-        (kentos_domain::contracts::MeasuredPoint::At { at }, "x") => Some(&mut at.x),
-        (kentos_domain::contracts::MeasuredPoint::At { at }, "y") => Some(&mut at.y),
+        (kentos_commands::MeasuredPoint::At { at }, "x") => Some(&mut at.x),
+        (kentos_commands::MeasuredPoint::At { at }, "y") => Some(&mut at.y),
         _ => None,
     }
 }
 
-impl Input for kentos_domain::contracts::CrsTransform {
+impl Input for kentos_commands::CrsTransform {
     /// `points[i].x`, `.y`, `.z`, `uncertainty.horizontal`, `.vertical` (docs/adr/0519).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         if let Some(rest) = path.strip_prefix("points[") {
@@ -1416,10 +1416,10 @@ impl Input for kentos_domain::contracts::CrsTransform {
     }
 }
 
-impl Input for kentos_domain::contracts::PointsConstruct {
+impl Input for kentos_commands::PointsConstruct {
     /// `constructions[i].distance`, `.angle`, `.a.at.x` … `.edge.near.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::PointConstruction as C;
+        use kentos_commands::PointConstruction as C;
         let rest = path.strip_prefix("constructions[")?;
         let (i, rest) = rest.split_once("].")?;
         let c = self.constructions.get_mut(i.parse::<usize>().ok()?)?;
@@ -1446,11 +1446,11 @@ impl Input for kentos_domain::contracts::PointsConstruct {
     }
 }
 
-impl Input for kentos_domain::contracts::CurvesConstruct {
+impl Input for kentos_commands::CurvesConstruct {
     /// `constructions[i].a.at.x` … (any point), `.first.near.x` …, `.r`, `.angle`, `.chord`, `.direction`,
     /// `.other`, `.rotation`, `.startAngle`, `.endAngle`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::CurveConstruction as C;
+        use kentos_commands::CurveConstruction as C;
         let rest = path.strip_prefix("constructions[")?;
         let (i, rest) = rest.split_once("].")?;
         let c = self.constructions.get_mut(i.parse::<usize>().ok()?)?;
@@ -1574,10 +1574,10 @@ impl Input for EntitiesJoin {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesLengthen {
+impl Input for kentos_commands::EntitiesLengthen {
     /// `change.length`, `change.angle`, `change.percent`, `change.to.x` and `.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::LengthenChange as C;
+        use kentos_commands::LengthenChange as C;
         match (&mut self.change, path) {
             (C::Delta { length, .. } | C::Total { length, .. }, "change.length") => length.as_mut(),
             (C::Delta { angle, .. } | C::Total { angle, .. }, "change.angle") => angle.as_mut(),
@@ -1589,13 +1589,13 @@ impl Input for kentos_domain::contracts::EntitiesLengthen {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesReverse {
+impl Input for kentos_commands::EntitiesReverse {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesCopy {
+impl Input for kentos_commands::EntitiesCopy {
     /// `base.x`, `base.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         let b = self.base.as_mut()?;
@@ -1607,7 +1607,7 @@ impl Input for kentos_domain::contracts::EntitiesCopy {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesPaste {
+impl Input for kentos_commands::EntitiesPaste {
     /// `at.x`, `at.y`, `clip.base.x`, `clip.base.y`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -1620,13 +1620,13 @@ impl Input for kentos_domain::contracts::EntitiesPaste {
     }
 }
 
-impl Input for kentos_domain::contracts::DrawingAudit {
+impl Input for kentos_commands::DrawingAudit {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesCleanup {
+impl Input for kentos_commands::EntitiesCleanup {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
             "tolerance" => self.tolerance.as_mut(),
@@ -1635,16 +1635,16 @@ impl Input for kentos_domain::contracts::EntitiesCleanup {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesMatch {
+impl Input for kentos_commands::EntitiesMatch {
     fn number(&mut self, _: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::CurvesEdit {
+impl Input for kentos_commands::CurvesEdit {
     /// `edit.at.x`, `edit.at.y`, `edit.weight`, `edit.tolerance`, a knot's `edit.at`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::CurveEdit as E;
+        use kentos_commands::CurveEdit as E;
         match (&mut self.edit, path) {
             (
                 E::AddFit { at, .. } | E::MoveFit { at, .. } | E::MoveControl { at, .. },
@@ -1662,10 +1662,10 @@ impl Input for kentos_domain::contracts::CurvesEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::EntitiesExplode {
+impl Input for kentos_commands::EntitiesExplode {
     /// `density.length`, `density.tolerance`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::ExplodeDensity as D;
+        use kentos_commands::ExplodeDensity as D;
         match (self.density.as_mut()?, path) {
             (D::Step { length }, "density.length") => Some(length),
             (D::Deviation { tolerance }, "density.tolerance") => Some(tolerance),
@@ -1674,10 +1674,10 @@ impl Input for kentos_domain::contracts::EntitiesExplode {
     }
 }
 
-impl Input for kentos_domain::contracts::ArraysEdit {
+impl Input for kentos_commands::ArraysEdit {
     /// `edit.scale`, `edit.rotation`, `edit.p.x`, `edit.p.y`, a layout's `edit.layout.dx` and `edit.layout.dy`.
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::{ArrayEdit as E, ArrayLayout as L};
+        use kentos_commands::{ArrayEdit as E, ArrayLayout as L};
         match (&mut self.edit, path) {
             (E::Placement { scale, .. }, "edit.scale") => scale.as_mut(),
             (E::Placement { rotation, .. }, "edit.rotation") => rotation.as_mut(),
@@ -1718,7 +1718,7 @@ impl Input for DimensionsCreate {
     /// `at.x`, `offset`, `height`, `lineWeight`, `measure.a.at.x`, `measure.angle`,
     /// `measure.za`, `measure.of.near.y`, `measure.between[1].x`, `measure.shownCentre.x`, `measure.on.y` …
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        fn xy<'a>(p: &'a mut kentos_contracts::Vec2, rest: &str) -> Option<&'a mut f64> {
+        fn xy<'a>(p: &'a mut kentos_commands::Vec2, rest: &str) -> Option<&'a mut f64> {
             match rest {
                 "x" => Some(&mut p.x),
                 "y" => Some(&mut p.y),
@@ -1736,7 +1736,7 @@ impl Input for DimensionsCreate {
         }
         let rest = path.strip_prefix("measure.")?;
         let (field, rest) = rest.split_once('.').unwrap_or((rest, ""));
-        fn point(p: &mut MeasuredPoint) -> Option<&mut kentos_contracts::Vec2> {
+        fn point(p: &mut MeasuredPoint) -> Option<&mut kentos_commands::Vec2> {
             match p {
                 MeasuredPoint::At { at } => Some(at),
                 MeasuredPoint::Place { .. } => None,
@@ -1822,7 +1822,7 @@ impl Input for EntitiesHatch {
             "lineWeight" => return self.look.line_weight.as_mut(),
             // docs/adr/0331 §2.
             "pattern.origin.at.x" | "pattern.origin.at.y" => {
-                let Some(kentos_contracts::HatchOrigin::Point { at }) = &mut self.pattern.origin else {
+                let Some(kentos_commands::HatchOrigin::Point { at }) = &mut self.pattern.origin else {
                     return None;
                 };
                 return Some(if path.ends_with('x') { &mut at.x } else { &mut at.y });
@@ -1871,9 +1871,9 @@ impl Input for DimensionsReassociate {
     }
 }
 
-impl Input for kentos_domain::contracts::DimensionsEdit {
+impl Input for kentos_commands::DimensionsEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::DimensionEdit as E;
+        use kentos_commands::DimensionEdit as E;
         match (&mut self.edit, path) {
             (
                 E::Space {
@@ -1888,9 +1888,9 @@ impl Input for kentos_domain::contracts::DimensionsEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::LeadersEdit {
+impl Input for kentos_commands::LeadersEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::LeaderEdit;
+        use kentos_commands::LeaderEdit;
         match (&mut self.edit, path) {
             (LeaderEdit::Align { angle, .. }, "edit.angle") => Some(angle),
             (LeaderEdit::Align { spacing: Some(s), .. }, "edit.spacing") => Some(s),
@@ -1899,10 +1899,10 @@ impl Input for kentos_domain::contracts::LeadersEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::HatchesEdit {
+impl Input for kentos_commands::HatchesEdit {
     /// `edit.region.at.x`, `edit.region.at.y` (Sınırı yeniden seç).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::{HatchEdit, HatchRegion};
+        use kentos_commands::{HatchEdit, HatchRegion};
         let HatchEdit::Reselect {
             region: HatchRegion::Point { at, .. },
             ..
@@ -1918,9 +1918,9 @@ impl Input for kentos_domain::contracts::HatchesEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::TablesEdit {
+impl Input for kentos_commands::TablesEdit {
     fn number(&mut self, path: &str) -> Option<&mut f64> {
-        use kentos_domain::contracts::{TableEdit, TablesOperation};
+        use kentos_commands::{TableEdit, TablesOperation};
         let TablesOperation::Edit { edits, .. } = &mut self.operation else {
             return None;
         };
@@ -1936,31 +1936,31 @@ impl Input for kentos_domain::contracts::TablesEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::FieldsEdit {
+impl Input for kentos_commands::FieldsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::TextsEdit {
+impl Input for kentos_commands::TextsEdit {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::TextsCheck {
+impl Input for kentos_commands::TextsCheck {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::FontsReport {
+impl Input for kentos_commands::FontsReport {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::DimensionsQuery {
+impl Input for kentos_commands::DimensionsQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -1972,7 +1972,7 @@ impl Input for LabelsPin {
     }
 }
 
-impl Input for kentos_domain::contracts::LabelsReport {
+impl Input for kentos_commands::LabelsReport {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -2164,20 +2164,20 @@ impl Input for ImportDxf {
 }
 
 // No number: a path and a count (docs/adr/0530).
-impl Input for kentos_domain::contracts::GisDerivation {
+impl Input for kentos_commands::GisDerivation {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ImportCsv {
+impl Input for kentos_commands::ImportCsv {
     /// No number: a path, a layer and column names.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ImportSld {
+impl Input for kentos_commands::ImportSld {
     /// No number: a path or a text, a layer.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2198,67 +2198,67 @@ impl Input for ImportGpkg {
     }
 }
 
-impl Input for kentos_domain::contracts::SourcesDescribe {
+impl Input for kentos_commands::SourcesDescribe {
     /// No number: a path.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SourcesEdit {
+impl Input for kentos_commands::SourcesEdit {
     /// No number: paths, a table, a layer and ids.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ProcessingTools {
+impl Input for kentos_commands::ProcessingTools {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ProcessingRun {
+impl Input for kentos_commands::ProcessingRun {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ProcessingBatch {
+impl Input for kentos_commands::ProcessingBatch {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::FieldsWrite {
+impl Input for kentos_commands::FieldsWrite {
     /// No number: a layer, fields and values as text.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SourcesSync {
+impl Input for kentos_commands::SourcesSync {
     /// No number: a layer and a direction.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SourcesReconcile {
+impl Input for kentos_commands::SourcesReconcile {
     /// No number: a layer and the sides taken.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::SourcesRelate {
+impl Input for kentos_commands::SourcesRelate {
     /// No number: a relation, an operation and a table's name.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::RecordsPage {
+impl Input for kentos_commands::RecordsPage {
     /// No number to move: a layer or a relation, words, a cursor.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
@@ -2324,44 +2324,44 @@ impl Input for BlocksEdit {
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksReplace {
+impl Input for kentos_commands::BlocksReplace {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksQuery {
+impl Input for kentos_commands::BlocksQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksParameters {
+impl Input for kentos_commands::BlocksParameters {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksProxy {
+impl Input for kentos_commands::BlocksProxy {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksFreeze {
+impl Input for kentos_commands::BlocksFreeze {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::ImportBlock {
+impl Input for kentos_commands::ImportBlock {
     /// No number to make not finite.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
 }
 
-impl Input for kentos_domain::contracts::BlocksInsert {
+impl Input for kentos_commands::BlocksInsert {
     /// `at.x`, `at.y`, `rotation`, `scale`, `yScale` (which the step's input must give).
     fn number(&mut self, path: &str) -> Option<&mut f64> {
         match path {
@@ -2387,7 +2387,7 @@ impl Input for EntitiesSetProperties {
 
 /// A coordinate of a named point: `c.x`, `p.y`.
 fn coordinate<'a>(
-    p: &'a mut kentos_domain::contracts::Vec2,
+    p: &'a mut kentos_commands::Vec2,
     name: &str,
     path: &str,
 ) -> Option<&'a mut f64> {
@@ -2912,346 +2912,346 @@ fn run_op(
         CAD_ENTITIES_TRANSFORM => run!(transform, EntitiesTransform),
         CAD_ENTITIES_EDIT => run!(edit, EntitiesEdit),
         CAD_ENTITIES_ARRAY => run!(array, EntitiesArray),
-        kentos_domain::contracts::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
-        kentos_domain::contracts::CAD_POINTS_CONSTRUCT => {
-            run!(points_construct, kentos_domain::contracts::PointsConstruct)
+        kentos_commands::CAD_ENTITIES_OFFSET => run!(offset, EntitiesOffset),
+        kentos_commands::CAD_POINTS_CONSTRUCT => {
+            run!(points_construct, kentos_commands::PointsConstruct)
         }
-        kentos_domain::contracts::CAD_CURVES_CONSTRUCT => {
-            run!(curves_construct, kentos_domain::contracts::CurvesConstruct)
+        kentos_commands::CAD_CURVES_CONSTRUCT => {
+            run!(curves_construct, kentos_commands::CurvesConstruct)
         }
-        kentos_domain::contracts::CAD_SNAP_FIND => {
-            run!(snap_find, kentos_domain::contracts::SnapFind)
+        kentos_commands::CAD_SNAP_FIND => {
+            run!(snap_find, kentos_commands::SnapFind)
         }
-        kentos_domain::contracts::CAD_RECTANGLE_CREATE => {
-            run!(rectangle_create, kentos_domain::contracts::RectangleCreate)
+        kentos_commands::CAD_RECTANGLE_CREATE => {
+            run!(rectangle_create, kentos_commands::RectangleCreate)
         }
-        kentos_domain::contracts::CAD_POLYGON_REGULAR => {
+        kentos_commands::CAD_POLYGON_REGULAR => {
             run!(
                 polygon_regular,
-                kentos_domain::contracts::RegularPolygonCreate
+                kentos_commands::RegularPolygonCreate
             )
         }
-        kentos_domain::contracts::CAD_ENTITIES_VERTEX => {
-            run!(entities_vertex, kentos_domain::contracts::EntitiesVertex)
+        kentos_commands::CAD_ENTITIES_VERTEX => {
+            run!(entities_vertex, kentos_commands::EntitiesVertex)
         }
-        kentos_domain::contracts::CAD_ENTITIES_PICK => {
-            run!(entities_pick, kentos_domain::contracts::EntitiesPick)
+        kentos_commands::CAD_ENTITIES_PICK => {
+            run!(entities_pick, kentos_commands::EntitiesPick)
         }
-        kentos_domain::contracts::CAD_CRS_TRANSFORM => {
-            run!(crs_transform, kentos_domain::contracts::CrsTransform)
+        kentos_commands::CAD_CRS_TRANSFORM => {
+            run!(crs_transform, kentos_commands::CrsTransform)
         }
-        kentos_domain::contracts::CAD_ENTITIES_RELATE => {
-            run!(entities_relate, kentos_domain::contracts::EntitiesRelate)
+        kentos_commands::CAD_ENTITIES_RELATE => {
+            run!(entities_relate, kentos_commands::EntitiesRelate)
         }
-        kentos_domain::contracts::CAD_ENTITIES_SELECT => {
-            run!(entities_select, kentos_domain::contracts::EntitiesSelect)
+        kentos_commands::CAD_ENTITIES_SELECT => {
+            run!(entities_select, kentos_commands::EntitiesSelect)
         }
-        kentos_domain::contracts::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
-        kentos_domain::contracts::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
-        kentos_domain::contracts::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
-        kentos_domain::contracts::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
-        kentos_domain::contracts::CAD_ENTITIES_STRETCH => run!(stretch, EntitiesStretch),
-        kentos_domain::contracts::CAD_ENTITIES_BREAK => run!(entities_break, EntitiesBreak),
-        kentos_domain::contracts::CAD_ENTITIES_JOIN => run!(entities_join, EntitiesJoin),
-        kentos_domain::contracts::CAD_ENTITIES_REVERSE => {
-            run!(entities_reverse, kentos_domain::contracts::EntitiesReverse)
+        kentos_commands::CAD_ENTITIES_TRIM => run!(entities_trim, EntitiesTrim),
+        kentos_commands::CAD_ENTITIES_EXTEND => run!(entities_extend, EntitiesTrim),
+        kentos_commands::CAD_ENTITIES_FILLET => run!(entities_fillet, EntitiesFillet),
+        kentos_commands::CAD_ENTITIES_CHAMFER => run!(entities_chamfer, EntitiesChamfer),
+        kentos_commands::CAD_ENTITIES_STRETCH => run!(stretch, EntitiesStretch),
+        kentos_commands::CAD_ENTITIES_BREAK => run!(entities_break, EntitiesBreak),
+        kentos_commands::CAD_ENTITIES_JOIN => run!(entities_join, EntitiesJoin),
+        kentos_commands::CAD_ENTITIES_REVERSE => {
+            run!(entities_reverse, kentos_commands::EntitiesReverse)
         }
-        kentos_domain::contracts::CAD_ENTITIES_LENGTHEN => {
+        kentos_commands::CAD_ENTITIES_LENGTHEN => {
             run!(
                 entities_lengthen,
-                kentos_domain::contracts::EntitiesLengthen
+                kentos_commands::EntitiesLengthen
             )
         }
-        kentos_domain::contracts::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
-        kentos_domain::contracts::CAD_ARRAYS_EDIT => {
-            run!(arrays_edit, kentos_domain::contracts::ArraysEdit)
+        kentos_commands::CAD_ENTITIES_DIVIDE => run!(divide, EntitiesDivide),
+        kentos_commands::CAD_ARRAYS_EDIT => {
+            run!(arrays_edit, kentos_commands::ArraysEdit)
         }
-        kentos_domain::contracts::CAD_CONSTRAINTS_EDIT => {
-            run!(constraints_edit, kentos_domain::contracts::ConstraintsEdit)
+        kentos_commands::CAD_CONSTRAINTS_EDIT => {
+            run!(constraints_edit, kentos_commands::ConstraintsEdit)
         }
-        kentos_domain::contracts::CAD_CONSTRAINTS_QUERY => {
-            run!(constraints_query, kentos_domain::contracts::ConstraintsQuery)
+        kentos_commands::CAD_CONSTRAINTS_QUERY => {
+            run!(constraints_query, kentos_commands::ConstraintsQuery)
         }
-        kentos_domain::contracts::CAD_PARAMETERS_EDIT => {
-            run!(parameters_edit, kentos_domain::contracts::ParametersEdit)
+        kentos_commands::CAD_PARAMETERS_EDIT => {
+            run!(parameters_edit, kentos_commands::ParametersEdit)
         }
-        kentos_domain::contracts::CAD_ENTITIES_EXPLODE => {
-            run!(entities_explode, kentos_domain::contracts::EntitiesExplode)
+        kentos_commands::CAD_ENTITIES_EXPLODE => {
+            run!(entities_explode, kentos_commands::EntitiesExplode)
         }
-        kentos_domain::contracts::CAD_ENTITIES_MATCH => {
-            run!(entities_match, kentos_domain::contracts::EntitiesMatch)
+        kentos_commands::CAD_ENTITIES_MATCH => {
+            run!(entities_match, kentos_commands::EntitiesMatch)
         }
-        kentos_domain::contracts::CAD_ENTITIES_CLEANUP => {
-            run!(entities_cleanup, kentos_domain::contracts::EntitiesCleanup)
+        kentos_commands::CAD_ENTITIES_CLEANUP => {
+            run!(entities_cleanup, kentos_commands::EntitiesCleanup)
         }
-        kentos_domain::contracts::CAD_ENTITIES_COPY => {
-            run!(entities_copy, kentos_domain::contracts::EntitiesCopy)
+        kentos_commands::CAD_ENTITIES_COPY => {
+            run!(entities_copy, kentos_commands::EntitiesCopy)
         }
-        kentos_domain::contracts::CAD_ENTITIES_PASTE => {
-            run!(entities_paste, kentos_domain::contracts::EntitiesPaste)
+        kentos_commands::CAD_ENTITIES_PASTE => {
+            run!(entities_paste, kentos_commands::EntitiesPaste)
         }
-        kentos_domain::contracts::CAD_DRAWING_AUDIT => {
-            run!(drawing_audit, kentos_domain::contracts::DrawingAudit)
+        kentos_commands::CAD_DRAWING_AUDIT => {
+            run!(drawing_audit, kentos_commands::DrawingAudit)
         }
-        kentos_domain::contracts::CAD_CURVES_EDIT => {
-            run!(curves_edit, kentos_domain::contracts::CurvesEdit)
+        kentos_commands::CAD_CURVES_EDIT => {
+            run!(curves_edit, kentos_commands::CurvesEdit)
         }
-        kentos_domain::contracts::CAD_ENTITIES_BOUNDARY => {
+        kentos_commands::CAD_ENTITIES_BOUNDARY => {
             run!(entities_boundary, EntitiesBoundary)
         }
-        kentos_domain::contracts::CAD_ENTITIES_HATCH => run!(entities_hatch, EntitiesHatch),
-        kentos_domain::contracts::CAD_DIMENSIONS_REASSOCIATE => {
+        kentos_commands::CAD_ENTITIES_HATCH => run!(entities_hatch, EntitiesHatch),
+        kentos_commands::CAD_DIMENSIONS_REASSOCIATE => {
             run!(dimensions_reassociate, DimensionsReassociate)
         }
-        kentos_domain::contracts::CAD_DIMENSIONS_EDIT => {
-            run!(dimensions_edit, kentos_domain::contracts::DimensionsEdit)
+        kentos_commands::CAD_DIMENSIONS_EDIT => {
+            run!(dimensions_edit, kentos_commands::DimensionsEdit)
         }
-        kentos_domain::contracts::CAD_DIMENSIONS_QUERY => {
-            run!(dimensions_query, kentos_domain::contracts::DimensionsQuery)
+        kentos_commands::CAD_DIMENSIONS_QUERY => {
+            run!(dimensions_query, kentos_commands::DimensionsQuery)
         }
-        kentos_domain::contracts::CAD_FONTS_REPORT => {
-            run!(fonts_report, kentos_domain::contracts::FontsReport)
+        kentos_commands::CAD_FONTS_REPORT => {
+            run!(fonts_report, kentos_commands::FontsReport)
         }
-        kentos_domain::contracts::CAD_LEADERS_EDIT => {
-            run!(leaders_edit, kentos_domain::contracts::LeadersEdit)
+        kentos_commands::CAD_LEADERS_EDIT => {
+            run!(leaders_edit, kentos_commands::LeadersEdit)
         }
-        kentos_domain::contracts::CAD_HATCHES_EDIT => {
-            run!(hatches_edit, kentos_domain::contracts::HatchesEdit)
+        kentos_commands::CAD_HATCHES_EDIT => {
+            run!(hatches_edit, kentos_commands::HatchesEdit)
         }
-        kentos_domain::contracts::CAD_TABLES_EDIT => {
-            run!(tables_edit, kentos_domain::contracts::TablesEdit)
+        kentos_commands::CAD_TABLES_EDIT => {
+            run!(tables_edit, kentos_commands::TablesEdit)
         }
-        kentos_domain::contracts::CAD_FIELDS_EDIT => {
-            run!(fields_edit, kentos_domain::contracts::FieldsEdit)
+        kentos_commands::CAD_FIELDS_EDIT => {
+            run!(fields_edit, kentos_commands::FieldsEdit)
         }
-        kentos_domain::contracts::CAD_TEXTS_EDIT => {
-            run!(texts_edit, kentos_domain::contracts::TextsEdit)
+        kentos_commands::CAD_TEXTS_EDIT => {
+            run!(texts_edit, kentos_commands::TextsEdit)
         }
-        kentos_domain::contracts::CAD_TEXTS_CHECK => {
-            run!(texts_check, kentos_domain::contracts::TextsCheck)
+        kentos_commands::CAD_TEXTS_CHECK => {
+            run!(texts_check, kentos_commands::TextsCheck)
         }
-        kentos_domain::contracts::CAD_DIMENSIONS_CREATE => {
+        kentos_commands::CAD_DIMENSIONS_CREATE => {
             run!(dimensions_create, DimensionsCreate)
         }
-        kentos_domain::contracts::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
-        kentos_domain::contracts::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
-        kentos_domain::contracts::CAD_WALLS_CREATE => {
-            run!(walls_create, kentos_domain::contracts::WallsCreate)
+        kentos_commands::CAD_ENTITIES_CREATE => run!(create, EntitiesCreate),
+        kentos_commands::CAD_NURBS_CREATE => run!(nurbs, NurbsCreate),
+        kentos_commands::CAD_WALLS_CREATE => {
+            run!(walls_create, kentos_commands::WallsCreate)
         }
-        kentos_domain::contracts::CAD_WALLS_FROM_LINES => {
-            run!(walls_from_lines, kentos_domain::contracts::WallsFromLines)
+        kentos_commands::CAD_WALLS_FROM_LINES => {
+            run!(walls_from_lines, kentos_commands::WallsFromLines)
         }
-        kentos_domain::contracts::CAD_WALLS_EDIT => {
-            run!(walls_edit, kentos_domain::contracts::WallsEdit)
+        kentos_commands::CAD_WALLS_EDIT => {
+            run!(walls_edit, kentos_commands::WallsEdit)
         }
-        kentos_domain::contracts::CAD_WALLS_JOINS => {
-            run!(walls_joins, kentos_domain::contracts::WallsJoins)
+        kentos_commands::CAD_WALLS_JOINS => {
+            run!(walls_joins, kentos_commands::WallsJoins)
         }
-        kentos_domain::contracts::CAD_OPENINGS_CREATE => {
-            run!(openings_create, kentos_domain::contracts::OpeningsCreate)
+        kentos_commands::CAD_OPENINGS_CREATE => {
+            run!(openings_create, kentos_commands::OpeningsCreate)
         }
-        kentos_domain::contracts::CAD_OPENINGS_EDIT => {
-            run!(openings_edit, kentos_domain::contracts::OpeningsEdit)
+        kentos_commands::CAD_OPENINGS_EDIT => {
+            run!(openings_edit, kentos_commands::OpeningsEdit)
         }
-        kentos_domain::contracts::CAD_SPACES_CREATE => {
-            run!(spaces_create, kentos_domain::contracts::SpacesCreate)
+        kentos_commands::CAD_SPACES_CREATE => {
+            run!(spaces_create, kentos_commands::SpacesCreate)
         }
-        kentos_domain::contracts::CAD_GRIDS_CREATE => {
-            run!(grids_create, kentos_domain::contracts::GridsCreate)
+        kentos_commands::CAD_GRIDS_CREATE => {
+            run!(grids_create, kentos_commands::GridsCreate)
         }
-        kentos_domain::contracts::CAD_COLUMNS_CREATE => {
-            run!(columns_create, kentos_domain::contracts::ColumnsCreate)
+        kentos_commands::CAD_COLUMNS_CREATE => {
+            run!(columns_create, kentos_commands::ColumnsCreate)
         }
-        kentos_domain::contracts::CAD_STAIRS_CREATE => {
-            run!(stairs_create, kentos_domain::contracts::StairsCreate)
+        kentos_commands::CAD_STAIRS_CREATE => {
+            run!(stairs_create, kentos_commands::StairsCreate)
         }
-        kentos_domain::contracts::CAD_RAMPS_CREATE => {
-            run!(ramps_create, kentos_domain::contracts::RampsCreate)
+        kentos_commands::CAD_RAMPS_CREATE => {
+            run!(ramps_create, kentos_commands::RampsCreate)
         }
-        kentos_domain::contracts::CAD_ARCH_EDIT => {
-            run!(arch_edit, kentos_domain::contracts::ArchEdit)
+        kentos_commands::CAD_ARCH_EDIT => {
+            run!(arch_edit, kentos_commands::ArchEdit)
         }
-        kentos_domain::contracts::CAD_TAGS_CREATE => {
-            run!(tags_create, kentos_domain::contracts::TagsCreate)
+        kentos_commands::CAD_TAGS_CREATE => {
+            run!(tags_create, kentos_commands::TagsCreate)
         }
-        kentos_domain::contracts::CAD_TAGS_CHECK => {
-            run!(tags_check, kentos_domain::contracts::TagsCheck)
+        kentos_commands::CAD_TAGS_CHECK => {
+            run!(tags_check, kentos_commands::TagsCheck)
         }
-        kentos_domain::contracts::CAD_TAGS_EDIT => {
-            run!(tags_edit, kentos_domain::contracts::TagsEdit)
+        kentos_commands::CAD_TAGS_EDIT => {
+            run!(tags_edit, kentos_commands::TagsEdit)
         }
-        kentos_domain::contracts::CAD_VIEWMARKS_CREATE => {
-            run!(viewmarks_create, kentos_domain::contracts::ViewMarksCreate)
+        kentos_commands::CAD_VIEWMARKS_CREATE => {
+            run!(viewmarks_create, kentos_commands::ViewMarksCreate)
         }
-        kentos_domain::contracts::CAD_VIEWMARKS_EDIT => {
-            run!(viewmarks_edit, kentos_domain::contracts::ViewMarksEdit)
+        kentos_commands::CAD_VIEWMARKS_EDIT => {
+            run!(viewmarks_edit, kentos_commands::ViewMarksEdit)
         }
-        kentos_domain::contracts::CAD_VIEWMARKS_REFERENCES => {
-            run!(viewmarks_references, kentos_domain::contracts::ViewMarksReferences)
+        kentos_commands::CAD_VIEWMARKS_REFERENCES => {
+            run!(viewmarks_references, kentos_commands::ViewMarksReferences)
         }
-        kentos_domain::contracts::CAD_SPACES_FINISH => {
-            run!(spaces_finish, kentos_domain::contracts::SpacesFinish)
+        kentos_commands::CAD_SPACES_FINISH => {
+            run!(spaces_finish, kentos_commands::SpacesFinish)
         }
-        kentos_domain::contracts::CAD_TEMPLATES_APPLY => {
-            run!(templates_apply, kentos_domain::contracts::TemplatesApply)
+        kentos_commands::CAD_TEMPLATES_APPLY => {
+            run!(templates_apply, kentos_commands::TemplatesApply)
         }
-        kentos_domain::contracts::CAD_SHEETS_SET => {
-            run!(sheets_set, kentos_domain::contracts::SheetsSet)
+        kentos_commands::CAD_SHEETS_SET => {
+            run!(sheets_set, kentos_commands::SheetsSet)
         }
-        kentos_domain::contracts::CAD_XREFS_EDIT => {
-            run!(xrefs_edit, kentos_domain::contracts::XrefsEdit)
+        kentos_commands::CAD_XREFS_EDIT => {
+            run!(xrefs_edit, kentos_commands::XrefsEdit)
         }
-        kentos_domain::contracts::CAD_XREFS_LIST => {
-            run!(xrefs_list, kentos_domain::contracts::XrefsList)
+        kentos_commands::CAD_XREFS_LIST => {
+            run!(xrefs_list, kentos_commands::XrefsList)
         }
-        kentos_domain::contracts::CAD_ASSETS_CHECK => {
-            run!(assets_check, kentos_domain::contracts::AssetsCheck)
+        kentos_commands::CAD_ASSETS_CHECK => {
+            run!(assets_check, kentos_commands::AssetsCheck)
         }
-        kentos_domain::contracts::CAD_INSERTS_CLIP => {
-            run!(inserts_clip, kentos_domain::contracts::InsertsClip)
+        kentos_commands::CAD_INSERTS_CLIP => {
+            run!(inserts_clip, kentos_commands::InsertsClip)
         }
-        kentos_domain::contracts::CAD_IMAGES_EDIT => {
-            run!(images_edit, kentos_domain::contracts::ImagesEdit)
+        kentos_commands::CAD_IMAGES_EDIT => {
+            run!(images_edit, kentos_commands::ImagesEdit)
         }
-        kentos_domain::contracts::CAD_RASTERS_MOSAIC => {
-            run!(rasters_mosaic, kentos_domain::contracts::RastersMosaic)
+        kentos_commands::CAD_RASTERS_MOSAIC => {
+            run!(rasters_mosaic, kentos_commands::RastersMosaic)
         }
-        kentos_domain::contracts::CAD_STAC_SEARCH => {
-            run!(stac_search, kentos_domain::contracts::StacSearch)
+        kentos_commands::CAD_STAC_SEARCH => {
+            run!(stac_search, kentos_commands::StacSearch)
         }
-        kentos_domain::contracts::CAD_STAC_PREPARE => {
-            run!(stac_prepare, kentos_domain::contracts::StacPrepare)
+        kentos_commands::CAD_STAC_PREPARE => {
+            run!(stac_prepare, kentos_commands::StacPrepare)
         }
-        kentos_domain::contracts::CAD_POINTCLOUDS_DESCRIBE => {
-            run!(pointclouds_describe, kentos_domain::contracts::PointCloudsDescribe)
+        kentos_commands::CAD_POINTCLOUDS_DESCRIBE => {
+            run!(pointclouds_describe, kentos_commands::PointCloudsDescribe)
         }
-        kentos_domain::contracts::CAD_TIME_QUERY => {
-            run!(time_query, kentos_domain::contracts::TimeQuery)
+        kentos_commands::CAD_TIME_QUERY => {
+            run!(time_query, kentos_commands::TimeQuery)
         }
-        kentos_domain::contracts::CAD_POINTCLOUDS_QUERY => {
-            run!(pointclouds_query, kentos_domain::contracts::PointCloudsQuery)
+        kentos_commands::CAD_POINTCLOUDS_QUERY => {
+            run!(pointclouds_query, kentos_commands::PointCloudsQuery)
         }
-        kentos_domain::contracts::CAD_RASTERS_GEOREF => {
-            run!(rasters_georef, kentos_domain::contracts::RastersGeoref)
+        kentos_commands::CAD_RASTERS_GEOREF => {
+            run!(rasters_georef, kentos_commands::RastersGeoref)
         }
-        kentos_domain::contracts::CAD_SCHEDULES_CREATE => {
-            run!(schedules_create, kentos_domain::contracts::SchedulesCreate)
+        kentos_commands::CAD_SCHEDULES_CREATE => {
+            run!(schedules_create, kentos_commands::SchedulesCreate)
         }
-        kentos_domain::contracts::CAD_SCHEDULES_EDIT => {
-            run!(schedules_edit, kentos_domain::contracts::SchedulesEdit)
+        kentos_commands::CAD_SCHEDULES_EDIT => {
+            run!(schedules_edit, kentos_commands::SchedulesEdit)
         }
-        kentos_domain::contracts::CAD_SPACES_EDIT => {
-            run!(spaces_edit, kentos_domain::contracts::SpacesEdit)
+        kentos_commands::CAD_SPACES_EDIT => {
+            run!(spaces_edit, kentos_commands::SpacesEdit)
         }
-        kentos_domain::contracts::CAD_SPACES_QUANTITIES => {
-            run!(spaces_quantities, kentos_domain::contracts::SpacesQuantities)
+        kentos_commands::CAD_SPACES_QUANTITIES => {
+            run!(spaces_quantities, kentos_commands::SpacesQuantities)
         }
-        kentos_domain::contracts::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
-        kentos_domain::contracts::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
+        kentos_commands::CAD_ENTITIES_ORDER => run!(entities_order, EntitiesOrder),
+        kentos_commands::CAD_ANNOTATIONS_SCALES => run!(annotations_scales, AnnotationsScales),
         CAD_ENTITIES_SET => run!(set, EntitiesSetProperties),
         CAD_BLOCKS_DEFINE => run!(blocks_define, BlocksDefine),
         CAD_BLOCKS_EDIT => run!(blocks_edit, BlocksEdit),
-        kentos_domain::contracts::CAD_BLOCKS_INSERT => {
-            run!(blocks_insert, kentos_domain::contracts::BlocksInsert)
+        kentos_commands::CAD_BLOCKS_INSERT => {
+            run!(blocks_insert, kentos_commands::BlocksInsert)
         }
-        kentos_domain::contracts::FILE_IMPORT_BLOCK => {
-            run!(file_import_block, kentos_domain::contracts::ImportBlock)
+        kentos_commands::FILE_IMPORT_BLOCK => {
+            run!(file_import_block, kentos_commands::ImportBlock)
         }
-        kentos_domain::contracts::CAD_BLOCKS_REPLACE => {
-            run!(blocks_replace, kentos_domain::contracts::BlocksReplace)
+        kentos_commands::CAD_BLOCKS_REPLACE => {
+            run!(blocks_replace, kentos_commands::BlocksReplace)
         }
-        kentos_domain::contracts::CAD_BLOCKS_QUERY => {
-            run!(blocks_query, kentos_domain::contracts::BlocksQuery)
+        kentos_commands::CAD_BLOCKS_QUERY => {
+            run!(blocks_query, kentos_commands::BlocksQuery)
         }
-        kentos_domain::contracts::CAD_BLOCKS_PARAMETERS => {
-            run!(block_params, kentos_domain::contracts::BlocksParameters)
+        kentos_commands::CAD_BLOCKS_PARAMETERS => {
+            run!(block_params, kentos_commands::BlocksParameters)
         }
-        kentos_domain::contracts::CAD_BLOCKS_PROXY => {
-            run!(blocks_proxy, kentos_domain::contracts::BlocksProxy)
+        kentos_commands::CAD_BLOCKS_PROXY => {
+            run!(blocks_proxy, kentos_commands::BlocksProxy)
         }
-        kentos_domain::contracts::CAD_BLOCKS_FREEZE => {
-            run!(blocks_freeze, kentos_domain::contracts::BlocksFreeze)
+        kentos_commands::CAD_BLOCKS_FREEZE => {
+            run!(blocks_freeze, kentos_commands::BlocksFreeze)
         }
-        kentos_domain::contracts::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
-        kentos_domain::contracts::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
-        kentos_domain::contracts::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
-        kentos_domain::contracts::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
-        kentos_domain::contracts::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
-        kentos_domain::contracts::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
-        kentos_domain::contracts::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
-        kentos_domain::contracts::CAD_LAYERS_TABLE => run!(layers_table, LayersTable),
-        kentos_domain::contracts::CAD_LAYERS_SUBTYPES => run!(layers_subtypes, LayersSubtypes),
-        kentos_domain::contracts::CAD_LAYERS_CONTINGENTS => run!(layers_contingents, LayersContingents),
-        kentos_domain::contracts::CAD_LAYERS_RULES => run!(layers_rules, LayersRules),
-        kentos_domain::contracts::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
-        kentos_domain::contracts::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
-        kentos_domain::contracts::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
-        kentos_domain::contracts::CAD_LABELS_REPORT => {
-            run!(labels_report, kentos_domain::contracts::LabelsReport)
+        kentos_commands::CAD_LAYERS_SERVICE => run!(layers_service, LayersService),
+        kentos_commands::CAD_NETWORK_DEFINE => run!(network_define, NetworkDefine),
+        kentos_commands::CAD_ADDRESSES_DEFINE => run!(address_define, AddressesDefine),
+        kentos_commands::CAD_LAYERS_TIME => run!(layers_time, LayersTime),
+        kentos_commands::CAD_SCENARIOS_EDIT => run!(scenarios_edit, ScenariosEdit),
+        kentos_commands::CAD_LAYERS_FILTER => run!(layers_filter, LayersFilter),
+        kentos_commands::CAD_LAYERS_INFO => run!(layers_info, LayersInfo),
+        kentos_commands::CAD_LAYERS_TABLE => run!(layers_table, LayersTable),
+        kentos_commands::CAD_LAYERS_SUBTYPES => run!(layers_subtypes, LayersSubtypes),
+        kentos_commands::CAD_LAYERS_CONTINGENTS => run!(layers_contingents, LayersContingents),
+        kentos_commands::CAD_LAYERS_RULES => run!(layers_rules, LayersRules),
+        kentos_commands::CAD_LAYERS_COMPOSE => run!(layers_compose, LayersCompose),
+        kentos_commands::CAD_LAYERS_LABELS => run!(layers_labels, LayersLabels),
+        kentos_commands::CAD_LABELS_PIN => run!(labels_pin, LabelsPin),
+        kentos_commands::CAD_LABELS_REPORT => {
+            run!(labels_report, kentos_commands::LabelsReport)
         }
-        kentos_domain::contracts::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
-        kentos_domain::contracts::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
-        kentos_domain::contracts::CAD_LAYERS_SET => run!(layers_set, LayersSet),
-        kentos_domain::contracts::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
-        kentos_domain::contracts::CAD_LAYERS_FIND => run!(layers_find, LayersFind),
-        kentos_domain::contracts::CAD_FIELDS_USAGE => run!(fields_usage, FieldsUsage),
-        kentos_domain::contracts::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
-        kentos_domain::contracts::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
-        kentos_domain::contracts::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
-        kentos_domain::contracts::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
-        kentos_domain::contracts::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
-        kentos_domain::contracts::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
-        kentos_domain::contracts::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
-        kentos_domain::contracts::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
-        kentos_domain::contracts::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
-        kentos_domain::contracts::CAD_UCS_SET => run!(ucs_set, UcsSet),
-        kentos_domain::contracts::CAD_VIEWS_EDIT => run!(views_edit, ViewsEdit),
-        kentos_domain::contracts::CAD_FORMS_EDIT => run!(forms_edit, FormsEdit),
-        kentos_domain::contracts::CAD_FORMS_VALIDATE => run!(forms_validate, FormsValidate),
-        kentos_domain::contracts::CAD_FORMS_SUBMIT => run!(forms_submit, FormsSubmit),
-        kentos_domain::contracts::CAD_FORMS_FILL => run!(forms_fill, FormsFill),
-        kentos_domain::contracts::CAD_FORMS_AUDIT => run!(forms_audit, FormsAudit),
-        kentos_domain::contracts::CAD_FORMS_TEST => run!(forms_test, FormsTest),
-        kentos_domain::contracts::CAD_FORMS_COMPARE => run!(forms_compare, FormsCompare),
-        kentos_domain::contracts::CAD_FORMS_TRANSITION => run!(forms_transition, FormsTransition),
-        kentos_domain::contracts::CAD_DOMAINS_EDIT => run!(domains_edit, DomainsEdit),
-        kentos_domain::contracts::CAD_DOMAINS_EXPORT => run!(domains_export, DomainsExport),
-        kentos_domain::contracts::CAD_FIELDS_MIGRATE => run!(fields_migrate, FieldsMigrate),
-        kentos_domain::contracts::CAD_ATTACHMENTS_INSPECT => run!(attachments_inspect, AttachmentsInspect),
-        kentos_domain::contracts::CAD_SCHEMA_DESCRIBE => run!(schema_describe, SchemaDescribe),
-        kentos_domain::contracts::CAD_FORMS_EXPORT => run!(forms_export, FormsExport),
-        kentos_domain::contracts::CAD_FORMS_IMPORT => run!(forms_import, FormsImport),
-        kentos_domain::contracts::CAD_FORMS_RECOMPUTE => run!(forms_recompute, FormsRecompute),
-        kentos_domain::contracts::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
-        kentos_domain::contracts::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),
-        kentos_domain::contracts::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
-        kentos_domain::contracts::CAD_JOINS_EDIT => run!(joins_edit, JoinsEdit),
-        kentos_domain::contracts::CAD_JOINS_QUERY => run!(joins_query, JoinsQuery),
-        kentos_domain::contracts::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
-        kentos_domain::contracts::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
-        kentos_domain::contracts::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
-        kentos_domain::contracts::FILE_IMPORT_CSV => {
-            run!(file_import_csv, kentos_domain::contracts::ImportCsv)
+        kentos_commands::CAD_LAYERS_RENDERER => run!(layers_renderer, LayersRenderer),
+        kentos_commands::CAD_LAYERS_EDIT => run!(layers_edit, LayersEdit),
+        kentos_commands::CAD_LAYERS_SET => run!(layers_set, LayersSet),
+        kentos_commands::CAD_LAYERS_STATES => run!(layers_states, LayersStates),
+        kentos_commands::CAD_LAYERS_FIND => run!(layers_find, LayersFind),
+        kentos_commands::CAD_FIELDS_USAGE => run!(fields_usage, FieldsUsage),
+        kentos_commands::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
+        kentos_commands::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
+        kentos_commands::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
+        kentos_commands::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
+        kentos_commands::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
+        kentos_commands::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
+        kentos_commands::CAD_STYLES_IMPACT => run!(styles_impact, StylesImpact),
+        kentos_commands::CAD_STYLES_EDIT => run!(styles_edit, StylesEdit),
+        kentos_commands::CAD_SETTINGS_SET => run!(settings_set, SettingsSet),
+        kentos_commands::CAD_UCS_SET => run!(ucs_set, UcsSet),
+        kentos_commands::CAD_VIEWS_EDIT => run!(views_edit, ViewsEdit),
+        kentos_commands::CAD_FORMS_EDIT => run!(forms_edit, FormsEdit),
+        kentos_commands::CAD_FORMS_VALIDATE => run!(forms_validate, FormsValidate),
+        kentos_commands::CAD_FORMS_SUBMIT => run!(forms_submit, FormsSubmit),
+        kentos_commands::CAD_FORMS_FILL => run!(forms_fill, FormsFill),
+        kentos_commands::CAD_FORMS_AUDIT => run!(forms_audit, FormsAudit),
+        kentos_commands::CAD_FORMS_TEST => run!(forms_test, FormsTest),
+        kentos_commands::CAD_FORMS_COMPARE => run!(forms_compare, FormsCompare),
+        kentos_commands::CAD_FORMS_TRANSITION => run!(forms_transition, FormsTransition),
+        kentos_commands::CAD_DOMAINS_EDIT => run!(domains_edit, DomainsEdit),
+        kentos_commands::CAD_DOMAINS_EXPORT => run!(domains_export, DomainsExport),
+        kentos_commands::CAD_FIELDS_MIGRATE => run!(fields_migrate, FieldsMigrate),
+        kentos_commands::CAD_ATTACHMENTS_INSPECT => run!(attachments_inspect, AttachmentsInspect),
+        kentos_commands::CAD_SCHEMA_DESCRIBE => run!(schema_describe, SchemaDescribe),
+        kentos_commands::CAD_FORMS_EXPORT => run!(forms_export, FormsExport),
+        kentos_commands::CAD_FORMS_IMPORT => run!(forms_import, FormsImport),
+        kentos_commands::CAD_FORMS_RECOMPUTE => run!(forms_recompute, FormsRecompute),
+        kentos_commands::CAD_RECORDS_CREATE => run!(records, RecordsCreate),
+        kentos_commands::CAD_RECORDS_DUPLICATE => run!(records_duplicate, RecordsDuplicate),
+        kentos_commands::CAD_RELATIONS_EDIT => run!(relations_edit, RelationsEdit),
+        kentos_commands::CAD_JOINS_EDIT => run!(joins_edit, JoinsEdit),
+        kentos_commands::CAD_JOINS_QUERY => run!(joins_query, JoinsQuery),
+        kentos_commands::CAD_UNITS_CHANGE => run!(units_change, UnitsChange),
+        kentos_commands::FILE_IMPORT_DXF => run!(file_import, ImportDxf),
+        kentos_commands::FILE_IMPORT_GPKG => run!(file_import_gpkg, ImportGpkg),
+        kentos_commands::FILE_IMPORT_CSV => {
+            run!(file_import_csv, kentos_commands::ImportCsv)
         }
-        kentos_domain::contracts::CAD_GIS_DERIVATION => {
-            run!(gis_derivation, kentos_domain::contracts::GisDerivation)
+        kentos_commands::CAD_GIS_DERIVATION => {
+            run!(gis_derivation, kentos_commands::GisDerivation)
         }
-        kentos_domain::contracts::FILE_IMPORT_SLD => {
-            run!(sld, kentos_domain::contracts::ImportSld)
+        kentos_commands::FILE_IMPORT_SLD => {
+            run!(sld, kentos_commands::ImportSld)
         }
-        kentos_domain::contracts::FILE_IMPORT_PDF => run!(file_import_pdf, ImportPdf),
-        kentos_domain::contracts::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_domain::contracts::SourcesDescribe),
-        kentos_domain::contracts::CAD_SOURCES_EDIT => run!(sources_edit, kentos_domain::contracts::SourcesEdit),
-        kentos_domain::contracts::CAD_SOURCES_SYNC => run!(sources_sync, kentos_domain::contracts::SourcesSync),
-        kentos_domain::contracts::CAD_SOURCES_RECONCILE => run!(sources_reconcile, kentos_domain::contracts::SourcesReconcile),
-        kentos_domain::contracts::CAD_SOURCES_RELATE => run!(sources_relate, kentos_domain::contracts::SourcesRelate),
-        kentos_domain::contracts::CAD_RECORDS_PAGE => run!(records_page, kentos_domain::contracts::RecordsPage),
-        kentos_domain::contracts::CAD_FIELDS_WRITE => run!(fields_write, kentos_domain::contracts::FieldsWrite),
-        kentos_domain::contracts::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_domain::contracts::ProcessingTools),
-        kentos_domain::contracts::CAD_PROCESSING_RUN => run!(processing_run, kentos_domain::contracts::ProcessingRun),
-        kentos_domain::contracts::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_domain::contracts::ProcessingBatch),
-        kentos_domain::contracts::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
-        kentos_domain::contracts::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
+        kentos_commands::FILE_IMPORT_PDF => run!(file_import_pdf, ImportPdf),
+        kentos_commands::CAD_SOURCES_DESCRIBE => run!(sources_describe, kentos_commands::SourcesDescribe),
+        kentos_commands::CAD_SOURCES_EDIT => run!(sources_edit, kentos_commands::SourcesEdit),
+        kentos_commands::CAD_SOURCES_SYNC => run!(sources_sync, kentos_commands::SourcesSync),
+        kentos_commands::CAD_SOURCES_RECONCILE => run!(sources_reconcile, kentos_commands::SourcesReconcile),
+        kentos_commands::CAD_SOURCES_RELATE => run!(sources_relate, kentos_commands::SourcesRelate),
+        kentos_commands::CAD_RECORDS_PAGE => run!(records_page, kentos_commands::RecordsPage),
+        kentos_commands::CAD_FIELDS_WRITE => run!(fields_write, kentos_commands::FieldsWrite),
+        kentos_commands::CAD_PROCESSING_TOOLS => run!(processing_tools, kentos_commands::ProcessingTools),
+        kentos_commands::CAD_PROCESSING_RUN => run!(processing_run, kentos_commands::ProcessingRun),
+        kentos_commands::CAD_PROCESSING_BATCH => run!(processing_batch, kentos_commands::ProcessingBatch),
+        kentos_commands::CAD_SHEETS_EDIT => run!(sheets_edit, SheetsEdit),
+        kentos_commands::CAD_CHANGESET_APPLY => run!(changeset, ChangesetApply),
         other => return Err(format!("{at}: {other} için koşucu yok")),
     }
     .map_err(|e| format!("{at}: sonuç yazılamadı: {e}"))
@@ -3400,10 +3400,10 @@ fn fresh_layers(got: &Value, before: &std::collections::HashSet<String>) -> Vec<
 
 /// The node of `id` in a layer tree and the id of the group it is in.
 fn node_with_parent<'a>(
-    nodes: &'a [kentos_domain::contracts::LayerNode],
+    nodes: &'a [kentos_commands::LayerNode],
     id: &str,
     parent: Option<&'a str>,
-) -> Option<(&'a kentos_domain::contracts::LayerNode, Option<&'a str>)> {
+) -> Option<(&'a kentos_commands::LayerNode, Option<&'a str>)> {
     for n in nodes {
         if n.id == id {
             return Some((n, parent));
@@ -3416,9 +3416,9 @@ fn node_with_parent<'a>(
 }
 
 /// Every node's id of a layer tree.
-fn layer_ids(nodes: &[kentos_domain::contracts::LayerNode]) -> std::collections::HashSet<String> {
+fn layer_ids(nodes: &[kentos_commands::LayerNode]) -> std::collections::HashSet<String> {
     let mut out = std::collections::HashSet::new();
-    let mut stack: Vec<&kentos_domain::contracts::LayerNode> = nodes.iter().collect();
+    let mut stack: Vec<&kentos_commands::LayerNode> = nodes.iter().collect();
     while let Some(n) = stack.pop() {
         out.insert(n.id.clone());
         stack.extend(n.children.iter());

@@ -11,7 +11,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 
 fn bench() -> Bench {
     let mut b = Bench::on(include_str!(

@@ -9,8 +9,8 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     BlockFileExported, CallAnswer, CallEnvelope, CallOp, CallRecord, CommandError, CommandResult,
     CommandWarning, DxfExported, ExportBlock, ExportDxf, ExportGpkg, ExportPdf, ExportShp,
     FILE_COMMANDS, FILE_EXPORT_BLOCK, FILE_EXPORT_BLOCK_VERSION, FILE_EXPORT_DXF,
@@ -89,7 +89,7 @@ fn dxf(
     input: &ExportDxf,
 ) -> Result<(PathBuf, bool, Vec<u8>, DxfExported), Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
-    let objects: Vec<&kentos_contracts::Entity> = match &input.layers {
+    let objects: Vec<&kentos_commands::Entity> = match &input.layers {
         None => doc.entities().collect(),
         Some(ids) => {
             let mut chosen = Vec::new();
@@ -209,8 +209,8 @@ fn pdf(
 pub fn block_drawing(
     doc: &Document,
     input: &ExportBlock,
-) -> Result<(kentos_contracts::DocumentSnapshotV2, u32), Refused> {
-    use kentos_contracts::{EntityId, Vec2};
+) -> Result<(kentos_commands::DocumentSnapshotV2, u32), Refused> {
+    use kentos_commands::{EntityId, Vec2};
     let mut whole = doc.to_snapshot_v2();
     let (uids, name, base): (Vec<EntityId>, String, Option<Vec2>) = match (
         &input.block,
@@ -253,7 +253,7 @@ pub fn block_drawing(
                 })
                 .collect();
             if zero && !known.contains("0") {
-                let layer: kentos_contracts::LayerNode = serde_json::from_value(serde_json::json!({
+                let layer: kentos_commands::LayerNode = serde_json::from_value(serde_json::json!({
                     "id": "0", "name": "0", "type": "layer", "visible": true, "locked": false, "expanded": true,
                     "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": []
                 }))
@@ -263,7 +263,7 @@ pub fn block_drawing(
             // Ids of the block and its order, so the same block makes the same file (its plan's bytes).
             whole.uids = (0..whole.entities.len())
                 .map(|i| {
-                    EntityId(kentos_contracts::uuid_v5(
+                    EntityId(kentos_commands::uuid_v5(
                         &id.0,
                         format!("piece/{i}").as_bytes(),
                     ))
@@ -488,7 +488,7 @@ fn gpkg(doc: &Document, input: &ExportGpkg) -> Result<GpkgMade, Refused> {
 pub fn export_shp(
     doc: &Document,
     input: &ExportShp,
-) -> Result<(kentos_contracts::ShpExported, Vec<CommandWarning>), Refused> {
+) -> Result<(kentos_commands::ShpExported, Vec<CommandWarning>), Refused> {
     let made = crate::shp_export::make(doc, input)?;
     crate::shp_export::write(&made)?;
     Ok((made.output, made.warnings))
@@ -497,12 +497,12 @@ pub fn export_shp(
 /// The SLD of a layer's look: where it goes, its bytes, what it holds and what it could not say (docs/adr/0516).
 fn sld(
     doc: &Document,
-    input: &kentos_contracts::ExportSld,
+    input: &kentos_commands::ExportSld,
 ) -> Result<
     (
         PathBuf,
         Vec<u8>,
-        kentos_contracts::SldExported,
+        kentos_commands::SldExported,
         Vec<CommandWarning>,
     ),
     Refused,
@@ -519,7 +519,7 @@ fn sld(
             path: Some("layer".into()),
         }]
     };
-    let output = kentos_contracts::SldExported {
+    let output = kentos_commands::SldExported {
         path: path.display().to_string(),
         layer: input.layer.clone(),
         rules: written.rules as u32,
@@ -534,11 +534,11 @@ fn sld(
 /// (docs/adr/0522).
 type CsvMade = (
     Vec<(PathBuf, Vec<u8>)>,
-    kentos_contracts::CsvExported,
+    kentos_commands::CsvExported,
     Vec<CommandWarning>,
 );
 
-fn csv(doc: &Document, input: &kentos_contracts::ExportCsv) -> Result<CsvMade, Refused> {
+fn csv(doc: &Document, input: &kentos_commands::ExportCsv) -> Result<CsvMade, Refused> {
     let (path, _) = target(&input.path, input.overwrite)?;
     let made = kentos_native_application::csv_table::export(doc, input)
         .map_err(|(code, message, at)| refuse(&code, message, &at))?;
@@ -559,7 +559,7 @@ fn csv(doc: &Document, input: &kentos_contracts::ExportCsv) -> Result<CsvMade, R
     output.path = path.display().to_string();
     output.files = files
         .iter()
-        .map(|(p, b)| kentos_contracts::CsvFileWritten {
+        .map(|(p, b)| kentos_commands::CsvFileWritten {
             name: p
                 .file_name()
                 .map_or_else(String::new, |n| n.to_string_lossy().into_owned()),
@@ -583,8 +583,8 @@ fn csv(doc: &Document, input: &kentos_contracts::ExportCsv) -> Result<CsvMade, R
 /// the CSV last, each whole.
 pub fn export_csv(
     doc: &Document,
-    input: &kentos_contracts::ExportCsv,
-) -> Result<(kentos_contracts::CsvExported, Vec<CommandWarning>), Refused> {
+    input: &kentos_commands::ExportCsv,
+) -> Result<(kentos_commands::CsvExported, Vec<CommandWarning>), Refused> {
     let (files, output, warnings) = csv(doc, input)?;
     for (p, b) in files.iter().rev() {
         write(p, b)?;
@@ -596,8 +596,8 @@ pub fn export_csv(
 /// state they are made from; a bound file that changed meanwhile, or a pin that is not the state, refuses it.
 pub fn export_atlas(
     doc: &Document,
-    input: &kentos_contracts::ExportAtlas,
-) -> Result<(kentos_contracts::AtlasExported, Vec<CommandWarning>), Refused> {
+    input: &kentos_commands::ExportAtlas,
+) -> Result<(kentos_commands::AtlasExported, Vec<CommandWarning>), Refused> {
     let (path, bytes, output, warnings) = atlas(doc, input, true)?;
     write(&path, &bytes)?;
     Ok((output, warnings))
@@ -606,8 +606,8 @@ pub fn export_atlas(
 /// The layer's look written as an SLD, as `file.export.sld` writes it (docs/adr/0516).
 pub fn export_sld(
     doc: &Document,
-    input: &kentos_contracts::ExportSld,
-) -> Result<(kentos_contracts::SldExported, Vec<CommandWarning>), Refused> {
+    input: &kentos_commands::ExportSld,
+) -> Result<(kentos_commands::SldExported, Vec<CommandWarning>), Refused> {
     let (path, bytes, output, warnings) = sld(doc, input)?;
     write(&path, &bytes)?;
     Ok((output, warnings))
@@ -640,7 +640,7 @@ struct Done {
 /// whether it replaces one, the bytes, the answer and the warnings; the refusal otherwise.
 fn atlas(
     doc: &Document,
-    input: &kentos_contracts::ExportAtlas,
+    input: &kentos_commands::ExportAtlas,
     bytes: bool,
 ) -> Result<AtlasMade, Refused> {
     let (path, exists) = target(&input.path, input.overwrite)?;
@@ -666,7 +666,7 @@ fn atlas(
     } else {
         (Vec::new(), Vec::new(), planned.notes.clone())
     };
-    let output = kentos_contracts::AtlasExported {
+    let output = kentos_commands::AtlasExported {
         path: path.display().to_string(),
         bytes: bytes.len() as u64,
         sha256: sha256_hex(&bytes),
@@ -696,7 +696,7 @@ fn atlas(
 type AtlasMade = (
     PathBuf,
     Vec<u8>,
-    kentos_contracts::AtlasExported,
+    kentos_commands::AtlasExported,
     Vec<CommandWarning>,
 );
 
@@ -803,7 +803,7 @@ fn run_typed(
         });
     }
     if command == FILE_EXPORT_ATLAS {
-        let typed: kentos_contracts::ExportAtlas = serde_json::from_value(input).map_err(|e| {
+        let typed: kentos_commands::ExportAtlas = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
         // A validate plans the pages and the pin; a PDF is made only for a plan and an execute.
@@ -838,7 +838,7 @@ fn run_typed(
         });
     }
     if command == FILE_EXPORT_CSV {
-        let typed: kentos_contracts::ExportCsv = serde_json::from_value(input).map_err(|e| {
+        let typed: kentos_commands::ExportCsv = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
         let (files, output, warnings) = match csv(doc, &typed) {
@@ -873,8 +873,8 @@ fn run_typed(
             }
         });
     }
-    if command == kentos_contracts::FILE_EXPORT_GIS {
-        let typed: kentos_contracts::ExportGis = serde_json::from_value(input).map_err(|e| {
+    if command == kentos_commands::FILE_EXPORT_GIS {
+        let typed: kentos_commands::ExportGis = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
         let (path, bytes, output, warnings) = match crate::gis_export::make(doc, &typed) {
@@ -907,7 +907,7 @@ fn run_typed(
         });
     }
     if command == FILE_EXPORT_SLD {
-        let typed: kentos_contracts::ExportSld = serde_json::from_value(input).map_err(|e| {
+        let typed: kentos_commands::ExportSld = serde_json::from_value(input).map_err(|e| {
             format!("{command} girdisi okunamadı: {e}. Kataloğun girdi şemasına bakın.")
         })?;
         let (path, bytes, output, warnings) = match sld(doc, &typed) {
@@ -1050,7 +1050,7 @@ fn version_of(command: &str) -> u32 {
         FILE_EXPORT_SLD => FILE_EXPORT_SLD_VERSION,
         FILE_EXPORT_CSV => FILE_EXPORT_CSV_VERSION,
         FILE_EXPORT_ATLAS => FILE_EXPORT_ATLAS_VERSION,
-        kentos_contracts::FILE_EXPORT_GIS => kentos_contracts::FILE_EXPORT_GIS_VERSION,
+        kentos_commands::FILE_EXPORT_GIS => kentos_commands::FILE_EXPORT_GIS_VERSION,
         FILE_PACKAGE => FILE_PACKAGE_VERSION,
         _ => FILE_EXPORT_DXF_VERSION,
     }
@@ -1074,18 +1074,18 @@ fn normalize(command: &str, input: &Value) -> Result<Value, String> {
         FILE_EXPORT_SHP => serde_json::from_value::<ExportShp>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        FILE_EXPORT_ATLAS => serde_json::from_value::<kentos_contracts::ExportAtlas>(input.clone())
+        FILE_EXPORT_ATLAS => serde_json::from_value::<kentos_commands::ExportAtlas>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        FILE_EXPORT_CSV => serde_json::from_value::<kentos_contracts::ExportCsv>(input.clone())
+        FILE_EXPORT_CSV => serde_json::from_value::<kentos_commands::ExportCsv>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
-        kentos_contracts::FILE_EXPORT_GIS => {
-            serde_json::from_value::<kentos_contracts::ExportGis>(input.clone())
+        kentos_commands::FILE_EXPORT_GIS => {
+            serde_json::from_value::<kentos_commands::ExportGis>(input.clone())
                 .map_err(text)
                 .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string()))
         }
-        FILE_EXPORT_SLD => serde_json::from_value::<kentos_contracts::ExportSld>(input.clone())
+        FILE_EXPORT_SLD => serde_json::from_value::<kentos_commands::ExportSld>(input.clone())
             .map_err(text)
             .and_then(|t| serde_json::to_value(t).map_err(|e| e.to_string())),
         FILE_PACKAGE => serde_json::from_value::<PackageProject>(input.clone())

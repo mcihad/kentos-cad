@@ -11,7 +11,7 @@
 //! 2. the expected revision, 3. the layer: every create command's
 //!    (`checks.rs`), for the reasons `polygon.rs` gives.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, PointCreate, PointCreated, PointEntity,
     PointPlan,
 };
@@ -53,8 +53,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &PointCreate) -> CommandResult<Poi
 pub fn execute(cx: &mut ExecutionContext<'_>, input: PointCreate) -> CommandResult<PointCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_POINT_CREATE,
-        kentos_contracts::CAD_POINT_CREATE_VERSION,
+        kentos_commands::CAD_POINT_CREATE,
+        kentos_commands::CAD_POINT_CREATE_VERSION,
         input,
         write_execute,
     )

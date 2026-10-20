@@ -27,7 +27,7 @@
 //! take is said and does nothing.
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     FormBody, FormCheck, FormField, FormIssue, FormItem, FormWidget, FormsEdit, FormsEdited,
     FormsOp, LayerField, ProjectForm,
 };
@@ -193,7 +193,7 @@ pub struct Window {
     /// The draft kept on this device that differs from the form's (docs/adr/0441 §5): offered back.
     pub(crate) kept: Option<crate::forms::library::KeptDraft>,
     /// The records Yayınla would break, asked about before it publishes (docs/adr/0442 §2).
-    pub(crate) breaking: Option<kentos_contracts::FormBreaking>,
+    pub(crate) breaking: Option<kentos_commands::FormBreaking>,
     /// Çeviriler (docs/adr/0443 §5): the language whose words are being written, and a new tag typed.
     pub(crate) language: Option<String>,
     pub(crate) new_language: String,
@@ -277,9 +277,9 @@ pub enum Event {
     AddAction,
     ActionTool(String),
     /// An action's kind, its workflow step and where its tool runs (docs/adr/0442 §5, §6).
-    ActionKind(kentos_contracts::ActionKind),
+    ActionKind(kentos_commands::ActionKind),
     ActionStep(String),
-    ActionRuns(kentos_contracts::ActionRuns),
+    ActionRuns(kentos_commands::ActionRuns),
     /// A related item made of a project relation: its layer and field.
     RelatedFrom(String),
     /// An attachments item (docs/adr/0407 §1) where the chosen item is.
@@ -287,7 +287,7 @@ pub enum Event {
     /// Konum (docs/adr/0433): the record's place.
     AddLocation,
     /// What an attachments item counts and adds.
-    Accept(kentos_contracts::AttachmentAccept),
+    Accept(kentos_commands::AttachmentAccept),
     /// A text field offers the layer's values (docs/adr/0407 §3).
     Suggest(bool),
     /// Yansıma (docs/adr/0437): the chosen field item shown again, read-only, right after it.
@@ -315,7 +315,7 @@ pub enum Event {
     /// The chosen item shown in a subtype, or no longer (docs/adr/0426): its visibility rule rewritten.
     ShowInKind(String),
     /// A related item shown as a list or a table (docs/adr/0425).
-    RelatedView(kentos_contracts::RelatedView),
+    RelatedView(kentos_commands::RelatedView),
     /// A field of the other layer taken into the table's columns, or out of them.
     RelatedColumn(String),
     Move(i32),
@@ -373,7 +373,7 @@ pub enum Event {
     /// A check's failure is a warning, not an error.
     CheckWarning(usize, bool),
     /// When a check is asked (docs/adr/0438 §2): none as the value changes.
-    CheckMoment(usize, Option<kentos_contracts::CheckMoment>),
+    CheckMoment(usize, Option<kentos_commands::CheckMoment>),
     /// A group starts closed.
     Collapsed(bool),
     /// The fields a record hides are emptied (the form's setting).
@@ -426,9 +426,9 @@ pub enum LookupEdit {
     Limit(String),
     /// A link of the chain compared folded.
     Fold(usize, bool),
-    Duplicates(kentos_contracts::LookupDuplicates),
+    Duplicates(kentos_commands::LookupDuplicates),
     /// The relation to the record's geometry; none: not spatial.
-    Spatial(Option<kentos_contracts::LookupRelation>),
+    Spatial(Option<kentos_commands::LookupRelation>),
     /// The tolerance as typed.
     Tolerance(String),
     CopyAdd,
@@ -441,11 +441,11 @@ pub enum LookupEdit {
 
 impl LookupEdit {
     /// The edit made on `l`.
-    fn apply(&self, l: &mut kentos_contracts::FormLookup) {
+    fn apply(&self, l: &mut kentos_commands::FormLookup) {
         match self {
             LookupEdit::ColumnAdd(key) => {
                 if !l.columns.contains(key)
-                    && l.columns.len() < kentos_contracts::MOST_LOOKUP_COLUMNS
+                    && l.columns.len() < kentos_commands::MOST_LOOKUP_COLUMNS
                 {
                     l.columns.push(key.clone());
                 }
@@ -456,7 +456,7 @@ impl LookupEdit {
                 }
             }
             LookupEdit::Sort(field) => {
-                l.sort = field.clone().map(|field| kentos_contracts::LookupSort {
+                l.sort = field.clone().map(|field| kentos_commands::LookupSort {
                     field,
                     descending: l.sort.as_ref().is_some_and(|s| s.descending),
                 });
@@ -476,7 +476,7 @@ impl LookupEdit {
             }
             LookupEdit::Duplicates(d) => l.duplicates = *d,
             LookupEdit::Spatial(relation) => {
-                l.spatial = relation.map(|relation| kentos_contracts::LookupSpatial {
+                l.spatial = relation.map(|relation| kentos_commands::LookupSpatial {
                     relation,
                     tolerance: l.spatial.as_ref().and_then(|s| s.tolerance),
                 });
@@ -491,7 +491,7 @@ impl LookupEdit {
                         .filter(|t| t.is_finite() && *t > 0.0);
                 }
             }
-            LookupEdit::CopyAdd => l.copy.push(kentos_contracts::LookupCopy {
+            LookupEdit::CopyAdd => l.copy.push(kentos_commands::LookupCopy {
                 from: String::new(),
                 to: String::new(),
             }),
@@ -606,8 +606,8 @@ fn place(body: &mut FormBody, chosen: Option<&str>, item: FormItem) {
 fn pasted(
     body: &FormBody,
     item: FormItem,
-    from: &[kentos_contracts::LayerField],
-    to: &[kentos_contracts::LayerField],
+    from: &[kentos_commands::LayerField],
+    to: &[kentos_commands::LayerField],
 ) -> Result<FormItem, String> {
     let tabbed = has_tabs(body);
     if matches!(item, FormItem::Tab { .. }) && !tabbed && !body.items.is_empty() {
@@ -799,7 +799,7 @@ impl App {
             {
                 issues.push(FormIssue {
                     code: kentos_forms::codes::ACTION_UNKNOWN.into(),
-                    severity: kentos_contracts::FormSeverity::Warning,
+                    severity: kentos_commands::FormSeverity::Warning,
                     item: Some(id.clone()),
                     field: None,
                     rule: None,
@@ -904,7 +904,7 @@ impl App {
         let Some(doc) = self.document.as_mut() else {
             return;
         };
-        let input = kentos_contracts::FormsRecompute {
+        let input = kentos_commands::FormsRecompute {
             form: form.id.clone(),
             draft: form.releases.is_empty(),
             moment: None,
@@ -1252,7 +1252,7 @@ impl App {
                     layer: String::new(),
                     field: String::new(),
                     visible_when: None,
-                    view: kentos_contracts::RelatedView::List,
+                    view: kentos_commands::RelatedView::List,
                     columns: Vec::new(),
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1294,17 +1294,17 @@ impl App {
                 let label = self
                     .layer_fields_of(&r.parent)
                     .iter()
-                    .find(|f| f.kind == kentos_contracts::LayerFieldKind::Text)
+                    .find(|f| f.kind == kentos_commands::LayerFieldKind::Text)
                     .map(|f| f.key().to_owned());
                 let taken = w.body.as_ref().map(|b| ids(&b.items)).unwrap_or_default();
                 let id = kentos_forms::item_id_of(&r.field, &taken);
                 let mut field = FormField::new(id.clone(), r.field.clone());
                 field.label = Some(r.name.clone());
-                field.lookup = Some(kentos_contracts::FormLookup {
+                field.lookup = Some(kentos_commands::FormLookup {
                     layer: r.parent.clone(),
-                    key: kentos_contracts::LOOKUP_UID.into(),
+                    key: kentos_commands::LOOKUP_UID.into(),
                     label,
-                    ..kentos_contracts::FormLookup::default()
+                    ..kentos_commands::FormLookup::default()
                 });
                 let item = FormItem::Field(field);
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1367,7 +1367,7 @@ impl App {
                         layer: r.child.clone(),
                         field: r.field.clone(),
                         visible_when: None,
-                        view: kentos_contracts::RelatedView::List,
+                        view: kentos_commands::RelatedView::List,
                         columns: Vec::new(),
                     };
                     edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1376,16 +1376,16 @@ impl App {
                     let label = self
                         .layer_fields_of(&r.parent)
                         .iter()
-                        .find(|f| f.kind == kentos_contracts::LayerFieldKind::Text)
+                        .find(|f| f.kind == kentos_commands::LayerFieldKind::Text)
                         .map(|f| f.key().to_owned());
                     let id = kentos_forms::item_id_of(&r.field, &taken);
                     let mut field = FormField::new(id.clone(), r.field.clone());
                     field.label = Some(r.name.clone());
-                    field.lookup = Some(kentos_contracts::FormLookup {
+                    field.lookup = Some(kentos_commands::FormLookup {
                         layer: r.parent.clone(),
-                        key: kentos_contracts::LOOKUP_UID.into(),
+                        key: kentos_commands::LOOKUP_UID.into(),
                         label,
-                        ..kentos_contracts::FormLookup::default()
+                        ..kentos_commands::FormLookup::default()
                     });
                     let item = FormItem::Field(field);
                     edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1541,10 +1541,10 @@ impl App {
                 let item = FormItem::Action {
                     id: id.clone(),
                     label: "Öznitelik hesapla".into(),
-                    kind: kentos_contracts::ActionKind::Tool,
+                    kind: kentos_commands::ActionKind::Tool,
                     tool: Some("attributes.calculate".into()),
                     step: None,
-                    runs: kentos_contracts::ActionRuns::Auto,
+                    runs: kentos_commands::ActionRuns::Auto,
                     visible_when: None,
                 };
                 edited(&mut w, &|b| place(b, chosen_item.as_deref(), item.clone()));
@@ -1579,15 +1579,15 @@ impl App {
                         }) = find_mut(&mut b.items, &id)
                         {
                             *k = kind;
-                            *tool = (kind == kentos_contracts::ActionKind::Tool).then(|| {
+                            *tool = (kind == kentos_commands::ActionKind::Tool).then(|| {
                                 tool.clone()
                                     .unwrap_or_else(|| "attributes.calculate".into())
                             });
-                            *step = (kind == kentos_contracts::ActionKind::Step)
+                            *step = (kind == kentos_commands::ActionKind::Step)
                                 .then(|| step.clone().or_else(|| first_step.clone()))
                                 .flatten();
-                            if kind != kentos_contracts::ActionKind::Tool {
-                                *runs = kentos_contracts::ActionRuns::Auto;
+                            if kind != kentos_commands::ActionKind::Tool {
+                                *runs = kentos_commands::ActionRuns::Auto;
                             }
                         }
                     });
@@ -1617,7 +1617,7 @@ impl App {
                 let item = FormItem::Attachments {
                     id: id.clone(),
                     label: Some("Ekler".into()),
-                    accept: kentos_contracts::AttachmentAccept::Any,
+                    accept: kentos_commands::AttachmentAccept::Any,
                     min: None,
                     max: None,
                     visible_when: None,
@@ -1691,7 +1691,7 @@ impl App {
                         let mirror_id =
                             kentos_forms::item_id_of(&format!("{}-yansima", f.id), &taken);
                         let mut m =
-                            kentos_contracts::FormField::new(mirror_id.clone(), f.field.clone());
+                            kentos_commands::FormField::new(mirror_id.clone(), f.field.clone());
                         m.label = f.label.clone();
                         m.mirror = true;
                         let item = FormItem::Field(m);
@@ -1713,10 +1713,10 @@ impl App {
                 if let Some(id) = chosen_item.clone() {
                     edited(&mut w, &|b| {
                         if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id) {
-                            f.lookup = layer.clone().map(|layer| kentos_contracts::FormLookup {
+                            f.lookup = layer.clone().map(|layer| kentos_commands::FormLookup {
                                 layer,
-                                key: kentos_contracts::LOOKUP_UID.into(),
-                                ..kentos_contracts::FormLookup::default()
+                                key: kentos_commands::LOOKUP_UID.into(),
+                                ..kentos_commands::FormLookup::default()
                             });
                         }
                     });
@@ -1770,7 +1770,7 @@ impl App {
                         if let Some(FormItem::Field(f)) = find_mut(&mut b.items, &id)
                             && let Some(l) = f.lookup.as_mut()
                         {
-                            l.matches.push(kentos_contracts::LookupMatch {
+                            l.matches.push(kentos_commands::LookupMatch {
                                 field: String::new(),
                                 record: String::new(),
                                 fold: false,
@@ -1863,7 +1863,7 @@ impl App {
                         {
                             if let Some(i) = columns.iter().position(|c| *c == key) {
                                 columns.remove(i);
-                            } else if columns.len() < kentos_contracts::MOST_RELATED_COLUMNS {
+                            } else if columns.len() < kentos_commands::MOST_RELATED_COLUMNS {
                                 columns.push(key.clone());
                             }
                         }
@@ -1967,11 +1967,11 @@ impl App {
                     Some(f) => {
                         let codes: Vec<String> =
                             f.values.iter().flatten().map(|c| c.code.clone()).collect();
-                        let workflow = kentos_contracts::FormWorkflow {
+                        let workflow = kentos_commands::FormWorkflow {
                             field: f.key().to_owned(),
                             initial: codes[0].clone(),
                             locked: Vec::new(),
-                            steps: vec![kentos_contracts::WorkflowStep {
+                            steps: vec![kentos_commands::WorkflowStep {
                                 label: "Gönder".into(),
                                 from: vec![codes[0].clone()],
                                 to: codes[1].clone(),
@@ -2033,7 +2033,7 @@ impl App {
             Event::StepAdd => edited(&mut w, &|b| {
                 if let Some(wf) = b.workflow.as_mut() {
                     let n = wf.steps.len() + 1;
-                    wf.steps.push(kentos_contracts::WorkflowStep {
+                    wf.steps.push(kentos_commands::WorkflowStep {
                         label: format!("Adım {n}"),
                         from: Vec::new(),
                         to: wf.initial.clone(),
@@ -2237,7 +2237,7 @@ impl App {
             Event::LanguageText(text) => w.new_language = text,
             Event::LanguageAdd => {
                 let tag = w.new_language.trim().to_owned();
-                if kentos_contracts::language_tag_ok(&tag) {
+                if kentos_commands::language_tag_ok(&tag) {
                     edited(&mut w, &|b| {
                         b.translations.entry(tag.clone()).or_default();
                     });
@@ -2390,7 +2390,7 @@ impl App {
                         },
                     );
                     match planned {
-                        kentos_contracts::CommandResult::Completed { output, .. } => {
+                        kentos_commands::CommandResult::Completed { output, .. } => {
                             if let Some(b) = output.breaking {
                                 if let Some(w) = self.forms_window.as_mut() {
                                     w.breaking = Some(b);
@@ -2727,8 +2727,8 @@ mod tests {
 
     fn body() -> FormBody {
         kentos_forms::generate(&[
-            LayerField::new("Durum", kentos_contracts::LayerFieldKind::Text),
-            LayerField::new("Kat", kentos_contracts::LayerFieldKind::Integer),
+            LayerField::new("Durum", kentos_commands::LayerFieldKind::Text),
+            LayerField::new("Kat", kentos_commands::LayerFieldKind::Integer),
         ])
     }
 
@@ -2759,7 +2759,7 @@ mod tests {
         assert_eq!(ids(b.items[0].items()), ["durum", "kat", "n"]);
         remove(&mut b, "kat");
         assert_eq!(bound(&b.items), ["Durum"]);
-        assert!(kentos_contracts::body_problem(&b).is_none());
+        assert!(kentos_commands::body_problem(&b).is_none());
     }
 
     /// docs/adr/0403 §2: the drops the form's shape takes, and the ones it does not.
@@ -2811,7 +2811,7 @@ mod tests {
             move_item(&mut b, "genel", "kat", Place::Before).is_err(),
             "a tab deep"
         );
-        assert!(kentos_contracts::body_problem(&b).is_none());
+        assert!(kentos_commands::body_problem(&b).is_none());
         assert_eq!(id_at(&b, 0).as_deref(), Some(second.as_str()));
     }
 

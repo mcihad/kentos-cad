@@ -276,9 +276,9 @@ fn ribbon_scenes() -> Vec<Scene> {
 fn mm_labels(app: &mut App) {
     crate::files_testing::make_cad(app);
     let doc = app.document.as_mut().expect("a drawing");
-    let settings = kentos_contracts::ProjectSettings {
+    let settings = kentos_commands::ProjectSettings {
         srid: 0,
-        drawing_unit: Some(kentos_contracts::DrawingUnit::Mm),
+        drawing_unit: Some(kentos_commands::DrawingUnit::Mm),
         // An architect's scale: the lines' paper widths stay thin around two-metre rooms.
         plot_scale: 50.0,
         ..doc.model.settings().clone()
@@ -287,8 +287,8 @@ fn mm_labels(app: &mut App) {
     let layer = doc.model.layers().active().to_owned();
     let mut slots = Vec::new();
     for (x, w, h) in [(0.0, 2.0, 1.5), (2.5, 1.0, 1.0)] {
-        let p = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
-        let base = kentos_contracts::EntityBase {
+        let p = |x: f64, y: f64| kentos_commands::Vec2 { x, y };
+        let base = kentos_commands::EntityBase {
             look: Default::default(),
             id: 0,
             layer_id: layer.clone(),
@@ -306,8 +306,8 @@ fn mm_labels(app: &mut App) {
         };
         slots.push(
             doc.model
-                .add(kentos_contracts::Entity::Polygon(
-                    kentos_contracts::PathEntity {
+                .add(kentos_commands::Entity::Polygon(
+                    kentos_commands::PathEntity {
                         base,
                         pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],
                         ms: None,
@@ -349,7 +349,7 @@ fn mm_labels(app: &mut App) {
 /// its name and `$alan` in mm²: the layer's id (docs/adr/0165 §2, the 13 Ekim addendum). Katman
 /// stili reads the same `$alan` in mm², so the classes it makes meet the values drawn.
 fn mm_rooms(app: &mut App) -> String {
-    use kentos_contracts::{DrawingUnit, Entity, EntityBase, PathEntity, ProjectSettings, Vec2};
+    use kentos_commands::{DrawingUnit, Entity, EntityBase, PathEntity, ProjectSettings, Vec2};
     crate::files_testing::make_cad(app);
     let doc = app.document.as_mut().expect("a drawing");
     let settings = ProjectSettings {

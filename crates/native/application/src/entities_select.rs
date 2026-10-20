@@ -8,7 +8,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandResult, EntitiesSelect, EntitiesSelected, Entity, LayerNodeType,
     MAX_SELECT_ITEMS, PolygonSelectMode, SelectKind, SelectLeftOut, SelectRegion, SimilarCriteria,
     Vec2 as Point,

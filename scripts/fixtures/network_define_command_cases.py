@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.network.define.json: the shared cases of `cad.network.define` v1 (docs/adr/0209 §11),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_networks.rs: the checks and
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_networks.rs: the checks and
 their order, the codes, the paths and the words), without KentOS code. A network that breaks a rule takes its words
 from fixtures/network/v1/rules.json (the contract's, held by Rust and TypeScript). The web
 (apps/web/src/product/fixtures.test.ts), the desktop (crates/native/application/tests/all/fixtures.rs) and Python
@@ -178,7 +178,7 @@ def build():
         "command": "cad.network.define",
         "commandVersion": 1,
         "title": "Ağ tanımı: projenin ağını yaz ya da sil (ADR 0209 §11)",
-        "note": "scripts/fixtures/network_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/contracts/src/cad_networks.rs) KentOS kodu olmadan kurulur, kuralı bozan ağların sözleri fixtures/network/v1/rules.json'dan. `expect.networks` projenin ağlarıdır. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
+        "note": "scripts/fixtures/network_define_command_cases.py yazar; beklentiler sözleşmenin kurallarından (crates/shared/commands/src/cad_networks.rs) KentOS kodu olmadan kurulur, kuralı bozan ağların sözleri fixtures/network/v1/rules.json'dan. `expect.networks` projenin ağlarıdır. Ağ proje ayarıdır: yazmak çizimi kirli yapar, geri alma adımı yazmaz.",
         "setup": SETUP,
         "cases": cases(),
     }

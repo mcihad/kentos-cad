@@ -2,7 +2,7 @@
 //! not show: −0 kept through a transform (JSON cannot write it), copies in a
 //! document out of slots, and transforms inside an open transaction.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesTransform, Entity, Transform, Vec2,
 };
 use kentos_domain::{Document, Slot};

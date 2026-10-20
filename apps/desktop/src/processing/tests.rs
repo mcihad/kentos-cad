@@ -4,7 +4,7 @@
 //! shared cases' (fixtures/processing/v1/parcels.kcad), whose answers
 //! `kentos-processing` holds to the web's.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::json;
 
@@ -242,7 +242,7 @@ fn parcel_sheet(worker: bool, meanwhile: impl FnOnce(&mut App)) -> App {
 }
 
 /// The drawing's objects and layers, to compare two runs.
-fn drawn(app: &App) -> (Vec<kentos_contracts::Entity>, Vec<(String, String)>) {
+fn drawn(app: &App) -> (Vec<kentos_commands::Entity>, Vec<(String, String)>) {
     let doc = &app.document.as_ref().expect("open").model;
     let layers = doc
         .layers()

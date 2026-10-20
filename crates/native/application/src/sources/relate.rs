@@ -6,7 +6,7 @@
 
 use std::path::Path;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, ProjectRelation, RelateOp, RelationState, SourceKind,
     SourceLink, SourcesRelate, SourcesRelated,
 };

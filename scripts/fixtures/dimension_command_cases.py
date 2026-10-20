@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.dimensions.reassociate.json: the shared cases of Yeniden bağla (docs/adr/0249 §3),
-their expectations built here from the contract's rules (crates/shared/contracts/src/cad_dimensions.rs and subref.rs:
+their expectations built here from the contract's rules (crates/shared/commands/src/cad_dimensions.rs and subref.rs:
 the checks and their order, the codes, the paths and the words; the step's name) and from the places' own definitions
 (a path's vertex, a line's middle, a circle's centre; a place along an edge or a curve and a piece inside a block,
 docs/adr/0263), without KentOS code. The desktop

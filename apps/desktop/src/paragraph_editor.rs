@@ -25,7 +25,7 @@ use iced::keyboard::key::Named;
 use iced::widget::text_editor::{self, Action, Binding, Content, Edit, KeyPress};
 use iced::widget::{button, column, container, pin, row, text_editor as editor};
 use iced::{Center, Color, Element, Fill, Font, Length, Padding, Task, Theme};
-use kentos_contracts::{Entity, TextAlign, TextEntity};
+use kentos_commands::{Entity, TextAlign, TextEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::TextPlace;
 use kentos_geometry_core::store::labels::paragraph_records;
@@ -78,7 +78,7 @@ pub struct Open {
     pub line_spacing: Option<f64>,
     pub mask: bool,
     /// Its style and face (docs/adr/0183 §2): the letters are measured and drawn in them.
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
     pub content: Content,
     /// The content's text as last seen, and its letters' formats.
     pub text: String,
@@ -183,7 +183,7 @@ pub struct Look {
 }
 
 impl Looks {
-    fn of(text: &str, runs: &[Run], face: kentos_contracts::DrawingFont, theme: &Theme) -> Looks {
+    fn of(text: &str, runs: &[Run], face: kentos_commands::DrawingFont, theme: &Theme) -> Looks {
         let palette = crate::viewport::palette(crate::viewport::Canvas::Slate);
         let mut lines: Vec<LineLooks> = Vec::new();
         let mut letter = 0usize;
@@ -289,7 +289,7 @@ impl Open {
     /// The text as it will be drawn: its label records (`paragraph_records`),
     /// its words and runs (labels.rs draws them over the drawing). `font` is
     /// the project's; a text with a typeface of its own is measured in that.
-    pub fn preview(&self, font: kentos_contracts::DrawingFont) -> crate::labels::Preview {
+    pub fn preview(&self, font: kentos_commands::DrawingFont) -> crate::labels::Preview {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             flow: self.flow.as_deref(),
@@ -327,7 +327,7 @@ impl Open {
     }
 
     /// How many lines the text has and how far apart they are, metres.
-    fn lines(&self, font: kentos_contracts::DrawingFont) -> (usize, f64) {
+    fn lines(&self, font: kentos_commands::DrawingFont) -> (usize, f64) {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             flow: self.flow.as_deref(),
@@ -351,7 +351,7 @@ impl Open {
 
     /// Where the box's top left is on the drawing: the first line's top at
     /// the box's left (the text's origin a height up).
-    fn top_left(&self, font: kentos_contracts::DrawingFont) -> Vec2 {
+    fn top_left(&self, font: kentos_commands::DrawingFont) -> Vec2 {
         let font = self.face.font.unwrap_or(font);
         let place = TextPlace {
             flow: self.flow.as_deref(),
@@ -560,7 +560,7 @@ impl App {
             .model
             .settings()
             .drawing_font
-            .unwrap_or(kentos_contracts::DrawingFont::Barlow);
+            .unwrap_or(kentos_commands::DrawingFont::Barlow);
         let camera = &self.viewport.camera;
         let [x, y] = camera.world_to_screen(open.top_left(face));
         let width = open
@@ -785,7 +785,7 @@ impl App {
             .model
             .settings()
             .drawing_font
-            .unwrap_or(kentos_contracts::DrawingFont::Barlow);
+            .unwrap_or(kentos_commands::DrawingFont::Barlow);
         Some(open.preview(face))
     }
 
@@ -949,7 +949,7 @@ mod tests {
         let looks = Looks::of(
             "ağ\nç",
             &runs,
-            kentos_contracts::DrawingFont::Barlow,
+            kentos_commands::DrawingFont::Barlow,
             &Theme::Dark,
         );
         let spans: Vec<Vec<Range<usize>>> = looks

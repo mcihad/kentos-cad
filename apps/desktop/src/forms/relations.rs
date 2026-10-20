@@ -16,7 +16,7 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNodeType, ProjectRelation, RelateOp, RelationDelete, RelationState,
     RelationsEdit, RelationsOp, SourcesRelate, SourcesRelated,
 };
@@ -326,7 +326,7 @@ impl App {
             return Vec::new();
         };
         let mut out = Vec::new();
-        fn walk(nodes: &[kentos_contracts::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
+        fn walk(nodes: &[kentos_commands::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
                 let path = if at.is_empty() {
                     n.name.clone()

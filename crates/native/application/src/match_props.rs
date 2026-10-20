@@ -8,7 +8,7 @@
 //! leader's arrowhead, its size, the note's height and background) are written on the objects as they are after that,
 //! everything else kept (a text's link to the object it labels too).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EntitiesEditPlan, EntitiesEdited, EntitiesMatch,
     EntitiesSetProperties, Entity, MatchProperty, PropertiesOperation,
 };
@@ -322,8 +322,8 @@ pub mod entities_match {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_MATCH,
-            kentos_contracts::CAD_ENTITIES_MATCH_VERSION,
+            kentos_commands::CAD_ENTITIES_MATCH,
+            kentos_commands::CAD_ENTITIES_MATCH_VERSION,
             input,
             |cx, input| {
                 let checked = match check(cx.doc, &input) {

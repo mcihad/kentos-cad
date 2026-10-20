@@ -134,7 +134,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
     let refs = &v.features("reference").entities;
     let relation = Relation::from_key(v.text("relation")).unwrap_or(Relation::Intersects);
     feedback.progress(0.0, "İlişkiler deneniyor");
-    let ids = |list: &[&kentos_contracts::Entity]| -> Vec<Slot> {
+    let ids = |list: &[&kentos_commands::Entity]| -> Vec<Slot> {
         list.iter().map(|e| Slot(e.base().id)).collect()
     };
     let input_ids = ids(inputs);

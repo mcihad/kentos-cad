@@ -16,7 +16,7 @@
 //! associative dimensions on them follow by where their points are
 //! (`Document::relocate_ties`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EditOperation, EntitiesBreak, EntitiesEdit, EntitiesEditPlan,
     EntitiesEdited, EntitiesJoin, Entity, EntityEdit, JOIN_TOLERANCE, TrimBoundaries,
 };
@@ -157,7 +157,7 @@ fn find(doc: &Document, uid: &str) -> Option<Slot> {
     Uuid::parse_str(uid).ok().and_then(|u| doc.slot_of(u))
 }
 
-fn point(p: kentos_contracts::Vec2) -> Vec2 {
+fn point(p: kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
@@ -347,8 +347,8 @@ pub mod entities_break {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_BREAK,
-            kentos_contracts::CAD_ENTITIES_BREAK_VERSION,
+            kentos_commands::CAD_ENTITIES_BREAK,
+            kentos_commands::CAD_ENTITIES_BREAK_VERSION,
             input,
             |cx, input| {
                 let checked = check_break(cx.doc, &input);
@@ -709,8 +709,8 @@ pub mod entities_join {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_JOIN,
-            kentos_contracts::CAD_ENTITIES_JOIN_VERSION,
+            kentos_commands::CAD_ENTITIES_JOIN,
+            kentos_commands::CAD_ENTITIES_JOIN_VERSION,
             input,
             |cx, input| {
                 let checked = check_join(cx.doc, cx.store, &input);

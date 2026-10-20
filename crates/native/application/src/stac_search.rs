@@ -4,7 +4,7 @@
 //! The shared cases are `fixtures/commands/v1/cad.stac.search.json` (`scripts/fixtures/stac_cases.py`, recorded
 //! answers in `fixtures/services/v1/stac`).
 
-use kentos_contracts::{CommandError, CommandResult, StacSearch, StacSearched, codes};
+use kentos_commands::{CommandError, CommandResult, StacSearch, StacSearched, codes};
 use kentos_services::stac::{Problem, read, request};
 
 use crate::ExecutionContext;
@@ -62,8 +62,8 @@ fn asked(input: &StacSearch) -> Result<StacSearched, Stop> {
 
 fn method_text(p: &request::Planned) -> &'static str {
     match p.request.method {
-        kentos_contracts::StacMethod::Get => "GET",
-        kentos_contracts::StacMethod::Post => "POST",
+        kentos_commands::StacMethod::Get => "GET",
+        kentos_commands::StacMethod::Post => "POST",
     }
 }
 

@@ -37,4 +37,11 @@ steps?: boolean,
  * name and its items' labels and help. Only what is shown changes; the values, codes and rules are
  * the form's own.
  */
-translations?: { [key in string]: FormTranslation }, };
+translations?: { [key in string]: FormTranslation }, 
+/**
+ * Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi
+ * reads and writes, through this form, only the records it holds true for (`@kullanici`,
+ * `@kullanici_eposta` the person signed in). None: every record of the layer. At most
+ * `MOST_SCOPE_LETTERS` letters.
+ */
+scope?: string, };

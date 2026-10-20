@@ -10,7 +10,7 @@
 //! went through (Denetle's) are crossed and said: such a trace is not one to
 //! rely on (docs/adr/0525).
 
-use kentos_contracts::{NetworkDef, NetworkKind};
+use kentos_commands::{NetworkDef, NetworkKind};
 use kentos_domain::{Related, Slot, Tie};
 use kentos_geometry_core::ops::network::{TraceAnswer, TraceKind};
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -172,7 +172,7 @@ impl NetTrace {
             .iter()
             .flat_map(|r| &r.slots)
             .filter_map(|s| match cx.doc.get(*s) {
-                Some(kentos_contracts::Entity::Point(p)) => Some(Vec2::new(p.p.x, p.p.y)),
+                Some(kentos_commands::Entity::Point(p)) => Some(Vec2::new(p.p.x, p.p.y)),
                 _ => None,
             })
             .collect();

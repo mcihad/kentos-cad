@@ -24,7 +24,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, CreateOperation, EntitiesCreate, EntitiesCreatePlan,
     EntitiesCreated, Entity, EntityBase, EntityGeometry, EntityId, NewObject, label_scale_ok,
 };
@@ -80,8 +80,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_CREATE,
-        kentos_contracts::CAD_ENTITIES_CREATE_VERSION,
+        kentos_commands::CAD_ENTITIES_CREATE,
+        kentos_commands::CAD_ENTITIES_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -187,7 +187,7 @@ struct Checked {
     warnings: Vec<CommandWarning>,
     attrs: Vec<BTreeMap<String, String>>,
     /// Each object's measured points read from the places its live references name (docs/adr/0250).
-    placed: Vec<Vec<(&'static str, kentos_contracts::Vec2)>>,
+    placed: Vec<Vec<(&'static str, kentos_commands::Vec2)>>,
 }
 
 /// The checks in the contract's order: why nothing may be written, or what
@@ -204,7 +204,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
         check_geometry(&object.geometry, "objects", i, "nesnenin")?;
         checks::line_weight(object.line_weight, &format!("objects[{i}].lineWeight"))?;
         if let Some(x) = object.transparency
-            && !(x.is_finite() && (0.0..=kentos_contracts::MAX_TRANSPARENCY).contains(&x))
+            && !(x.is_finite() && (0.0..=kentos_commands::MAX_TRANSPARENCY).contains(&x))
         {
             return Err(Stop::failed(error(
                 codes::INVALID_TRANSPARENCY,
@@ -304,7 +304,7 @@ fn check(doc: &Document, input: &EntitiesCreate) -> Result<Checked, Stop> {
 fn placed_points(
     doc: &Document,
     input: &EntitiesCreate,
-) -> Result<Vec<Vec<(&'static str, kentos_contracts::Vec2)>>, Stop> {
+) -> Result<Vec<Vec<(&'static str, kentos_commands::Vec2)>>, Stop> {
     let mut out = Vec::with_capacity(input.objects.len());
     for (i, object) in input.objects.iter().enumerate() {
         let mut own = Vec::new();
@@ -347,7 +347,7 @@ fn placed_points(
                         )));
                     }
                 };
-                own.push((name, kentos_contracts::Vec2 { x: p.x, y: p.y }));
+                own.push((name, kentos_commands::Vec2 { x: p.x, y: p.y }));
             }
         }
         out.push(own);
@@ -425,7 +425,7 @@ fn check_link(object: &NewObject, i: usize) -> Result<(), Stop> {
 fn entities(
     input: &EntitiesCreate,
     attrs: &[BTreeMap<String, String>],
-    placed: &[Vec<(&'static str, kentos_contracts::Vec2)>],
+    placed: &[Vec<(&'static str, kentos_commands::Vec2)>],
 ) -> Vec<Entity> {
     input
         .objects
@@ -436,7 +436,7 @@ fn entities(
             let mut entity = entity_of(
                 &object.geometry,
                 EntityBase {
-                    look: kentos_contracts::ObjectLook {
+                    look: kentos_commands::ObjectLook {
                         line_type: object.line_type,
                         transparency: object.transparency,
                         order: object.order.filter(|o| *o != 0),

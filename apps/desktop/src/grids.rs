@@ -467,7 +467,7 @@ mod tests {
     fn a_projects_grid_is_looked_for_added_and_removed() {
         use crate::files_testing::{app_with_drawing, drive, last_said};
         use crate::project::SettingsEvent;
-        use kentos_contracts::{DatumTransform, GridChoice, RegistryDatum};
+        use kentos_commands::{DatumTransform, GridChoice, RegistryDatum};
         use kentos_interaction::second::Second;
 
         let id = sha256(&std::fs::read(TR).expect("the grid"));
@@ -555,7 +555,7 @@ mod tests {
         use crate::files_testing::{app_with_drawing, drive, find_text};
         use crate::project::SettingsEvent;
         use iced::Size;
-        use kentos_contracts::{DatumTransform, GridChoice, RegistryDatum};
+        use kentos_commands::{DatumTransform, GridChoice, RegistryDatum};
         use kentos_ui::snapshot::{Input, Snapshot};
 
         let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");

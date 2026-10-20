@@ -5,7 +5,7 @@
 //! plan shows them as they will be (`dependents`), also on a copy kept
 //! between previews.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesStretch, EntitiesStretchPlan, Entity, EntityId,
     HatchAssoc, StretchWindow, Vec2,
 };
@@ -34,7 +34,7 @@ fn drawing() -> Document {
     let Some(Entity::Text(t)) = doc.get(Slot(3)).cloned() else {
         panic!("a text")
     };
-    let linked = Entity::Text(kentos_domain::contracts::TextEntity {
+    let linked = Entity::Text(kentos_commands::TextEntity {
         label_of: Some(id(&doc, 2)),
         label_scale: Some(100.0),
         ..t
@@ -43,7 +43,7 @@ fn drawing() -> Document {
     let Some(Entity::Hatch(h)) = doc.get(Slot(4)).cloned() else {
         panic!("a hatch")
     };
-    let tied = Entity::Hatch(kentos_domain::contracts::HatchEntity {
+    let tied = Entity::Hatch(kentos_commands::HatchEntity {
         boundary: None,
         assoc: Some(HatchAssoc {
             gap: None,

@@ -3,7 +3,7 @@
 //! pointer events and typed text; the tool changes the drawing only through
 //! the document and says what to draw as [`Preview`] data.
 
-use kentos_contracts::AnnotationKind;
+use kentos_commands::AnnotationKind;
 use kentos_domain::Document;
 use kentos_geometry_core::entity::Shape as GeomShape;
 use kentos_geometry_core::geometry::Bounds;
@@ -119,14 +119,14 @@ pub enum ViewChange {
     /// docs/adr/0088): kept (the selection holds them), or left (Esc).
     PickedObjects(bool),
     /// A copy for the host's clipboard (Taban noktasıyla kopyala, [`crate::copy_base`], docs/adr/0309).
-    Copied(Box<kentos_contracts::Clip>),
+    Copied(Box<kentos_commands::Clip>),
     /// Blok oluştur's base point ([`crate::block_define`], docs/adr/0144): the
     /// host opens the window that names a block of the selected objects.
     DefineBlock(Vec2),
     /// Blok ekle's point for a block with attribute definitions
     /// ([`crate::block_insert`], docs/adr/0144 §7): the host asks their
     /// values and gives them back with [`Tool::values_given`].
-    AttributeValues(kentos_contracts::BlockId),
+    AttributeValues(kentos_commands::BlockId),
     /// Metin dosyası yerleştir's file ([`crate::text_file`], docs/adr/0145 §6):
     /// the host picks one and gives back its name and bytes with [`Tool::file_given`].
     OpenTextFile,
@@ -137,7 +137,7 @@ pub enum ViewChange {
     /// (Köşelere koordinat yaz's Çizelge, docs/adr/0185 §1): the host runs
     /// Tablo ekle's placement ([`crate::table_place::TablePlace`]) with it
     /// under this name.
-    PlaceTable(Box<kentos_contracts::EntityGeometry>, &'static str),
+    PlaceTable(Box<kentos_commands::EntityGeometry>, &'static str),
     /// Koordinat oku's point (docs/adr/0204 §8): the host reads the values
     /// of the shown rasters under it and says them once read.
     RasterValues(Vec2),
@@ -174,7 +174,7 @@ pub struct TextField {
     pub at: Vec2,
     pub height: f64,
     pub rotation: f64,
-    pub align: Option<kentos_contracts::TextAlign>,
+    pub align: Option<kentos_commands::TextAlign>,
     pub width_factor: f64,
     pub initial: Option<String>,
     /// What the empty field shows, and the hint under it; none: Yazı's.
@@ -184,7 +184,7 @@ pub struct TextField {
     /// arrow without a note, docs/adr/0146 §7); otherwise it is as Esc.
     pub empty: bool,
     /// The text style's face it will have (docs/adr/0183 §2); none for Standart.
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
 }
 
 /// Where the paragraph editor opens and how its text will look (docs/adr/0182
@@ -201,7 +201,7 @@ pub struct ParagraphField {
     pub mask: bool,
     /// The text style's face and width factor it will have (docs/adr/0183
     /// §2); none and none for Standart.
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
     pub width_factor: Option<f64>,
 }
 
@@ -291,7 +291,7 @@ pub struct Draft {
     pub line_weight: Option<f64>,
     /// The line type new objects drawn with lines take (the ribbon's Çizgi
     /// tipi; docs/adr/0260 §2); `None`: the layer's (“Katmana göre”).
-    pub line_type: Option<kentos_contracts::LineType>,
+    pub line_type: Option<kentos_commands::LineType>,
     /// How a geographic second system's values are written
     /// (`display.geographic`, docs/adr/0167 §1).
     pub geographic: crate::second::Notation,
@@ -598,9 +598,9 @@ pub struct Memory {
     pub divide_by_step: bool,
     /// Böl's block (none: points), whether its inserts turn with the object, the open object's ends that also
     /// get a place, and a step's first distance in metres (none: at the step; docs/adr/0299).
-    pub divide_block: Option<kentos_contracts::BlockId>,
+    pub divide_block: Option<kentos_commands::BlockId>,
     pub divide_align: bool,
-    pub divide_ends: kentos_contracts::DivideEnds,
+    pub divide_ends: kentos_commands::DivideEnds,
     pub divide_start: Option<f64>,
     /// The annotation tools' Yükseklik typed in this drawing, paper mm, by
     /// kind (docs/adr/0205 §2; the web's `tools/annotationHeights.ts`): none
@@ -611,12 +611,12 @@ pub struct Memory {
     pub text_angle: f64,
     /// Yazı's Hiza (none: the left of the baseline), Genişlik, Zemin and
     /// Artır (`TextTool.align`, `.widthFactor`, `.mask`, `.increment`; docs/adr/0145 §6).
-    pub text_align: Option<kentos_contracts::TextAlign>,
+    pub text_align: Option<kentos_commands::TextAlign>,
     pub text_width_factor: f64,
     pub text_mask: bool,
     pub text_increment: bool,
     /// Eğri boyunca yazı's Hiza and Konum as one alignment (`TextAlongTool.align`, docs/adr/0196 §4).
-    pub along_align: kentos_contracts::TextAlign,
+    pub along_align: kentos_commands::TextAlign,
     /// Dördüncü köşe's Çıktı: the four corners as an area, else the fourth as a point
     /// (`FourthCornerTool.area`, docs/adr/0197 §4).
     pub fourth_area: bool,
@@ -644,7 +644,7 @@ pub struct Memory {
     /// Kılavuz's arrowhead (none: the filled triangle), its size in the
     /// note's height (none: 1; docs/adr/0205 §7) and Zemin (`LeaderTool.arrow`,
     /// `.arrowSize`, `.mask`; docs/adr/0146 §7); its height is its own kind's.
-    pub leader_arrow: Option<kentos_contracts::LeaderArrow>,
+    pub leader_arrow: Option<kentos_commands::LeaderArrow>,
     pub leader_arrow_size: Option<f64>,
     pub leader_mask: bool,
     /// Tarama's and Çoklu tara's pattern (an index into the core's
@@ -734,7 +734,7 @@ pub struct Memory {
     /// Duvar's width (metres), justification, base line offset and style (`wall::style_key` of its id; none: no
     /// style) (docs/adr/0339 §6).
     pub wall_width: f64,
-    pub wall_justify: kentos_contracts::WallJustify,
+    pub wall_justify: kentos_commands::WallJustify,
     pub wall_offset: f64,
     pub wall_style: Option<u64>,
     /// Çizgiden duvar's Çiftler, Kaynağı koru and its pairs' widest wall, metres (docs/adr/0339 §6).
@@ -818,7 +818,7 @@ pub struct Memory {
     pub audit_purge_dims: bool,
     /// Blok ekle's block, scale, turn in degrees and mirror
     /// (`BlockInsertTool.block`, `.scale`, `.rotation`, `.mirror`; docs/adr/0144).
-    pub block_insert: Option<kentos_contracts::BlockId>,
+    pub block_insert: Option<kentos_commands::BlockId>,
     pub block_scale: f64,
     /// Blok ekle's own y factor (docs/adr/0315 §3); none: the x one.
     pub block_y_scale: Option<f64>,
@@ -905,7 +905,7 @@ pub struct ImageFile {
     pub name: String,
     pub path: Option<String>,
     pub id: String,
-    pub library: kentos_contracts::ProjectStyles,
+    pub library: kentos_commands::ProjectStyles,
     pub width: u32,
     pub height: u32,
 }
@@ -1064,7 +1064,7 @@ impl Default for Memory {
             divide_by_step: false,
             divide_block: None,
             divide_align: true,
-            divide_ends: kentos_contracts::DivideEnds::None,
+            divide_ends: kentos_commands::DivideEnds::None,
             divide_start: None,
             heights: Heights::default(),
             text_angle: 0.0,
@@ -1072,7 +1072,7 @@ impl Default for Memory {
             text_width_factor: 1.0,
             text_mask: false,
             text_increment: false,
-            along_align: kentos_contracts::TextAlign::BottomCenter,
+            along_align: kentos_commands::TextAlign::BottomCenter,
             fourth_area: false,
             ring_spacing: 5.0,
             ring_count: 3,
@@ -1131,13 +1131,13 @@ impl Default for Memory {
             last_dimension: None,
             text_style: None,
             dimension_style: None,
-            wall_width: kentos_contracts::DEFAULT_WALL_WIDTH,
-            wall_justify: kentos_contracts::WallJustify::Center,
+            wall_width: kentos_commands::DEFAULT_WALL_WIDTH,
+            wall_justify: kentos_commands::WallJustify::Center,
             wall_offset: 0.0,
             wall_style: None,
             wall_pairs: false,
             wall_keep_sources: false,
-            wall_pair_max: kentos_contracts::DEFAULT_PAIR_WIDTH,
+            wall_pair_max: kentos_commands::DEFAULT_PAIR_WIDTH,
             offset_both: false,
             offset_erase: false,
             path_count: 5,
@@ -1163,7 +1163,7 @@ impl Default for Memory {
             nurbs_degree: 3,
             curve_tolerance: 0.01,
             match_off: 0,
-            cleanup_tolerance: kentos_contracts::CLEANUP_TOLERANCE,
+            cleanup_tolerance: kentos_commands::CLEANUP_TOLERANCE,
             cleanup_overlaps: true,
             cleanup_end_to_end: false,
             cleanup_straight: true,
@@ -1173,7 +1173,7 @@ impl Default for Memory {
             wipeout_object: false,
             explode_count: 24,
             explode_step: 1.0,
-            explode_deviation: kentos_contracts::EXPLODE_DEVIATION,
+            explode_deviation: kentos_commands::EXPLODE_DEVIATION,
             audit_fix: true,
             audit_purge_text: false,
             audit_purge_dims: false,
@@ -1228,7 +1228,7 @@ impl Default for Memory {
 
 /// A project's user coordinate system as the shared core's frame (docs/adr/0261 §1).
 pub fn frame_of(
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> kentos_geometry_core::tools::ucs::Frame {
     match settings.ucs {
         Some(u) => {
@@ -1303,7 +1303,7 @@ impl Context<'_> {
     /// The same in the drawing at the plot scale, metres (`mm / 1000 ×
     /// scale`, the expression every tool writes with).
     pub fn annotation_height(&self, kind: AnnotationKind) -> f64 {
-        kentos_contracts::paper_height(self.annotation_mm(kind), self.doc.settings().plot_scale)
+        kentos_commands::paper_height(self.annotation_mm(kind), self.doc.settings().plot_scale)
     }
 
     /// The symbol a new object takes: its object template's (docs/adr/0176
@@ -1512,7 +1512,7 @@ pub struct CellGhost {
     pub text: String,
     pub height: f64,
     pub bold: bool,
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
 }
 
 /// A text to come: where its alignment puts it, its text, its height on
@@ -1527,7 +1527,7 @@ pub struct TextGhost {
     pub rotation: f64,
     pub align: Option<kentos_geometry_core::text::TextAlign>,
     pub mask: bool,
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
     pub width_factor: f64,
 }
 
@@ -1674,7 +1674,7 @@ pub trait Tool {
     /// or none (Vazgeç).
     fn paragraph_typed(
         &mut self,
-        _typed: Option<(&str, &[kentos_contracts::TextRun], Option<&kentos_contracts::ParagraphLayout>)>,
+        _typed: Option<(&str, &[kentos_commands::TextRun], Option<&kentos_commands::ParagraphLayout>)>,
         _cx: &mut Context<'_>,
     ) {
     }

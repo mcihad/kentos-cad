@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{AffectReason, SheetsSet, SheetsSetResult};
+use kentos_commands::{AffectReason, SheetsSet, SheetsSetResult};
 use kentos_ui::icon::icon;
 use kentos_ui::widget::{Dialog as Frame, overlay};
 use kentos_ui::{label, style};
@@ -62,11 +62,11 @@ impl App {
             uids: (!uids.is_empty()).then_some(uids),
         };
         match kentos_native_application::sheets_set::plan_in(&doc.model, &input) {
-            kentos_contracts::CommandResult::Completed { output, .. } => {
+            kentos_commands::CommandResult::Completed { output, .. } => {
                 self.sheet_set = Some(Window { set: output, chosen });
                 self.dialog = Some(Dialog::SheetSet);
             }
-            kentos_contracts::CommandResult::Failed { error } => self.warn(error.message),
+            kentos_commands::CommandResult::Failed { error } => self.warn(error.message),
             _ => {}
         }
     }

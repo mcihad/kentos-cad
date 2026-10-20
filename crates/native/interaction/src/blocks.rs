@@ -5,8 +5,8 @@
 //! shown on; why a block cannot be deleted. What a call has to say comes back
 //! as lines for the host's log.
 
-use kentos_contracts::blocks::{Placements, placements};
-use kentos_contracts::{
+use kentos_commands::blocks::{Placements, placements};
+use kentos_commands::{
     BlockEditOperation, BlockId, BlocksEdit, BlocksEdited, CommandResult, Entity,
 };
 use kentos_domain::{Document, Slot};
@@ -204,7 +204,7 @@ pub fn attributes_insert(
 pub fn selected_block(doc: &Document, selection: &Selection) -> Option<BlockId> {
     let mut found: Option<BlockId> = None;
     for slot in selection.ids() {
-        if let Some(kentos_contracts::Entity::Insert(i)) = doc.get(*slot) {
+        if let Some(kentos_commands::Entity::Insert(i)) = doc.get(*slot) {
             match found {
                 Some(b) if b != i.block => return None,
                 _ => found = Some(i.block),
@@ -219,7 +219,7 @@ pub fn selected_block(doc: &Document, selection: &Selection) -> Option<BlockId> 
 pub fn check_attributes(
     doc: &mut Document,
     id: BlockId,
-    attributes: Vec<kentos_contracts::AttributeDefinition>,
+    attributes: Vec<kentos_commands::AttributeDefinition>,
 ) -> Result<(), String> {
     let input = BlocksEdit {
         attributes: Some(attributes),
@@ -239,7 +239,7 @@ pub fn check_attributes(
 pub fn set_attributes(
     doc: &mut Document,
     id: BlockId,
-    attributes: Vec<kentos_contracts::AttributeDefinition>,
+    attributes: Vec<kentos_commands::AttributeDefinition>,
 ) -> (Vec<Said>, bool) {
     let name = name_of(doc, id);
     let n = attributes.len();
@@ -276,7 +276,7 @@ pub fn rebase(doc: &mut Document, id: BlockId, base: Vec2) -> Vec<Said> {
     let out = edit(
         doc,
         BlocksEdit {
-            base: Some(kentos_contracts::Vec2 {
+            base: Some(kentos_commands::Vec2 {
                 x: base.x,
                 y: base.y,
             }),
@@ -310,7 +310,7 @@ pub fn redefine(doc: &mut Document, id: BlockId, uids: Vec<String>, base: Vec2) 
         doc,
         BlocksEdit {
             uids: Some(uids),
-            base: Some(kentos_contracts::Vec2 {
+            base: Some(kentos_commands::Vec2 {
                 x: base.x,
                 y: base.y,
             }),

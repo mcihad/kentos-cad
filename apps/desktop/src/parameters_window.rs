@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{Column, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CadParameter, CommandResult, ConstraintEdit, ConstraintsEdit, ParameterEdit, ParameterKind,
     ParametersEdit, rule_label,
 };

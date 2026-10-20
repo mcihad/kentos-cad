@@ -11,7 +11,7 @@ use crate::common;
 use std::collections::BTreeMap;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Entity, EntityBase, HatchPatternType, PathEntity, Vec2 as Wire};
+use kentos_commands::{Entity, EntityBase, HatchPatternType, PathEntity, Vec2 as Wire};
 use kentos_interaction::Level;
 
 const HATCH: &str = include_str!("../../../../../fixtures/interaction/v1/hatch.kcad");
@@ -340,7 +340,7 @@ fn a_click_in_a_part_of_a_multi_part_parcel_fills_that_part() {
         .expect("the parcel");
     let at = |x: f64, y: f64| Wire { x: E + x, y: N + y };
     let mut two = parcel;
-    two.parts = Some(vec![kentos_contracts::AreaPart {
+    two.parts = Some(vec![kentos_commands::AreaPart {
         ms: None,
         pts: vec![
             at(40.0, 20.0),

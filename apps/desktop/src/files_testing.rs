@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::Task;
 use iced::futures::StreamExt as _;
-use kentos_contracts::{DocumentSnapshotV1, Entity, EntityBase, EntityId, PointEntity, Vec2};
+use kentos_commands::{DocumentSnapshotV1, Entity, EntityBase, EntityId, PointEntity, Vec2};
 
 use crate::app::{App, Message};
 use crate::document::Document;
@@ -105,7 +105,7 @@ pub fn app_with_drawing() -> App {
 pub fn make_cad(app: &mut App) {
     let doc = app.document.as_mut().expect("a drawing");
     let mut settings = doc.settings().clone();
-    settings.workspace = Some(kentos_contracts::Workspace::Cad);
+    settings.workspace = Some(kentos_commands::Workspace::Cad);
     doc.model.set_settings(settings);
 }
 

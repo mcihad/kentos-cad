@@ -6,7 +6,7 @@
 //! web's are `apps/web/src/app/services.ts`.
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayerServiceOperation, LayersService,
 };
 use kentos_native_application::{ExecutionContext, layers_service};

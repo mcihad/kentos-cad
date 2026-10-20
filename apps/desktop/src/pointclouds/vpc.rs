@@ -8,7 +8,7 @@
 use std::path::{Path, PathBuf};
 
 use iced::Task;
-use kentos_contracts::PointCloudFields;
+use kentos_commands::PointCloudFields;
 use kentos_pointcloud::vpc::{Item, write};
 
 use super::Event as Clouds;

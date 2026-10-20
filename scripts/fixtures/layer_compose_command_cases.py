@@ -1,5 +1,5 @@
 """Writes fixtures/commands/v1/cad.layers.compose.json: the shared cases of `cad.layers.compose` v1 (docs/adr/0226 §3,
-§4, §6), their expectations built here from the contract's rules (crates/shared/contracts/src/cad_layers.rs,
+§4, §6), their expectations built here from the contract's rules (crates/shared/commands/src/cad_layers.rs,
 layer_compose.rs: the checks and their order, the codes, the paths and the words; what says nothing is not kept; the
 step's name), without KentOS code. The web (apps/web/src/product/fixtures.test.ts), the desktop
 (crates/native/application/tests/all/fixtures.rs) and Python (python/tests/test_command_cases.py) run them.

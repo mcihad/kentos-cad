@@ -3,7 +3,7 @@
 //! with its panel, the current colour of new objects. The sample drawing:
 //! Kadastro holds Parsel (active) and Bina (locked); Çizim is hidden.
 
-use kentos_contracts::{LineType, Workspace};
+use kentos_commands::{LineType, Workspace};
 use kentos_domain::Slot;
 
 use super::*;
@@ -62,7 +62,7 @@ fn the_template_field_lists_the_recent_then_the_categories_the_drawn_one_chosen(
 
     let mut app = app_with_drawing();
     let template = |id: &str, name: &str, path: &[&str], tool: &str| json!({ "kind": "template", "id": id, "name": name, "path": path, "template": { "tool": tool, "layer": { "path": [], "name": "Parsel" } } });
-    let styles = kentos_contracts::ProjectStyles {
+    let styles = kentos_commands::ProjectStyles {
         items: vec![
             template("p-parsel", "Parsel sınırı", &["Kadastro"], "polygon"),
             template("p-ada", "Ada sınırı", &["Kadastro"], "polyline"),

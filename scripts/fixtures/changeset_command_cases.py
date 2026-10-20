@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.changeset.apply.json: the shared cases of `cad.changeset.apply` v1 (docs/adr/0253 §8).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_changeset.rs: the checks and
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_changeset.rs: the checks and
 their order, the codes, paths and words; docs/adr/0253 §8), and from what the steps' own commands answer as their own
 cases write it (fixtures/commands/v1/cad.point.create.json, cad.entities.set.json, cad.entities.delete.json,
 cad.layers.set.json, cad.settings.set.json: outputs, messages), without KentOS code:

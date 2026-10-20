@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, LayerField, LayerFieldKind, check_value, display_value, infer_field, js_trim,
 };
 use kentos_geometry_core::ops::charts::data::{Cell, Column, Kind, geometry_columns};

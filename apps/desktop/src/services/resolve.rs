@@ -8,7 +8,7 @@
 use std::sync::{Arc, Mutex, PoisonError};
 
 use kentos_cloud::fetch;
-use kentos_contracts::{AuthKind, ConnectionSecret, ServiceConnection, ServiceKind, ServiceLayer};
+use kentos_commands::{AuthKind, ConnectionSecret, ServiceConnection, ServiceKind, ServiceLayer};
 use kentos_render_wgpu::styled::ServiceView;
 use kentos_services::auth::{self, Token};
 use kentos_services::caps::tilejson;

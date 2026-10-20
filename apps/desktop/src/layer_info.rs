@@ -8,7 +8,7 @@
 
 use iced::widget::{Column, button, column, container, row, text_editor, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, InfoCard, LayerAction, LayerNodeType, LayersInfo, actions_problem,
 };
 use kentos_domain::Slot;

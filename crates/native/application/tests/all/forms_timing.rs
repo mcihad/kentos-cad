@@ -7,7 +7,7 @@
 use std::time::Instant;
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesSetProperties, FormsAudit, FormsRecompute,
     FormsValidate,
 };
@@ -112,10 +112,10 @@ fn drawing() -> Document {
                       "Kat": (i % 9).to_string(), "A1": "x"}}));
     }
     let b = body();
-    let typed: kentos_domain::contracts::FormBody =
+    let typed: kentos_commands::FormBody =
         serde_json::from_value(b.clone()).expect("a body");
     let form = json!({"id": "bina", "name": "Bina", "layer": "bina", "draft": b.clone(),
-        "releases": [{"version": 1, "digest": kentos_domain::contracts::body_digest(&typed), "body": b}]});
+        "releases": [{"version": 1, "digest": kentos_commands::body_digest(&typed), "body": b}]});
     let snapshot = json!({"format":"kentos.document","version":1,"name":"Büyük form","settings":{"srid":0,
         "lengthDecimals":3,"areaDecimals":2,"areaUnit":"m2","angleUnit":"deg","plotScale":100,"forms":[form]},
         "origin":{"x":0,"y":0},"layers":[{"id":"bina","name":"Bina","type":"layer","visible":true,"locked":false,

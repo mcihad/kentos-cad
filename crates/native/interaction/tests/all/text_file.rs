@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, N, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::api::json::Json;
 use kentos_interaction::ViewChange;
 use kentos_interaction::text_file::{MAX_BYTES, Refused, lines};

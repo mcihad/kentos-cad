@@ -7,7 +7,7 @@
 
 use iced::widget::{Column, button, column, row, text_input};
 use iced::{Center, Element};
-use kentos_contracts::{AnnotationHeights, AnnotationKind, paper_height};
+use kentos_commands::{AnnotationHeights, AnnotationKind, paper_height};
 use kentos_interaction::Format;
 use kentos_project::wizard::{project_scales, scale_text};
 use kentos_ui::theme::typography;

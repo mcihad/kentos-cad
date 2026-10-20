@@ -10,7 +10,7 @@ mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, RasterEntity, RasterFields};
+use kentos_commands::{Entity, RasterEntity, RasterFields};
 use kentos_native_application::geometry::shape;
 use kentos_raster::from_points::{PointInput, PointJob, PointSpec};
 use kentos_raster::ops::Notes;
@@ -96,10 +96,10 @@ fn ends_of(r: &Resolved<'_>, second: &str) -> (Vec<kentos_geometry_core::entity:
 
 fn raster_entity(
     grid: &kentos_raster::grid::Grid,
-    (bands, sample): (u32, kentos_contracts::RasterSample),
+    (bands, sample): (u32, kentos_commands::RasterSample),
     path: &str,
     srid: u32,
-    style: kentos_contracts::RasterStyle,
+    style: kentos_commands::RasterStyle,
     layer: &str,
 ) -> Entity {
     Entity::Raster(RasterEntity {

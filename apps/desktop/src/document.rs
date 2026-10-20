@@ -13,7 +13,7 @@
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 
-use kentos_contracts::{
+use kentos_commands::{
     DocumentSnapshotV1, DocumentSnapshotV2, LayerNode, LayerNodeType, ProjectInfo,
     ProjectPermission, ProjectSettings, ProjectState, ProjectStorage,
 };
@@ -303,7 +303,7 @@ mod tests {
 
     /// The web's edits, applied by hand to the drawing before them: what the web must have saved.
     fn web_edits(mut s: DocumentSnapshotV2) -> DocumentSnapshotV2 {
-        use kentos_contracts::{Entity, EntityBase, EntityId, PointEntity, Vec2};
+        use kentos_commands::{Entity, EntityBase, EntityId, PointEntity, Vec2};
         let i = index_of(&s, "point");
         if let Entity::Point(p) = &mut s.entities[i] {
             p.base.attrs = [("Ad".to_owned(), "P1-web".to_owned())].into();
@@ -343,7 +343,7 @@ mod tests {
 
     /// The desktop's edits, applied by hand: what the desktop must have saved.
     fn desktop_edits(mut s: DocumentSnapshotV2) -> DocumentSnapshotV2 {
-        use kentos_contracts::Entity;
+        use kentos_commands::Entity;
         let i = index_of(&s, "polygon");
         if let Entity::Polygon(p) = &mut s.entities[i] {
             p.base.attrs.insert("Nitelik".into(), "Arsa".into());
@@ -363,7 +363,7 @@ mod tests {
     /// comparing it.
     #[test]
     fn the_desktop_reads_the_webs_edits_without_loss_and_saves_its_own() {
-        use kentos_contracts::Entity;
+        use kentos_commands::Entity;
         let dir = scratch("exchange");
         let from_web = dir.join("web-edited.kcad");
         std::fs::copy(format!("{KCAD}exchange/web-edited.kcad"), &from_web).expect("copies");

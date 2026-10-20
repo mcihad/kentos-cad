@@ -18,7 +18,7 @@
 //! 180°); the directions are the shared core's (`xline_direction`,
 //! `unit_toward`).
 
-use kentos_contracts::EntityGeometry;
+use kentos_commands::EntityGeometry;
 use kentos_geometry_core::geom::intersect::Edge;
 use kentos_geometry_core::geometry::angle_deg;
 use kentos_geometry_core::tools::drawing::{unit_toward, xline_direction, xline_offset};

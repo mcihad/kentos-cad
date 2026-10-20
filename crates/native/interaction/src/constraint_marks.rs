@@ -3,7 +3,7 @@
 //! does not meet marked as such; and the parts one constraint names, for the drawing to show when the pointer is on
 //! its mark. Read from the document; nothing is written.
 
-use kentos_contracts::{
+use kentos_commands::{
     CadElement, ConstraintId, ConstraintRule, Entity, ParameterKind, rule_label,
 };
 use kentos_domain::constraints::core_shape;
@@ -55,9 +55,9 @@ fn icon(rule: &ConstraintRule) -> &'static str {
         ConstraintRule::Symmetric { .. } => "constraintSymmetric",
         ConstraintRule::Fix { .. } => "constraintFix",
         ConstraintRule::Distance { axis, .. } => match axis {
-            kentos_contracts::DistanceAxis::Horizontal => "constraintHorizontalDistance",
-            kentos_contracts::DistanceAxis::Vertical => "constraintVerticalDistance",
-            kentos_contracts::DistanceAxis::Aligned => "constraintDistance",
+            kentos_commands::DistanceAxis::Horizontal => "constraintHorizontalDistance",
+            kentos_commands::DistanceAxis::Vertical => "constraintVerticalDistance",
+            kentos_commands::DistanceAxis::Aligned => "constraintDistance",
         },
         ConstraintRule::Angle { .. } => "constraintAngle",
         ConstraintRule::Radius { .. } => "constraintRadius",
@@ -66,7 +66,7 @@ fn icon(rule: &ConstraintRule) -> &'static str {
 }
 
 /// The object a part names, as the core reads it.
-fn object(doc: &Document, uid: kentos_contracts::EntityId) -> Option<(&Entity, Shape)> {
+fn object(doc: &Document, uid: kentos_commands::EntityId) -> Option<(&Entity, Shape)> {
     let e = doc
         .slot_of(Uuid::from_bytes(uid.0))
         .and_then(|s| doc.get(s))?;
@@ -76,7 +76,7 @@ fn object(doc: &Document, uid: kentos_contracts::EntityId) -> Option<(&Entity, S
 /// Where a part's mark goes, and its edges as runs of points.
 fn part(
     doc: &Document,
-    uid: kentos_contracts::EntityId,
+    uid: kentos_commands::EntityId,
     element: &CadElement,
 ) -> Option<(Vec2, Vec<Vec<Vec2>>)> {
     let (e, shape) = object(doc, uid)?;

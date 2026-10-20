@@ -13,7 +13,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{EntityGeometry, TextFace};
+use kentos_commands::{EntityGeometry, TextFace};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::table::ScheduleKind;
 use kentos_interaction::table;
@@ -90,7 +90,7 @@ fn place(
     );
     let entity = kentos_native_application::geometry::entity_of(
         &geometry,
-        kentos_contracts::EntityBase {
+        kentos_commands::EntityBase {
             look: Default::default(),
             id: 0,
             layer_id: "cizim".into(),
@@ -111,7 +111,7 @@ fn titled(app: &mut App, p: [f64; 2], height: f64) {
     place(app, ScheduleKind::Areas, &[1, 2], p, height, Some(0.3));
     let doc = app.document.as_mut().expect("a drawing");
     let slot = Slot(u32::try_from(doc.model.next_slot() - 1).expect("a slot"));
-    let Some(kentos_contracts::Entity::Table(mut t)) = doc.model.get(slot).cloned() else {
+    let Some(kentos_commands::Entity::Table(mut t)) = doc.model.get(slot).cloned() else {
         panic!("the area table");
     };
     let m = t.columns.len();
@@ -121,7 +121,7 @@ fn titled(app: &mut App, p: [f64; 2], height: f64) {
         row
     });
     t.rows.insert(0, t.rows[0]);
-    t.merges = vec![kentos_contracts::CellRange {
+    t.merges = vec![kentos_commands::CellRange {
         row: 0,
         col: 0,
         rows: 1,
@@ -246,7 +246,7 @@ fn table_slot(app: &App) -> Slot {
     let doc = app.document.as_ref().expect("a drawing");
     doc.model
         .entities()
-        .find(|e| matches!(e, kentos_contracts::Entity::Table(_)))
+        .find(|e| matches!(e, kentos_commands::Entity::Table(_)))
         .map(|e| Slot(e.base().id))
         .expect("a table")
 }

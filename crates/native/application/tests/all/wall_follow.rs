@@ -2,7 +2,7 @@
 //! inside a room of one closed wall follows its inner face, and a dimension bound to the face's corner follows the
 //! corner, in the same undo step as the new width; undo takes them back together.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesHatch, Entity, WallChange, WallsEdit, WallsOperation,
 };
 use kentos_domain::{Document, Slot};
@@ -23,7 +23,7 @@ fn room() -> Document {
         .expect("opens")
 }
 
-fn ring_area(ring: &[kentos_domain::contracts::Vec2]) -> f64 {
+fn ring_area(ring: &[kentos_commands::Vec2]) -> f64 {
     let mut s = 0.0;
     for i in 0..ring.len() {
         let (a, b) = (ring[i], ring[(i + 1) % ring.len()]);
@@ -61,7 +61,7 @@ fn a_room_hatch_follows_the_wall_getting_thicker() {
     let uid = doc.uid(Slot(1)).expect("the wall").to_string();
     // The inner face's first edge measured from its corner to its corner: bound to the wall's line 0, vertices 0, 1.
     let corner = |index: u32| json!({"kind": "place", "uid": uid, "place": {"kind": "vertex", "part": 0, "ring": 0, "index": index}});
-    let dim: kentos_domain::contracts::DimensionsCreate = serde_json::from_value(json!({
+    let dim: kentos_commands::DimensionsCreate = serde_json::from_value(json!({
         "measure": {"kind": "aligned", "a": corner(0), "b": corner(1)}, "at": {"x": 3, "y": 1}, "layerId": "a"
     }))
     .expect("an input");

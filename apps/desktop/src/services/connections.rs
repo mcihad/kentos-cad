@@ -10,7 +10,7 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{AuthKind, ConnectionSecret, ServiceConnection, connections_problem};
+use kentos_commands::{AuthKind, ConnectionSecret, ServiceConnection, connections_problem};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::select::{Choice, Select};
@@ -76,7 +76,7 @@ impl Row {
         ServiceConnection {
             id: self.id.clone(),
             name: self.name.trim().to_owned(),
-            origin: kentos_contracts::origin_of(&self.origin)
+            origin: kentos_commands::origin_of(&self.origin)
                 .unwrap_or_else(|| self.origin.trim().to_owned()),
             auth: self.auth,
             names: if named {

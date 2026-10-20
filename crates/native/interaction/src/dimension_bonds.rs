@@ -2,7 +2,7 @@
 //! live references, the place on the object and the object's edges (the piece's, when the place is inside an
 //! insert), for the drawing to show over the selection. Read from the document; nothing is written.
 
-use kentos_contracts::{DimensionRefs, Entity};
+use kentos_commands::{DimensionRefs, Entity};
 use kentos_domain::dimension_ties::{core_blocks, core_place};
 use kentos_domain::{Document, Slot, Uuid};
 use kentos_geometry_core::geom::intersect::Edge;

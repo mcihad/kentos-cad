@@ -16,7 +16,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::{Level, SnapKind, Spatial, Vec2};
 
 const OBJECTS: &str = include_str!("../../../../../fixtures/interaction/v1/objects.kcad");

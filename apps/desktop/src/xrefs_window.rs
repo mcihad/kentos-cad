@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 use iced::widget::{Column, Row, button, container, row, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     AssetKind, AssetState, AssetStatus, AssetVia, AssetsCheck, CommandResult, CommandWarning, Vec2, XrefBindMode, XrefInfo, XrefKind, XrefState, XrefsEdit, XrefsEdited,
     XrefsList, XrefsOperation,
 };
@@ -289,7 +289,7 @@ impl App {
         let drawing = self.document.as_ref().and_then(|d| d.path.clone());
         let Some(doc) = self.document.as_mut() else { return };
         let Some(uid) = doc.model.uid(slot) else { return };
-        let operation = kentos_contracts::ImagesOperation::Relink {
+        let operation = kentos_commands::ImagesOperation::Relink {
             uids: vec![uid.to_string()],
             file: path.display().to_string(),
         };

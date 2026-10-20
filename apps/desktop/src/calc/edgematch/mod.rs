@@ -21,7 +21,7 @@ mod words;
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::{Entity, EntityEdit, EntityGeometry};
+use kentos_commands::{Entity, EntityEdit, EntityGeometry};
 use kentos_domain::{Document as Model, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::edgematch::{

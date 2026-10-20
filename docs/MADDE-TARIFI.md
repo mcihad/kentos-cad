@@ -98,17 +98,20 @@ Kullanıcının sorunu, profesyonel araçların karşılığı, KentOS'ta bugün
 (madde bitince doldurulur)
 ```
 
-## 3. Sözleşme (`crates/shared/contracts`)
+## 3. Sözleşme (`crates/shared/contracts`, `crates/shared/commands`)
 
+- **Nereye:** verinin modeli (nesne, katman, proje ayarı, form gövdesi, `.kcad`'in taşıdığı her şey) `kentos-contracts`'ta;
+  ürün komutlarının girdi, çıktı ve plan türleri (`cad_*.rs`), katalog (`catalog()`) ve yetenekler `kentos-commands`'ta (ADR 0540).
+  Alt crate'lerin (belge, biçimler, `kcad`, formlar) kullandığı tür, komutun türü olsa da `kentos-contracts`'ta kalır.
 - **Türler:** `serde` (`rename_all = "camelCase"`), `ts-rs` (`#[cfg_attr(feature = "ts", ts(export))]`) ve `schemars` ile tanımlanır.
 - **Kurallar:** kuralları `problem()` ve listeler için `..._problem()` biçiminde, Türkçe iletilerle yaz. Aynı kurallar okuyucuda,
   komutta ve sunucuda kullanılır. Projede saklanan ayar için bir de `sanitized` yaz.
-- **Modül kaydı:** `src/lib.rs`'e `pub mod …; pub use …::*;` ekle.
+- **Modül kaydı:** crate'in `src/lib.rs`'ine `pub mod …; pub use …::*;` ekle.
 - **Proje ayarına yeni alan:** `ProjectSettings` struct'ı açıkça yazan her yere alanı ekle:
   `grep -rn --include='*.rs' "connections: Vec::new()," crates apps`.
-- **TypeScript türleri:** `cargo test -p kentos-contracts` çalıştır; ts-rs çıktıyı `apps/web/src/contracts/generated/`'a yazar. Bu
+- **TypeScript türleri:** `cargo test -p kentos-contracts` ve komut türleri için `-p kentos-commands` çalıştır; ts-rs çıktıyı `apps/web/src/contracts/generated/`'a yazar. Bu
   klasör elle düzenlenmez.
-- **Komut kataloğu:** `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-contracts catalog`. Yeni komut için `catalog.rs`'e bir
+- **Komut kataloğu:** `KENTOS_WRITE_CATALOG=1 cargo test -p kentos-commands catalog`. Yeni komut için `catalog.rs`'e bir
   `CommandDescriptor` ve örnekler ekle; katalog testindeki girdi ve çıktı tür eşlemesine de ekle.
 - **Ayar şeması** (kullanıcı ayarı eklendiyse): `KENTOS_WRITE_SETTINGS=1 cargo test -p kentos-contracts settings`.
 

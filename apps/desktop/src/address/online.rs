@@ -19,7 +19,7 @@ use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use kentos_cloud::fetch::{self, Method, Request};
-use kentos_contracts::ConnectionSecret;
+use kentos_commands::ConnectionSecret;
 use kentos_processing::address::AddressHost;
 use kentos_services::geocode::providers::{KeyRule, Provider, Providers};
 use kentos_services::geocode::request::GeoRequest;

@@ -21,7 +21,7 @@
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicI32, Ordering};
 
-use kentos_contracts::{
+use kentos_commands::{
     EntitiesCreate, EntitiesSetProperties, LayerFieldKind, LayerTime, PropertiesOperation,
 };
 use kentos_domain::Slot;

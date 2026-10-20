@@ -1416,3 +1416,39 @@ pub fn display_value(field: &LayerField, value: &str) -> String {
         _ => value.to_owned(),
     }
 }
+
+// A place that names a layer's field (`cad.fields.usage`, docs/adr/0414 §3): `kentos_forms::field_refs` finds them.
+/// How a place names a field.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FieldUseHow {
+    /// By its key (its stable id, else its name): a form item, a list, a relation.
+    Key,
+    /// By its name: an attribute's name (the time, the card's fields, a table rule's field).
+    Name,
+    /// In an expression (İfadeyle seç's language).
+    Expression,
+    /// In a template's `{…}` expressions.
+    Template,
+}
+
+/// One place that names a field.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FieldUse {
+    /// The place in words: “Bina denetimi” formu › “Not” öğesi › Görünme koşulu.
+    pub place: String,
+    /// Where it is in the drawing: `settings/forms/0/draft/items/2/visibleWhen`, `layers/<id>/…`.
+    pub path: String,
+    pub how: FieldUseHow,
+    /// In a published release of a form, which a rename does not change. Only `true` is written.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub kept: bool,
+}

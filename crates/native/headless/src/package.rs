@@ -13,8 +13,8 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::{sha256_hex, sha256_reader_hex};
-use kentos_contracts::{
+use kentos_commands::encoding::{sha256_hex, sha256_reader_hex};
+use kentos_commands::{
     CommandWarning, DocumentSnapshotV2, FontMatch, FontsReport, LeftWhy, MAX_PACKAGE_NAME, PackageLeft,
     PackageProject, PackagedFile, PackagedKind, ProjectPackaged, SourceKind, codes,
 };
@@ -39,7 +39,7 @@ const WORLD_FILES: &[&str] = &[
 const WHOLE_NAME_SIDECARS: &[&str] = &["aux.xml", "ovr"];
 
 fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
-    Box::new(kentos_contracts::CommandError {
+    Box::new(kentos_commands::CommandError {
         code: code.to_owned(),
         message: message.into(),
         path: Some(path.to_owned()),
@@ -436,7 +436,7 @@ fn manifest_of(
     sha256: &str,
     files: &[PackagedFile],
     left: &[PackageLeft],
-    faces: &[kentos_contracts::DrawingFont],
+    faces: &[kentos_commands::DrawingFont],
 ) -> Vec<u8> {
     let manifest = serde_json::json!({
         "format": MANIFEST_FORMAT,

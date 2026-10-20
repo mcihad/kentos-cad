@@ -4,7 +4,7 @@
 //! east of the origin, the area 4 is on Parsel, line 6 on a locked layer.
 
 use crate::common::{Bench, E, N};
-use kentos_contracts::{Entity, Wipeout};
+use kentos_commands::{Entity, Wipeout};
 use kentos_domain::Slot;
 use kentos_interaction::{Level, Vec2};
 
@@ -87,7 +87,7 @@ fn a_mask_is_picked_by_its_boundary_and_what_it_covers_stays_reachable() {
     );
     // Made an ordinary area again, its inside picks it.
     let uid = b.doc.uid(mask).expect("its id").to_string();
-    let input = kentos_contracts::EntitiesSetProperties {
+    let input = kentos_commands::EntitiesSetProperties {
         line_pattern: None,
         uids: vec![uid],
         layer_id: None,
@@ -102,7 +102,7 @@ fn a_mask_is_picked_by_its_boundary_and_what_it_covers_stays_reachable() {
         label: None,
         attachments: None,
         unlink: false,
-        operation: kentos_contracts::PropertiesOperation::Wipeout,
+        operation: kentos_commands::PropertiesOperation::Wipeout,
         expected_revision: None,
     };
     let done = kentos_native_application::set::execute(
@@ -111,7 +111,7 @@ fn a_mask_is_picked_by_its_boundary_and_what_it_covers_stays_reachable() {
     );
     assert!(matches!(
         done,
-        kentos_contracts::CommandResult::Completed { .. }
+        kentos_commands::CommandResult::Completed { .. }
     ));
     b.spatial.sync(&b.doc);
     assert_eq!(b.spatial.pick(Vec2::new(E + 5.0, N + 9.5), tol), Some(mask));

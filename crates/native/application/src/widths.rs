@@ -4,7 +4,7 @@
 //! by the shared core's rules (`kentos_geometry_core::ops::widths`), as its
 //! vertices take their elevations (`elevation`).
 
-use kentos_contracts::{Entity, Vec2 as Point};
+use kentos_commands::{Entity, Vec2 as Point};
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::elevation::Carry;
 use kentos_geometry_core::ops::widths::{Widened, carry_widths};

@@ -8,7 +8,7 @@
 //! left normal (`geom::dimension`), a break's place the fraction of one of its three lines (the dimension line, and the
 //! extension lines from the measured points to it) where an object's edge crosses it (`intersect_edges`).
 
-use kentos_contracts::{
+use kentos_commands::{
     BreakLine, CommandResult, CommandWarning, DimensionBreak, DimensionEdit, DimensionEntity, DimensionStyle,
     DimensionsEdit, DimensionsEditPlan, DimensionsEdited, Entity, TextShift,
 };
@@ -25,7 +25,7 @@ use crate::checks::{self, Stop, error, is_uid_text};
 pub use crate::codes;
 
 /// The most breaks a dimension keeps (the contract's).
-const MOST: usize = kentos_contracts::MAX_BREAKS;
+const MOST: usize = kentos_commands::MAX_BREAKS;
 
 fn fail(code: &str, message: String, path: String) -> Stop {
     Stop::failed(error(code, message, Some(path)))
@@ -450,8 +450,8 @@ pub fn plan_in(doc: &Document, input: &DimensionsEdit) -> CommandResult<Dimensio
 pub fn execute(cx: &mut ExecutionContext<'_>, input: DimensionsEdit) -> CommandResult<DimensionsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_DIMENSIONS_EDIT,
-        kentos_contracts::CAD_DIMENSIONS_EDIT_VERSION,
+        kentos_commands::CAD_DIMENSIONS_EDIT,
+        kentos_commands::CAD_DIMENSIONS_EDIT_VERSION,
         input,
         write_execute,
     )

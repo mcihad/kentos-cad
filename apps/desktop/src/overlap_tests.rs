@@ -18,7 +18,7 @@ fn opened(size: Size, theme: &str) -> App {
         .settings
         .choose(&[("appearance.theme", serde_json::Value::from(theme))]);
     app.apply_settings();
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../fixtures/interaction/v1/overlap.kcad"
     ))
     .expect("the drawing reads");

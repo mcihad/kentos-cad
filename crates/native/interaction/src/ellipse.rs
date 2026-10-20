@@ -16,7 +16,7 @@
 //! `cad.curves.construct`'s (docs/adr/0289), which refuses with the words
 //! the tool says; the preview's points are the same core's.
 
-use kentos_contracts::{CurveConstruction, EntityGeometry, MeasuredPoint};
+use kentos_commands::{CurveConstruction, EntityGeometry, MeasuredPoint};
 use kentos_geometry_core::geom::ellipse::{
     EllipseGeom, ellipse_point, major_length, param_at_polar, tessellate_ellipse,
 };

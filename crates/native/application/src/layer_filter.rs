@@ -9,7 +9,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{Entity, EntityId, LayerFilter};
+use kentos_commands::{Entity, EntityId, LayerFilter};
 use kentos_expression::rows::{As, RowsInput, evaluate_rows_on};
 use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;
@@ -57,7 +57,7 @@ pub use kentos_forms::kind_label;
 
 /// Corners of a path or area, holes and every part's included (`$köşe`).
 pub(crate) fn vertex_count(e: &Entity) -> Option<f64> {
-    let ring = |pts: usize, holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+    let ring = |pts: usize, holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         pts + holes.iter().flatten().map(|h| h.pts.len()).sum::<usize>()
     };
     let n = match e {

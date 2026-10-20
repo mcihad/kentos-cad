@@ -20,7 +20,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     AttributeDefinition, BlockDefinition, BlockEditOperation, BlockId, BlocksEdit, BlocksEditPlan,
     BlocksEdited, CommandResult, CommandWarning, Entity,
 };
@@ -72,8 +72,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksEdit) -> CommandResult<Bloc
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksEdit) -> CommandResult<BlocksEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_EDIT,
-        kentos_contracts::CAD_BLOCKS_EDIT_VERSION,
+        kentos_commands::CAD_BLOCKS_EDIT,
+        kentos_commands::CAD_BLOCKS_EDIT_VERSION,
         input,
         write_execute,
     )
@@ -415,7 +415,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
                 .tags
                 .clone()
                 .unwrap_or_else(|| old.card.as_ref().map(|c| c.tags.clone()).unwrap_or_default());
-            next.card = Some(kentos_contracts::BlockCard {
+            next.card = Some(kentos_commands::BlockCard {
                 category: category.filter(|c| !checks::is_blank(c)),
                 tags,
                 version,
@@ -423,7 +423,7 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
             if let Some(d) = &input.description {
                 next.description = (!checks::is_blank(d)).then(|| d.clone());
             }
-            if let Some(problem) = next.card.as_ref().and_then(kentos_contracts::blocks::card_problem) {
+            if let Some(problem) = next.card.as_ref().and_then(kentos_commands::blocks::card_problem) {
                 return Err(Stop::failed(error(
                     codes::INVALID_BLOCK_CARD,
                     format!("“{}” bloğunun kartı: {problem}", old.name),
@@ -456,10 +456,10 @@ fn check(doc: &Document, input: &BlocksEdit) -> Result<Checked, Stop> {
         b: &BlockDefinition,
     ) -> (
         &Vec<Entity>,
-        kentos_contracts::Vec2,
+        kentos_commands::Vec2,
         &Vec<AttributeDefinition>,
-        Option<kentos_contracts::BlockUnits>,
-        &Option<kentos_contracts::DynamicBlock>,
+        Option<kentos_commands::BlockUnits>,
+        &Option<kentos_commands::DynamicBlock>,
     ) {
         (&b.entities, b.base, &b.attributes, b.units, &b.dynamic)
     }
@@ -535,7 +535,7 @@ fn place(doc: &Document, input: &BlocksEdit, uids: &[String]) -> Result<Checked,
             changes.push((slot, Entity::Insert(next)));
         }
     }
-    let report = kentos_contracts::AttributeSync {
+    let report = kentos_commands::AttributeSync {
         inserts: u32::try_from(changes.len()).unwrap_or(u32::MAX),
         ..Default::default()
     };
@@ -553,7 +553,7 @@ fn place(doc: &Document, input: &BlocksEdit, uids: &[String]) -> Result<Checked,
 /// `fields` without a block: every block's inserts with a field filled again (docs/adr/0317 §1).
 fn fields_all(doc: &Document) -> Result<Checked, Stop> {
     let mut changes = Vec::new();
-    let mut report = kentos_contracts::AttributeSync::default();
+    let mut report = kentos_commands::AttributeSync::default();
     let mut locked = 0;
     for id in crate::blocks_sync::field_blocks(doc, None) {
         let Some(b) = doc.block(id) else { continue };
@@ -687,8 +687,8 @@ fn units(
     next: &mut BlockDefinition,
     input: &BlocksEdit,
 ) -> Result<(), Stop> {
-    use kentos_contracts::BlockUnits;
-    use kentos_contracts::units::Scale;
+    use kentos_commands::BlockUnits;
+    use kentos_commands::units::Scale;
     let Some(to) = input.units else {
         return Ok(());
     };
@@ -727,8 +727,8 @@ fn units(
 
 /// A definition alone scaled (docs/adr/0315 §4): its points and sizes, and its nested inserts' factors, since the
 /// definitions they place stay as they are.
-pub(crate) fn rescaled(block: &mut BlockDefinition, s: kentos_contracts::units::Scale) {
-    kentos_contracts::units::scale_block(block, s);
+pub(crate) fn rescaled(block: &mut BlockDefinition, s: kentos_commands::units::Scale) {
+    kentos_commands::units::scale_block(block, s);
     for e in &mut block.entities {
         if let Entity::Insert(i) = e {
             i.scale = s.apply(i.scale);

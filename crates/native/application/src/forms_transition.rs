@@ -5,7 +5,7 @@
 //! record refuses one with the form's errors, and one naming a reason refuses it empty. The shared
 //! cases are `fixtures/commands/v1/cad.forms.transition.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, FormSeverity, FormsTransition, FormsTransitioned, check_value,
 };
 use kentos_domain::{Document, Slot};
@@ -26,7 +26,7 @@ struct Checked {
 }
 
 /// `form_invalid` with the first of `issues`' errors, at the value that gave it.
-fn invalid(input: &FormsTransition, issues: &[kentos_contracts::FormIssue]) -> Stop {
+fn invalid(input: &FormsTransition, issues: &[kentos_commands::FormIssue]) -> Stop {
     let errors: Vec<_> = issues
         .iter()
         .filter(|i| i.severity == FormSeverity::Error)
@@ -193,14 +193,14 @@ fn check(doc: &Document, input: &FormsTransition) -> Result<Checked, Stop> {
             ));
         }
         if note.trim().is_empty()
-            || note.chars().count() > kentos_contracts::MOST_FORM_TEXT
+            || note.chars().count() > kentos_commands::MOST_FORM_TEXT
             || note.chars().any(|c| c.is_control() && c != '\n')
         {
             return Err(fail(
                 codes::FORM_INVALID,
                 format!(
                     "Not boş olamaz, en çok {} karakterdir ve denetim karakteri içermez.",
-                    kentos_contracts::MOST_FORM_TEXT
+                    kentos_commands::MOST_FORM_TEXT
                 ),
                 &format!("notes.{k}"),
             ));
@@ -422,8 +422,8 @@ pub fn execute(
 ) -> CommandResult<FormsTransitioned> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_TRANSITION,
-        kentos_contracts::CAD_FORMS_TRANSITION_VERSION,
+        kentos_commands::CAD_FORMS_TRANSITION,
+        kentos_commands::CAD_FORMS_TRANSITION_VERSION,
         input,
         write_execute,
     )

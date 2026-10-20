@@ -7,7 +7,7 @@
 //! cells nodata −9999, and, asked, a raster object in a ramp lit by its
 //! relief (`ops::raster`).
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, EntityBase, RasterEntity, RasterFields, RasterRender, RasterSample, RasterStretch,
     RasterStyle,
 };
@@ -170,7 +170,7 @@ pub fn default_cell(bounds: &[f64; 6], count: u64) -> f64 {
 fn go(
     files: &dyn Files,
     r: &Resolved<'_>,
-    cloud: &kentos_contracts::PointCloudEntity,
+    cloud: &kentos_commands::PointCloudEntity,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {
     let c = &cloud.cloud;
@@ -336,7 +336,7 @@ fn raster_object(f: &Frame, path: &str, srid: u32, (lo, hi): (f64, f64), layer: 
                 altitude: None,
                 z_factor: None,
                 nodata: Some(NODATA),
-                resampling: kentos_contracts::RasterResampling::Bilinear,
+                resampling: kentos_commands::RasterResampling::Bilinear,
                 edges: None,
             },
             opacity: None,

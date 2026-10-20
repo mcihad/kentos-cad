@@ -13,7 +13,7 @@ use std::sync::Arc;
 
 use iced::Task;
 use iced::futures::Stream;
-use kentos_contracts::{CloudFormat, CloudSource, Entity, PointCloudFields};
+use kentos_commands::{CloudFormat, CloudSource, Entity, PointCloudFields};
 use kentos_domain::{Document as Model, Slot};
 use serde_json::{Value, json};
 
@@ -114,7 +114,7 @@ pub fn keep_in_library(model: &mut Model, id: &str, item: Value) {
 pub fn key_of(c: &PointCloudFields) -> String {
     use kentos_geometry_core::api::json::Json;
     let sources =
-        Json::parse(&kentos_contracts::sources_json_text(&c.sources)).unwrap_or(Json::Null);
+        Json::parse(&kentos_commands::sources_json_text(&c.sources)).unwrap_or(Json::Null);
     kentos_geometry_core::geom::pointcloud::cloud_key(&sources)
 }
 

@@ -10,7 +10,7 @@ pub mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, RasterEntity, RasterFields};
+use kentos_commands::{Entity, RasterEntity, RasterFields};
 use kentos_native_application::geometry::shape;
 use kentos_raster::remote::{RemoteNotes, Table};
 use serde_json::{Value, json};

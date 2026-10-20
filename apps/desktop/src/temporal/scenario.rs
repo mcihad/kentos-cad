@@ -14,7 +14,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, SCENARIO_NAME_MAX, ScenarioOperation, ScenariosEdit};
+use kentos_commands::{CommandResult, SCENARIO_NAME_MAX, ScenarioOperation, ScenariosEdit};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, scenarios_edit};
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -93,7 +93,7 @@ impl App {
         let bases = self.base_layers();
         let mut n = 1;
         let taken: Vec<String> = {
-            fn names(nodes: &[kentos_contracts::LayerNode], out: &mut Vec<String>) {
+            fn names(nodes: &[kentos_commands::LayerNode], out: &mut Vec<String>) {
                 for x in nodes {
                     out.push(x.name.clone());
                     names(&x.children, out);

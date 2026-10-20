@@ -8,7 +8,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LabelCounts, LabelsReport, LabelsReported, LayerLabelReport, LayerNode,
     LayerNodeType,
 };
@@ -71,7 +71,7 @@ fn check(doc: &Document, input: &LabelsReport) -> Result<Asked, Stop> {
     };
     let window = match input.window {
         Some(w) => {
-            if let Some(why) = kentos_contracts::extent_problem(&w) {
+            if let Some(why) = kentos_commands::extent_problem(&w) {
                 return Err(fail(
                     codes::INVALID_WINDOW,
                     format!("Pencerenin {why}."),
@@ -155,7 +155,7 @@ fn label_store(doc: &Document) -> Store {
             .map_or_else(|| id.to_owned(), |n| n.name.clone())
     };
     for l in &leaves {
-        let list: Vec<&kentos_contracts::Entity> = doc
+        let list: Vec<&kentos_commands::Entity> = doc
             .layer_slots(&l.id)
             .filter_map(|(_, s)| doc.get(s))
             .collect();

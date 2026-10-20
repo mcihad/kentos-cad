@@ -13,7 +13,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, LayerNode, LayerNodeType, SCENARIO_NAME_MAX, ScenarioInfo,
     ScenarioOperation, ScenarioPair, ScenariosEdit, ScenariosEditPlan, ScenariosEdited,
     scenario_pairs,
@@ -412,8 +412,8 @@ pub fn execute(
 ) -> CommandResult<ScenariosEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_SCENARIOS_EDIT,
-        kentos_contracts::CAD_SCENARIOS_EDIT_VERSION,
+        kentos_commands::CAD_SCENARIOS_EDIT,
+        kentos_commands::CAD_SCENARIOS_EDIT_VERSION,
         input,
         write_execute,
     )

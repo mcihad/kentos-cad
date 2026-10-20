@@ -10,7 +10,7 @@ use std::fmt;
 
 use iced::widget::{Column, Row, button, column, container, row, text_editor, text_input};
 use iced::{Center, Element, Fill, Theme};
-use kentos_contracts::{
+use kentos_commands::{
     AreaLabelMode, CalloutKind, LabelAbbreviate, LabelAlign, LabelBackground, LabelCallout,
     LabelHalo, LabelOverlap, LabelPlacement, LabelPosition, LabelShadow, LabelShape, LabelStack,
     LabelStyle, LabelWord, LineLabelMode, PointLabelMode, StackMode,

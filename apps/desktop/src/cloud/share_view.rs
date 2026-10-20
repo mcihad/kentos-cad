@@ -10,7 +10,7 @@ use iced::widget::{
     Column, Row, Space, button, column, container, rich_text, row, span, stack, text, text_input,
 };
 use iced::{Background, Border, Bottom, Center, Element, Fill, Length, Theme};
-use kentos_contracts::{InvitationState, ProjectInvitation};
+use kentos_commands::{InvitationState, ProjectInvitation};
 use kentos_ui::attribute::DateTime;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::{Tokens, typography};

@@ -10,57 +10,7 @@
 //! for the commands that pick objects by kind, an object of each kind is
 //! tried: a listed kind is taken, another is refused with the listed code.
 
-use serde::{Deserialize, Serialize};
-#[cfg(feature = "ts")]
-use ts_rs::TS;
-
-/// What a command takes and how it answers.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct CommandCapabilities {
-    /// The object kinds its operations apply to; none when it takes no objects
-    /// by kind (it names layers, styles, settings) or takes every kind.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<CommandTarget>>", optional))]
-    pub targets: Vec<CommandTarget>,
-    /// The codes it refuses with (`failed`, `conflict`), beside the
-    /// protocol's own (`CommandCatalog.protocol`); `codes` says what each means.
-    pub refusals: Vec<String>,
-    /// The codes of its warnings.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
-    pub warnings: Vec<String>,
-}
-
-/// The object kinds an operation of a command applies to.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct CommandTarget {
-    /// The operation or method (a transform's `type`, a corner's `kind`);
-    /// none for the command as a whole.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub operation: Option<String>,
-    /// The kinds (`Entity`'s `kind`: `line`, `polyline`, `polygon` …);
-    /// `*` every kind but the ones `except` names.
-    pub kinds: Vec<String>,
-    /// With `*`: the kinds it does not take.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
-    pub except: Vec<String>,
-    /// The code an object of a kind it does not take is refused with.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub refused_with: Option<String>,
-    /// Turkish: what else decides.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub note: Option<String>,
-}
+use crate::{CommandCapabilities, CommandTarget};
 
 /// Every object kind, as `Entity` tags it.
 pub const KINDS: [&str; 29] = [

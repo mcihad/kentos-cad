@@ -11,7 +11,7 @@
 use std::fs::File;
 use std::path::{Component, Path, PathBuf};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, MOSAIC_MOST_SOURCES, MosaicOrder, MosaicResolution,
     MosaicSource, RasterEntity, RasterFields, RasterSample, RastersMosaic, RastersMosaicked, codes,
 };
@@ -565,8 +565,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &RastersMosaic) -> CommandResult<R
 pub fn execute(cx: &mut ExecutionContext<'_>, input: RastersMosaic) -> CommandResult<RastersMosaicked> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RASTERS_MOSAIC,
-        kentos_contracts::CAD_RASTERS_MOSAIC_VERSION,
+        kentos_commands::CAD_RASTERS_MOSAIC,
+        kentos_commands::CAD_RASTERS_MOSAIC_VERSION,
         input,
         write_execute,
     )

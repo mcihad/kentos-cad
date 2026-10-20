@@ -24,7 +24,7 @@ mod tests;
 pub(crate) use plan::{Filter, texts};
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, EntityEdit, TopologyException, TopologyRule,
     TopologySettings,
 };
@@ -188,7 +188,7 @@ impl App {
             .iter()
             .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
             .collect();
-        let objects: Vec<&kentos_contracts::Entity> = model
+        let objects: Vec<&kentos_commands::Entity> = model
             .entities()
             .filter(|e| named.contains(&e.base().layer_id.as_str()))
             .collect();
@@ -305,7 +305,7 @@ impl App {
             .iter()
             .flat_map(|r| std::iter::once(r.layer.as_str()).chain(r.other.as_deref()))
             .collect();
-        let objects: Vec<&kentos_contracts::Entity> = model
+        let objects: Vec<&kentos_commands::Entity> = model
             .entities()
             .filter(|e| named.contains(&e.base().layer_id.as_str()))
             .collect();
@@ -631,19 +631,19 @@ impl App {
                 continue;
             };
             if on {
-                let objects: Vec<kentos_contracts::EntityId> = f
+                let objects: Vec<kentos_commands::EntityId> = f
                     .objects
                     .iter()
                     .filter_map(|&k| {
                         c.uids
                             .get(k)
-                            .and_then(|u| kentos_contracts::EntityId::parse(u))
+                            .and_then(|u| kentos_commands::EntityId::parse(u))
                     })
                     .collect();
                 list.push(TopologyException {
                     rule: c.rules[f.rule].id.clone(),
                     objects,
-                    at: kentos_contracts::Vec2 {
+                    at: kentos_commands::Vec2 {
                         x: f.at.x,
                         y: f.at.y,
                     },

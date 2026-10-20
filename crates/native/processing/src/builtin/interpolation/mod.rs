@@ -10,7 +10,7 @@ mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, RasterEntity, RasterFields, RasterSample, RasterStyle, Workspace};
+use kentos_commands::{Entity, RasterEntity, RasterFields, RasterSample, RasterStyle, Workspace};
 use kentos_geometry_core::display::fixed;
 use kentos_native_application::geometry::shape;
 use kentos_raster::from_points::{CrossRow, CrossSummary, GridOf, PointInput, PointJob, PointSpec};

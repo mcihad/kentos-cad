@@ -26,7 +26,7 @@
 use iced::keyboard::key::Named;
 use iced::widget::container;
 use iced::{Element, Fill, Task};
-use kentos_contracts::{LayerNode, LayerNodeType};
+use kentos_commands::{LayerNode, LayerNodeType};
 use kentos_ui::widget::SearchBox;
 
 use crate::app::{App, Message};
@@ -75,7 +75,7 @@ impl Search {
         if self.query.is_empty() {
             true
         } else if self.pattern() {
-            kentos_contracts::pattern_matches(&self.query, name)
+            kentos_commands::pattern_matches(&self.query, name)
         } else {
             lower_tr(name).contains(&self.query)
         }
@@ -168,8 +168,8 @@ impl LayerProps {
     }
 
     /// The command's input for them.
-    fn find(self) -> kentos_contracts::LayersFind {
-        kentos_contracts::LayersFind {
+    fn find(self) -> kentos_commands::LayersFind {
+        kentos_commands::LayersFind {
             on: if self.shown == self.hidden {
                 None
             } else {
@@ -475,8 +475,8 @@ impl App {
         }
         match doc.model.layers().get(id).map(|n| (n.kind, n.expanded)) {
             Some((LayerNodeType::Layer, _)) => {
-                let input = kentos_contracts::LayersSet::new(
-                    kentos_contracts::LayerSetOperation::Active,
+                let input = kentos_commands::LayersSet::new(
+                    kentos_commands::LayerSetOperation::Active,
                     Some(id.to_owned()),
                 );
                 self.set_layers(input);

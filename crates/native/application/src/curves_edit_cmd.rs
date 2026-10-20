@@ -7,7 +7,7 @@
 //! A closed (periodic) curve keeps its first `degree` control points (and weights) wrapped after the last:
 //! moving or weighing one moves or weighs its copy too, and its points are numbered without the copies.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CurveEdit, CurvesEdit, EditOperation, EntitiesEdit, EntitiesEditPlan,
     EntitiesEdited, Entity, EntityEdit, EntityGeometry, NurbsEntity, PathEntity, Vec2,
 };
@@ -575,8 +575,8 @@ pub mod curves_edit {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_CURVES_EDIT,
-            kentos_contracts::CAD_CURVES_EDIT_VERSION,
+            kentos_commands::CAD_CURVES_EDIT,
+            kentos_commands::CAD_CURVES_EDIT_VERSION,
             input,
             |cx, input| {
                 let checked = check(cx.doc, &input);

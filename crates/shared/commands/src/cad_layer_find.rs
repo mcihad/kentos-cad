@@ -8,24 +8,11 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-use crate::LineType;
+use crate::{LineType, fold_name};
 #[cfg(feature = "schema")]
 use crate::cad::REVISION_TEXT;
 
 // ── The name pattern ────────────────────────────────────────────────────────
-
-/// A name folded for comparing: lower case as Turkish writes it (I ı, İ i).
-pub fn fold_name(name: &str) -> String {
-    let mut out = String::with_capacity(name.len());
-    for c in name.chars() {
-        match c {
-            'I' => out.push('ı'),
-            'İ' => out.push('i'),
-            _ => out.extend(c.to_lowercase()),
-        }
-    }
-    out
-}
 
 fn fold_char(c: char) -> char {
     match c {

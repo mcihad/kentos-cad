@@ -2,7 +2,7 @@
 //! parcels take a parcel's properties in a drawing of 100 000 objects. The shared cases are
 //! `fixtures/commands/v1/cad.entities.match.json`.
 
-use kentos_domain::contracts::{CommandResult, DocumentSnapshotV1, EntitiesMatch, Entity};
+use kentos_commands::{CommandResult, DocumentSnapshotV1, EntitiesMatch, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::{ExecutionContext, entities_match};
 use serde_json::json;

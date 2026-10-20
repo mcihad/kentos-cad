@@ -10,7 +10,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{NetworkCostKind, NetworkDef, NetworkKind};
+use kentos_commands::{NetworkCostKind, NetworkDef, NetworkKind};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;

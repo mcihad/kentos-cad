@@ -7,7 +7,7 @@
 
 use iced::widget::{Column, container, row, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, StandardIssue, StandardIssueKind, StandardsApplied, StandardsApply,
     StandardsCheck, StandardsReport, built_in_standard, built_in_standards,
 };

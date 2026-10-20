@@ -16,7 +16,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{CreateOperation, EntitiesCreate, Entity, EntityGeometry, NewObject};
+use kentos_commands::{CreateOperation, EntitiesCreate, Entity, EntityGeometry, NewObject};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::vertex_points::{VertexPoints as Found, vertex_points};

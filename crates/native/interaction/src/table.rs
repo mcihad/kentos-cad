@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     EntityBase, EntityGeometry, TableAlign, TableGrid, TableSheet, TableSource, TextFace,
 };
 use kentos_domain::{Document, Slot};
@@ -31,7 +31,7 @@ pub fn source_of(doc: &Document, kind: ScheduleKind, slots: &[Slot]) -> TableSou
     let objects = slots
         .iter()
         .filter_map(|s| doc.uid(*s))
-        .map(|u| kentos_contracts::EntityId(*u.as_bytes()))
+        .map(|u| kentos_commands::EntityId(*u.as_bytes()))
         .collect();
     match kind {
         ScheduleKind::Coordinates => TableSource::Coordinates { objects },
@@ -105,7 +105,7 @@ pub fn new_table(
         styles: None,
         formulas: None,
         fields: None,
-        p: kentos_contracts::Vec2 { x: p.x, y: p.y },
+        p: kentos_commands::Vec2 { x: p.x, y: p.y },
         rotation: 0.0,
         height: look.height,
         rows: vec![look.height; n],

@@ -9,8 +9,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     CommandWarning, ExportShp, ShpColumnAsText, ShpColumnRenamed, ShpExported, ShpFileWritten,
     ShpSetExported, codes,
 };
@@ -45,11 +45,11 @@ pub struct Made {
 }
 
 fn refuse(code: &str, message: impl Into<String>, path: &str) -> Refused {
-    Box::new(kentos_contracts::CommandError {
+    Box::new(kentos_commands::CommandError {
         code: code.to_owned(),
         message: message.into(),
         path: Some(path.to_owned()),
-        ..kentos_contracts::CommandError::default()
+        ..kentos_commands::CommandError::default()
     })
 }
 

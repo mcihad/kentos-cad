@@ -1,7 +1,7 @@
 //! Mimari › Proje's template and phase view (docs/adr/0346): Mimari şablonu applies the KentOS work template through
 //! `cad.templates.apply`; Evre's four views are the project's `arch.phaseView`, written through `cad.settings.set`.
 
-use kentos_contracts::{PhaseView, SettingsSet, TemplatesApply};
+use kentos_commands::{PhaseView, SettingsSet, TemplatesApply};
 use kentos_interaction::Level;
 use kentos_native_application::ExecutionContext;
 

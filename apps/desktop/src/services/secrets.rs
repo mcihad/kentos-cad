@@ -12,7 +12,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Mutex, OnceLock, PoisonError};
 
-use kentos_contracts::ConnectionSecret;
+use kentos_commands::ConnectionSecret;
 use serde::{Deserialize, Serialize};
 
 const FILE: &str = "baglantilar.json";

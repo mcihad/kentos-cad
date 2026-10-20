@@ -1077,7 +1077,7 @@ fn run(server: &mut Server, name: &str, args: &Value) -> Result<Value, Value> {
                             "bbox dört sayı olmalı: [min_x, min_y, max_x, max_y].",
                         ));
                     };
-                    Some(kentos_contracts::Bounds {
+                    Some(kentos_commands::Bounds {
                         min_x,
                         min_y,
                         max_x,

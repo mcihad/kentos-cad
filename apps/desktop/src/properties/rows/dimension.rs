@@ -6,7 +6,7 @@
 //! value, or “Çeşitli”; a change writes them in one step “Değiştir”, those
 //! that already have the value left out. On a locked layer the rows only show.
 
-use kentos_contracts::{DimensionEntity, DimensionStyle, Entity, LineType};
+use kentos_commands::{DimensionEntity, DimensionStyle, Entity, LineType};
 use kentos_domain::Slot;
 use kentos_interaction::{Format, dimension_layout, dist};
 
@@ -342,7 +342,7 @@ pub(super) fn relation(d: &DimensionEntity) -> Option<String> {
         return Some("Serbest".into());
     };
     if let Some(why) = refs.each().find_map(|(_, r)| r.broken.as_deref()) {
-        return Some(format!("Kopuk: {}", kentos_contracts::broken_words(why)));
+        return Some(format!("Kopuk: {}", kentos_commands::broken_words(why)));
     }
     let live = refs.each().count();
     Some(if live >= total {
@@ -367,7 +367,7 @@ fn common_relation(dims: &[&DimensionEntity]) -> Option<String> {
 /// dimension), Sığdırma, Yuvarlama, Sıfırlar, Alternatif birim, Tolerans with its values, Değerin yeri, Kırmalar; each
 /// change one `cad.dimensions.edit`.
 fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Format) -> Vec<Row> {
-    use kentos_contracts::{
+    use kentos_commands::{
         AltUnits, DimensionFit, DimensionOptions, DimensionTolerance, DimensionZeros, ToleranceKind,
     };
     let edit = |editor: Editor| (!locked).then_some(editor);
@@ -444,11 +444,11 @@ fn option_rows(dims: &[&DimensionEntity], slots: &[Slot], locked: bool, f: &Form
     let alt_name = |a: Option<AltUnits>| a.map_or("Yok", |a| a.unit.mark());
     let alts = [
         None,
-        Some(kentos_contracts::DrawingUnit::Mm),
-        Some(kentos_contracts::DrawingUnit::Cm),
-        Some(kentos_contracts::DrawingUnit::M),
-        Some(kentos_contracts::DrawingUnit::In),
-        Some(kentos_contracts::DrawingUnit::Ft),
+        Some(kentos_commands::DrawingUnit::Mm),
+        Some(kentos_commands::DrawingUnit::Cm),
+        Some(kentos_commands::DrawingUnit::M),
+        Some(kentos_commands::DrawingUnit::In),
+        Some(kentos_commands::DrawingUnit::Ft),
     ];
     rows.push(
         Row::text("Alternatif birim", alt_name(o.alt)).editor(edit(select(

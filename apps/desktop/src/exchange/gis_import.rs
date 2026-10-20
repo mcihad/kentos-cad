@@ -21,7 +21,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     GeoJsonReadOptions, ImportLayer, ImportResult, LayerStyle, ShapefileReadOptions,
 };
 use kentos_formats::shp;

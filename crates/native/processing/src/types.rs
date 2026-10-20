@@ -6,8 +6,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::fields::LayerField;
-use kentos_contracts::{AngleUnit, Entity, LabelStyle, LayerStyle, PointStyle, Vec2};
+use kentos_commands::fields::LayerField;
+use kentos_commands::{AngleUnit, Entity, LabelStyle, LayerStyle, PointStyle, Vec2};
 use kentos_domain::{Document, Slot};
 use kentos_expression::world::World;
 use kentos_native_application::geometry::drawing_font;
@@ -37,7 +37,7 @@ pub struct Defaults {
     /// left empty is this one.
     pub measure_height_mm: f64,
     /// The project's networks (docs/adr/0209): a network parameter takes the first of its kind.
-    pub networks: Vec<kentos_contracts::NetworkDef>,
+    pub networks: Vec<kentos_commands::NetworkDef>,
     /// The sources an address source parameter offers (docs/adr/0229 §11): the project's address data, then
     /// the device's providers the host adds; it takes the first that can be chosen.
     pub address_sources: Vec<crate::address::SourceOption>,
@@ -54,7 +54,7 @@ impl Defaults {
             plot_scale: s.plot_scale,
             drawing_font: drawing_font(s.drawing_font).id(),
             active_layer: doc.layers().active().to_owned(),
-            measure_height_mm: s.annotation_mm(kentos_contracts::AnnotationKind::Measure),
+            measure_height_mm: s.annotation_mm(kentos_commands::AnnotationKind::Measure),
             networks: s.networks.clone(),
             address_sources: crate::address::project_sources(doc),
         }
@@ -254,7 +254,7 @@ pub enum ParamKind {
     /// A network of the project and the cost a tool asks it with (docs/adr/0209 §10): `{ network, cost }`, the
     /// network's id and the cost's name; `prefers`: the kind offered first.
     Network {
-        prefers: kentos_contracts::NetworkKind,
+        prefers: kentos_commands::NetworkKind,
     },
     /// Where addresses are looked for (docs/adr/0229 §11): `locator:<id>`, the project's address data, or
     /// `provider:<id>`, an online provider of the device's; the window lists [`Defaults::address_sources`].
@@ -731,7 +731,7 @@ pub struct RunResult {
     /// parameters takes (docs/adr/0217 §7).
     pub like: Option<String>,
     /// The rasters a raster tool read and wrote with their grids, for the run's record (docs/adr/0535).
-    pub grids: Vec<kentos_contracts::RecordGrid>,
+    pub grids: Vec<kentos_commands::RecordGrid>,
 }
 
 /// A layer or group a run makes (docs/adr/0217 §7): its key (what the run's

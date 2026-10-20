@@ -8,7 +8,7 @@
 //! Katman durumları window and Katmanlar' Katman durumları ▾ write through
 //! it; the shared cases are in `fixtures/commands/v1/cad.layers.states.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LAYER_STATES_FORMAT, LAYER_STATES_VERSION, LayerState, LayerStatesDone,
     LayerStatesFile, LayerStatesOperation, LayersStates, layer_states_file_problem,
 };
@@ -132,8 +132,8 @@ pub fn execute(
 ) -> CommandResult<LayerStatesDone> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_STATES,
-        kentos_contracts::CAD_LAYERS_STATES_VERSION,
+        kentos_commands::CAD_LAYERS_STATES,
+        kentos_commands::CAD_LAYERS_STATES_VERSION,
         input,
         write_execute,
     )

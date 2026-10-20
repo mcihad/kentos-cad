@@ -4,7 +4,7 @@
 //! sample standard deviation, and each class's count (`ops::stats`). A
 //! table, with Panoya kopyala and CSV; the drawing does not change.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::areas::areas_of_entity;
 use kentos_native_application::geometry::shape;
 use kentos_pointcloud::ops::region::Region;
@@ -110,7 +110,7 @@ fn run(r: &Resolved<'_>, _cx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
 
 fn go(
     files: &dyn Files,
-    list: &[&kentos_contracts::PointCloudEntity],
+    list: &[&kentos_commands::PointCloudEntity],
     areas: Vec<(&Entity, Region)>,
     feedback: &mut dyn Feedback,
 ) -> Result<RunResult, String> {

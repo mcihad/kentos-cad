@@ -9,7 +9,7 @@
 //! style, which a schedule does not change. A length is read in the project's unit, a point or a comma before its
 //! decimals; empty words take an optional field away.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, ScheduleChange, ScheduleColumn,
     ScheduleField, ScheduleFilter, ScheduleOf, ScheduleOperation, ScheduleSort, SchedulesCreate,
     SchedulesCreated, SchedulesEdit, SchedulesEdited, SchedulesPlan, TableEntity, TableSource,
@@ -36,7 +36,7 @@ fn spec_holds(
     filter: Option<&ScheduleFilter>,
     at: &str,
 ) -> Result<(), Stop> {
-    if let Some((field, words)) = kentos_contracts::schedule_problem(of, columns, sort, filter) {
+    if let Some((field, words)) = kentos_commands::schedule_problem(of, columns, sort, filter) {
         return Err(fail(
             codes::INVALID_SCHEDULE,
             words,
@@ -93,7 +93,7 @@ fn create_check(
     )?;
     if let Some(h) = input.height {
         checks::finite(h, "Yazı yüksekliği", "Sonlu bir sayı verin.", "height")?;
-        if h <= 0.0 || h > kentos_contracts::MAX_TABLE_SIZE {
+        if h <= 0.0 || h > kentos_commands::MAX_TABLE_SIZE {
             return Err(fail(
                 codes::INVALID_SCHEDULE,
                 format!("Çizelgenin yazı yüksekliği {h}; sıfırdan büyük olmalı."),
@@ -106,7 +106,7 @@ fn create_check(
     let warnings = checks::layer(doc, &input.layer_id)?;
     let height = input.height.unwrap_or_else(|| {
         doc.settings()
-            .annotation_height(kentos_contracts::AnnotationKind::Table)
+            .annotation_height(kentos_commands::AnnotationKind::Table)
     });
     let table = TableEntity {
         base: EntityBase {
@@ -198,8 +198,8 @@ pub mod create {
     ) -> CommandResult<SchedulesCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_SCHEDULES_CREATE,
-            kentos_contracts::CAD_SCHEDULES_CREATE_VERSION,
+            kentos_commands::CAD_SCHEDULES_CREATE,
+            kentos_commands::CAD_SCHEDULES_CREATE_VERSION,
             input,
             write_execute,
         )
@@ -316,7 +316,7 @@ fn written(
         // A type KentOS knows by its name or id is kept by its id, as Açıklık writes it.
         (Entity::Opening(o), F::Type) => {
             o.opening.style =
-                text().map(|v| kentos_contracts::opening_type(&v).map_or(v, |t| t.id));
+                text().map(|v| kentos_commands::opening_type(&v).map_or(v, |t| t.id));
         }
         (Entity::Opening(o), F::Width) => o.opening.width = length_of(doc, value, true)?,
         (Entity::Opening(o), F::Sill) => {
@@ -551,8 +551,8 @@ pub mod edit {
     ) -> CommandResult<SchedulesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_SCHEDULES_EDIT,
-            kentos_contracts::CAD_SCHEDULES_EDIT_VERSION,
+            kentos_commands::CAD_SCHEDULES_EDIT,
+            kentos_commands::CAD_SCHEDULES_EDIT_VERSION,
             input,
             write_execute,
         )

@@ -6,7 +6,7 @@
 //! `apps/web/src/tools/overlap.ts`; both play
 //! `fixtures/interaction/v1/overlap.json`.
 
-use kentos_contracts::{AreaPart, EntityGeometry, RingGeometry};
+use kentos_commands::{AreaPart, EntityGeometry, RingGeometry};
 use kentos_geometry_core::geom::arrangement::{Area, Ring};
 use kentos_geometry_core::geom::region::net_area;
 use kentos_geometry_core::ops::adjoin::Neighbours;

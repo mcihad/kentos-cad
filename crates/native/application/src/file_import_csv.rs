@@ -7,7 +7,7 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-use kentos_contracts::{CommandResult, CommandWarning, GpkgImported, ImportCsv, ImportGpkg};
+use kentos_commands::{CommandResult, CommandWarning, GpkgImported, ImportCsv, ImportGpkg};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;

@@ -15,7 +15,7 @@
 
 use iced::widget::{Column, container, row, scrollable, space};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{FormSeverity, FormsAudit, FormsAudited};
+use kentos_commands::{FormSeverity, FormsAudit, FormsAudited};
 use kentos_domain::{Slot, Uuid};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, forms_audit};

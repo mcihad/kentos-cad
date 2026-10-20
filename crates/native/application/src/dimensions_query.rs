@@ -4,7 +4,7 @@
 //! not the geometry's measure: a program reading a drawing's sizes reads `measured`. The web is paused
 //! (docs/adr/0228): the desktop's handler alone, passing `fixtures/commands/v1/cad.dimensions.query.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DimensionBond, DimensionEntity, DimensionRead, DimensionStyle, DimensionsQuery,
     DimensionsRead, Entity,
 };
@@ -171,8 +171,8 @@ pub fn execute(
 ) -> CommandResult<DimensionsRead> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_DIMENSIONS_QUERY,
-        kentos_contracts::CAD_DIMENSIONS_QUERY_VERSION,
+        kentos_commands::CAD_DIMENSIONS_QUERY,
+        kentos_commands::CAD_DIMENSIONS_QUERY_VERSION,
         input,
         |cx, input| answer(cx.doc, &input),
     )

@@ -7,7 +7,7 @@
 //! `fixtures/vertex-table/v1/edits.json` holds both platforms to the same
 //! drawing, messages and steps.
 
-use kentos_contracts::{
+use kentos_commands::{
     AreaPart, EditOperation, EntitiesEdit, Entity, EntityEdit, EntityGeometry, RingGeometry,
 };
 use kentos_domain::{Document, Slot};
@@ -229,8 +229,8 @@ pub fn cell_editable(kind: Kind, row: &TableRow, col: Column) -> bool {
     col != Column::Radius || (kind != Kind::Line && row.chord.is_some())
 }
 
-fn wire(p: kentos_geometry_core::Vec2) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 { x: p.x, y: p.y }
+fn wire(p: kentos_geometry_core::Vec2) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
 fn ring(p: &Elevated) -> RingGeometry {

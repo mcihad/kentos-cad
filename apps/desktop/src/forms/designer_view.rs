@@ -3,7 +3,7 @@
 
 use iced::widget::{Column, Row, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill};
-use kentos_contracts::{
+use kentos_commands::{
     FormBody, FormIssue, FormItem, FormSeverity, FormWidget, LayerField, LayerNodeType, ProjectForm,
 };
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -209,7 +209,7 @@ impl App {
         if let Some(r) = form.and_then(|f| f.releases.last())
             && r.fields
                 .as_ref()
-                .is_some_and(|d| *d != kentos_contracts::bound_fields_digest(&r.body, &fields))
+                .is_some_and(|d| *d != kentos_commands::bound_fields_digest(&r.body, &fields))
         {
             body = body.push(words::summary(vec![words::text_line(
                 Kind::Warn,
@@ -448,7 +448,7 @@ impl App {
             return Vec::new();
         };
         let mut out = Vec::new();
-        fn walk(nodes: &[kentos_contracts::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
+        fn walk(nodes: &[kentos_commands::LayerNode], at: &str, out: &mut Vec<(String, String)>) {
             for n in nodes {
                 let path = if at.is_empty() {
                     n.name.clone()
@@ -684,7 +684,7 @@ impl App {
                 .align_y(Center),
             );
         }
-        let tag_ok = kentos_contracts::language_tag_ok(w.new_language.trim())
+        let tag_ok = kentos_commands::language_tag_ok(w.new_language.trim())
             && !body.translations.contains_key(w.new_language.trim());
         let add = row![
             text_input("Dil etiketi (en, de, ar)", &w.new_language)
@@ -792,7 +792,7 @@ impl App {
     }
 
     fn comments_box(&self, item: Option<&str>) -> Element<'_, Message> {
-        let comments: Vec<kentos_contracts::FormComment> = self
+        let comments: Vec<kentos_commands::FormComment> = self
             .chosen_form()
             .map(|f| {
                 f.comments
@@ -1276,7 +1276,7 @@ impl App {
                         .style(muted),
                     );
                 // Liste | Tablo, and the table's columns (docs/adr/0425).
-                use kentos_contracts::RelatedView as RV;
+                use kentos_commands::RelatedView as RV;
                 let views = [RV::List, RV::Table, RV::Cards];
                 col = col.push(words::field(
                     "Görünüm",
@@ -1401,7 +1401,7 @@ impl App {
                 visible_when,
                 ..
             } => {
-                use kentos_contracts::{ActionKind as K, ActionRuns as R};
+                use kentos_commands::{ActionKind as K, ActionRuns as R};
                 let kinds = [K::Tool, K::Recompute, K::Step, K::Show];
                 let kind_pick = Select::new(
                     [
@@ -1514,7 +1514,7 @@ impl App {
                 visible_when,
                 ..
             } => {
-                use kentos_contracts::AttachmentAccept as A;
+                use kentos_commands::AttachmentAccept as A;
                 let kinds = [A::Any, A::Photo, A::Document];
                 let accepts = Select::new(
                     ["Hepsi", "Fotoğraflar", "Belgeler ve adresler"].map(Choice::new),
@@ -1692,7 +1692,7 @@ impl App {
                                 f.suggest,
                                 "Öneri",
                                 (layer.is_some_and(|l| {
-                                    l.kind == kentos_contracts::LayerFieldKind::Text
+                                    l.kind == kentos_commands::LayerFieldKind::Text
                                         && l.values.as_ref().is_none_or(|v| v.is_empty())
                                 }) && f.lookup.is_none()
                                     || f.suggest)
@@ -1786,7 +1786,7 @@ impl App {
                 col = col.push(label::strong("Denetimler"));
                 for (i, c) in f.checks.iter().enumerate() {
                     // When it is asked (docs/adr/0438 §2).
-                    use kentos_contracts::CheckMoment;
+                    use kentos_commands::CheckMoment;
                     let moments = [None, Some(CheckMoment::Save), Some(CheckMoment::Submit)];
                     let at = moments.iter().position(|m| *m == c.on);
                     let when = Select::new(
@@ -1896,7 +1896,7 @@ impl App {
     /// rules, notes and layer settings that read the field, with this form as the designer has it.
     fn field_links<'a>(
         &self,
-        f: &kentos_contracts::FormField,
+        f: &kentos_commands::FormField,
         fields: &[LayerField],
     ) -> Element<'a, Message> {
         use kentos_expression::editor::fields_of;
@@ -1944,7 +1944,7 @@ impl App {
             )
             .into_iter()
             // What the drafts and the layer read; a published release keeps its own.
-            .filter(|u| u.how != kentos_contracts::FieldUseHow::Key && !u.kept)
+            .filter(|u| u.how != kentos_commands::FieldUseHow::Key && !u.kept)
             .collect();
         }
         let mut col = Column::new()
@@ -2108,7 +2108,7 @@ impl App {
     /// the related item's layer and field.
     fn relation_pick<'a>(&'a self, layer: &str, field: &str) -> Element<'a, Message> {
         let form_layer = self.chosen_form().map(|f| f.layer.clone());
-        let relations: Vec<kentos_contracts::ProjectRelation> = self
+        let relations: Vec<kentos_commands::ProjectRelation> = self
             .document
             .as_ref()
             .map(|d| {
@@ -2142,7 +2142,7 @@ impl App {
     fn lookup_rows<'a>(
         &'a self,
         id: &str,
-        f: &kentos_contracts::FormField,
+        f: &kentos_commands::FormField,
         error: Option<String>,
     ) -> Element<'a, Message> {
         let layers = self.form_layers();
@@ -2166,7 +2166,7 @@ impl App {
         };
         let their = self.layer_fields_of(&l.layer);
         let mut keys: Vec<(String, String)> = vec![(
-            kentos_contracts::LOOKUP_UID.to_owned(),
+            kentos_commands::LOOKUP_UID.to_owned(),
             "Kimlik (nesneye bağ)".to_owned(),
         )];
         keys.extend(
@@ -2270,7 +2270,7 @@ impl App {
     /// A list's order, columns, page, duplicates, geometry, copies and stamp (docs/adr/0439).
     fn lookup_extras<'a>(
         &'a self,
-        l: &kentos_contracts::FormLookup,
+        l: &kentos_commands::FormLookup,
         their: &[LayerField],
         own: &[LayerField],
     ) -> Element<'a, Message> {
@@ -2324,7 +2324,7 @@ impl App {
             );
         }
         let free: Vec<(String, String)> =
-            std::iter::once((kentos_contracts::LOOKUP_UID.to_owned(), "Kimlik".to_owned()))
+            std::iter::once((kentos_commands::LOOKUP_UID.to_owned(), "Kimlik".to_owned()))
                 .chain(their_keys.iter().cloned().zip(their_names.iter().cloned()))
                 .filter(|(k, _)| !l.columns.contains(k))
                 .collect();
@@ -2332,7 +2332,7 @@ impl App {
         if !l.columns.is_empty() {
             columns = columns.push(chips.wrap());
         }
-        if l.columns.len() < kentos_contracts::MOST_LOOKUP_COLUMNS {
+        if l.columns.len() < kentos_commands::MOST_LOOKUP_COLUMNS {
             let fk: Vec<String> = free.iter().map(|(k, _)| k.clone()).collect();
             columns = columns.push(
                 container(
@@ -2353,7 +2353,7 @@ impl App {
             .width(90)
             .style(style::field::input);
         // Yinelenen anahtar.
-        use kentos_contracts::LookupDuplicates as D;
+        use kentos_commands::LookupDuplicates as D;
         let dups = [D::Warn, D::First, D::Refuse];
         let duplicates = Select::new(
             ["Uyar, ilkini al", "İlkini al", "Reddet"].map(Choice::new),
@@ -2361,7 +2361,7 @@ impl App {
             move |i| msg(Event::Lookup(LookupEdit::Duplicates(dups[i]))),
         );
         // Konum: the relation to the record's geometry and its tolerance.
-        use kentos_contracts::LookupRelation as R;
+        use kentos_commands::LookupRelation as R;
         let mut places = vec![Choice::new("Konuma bakma")];
         places.extend(R::ALL.iter().map(|r| Choice::new(r.label())));
         let at_place = l.spatial.as_ref().map_or(Some(0), |s| {
@@ -2427,7 +2427,7 @@ impl App {
         }
         let texts: Vec<&LayerField> = own
             .iter()
-            .filter(|x| x.kind == kentos_contracts::LayerFieldKind::Text)
+            .filter(|x| x.kind == kentos_commands::LayerFieldKind::Text)
             .collect();
         let tkeys: Vec<String> = texts.iter().map(|x| x.key().to_owned()).collect();
         let mut stamps = vec![Choice::new("Damga yok")];
@@ -2615,7 +2615,7 @@ impl App {
         };
         let reasons: Vec<&LayerField> = fields
             .iter()
-            .filter(|f| f.kind == kentos_contracts::LayerFieldKind::Text && f.values.is_none())
+            .filter(|f| f.kind == kentos_commands::LayerFieldKind::Text && f.values.is_none())
             .collect();
         let mut col = Column::new()
             .spacing(10)
@@ -2786,7 +2786,7 @@ impl App {
             col = col.push(label::caption("Taslak son yayınla aynı.").style(muted));
         }
         for c in changes {
-            use kentos_contracts::FormChangeKind as K;
+            use kentos_commands::FormChangeKind as K;
             // A mark of the change's kind: added green, removed red, moved and changed in the accent.
             let (mark, tone): (&str, fn(&Tokens) -> iced::Color) = match c.kind {
                 K::Added => ("+", |t| t.success),

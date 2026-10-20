@@ -9,7 +9,7 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, GpkgImported, GpkgTableImported, ImportGpkg,
     ImportResult, ImportedLayer, LayerNodeType,
 };

@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{Entity, RasterRender};
+use kentos_commands::{Entity, RasterRender};
 
 use crate::app::{App, Message, Picker};
 use crate::calc::raster_fit::{Event as Fit, raster_fit_event};
@@ -23,7 +23,7 @@ fn send(app: &mut App, message: Message) {
     drive(app, task);
 }
 
-fn rasters(app: &App) -> Vec<kentos_contracts::RasterEntity> {
+fn rasters(app: &App) -> Vec<kentos_commands::RasterEntity> {
     app.document
         .as_ref()
         .expect("a drawing")
@@ -239,7 +239,7 @@ fn raster_oturt_sets_an_affine_as_one_step() {
     }
     // The raster keeps how it was placed (docs/adr/0518): the method and the points, its source.
     let record = r.raster.georef.as_ref().expect("the record");
-    assert_eq!(record.method, kentos_contracts::GeorefMethod::Affine);
+    assert_eq!(record.method, kentos_commands::GeorefMethod::Affine);
     assert_eq!(record.points.len(), 3);
     assert_eq!((record.source.width, record.source.height), (r.raster.width, r.raster.height));
     let doc = app.document.as_mut().expect("a drawing");
@@ -298,7 +298,7 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     app.selection.set(vec![slot]);
     let task = app.run("raster.georef");
     drive(&mut app, task);
-    app.calc.raster_fit.method = kentos_contracts::GeorefMethod::Projective;
+    app.calc.raster_fit.method = kentos_commands::GeorefMethod::Projective;
     let rows = [
         ["1", "0", "", "12.5", "14.0", "486880.6", "4420547.1"],
         ["1", "0", "", "287.0", "11.5", "487159.2", "4420549.4"],
@@ -329,7 +329,7 @@ fn raster_oturt_resamples_beside_a_linked_file() {
     );
     assert_eq!(
         (r.raster.bands, r.raster.sample),
-        (4, kentos_contracts::RasterSample::U8)
+        (4, kentos_commands::RasterSample::U8)
     );
     assert_eq!(r.raster.style.render, RasterRender::Rgb);
     // North up on the output grid: no turn in its affine.
@@ -356,7 +356,7 @@ fn raster_oturt_resamples_beside_a_linked_file() {
 /// wait for its pyramid file, made once in the device's cache, then come.
 #[test]
 fn a_large_raster_gets_its_pyramid_file_once() {
-    use kentos_contracts::RasterSample;
+    use kentos_commands::RasterSample;
     use kentos_formats::raster::write::{Geo, Image, Writer};
     use kentos_formats::raster::{Samples, TILE};
 

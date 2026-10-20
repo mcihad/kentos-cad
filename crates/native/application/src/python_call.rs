@@ -207,7 +207,7 @@ pub fn redacted_names(doc: &kentos_domain::Document) -> Vec<String> {
         let bodies = std::iter::once(&form.draft).chain(form.releases.iter().map(|r| &r.body));
         for body in bodies {
             for (_, item) in body.walk() {
-                if let kentos_contracts::FormItem::Field(f) = item
+                if let kentos_commands::FormItem::Field(f) = item
                     && f.redact
                 {
                     let names = std::iter::once(f.field.clone()).chain(

@@ -28,7 +28,7 @@ use std::collections::BTreeSet;
 use std::rc::Rc;
 
 use iced::Task;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::vertex_table::Kind;
 

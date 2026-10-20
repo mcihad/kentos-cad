@@ -3,7 +3,7 @@
 //! a `cad.walls.edit` input to run as it is). It writes nothing. The shared cases are
 //! `fixtures/commands/v1/cad.walls.joins.json` (`scripts/fixtures/wall_command_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, Vec2, WallEnd, WallEntity, WallJoinIssue, WallJoint, WallJointKind,
     WallJointMember, WallsEdit, WallsJoined, WallsJoins, WallsOperation,
 };

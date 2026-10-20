@@ -5,7 +5,7 @@
   showAll, plot, frozen, thawAll)
 - fixtures/commands/v1/cad.layers.states.json (`cad.layers.states` v1: save, update, rename, remove, apply, export, import)
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_layer_tree.rs: the checks and
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_layer_tree.rs: the checks and
 their order, the codes, paths and words, the steps' names) and from the ADRs' meaning of each change (docs/adr/0072 a
 layer removed with its objects, 0076 a layer added, 0177 a copy, a merge, the purge and the states, 0199 the fields,
 0020 the tree's own changes), with the tree, the objects and the states modelled below as plain JSON, without KentOS

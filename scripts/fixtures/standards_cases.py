@@ -3,7 +3,7 @@
 - fixtures/commands/v1/cad.standards.check.json (`cad.standards.check` v1: what a drawing breaks of a standard)
 - fixtures/commands/v1/cad.standards.apply.json (`cad.standards.apply` v1: the planned fix)
 
-The rules are written here again from the ADR and the contract (crates/shared/contracts/src/cad_standards.rs), the
+The rules are written here again from the ADR and the contract (crates/shared/commands/src/cad_standards.rs), the
 tree, the objects and the settings as plain JSON, without KentOS code: the findings in their order (the standard's
 layers, the drawing's other layers, the fonts and styles, the objects), each with its message; the apply as
 Katmanları çevir's merging (layer_find_cases.py's `translate`), then the standard layers added or restyled, then

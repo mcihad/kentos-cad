@@ -6,7 +6,7 @@
 use iced::widget::text::{LineHeight, Wrapping};
 use iced::widget::{Column, button, column, container, row, space, text};
 use iced::{Center, Color, Element, Fill, Padding, Theme};
-use kentos_contracts::{CallKind, CallStatus};
+use kentos_commands::{CallKind, CallStatus};
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::theme::{Tokens, typography};
 use kentos_ui::widget::{Tip, tip};

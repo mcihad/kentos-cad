@@ -40,7 +40,7 @@ pub fn open_in_step(
         return Ok(None);
     }
     let settings = cx.doc.settings();
-    let cad = settings.project_type() == Some(kentos_contracts::Workspace::Cad);
+    let cad = settings.project_type() == Some(kentos_commands::Workspace::Cad);
     let (name, style) =
         match kentos_project::new_project::standard_layer(id, settings.plot_scale, cad) {
             Some(node) => (node.name, node.style),
@@ -68,7 +68,7 @@ pub fn name_of(id: &str, cx: &Context<'_>) -> String {
         return layer.name.clone();
     }
     let settings = cx.doc.settings();
-    let cad = settings.project_type() == Some(kentos_contracts::Workspace::Cad);
+    let cad = settings.project_type() == Some(kentos_commands::Workspace::Cad);
     kentos_project::new_project::standard_layer(id, settings.plot_scale, cad)
         .map_or_else(|| id.to_owned(), |node| node.name)
 }

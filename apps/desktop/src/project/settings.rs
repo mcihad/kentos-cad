@@ -8,7 +8,7 @@ use std::fmt;
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     AngleUnit, AreaUnit, CrsDefinition, DrawingFont, DrawingUnit, ProjectSettings, Workspace,
 };
 use kentos_interaction::{Format, Level};
@@ -152,11 +152,11 @@ impl fmt::Display for Unit {
 
 /// A length style as the segmented control writes it (docs/adr/0262 §2).
 #[derive(Debug, Clone, Copy, PartialEq)]
-struct Style(kentos_contracts::LengthStyle);
+struct Style(kentos_commands::LengthStyle);
 
 impl fmt::Display for Style {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        use kentos_contracts::LengthStyle as L;
+        use kentos_commands::LengthStyle as L;
         f.write_str(match self.0 {
             L::Decimal => "Ondalık",
             L::Architectural => "Mimari",
@@ -209,9 +209,9 @@ pub struct State {
     /// Mimari's levels as typed and the walls' detail (docs/adr/0339 §3; arch.rs); Kaydet writes them through
     /// `cad.settings.set`.
     arch: Vec<super::arch::Row>,
-    arch_detail: Option<kentos_contracts::WallDetail>,
+    arch_detail: Option<kentos_commands::WallDetail>,
     /// Mimari: the spaces' measurement method (docs/adr/0342 §1).
-    arch_method: Option<kentos_contracts::SpaceMethod>,
+    arch_method: Option<kentos_commands::SpaceMethod>,
     /// Kotlar ve epok as typed (docs/adr/0519 §5; heights.rs); Kaydet writes them through `cad.settings.set`.
     heights: super::heights::Texts,
     /// Kaydet's question when a local project's unit changes with a drawing
@@ -227,7 +227,7 @@ pub enum Event {
     /// The scale's denominator typed; one that holds is the draft's.
     ScaleTyped(String),
     /// A kind's height on paper, mm (docs/adr/0205 §1).
-    Height(kentos_contracts::AnnotationKind, f64),
+    Height(kentos_commands::AnnotationKind, f64),
     /// Varsayılanlara dön: every kind its default.
     ResetHeights,
     Mode(Workspace),
@@ -241,7 +241,7 @@ pub enum Event {
     /// A local project's drawing unit (docs/adr/0165 §2); metres are kept as none.
     DrawingUnit(DrawingUnit),
     /// How lengths are written in an inch or foot drawing (docs/adr/0262 §2); decimal is kept as none.
-    LengthStyle(kentos_contracts::LengthStyle),
+    LengthStyle(kentos_commands::LengthStyle),
     /// İkinci koordinat sistemi (docs/adr/0167 §1); none: Yok. Either takes
     /// the place of a second definition (docs/adr/0168 §1).
     Second(Option<u32>),
@@ -270,8 +270,8 @@ pub enum Event {
     /// Mimari: a level's row changed, Kat ekle, the walls' detail (docs/adr/0339 §3).
     Level(usize, super::arch::Edit),
     AddLevel,
-    ArchDetail(Option<kentos_contracts::WallDetail>),
-    ArchMethod(Option<kentos_contracts::SpaceMethod>),
+    ArchDetail(Option<kentos_commands::WallDetail>),
+    ArchMethod(Option<kentos_commands::SpaceMethod>),
     /// Kotlar ve epok: a field changed (docs/adr/0519 §5).
     Heights(super::heights::Edit),
     /// Uzunlukları projeksiyona indir (docs/adr/0171 §4).
@@ -284,7 +284,7 @@ pub enum Event {
     Save,
     /// The unit question's answer (docs/adr/0256 §2): the sizes or the
     /// numbers kept; none: Vazgeç, back to the window.
-    UnitAnswer(Option<kentos_contracts::UnitGeometry>),
+    UnitAnswer(Option<kentos_commands::UnitGeometry>),
 }
 
 fn event(e: Event) -> Message {
@@ -326,7 +326,7 @@ impl State {
 
     /// The draft's survey settings (Ölçme).
     #[cfg(test)]
-    pub(super) fn draft_survey(&self) -> Option<kentos_contracts::SurveySettings> {
+    pub(super) fn draft_survey(&self) -> Option<kentos_commands::SurveySettings> {
         self.settings.survey.clone()
     }
 
@@ -512,7 +512,7 @@ impl App {
                 }
             }
             Event::LengthStyle(style) => {
-                d.length_style = (style != kentos_contracts::LengthStyle::Decimal).then_some(style);
+                d.length_style = (style != kentos_commands::LengthStyle::Decimal).then_some(style);
             }
             // The draft takes the rows that hold (docs/adr/0214 §4).
             Event::Variable(i, edit) => {
@@ -626,8 +626,8 @@ impl App {
     /// (`unit` none: the question opens, Kaydet waits); then written by
     /// `cad.units.change` as one undo step, the sizes kept on an empty
     /// drawing. Whether Kaydet goes on: a refusal is said and the window stays.
-    fn change_unit(&mut self, unit: Option<kentos_contracts::UnitGeometry>) -> bool {
-        use kentos_contracts::{CommandResult, UnitGeometry, UnitsChange};
+    fn change_unit(&mut self, unit: Option<kentos_commands::UnitGeometry>) -> bool {
+        use kentos_commands::{CommandResult, UnitGeometry, UnitsChange};
         let (Some(Window::Settings(s)), Some(doc)) = (&mut self.project, &mut self.document) else {
             return true;
         };
@@ -686,7 +686,7 @@ impl App {
     /// Kaydet: the draft goes into the drawing (the web's `onSave`). A local
     /// project's unit changing with a drawing in it is asked about first
     /// (`unit`: the answer, docs/adr/0256 §2) and written by `cad.units.change`.
-    fn save_project_settings(&mut self, unit: Option<kentos_contracts::UnitGeometry>) {
+    fn save_project_settings(&mut self, unit: Option<kentos_commands::UnitGeometry>) {
         if !self.change_unit(unit) {
             return;
         }
@@ -709,7 +709,7 @@ impl App {
         arch.phase_view = s.initial.arch.as_ref().and_then(|a| a.phase_view);
         if Some(&arch) != s.initial.arch.as_ref() && !(arch.is_empty() && s.initial.arch.is_none())
         {
-            let input = kentos_contracts::SettingsSet {
+            let input = kentos_commands::SettingsSet {
                 arch: Some(arch.clone()),
                 ..Default::default()
             };
@@ -717,9 +717,9 @@ impl App {
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
                 input,
             );
-            if let kentos_contracts::CommandResult::Failed { error }
-            | kentos_contracts::CommandResult::Conflict { error }
-            | kentos_contracts::CommandResult::NeedsInput { error } = result
+            if let kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } = result
             {
                 self.warn(error.message);
                 return;
@@ -749,14 +749,14 @@ impl App {
         if kentos_interaction::ground::why_not_grid(&settings).is_some()
             && let Some(survey) = settings.survey.take()
         {
-            settings.survey = kentos_contracts::SurveySettings {
+            settings.survey = kentos_commands::SurveySettings {
                 reduce_to_grid: None,
                 ..survey
             }
             .sanitized();
         }
         // What the annotations' heights hung on before, for them to follow (docs/adr/0205 §3).
-        let change = kentos_contracts::ScaleChange {
+        let change = kentos_commands::ScaleChange {
             from_scale: s.initial.plot_scale,
             to_scale: settings.plot_scale,
             from: s.initial.annotation.clone().unwrap_or_default(),
@@ -769,13 +769,13 @@ impl App {
                 doc.model.settings().coordinate_epoch,
             )
         {
-            let input = kentos_contracts::SettingsSet {
+            let input = kentos_commands::SettingsSet {
                 heights: Some(
                     heights
                         .0
                         .clone()
-                        .unwrap_or(kentos_contracts::HeightReference {
-                            kind: kentos_contracts::HeightKind::Unknown,
+                        .unwrap_or(kentos_commands::HeightReference {
+                            kind: kentos_commands::HeightKind::Unknown,
                             vertical_srid: None,
                             geoid: None,
                         }),
@@ -787,9 +787,9 @@ impl App {
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
                 input,
             );
-            if let kentos_contracts::CommandResult::Failed { error }
-            | kentos_contracts::CommandResult::Conflict { error }
-            | kentos_contracts::CommandResult::NeedsInput { error } = result
+            if let kentos_commands::CommandResult::Failed { error }
+            | kentos_commands::CommandResult::Conflict { error }
+            | kentos_commands::CommandResult::NeedsInput { error } = result
             {
                 self.warn(error.message);
                 return;
@@ -976,7 +976,7 @@ impl App {
     fn second_record(
         &self,
         s: &State,
-    ) -> Option<(String, Result<kentos_contracts::CrsTransformed, String>)> {
+    ) -> Option<(String, Result<kentos_commands::CrsTransformed, String>)> {
         let doc = self.document.as_ref()?;
         let second = s.settings.second()?;
         if s.settings.custom_crs.is_some() || crs::system(s.settings.srid).is_none() {
@@ -986,18 +986,18 @@ impl App {
         let heights = super::heights::read(&s.heights, s.settings.has_system())
             .ok()
             .and_then(|(h, _)| h);
-        let input = kentos_contracts::CrsTransform {
-            points: vec![kentos_contracts::CrsPoint {
+        let input = kentos_commands::CrsTransform {
+            points: vec![kentos_commands::CrsPoint {
                 x: origin.x,
                 y: origin.y,
                 z: None,
             }],
-            from: Some(kentos_contracts::CrsSide {
+            from: Some(kentos_commands::CrsSide {
                 srid: Some(s.settings.srid),
                 heights,
                 epoch: None,
             }),
-            to: Some(kentos_contracts::CrsSide {
+            to: Some(kentos_commands::CrsSide {
                 srid: Some(second),
                 heights: None,
                 epoch: None,
@@ -1012,10 +1012,10 @@ impl App {
         Some((
             title,
             match kentos_native_application::crs_transform::answer(&doc.model, &input) {
-                kentos_contracts::CommandResult::Completed { output, .. } => Ok(output),
-                kentos_contracts::CommandResult::Failed { error }
-                | kentos_contracts::CommandResult::Conflict { error }
-                | kentos_contracts::CommandResult::NeedsInput { error } => Err(error.message),
+                kentos_commands::CommandResult::Completed { output, .. } => Ok(output),
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => Err(error.message),
                 _ => Err("Dönüşüm hesaplanamadı.".into()),
             },
         ))
@@ -1353,7 +1353,7 @@ fn units<'a>(s: &'a State) -> Element<'a, Message> {
         |u| event(Event::DrawingUnit(u.0)),
     );
     let style = {
-        use kentos_contracts::LengthStyle as L;
+        use kentos_commands::LengthStyle as L;
         Segmented::new(
             [
                 Style(L::Decimal),

@@ -10,7 +10,7 @@
 //! the expected revision; the layer is the drawing's, a layer, not drawn
 //! from a service.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerNode, LayerNodeType, LayerStyle, LayersRendered, LayersRenderer,
     LayersRendererPlan,
 };
@@ -114,8 +114,8 @@ pub fn execute(
 ) -> CommandResult<LayersRendered> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_RENDERER,
-        kentos_contracts::CAD_LAYERS_RENDERER_VERSION,
+        kentos_commands::CAD_LAYERS_RENDERER,
+        kentos_commands::CAD_LAYERS_RENDERER_VERSION,
         input,
         write_execute,
     )

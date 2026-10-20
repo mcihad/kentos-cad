@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, E, N, base};
-use kentos_contracts::{BlockId, Entity, PointEntity};
+use kentos_commands::{BlockId, Entity, PointEntity};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::data_search::Record;
 use kentos_interaction::data_search::{attribute_names, in_scope, index, record_of};
@@ -116,7 +116,7 @@ fn scene() -> (Bench, Slot, Slot) {
         .doc
         .add(Entity::Point(PointEntity {
             base: named,
-            p: kentos_contracts::Vec2 { x: E, y: N },
+            p: kentos_commands::Vec2 { x: E, y: N },
             z: None,
             parts: None,
         }))
@@ -125,7 +125,7 @@ fn scene() -> (Bench, Slot, Slot) {
         .doc
         .add(Entity::Point(PointEntity {
             base: base("cizim"),
-            p: kentos_contracts::Vec2 { x: E + 1.0, y: N },
+            p: kentos_commands::Vec2 { x: E + 1.0, y: N },
             z: None,
             parts: None,
         }))

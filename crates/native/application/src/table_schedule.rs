@@ -2,7 +2,7 @@
 //! objects in the order asked and the project's units. Tablo ekle and Tabloyu güncelle (`cad.tables.edit`'s refresh,
 //! docs/adr/0327 §4) read them alike.
 
-use kentos_contracts::{AreaUnit, DrawingUnit, Entity};
+use kentos_commands::{AreaUnit, DrawingUnit, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::compare::Attrs;
 use kentos_geometry_core::ops::table::{self as rules, Cells, Listed, ScheduleKind, Units};

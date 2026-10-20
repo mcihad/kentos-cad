@@ -5,7 +5,7 @@
 //! `apps/web/src/tools/selectable.ts`. Every selection asks the one query
 //! of `cad.entities.select` (docs/adr/0275) with the filter's kinds.
 
-use kentos_contracts::{EntitiesSelect, Entity, SelectRegion, Vec2 as Point};
+use kentos_commands::{EntitiesSelect, Entity, SelectRegion, Vec2 as Point};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::entities_select::{self, Selected};
 
@@ -127,9 +127,9 @@ pub fn twisted_ring(cx: &Context<'_>, a: Vec2, b: Vec2, crossing: bool) -> Optio
     Some(SelectRegion::Polygon {
         points,
         mode: if crossing {
-            kentos_contracts::PolygonSelectMode::Crossing
+            kentos_commands::PolygonSelectMode::Crossing
         } else {
-            kentos_contracts::PolygonSelectMode::Inside
+            kentos_commands::PolygonSelectMode::Inside
         },
     })
 }
@@ -227,7 +227,7 @@ mod tests {
     /// The filter's bits are the query's kinds in one order (docs/adr/0275).
     #[test]
     fn the_mask_and_the_query_s_kinds_are_one_order() {
-        let names: Vec<&str> = kentos_contracts::SelectKind::ALL
+        let names: Vec<&str> = kentos_commands::SelectKind::ALL
             .iter()
             .map(|k| k.name())
             .collect();

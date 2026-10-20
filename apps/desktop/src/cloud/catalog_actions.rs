@@ -19,7 +19,7 @@ use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::saving::envelope;
 use kentos_cloud::{ApiFailure, Progress};
-use kentos_contracts::{
+use kentos_commands::{
     CatalogView, EmptyInput, PROJECT_ARCHIVE, PROJECT_ARCHIVE_VERSION, PROJECT_FAVORITE,
     PROJECT_FAVORITE_VERSION, PROJECT_PURGE, PROJECT_PURGE_VERSION, PROJECT_RESTORE,
     PROJECT_RESTORE_VERSION, PROJECT_TRASH, PROJECT_TRASH_VERSION, PROJECT_UNARCHIVE,

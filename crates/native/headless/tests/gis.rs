@@ -227,8 +227,8 @@ fn a_derivation_is_never_bound_back_and_is_told_what_it_is_when_taken_in() {
         name: "Ada 101".into(),
         srid: 5256,
         plot_scale: 1000.0,
-        workspace: kentos_contracts::Workspace::Gis,
-        drawing_font: kentos_contracts::DrawingFont::Barlow,
+        workspace: kentos_commands::Workspace::Gis,
+        drawing_font: kentos_commands::DrawingFont::Barlow,
         province: None,
         drawing_unit: None,
     })

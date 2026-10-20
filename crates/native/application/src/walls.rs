@@ -2,7 +2,7 @@
 //! KentOS's own, then taken into the project), a wall's fields made from what the user gave and checked as the file
 //! checks them, and whether its faces can be drawn.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArchInfo, DEFAULT_WALL_WIDTH, NewWall, Vec2, WallCaps, WallFields, WallJustify, WallStyleDef,
     builtin_wall_styles, fixed_width,
 };
@@ -72,7 +72,7 @@ pub(crate) fn level_known(doc: &Document, arch: &ArchInfo, path: &str) -> Result
         .as_ref()
         .map(|a| a.levels.as_slice())
         .unwrap_or_default();
-    match kentos_contracts::level_problem(arch.level.as_deref(), levels) {
+    match kentos_commands::level_problem(arch.level.as_deref(), levels) {
         Some(why) => Err(Stop::failed(error(
             codes::LEVEL_NOT_FOUND,
             why,
@@ -160,7 +160,7 @@ pub fn styled(
     width: Option<f64>,
 ) -> (
     f64,
-    Vec<kentos_contracts::WallComponent>,
+    Vec<kentos_commands::WallComponent>,
     WallCaps,
     Option<String>,
 ) {
@@ -277,19 +277,19 @@ pub fn take_styles(doc: &mut Document, added: &[WallStyleDef]) {
 /// The view the project's walls are drawn at (docs/adr/0339 §4): the detail Proje ayarları › Mimari says, else the
 /// drawing scale's (`WallDetail::at_scale`), and that scale for the hatches.
 pub fn view_of(
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
 ) -> kentos_geometry_core::geom::wall::View {
     view_at(settings, settings.plot_scale)
 }
 
 /// The view a sheet's map at 1:`scale` draws the walls at: the settings' detail, else that scale's.
 pub fn view_at(
-    settings: &kentos_contracts::ProjectSettings,
+    settings: &kentos_commands::ProjectSettings,
     scale: f64,
 ) -> kentos_geometry_core::geom::wall::View {
     let detail = match &settings.arch {
         Some(arch) => arch.detail_at(scale),
-        None => kentos_contracts::WallDetail::at_scale(scale),
+        None => kentos_commands::WallDetail::at_scale(scale),
     };
     kentos_geometry_core::geom::wall::View {
         detail: kentos_formats::walls::detail(detail),
@@ -298,7 +298,7 @@ pub fn view_at(
 }
 
 /// A wall as the joins take it: its core shape.
-pub(crate) fn core_shape(w: &kentos_contracts::WallEntity) -> kentos_geometry_core::entity::Shape {
+pub(crate) fn core_shape(w: &kentos_commands::WallEntity) -> kentos_geometry_core::entity::Shape {
     kentos_formats::walls::core_wall(&w.wall)
 }
 
@@ -328,13 +328,13 @@ fn meets(a: &[f64; 4], b: &[f64; 4]) -> bool {
 /// `gone` left out: the core's walls, `changed` first, and the slots of the others.
 pub(crate) fn neighbourhood(
     doc: &Document,
-    changed: &[(Option<kentos_domain::Slot>, &kentos_contracts::WallEntity)],
+    changed: &[(Option<kentos_domain::Slot>, &kentos_commands::WallEntity)],
     gone: &[kentos_domain::Slot],
 ) -> (
     Vec<kentos_geometry_core::entity::Shape>,
     Vec<kentos_domain::Slot>,
 ) {
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
     let boxes: Vec<[f64; 4]> = changed
         .iter()
         .map(|(_, w)| {
@@ -365,9 +365,9 @@ pub(crate) fn neighbourhood(
 /// warnings (docs/adr/0340 §2), each with what resolves it.
 pub(crate) fn join_warnings(
     doc: &Document,
-    changed: &[(Option<kentos_domain::Slot>, &kentos_contracts::WallEntity)],
+    changed: &[(Option<kentos_domain::Slot>, &kentos_commands::WallEntity)],
     gone: &[kentos_domain::Slot],
-) -> Vec<kentos_contracts::CommandWarning> {
+) -> Vec<kentos_commands::CommandWarning> {
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::geom::wall_join::{WallIn, solve};
     let (shapes, _) = neighbourhood(doc, changed, gone);
@@ -382,7 +382,7 @@ pub(crate) fn join_warnings(
             _ => None,
         })
         .collect();
-    let mut out: Vec<kentos_contracts::CommandWarning> = Vec::new();
+    let mut out: Vec<kentos_commands::CommandWarning> = Vec::new();
     for issue in solve(&ins, Some(&[])).issues {
         if !issue.walls.iter().any(|&w| w < changed.len()) {
             continue;
@@ -392,7 +392,7 @@ pub(crate) fn join_warnings(
         if out.iter().any(|w| w.message == message) {
             continue;
         }
-        out.push(kentos_contracts::CommandWarning {
+        out.push(kentos_commands::CommandWarning {
             code: issue.code.code().into(),
             message,
             path: None,
@@ -411,7 +411,7 @@ pub(crate) fn core_spec(w: &WallFields) -> kentos_geometry_core::geom::wall::Spe
 pub(crate) fn joined_pieces(
     doc: &Document,
     slot: kentos_domain::Slot,
-    w: &kentos_contracts::WallEntity,
+    w: &kentos_commands::WallEntity,
 ) -> Option<Vec<kentos_geometry_core::block::Piece>> {
     use kentos_geometry_core::entity::Shape;
     use kentos_geometry_core::geom::wall_join::{WallIn, solve_with};

@@ -2,7 +2,7 @@
 
 use std::path::{Path, PathBuf};
 
-use kentos_contracts::{Bounds, CallEnvelope, CommandResult, DocumentSnapshotV1, LayerNode};
+use kentos_commands::{Bounds, CallEnvelope, CommandResult, DocumentSnapshotV1, LayerNode};
 use kentos_domain::{Document, Group};
 use serde_json::{Value, json};
 
@@ -135,7 +135,7 @@ impl Session {
     /// stays as dirty as it was. The answer is the command's output.
     pub fn export_dxf(&mut self, path: &Path) -> Result<Value, HeadlessError> {
         self.file_command(
-            kentos_contracts::FILE_EXPORT_DXF,
+            kentos_commands::FILE_EXPORT_DXF,
             json!({ "path": path.display().to_string(), "overwrite": true }),
         )
     }
@@ -150,7 +150,7 @@ impl Session {
         if !sheets.is_empty() {
             input["sheets"] = json!(sheets);
         }
-        self.file_command(kentos_contracts::FILE_EXPORT_PDF, input)
+        self.file_command(kentos_commands::FILE_EXPORT_PDF, input)
     }
 
     /// A file command's execute: its output, or its refusal as the host's error.
@@ -161,7 +161,7 @@ impl Session {
                 relax_constraints: false,
                 command: command.to_owned(),
                 version: None,
-                op: kentos_contracts::CallOp::Execute,
+                op: kentos_commands::CallOp::Execute,
                 input,
                 request_id: None,
                 expected: None,
@@ -222,7 +222,7 @@ impl Session {
     /// Runs a journal's commands again on this drawing; the report. A row
     /// that wrote a file is planned again and compared, not written.
     pub fn replay(&mut self, journal: Value) -> Result<Value, HeadlessError> {
-        let journal: kentos_contracts::ReplayJournal =
+        let journal: kentos_commands::ReplayJournal =
             serde_json::from_value(journal).map_err(|e| {
                 HeadlessError::new(
                     "invalid_input",
@@ -277,17 +277,17 @@ impl Session {
     }
 
     /// The block definitions in the drawing's order (docs/adr/0144).
-    pub fn blocks(&self) -> Vec<&kentos_contracts::BlockDefinition> {
+    pub fn blocks(&self) -> Vec<&kentos_commands::BlockDefinition> {
         self.doc.blocks().iter().map(|b| &**b).collect()
     }
 
     /// The associative arrays in the order they were made (docs/adr/0300).
-    pub fn arrays(&self) -> Vec<&kentos_contracts::AssocArray> {
+    pub fn arrays(&self) -> Vec<&kentos_commands::AssocArray> {
         self.doc.arrays().iter().map(|a| &**a).collect()
     }
 
     /// The constraints and the parameter table (docs/adr/0334).
-    pub fn constraints(&self) -> &kentos_contracts::ConstraintSet {
+    pub fn constraints(&self) -> &kentos_commands::ConstraintSet {
         self.doc.constraints()
     }
 
@@ -407,5 +407,5 @@ fn to_json<T: serde::Serialize>(value: &T) -> Result<Value, HeadlessError> {
 
 /// A command's code as the host's error code (the host's codes are static).
 fn static_code(code: &str) -> &'static str {
-    kentos_contracts::codes::info(code).map_or("file_unwritable", |c| c.code)
+    kentos_commands::codes::info(code).map_or("file_unwritable", |c| c.code)
 }

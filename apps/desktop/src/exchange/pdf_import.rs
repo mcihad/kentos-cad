@@ -9,7 +9,7 @@ use std::path::PathBuf;
 
 use iced::widget::{Column, Row, button, row, text_input};
 use iced::{Center, Element, Task};
-use kentos_contracts::{CallOp, CommandResult, PdfCurveOutput, PdfImported};
+use kentos_commands::{CallOp, CommandResult, PdfCurveOutput, PdfImported};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_interaction::pick::PickPoint;

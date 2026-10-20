@@ -12,7 +12,7 @@
 //! undo step (“Ekle”), and says “Eğri eklendi: 4 nokta, 31.416 m”. The
 //! curve and its length are the shared core's (centripetal Catmull-Rom).
 
-use kentos_contracts::EntityGeometry;
+use kentos_commands::EntityGeometry;
 use kentos_geometry_core::entity::entity_length;
 use kentos_geometry_core::geom::spline::catmull_rom;
 use kentos_geometry_core::geometry::dist;

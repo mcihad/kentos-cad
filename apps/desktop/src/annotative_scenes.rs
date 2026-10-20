@@ -9,7 +9,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{AnnotationsScales, CommandResult};
+use kentos_commands::{AnnotationsScales, CommandResult};
 use kentos_domain::Slot;
 use kentos_native_application::ExecutionContext;
 use serde_json::json;

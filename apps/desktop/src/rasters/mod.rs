@@ -9,7 +9,7 @@ use std::path::Path;
 use std::sync::Arc;
 
 use iced::Task;
-use kentos_contracts::{Entity, RasterFields};
+use kentos_commands::{Entity, RasterFields};
 use kentos_domain::{Document as Model, Slot};
 use serde_json::{Value, json};
 

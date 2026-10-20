@@ -22,7 +22,7 @@
 //! Çıktı, Aralık, Sayı and Işın stay for as long as the app lives
 //! ([`crate::tool::Memory`]).
 
-use kentos_contracts::{CreateOperation, EntityGeometry};
+use kentos_commands::{CreateOperation, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::tessellate_circle;
 use kentos_geometry_core::geometry::dist;

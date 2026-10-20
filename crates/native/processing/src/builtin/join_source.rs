@@ -5,7 +5,7 @@
 
 use std::collections::{BTreeSet, HashMap, HashSet};
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::statistics::{JoinPlan, join_key};
 use serde_json::{Value, json};
 

@@ -95,8 +95,8 @@ pub struct Computed {
 /// The project's angle unit as the core takes it.
 pub(crate) fn unit(model: &Model) -> Unit {
     match model.settings().angle_unit {
-        kentos_contracts::AngleUnit::Deg => Unit::DEG,
-        kentos_contracts::AngleUnit::Grad => Unit::GRAD,
+        kentos_commands::AngleUnit::Deg => Unit::DEG,
+        kentos_commands::AngleUnit::Grad => Unit::GRAD,
     }
 }
 

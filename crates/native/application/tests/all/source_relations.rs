@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::CallOp;
+use kentos_commands::CallOp;
 use kentos_domain::Document;
 use kentos_geopackage::GeoPackage;
 use kentos_native_application::{ExecutionContext, registry};
@@ -40,7 +40,7 @@ fn empty() -> Document {
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 
@@ -526,7 +526,7 @@ fn through_the_protocol(d: &mut Document, command: &str, op: CallOp, input: Valu
     let answer = kentos_native_application::call::call(
         d,
         None,
-        kentos_contracts::CallEnvelope {
+        kentos_commands::CallEnvelope {
             relax_constraints: false,
             command: command.into(),
             version: None,

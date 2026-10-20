@@ -11,7 +11,7 @@ use super::tests::{run, send};
 use super::{Event, Window};
 use crate::app::{App, Message, Picker};
 use crate::files_testing::{drive, scratch};
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_native_application::ExecutionContext;
 use serde_json::{Value, json};
 
@@ -32,7 +32,7 @@ fn app_with_atlas() -> App {
             input,
         );
         assert!(
-            matches!(answer, kentos_contracts::CommandResult::Completed { .. }),
+            matches!(answer, kentos_commands::CommandResult::Completed { .. }),
             "{answer:?}"
         );
     }
@@ -72,7 +72,7 @@ fn a_drawing_that_moved_on_since_the_preview_is_refused_and_the_preview_asked_ag
     // The drawing changes after the preview: a polygon more on the coverage layer.
     {
         let doc = app.document.as_mut().expect("open");
-        let entity: kentos_contracts::Entity = serde_json::from_value(json!({
+        let entity: kentos_commands::Entity = serde_json::from_value(json!({
             "kind": "polygon", "id": 0, "layerId": "parsel", "attrs": {},
             "pts": [{"x": 1.0, "y": 1.0}, {"x": 5.0, "y": 1.0}, {"x": 5.0, "y": 4.0}]
         }))
@@ -192,7 +192,7 @@ fn screens() {
             run(&mut app, "file.export.atlas");
             {
                 let doc = app.document.as_mut().expect("open");
-                let entity: kentos_contracts::Entity = serde_json::from_value(json!({
+                let entity: kentos_commands::Entity = serde_json::from_value(json!({
                     "kind": "polygon", "id": 0, "layerId": "parsel", "attrs": {},
                     "pts": [{"x": 1.0, "y": 1.0}, {"x": 5.0, "y": 1.0}, {"x": 5.0, "y": 4.0}]
                 }))

@@ -9,7 +9,7 @@ pub mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::crs::System;
 use kentos_geometry_core::ops::spatial_stats::StatsRun;
 use kentos_project::systems::own;
@@ -199,7 +199,7 @@ pub fn tested_result_of(
     }
     let profile = run.profile.take();
     if let Some(p) = &profile {
-        let digest = kentos_contracts::encoding::sha256_hex(p.inputs.as_bytes());
+        let digest = kentos_commands::encoding::sha256_hex(p.inputs.as_bytes());
         run.infos.push(format!(
             "Deney profili ({}): tohum {}, {} permütasyon, düzeltme {}; girdi özeti {}….",
             p.get("rule").unwrap_or(""),

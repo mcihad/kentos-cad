@@ -64,7 +64,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{EntitiesCreate, NewObject, PolygonCreate, PolylineCreate, RingGeometry};
+use kentos_commands::{EntitiesCreate, NewObject, PolygonCreate, PolylineCreate, RingGeometry};
 use kentos_domain::{Slot, labels};
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arc::DEFAULT_STEP;
@@ -312,7 +312,7 @@ pub struct Path {
     /// Duvar: the value waited for after its key, the styles offered (as of the last call) and the wall the path
     /// to the cursor would make, from the command's plan (docs/adr/0339 §6).
     wall_ask: Option<wall::Ask>,
-    wall_offer: Vec<kentos_contracts::WallStyleDef>,
+    wall_offer: Vec<kentos_commands::WallStyleDef>,
     wall_drawn: wall::Drawn,
 }
 
@@ -1357,7 +1357,7 @@ impl Path {
             color: cx.draft.color_text(),
             line_weight: cx.draft.line_weight,
             line_type: None,
-            wipeout: Some(kentos_contracts::Wipeout {
+            wipeout: Some(kentos_commands::Wipeout {
                 frame: !cx.memory.wipeout_no_frame,
             }),
             attrs: None,
@@ -1379,14 +1379,14 @@ impl Path {
             cx.say(Level::Warn, "Maske yapılacak kapalı alana tıklayın.");
             return;
         };
-        if !matches!(cx.doc.get(slot), Some(kentos_contracts::Entity::Polygon(_))) {
+        if !matches!(cx.doc.get(slot), Some(kentos_commands::Entity::Polygon(_))) {
             cx.say(
                 Level::Warn,
                 "Yalnız kapalı alan maske olur; çizgiyi önce Alana çevir ile alan yapın.",
             );
             return;
         }
-        let input = kentos_contracts::EntitiesSetProperties {
+        let input = kentos_commands::EntitiesSetProperties {
             line_pattern: None,
             uids: vec![uid.to_string()],
             layer_id: None,
@@ -1395,7 +1395,7 @@ impl Path {
             line_type: None,
             line_type_scale: None,
             transparency: None,
-            wipeout: Some(Some(kentos_contracts::Wipeout {
+            wipeout: Some(Some(kentos_commands::Wipeout {
                 frame: !cx.memory.wipeout_no_frame,
             })),
             symbol: None,
@@ -1403,7 +1403,7 @@ impl Path {
             label: None,
             attachments: None,
             unlink: false,
-            operation: kentos_contracts::PropertiesOperation::Wipeout,
+            operation: kentos_commands::PropertiesOperation::Wipeout,
             expected_revision: None,
         };
         let result =

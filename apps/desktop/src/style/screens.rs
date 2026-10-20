@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use std::time::Instant;
 
 use iced::Size;
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_render_wgpu::Bounds;
 use kentos_ui::snapshot::Snapshot;
 
@@ -39,7 +39,7 @@ pub fn demo() -> Option<Document> {
 
 /// The box of a layer's points (the showcase's areas, lines, points and texts).
 fn extent(app: &App, layer: &str) -> Option<Bounds> {
-    use kentos_contracts::Entity;
+    use kentos_commands::Entity;
     let doc = app.document.as_ref()?;
     let mut b: Option<Bounds> = None;
     let mut grow = |x: f64, y: f64| {

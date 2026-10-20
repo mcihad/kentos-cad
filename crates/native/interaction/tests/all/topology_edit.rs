@@ -10,7 +10,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::grip_menu::{self, GripAction};
 use kentos_interaction::{Format, Level, Vec2, View};

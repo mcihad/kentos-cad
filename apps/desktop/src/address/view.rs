@@ -140,7 +140,7 @@ impl App {
             && a.answerer.as_ref().is_none_or(|w| w.keeps_none.is_none());
         let some_row = a.current.is_some();
         let one_point = matches!(self.selection.ids(), [slot]
-            if matches!(doc.model.get(*slot), Some(kentos_contracts::Entity::Point(_))));
+            if matches!(doc.model.get(*slot), Some(kentos_commands::Entity::Point(_))));
         // The question: where, what, Ara; and Konumdan adres.
         let bar = row![
             label::caption(texts::SOURCE),

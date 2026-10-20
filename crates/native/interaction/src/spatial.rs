@@ -32,7 +32,7 @@ use std::collections::HashSet;
 use std::hash::BuildHasherDefault;
 use std::sync::Arc;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockDefinition, Entity, EntityId, LayerFilter, LayerNode, LayerSnap, LayerTime,
 };
 use kentos_domain::{ChangeMark, Changes, Document, LayerTree, Slot, SlotHasher, Uuid};
@@ -102,7 +102,7 @@ pub struct Spatial {
     prior: std::cell::RefCell<kentos_geometry_core::store::placing::Prior>,
     /// The active view's theme (docs/adr/0523 §2): its layer state's visibility and freeze are what is picked
     /// and snapped to; none, the drawing's.
-    theme: Option<kentos_contracts::LayerState>,
+    theme: Option<kentos_commands::LayerState>,
 }
 
 /// A layer's filter as the store's marks were made with it: compiled in the
@@ -202,7 +202,7 @@ impl Spatial {
             .as_ref()
             .and_then(|a| a.phase_view)
             .unwrap_or_default();
-        if view == kentos_contracts::PhaseView::All {
+        if view == kentos_commands::PhaseView::All {
             if !self.store.no_phase_hidden() {
                 self.store.set_phase_hidden(std::iter::empty());
             }
@@ -216,7 +216,7 @@ impl Spatial {
         };
         let hidden: Vec<f64> = doc
             .entities()
-            .filter(|e| view.look(e.phase(by_uid)) == kentos_contracts::PhaseLook::Hidden)
+            .filter(|e| view.look(e.phase(by_uid)) == kentos_commands::PhaseLook::Hidden)
             .map(|e| f64::from(e.base().id))
             .collect();
         self.store.set_phase_hidden(hidden);
@@ -763,7 +763,7 @@ impl Spatial {
 
     /// The active view's theme (docs/adr/0523 §2): what is picked and snapped to follows its layer state;
     /// none, the drawing's tree. Sent at once.
-    pub fn set_theme(&mut self, doc: &Document, theme: Option<kentos_contracts::LayerState>) {
+    pub fn set_theme(&mut self, doc: &Document, theme: Option<kentos_commands::LayerState>) {
         if self.theme != theme {
             self.theme = theme;
             self.sync_layers_of(doc);
@@ -771,7 +771,7 @@ impl Spatial {
     }
 
     /// The active view's theme.
-    pub fn theme(&self) -> Option<&kentos_contracts::LayerState> {
+    pub fn theme(&self) -> Option<&kentos_commands::LayerState> {
         self.theme.as_ref()
     }
 
@@ -1540,8 +1540,8 @@ pub fn arc_sweep(a0: f64, a1: f64) -> f64 {
 
 /// Whether an ellipse object is whole rather than an elliptical arc (the
 /// core's `is_full_ellipse`).
-pub fn full_ellipse(e: &kentos_contracts::EllipseEntity) -> bool {
-    let v = |p: kentos_contracts::Vec2| Vec2::new(p.x, p.y);
+pub fn full_ellipse(e: &kentos_commands::EllipseEntity) -> bool {
+    let v = |p: kentos_commands::Vec2| Vec2::new(p.x, p.y);
     kentos_geometry_core::geom::ellipse::is_full_ellipse(
         &kentos_geometry_core::entity::ellipse_geom(v(e.c), v(e.major), e.ratio, e.t0, e.t1),
     )
@@ -1698,9 +1698,9 @@ pub fn layer_snap_mask(snap: &LayerSnap) -> u32 {
 pub const LABELLED_KINDS: [&str; 5] = ["polygon", "circle", "point", "polyline", "line"];
 
 /// The label style of an object whose layer has none: the web's
-/// `DEFAULT_LABELS`, in the contract (`kentos_contracts::default_label`) so
+/// `DEFAULT_LABELS`, in the contract (`kentos_commands::default_label`) so
 /// the document's linked texts follow the same (docs/adr/0175 §4).
-pub use kentos_contracts::default_label;
+pub use kentos_commands::default_label;
 
 /// What a block's text piece shows on an insert with these attributes
 /// (docs/adr/0144 §7; the web's `pieceText`): an attribute's piece the

@@ -4,7 +4,7 @@
 use std::collections::BTreeSet;
 
 use kentos_application::SERVER_COMMANDS;
-use kentos_contracts::{CommandHost, catalog};
+use kentos_commands::{CommandHost, catalog};
 
 #[test]
 fn the_server_runs_exactly_the_catalog_commands_marked_server() {

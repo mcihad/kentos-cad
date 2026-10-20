@@ -19,7 +19,7 @@ mod view;
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_contracts::{
+use kentos_commands::{
     CallKind, CallRecord, CallStatus, REPLAY_FORMAT, REPLAY_VERSION, ReplayJournal,
 };
 use kentos_domain::RefusedCall;

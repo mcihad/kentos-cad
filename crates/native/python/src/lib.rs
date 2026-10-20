@@ -23,7 +23,7 @@ mod temporal;
 
 use std::path::PathBuf;
 
-use kentos_contracts::Bounds;
+use kentos_commands::Bounds;
 use kentos_headless::{HeadlessError, Op, Session, new_drawing};
 use pyo3::create_exception;
 use pyo3::exceptions::PyException;

@@ -10,7 +10,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{Entity, PathEntity};
+use kentos_commands::{Entity, PathEntity};
 use kentos_interaction::{Level, Overlap};
 
 const NO_REGION: &str = "Yol komşu alanlarla kapalı bir bölge oluşturmuyor: ilk ve son noktayı komşu alanların içine ya da sınırına koyun.";
@@ -48,7 +48,7 @@ fn lowest_first(mut ring: Vec<[f64; 2]>) -> Vec<[f64; 2]> {
     ring
 }
 
-fn ring(pts: &[kentos_contracts::Vec2]) -> Vec<[f64; 2]> {
+fn ring(pts: &[kentos_commands::Vec2]) -> Vec<[f64; 2]> {
     lowest_first(pts.iter().map(|q| rel(*q)).collect())
 }
 

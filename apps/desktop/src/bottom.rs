@@ -30,7 +30,7 @@
 
 use iced::widget::{button, column, container, row};
 use iced::{Element, Fill, Length};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::{Format, bearing_grad, dist, measures, vertices};
 use kentos_ui::label;
 use kentos_ui::widget::command_line;
@@ -573,8 +573,8 @@ mod tests {
     fn python_konsolu_is_in_the_ribbon_and_opens_the_python_tab() {
         use crate::catalog::{Item, PYTHON_CONSOLE, catalog};
         for (mode, tab) in [
-            (kentos_contracts::Workspace::Cad, "manage"),
-            (kentos_contracts::Workspace::Gis, "analysis"),
+            (kentos_commands::Workspace::Cad, "manage"),
+            (kentos_commands::Workspace::Gis, "analysis"),
         ] {
             let komut = catalog()
                 .tabs_in(mode)

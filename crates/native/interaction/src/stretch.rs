@@ -26,7 +26,7 @@
 //! colour (the plan's `dependents`, docs/adr/0297 §3); the document's copy
 //! the plan follows them on is kept while the drawing stays as it is.
 
-use kentos_contracts::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
+use kentos_commands::{CommandResult, EntitiesStretch, StretchTopology, StretchWindow, codes};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::{Bounds, dist};
 use kentos_geometry_core::jsmath::{js_hypot, js_max, js_min};
@@ -136,7 +136,7 @@ impl Stretch {
 
     /// Says the command's warnings, but not a selected object's lying outside
     /// the window: the selection may be wider than the window.
-    fn say_warnings(warnings: Vec<kentos_contracts::CommandWarning>, cx: &mut Context<'_>) {
+    fn say_warnings(warnings: Vec<kentos_commands::CommandWarning>, cx: &mut Context<'_>) {
         for w in warnings {
             if w.code != codes::OUTSIDE_WINDOW {
                 cx.say(Level::Warn, w.message);

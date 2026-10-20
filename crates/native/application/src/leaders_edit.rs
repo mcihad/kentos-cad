@@ -6,7 +6,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, EntityId, LeaderArm, LeaderArrow, LeaderEdit, LeaderEntity, LeadersEdit,
     LeadersEdited, LeadersPlan, SubRef, Vec2, apply_leader_style, leader_arrow_holds,
     leader_problem,
@@ -382,8 +382,8 @@ fn check(doc: &Document, input: &LeadersEdit) -> Result<Checked, Stop> {
                 return Err(invalid(
                     format!(
                         "Ok boyu {s}; notun yüksekliğinin {} ile {} katı olmalı.",
-                        kentos_contracts::MIN_LEADER_ARROW,
-                        kentos_contracts::MAX_LEADER_ARROW
+                        kentos_commands::MIN_LEADER_ARROW,
+                        kentos_commands::MAX_LEADER_ARROW
                     ),
                     "edit.arrowSize",
                 ));
@@ -533,8 +533,8 @@ pub fn plan_in(doc: &Document, input: &LeadersEdit) -> CommandResult<LeadersPlan
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LeadersEdit) -> CommandResult<LeadersEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LEADERS_EDIT,
-        kentos_contracts::CAD_LEADERS_EDIT_VERSION,
+        kentos_commands::CAD_LEADERS_EDIT,
+        kentos_commands::CAD_LEADERS_EDIT_VERSION,
         input,
         write_execute,
     )

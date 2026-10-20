@@ -7,7 +7,7 @@
 //! place; the tool waits for the next picture. Esc and Ctrl+Z take back the
 //! last corner, then the picture; Esc with none leaves.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{EditOperation, Entity, EntityEdit};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::image::shown;
@@ -69,12 +69,12 @@ impl ImageClip {
         let removed = clip.is_none();
         fields.clip = clip.map(|ring| {
             ring.into_iter()
-                .map(|q| kentos_contracts::Vec2 { x: q.x, y: q.y })
+                .map(|q| kentos_commands::Vec2 { x: q.x, y: q.y })
                 .collect()
         });
         let change = EntityEdit::Update {
             uid: edge::uid(cx.doc, *slot),
-            geometry: kentos_contracts::EntityGeometry::Image(fields),
+            geometry: kentos_commands::EntityGeometry::Image(fields),
         };
         if edge::write(EditOperation::ImageClip, vec![change], cx).is_none() {
             return;

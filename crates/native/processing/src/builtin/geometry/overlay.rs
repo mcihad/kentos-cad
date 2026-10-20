@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::geoprocess::calls::{Mode, OverlayPiece, overlay_run};
 use kentos_geometry_core::ops::statistics::apportion;
 use serde_json::json;

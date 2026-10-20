@@ -4,7 +4,7 @@
 //! expectations, a request sent again, the errors' objects, the journal, and
 //! a command run as a job.
 
-use kentos_contracts::{
+use kentos_commands::{
     CallAnswer, CallEnvelope, CallExpectations, CallKind, CallOp, CallStatus, CommandResult,
     DocumentSnapshotV1, DocumentSnapshotV2, JobPhase,
 };
@@ -518,7 +518,7 @@ fn a_job_computes_on_a_copy_and_its_write_comes_in_whole() {
 
 #[test]
 fn a_journal_replays_on_another_drawing_with_its_new_ids_mapped() {
-    use kentos_contracts::ReplayOutcome;
+    use kentos_commands::ReplayOutcome;
     use kentos_native_application::replay::{journal_of, replay};
     let mut doc = drawing();
     let line = uid(&doc, 1);

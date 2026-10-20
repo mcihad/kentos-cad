@@ -15,7 +15,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{LayerEditOperation, LayersEdit};
+use kentos_commands::{LayerEditOperation, LayersEdit};
 use kentos_domain::layer_purge::{self, PurgeFound, PurgeIds, PurgeItem, PurgeKind};
 use kentos_interaction::Level;
 use kentos_native_style::library::{ItemKind, Source};

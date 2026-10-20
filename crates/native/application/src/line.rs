@@ -16,7 +16,7 @@
 //! as for the closed area. The tool never gives one (a second click on the
 //! same point adds nothing).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, LineCreate, LineCreated, LineEntity,
     LinePlan,
 };
@@ -58,8 +58,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &LineCreate) -> CommandResult<Line
 pub fn execute(cx: &mut ExecutionContext<'_>, input: LineCreate) -> CommandResult<LineCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LINE_CREATE,
-        kentos_contracts::CAD_LINE_CREATE_VERSION,
+        kentos_commands::CAD_LINE_CREATE,
+        kentos_commands::CAD_LINE_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -107,7 +107,7 @@ fn line(input: LineCreate, id: u32) -> Entity {
         ma: None,
         mb: None,
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_contracts::{FormPackage, FormsExport, FormsImport};
+use kentos_commands::{FormPackage, FormsExport, FormsImport};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, forms_export, forms_import};
 

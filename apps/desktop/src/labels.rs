@@ -26,7 +26,7 @@ use iced::widget::canvas::{self, Frame, LineJoin, Path, Stroke};
 use iced::{
     Color, Element, Fill, Font, Pixels, Point, Rectangle, Renderer, Size, Theme, Vector, mouse,
 };
-use kentos_contracts::{DrawingFont, Entity, LabelInk};
+use kentos_commands::{DrawingFont, Entity, LabelInk};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::labels::engine::{HIDDEN, MASKED, PINNED, UNPLACED};
 use kentos_geometry_core::text::paragraph::{self, Run, Script, advance};
@@ -186,7 +186,7 @@ pub struct Preview {
     pub runs: Vec<Run>,
     pub records: Vec<f64>,
     /// Its face (docs/adr/0183 §2): its typeface, bold, italic and slant.
-    pub face: kentos_contracts::TextFace,
+    pub face: kentos_commands::TextFace,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -416,7 +416,7 @@ struct Placed {
 
 /// A shape behind a placed label.
 struct Backdrop {
-    shape: kentos_contracts::LabelShape,
+    shape: kentos_commands::LabelShape,
     fill: Option<Color>,
     stroke: Option<Color>,
     pad: f32,
@@ -958,7 +958,7 @@ struct Piece<'t> {
 /// a text of one line, as always); a run's bold and italic added. A family
 /// without an italic face is leant as a browser leans it.
 fn face_font(
-    face: &kentos_contracts::TextFace,
+    face: &kentos_commands::TextFace,
     project: DrawingFont,
     legacy_italic: bool,
     run: Option<&Run>,
@@ -990,7 +990,7 @@ fn face_font(
 }
 
 /// A block's piece's face as the contract writes it (the core's `Face`).
-fn contract_face(face: &kentos_geometry_core::text::face::Face) -> kentos_contracts::TextFace {
+fn contract_face(face: &kentos_geometry_core::text::face::Face) -> kentos_commands::TextFace {
     kentos_native_application::geometry::contract_face(face.clone())
 }
 
@@ -1008,7 +1008,7 @@ impl Labels<'_> {
     fn grown_arrowhead(
         &self,
         frame: &mut impl Ink,
-        l: &kentos_contracts::LeaderEntity,
+        l: &kentos_commands::LeaderEntity,
         k: f64,
         color: Color,
     ) {
@@ -1083,7 +1083,7 @@ impl Labels<'_> {
         rotation: f64,
         height: f64,
         width_factor: f64,
-        text_face: &kentos_contracts::TextFace,
+        text_face: &kentos_commands::TextFace,
     ) {
         let letters: Vec<char> = text.chars().collect();
         let (start, end) = (start.min(letters.len()), end.min(letters.len()));
@@ -1562,7 +1562,7 @@ impl Labels<'_> {
                     entity,
                 ) => {
                     let own;
-                    let (text, runs, face): (&str, &[Run], kentos_contracts::TextFace) =
+                    let (text, runs, face): (&str, &[Run], kentos_commands::TextFace) =
                         match (piece, entity) {
                             (Some(p), _) => (
                                 &p.0,
@@ -1735,13 +1735,13 @@ impl Labels<'_> {
     fn placed_frame(
         &self,
         entity: &Entity,
-        layer: Option<&kentos_contracts::LayerNode>,
+        layer: Option<&kentos_commands::LayerNode>,
         class: u16,
         state: u32,
         slot: Slot,
     ) -> Option<Placed> {
         let style = match layer.and_then(|l| l.style.labels.as_ref()) {
-            Some(l) if l.mode == kentos_contracts::LabelsMode::Rules => {
+            Some(l) if l.mode == kentos_commands::LabelsMode::Rules => {
                 l.classes.get(class as usize).map(|c| c.style.clone())?
             }
             _ => layer
@@ -1776,7 +1776,7 @@ impl Labels<'_> {
                 pad: b.padding.unwrap_or(2.0) as f32,
             }),
             None if masked => Some(Backdrop {
-                shape: kentos_contracts::LabelShape::Rect,
+                shape: kentos_commands::LabelShape::Rect,
                 fill: Some(self.colors.halo),
                 stroke: None,
                 pad: 1.0,
@@ -1822,7 +1822,7 @@ impl Labels<'_> {
             manhattan: style
                 .callout
                 .as_ref()
-                .is_some_and(|c| c.kind == kentos_contracts::CalloutKind::Manhattan),
+                .is_some_and(|c| c.kind == kentos_commands::CalloutKind::Manhattan),
             pinned: self.pinned && state & PINNED != 0,
         })
     }
@@ -1858,7 +1858,7 @@ impl Labels<'_> {
                     Point::new(m.x + dx + u * cs - v * s, m.y + dy + u * s + v * cs)
                 };
                 match b.shape {
-                    kentos_contracts::LabelShape::Ellipse => (0..32)
+                    kentos_commands::LabelShape::Ellipse => (0..32)
                         .map(|i| {
                             let t = i as f32 / 32.0 * std::f32::consts::TAU;
                             at(
@@ -1885,7 +1885,7 @@ impl Labels<'_> {
                     }
                 }
             };
-            let round = b.shape != kentos_contracts::LabelShape::Rect;
+            let round = b.shape != kentos_commands::LabelShape::Rect;
             if let Some((dx, dy, sc)) = c.shadow
                 && b.fill.is_some()
             {
@@ -2023,7 +2023,7 @@ pub(crate) fn ghost(
     size: f32,
     angle: f32,
     (along, up): (f32, f32),
-    (face, width_factor): (&kentos_contracts::TextFace, f32),
+    (face, width_factor): (&kentos_commands::TextFace, f32),
     drawing: DrawingFont,
     (color, halo): (Color, Color),
     mask: bool,
@@ -2065,7 +2065,7 @@ pub(crate) fn cell_ghost(
     at: Point,
     size: f32,
     bold: bool,
-    face: &kentos_contracts::TextFace,
+    face: &kentos_commands::TextFace,
     drawing: DrawingFont,
     (color, halo): (Color, Color),
 ) {
@@ -2107,7 +2107,7 @@ pub(crate) fn sample_text(
     text: &str,
     at: Point,
     size: f32,
-    face: &kentos_contracts::TextFace,
+    face: &kentos_commands::TextFace,
     width_factor: f32,
     project: DrawingFont,
     (color, halo): (Color, Color),
@@ -2527,7 +2527,7 @@ mod tests {
                 json.push_str(&format!("\"{}\":{},", k.trim(), v.trim()));
             }
             let json = format!("{{{}}}", json.trim_end_matches(','));
-            let web: kentos_contracts::LabelStyle =
+            let web: kentos_commands::LabelStyle =
                 serde_json::from_str(&json).expect("a label style");
             assert_eq!(default_label(kind.trim()), Some(web), "{kind}");
         }
@@ -2539,7 +2539,7 @@ mod tests {
     #[test]
     fn a_map_takes_the_placed_labels_backgrounds_and_callouts() {
         let snapshot =
-            kentos_contracts::DocumentSnapshotV1::from_json(crate::label_scenes::DRAWING)
+            kentos_commands::DocumentSnapshotV1::from_json(crate::label_scenes::DRAWING)
                 .expect("the scene reads");
         let doc = crate::document::Document::new(snapshot, None).expect("opens");
         let mut spatial = Spatial::new();
@@ -3016,7 +3016,7 @@ fn annotation_screens() {
 fn perf() {
     use std::time::Instant;
 
-    use kentos_contracts::{DocumentSnapshotV1, EntityBase, PointEntity};
+    use kentos_commands::{DocumentSnapshotV1, EntityBase, PointEntity};
     use kentos_ui::snapshot::Snapshot;
 
     use crate::app::App;
@@ -3045,7 +3045,7 @@ fn perf() {
                 label_pins: Vec::new(),
                 attachments: Vec::new(),
             },
-            p: kentos_contracts::Vec2 {
+            p: kentos_commands::Vec2 {
                 x: 486_400.0 + (i % side) as f64,
                 y: 4_420_000.0 + (i / side) as f64,
             },

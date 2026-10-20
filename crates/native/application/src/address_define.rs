@@ -9,7 +9,7 @@
 //! revision; the locator removed is the project's. A layer the drawing does
 //! not have is a warning.
 
-use kentos_contracts::{
+use kentos_commands::{
     AddressLocator, AddressesDefine, AddressesDefineOperation, AddressesDefined, CommandResult,
     CommandWarning, ProjectSettings, address_locators_problem,
 };
@@ -121,8 +121,8 @@ pub fn execute(
 ) -> CommandResult<AddressesDefined> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ADDRESSES_DEFINE,
-        kentos_contracts::CAD_ADDRESSES_DEFINE_VERSION,
+        kentos_commands::CAD_ADDRESSES_DEFINE,
+        kentos_commands::CAD_ADDRESSES_DEFINE_VERSION,
         input,
         write_execute,
     )

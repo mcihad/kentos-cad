@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, text, text_input};
 use iced::{Element, Task};
-use kentos_contracts::{BlockEditOperation, BlockId, BlocksEdit, CommandResult};
+use kentos_commands::{BlockEditOperation, BlockId, BlocksEdit, CommandResult};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, blocks_edit};
 use kentos_ui::style;

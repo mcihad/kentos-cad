@@ -19,7 +19,7 @@ use std::time::{Duration, Instant};
 use iced::Task;
 use iced::task::Handle;
 use kentos_cloud::{After, ApiFailure, DraftKey, ProjectSync, SaveState};
-use kentos_contracts::{CommandEnvelope, CommitResult};
+use kentos_commands::{CommandEnvelope, CommitResult};
 use kentos_domain::Uuid;
 
 use crate::app::{App, Message};
@@ -77,8 +77,8 @@ pub struct Live {
     /// The server's copies chosen while an edit was open (its info and block
     /// definitions, when asked for): taken once it ends.
     pub(super) theirs: Option<(
-        Option<kentos_contracts::ProjectInfo>,
-        Option<Vec<kentos_contracts::BlockRecord>>,
+        Option<kentos_commands::ProjectInfo>,
+        Option<Vec<kentos_commands::BlockRecord>>,
     )>,
     /// `polling` holds the long poll, not a fetch: a request that must not
     /// wait for the next commit may take its place (docs/adr/0081).
@@ -88,10 +88,10 @@ pub struct Live {
     /// those layers are given back (follow.rs, docs/adr/0081).
     pub(super) give_back: bool,
     /// The server's tree for that, come while an edit was open: used once it ends.
-    pub(super) giving: Option<kentos_contracts::ProjectInfo>,
+    pub(super) giving: Option<kentos_commands::ProjectInfo>,
     /// The server's block definitions after it refused to remove one still
     /// placed there, come while an edit was open: used once it ends.
-    pub(super) giving_blocks: Option<Vec<kentos_contracts::BlockRecord>>,
+    pub(super) giving_blocks: Option<Vec<kentos_commands::BlockRecord>>,
     pub told: Told,
     /// When the server last answered a save (milliseconds since 1970; the save cell's tip).
     pub last_saved: Option<i64>,

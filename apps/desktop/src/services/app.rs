@@ -11,7 +11,7 @@ use kentos_ui::style;
 use kentos_ui::theme::shape::{self, Level};
 use kentos_ui::theme::{Tokens, typography};
 
-use kentos_contracts::{ServiceKind, ServiceLayer};
+use kentos_commands::{ServiceKind, ServiceLayer};
 use kentos_ui::widget::context_menu::Menu;
 
 use super::overlay::Marks;
@@ -99,7 +99,7 @@ pub fn service_icon(service: &ServiceLayer) -> &'static str {
 }
 
 /// A service's key from the drawing's settings.
-fn key_in(settings: &kentos_contracts::ProjectSettings, service: &ServiceLayer) -> String {
+fn key_in(settings: &kentos_commands::ProjectSettings, service: &ServiceLayer) -> String {
     let connection = service
         .connection
         .as_ref()
@@ -248,8 +248,8 @@ impl App {
         let Some(doc) = &mut self.document else {
             return;
         };
-        let input = kentos_contracts::LayersService {
-            operation: kentos_contracts::LayerServiceOperation::Update,
+        let input = kentos_commands::LayersService {
+            operation: kentos_commands::LayerServiceOperation::Update,
             layer: Some(id.to_owned()),
             name: None,
             parent: None,
@@ -267,9 +267,9 @@ impl App {
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         );
-        if let kentos_contracts::CommandResult::Failed { error }
-        | kentos_contracts::CommandResult::Conflict { error }
-        | kentos_contracts::CommandResult::NeedsInput { error } = result
+        if let kentos_commands::CommandResult::Failed { error }
+        | kentos_commands::CommandResult::Conflict { error }
+        | kentos_commands::CommandResult::NeedsInput { error } = result
         {
             self.warn(error.message);
         }
@@ -278,7 +278,7 @@ impl App {
     /// A service layer's own items in its menu (docs/adr/0208 §14).
     pub(crate) fn service_menu(
         &self,
-        node: &kentos_contracts::LayerNode,
+        node: &kentos_commands::LayerNode,
         menu: Menu<Message>,
     ) -> Menu<Message> {
         let Some(service) = &node.service else {

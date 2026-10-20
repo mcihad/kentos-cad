@@ -6,7 +6,7 @@
 //! from the run's store, the numbers from the core's `ops::statistics`; one
 //! undo step.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::spatial_query::Relation;
 use kentos_geometry_core::ops::statistics::{Stat, statistic};

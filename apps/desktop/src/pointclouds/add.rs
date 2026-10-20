@@ -16,7 +16,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, button, column, container, row, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CloudFormat, CloudSource, CommandResult, CreateOperation, EntitiesCreate, EntityGeometry,
     NewObject, PointCloudFields, PointCloudStyle,
 };
@@ -370,7 +370,7 @@ pub fn inspect(paths: &[PathBuf], address: Option<&str>) -> Result<Read, String>
     let mut members = Vec::new();
     if let Some(url) = address {
         let url = url.trim();
-        if let Some(why) = kentos_contracts::url_problem(url) {
+        if let Some(why) = kentos_commands::url_problem(url) {
             return Err(why);
         }
         let name = super::source_name(
@@ -417,10 +417,10 @@ pub fn inspect(paths: &[PathBuf], address: Option<&str>) -> Result<Read, String>
             }
         }
     }
-    if members.len() > kentos_contracts::MAX_CLOUD_SOURCES {
+    if members.len() > kentos_commands::MAX_CLOUD_SOURCES {
         return Err(format!(
             "Bir nokta bulutunun en çok {} dosyası olabilir; {} seçildi.",
-            kentos_contracts::MAX_CLOUD_SOURCES,
+            kentos_commands::MAX_CLOUD_SOURCES,
             members.len()
         ));
     }

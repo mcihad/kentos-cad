@@ -5,7 +5,7 @@
 //! the drawing's. Listed in the order layers (the tree's, layers only), forms, value lists, relations
 //! (the project's orders); a query keeps those whose id or name holds its words (Turkish folded).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DESCRIBED, LayerNodeType, MOST_DESCRIBED, SchemaDescribe, SchemaDescribed,
     SchemaItem, SchemaKind,
 };

@@ -11,8 +11,8 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::fields::{LayerField, LayerFieldKind, check_value};
-use kentos_contracts::{Entity, EntityBase, EntityGeometry, Vec2};
+use kentos_commands::fields::{LayerField, LayerFieldKind, check_value};
+use kentos_commands::{Entity, EntityBase, EntityGeometry, Vec2};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::statistics::join_plan;
 use kentos_native_application::geometry::entity_of;
@@ -545,7 +545,7 @@ fn run(v: &Resolved<'_>, ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> R
         };
         let made = match objects {
             Some(objects) => Some(shaped(objects[r], base)),
-            None if records => Some(Entity::Record(kentos_contracts::RecordEntity { base })),
+            None if records => Some(Entity::Record(kentos_commands::RecordEntity { base })),
             None => {
                 let (x, y) = (js_trim(cell(r, corner.0)), js_trim(cell(r, corner.1)));
                 let read = |text: &str, name: &str| {

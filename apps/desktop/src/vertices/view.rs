@@ -5,7 +5,7 @@
 
 use iced::widget::{button, column, container, mouse_area, row, space};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::{Format, bearing_grad, measures};
 use kentos_ui::icon::icon;
 use kentos_ui::label;

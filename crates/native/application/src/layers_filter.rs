@@ -9,7 +9,7 @@
 //! compiles (`$sıra` and `$ölçek` refused); the expected revision; the layer
 //! is the drawing's, a layer, not drawn from a service.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerFilter, LayerNode, LayerNodeType, LayersFilter, LayersFilterPlan,
     LayersFiltered,
 };
@@ -89,7 +89,7 @@ fn check(
 pub fn count(doc: &Document, layer: &str, filter: Option<&CompiledFilter>) -> (u32, u32) {
     let list: Vec<_> = doc
         .by_layer_with_uids(layer)
-        .map(|(uid, e)| (e, kentos_contracts::EntityId(*uid.as_bytes())))
+        .map(|(uid, e)| (e, kentos_commands::EntityId(*uid.as_bytes())))
         .collect();
     let total = list.len() as u32;
     let Some(filter) = filter else {
@@ -156,8 +156,8 @@ pub fn execute(
 ) -> CommandResult<LayersFiltered> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_FILTER,
-        kentos_contracts::CAD_LAYERS_FILTER_VERSION,
+        kentos_commands::CAD_LAYERS_FILTER,
+        kentos_commands::CAD_LAYERS_FILTER_VERSION,
         input,
         write_execute,
     )

@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DimensionMeasure, DimensionsCreate, EdgeNear, EntitiesTransform, MeasuredPoint, NewLook, SubPlace,
     Transform, Vec2 as Point,
 };

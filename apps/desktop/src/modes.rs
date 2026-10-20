@@ -9,7 +9,7 @@
 
 use iced::Element;
 use iced::widget::row;
-use kentos_contracts::Workspace;
+use kentos_commands::Workspace;
 use kentos_ui::icon::{Icon, icon};
 use kentos_ui::widget::{Menu, MenuButton, Tip, tip};
 
@@ -184,7 +184,7 @@ fn shown(app: &App) -> &'static str {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::Workspace;
+    use kentos_commands::Workspace;
 
     use super::shown;
     use crate::app::{App, Message};

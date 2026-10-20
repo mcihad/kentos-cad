@@ -3,7 +3,7 @@
 //! whose answers scripts/fixtures/file_revisions_cases.py wrote apart from
 //! either program.
 
-use kentos_contracts::{EventRecord, FileRevisions, ProjectState};
+use kentos_commands::{EventRecord, FileRevisions, ProjectState};
 use serde_json::Value;
 
 use super::cells_plan::{self as cells, FileSave, SaveInput};

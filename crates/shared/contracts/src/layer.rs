@@ -687,3 +687,16 @@ pub fn sanitized_layer_states(states: Vec<LayerState>) -> Vec<LayerState> {
     }
     out
 }
+
+/// A name folded for comparing: lower case as Turkish writes it (I ı, İ i).
+pub fn fold_name(name: &str) -> String {
+    let mut out = String::with_capacity(name.len());
+    for c in name.chars() {
+        match c {
+            'I' => out.push('ı'),
+            'İ' => out.push('i'),
+            _ => out.extend(c.to_lowercase()),
+        }
+    }
+    out
+}

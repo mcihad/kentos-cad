@@ -12,7 +12,7 @@
 //! plain addition, the value written the sum and not a rounded one
 //! (CLAUDE.md §23.2).
 
-use kentos_contracts::{Entity, EntityGeometry};
+use kentos_commands::{Entity, EntityGeometry};
 use kentos_geometry_core::ops::elevation::{ON, length_3d};
 use kentos_geometry_core::ops::grips::{grip_part, hole_grip};
 use kentos_geometry_core::tools::point_text::{is_js_space, js_trim, parse_number};
@@ -52,7 +52,7 @@ pub fn has_any(e: &Entity) -> bool {
         Entity::Line(l) => l.za.is_some() || l.zb.is_some(),
         Entity::Polyline(p) => any(&p.zs) || p.parts.iter().flatten().any(|q| any(&q.zs)),
         Entity::Polygon(p) => {
-            let holes = |hs: &Option<Vec<kentos_contracts::RingGeometry>>| {
+            let holes = |hs: &Option<Vec<kentos_commands::RingGeometry>>| {
                 hs.iter().flatten().any(|h| any(&h.zs))
             };
             // Every part's too (docs/adr/0143).
@@ -312,7 +312,7 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
             first
         } else {
             let part = p.parts.as_ref()?.get(k - 1)?;
-            kentos_contracts::PathEntity {
+            kentos_commands::PathEntity {
                 ms: None,
                 base: p.base.clone(),
                 pts: part.pts.clone(),
@@ -363,7 +363,7 @@ pub fn grip_elevation(e: &Entity, index: usize) -> Option<f64> {
 /// The elevation of the object's vertex at `at`, or none: no vertex there,
 /// or it has none. A line's end counts, and a point is a vertex.
 pub fn elevation_at(e: &Entity, at: Vec2) -> Option<f64> {
-    let near = |q: &kentos_contracts::Vec2| (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON;
+    let near = |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= ON && (q.y - at.y).abs() <= ON;
     match e {
         // Any point of a multi-point object (docs/adr/0174).
         Entity::Point(p) => p.z.filter(|_| near(&p.p)).or_else(|| {
@@ -492,7 +492,7 @@ pub fn geometry_with(e: &Entity, change: Change) -> Option<EntityGeometry> {
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{EntityBase, LineEntity, PathEntity, PointEntity, RingGeometry};
+    use kentos_commands::{EntityBase, LineEntity, PathEntity, PointEntity, RingGeometry};
 
     use super::*;
 
@@ -511,8 +511,8 @@ mod tests {
         }
     }
 
-    fn pt(x: f64, y: f64) -> kentos_contracts::Vec2 {
-        kentos_contracts::Vec2 { x, y }
+    fn pt(x: f64, y: f64) -> kentos_commands::Vec2 {
+        kentos_commands::Vec2 { x, y }
     }
 
     fn line(za: Option<f64>, zb: Option<f64>) -> Entity {
@@ -767,7 +767,7 @@ mod tests {
             }
         );
         // A circle takes none.
-        let circle = Entity::Circle(kentos_contracts::CircleEntity {
+        let circle = Entity::Circle(kentos_commands::CircleEntity {
             base: base(),
             c: pt(0.0, 0.0),
             r: 1.0,
@@ -830,7 +830,7 @@ mod tests {
             z: Some(5.0),
             parts: None,
         });
-        let circle = Entity::Circle(kentos_contracts::CircleEntity {
+        let circle = Entity::Circle(kentos_commands::CircleEntity {
             base: base(),
             c: pt(0.0, 0.0),
             r: 1.0,

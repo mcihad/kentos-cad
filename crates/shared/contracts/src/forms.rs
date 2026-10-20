@@ -2031,6 +2031,47 @@ pub fn forms_of_layer<'a>(forms: &'a [ProjectForm], layer: &str) -> Vec<&'a Proj
     forms.iter().filter(|f| f.layer == layer).collect()
 }
 
+
+// A form's change between two versions (`cad.forms.compare`, docs/adr/0427): `kentos_forms::compare` writes them.
+/// What happened to an item from one version to the other.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub enum FormChangeKind {
+    Added,
+    Removed,
+    /// Under another tab or group, or elsewhere among its siblings.
+    Moved,
+    /// Its own properties (its items aside).
+    Changed,
+}
+
+/// One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct FormChange {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub item: Option<String>,
+    pub kind: FormChangeKind,
+    /// The properties that changed, by their names in the form's JSON, in their order.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub properties: Vec<String>,
+    /// What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
+    /// `workflow`, `tests`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
+    pub areas: Vec<String>,
+    /// Turkish, for people.
+    pub words: String,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

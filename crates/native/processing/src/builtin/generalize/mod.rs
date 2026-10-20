@@ -11,7 +11,7 @@ pub mod parts;
 pub mod smooth;
 pub mod square;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::convert::Zs;
 use kentos_native_application::geometry::shape;

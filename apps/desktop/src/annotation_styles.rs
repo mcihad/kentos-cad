@@ -14,7 +14,7 @@ use std::collections::HashMap;
 use iced::widget::canvas::{self, Frame, Path, Stroke};
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Color, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_contracts::{
+use kentos_commands::{
     DimensionArrow, DimensionStyleDef, DimensionTextPlace, DrawingFont, DrawingUnit,
     STANDARD_STYLE, TextStyleDef, dimension_styles_problem, text_styles_problem,
 };
@@ -126,7 +126,7 @@ pub enum Event {
     /// none: a hairline) and type (none: continuous), docs/adr/0205 §6.
     LineColor(Part, Option<String>),
     LineWeight(Part, Option<f64>),
-    LineType(Part, Option<kentos_contracts::LineType>),
+    LineType(Part, Option<kentos_commands::LineType>),
     Save,
     Cancel,
     /// Dışa aktar… and Al… (docs/adr/0322 §4): the saved table to a file, a file's styles taken in.
@@ -372,31 +372,31 @@ impl App {
         )
     }
 
-    fn styles_kind(&self) -> kentos_contracts::AnnotationStyleKind {
+    fn styles_kind(&self) -> kentos_commands::AnnotationStyleKind {
         match self
             .annotation_styles
             .as_ref()
             .map_or(Kind::Text, |w| w.kind)
         {
-            Kind::Text => kentos_contracts::AnnotationStyleKind::Text,
-            Kind::Dimension => kentos_contracts::AnnotationStyleKind::Dimension,
+            Kind::Text => kentos_commands::AnnotationStyleKind::Text,
+            Kind::Dimension => kentos_commands::AnnotationStyleKind::Dimension,
         }
     }
 
     /// `cad.styles.edit` over the drawing; its answer, or none with the refusal said.
     fn styles_command(
         &mut self,
-        input: kentos_contracts::StylesEdit,
-    ) -> Option<kentos_contracts::StylesEdited> {
+        input: kentos_commands::StylesEdit,
+    ) -> Option<kentos_commands::StylesEdited> {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::styles_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             input,
         );
         match result {
-            kentos_contracts::CommandResult::Completed { output, .. } => Some(output),
-            kentos_contracts::CommandResult::Failed { error, .. }
-            | kentos_contracts::CommandResult::Conflict { error, .. } => {
+            kentos_commands::CommandResult::Completed { output, .. } => Some(output),
+            kentos_commands::CommandResult::Failed { error, .. }
+            | kentos_commands::CommandResult::Conflict { error, .. } => {
                 self.warn(error.message);
                 None
             }
@@ -406,9 +406,9 @@ impl App {
 
     fn styles_input(
         &self,
-        operation: kentos_contracts::StyleEditOperation,
-    ) -> kentos_contracts::StylesEdit {
-        kentos_contracts::StylesEdit {
+        operation: kentos_commands::StyleEditOperation,
+    ) -> kentos_commands::StylesEdit {
+        kentos_commands::StylesEdit {
             wall: None,
             leader: None,
             kind: self.styles_kind(),
@@ -426,7 +426,7 @@ impl App {
 
     /// Dışa aktar…: the saved table as a `kentos.annotation-styles` file, through `cad.styles.edit`'s export.
     fn export_annotation_styles(&mut self, path: &std::path::Path) {
-        let input = self.styles_input(kentos_contracts::StyleEditOperation::Export);
+        let input = self.styles_input(kentos_commands::StyleEditOperation::Export);
         let Some(text) = self.styles_command(input).and_then(|done| done.library) else {
             return;
         };
@@ -455,7 +455,7 @@ impl App {
                 return;
             }
         };
-        let mut input = self.styles_input(kentos_contracts::StyleEditOperation::Import);
+        let mut input = self.styles_input(kentos_commands::StyleEditOperation::Import);
         input.library = Some(text);
         let kind = self
             .annotation_styles
@@ -832,7 +832,7 @@ impl App {
             scale: settings.plot_scale,
             // Standart's height is the project's Ölçü height (docs/adr/0205 §1).
             standard_mm: {
-                let kind = kentos_contracts::AnnotationKind::Dimension;
+                let kind = kentos_commands::AnnotationKind::Dimension;
                 settings
                     .annotation
                     .as_ref()
@@ -1301,11 +1301,11 @@ impl canvas::Program<Message> for Sample {
                 let paper = |mm: f64| ((mm / 1000.0 * self.scale * k) as f32).max(1.0);
                 let pen = |color: &Option<String>,
                            weight: Option<f64>,
-                           kind: Option<kentos_contracts::LineType>| {
+                           kind: Option<kentos_commands::LineType>| {
                     let dash: &'static [f64] = match kind {
-                        Some(kentos_contracts::LineType::Dashed) => &[3.0, 1.5],
-                        Some(kentos_contracts::LineType::Dashdot) => &[5.0, 1.2, 0.6, 1.2],
-                        Some(kentos_contracts::LineType::Dotted) => &[0.6, 1.2],
+                        Some(kentos_commands::LineType::Dashed) => &[3.0, 1.5],
+                        Some(kentos_commands::LineType::Dashdot) => &[5.0, 1.2, 0.6, 1.2],
+                        Some(kentos_commands::LineType::Dotted) => &[0.6, 1.2],
                         _ => &[],
                     };
                     (
@@ -1423,9 +1423,9 @@ fn weight_select<'a>(part: Part, value: Option<f64>) -> Element<'a, Message> {
 }
 
 /// A type of a dimension's line: none (continuous) or another (the web's `typeSelect`).
-fn type_select<'a>(part: Part, value: Option<kentos_contracts::LineType>) -> Element<'a, Message> {
+fn type_select<'a>(part: Part, value: Option<kentos_commands::LineType>) -> Element<'a, Message> {
     use crate::ribbon_panels::LINE_TYPES;
-    use kentos_contracts::LineType;
+    use kentos_commands::LineType;
     let chosen = LINE_TYPES
         .iter()
         .position(|(t, _)| *t == value.unwrap_or(LineType::Continuous));

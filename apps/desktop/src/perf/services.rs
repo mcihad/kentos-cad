@@ -198,10 +198,10 @@ fn services() {
     // OpenFreeMap's vector tiles over OpenStreetMap's pictures.
     if let Some(doc) = &mut app.document {
         let (ofm, _) = crate::service_scenes::preset("ofm-liberty");
-        let service: kentos_contracts::ServiceLayer =
+        let service: kentos_commands::ServiceLayer =
             serde_json::from_value(ofm).expect("a service");
-        let input = kentos_contracts::LayersService {
-            operation: kentos_contracts::LayerServiceOperation::Add,
+        let input = kentos_commands::LayersService {
+            operation: kentos_commands::LayerServiceOperation::Add,
             layer: None,
             name: Some("OpenFreeMap".into()),
             parent: None,

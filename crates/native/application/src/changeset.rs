@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CAD_CHANGESET_APPLY, CAD_CHANGESET_APPLY_VERSION, CHANGESET_LABEL, CallOp, ChangesetApplied,
     ChangesetApply, ChangesetStepDone, CommandError, CommandResult, CommandWarning, FILE_COMMANDS,
     codes,

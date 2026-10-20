@@ -24,7 +24,7 @@
 //! 5. the core's refusals: the kind, a multi-part polyline, an angle for other
 //!    than an arc, a new length not above zero, an arc closing on itself.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EditOperation, EntitiesEdit, EntitiesEditPlan, EntitiesEdited, EntitiesLengthen,
     Entity, EntityEdit, EntityGeometry, LengthenChange, LengthenEnd,
 };
@@ -296,8 +296,8 @@ pub mod entities_lengthen {
     ) -> CommandResult<EntitiesEdited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_LENGTHEN,
-            kentos_contracts::CAD_ENTITIES_LENGTHEN_VERSION,
+            kentos_commands::CAD_ENTITIES_LENGTHEN,
+            kentos_commands::CAD_ENTITIES_LENGTHEN_VERSION,
             input,
             |cx, input| {
                 let checked = check(cx.doc, &input);

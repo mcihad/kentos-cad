@@ -1,7 +1,7 @@
 //! Bind › Insert's layers for `cad.xrefs.edit` (docs/adr/0348 §3): the reference's layers joined to the drawing's of the
 //! same path, its definitions' objects moved onto them. The rule is `kentos_domain::xref::bind_layers`'s.
 
-use kentos_contracts::BlockDefinition;
+use kentos_commands::BlockDefinition;
 use kentos_domain::Document;
 
 use crate::exchange_write::{Counts, put_nodes};

@@ -9,7 +9,7 @@
 
 use std::collections::HashMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, EntitiesSetProperties, LayerNode, LayerNodeType,
     LayerTranslation, LayersTranslate, LayersTranslated, PropertiesOperation, TranslateRule,
     fold_name, layer_color_ok, pattern_matches, pattern_problem,
@@ -222,8 +222,8 @@ pub fn execute(
 ) -> CommandResult<LayersTranslated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_LAYERS_TRANSLATE,
-        kentos_contracts::CAD_LAYERS_TRANSLATE_VERSION,
+        kentos_commands::CAD_LAYERS_TRANSLATE,
+        kentos_commands::CAD_LAYERS_TRANSLATE_VERSION,
         input,
         write_execute,
     )
@@ -246,7 +246,7 @@ fn count(n: usize) -> u32 {
 /// A source layer's id, name and rule.
 type Source = (String, String, usize);
 /// A rule's standard layer, when the drawing has it: its id and look.
-type Target = Option<(String, kentos_contracts::LayerStyle)>;
+type Target = Option<(String, kentos_commands::LayerStyle)>;
 
 /// Translates the layers (its checks passed); `cad.standards.apply` writes its merging so.
 pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResult<LayersTranslated> {
@@ -293,7 +293,7 @@ pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResul
             continue;
         }
         let rule = &input.rules[*r];
-        let given = |mut style: kentos_contracts::LayerStyle| {
+        let given = |mut style: kentos_commands::LayerStyle| {
             if let Some(c) = &rule.color {
                 style.color.clone_from(c);
             }
@@ -324,7 +324,7 @@ pub(crate) fn write(doc: &mut Document, input: &LayersTranslate) -> CommandResul
                     .get(source)
                     .map_or_else(default_style, |n| n.style.clone());
                 let mut new = NewLayer::layer(rule.to.trim());
-                new.style = given(kentos_contracts::LayerStyle {
+                new.style = given(kentos_commands::LayerStyle {
                     fill: None,
                     point: None,
                     label: None,

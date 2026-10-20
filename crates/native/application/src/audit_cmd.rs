@@ -3,7 +3,7 @@
 //! `purge` the unused styles removed (a project setting). The rules are the document's (`kentos_domain::audit`,
 //! `layer_purge`); the shared cases are `fixtures/commands/v1/cad.drawing.audit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     AuditCode, AuditFinding, AuditPurge, CommandResult, CommandWarning, DrawingAudit,
     DrawingAudited, ResourceKind, UnusedResource,
 };
@@ -153,7 +153,7 @@ fn write(cx: &mut ExecutionContext<'_>, found: Found) -> CommandResult<DrawingAu
         warnings,
     } = found;
     let doc = &mut *cx.doc;
-    let repaired: Vec<(Slot, kentos_contracts::Entity)> = repairs
+    let repaired: Vec<(Slot, kentos_commands::Entity)> = repairs
         .iter()
         .filter_map(|slot| doc.audit_repaired(*slot).map(|e| (*slot, e)))
         .collect();
@@ -228,8 +228,8 @@ pub mod drawing_audit {
     ) -> CommandResult<DrawingAudited> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_DRAWING_AUDIT,
-            kentos_contracts::CAD_DRAWING_AUDIT_VERSION,
+            kentos_commands::CAD_DRAWING_AUDIT,
+            kentos_commands::CAD_DRAWING_AUDIT_VERSION,
             input,
             |cx, input| match check(cx.doc, &input) {
                 Ok(found) => write(cx, found),

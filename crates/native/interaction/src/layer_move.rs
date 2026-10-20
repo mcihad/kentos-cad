@@ -12,7 +12,7 @@
 //!   refuses and the tool waits for another; the commands' own warnings (a
 //!   hidden target) are said.
 
-use kentos_contracts::{EntitiesCreate, EntitiesSetProperties, NewObject, PropertiesOperation};
+use kentos_commands::{EntitiesCreate, EntitiesSetProperties, NewObject, PropertiesOperation};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::tools::point_text::js_trim;

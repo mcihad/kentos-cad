@@ -40,7 +40,7 @@
 //! Objects on a locked layer are neither changed nor copied. The web's tools
 //! used to copy them onto their locked layer; ADR 0037 records the change.
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrangeMode, CommandError, CommandResult, CommandWarning, EntitiesTransform,
     EntitiesTransformPlan, EntitiesTransformed, Entity, Transform,
 };
@@ -117,8 +117,8 @@ pub fn execute(
 ) -> CommandResult<EntitiesTransformed> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ENTITIES_TRANSFORM,
-        kentos_contracts::CAD_ENTITIES_TRANSFORM_VERSION,
+        kentos_commands::CAD_ENTITIES_TRANSFORM,
+        kentos_commands::CAD_ENTITIES_TRANSFORM_VERSION,
         input,
         write_execute,
     )
@@ -264,10 +264,10 @@ pub fn affine(transform: &Transform) -> Option<Affine> {
 /// pair whole, its points apart from the first pair's by the core's own
 /// measure (`align`: within a nanometre the direction is lost).
 fn check_align(
-    source: kentos_contracts::Vec2,
-    target: kentos_contracts::Vec2,
-    source2: Option<kentos_contracts::Vec2>,
-    target2: Option<kentos_contracts::Vec2>,
+    source: kentos_commands::Vec2,
+    target: kentos_commands::Vec2,
+    source2: Option<kentos_commands::Vec2>,
+    target2: Option<kentos_commands::Vec2>,
 ) -> Result<(), Stop> {
     let refuse = |message: &str, path: &str| {
         Err(Stop::failed(checks::error(
@@ -276,7 +276,7 @@ fn check_align(
             Some(path.into()),
         )))
     };
-    let apart = |a: kentos_contracts::Vec2, b: kentos_contracts::Vec2| {
+    let apart = |a: kentos_commands::Vec2, b: kentos_commands::Vec2| {
         dist(Vec2::new(a.x, a.y), Vec2::new(b.x, b.y)) >= 1e-9
     };
     match (source2, target2) {
@@ -381,7 +381,7 @@ fn links_message(e: RubberError) -> String {
 }
 
 /// Kauçuk levha's links: finite (named by their place), then one sheet.
-fn check_sheet(links: &[kentos_contracts::RubberLink]) -> Result<Sheet, Stop> {
+fn check_sheet(links: &[kentos_commands::RubberLink]) -> Result<Sheet, Stop> {
     for (i, l) in links.iter().enumerate() {
         let n = i + 1;
         checks::point(
@@ -437,7 +437,7 @@ fn refuse_singular() -> Stop {
     ))
 }
 
-fn core(p: kentos_contracts::Vec2) -> Vec2 {
+fn core(p: kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
@@ -599,7 +599,7 @@ fn check_transform(transform: &Transform) -> Result<How, Stop> {
 pub fn text_policy(transform: &Transform) -> TextPolicy {
     match transform {
         Transform::Mirror {
-            text: Some(kentos_contracts::MirrorText::Mirrored),
+            text: Some(kentos_commands::MirrorText::Mirrored),
             ..
         } => TextPolicy::Mirrored,
         _ => TextPolicy::Readable,
@@ -824,7 +824,7 @@ fn check(doc: &Document, input: &EntitiesTransform) -> Result<Checked, Stop> {
 /// the affine's length scale. A rubber sheet or a warp keeps them as they were.
 fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
     use kentos_geometry_core::geom::affine::{apply, determinant};
-    let Some(field) = kentos_contracts::annotative_field(&mut after) else {
+    let Some(field) = kentos_commands::annotative_field(&mut after) else {
         return after;
     };
     let Some(scales) = field.as_mut() else {
@@ -833,7 +833,7 @@ fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
     if scales
         .scales
         .iter()
-        .all(kentos_contracts::AnnotativeScale::is_plain)
+        .all(kentos_commands::AnnotativeScale::is_plain)
     {
         return after;
     }
@@ -847,7 +847,7 @@ fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
     for s in &mut entries {
         if let Some(p) = s.point {
             let q = apply(m, Vec2::new(p.x, p.y));
-            s.point = Some(kentos_contracts::Vec2 { x: q.x, y: q.y });
+            s.point = Some(kentos_commands::Vec2 { x: q.x, y: q.y });
         }
         if let Some(t) = s.text_shift.as_mut() {
             t.along *= length;
@@ -860,7 +860,7 @@ fn carry_scales(before: &Entity, mut after: Entity, m: &Affine) -> Entity {
             s.rotation = s.rotation.map(|r| (r + now - was).rem_euclid(360.0));
         }
     }
-    if let Some(field) = kentos_contracts::annotative_field(&mut after)
+    if let Some(field) = kentos_commands::annotative_field(&mut after)
         && let Some(scales) = field.as_mut()
     {
         scales.scales = entries;

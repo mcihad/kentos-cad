@@ -12,7 +12,7 @@ mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, RasterEntity, RasterFields};
+use kentos_commands::{Entity, RasterEntity, RasterFields};
 use kentos_domain::Slot;
 use kentos_geometry_core::display::fixed;
 use kentos_native_application::geometry::shape;
@@ -63,8 +63,8 @@ pub struct Ran {
     /// A raster result: its bands, samples, look and grid.
     pub raster: Option<(
         u32,
-        kentos_contracts::RasterSample,
-        kentos_contracts::RasterStyle,
+        kentos_commands::RasterSample,
+        kentos_commands::RasterStyle,
         kentos_raster::grid::Grid,
     )>,
     pub zones: Vec<ZoneFigures>,

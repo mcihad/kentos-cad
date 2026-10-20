@@ -7,7 +7,7 @@
 //! with them, the Bilgi tool, the actions and the dialog's preview fill with
 //! them. The web's is `apps/web/src/model/infoTemplates.ts`.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_expression::rows::As;
 use kentos_expression::template::{self, Template};
 use kentos_expression::{Expr, Schema, Unit, compile_with};

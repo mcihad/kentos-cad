@@ -581,7 +581,7 @@ mod tests {
 
         fn corners(app: &App) -> usize {
             match app.document.as_ref().and_then(|d| d.model.get(Slot(4))) {
-                Some(kentos_contracts::Entity::Polygon(p)) => p.pts.len(),
+                Some(kentos_commands::Entity::Polygon(p)) => p.pts.len(),
                 _ => 0,
             }
         }
@@ -627,7 +627,7 @@ mod tests {
 
         fn first(app: &App) -> (f64, f64, usize) {
             match app.document.as_ref().and_then(|d| d.model.get(Slot(4))) {
-                Some(kentos_contracts::Entity::Polygon(p)) => (p.pts[0].x, p.pts[0].y, p.pts.len()),
+                Some(kentos_commands::Entity::Polygon(p)) => (p.pts[0].x, p.pts[0].y, p.pts.len()),
                 _ => (0.0, 0.0, 0),
             }
         }
@@ -811,7 +811,7 @@ fn screens() {
                         let parcel = kentos_domain::Slot(4);
                         app.selection.set([parcel]);
                         let doc = app.document.as_ref().expect("open");
-                        let Some(kentos_contracts::Entity::Polygon(p)) = doc.model.get(parcel)
+                        let Some(kentos_commands::Entity::Polygon(p)) = doc.model.get(parcel)
                         else {
                             panic!("the parcel");
                         };

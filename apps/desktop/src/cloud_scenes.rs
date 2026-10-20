@@ -15,7 +15,7 @@
 use std::path::PathBuf;
 
 use iced::Point;
-use kentos_contracts::{CloudRender, Entity};
+use kentos_commands::{CloudRender, Entity};
 use kentos_geometry_core::vec2::Vec2;
 use kentos_ui::snapshot::Snapshot;
 
@@ -40,7 +40,7 @@ pub(crate) fn test_cache() {
 pub(crate) fn opened(app: &mut App, bounds: [f64; 4]) {
     test_cache();
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/interaction/v1/pointclouds.kcad");
     let doc = Document::new(snapshot, Some(path)).expect("opens");

@@ -2,7 +2,7 @@
 //! words, lamp and click through a file project's Kaydet, the server cell's
 //! answer, and the account menu's rows with the rights a viewer lacks.
 
-use kentos_contracts::{CONTRACTS_VERSION, Health, ProjectState, ProjectStorage};
+use kentos_commands::{CONTRACTS_VERSION, Health, ProjectState, ProjectStorage};
 
 use crate::app::{App, Message};
 use crate::cloud::cells::{Lamp, Shade};

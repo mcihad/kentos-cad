@@ -9,7 +9,7 @@
 //! time profile (docs/adr/0521): the delays in seconds, a profile as
 //! `07:00-09:30 0,5; 17:00-19:00 hiz_aksam` (a factor or a speed field).
 
-use kentos_contracts::{
+use kentos_commands::{
     JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost, NetworkCostKind,
     NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels, NetworkPeriod,
     NetworkTurns, NetworkUTurns, TurnLayer, clock_text,
@@ -128,7 +128,7 @@ fn joined(list: &[String]) -> String {
 }
 
 /// A clock as typed (the contract's rule).
-pub use kentos_contracts::clock_of;
+pub use kentos_commands::clock_of;
 
 /// A time profile as typed: periods split at semicolons, each `from-to` then a factor or a speed field.
 pub fn periods_of(text: &str) -> Result<Vec<NetworkPeriod>, String> {

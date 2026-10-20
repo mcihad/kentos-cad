@@ -13,7 +13,7 @@
 //!   the name typed next, Sil (S) removes one; the names are the options'
 //!   choices.
 
-use kentos_contracts::{UcsSet, UcsTo, Vec2 as Wire};
+use kentos_commands::{UcsSet, UcsTo, Vec2 as Wire};
 use kentos_native_application::{ExecutionContext, ucs_set};
 
 use kentos_geometry_core::jsmath::{atan2, cos, sin};
@@ -108,7 +108,7 @@ impl UcsTool {
 
     fn see(&mut self, cx: &Context<'_>) {
         let s = cx.doc.settings();
-        let u = s.ucs.unwrap_or(kentos_contracts::Ucs::WORLD);
+        let u = s.ucs.unwrap_or(kentos_commands::Ucs::WORLD);
         self.now = (Vec2::new(u.origin.x, u.origin.y), u.angle);
         self.names = s.named_ucs.iter().map(|n| n.name.clone()).collect();
     }

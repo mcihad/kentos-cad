@@ -4,7 +4,7 @@
 
 use std::time::Instant;
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     Clip, CommandResult, DocumentSnapshotV1, EntitiesCopy, EntitiesPaste, Vec2,
 };
 use kentos_domain::{Document, Slot};

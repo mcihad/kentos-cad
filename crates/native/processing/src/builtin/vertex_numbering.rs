@@ -7,7 +7,7 @@
 
 use std::collections::{BTreeMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, EntityBase, LabelPlacement, LabelStyle, PointEntity, PointStyle, PointSymbol,
     TextEntity,
 };

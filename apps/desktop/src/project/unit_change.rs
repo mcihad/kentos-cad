@@ -7,7 +7,7 @@
 
 use iced::Element;
 use iced::widget::column;
-use kentos_contracts::{CommandResult, DrawingUnit, UnitGeometry, UnitsChange};
+use kentos_commands::{CommandResult, DrawingUnit, UnitGeometry, UnitsChange};
 use kentos_interaction::ground::trimmed;
 use kentos_native_application::units_change;
 use kentos_ui::label;
@@ -150,7 +150,7 @@ pub fn view<'a, M: Clone + 'a>(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{DrawingUnit, Entity, EntityBase, PathEntity, ProjectSettings, Vec2};
+    use kentos_commands::{DrawingUnit, Entity, EntityBase, PathEntity, ProjectSettings, Vec2};
 
     use crate::app::{App, Message};
     use crate::project::{SettingsEvent, settings_message};
@@ -248,7 +248,7 @@ mod tests {
         );
         send(
             &mut app,
-            SettingsEvent::UnitAnswer(Some(kentos_contracts::UnitGeometry::Keep)),
+            SettingsEvent::UnitAnswer(Some(kentos_commands::UnitGeometry::Keep)),
         );
         assert!(app.project.is_none(), "the window closes once saved");
         let doc = app.document.as_ref().expect("a drawing");
@@ -267,7 +267,7 @@ mod tests {
         open_and_change(&mut app, DrawingUnit::M);
         send(
             &mut app,
-            SettingsEvent::UnitAnswer(Some(kentos_contracts::UnitGeometry::Scale)),
+            SettingsEvent::UnitAnswer(Some(kentos_commands::UnitGeometry::Scale)),
         );
         assert_eq!(corner(&app), 4000.0);
         assert!(crate::files_testing::last_said(&app).contains("Proje ayarları kaydedildi"));

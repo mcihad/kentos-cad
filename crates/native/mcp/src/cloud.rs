@@ -15,7 +15,7 @@ use std::task::{Context, Poll, Wake, Waker};
 use std::thread::{self, Thread};
 
 use kentos_cloud::{ApiFailure, CatalogQuery, Cloud};
-use kentos_contracts::{CatalogView, CommandEnvelope};
+use kentos_commands::{CatalogView, CommandEnvelope};
 use kentos_domain::Uuid;
 use serde_json::{Value, json};
 

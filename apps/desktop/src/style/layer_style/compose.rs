@@ -6,7 +6,7 @@
 
 use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Center, Element, Fill};
-use kentos_contracts::{BlendMode, LayerCompose, LayerMask, MAX_MASK_SIZE};
+use kentos_commands::{BlendMode, LayerCompose, LayerMask, MAX_MASK_SIZE};
 use kentos_ui::label;
 use kentos_ui::style;
 use kentos_ui::widget::tree_view::Check;

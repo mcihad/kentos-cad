@@ -12,7 +12,7 @@
 //! one, on an unlocked layer, measuring the point; no place on itself; each
 //! place one its object has.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DimensionEntity, DimensionPoint, DimensionsReassociate,
     DimensionsReassociatePlan, DimensionsReassociated, Entity, EntityId, SubRef, Vec2,
 };
@@ -93,7 +93,7 @@ fn check(doc: &Document, input: &DimensionsReassociate) -> Result<Checked, Stop>
             ));
         }
         if let Some(to) = &b.to
-            && let Some(problem) = kentos_contracts::path_problem(&to.path)
+            && let Some(problem) = kentos_commands::path_problem(&to.path)
         {
             return Err(fail(
                 codes::INVALID_REFS,
@@ -283,8 +283,8 @@ pub fn execute(
 ) -> CommandResult<DimensionsReassociated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE,
-        kentos_contracts::CAD_DIMENSIONS_REASSOCIATE_VERSION,
+        kentos_commands::CAD_DIMENSIONS_REASSOCIATE,
+        kentos_commands::CAD_DIMENSIONS_REASSOCIATE_VERSION,
         input,
         write_execute,
     )

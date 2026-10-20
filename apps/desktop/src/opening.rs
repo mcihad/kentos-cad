@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 use iced::futures::channel::mpsc;
 use iced::widget::{button, column};
 use iced::{Element, Task};
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_kcad::{Code, Sniff, Step};
 use kentos_ui::widget::{Dialog, overlay, progress};
 use kentos_ui::{label, style};

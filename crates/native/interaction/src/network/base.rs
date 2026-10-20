@@ -6,7 +6,7 @@
 //! (Ağlar, G). Questions go to the host's network thread with a ticket; an
 //! answer whose ticket the tool no longer waits for is dropped.
 
-use kentos_contracts::{NetworkCostKind, NetworkDef, NetworkKind};
+use kentos_commands::{NetworkCostKind, NetworkDef, NetworkKind};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::geom::bulge::bulge_path_outline;
 use kentos_geometry_core::ops::network::{Line, Refusal};
@@ -35,7 +35,7 @@ pub const TIMES: [Option<u32>; 7] = [
 
 /// Saat as the prompt says it.
 pub fn time_text(t: Option<u32>) -> String {
-    t.map_or_else(|| "her saat".to_owned(), kentos_contracts::clock_text)
+    t.map_or_else(|| "her saat".to_owned(), kentos_commands::clock_text)
 }
 
 /// The command that opens Ağlar.

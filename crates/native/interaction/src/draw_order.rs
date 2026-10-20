@@ -4,7 +4,7 @@
 //! step named after the tool; the command's refusals (another layer, a locked layer) are said and the tool waits for
 //! another reference.
 
-use kentos_contracts::{CommandResult, EntitiesOrder, OrderTo};
+use kentos_commands::{CommandResult, EntitiesOrder, OrderTo};
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_native_application::{ExecutionContext, entities_order};
 

@@ -8,7 +8,7 @@
 //! the project does not have: nothing is written. The joins with the walls round them follow in the same step (they
 //! are drawn from the walls); what then does not join is said, with what resolves it.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, OpeningEntity, Vec2, WallChange, WallEnd, WallEntity, WallFields, WallJoin, WallJoins,
     WallJustify, WallStyleDef, WallsEdit, WallsEdited, WallsOperation, fixed_width,
 };
@@ -689,7 +689,7 @@ fn check(doc: &Document, input: &WallsEdit) -> Result<Work, Stop> {
     Ok(work)
 }
 
-fn warnings(doc: &Document, work: &Work) -> Vec<kentos_contracts::CommandWarning> {
+fn warnings(doc: &Document, work: &Work) -> Vec<kentos_commands::CommandWarning> {
     let changed: Vec<(Option<Slot>, &WallEntity)> = work
         .updates
         .iter()
@@ -742,8 +742,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &WallsEdit) -> CommandResult<Walls
 pub fn execute(cx: &mut ExecutionContext<'_>, input: WallsEdit) -> CommandResult<WallsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_WALLS_EDIT,
-        kentos_contracts::CAD_WALLS_EDIT_VERSION,
+        kentos_commands::CAD_WALLS_EDIT,
+        kentos_commands::CAD_WALLS_EDIT_VERSION,
         input,
         write_execute,
     )

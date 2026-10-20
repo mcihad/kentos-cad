@@ -4,7 +4,7 @@
 //! with `cad.inserts.clip` (one step “Kırp”); the command keeps the boundary in the definition. Esc and Ctrl+Z take
 //! back the last corner, then the insert; Esc with none leaves.
 
-use kentos_contracts::{ClipBoundary, ClipFrame, Entity, InsertsClip, InsertsClipOperation};
+use kentos_commands::{ClipBoundary, ClipFrame, Entity, InsertsClip, InsertsClipOperation};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::{ExecutionContext, inserts_clip};

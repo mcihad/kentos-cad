@@ -1,12 +1,12 @@
 //! `cad.layers.find` v1 (docs/adr/0311 §4): the layers found by a name
-//! pattern (AutoCAD's `wcmatch`, `kentos_contracts::pattern_matches`) and
+//! pattern (AutoCAD's `wcmatch`, `kentos_commands::pattern_matches`) and
 //! their properties, AutoCAD's layer filters as one query. The Katmanlar
 //! panel's search and its Süzgeç ▾ ask [`find`]; Python and MCP run the
 //! command as it is. It writes nothing. The shared cases are
 //! `fixtures/commands/v1/cad.layers.find.json`
 //! (`scripts/fixtures/layer_find_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LayerFound, LayerNode, LayerNodeType, LayersFind, LayersFound, fold_name,
     layer_color_ok, pattern_matches, pattern_problem,
 };

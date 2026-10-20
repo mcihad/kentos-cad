@@ -7,7 +7,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{BlockId, Entity};
+use kentos_commands::{BlockId, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::ops::data_search::Record;
 use kentos_geometry_core::ops::point_editor::natural_order;

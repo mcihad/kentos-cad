@@ -17,7 +17,7 @@
 //! its own object and undo step “Ekle”): the tool, Python and an agent give
 //! the same points and get the same curve.
 
-use kentos_contracts::{CommandResult, Entity, NurbsBy, NurbsCreate};
+use kentos_commands::{CommandResult, Entity, NurbsBy, NurbsCreate};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;

@@ -499,7 +499,7 @@ pub struct Newest {
     pub(super) box_width: Option<Option<f64>>,
     #[serde(rename = "lineSpacing", default, deserialize_with = "present")]
     pub(super) line_spacing: Option<Option<f64>>,
-    pub(super) runs: Option<Vec<kentos_contracts::TextRun>>,
+    pub(super) runs: Option<Vec<kentos_commands::TextRun>>,
     /// Its own symbol, colour and line weight, `null` none; its layer's
     /// name (docs/adr/0176 §3). Exact; absent, not compared.
     #[serde(default, deserialize_with = "present")]
@@ -511,8 +511,8 @@ pub struct Newest {
     pub(super) layer: Option<String>,
     /// A text's style and face, a dimension's style and look, as the contract
     /// writes them (`{}` none; docs/adr/0183). Exact; absent, not compared.
-    pub(super) face: Option<kentos_contracts::TextFace>,
-    pub(super) look: Option<kentos_contracts::DimensionLook>,
+    pub(super) face: Option<kentos_commands::TextFace>,
+    pub(super) look: Option<kentos_commands::DimensionLook>,
     /// A table's cells and look (docs/adr/0184); absent, not compared.
     pub(super) table: Option<TableExpect>,
     /// A hatch's pattern (docs/adr/0186): its kind, a pattern's name, a
@@ -544,7 +544,7 @@ pub struct TableExpect {
     pub(super) cells: Option<Vec<Vec<String>>>,
     pub(super) rows: Option<Vec<f64>>,
     pub(super) columns: Option<Vec<f64>>,
-    pub(super) merges: Option<Vec<kentos_contracts::CellRange>>,
+    pub(super) merges: Option<Vec<kentos_commands::CellRange>>,
     #[serde(default, deserialize_with = "present")]
     pub(super) aligns: Option<Option<Vec<String>>>,
     pub(super) header: Option<bool>,

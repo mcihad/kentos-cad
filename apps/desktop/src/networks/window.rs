@@ -11,7 +11,7 @@
 
 use iced::widget::{Column, Space, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDefine,
     NetworkDefineOperation, NetworkKind, NetworkUTurns, networks_problem, next_network_id,
 };
@@ -355,13 +355,13 @@ impl App {
             |input: NetworkDefine, doc: &mut kentos_domain::Document| -> Result<(), String> {
                 let mut cx = kentos_native_application::ExecutionContext::new(doc);
                 match kentos_native_application::network_define::execute(&mut cx, input) {
-                    kentos_contracts::CommandResult::Completed { warnings, .. } => {
+                    kentos_commands::CommandResult::Completed { warnings, .. } => {
                         said.extend(warnings.into_iter().map(|w| w.message));
                         Ok(())
                     }
-                    kentos_contracts::CommandResult::Failed { error }
-                    | kentos_contracts::CommandResult::Conflict { error }
-                    | kentos_contracts::CommandResult::NeedsInput { error } => Err(error.message),
+                    kentos_commands::CommandResult::Failed { error }
+                    | kentos_commands::CommandResult::Conflict { error }
+                    | kentos_commands::CommandResult::NeedsInput { error } => Err(error.message),
                     _ => Err("Ağ yazılamadı.".into()),
                 }
             };
@@ -603,7 +603,7 @@ impl App {
                 tool(
                     "plus",
                     ADD,
-                    (w.forms.len() < kentos_contracts::NETWORK_LIMIT).then(|| msg(Event::Add))
+                    (w.forms.len() < kentos_commands::NETWORK_LIMIT).then(|| msg(Event::Add))
                 ),
                 tool("erase", REMOVE, w.chosen.map(|_| msg(Event::Remove)))
             ]
@@ -787,7 +787,7 @@ impl App {
             Some(small(
                 "plus",
                 "Katman ekle",
-                (f.edges.len() < kentos_contracts::NETWORK_LAYER_LIMIT)
+                (f.edges.len() < kentos_commands::NETWORK_LAYER_LIMIT)
                     .then(|| msg(Event::EdgeAdd)),
             )),
         ));
@@ -818,7 +818,7 @@ impl App {
             Some(small(
                 "plus",
                 "Katman ekle",
-                (f.junctions.len() < kentos_contracts::NETWORK_LAYER_LIMIT)
+                (f.junctions.len() < kentos_commands::NETWORK_LAYER_LIMIT)
                     .then(|| msg(Event::JunctionAdd)),
             )),
         ));
@@ -910,7 +910,7 @@ impl App {
             Some(small(
                 "plus",
                 "Maliyet ekle",
-                (f.costs.len() < kentos_contracts::NETWORK_COST_LIMIT).then(|| msg(Event::CostAdd)),
+                (f.costs.len() < kentos_commands::NETWORK_COST_LIMIT).then(|| msg(Event::CostAdd)),
             )),
         ));
         for (i, c) in f.costs.iter().enumerate() {
@@ -979,7 +979,7 @@ impl App {
                 small(
                     "plus",
                     "Dönüş katmanı ekle",
-                    (f.turn_layers.len() < kentos_contracts::NETWORK_TURN_LAYER_LIMIT)
+                    (f.turn_layers.len() < kentos_commands::NETWORK_TURN_LAYER_LIMIT)
                         .then(|| msg(Event::TurnAdd)),
                 )
             }),
@@ -1230,8 +1230,8 @@ fn def_shell(id: &str) -> NetworkDef {
         edges: Vec::new(),
         junctions: Vec::new(),
         connect: NetworkConnect::Ends,
-        tolerance: kentos_contracts::NETWORK_TOLERANCE,
-        direction: kentos_contracts::NetworkDirection::Both,
+        tolerance: kentos_commands::NETWORK_TOLERANCE,
+        direction: kentos_commands::NetworkDirection::Both,
         costs: Vec::new(),
         closed: None,
         turns: None,

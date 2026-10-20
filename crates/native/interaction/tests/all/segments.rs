@@ -4,7 +4,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{EntitiesVertex, Entity, SubPlace, VertexAction};
+use kentos_commands::{EntitiesVertex, Entity, SubPlace, VertexAction};
 use kentos_interaction::segment_edit::{Ask, SegmentEdit};
 use kentos_interaction::{Level, Vec2};
 
@@ -14,14 +14,14 @@ fn near(a: f64, b: f64) -> bool {
     (a - b).abs() < 1e-9
 }
 
-fn newest(b: &Bench) -> kentos_contracts::PathEntity {
+fn newest(b: &Bench) -> kentos_commands::PathEntity {
     let Entity::Polyline(path) = b.newest() else {
         panic!("a polyline, not {:?}", b.newest());
     };
     path.clone()
 }
 
-fn pts(p: &kentos_contracts::PathEntity) -> Vec<[f64; 2]> {
+fn pts(p: &kentos_commands::PathEntity) -> Vec<[f64; 2]> {
     p.pts.iter().map(|q| rel(*q)).collect()
 }
 

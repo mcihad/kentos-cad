@@ -4,7 +4,7 @@
 
 use std::fmt;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Document as Model;
 use kentos_geometry_core::ops::edgematch::{Meet, Method};
 

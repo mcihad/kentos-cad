@@ -7,7 +7,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{button, container, mouse_area, row, space, text_input};
 use iced::{Center, Color, Element, Fill, Length, Theme};
-use kentos_contracts::{LayerField, LayerFieldKind, check_value};
+use kentos_commands::{LayerField, LayerFieldKind, check_value};
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::label;
 use kentos_ui::style;
@@ -57,7 +57,7 @@ const BAR_ONE_ROW: f32 = 1370.0;
 fn choices_of(
     f: &LayerField,
     value: &str,
-    offered: Vec<kentos_contracts::FieldChoice>,
+    offered: Vec<kentos_commands::FieldChoice>,
 ) -> (Vec<Choice>, Vec<String>, Option<usize>) {
     let pairs: Vec<(String, String)> = match &f.values {
         // A retired value only for the record holding it (docs/adr/0418), narrowed to the record's
@@ -331,7 +331,7 @@ impl App {
         let slots = rows.slots.clone();
         let count = shown.len();
         // Koşullu biçim (docs/adr/0413 §4): each object's cells' looks, the Tür column the row's.
-        let looks: Vec<Vec<kentos_contracts::CellLook>> = if rows.styles.is_empty() {
+        let looks: Vec<Vec<kentos_commands::CellLook>> = if rows.styles.is_empty() {
             Vec::new()
         } else {
             (0..rows.slots.len())
@@ -382,7 +382,7 @@ impl App {
                                 .unwrap_or_default();
                             let offered = model.get(slot).map_or_else(Vec::new, |e| {
                                 let node = model.layers().get(&e.base().layer_id);
-                                kentos_contracts::offered_on(
+                                kentos_commands::offered_on(
                                     node.and_then(|n| n.subtypes.as_ref()),
                                     node.map_or(&[][..], |n| n.contingents.as_slice()),
                                     node.map_or(&[][..], |n| n.fields.as_slice()),
@@ -610,7 +610,7 @@ pub(crate) fn readable_on(background: Color) -> Color {
 fn styled_cell<'a>(
     value: &str,
     face: Face,
-    look: kentos_contracts::CellLook,
+    look: kentos_commands::CellLook,
     row_background: Option<String>,
 ) -> Element<'a, Message> {
     let own = look

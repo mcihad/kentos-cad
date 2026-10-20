@@ -1375,17 +1375,17 @@ impl crate::app::App {
         let above = 4.0 * kentos_geometry_core::geom::space::LABEL_MM * model.settings().plot_scale / 1000.0;
         for slot in model.lost_spaces() {
             match model.get(slot) {
-                Some(kentos_contracts::Entity::Space(s)) => {
+                Some(kentos_commands::Entity::Space(s)) => {
                     if let Some(p) = kentos_native_application::spaces::label_point(&s.space.parts) {
                         out.push(Vec2::new(p.x, p.y + above));
                     }
                 }
                 // A column whose grid is gone (docs/adr/0343 §3), at its centre.
-                Some(kentos_contracts::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
+                Some(kentos_commands::Entity::Column(c)) => out.push(Vec2::new(c.column.at.x, c.column.at.y)),
                 // A tag whose object is gone (docs/adr/0344 §1), above its middle.
-                Some(kentos_contracts::Entity::Tag(t)) => out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above)),
+                Some(kentos_commands::Entity::Tag(t)) => out.push(Vec2::new(t.tag.at.x, t.tag.at.y + above)),
                 // A view mark whose target is gone (docs/adr/0345 §2), above its first point.
-                Some(kentos_contracts::Entity::ViewMark(m)) => {
+                Some(kentos_commands::Entity::ViewMark(m)) => {
                     if let Some(p) = m.mark.points.first() {
                         out.push(Vec2::new(p.x, p.y + above));
                     }
@@ -1394,7 +1394,7 @@ impl crate::app::App {
             }
         }
         for slot in model.broken_dimensions() {
-            let Some(kentos_contracts::Entity::Dimension(d)) = model.get(slot) else {
+            let Some(kentos_commands::Entity::Dimension(d)) = model.get(slot) else {
                 continue;
             };
             let Some(refs) = &d.refs else { continue };

@@ -11,7 +11,7 @@ pub mod tools;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     DatasetDim, Entity, PathEntity, RasterDataset, RasterEntity, RasterFields, Workspace,
 };
 use kentos_geometry_core::entity::Shape;
@@ -164,7 +164,7 @@ pub fn run_profile(
                         pts: p
                             .points
                             .iter()
-                            .map(|q| kentos_contracts::Vec2 { x: q[0], y: q[1] })
+                            .map(|q| kentos_commands::Vec2 { x: q[0], y: q[1] })
                             .collect(),
                         bulges: None,
                         holes: None,
@@ -342,7 +342,7 @@ pub fn run_calc(r: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feed
                     .collect();
                 let follow = dataset.follow_time && dims.iter().any(|d| d.time);
                 let mut style = raster.raster.style.clone();
-                style.stretch = kentos_contracts::RasterStretch::MinMax;
+                style.stretch = kentos_commands::RasterStretch::MinMax;
                 style.min = None;
                 style.max = None;
                 Entity::Raster(RasterEntity {
@@ -351,7 +351,7 @@ pub fn run_calc(r: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feed
                         file: Some(path.clone()),
                         asset: None,
                         url: None,
-                        sample: kentos_contracts::RasterSample::F32,
+                        sample: kentos_commands::RasterSample::F32,
                         opacity: raster.raster.opacity,
                         style,
                         dataset: Some(RasterDataset {

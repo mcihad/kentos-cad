@@ -9,7 +9,7 @@
 
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     TOPOLOGY_TOLERANCE, TopologyRule, TopologyRuleKind, TopologySettings, TopologyValue,
 };
 use kentos_geometry_core::ops::topology_rules::Kind;

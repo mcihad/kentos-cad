@@ -25,7 +25,7 @@ pub mod subtypes;
 pub mod table_styles;
 
 use iced::Task;
-use kentos_contracts::{LayerField, ProjectForm};
+use kentos_commands::{LayerField, ProjectForm};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 

@@ -15,7 +15,7 @@
 //! and the hole check are the shared core's (`nearest_segment`, `place_at`,
 //! `near_hole`).
 
-use kentos_contracts::{EntitiesVertex, Entity, SubPlace, VertexAction};
+use kentos_commands::{EntitiesVertex, Entity, SubPlace, VertexAction};
 use kentos_domain::Document;
 use kentos_domain::dimension_ties::contract_place;
 use kentos_geometry_core::geom::intersect::closest_on_edge;

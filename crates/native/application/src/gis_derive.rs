@@ -17,9 +17,9 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
 
-use kentos_contracts::canonical::canonical_json;
-use kentos_contracts::encoding::sha256_hex;
-use kentos_contracts::{
+use kentos_commands::canonical::canonical_json;
+use kentos_commands::encoding::sha256_hex;
+use kentos_commands::{
     DERIVATION_DIGEST, DERIVATION_FORMAT, DERIVATION_LIMIT_DEFAULT, DERIVATION_LIMIT_MAX,
     DERIVATION_STANDARD, DerivationEntry, DerivationLayer, DerivationRecord, DerivationSource,
     DerivationStatus, DerivationTable, Entity, GisAnnotations, GisDerived, GisLeft,
@@ -80,7 +80,7 @@ pub enum Outcome {
     },
 }
 
-fn cv(p: &kentos_contracts::Vec2) -> CorePoint {
+fn cv(p: &kentos_commands::Vec2) -> CorePoint {
     CorePoint::new(p.x, p.y)
 }
 
@@ -99,7 +99,7 @@ fn lerp(a: Option<f64>, b: Option<f64>, f: f64) -> Option<f64> {
     }
 }
 
-fn coord(p: &kentos_contracts::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
+fn coord(p: &kentos_commands::Vec2, z: Option<f64>, m: Option<f64>) -> Coord {
     Coord {
         x: p.x,
         y: p.y,
@@ -115,7 +115,7 @@ fn core_coord(p: CorePoint) -> Coord {
 /// A path as coordinates, its arcs chords, Z and M taken along each edge; a closed path's ring does not repeat its
 /// first point. The deviation is the farthest any chord comes from its arc.
 fn path(
-    pts: &[kentos_contracts::Vec2],
+    pts: &[kentos_commands::Vec2],
     bulges: Option<&Vec<f64>>,
     zs: &Option<Vec<Option<f64>>>,
     ms: &Option<Vec<Option<f64>>>,
@@ -152,10 +152,10 @@ fn closed_line(mut coords: Vec<Coord>) -> Curve {
 
 /// An area's outer ring and holes as closed lines.
 fn rings(
-    pts: &[kentos_contracts::Vec2],
+    pts: &[kentos_commands::Vec2],
     bulges: Option<&Vec<f64>>,
     zs: &Option<Vec<Option<f64>>>,
-    holes: Option<&Vec<kentos_contracts::RingGeometry>>,
+    holes: Option<&Vec<kentos_commands::RingGeometry>>,
     tol: f64,
 ) -> (Vec<Curve>, f64) {
     let (outer, mut dev) = path(pts, bulges, zs, &None, true, tol);
@@ -274,7 +274,7 @@ pub fn derive_entity(doc: &Document, e: &Entity, o: &Options) -> Outcome {
             false,
         ),
         Entity::Polyline(p) => {
-            let one = |pts: &[kentos_contracts::Vec2],
+            let one = |pts: &[kentos_commands::Vec2],
                        bulges: Option<&Vec<f64>>,
                        zs: &Option<Vec<Option<f64>>>,
                        ms: &Option<Vec<Option<f64>>>,
@@ -1014,7 +1014,7 @@ pub fn check(doc: &Document, path: &Path, limit: Option<u32>) -> Result<GisDeriv
         .unwrap_or(DERIVATION_LIMIT_DEFAULT)
         .min(DERIVATION_LIMIT_MAX) as usize;
     let (bytes, sha256) = std::fs::File::open(path)
-        .and_then(|f| kentos_contracts::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
+        .and_then(|f| kentos_commands::encoding::sha256_reader_hex(std::io::BufReader::new(f)))
         .map_err(|e| {
             (
                 "import_unreadable",

@@ -14,7 +14,7 @@
 //! command carries elevations by where the vertices lie (docs/adr/0142). The
 //! geometry is the shared core's (`ops::holes`); none is computed here.
 
-use kentos_contracts::{EditOperation, Entity, EntityEdit};
+use kentos_commands::{EditOperation, Entity, EntityEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::{Shape, area_parts, polygon_ring};
 use kentos_geometry_core::geom::arrangement::Ring;

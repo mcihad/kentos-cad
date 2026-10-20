@@ -31,7 +31,7 @@ const DRAWING: &str = include_str!("../../../fixtures/interaction/v1/attachments
 /// The drawing beside its linked deed, the view around the block.
 pub(crate) fn opened(app: &mut App) {
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
+        kentos_commands::DocumentSnapshotV1::from_json(DRAWING).expect("the drawing reads");
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/interaction/v1/attachments.kcad");
     let doc = Document::new(snapshot, Some(path)).expect("opens");

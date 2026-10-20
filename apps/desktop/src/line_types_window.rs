@@ -6,7 +6,7 @@
 use iced::widget::canvas::{self, Frame, Geometry, Path, Stroke};
 use iced::widget::{Canvas, Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Point, Rectangle, Renderer, Task, Theme, mouse};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, LineTypeDef, LineTypesEdit, LineTypesEdited, LineTypesOperation, PatternUnit,
 };
 use kentos_interaction::Level;
@@ -339,7 +339,7 @@ impl App {
             (
                 s.plot_scale,
                 s.drawing_unit
-                    .unwrap_or(kentos_contracts::DrawingUnit::M)
+                    .unwrap_or(kentos_commands::DrawingUnit::M)
                     .metres(),
             )
         });
@@ -407,7 +407,7 @@ impl App {
                 IMPACT,
                 w.chosen.clone().map(|name| {
                     Message::StyleImpact(crate::style_impact::Event::Open(
-                        kentos_contracts::ImpactTarget::LineType,
+                        kentos_commands::ImpactTarget::LineType,
                         name,
                     ))
                 }),

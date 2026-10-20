@@ -8,7 +8,7 @@ use super::tests::{count, run, send};
 use super::{Event, Window};
 use crate::app::App;
 use crate::files_testing::app_with_drawing;
-use kentos_contracts::SourceTable;
+use kentos_commands::SourceTable;
 
 fn window(app: &App) -> &State {
     match &app.exchange {

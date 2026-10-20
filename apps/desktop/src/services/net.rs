@@ -12,7 +12,7 @@ use std::sync::atomic::Ordering;
 use std::sync::{Arc, PoisonError};
 
 use kentos_cloud::fetch::{self, Failure, Method, Response};
-use kentos_contracts::ServiceKind;
+use kentos_commands::ServiceKind;
 use kentos_render_wgpu::styled::ServiceTile;
 use kentos_services::{auth, google, query, source};
 
@@ -166,8 +166,8 @@ fn tile_request(
 pub(crate) fn send(
     req: kentos_services::request::Request,
     conn: Option<(
-        &kentos_contracts::ServiceConnection,
-        Option<&kentos_contracts::ConnectionSecret>,
+        &kentos_commands::ServiceConnection,
+        Option<&kentos_commands::ConnectionSecret>,
     )>,
     referer: &str,
     per_host: usize,
@@ -213,8 +213,8 @@ pub(crate) fn send(
 pub(crate) fn send_text(
     req: kentos_services::request::Request,
     conn: Option<(
-        &kentos_contracts::ServiceConnection,
-        Option<&kentos_contracts::ConnectionSecret>,
+        &kentos_commands::ServiceConnection,
+        Option<&kentos_commands::ConnectionSecret>,
     )>,
     referer: &str,
     per_host: usize,
@@ -227,8 +227,8 @@ pub(crate) fn send_text(
 pub(crate) fn ask_with(
     req: kentos_services::request::Request,
     conn: Option<(
-        &kentos_contracts::ServiceConnection,
-        Option<&kentos_contracts::ConnectionSecret>,
+        &kentos_commands::ServiceConnection,
+        Option<&kentos_commands::ConnectionSecret>,
     )>,
     referer: &str,
     per_host: usize,
@@ -576,7 +576,7 @@ pub(super) fn name_of(entry: &Entry) -> String {
         .map(|p| p.name.clone())
         .unwrap_or_else(|| {
             let url = &entry.service.url;
-            kentos_contracts::origin_of(url)
+            kentos_commands::origin_of(url)
                 .unwrap_or_else(|| entry.service.kind.label().to_owned())
         })
 }

@@ -10,7 +10,7 @@ use std::fmt;
 
 use iced::widget::{Id, column, container, row, space, text, text_input};
 use iced::{Center, Color, Element, Fill, Task};
-use kentos_contracts::{Entity, LayerNode, LayerNodeType};
+use kentos_commands::{Entity, LayerNode, LayerNodeType};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::point_editor::Keep;
 use kentos_geometry_core::tools::point_text::js_trim;

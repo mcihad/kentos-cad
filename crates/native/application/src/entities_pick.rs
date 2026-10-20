@@ -5,7 +5,7 @@
 //! the same. It writes nothing. The shared cases are `fixtures/commands/v1/cad.entities.pick.json`
 //! (`scripts/fixtures/entities_pick_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EntitiesPick, EntitiesPicked, EntitiesSelect, Entity, PickedEntity, SelectRegion,
 };
 use kentos_domain::dimension_ties::{contract_place, core_blocks};

@@ -9,7 +9,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::json;
 

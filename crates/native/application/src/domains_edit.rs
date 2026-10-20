@@ -7,7 +7,7 @@
 use std::cmp::Ordering;
 use std::collections::{BTreeMap, BTreeSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, DomainField, DomainsEdit, DomainsEdited, DomainsOp, Entity,
     FieldDomain, LayerField, LayerNodeType, MULTIPLE_JOIN, compare_decimals, domain_id_of,
     domain_uses, domains_problem, follow_domains, link_problem,
@@ -100,7 +100,7 @@ fn codes_in<'a>(field: &LayerField, value: &'a str) -> Vec<&'a str> {
 fn misfits(
     doc: &Document,
     uses: &[(String, String)],
-    list: &[kentos_contracts::FieldChoice],
+    list: &[kentos_commands::FieldChoice],
     recode: &BTreeMap<String, String>,
 ) -> (usize, BTreeSet<String>) {
     let mut n = 0;
@@ -640,8 +640,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &DomainsEdit) -> CommandResult<Dom
 pub fn execute(cx: &mut ExecutionContext<'_>, input: DomainsEdit) -> CommandResult<DomainsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_DOMAINS_EDIT,
-        kentos_contracts::CAD_DOMAINS_EDIT_VERSION,
+        kentos_commands::CAD_DOMAINS_EDIT,
+        kentos_commands::CAD_DOMAINS_EDIT_VERSION,
         input,
         write_execute,
     )

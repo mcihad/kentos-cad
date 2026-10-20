@@ -11,7 +11,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     ArrayEdit, ArrayItem, ArrayLayout, ArraysEdit, AssocArray, CommandError, CommandResult,
     EntitiesEditPlan, EntitiesEdited, Entity, EntityId, InsertEntity,
 };
@@ -69,8 +69,8 @@ pub fn plan_in(doc: &Document, input: &ArraysEdit) -> CommandResult<EntitiesEdit
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ArraysEdit) -> CommandResult<EntitiesEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ARRAYS_EDIT,
-        kentos_contracts::CAD_ARRAYS_EDIT_VERSION,
+        kentos_commands::CAD_ARRAYS_EDIT,
+        kentos_commands::CAD_ARRAYS_EDIT_VERSION,
         input,
         write_execute,
     )

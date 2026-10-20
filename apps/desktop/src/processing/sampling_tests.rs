@@ -2,7 +2,7 @@
 //! shared drawing (fixtures/processing/v1/sampling.kcad): every shared case
 //! run from the window as a user fills it, and the pictures for the owner.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use kentos_domain::Slot;
 use serde_json::Value;
 

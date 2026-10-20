@@ -80,7 +80,7 @@ pub fn postgis() -> Option<&'static dyn TableProvider> {
     POSTGIS.get().map(|b| b.as_ref())
 }
 
-pub use kentos_contracts::{address_problem, is_database};
+pub use kentos_commands::{address_problem, is_database};
 
 #[cfg(test)]
 mod tests {

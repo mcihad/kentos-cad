@@ -16,7 +16,7 @@
 //! method; the tool leaves, the selection stays. Nothing that would not
 //! move is written.
 
-use kentos_contracts::{ArrangeMode, Transform};
+use kentos_commands::{ArrangeMode, Transform};
 use kentos_domain::Slot;
 use kentos_geometry_core::block::Blocks;
 use kentos_geometry_core::geom::affine::translation;

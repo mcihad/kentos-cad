@@ -15,7 +15,7 @@ use iced::widget::canvas::{self, LineDash, Path, Stroke};
 use iced::widget::{Space, canvas as canvas_widget, column, container, row, stack, text};
 use iced::{Color, Element, Fill, Point, Rectangle, Renderer, Theme, Vector, border, mouse};
 
-use kentos_contracts::DrawingFont;
+use kentos_commands::DrawingFont;
 use kentos_interaction::{MarkerShape, Preview, Tone, Vec2};
 use kentos_render_wgpu::Camera;
 use kentos_ui::theme::{Tokens, typography};
@@ -673,7 +673,7 @@ fn screens() {
                 let text = std::fs::read_to_string(crate::traces::folder().join(&trace.document))
                     .expect("the drawing");
                 let doc = crate::document::Document::new(
-                    kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads"),
+                    kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads"),
                     None,
                 )
                 .expect("opens");

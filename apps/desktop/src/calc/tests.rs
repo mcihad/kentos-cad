@@ -1,7 +1,7 @@
 //! The Hesap windows through the app: what they compute, what they write,
 //! the tables and Çizimden (docs/adr/0070, 0071); and their pictures.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 
 use super::*;
 use crate::files_testing::{app_with_drawing, last_said};
@@ -206,7 +206,7 @@ fn a_closed_traverse_closes_and_adds_its_points_in_one_step() {
                 .to_owned()
         )]
     );
-    settings.survey = Some(kentos_contracts::SurveySettings {
+    settings.survey = Some(kentos_commands::SurveySettings {
         traverse_angle: Some(30.0 * std::f64::consts::PI / 2_000_000.0),
         traverse_coord: Some(0.01),
         ..Default::default()
@@ -399,7 +399,7 @@ fn screens() {
                 if name.ends_with("-zemin") {
                     let doc = app.document.as_mut().expect("open");
                     let mut settings = doc.settings().clone();
-                    settings.survey = Some(kentos_contracts::SurveySettings {
+                    settings.survey = Some(kentos_commands::SurveySettings {
                         ground_height: Some(850.0),
                         reduce_to_grid: Some(true),
                         ..Default::default()
@@ -416,7 +416,7 @@ fn screens() {
                         if name == "hesap-poligon-tolerans" {
                             let doc = app.document.as_mut().expect("open");
                             let mut settings = doc.settings().clone();
-                            settings.survey = Some(kentos_contracts::SurveySettings {
+                            settings.survey = Some(kentos_commands::SurveySettings {
                                 traverse_angle: Some(6.0 * std::f64::consts::PI / 2_000_000.0),
                                 traverse_coord: Some(0.01),
                                 ..Default::default()
@@ -533,7 +533,7 @@ fn the_survey_windows_take_lengths_to_the_grid() {
     let mut app = app_with_drawing();
     let doc = app.document.as_mut().expect("open");
     let mut settings = doc.settings().clone();
-    settings.survey = Some(kentos_contracts::SurveySettings {
+    settings.survey = Some(kentos_commands::SurveySettings {
         ground_height: Some(850.0),
         reduce_to_grid: Some(true),
         ..Default::default()
@@ -635,7 +635,7 @@ fn the_survey_windows_take_lengths_to_the_grid() {
 
     // Without the switch the lengths are the grid's already.
     let doc = app.document.as_mut().expect("open");
-    settings.survey = Some(kentos_contracts::SurveySettings {
+    settings.survey = Some(kentos_commands::SurveySettings {
         ground_height: Some(850.0),
         ..Default::default()
     });

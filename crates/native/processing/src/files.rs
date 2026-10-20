@@ -7,7 +7,7 @@
 //! source; a host without files (a test, the headless server) gives none,
 //! and such a tool refuses, saying why.
 
-use kentos_contracts::{CloudSource, RasterFields};
+use kentos_commands::{CloudSource, RasterFields};
 use kentos_formats::raster::source::{BlockNeed, Reader};
 use kentos_pointcloud::ops::convert::Input;
 

@@ -2,7 +2,7 @@
 //! show: deletes inside an open transaction join it, one undo step for all,
 //! and the undo brings the objects back with their ids, in their places.
 
-use kentos_domain::contracts::{CommandResult, DocumentSnapshotV1, EntitiesDelete};
+use kentos_commands::{CommandResult, DocumentSnapshotV1, EntitiesDelete};
 use kentos_domain::{Document, Slot};
 use kentos_native_application::{ExecutionContext, delete};
 use serde_json::Value;

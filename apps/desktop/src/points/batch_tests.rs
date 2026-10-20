@@ -38,18 +38,18 @@ fn drawing(file: &Value) -> kentos_domain::Document {
         "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": "cizim", "entities": file["objects"],
         "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string())
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string())
         .expect("the drawing");
     kentos_domain::Document::from_snapshot(snapshot).expect("opens")
 }
 
 /// An object as the cases compare it: its kind, layer, label and attributes,
 /// and a point's place and elevation.
-fn view(e: &kentos_contracts::Entity) -> Value {
+fn view(e: &kentos_commands::Entity) -> Value {
     let b = e.base();
     let mut v =
         json!({ "kind": e.kind(), "layerId": b.layer_id, "label": b.label, "attrs": b.attrs });
-    if let kentos_contracts::Entity::Point(p) = e {
+    if let kentos_commands::Entity::Point(p) = e {
         v["at"] = json!([p.p.x, p.p.y]);
         v["z"] = json!(p.z);
     }
@@ -128,9 +128,9 @@ fn the_selected_rows_in_the_tables_order_or_every_row() {
 }
 
 /// An object with line work's paths too (dedupe.json's view).
-fn seen(e: &kentos_contracts::Entity) -> Value {
+fn seen(e: &kentos_commands::Entity) -> Value {
     let mut v = view(e);
-    if !matches!(e, kentos_contracts::Entity::Point(_)) {
+    if !matches!(e, kentos_commands::Entity::Point(_)) {
         v["paths"] = kentos_native_application::elevation::paths(e)
             .iter()
             .map(|p| json!({ "pts": p.pts.iter().map(|q| [q.x, q.y]).collect::<Vec<_>>(), "zs": p.zs }))

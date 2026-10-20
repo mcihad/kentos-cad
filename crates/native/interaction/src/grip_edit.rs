@@ -9,7 +9,7 @@
 //! geometry, a copy as a new object), the others through `cad.entities.transform` of the selection, in place or as
 //! copies. The geometry is the shared core's (`move_grip`, the affine transforms).
 
-use kentos_contracts::Transform;
+use kentos_commands::Transform;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::{Entity as CoreEntity, area_parts};
 use kentos_geometry_core::geom::affine::{Affine, mirror, rotation, scaling, translation};
@@ -79,11 +79,11 @@ pub fn texts_word(mirrored: bool) -> &'static str {
 }
 
 /// Aynala's Yazılar as the command takes it (docs/adr/0292).
-pub fn mirror_text(mirrored: bool) -> kentos_contracts::MirrorText {
+pub fn mirror_text(mirrored: bool) -> kentos_commands::MirrorText {
     if mirrored {
-        kentos_contracts::MirrorText::Mirrored
+        kentos_commands::MirrorText::Mirrored
     } else {
-        kentos_contracts::MirrorText::Readable
+        kentos_commands::MirrorText::Readable
     }
 }
 
@@ -397,7 +397,7 @@ pub fn stretched(
     grips: &[HotGrip],
     dx: f64,
     dy: f64,
-) -> Vec<(Slot, kentos_contracts::Entity, kentos_contracts::Entity)> {
+) -> Vec<(Slot, kentos_commands::Entity, kentos_commands::Entity)> {
     let mut slots: Vec<Slot> = Vec::new();
     for g in grips {
         if !slots.contains(&g.slot) {

@@ -9,7 +9,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{Entity, TextEntity, Vec2};
+use kentos_commands::{Entity, TextEntity, Vec2};
 use kentos_domain::Slot;
 use serde_json::json;
 

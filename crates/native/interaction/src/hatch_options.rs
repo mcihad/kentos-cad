@@ -5,7 +5,7 @@
 //! and the pattern are the core's (`tools::hatch`); the web's are
 //! `tools/hatchOptions.ts`.
 
-use kentos_contracts::HatchPattern;
+use kentos_commands::HatchPattern;
 use kentos_geometry_core::tools::hatch::{
     COLOURS, Choice, Kind, Options, choice_named, choices, colour_of, pattern_of,
 };
@@ -35,20 +35,20 @@ pub enum Asking {
 }
 
 /// Sıra's choices (docs/adr/0332 §1), `Memory::hatch_order`'s order: their words and the command's.
-pub const ORDERS: [(&str, kentos_contracts::HatchDrawOrder); 5] = [
-    ("atama", kentos_contracts::HatchDrawOrder::None),
-    ("arkaya", kentos_contracts::HatchDrawOrder::Back),
-    ("öne", kentos_contracts::HatchDrawOrder::Front),
-    ("sınırın arkasına", kentos_contracts::HatchDrawOrder::BehindBoundary),
-    ("sınırın önüne", kentos_contracts::HatchDrawOrder::AboveBoundary),
+pub const ORDERS: [(&str, kentos_commands::HatchDrawOrder); 5] = [
+    ("atama", kentos_commands::HatchDrawOrder::None),
+    ("arkaya", kentos_commands::HatchDrawOrder::Back),
+    ("öne", kentos_commands::HatchDrawOrder::Front),
+    ("sınırın arkasına", kentos_commands::HatchDrawOrder::BehindBoundary),
+    ("sınırın önüne", kentos_commands::HatchDrawOrder::AboveBoundary),
 ];
 
 /// The next hatches' Saydamlık and Sıra as the command takes them.
-pub fn look_of(m: &Memory) -> (Option<f64>, Option<kentos_contracts::HatchDrawOrder>) {
+pub fn look_of(m: &Memory) -> (Option<f64>, Option<kentos_commands::HatchDrawOrder>) {
     let order = ORDERS[usize::from(m.hatch_order.min(4))].1;
     (
         (m.hatch_transparency > 0.0).then_some(m.hatch_transparency),
-        (order != kentos_contracts::HatchDrawOrder::None).then_some(order),
+        (order != kentos_commands::HatchDrawOrder::None).then_some(order),
     )
 }
 
@@ -84,8 +84,8 @@ pub fn lined(m: &Memory, user: &[String]) -> bool {
 }
 
 /// Başlangıç as the command takes it.
-pub fn origin_spec(m: &Memory) -> Option<kentos_contracts::HatchOrigin> {
-    use kentos_contracts::{BoxCorner as C, HatchOrigin as O};
+pub fn origin_spec(m: &Memory) -> Option<kentos_commands::HatchOrigin> {
+    use kentos_commands::{BoxCorner as C, HatchOrigin as O};
     let corner = |corner| O::Corner {
         corner,
         across: m.hatch_origin_across,
@@ -97,15 +97,15 @@ pub fn origin_spec(m: &Memory) -> Option<kentos_contracts::HatchOrigin> {
         4 => Some(corner(C::TopRight)),
         5 => Some(corner(C::Center)),
         6 => m.hatch_origin_at.map(|p| O::Point {
-            at: kentos_contracts::Vec2 { x: p.x, y: p.y },
+            at: kentos_commands::Vec2 { x: p.x, y: p.y },
         }),
         _ => None,
     }
 }
 
 /// How the islands are taken as Adalar says (docs/adr/0329 §1): taranmaz is Dış, iç içe Normal, taranır Yok say.
-pub fn island_style(m: &Memory) -> Option<kentos_contracts::IslandStyle> {
-    (m.hatch_islands && m.hatch_nested).then_some(kentos_contracts::IslandStyle::Normal)
+pub fn island_style(m: &Memory) -> Option<kentos_commands::IslandStyle> {
+    (m.hatch_islands && m.hatch_nested).then_some(kentos_commands::IslandStyle::Normal)
 }
 
 /// Adalar's word.
@@ -142,15 +142,15 @@ pub fn colour_text(m: &Memory) -> String {
 
 /// The pattern as Tarama's command takes it (docs/adr/0254 §7): the
 /// session's choice by its name, and its options.
-pub fn spec(m: &Memory, user: &[String]) -> kentos_contracts::HatchPatternSpec {
+pub fn spec(m: &Memory, user: &[String]) -> kentos_commands::HatchPatternSpec {
     let lined = lined(m, user);
-    kentos_contracts::HatchPatternSpec {
+    kentos_commands::HatchPatternSpec {
         name: user_of(m, user).map_or_else(|| choice(m).name, str::to_owned),
         scale: Some(m.hatch_scale),
         angle: Some(m.hatch_angle),
         second_color: Some(colour_text(m)),
         inverted: Some(m.hatch_inverted),
-        basis: (lined && m.hatch_world).then_some(kentos_contracts::ScaleBasis::World),
+        basis: (lined && m.hatch_world).then_some(kentos_commands::ScaleBasis::World),
         origin: if lined { origin_spec(m) } else { None },
         annotative: (lined && m.hatch_annotative && !m.hatch_world).then_some(true),
     }
@@ -255,7 +255,7 @@ pub fn clicked(asking: &mut Option<Asking>, at: Vec2, raw: Vec2, cx: &mut Contex
             let hatch = crate::selectable::candidates(cx, raw)
                 .into_iter()
                 .find_map(|s| match cx.doc.get(s) {
-                    Some(kentos_contracts::Entity::Hatch(h)) => Some(h.clone()),
+                    Some(kentos_commands::Entity::Hatch(h)) => Some(h.clone()),
                     _ => None,
                 });
             match hatch {
@@ -276,14 +276,14 @@ pub fn clicked(asking: &mut Option<Asking>, at: Vec2, raw: Vec2, cx: &mut Contex
 
 /// The options a hatch was made with, as near as its pattern says them (AutoCAD's Inherit properties, docs/adr/0331
 /// §2): its pattern (the project's by name first), Ölçek and Açı on paper at its own scale, its origin, Ölçekli.
-pub fn inherit(h: &kentos_contracts::HatchEntity, m: &mut Memory, user: &[String], plot_scale: f64) {
-    use kentos_contracts::HatchPatternType as T;
+pub fn inherit(h: &kentos_commands::HatchEntity, m: &mut Memory, user: &[String], plot_scale: f64) {
+    use kentos_commands::HatchPatternType as T;
     let p = &h.pattern;
     let at = h.annotative.as_ref().map_or(plot_scale, |a| a.at);
     let own = (p.kind == T::Pattern)
         .then_some(p.name.as_deref())
         .flatten()
-        .and_then(|n| user.iter().position(|u| kentos_contracts::same_hatch_pattern_name(u, n)));
+        .and_then(|n| user.iter().position(|u| kentos_commands::same_hatch_pattern_name(u, n)));
     m.hatch_user = own.and_then(|k| u16::try_from(k).ok());
     if own.is_none()
         && let Some(k) = choice_of(p)
@@ -399,7 +399,7 @@ pub fn answer(asking: &mut Option<Asking>, text: &str, cx: &mut Context<'_>) -> 
             _ => cx.say(Level::Warn, format!("Açı derece olarak bir sayı olmalı; “{t}” yazıldı.")),
         },
         Asking::Gap => match parse_number(t) {
-            Some(n) if (0.0..=kentos_contracts::MAX_HATCH_GAP).contains(&n) => {
+            Some(n) if (0.0..=kentos_commands::MAX_HATCH_GAP).contains(&n) => {
                 cx.memory.hatch_gap = n;
                 *asking = None;
             }
@@ -447,7 +447,7 @@ pub fn typed_choice(text: &str, cx: &mut Context<'_>) -> bool {
     let user = user_names(cx);
     if let Some(k) = user
         .iter()
-        .position(|u| kentos_contracts::same_hatch_pattern_name(u, js_trim(text)))
+        .position(|u| kentos_commands::same_hatch_pattern_name(u, js_trim(text)))
     {
         cx.memory.hatch_user = u16::try_from(k).ok();
         return true;
@@ -567,7 +567,7 @@ pub fn choose(key: &str, typed: &str, asking: &mut Option<Asking>, cx: &mut Cont
 /// (a pattern's scale or user lines' spacing on the paper, user lines' turn
 /// past 45°), its gradient's colour and way.
 pub fn rechosen(p: &HatchPattern, choice: usize, plot_scale: f64) -> Option<HatchPattern> {
-    use kentos_contracts::HatchPatternType as T;
+    use kentos_commands::HatchPatternType as T;
     let metres = plot_scale / 1000.0;
     let scale = match p.kind {
         T::Pattern => p.scale.unwrap_or(metres) / metres,
@@ -598,18 +598,18 @@ pub fn rechosen(p: &HatchPattern, choice: usize, plot_scale: f64) -> Option<Hatc
 
 /// The choice a hatch's pattern is: its library name, else its kind's.
 pub fn choice_of(p: &HatchPattern) -> Option<usize> {
-    use kentos_contracts::HatchPatternType as T;
+    use kentos_commands::HatchPatternType as T;
     let list = choices();
     match p.kind {
         T::Pattern => p.name.as_deref().and_then(choice_named),
         T::Gradient => {
             let shape = p.gradient.as_ref().map(|g| g.shape);
             list.iter().position(|c| match (c.kind, shape) {
-                (Kind::Gradient(s), Some(kentos_contracts::GradientShape::Linear)) => s == "linear",
-                (Kind::Gradient(s), Some(kentos_contracts::GradientShape::Cylinder)) => {
+                (Kind::Gradient(s), Some(kentos_commands::GradientShape::Linear)) => s == "linear",
+                (Kind::Gradient(s), Some(kentos_commands::GradientShape::Cylinder)) => {
                     s == "cylinder"
                 }
-                (Kind::Gradient(s), Some(kentos_contracts::GradientShape::Spherical)) => {
+                (Kind::Gradient(s), Some(kentos_commands::GradientShape::Spherical)) => {
                     s == "spherical"
                 }
                 _ => false,

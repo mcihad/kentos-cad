@@ -1,7 +1,7 @@
 //! What the space commands share (docs/adr/0342 §4): the project's method, a level named, the space's fields and its
 //! area measured by the core.
 
-use kentos_contracts::{ArchInfo, SpaceFields, SpaceMethod, SpacePart};
+use kentos_commands::{ArchInfo, SpaceFields, SpaceMethod, SpacePart};
 use kentos_domain::Document;
 
 use crate::checks::{Stop, error};
@@ -62,7 +62,7 @@ pub fn perimeter_of(parts: &[SpacePart]) -> f64 {
 }
 
 /// Where the space's label stands (its largest part's pole).
-pub fn label_point(parts: &[SpacePart]) -> Option<kentos_contracts::Vec2> {
+pub fn label_point(parts: &[SpacePart]) -> Option<kentos_commands::Vec2> {
     kentos_geometry_core::geom::space::label_at(&areas(parts))
-        .map(|p| kentos_contracts::Vec2 { x: p.x, y: p.y })
+        .map(|p| kentos_commands::Vec2 { x: p.x, y: p.y })
 }

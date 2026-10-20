@@ -6,7 +6,7 @@
 //! counted and said. The centres and the areas are the core's (`Merkezi
 //! içinde`); one undo step.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::spatial_query::Relation;
 use serde_json::json;

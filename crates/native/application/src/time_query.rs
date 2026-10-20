@@ -2,7 +2,7 @@
 //! valid time is read by the layer time's rules (`time::object_time`, `time::shows`, ADR 0210 §4); the day known by
 //! the versions' system time (`time::recorded_interval`, `time::known`). Read only.
 
-use kentos_contracts::{CommandResult, LayerNodeType, TimeQueried, TimeQuery};
+use kentos_commands::{CommandResult, LayerNodeType, TimeQueried, TimeQuery};
 use kentos_domain::Document;
 use kentos_geometry_core::time::{self, Read, Rule, Window};
 

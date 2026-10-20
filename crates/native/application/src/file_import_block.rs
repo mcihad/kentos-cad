@@ -11,7 +11,7 @@
 
 use std::path::Path;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockFileImported, BlockFileMode, BlockId, CommandResult, DocumentSnapshotV1,
     DocumentSnapshotV2, ImportBlock,
 };
@@ -107,8 +107,8 @@ fn fresh_ids(ours: &DocumentSnapshotV2, theirs: &mut DocumentSnapshotV2) {
     if moved.is_empty() {
         return;
     }
-    let follow = |e: &mut kentos_contracts::Entity| {
-        if let kentos_contracts::Entity::Insert(i) = e
+    let follow = |e: &mut kentos_commands::Entity| {
+        if let kentos_commands::Entity::Insert(i) = e
             && let Some(to) = moved.get(&i.block)
         {
             i.block = *to;
@@ -250,8 +250,8 @@ pub fn execute(
 ) -> CommandResult<BlockFileImported> {
     crate::call::recorded(
         cx,
-        kentos_contracts::FILE_IMPORT_BLOCK,
-        kentos_contracts::FILE_IMPORT_BLOCK_VERSION,
+        kentos_commands::FILE_IMPORT_BLOCK,
+        kentos_commands::FILE_IMPORT_BLOCK_VERSION,
         input,
         |cx, input| write(cx.doc, &input),
     )
@@ -262,7 +262,7 @@ fn write(doc: &mut Document, input: &ImportBlock) -> CommandResult<BlockFileImpo
         Ok(c) => c,
         Err(stop) => return stop.into(),
     };
-    let before: Vec<kentos_contracts::BlockDefinition> =
+    let before: Vec<kentos_commands::BlockDefinition> =
         doc.blocks().iter().map(|b| (**b).clone()).collect();
     let label = step_name(&file_name(&input.path));
     let group = doc.begin_group(&label);
@@ -317,7 +317,7 @@ fn write(doc: &mut Document, input: &ImportBlock) -> CommandResult<BlockFileImpo
         .into_iter()
         .flatten()
         .collect();
-        warnings.push(kentos_contracts::CommandWarning {
+        warnings.push(kentos_commands::CommandWarning {
             code: codes::OBJECTS_LEFT_OUT.into(),
             message: format!("{} bloğa konamadığı için alınmadı.", what.join(" ve ")),
             path: Some("path".into()),

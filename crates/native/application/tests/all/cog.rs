@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{CallOp, DocumentSnapshotV1};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_domain::Document;
 use kentos_formats::raster::cog;
 use kentos_native_application::{ExecutionContext, registry};

@@ -4,7 +4,7 @@
 //! that keeps its id and goes with a removed one; an associative hatch follows
 //! a reversed boundary and lets go of a broken one.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, DocumentSnapshotV1, EntitiesBreak, EntitiesJoin, EntitiesReverse, Entity,
     EntityId, HatchAssoc, Vec2,
 };
@@ -40,7 +40,7 @@ fn drawing() -> Document {
         let Some(Entity::Text(t)) = doc.get(Slot(text)).cloned() else {
             panic!("a text")
         };
-        let linked = Entity::Text(kentos_domain::contracts::TextEntity {
+        let linked = Entity::Text(kentos_commands::TextEntity {
             label_of: Some(id(&doc, of)),
             label_scale: Some(100.0),
             ..t
@@ -50,7 +50,7 @@ fn drawing() -> Document {
     let Some(Entity::Hatch(h)) = doc.get(Slot(7)).cloned() else {
         panic!("a hatch")
     };
-    let tied = Entity::Hatch(kentos_domain::contracts::HatchEntity {
+    let tied = Entity::Hatch(kentos_commands::HatchEntity {
         boundary: None,
         assoc: Some(HatchAssoc {
             gap: None,

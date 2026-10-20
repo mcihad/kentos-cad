@@ -25,7 +25,7 @@ fn a_clouds_look_is_written_through_the_properties_edit() {
             _ => None,
         })
         .expect("the cloud");
-    c.cloud.style.render = kentos_contracts::CloudRender::Classification;
+    c.cloud.style.render = kentos_commands::CloudRender::Classification;
     let said =
         kentos_interaction::properties::set_geometry(&mut doc.model, slot, &Entity::PointCloud(c));
     assert!(said.is_empty(), "{said:?}");
@@ -34,7 +34,7 @@ fn a_clouds_look_is_written_through_the_properties_edit() {
     };
     assert_eq!(
         after.cloud.style.render,
-        kentos_contracts::CloudRender::Classification
+        kentos_commands::CloudRender::Classification
     );
 }
 
@@ -51,7 +51,7 @@ fn send(app: &mut App, e: add::Event) {
     drive(app, task);
 }
 
-fn clouds(app: &App) -> Vec<kentos_contracts::PointCloudEntity> {
+fn clouds(app: &App) -> Vec<kentos_commands::PointCloudEntity> {
     app.document
         .as_ref()
         .expect("a drawing")
@@ -132,7 +132,7 @@ fn nokta_bulutu_ekle_writes_its_layer_and_the_cloud_as_one_step() {
     let read = s.read.as_ref().expect("read").as_ref().expect("a cloud");
     assert_eq!(read.members.len(), 1);
     assert_eq!(read.members[0].count, 71_212);
-    assert_eq!(read.members[0].format, kentos_contracts::CloudFormat::Laz);
+    assert_eq!(read.members[0].format, kentos_commands::CloudFormat::Laz);
     assert_eq!(s.layer, "koy");
     send(&mut app, add::Event::Run);
     assert!(app.clouds.add.is_none(), "the window closed");

@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{CallOp, DocumentSnapshotV1};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -69,7 +69,7 @@ fn g1_results_go_to_geopackages_and_the_drawing_stays() {
         assert_eq!(sink["bytes"], json!(bytes.len()), "{name}");
         assert_eq!(
             sink["sha256"],
-            json!(kentos_contracts::encoding::sha256_hex(&bytes)),
+            json!(kentos_commands::encoding::sha256_hex(&bytes)),
             "{name}"
         );
         assert_eq!(

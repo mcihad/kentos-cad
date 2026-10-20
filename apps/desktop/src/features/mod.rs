@@ -24,7 +24,7 @@
 use std::cell::RefCell;
 
 use iced::Task;
-use kentos_contracts::{EntitiesSetProperties, Entity, PropertiesOperation, js_trim};
+use kentos_commands::{EntitiesSetProperties, Entity, PropertiesOperation, js_trim};
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::feature_table::{Query, feature_table};
 use kentos_interaction::feature_table::{FeatureTable, feature_table_of};
@@ -146,7 +146,7 @@ pub enum Event {
     /// A record of the Form view's list pressed (its place among the rows shown).
     FormRow(usize),
     /// Dışa aktar ▾ (docs/adr/0223 §3): the rows shown written in a format.
-    Export(kentos_contracts::WorkbookFormat),
+    Export(kentos_commands::WorkbookFormat),
     /// A value cell double-clicked: the row and the model's column.
     Edit(usize, usize),
     /// The editor's text typed.
@@ -193,22 +193,22 @@ pub(crate) struct Rows {
     pub sorted: Option<usize>,
     /// Koşullu biçim (docs/adr/0413 §4): the layer's rules, and for each of them whether it holds
     /// for each object (by its index in `slots`); a rule that cannot be read holds for none.
-    pub styles: Vec<kentos_contracts::TableStyle>,
+    pub styles: Vec<kentos_commands::TableStyle>,
     pub holds: Vec<Vec<bool>>,
 }
 
 impl Rows {
     /// What the rules give the cell of row `at` (its index in `slots`) under `field` (none: Tür).
-    pub(crate) fn look(&self, at: usize, field: Option<&str>) -> kentos_contracts::CellLook {
+    pub(crate) fn look(&self, at: usize, field: Option<&str>) -> kentos_commands::CellLook {
         if self.styles.is_empty() {
-            return kentos_contracts::CellLook::default();
+            return kentos_commands::CellLook::default();
         }
         let holds: Vec<bool> = self
             .holds
             .iter()
             .map(|h| h.get(at).copied().unwrap_or(false))
             .collect();
-        kentos_contracts::cell_look(&self.styles, &holds, field)
+        kentos_commands::cell_look(&self.styles, &holds, field)
     }
 }
 
@@ -296,7 +296,7 @@ impl App {
         let is_layer = |id: &str| {
             layers
                 .get(id)
-                .is_some_and(|n| n.kind == kentos_contracts::LayerNodeType::Layer)
+                .is_some_and(|n| n.kind == kentos_commands::LayerNodeType::Layer)
         };
         if let Some(l) = self.features.layer.as_deref().filter(|l| is_layer(l)) {
             return Some(l.to_owned());
@@ -465,7 +465,7 @@ impl App {
         &self,
         doc: &Document,
         layer: &str,
-        fields: &[kentos_contracts::LayerField],
+        fields: &[kentos_commands::LayerField],
     ) -> Vec<(String, std::collections::BTreeMap<String, String>)> {
         lookup_labels(&doc.model, layer, fields)
     }
@@ -669,8 +669,8 @@ impl App {
         };
         let raw = e.base().attrs.get(key).cloned().unwrap_or_default();
         self.features.text = match &c.field {
-            Some(f) => match kentos_contracts::check_value(f, &raw) {
-                Ok(v) if !v.is_empty() => kentos_contracts::display_value(f, &v),
+            Some(f) => match kentos_commands::check_value(f, &raw) {
+                Ok(v) if !v.is_empty() => kentos_commands::display_value(f, &v),
                 _ => raw,
             },
             None => raw,
@@ -868,7 +868,7 @@ impl App {
             .ok_or_else(|| format!("“{header}” sütunu yok"))?;
         let field = rows.table.columns[j].field.as_ref();
         let listed = field.is_some_and(|f| {
-            f.kind == kentos_contracts::LayerFieldKind::Boolean
+            f.kind == kentos_commands::LayerFieldKind::Boolean
                 || f.values.as_ref().is_some_and(|v| !v.is_empty())
         });
         let write = if listed {
@@ -911,10 +911,10 @@ fn write_attribute(
 ) -> Result<(), String> {
     let cx = &mut kentos_native_application::ExecutionContext::new(model);
     match kentos_native_application::set::execute(cx, input) {
-        kentos_contracts::CommandResult::Completed { .. } => Ok(()),
-        kentos_contracts::CommandResult::Failed { error }
-        | kentos_contracts::CommandResult::Conflict { error }
-        | kentos_contracts::CommandResult::NeedsInput { error } => Err(error.message),
+        kentos_commands::CommandResult::Completed { .. } => Ok(()),
+        kentos_commands::CommandResult::Failed { error }
+        | kentos_commands::CommandResult::Conflict { error }
+        | kentos_commands::CommandResult::NeedsInput { error } => Err(error.message),
         _ => Err("Değer yazılamadı.".to_owned()),
     }
 }
@@ -978,9 +978,9 @@ fn filter_passes(
 pub(crate) fn lookup_labels(
     model: &kentos_domain::Document,
     layer: &str,
-    fields: &[kentos_contracts::LayerField],
+    fields: &[kentos_commands::LayerField],
 ) -> Vec<(String, std::collections::BTreeMap<String, String>)> {
-    let forms: Vec<&kentos_contracts::ProjectForm> = model
+    let forms: Vec<&kentos_commands::ProjectForm> = model
         .settings()
         .forms
         .iter()
@@ -995,7 +995,7 @@ pub(crate) fn lookup_labels(
         let body = form.releases.last().map_or(&form.draft, |r| &r.body);
         let world = model.form_world(body);
         out.extend(body.walk().into_iter().filter_map(|(_, item)| match item {
-            kentos_contracts::FormItem::Field(f) => {
+            kentos_commands::FormItem::Field(f) => {
                 let lookup = f.lookup.as_ref()?;
                 let name = fields.iter().find(|x| x.key() == f.field)?.name.clone();
                 Some((name, kentos_forms::labels_of(lookup, &world)))

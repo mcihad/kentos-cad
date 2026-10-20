@@ -9,7 +9,7 @@
 
 use std::borrow::Cow;
 
-use kentos_contracts::AttachmentKind;
+use kentos_commands::AttachmentKind;
 use kentos_domain::Slot;
 use kentos_expression::template::TargetKind;
 

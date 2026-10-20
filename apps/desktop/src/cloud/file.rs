@@ -20,7 +20,7 @@ use iced::Task;
 use iced::futures::channel::mpsc;
 use iced::futures::stream;
 use kentos_cloud::{ApiFailure, Opened, Revision, Source as Kept, conflicting_revision};
-use kentos_contracts::{FileCommitted, ProjectStorage};
+use kentos_commands::{FileCommitted, ProjectStorage};
 
 use crate::app::{App, Message};
 use crate::cloud::cells_plan::FileState;

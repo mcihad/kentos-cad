@@ -5,7 +5,7 @@
 
 use std::sync::OnceLock;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandWarning, ProcessingBatch, ProcessingBatched, ProcessingRan, ProcessingRun,
     ProcessingTools, ProcessingToolsListed, codes,
 };

@@ -138,7 +138,7 @@ fn run(v: &Resolved<'_>, _ctx: &RunContext<'_>, feedback: &mut dyn Feedback) -> 
         fill_notches: v.flag("fillNotches"),
     };
     let group = v.text("group");
-    let value = |e: &kentos_contracts::Entity| {
+    let value = |e: &kentos_commands::Entity| {
         if group.is_empty() {
             String::new()
         } else {

@@ -8,7 +8,7 @@
 
 use iced::widget::{Column, column, container, row, scrollable};
 use iced::{Element, Fill, Length, Task};
-use kentos_contracts::ServiceKind;
+use kentos_commands::ServiceKind;
 use kentos_interaction::Vec2;
 use kentos_interaction::pick::PickPoint;
 use kentos_services::info::{InfoRow, read, requests};

@@ -2,7 +2,7 @@
 //! controls, Sınır shown on the drawing, a link looked at (Göster), and
 //! Uygula through `cad.entities.edit`.
 
-use kentos_contracts::{CommandResult, EditOperation, EntitiesEdit};
+use kentos_commands::{CommandResult, EditOperation, EntitiesEdit};
 use kentos_domain::Slot;
 use kentos_geometry_core::geometry::Bounds;
 use kentos_geometry_core::ops::edgematch::Meet;

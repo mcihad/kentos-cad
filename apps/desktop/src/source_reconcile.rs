@@ -12,7 +12,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{Column, button, container, row, scrollable, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, ConflictKind, ReconcileConflict, ReconcileSide, ReconcileTake,
     SourcesReconcile, SourcesReconciled,
 };
@@ -81,7 +81,7 @@ fn msg(event: Event) -> Message {
 }
 
 /// “2 eklenecek, 1 değişecek”: the counts that are not naught; “yok” when all are.
-fn counts(c: &kentos_contracts::ReconcileCounts) -> String {
+fn counts(c: &kentos_commands::ReconcileCounts) -> String {
     let parts: Vec<String> = [
         (c.added, "eklenecek"),
         (c.modified, "değişecek"),

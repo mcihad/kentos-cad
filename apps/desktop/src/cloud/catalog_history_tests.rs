@@ -6,7 +6,7 @@
 use std::time::{Duration, Instant};
 
 use kentos_cloud::ApiFailure;
-use kentos_contracts::{
+use kentos_commands::{
     CatalogView, Checkpoint, CheckpointChange, CheckpointKind, EventPage, EventRecord,
     FileRevision, FileRevisions, ProjectDuplicated, ProjectPermission, ProjectStorage,
 };

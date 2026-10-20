@@ -5,7 +5,7 @@
 //! dataset's raster (docs/adr/0243 §11) adds its variable, each slice
 //! dimension's value shown and, for a mesh, its nodes and faces.
 
-use kentos_contracts::{RasterEntity, RasterRender, RasterStretch};
+use kentos_commands::{RasterEntity, RasterRender, RasterStretch};
 use kentos_domain::Slot;
 use kentos_interaction::{Format, fixed};
 

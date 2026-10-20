@@ -7,7 +7,7 @@
 
 use iced::widget::{Column, button, container, row, text, text_input};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{CommandResult, LayersTranslate, LayersTranslated, TranslateRule};
+use kentos_commands::{CommandResult, LayersTranslate, LayersTranslated, TranslateRule};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, layers_translate};
 use kentos_ui::icon::{Icon, Tone, icon};

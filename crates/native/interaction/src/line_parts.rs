@@ -6,7 +6,7 @@
 //! place and persistent id, the others new with its data. Touching lines are
 //! not chained: that is Birleştir's. The web's are in `areaTools.ts`.
 
-use kentos_contracts::{AreaPart, EditOperation, Entity, EntityEdit, EntityGeometry, PointPart};
+use kentos_commands::{AreaPart, EditOperation, Entity, EntityEdit, EntityGeometry, PointPart};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::entity_length;
 use kentos_geometry_core::ops::areas::areas_of_entity;

@@ -5,7 +5,7 @@
 //! why an action on the open project is off. fixtures/cloud/v1/cells.json
 //! holds every answer; both platforms play it (`cells_plan_tests.rs`).
 
-use kentos_contracts::{Health, ProjectPermission};
+use kentos_commands::{Health, ProjectPermission};
 
 use super::local_time::Zone;
 use super::revisions::{NewerRevision, newer_tip};

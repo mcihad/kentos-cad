@@ -3,7 +3,7 @@
 //! whose answers scripts/fixtures/cells_cases.py wrote apart from either
 //! program.
 
-use kentos_contracts::{Health, ProjectPermission};
+use kentos_commands::{Health, ProjectPermission};
 use serde_json::Value;
 
 use super::cells_plan::{

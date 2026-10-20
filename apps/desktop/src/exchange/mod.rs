@@ -488,11 +488,11 @@ impl App {
     /// metres, so one point alone is shown in context (web `zoomToImported`).
     pub(crate) fn zoom_to(&mut self, slots: &[Slot]) {
         let Some(doc) = &self.document else { return };
-        let boxes: Vec<kentos_contracts::Bounds> = slots
+        let boxes: Vec<kentos_commands::Bounds> = slots
             .iter()
             .filter_map(|s| doc.model.get(*s))
             .filter_map(|e| scene::extents_of(doc, std::iter::once(e)))
-            .map(|b| kentos_contracts::Bounds {
+            .map(|b| kentos_commands::Bounds {
                 min_x: b.min_x,
                 min_y: b.min_y,
                 max_x: b.max_x,
@@ -505,7 +505,7 @@ impl App {
     }
 
     /// Shows `b`, never smaller than a few metres across.
-    pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_contracts::Bounds) {
+    pub(crate) fn zoom_to_bounds(&mut self, b: &kentos_commands::Bounds) {
         /// At least this much around what was imported.
         const MIN_SPAN: f64 = 20.0;
         let grow = |lo: f64, hi: f64| {

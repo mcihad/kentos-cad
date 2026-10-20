@@ -7,7 +7,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{EntityGeometry, LineType};
+use kentos_commands::{EntityGeometry, LineType};
 use kentos_domain::NewLayer;
 use kentos_geometry_core::ops::network::Line;
 use kentos_geometry_core::tools::point_text::js_trim;
@@ -143,12 +143,12 @@ pub fn write_results(
                 id
             }
         };
-        let input = kentos_contracts::EntitiesCreate {
+        let input = kentos_commands::EntitiesCreate {
             layer_id,
             objects: w
                 .objects
                 .iter()
-                .map(|(geometry, attrs)| kentos_contracts::NewObject {
+                .map(|(geometry, attrs)| kentos_commands::NewObject {
                     line_type: None,
                     geometry: geometry.clone(),
                     color: None,

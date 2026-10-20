@@ -5,7 +5,7 @@
 use crate::common;
 
 use common::Bench;
-use kentos_contracts::{AngleUnit, DrawingUnit, Entity, ProjectSettings, Workspace};
+use kentos_commands::{AngleUnit, DrawingUnit, Entity, ProjectSettings, Workspace};
 
 /// `tool` running on the empty drawing made a local CAD project in `unit`,
 /// its angles in degrees, as a new one is (docs/adr/0165 §2, §4).
@@ -76,9 +76,9 @@ fn a_project_with_a_coordinate_system_is_in_metres() {
 /// A 2 × 1.5 m area and a 1 × 1 m one on the drawing's layer: 3 and 1 m².
 fn two_areas(b: &mut Bench) -> [kentos_domain::Slot; 2] {
     let square = |b: &mut Bench, x: f64, w: f64, h: f64| {
-        let p = |x: f64, y: f64| kentos_contracts::Vec2 { x, y };
+        let p = |x: f64, y: f64| kentos_commands::Vec2 { x, y };
         b.doc
-            .add(Entity::Polygon(kentos_contracts::PathEntity {
+            .add(Entity::Polygon(kentos_commands::PathEntity {
                 ms: None,
                 base: common::base("cizim"),
                 pts: vec![p(x, 0.0), p(x + w, 0.0), p(x + w, h), p(x, h)],

@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 use iced::widget::Column;
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, CsvExported, CsvGeometry, CsvGeometryIn, CsvSeparator,
     ExportCsv, GpkgImported, ImportCsv,
 };

@@ -11,7 +11,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{ArchPhase, Entity, WallChange, WallsEdit, WallsOperation};
+use kentos_commands::{ArchPhase, Entity, WallChange, WallsEdit, WallsOperation};
 use kentos_domain::Slot;
 
 use crate::app::App;
@@ -140,23 +140,23 @@ fn sheet_set(app: &mut App) {
     look_at(app, "a-501-harita", 5.6, 1.0, 20);
     if let Some(doc) = app.document.as_mut() {
         let layer = doc.model.layers().active().to_owned();
-        let at = |x: f64, y: f64| kentos_contracts::Vec2 {
+        let at = |x: f64, y: f64| kentos_commands::Vec2 {
             x: crate::tools_scenes::E + x,
             y: crate::tools_scenes::N + y,
         };
         let _ = kentos_native_application::viewmarks_create::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::ViewMarksCreate {
+            kentos_commands::ViewMarksCreate {
                 layer_id: layer,
-                marks: vec![kentos_contracts::NewViewMark {
-                    form: kentos_contracts::ViewMarkForm::Section,
+                marks: vec![kentos_commands::NewViewMark {
+                    form: kentos_commands::ViewMarkForm::Section,
                     points: vec![at(-1.6, 2.2), at(8.6, 2.2)],
                     radius: None,
                     at: None,
                     angle: None,
                     flip: false,
                     mark: "A".into(),
-                    target: Some(kentos_contracts::ViewTarget::sheet("a-301", "a-301-harita")),
+                    target: Some(kentos_commands::ViewTarget::sheet("a-301", "a-301-harita")),
                     size: None,
                 }],
                 color: None,

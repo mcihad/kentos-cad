@@ -26,7 +26,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{AnnotationKind, CreateOperation, Entity, EntityGeometry, TextFace};
+use kentos_commands::{AnnotationKind, CreateOperation, Entity, EntityGeometry, TextFace};
 use kentos_domain::Slot;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::ops::coordinate_labels::{
@@ -194,7 +194,7 @@ fn geometries(labels: &Labels, look: &Look) -> Vec<EntityGeometry> {
                 rotation: 0.0,
                 align: t
                     .align
-                    .and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+                    .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
                 width_factor: look.width_factor,
                 mask: false,
                 box_width: None,
@@ -463,7 +463,7 @@ fn name_at(e: &Entity, at: Vec2) -> Option<String> {
         return None;
     }
     let near =
-        |q: &kentos_contracts::Vec2| (q.x - at.x).abs() <= 1e-6 && (q.y - at.y).abs() <= 1e-6;
+        |q: &kentos_commands::Vec2| (q.x - at.x).abs() <= 1e-6 && (q.y - at.y).abs() <= 1e-6;
     if near(&p.p) {
         return Some(label.to_owned());
     }

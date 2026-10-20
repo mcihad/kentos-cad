@@ -8,7 +8,7 @@
 //! and the shown decimals apart. It writes nothing. The shared cases are
 //! `fixtures/commands/v1/cad.crs.transform.json` (`scripts/fixtures/crs_vertical_cases.py`, PROJ through pyproj).
 
-use kentos_contracts::{
+use kentos_commands::{
     AccuracyReport, AreaOfUse, CRS_ENGINE, CommandResult, CommandWarning, CrsOperation, CrsPoint,
     CrsSide, CrsTransform, CrsTransformed, GridUse, HeightKind, HeightMethod, HeightReference,
     MAX_CRS_POINTS, OperationStep, ProjectSettings, SourceUncertainty, StepKind, UnreachedPoint,
@@ -120,7 +120,7 @@ fn side(settings: &ProjectSettings, given: Option<&CrsSide>, path: &str) -> Resu
         None if own => settings.coordinate_epoch,
         None => None,
     };
-    if let Some(why) = epoch.and_then(kentos_contracts::epoch_problem) {
+    if let Some(why) = epoch.and_then(kentos_commands::epoch_problem) {
         return Err(fail(
             codes::INVALID_EPOCH,
             format!("{path} epoku: {why}."),
@@ -226,7 +226,7 @@ fn prepare(settings: &ProjectSettings, input: &CrsTransform) -> Result<Prepared,
     }
     for (i, p) in input.points.iter().enumerate() {
         checks::point(
-            kentos_contracts::Vec2 { x: p.x, y: p.y },
+            kentos_commands::Vec2 { x: p.x, y: p.y },
             &format!("{}. noktanın", i + 1),
             &format!("points[{i}]"),
         )?;
@@ -452,7 +452,7 @@ pub fn answer(doc: &Document, input: &CrsTransform) -> CommandResult<CrsTransfor
         topology_tolerance: settings
             .topology
             .as_ref()
-            .map_or(kentos_contracts::TOPOLOGY_TOLERANCE, |t| t.tolerance()),
+            .map_or(kentos_commands::TOPOLOGY_TOLERANCE, |t| t.tolerance()),
         display_decimals: decimals,
         display_step: 10f64.powi(-i32::try_from(decimals).unwrap_or(0)),
     };

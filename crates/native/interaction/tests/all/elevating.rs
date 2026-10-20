@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, E, N};
-use kentos_contracts::{
+use kentos_commands::{
     CircleEntity, Entity, EntityBase, LineEntity, PathEntity, PointEntity, RingGeometry,
     TextEntity, Vec2,
 };

@@ -6,7 +6,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, FieldMigration, FieldsMigrate, FieldsMigrated,
     LayerField, LayerFieldKind, LayerNodeType, check_value, js_trim,
 };
@@ -223,8 +223,8 @@ pub fn execute(
 ) -> CommandResult<FieldsMigrated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FIELDS_MIGRATE,
-        kentos_contracts::CAD_FIELDS_MIGRATE_VERSION,
+        kentos_commands::CAD_FIELDS_MIGRATE,
+        kentos_commands::CAD_FIELDS_MIGRATE_VERSION,
         input,
         write_execute,
     )

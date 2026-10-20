@@ -4,7 +4,7 @@
 //! carrying the object's attributes, the hub's name (Merkez) and the distance
 //! (Uzaklık). Centre to centre, by the run's store (`Store::nearest`).
 
-use kentos_contracts::{Entity, EntityGeometry};
+use kentos_commands::{Entity, EntityGeometry};
 use kentos_domain::Slot;
 use serde_json::json;
 

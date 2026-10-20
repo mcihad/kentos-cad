@@ -13,7 +13,7 @@
 //! nesnenin simetriği kopya olarak oluşturuldu.” and leaves. The texts are
 //! the policy's, arcs stay counter-clockwise: the shared core's rules.
 
-use kentos_contracts::Transform;
+use kentos_commands::Transform;
 use kentos_geometry_core::geom::affine::{Affine, mirror};
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::point_text::js_trim;

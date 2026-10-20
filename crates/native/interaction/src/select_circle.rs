@@ -78,7 +78,7 @@ impl SelectCircle {
             return;
         }
         let crossing = cx.memory.circle_crossing;
-        let region = kentos_contracts::SelectRegion::Circle {
+        let region = kentos_commands::SelectRegion::Circle {
             center: crate::selectable::point(centre),
             radius,
             crossing,

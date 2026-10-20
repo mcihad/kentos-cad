@@ -11,7 +11,7 @@ The expectations are built here from the ADR's rule, without KentOS code:
   definitions), the home view and the anchor; angles, ratios (bulges, a dimension's and a leader's sizes, which are
   times their height), an insert's own scale, paper sizes, a route's measures (M) and a point cloud's points stay;
 - the unit and the scaled drawing are one undo step “Birimi değiştir”; metres are written as no unit;
-- the refusals and their order are the contract's (crates/shared/contracts/src/cad_units.rs).
+- the refusals and their order are the contract's (crates/shared/commands/src/cad_units.rs).
 
     python3 scripts/fixtures/units_change_cases.py           # writes the file
     python3 scripts/fixtures/units_change_cases.py --check   # compares it with the one on disk

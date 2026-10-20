@@ -6,7 +6,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, LineEntity, PointEntity, Vec2 as Point};
+use kentos_commands::{Entity, LineEntity, PointEntity, Vec2 as Point};
 use kentos_domain::Slot;
 use kentos_geometry_core::Vec2;
 use kentos_geometry_core::ops::lrs::{EventIn, RoutePart, events_run, line_drift, point_drift};

@@ -19,7 +19,7 @@
 
 use iced::widget::{Column, button, column, container, row, scrollable, text, text_input};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{
+use kentos_commands::{
     Bounds, Convention, CrsDefinition, CrsPlane, CrsSource, CrsSystem, DatumRef, DeclaredCrs,
     ProjectSettings,
 };
@@ -870,9 +870,9 @@ pub fn definition_details(d: &CrsDefinition) -> Vec<(&'static str, String)> {
     match datum {
         Some(DatumRef::Registry(r)) => {
             let id = match r {
-                kentos_contracts::RegistryDatum::Turef => "TUREF",
-                kentos_contracts::RegistryDatum::Ed50 => "ED50",
-                kentos_contracts::RegistryDatum::Wgs84 => "WGS84",
+                kentos_commands::RegistryDatum::Turef => "TUREF",
+                kentos_commands::RegistryDatum::Ed50 => "ED50",
+                kentos_commands::RegistryDatum::Wgs84 => "WGS84",
             };
             out.push(("Datum", datum_label(id).to_owned()));
             if let Some(e) = systems()

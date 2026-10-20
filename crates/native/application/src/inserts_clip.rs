@@ -5,7 +5,7 @@
 //! The content is cut by the core (`kentos_geometry_core::block_clip`). Inserts on a locked layer are left out and
 //! counted (docs/adr/0278); one undo step “Kırp”. The shared cases are `fixtures/commands/v1/cad.inserts.clip.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     ClipBoundary, ClipFrame, CommandResult, CommandWarning, Entity, InsertClip, InsertClipped, InsertsClip,
     InsertsClipOperation, InsertsClipped, MAX_CLIPPING_CORNERS, Vec2, codes,
 };
@@ -125,7 +125,7 @@ fn boundary(b: &ClipBoundary) -> Result<Vec<Vec2>, Stop> {
 
 /// The ring in the insert's definition: its corners through the inverse of the placement, the base put back. None
 /// for a placement without an inverse.
-fn in_definition(ring: &[Vec2], insert: &kentos_contracts::InsertEntity, base: Vec2) -> Option<Vec<Vec2>> {
+fn in_definition(ring: &[Vec2], insert: &kentos_commands::InsertEntity, base: Vec2) -> Option<Vec<Vec2>> {
     let m = placement_xy(
         P::new(insert.p.x, insert.p.y),
         insert.scale,
@@ -276,8 +276,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &InsertsClip) -> CommandResult<Ins
 pub fn execute(cx: &mut ExecutionContext<'_>, input: InsertsClip) -> CommandResult<InsertsClipped> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_INSERTS_CLIP,
-        kentos_contracts::CAD_INSERTS_CLIP_VERSION,
+        kentos_commands::CAD_INSERTS_CLIP,
+        kentos_commands::CAD_INSERTS_CLIP_VERSION,
         input,
         write_execute,
     )

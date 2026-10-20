@@ -5,7 +5,7 @@
 //! about an object's look (`objects[2].color`) is said at the look's own
 //! field (`color`): the input names the look once, for every object.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandError, CommandResult, CreateOperation, EntitiesCreate, EntitiesCreatePlan,
     EntitiesCreated, EntityGeometry, NewLook, NewObject,
 };
@@ -101,7 +101,7 @@ pub(crate) fn validate(cx: &ExecutionContext<'_>, objects: &EntitiesCreate) -> C
 /// Warnings of the command's own put before the creation's.
 pub(crate) fn with_warnings<T>(
     result: CommandResult<T>,
-    first: Vec<kentos_contracts::CommandWarning>,
+    first: Vec<kentos_commands::CommandWarning>,
 ) -> CommandResult<T> {
     match result {
         CommandResult::Completed { output, warnings } => CommandResult::Completed {

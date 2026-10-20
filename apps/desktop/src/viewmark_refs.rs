@@ -5,7 +5,7 @@
 
 use iced::widget::{Column, button, container, row};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     Entity, ViewMarkForm, ViewMarksOperation, ViewMarksReferenced, ViewTarget, ViewsOp,
 };
 use kentos_ui::icon::icon;
@@ -204,7 +204,7 @@ impl App {
         };
         let Some(view) = done.view else { return };
         self.view_refs_edit(ViewMarksOperation::Retarget {
-            target: ViewTarget::view(&kentos_contracts::view_key(&view)),
+            target: ViewTarget::view(&kentos_commands::view_key(&view)),
         });
         self.say(Level::Success, format!("“{name}” görünümü oluşturuldu ve detay ona bağlandı."));
     }

@@ -15,7 +15,7 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::ProjectSheets;
+use kentos_commands::ProjectSheets;
 use kentos_sheet::model::SheetBook;
 
 use crate::app::App;

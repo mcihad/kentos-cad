@@ -15,7 +15,7 @@
 //! ölçeklendi.” and leaves. The ghosts are the web's: the alignment with the
 //! cursor as the point being given.
 
-use kentos_contracts::Transform;
+use kentos_commands::Transform;
 use kentos_geometry_core::geom::affine::Affine;
 use kentos_geometry_core::geometry::dist;
 use kentos_geometry_core::tools::editing::align_transform;

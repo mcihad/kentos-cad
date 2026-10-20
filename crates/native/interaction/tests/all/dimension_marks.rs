@@ -5,7 +5,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{DimensionEntity, DimensionRule, DimensionStyle, Entity};
+use kentos_commands::{DimensionEntity, DimensionRule, DimensionStyle, Entity};
 
 const EMPTY: &str = include_str!("../../../../../fixtures/interaction/v1/empty.kcad");
 

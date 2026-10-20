@@ -8,7 +8,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::{DimensionEntity, DimensionStyle, Entity};
+use kentos_commands::{DimensionEntity, DimensionStyle, Entity};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 

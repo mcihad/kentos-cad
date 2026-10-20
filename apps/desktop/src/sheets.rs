@@ -17,7 +17,7 @@ use std::rc::Rc;
 use iced::Task;
 use iced::widget::canvas::{self, Frame, Path};
 use iced::{Point, Size, Vector};
-use kentos_contracts::DrawingFont;
+use kentos_commands::DrawingFont;
 use kentos_interaction::{Format, Level, Spatial};
 use kentos_render_wgpu::precision::join;
 use kentos_render_wgpu::scene::{self, ScenePart};
@@ -244,8 +244,8 @@ impl SheetMaps {
             own.0,
             own.1,
         ) {
-            let node: &kentos_contracts::LayerNode = &node;
-            let objects: Vec<&kentos_contracts::Entity> =
+            let node: &kentos_commands::LayerNode = &node;
+            let objects: Vec<&kentos_commands::Entity> =
                 kentos_plot::layers::in_order(doc.model.by_layer(&node.id).collect());
             if objects.is_empty() {
                 continue;
@@ -1673,7 +1673,7 @@ mod tests {
         );
         assert!(doc.model.set_layer_style("bina", style, "Desenli yapılar"));
         // A building's outline on it, as the web's demo has them.
-        let building: kentos_contracts::Entity = serde_json::from_value(serde_json::json!({
+        let building: kentos_commands::Entity = serde_json::from_value(serde_json::json!({
             "kind": "polygon", "layerId": "bina", "attrs": {}, "id": 0,
             "pts": [{ "x": 486530.0, "y": 4420200.0 }, { "x": 486540.0, "y": 4420200.0 },
                     { "x": 486540.0, "y": 4420210.0 }, { "x": 486530.0, "y": 4420210.0 }]
@@ -2324,11 +2324,11 @@ mod tests {
         });
         let text =
             std::fs::read_to_string(&path).expect("the web's demo drawing (see the comment)");
-        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads");
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads");
         let mut doc = Document::new(snapshot, None).expect("opens");
         doc.model.set_name("Ornek_1244-1249_Ada.kcad");
         let mut settings = doc.settings().clone();
-        settings.workspace = Some(kentos_contracts::Workspace::Cad);
+        settings.workspace = Some(kentos_commands::Workspace::Cad);
         doc.model.set_settings(settings);
         let home = doc.model.home_view();
         let (mut app, _) = App::boot(None);

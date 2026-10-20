@@ -75,7 +75,7 @@ pub(crate) fn area_chosen(app: &mut App) {
     let answer = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
         "cad.polygon.create",
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CallOp::Execute,
         json!({ "layerId": layer, "pts": [
             { "x": 487_450.0, "y": 4_420_250.0 }, { "x": 487_750.0, "y": 4_420_250.0 },
             { "x": 487_750.0, "y": 4_420_450.0 }, { "x": 487_450.0, "y": 4_420_450.0 }

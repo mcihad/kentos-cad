@@ -12,7 +12,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use kentos_contracts::{AngleUnit, FieldBookRead, FieldCsvOptions, FieldStation};
+use kentos_commands::{AngleUnit, FieldBookRead, FieldCsvOptions, FieldStation};
 use kentos_geometry_core::display::fixed;
 use kentos_geometry_core::survey::Unit;
 use kentos_geometry_core::survey::fieldbook::{
@@ -306,7 +306,7 @@ impl Form {
 
     /// The station shown again: its cells, and its reduction with the
     /// project's k and tolerances (docs/adr/0169 §3).
-    pub fn sync(&mut self, settings: &kentos_contracts::ProjectSettings) {
+    pub fn sync(&mut self, settings: &kentos_commands::ProjectSettings) {
         self.rows.clear();
         self.reduction = None;
         self.reduced_from.clear();
@@ -384,7 +384,7 @@ impl Form {
     /// the project's unit (docs/adr/0169 §3).
     fn sync_traverse(
         &mut self,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
         core: Unit,
         tolerances: &Tolerances,
     ) {
@@ -427,7 +427,7 @@ impl Form {
     /// Every station of the book reduced in its unit, each named (docs/adr/0203 §6).
     fn reduced_all(
         &self,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
     ) -> (Unit, Vec<(String, Reduction)>) {
         let core = core_unit(self.unit(settings.angle_unit));
         let survey = settings.survey.clone().unwrap_or_default();
@@ -452,7 +452,7 @@ impl Form {
     /// directions in the project's unit (docs/adr/0203 §6).
     pub fn network_rows(
         &self,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
     ) -> Vec<kentos_geometry_core::survey::adjust::horizontal::NetRow> {
         let (core, reduced) = self.reduced_all(settings);
         kentos_geometry_core::survey::fieldbook::network_rows(
@@ -466,7 +466,7 @@ impl Form {
     /// (trigonometric, with their horizontal distances).
     pub fn level_rows(
         &self,
-        settings: &kentos_contracts::ProjectSettings,
+        settings: &kentos_commands::ProjectSettings,
     ) -> Vec<kentos_geometry_core::survey::adjust::levelling::LevelRow> {
         let (_, reduced) = self.reduced_all(settings);
         kentos_geometry_core::survey::fieldbook::level_rows(&reduced)

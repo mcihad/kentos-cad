@@ -4,7 +4,7 @@
 
 use iced::widget::{Column, text_input};
 use iced::{Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, SourceTable, SourcesDescribe, SourcesDescribed, SourcesEdit, SourcesEditOp,
 };
 use kentos_domain::Slot;
@@ -43,7 +43,7 @@ fn listing_document() -> Result<kentos_domain::Document, String> {
         "origin":{"x":0,"y":0},"activeLayer":"0","layers":[{"id":"0","name":"0","type":"layer","visible":true,
         "locked":false,"expanded":true,"style":{"color":"fg","lineType":"continuous","lineWeight":0.25},"children":[]}],
         "entities":[],"styles":{"items":[],"categories":[]}}"#;
-    kentos_contracts::DocumentSnapshotV1::from_json(empty)
+    kentos_commands::DocumentSnapshotV1::from_json(empty)
         .map_err(|e| e.to_string())
         .and_then(kentos_domain::Document::from_snapshot)
 }

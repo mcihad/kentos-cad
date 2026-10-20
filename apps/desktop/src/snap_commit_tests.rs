@@ -2,7 +2,7 @@
 //! changed between the last move and the press, Tab's candidates of a drawing since changed, and a large drawing
 //! all commit the snap of the place and the drawing of the press, never the last move's.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::SnapKind;
 
 use crate::app::{App, Message};

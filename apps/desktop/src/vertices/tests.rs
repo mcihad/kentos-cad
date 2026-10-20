@@ -58,8 +58,8 @@ fn same(a: &Value, e: &Value, path: &str) -> Result<(), String> {
 
 /// An object as the cases compare it: line work's paths with their
 /// elevations and bulges (null when every edge is straight).
-fn view(e: &kentos_contracts::Entity) -> Value {
-    use kentos_contracts::Entity;
+fn view(e: &kentos_commands::Entity) -> Value {
+    use kentos_commands::Entity;
     if !matches!(
         e,
         Entity::Line(_) | Entity::Polyline(_) | Entity::Polygon(_)
@@ -125,7 +125,7 @@ fn every_write_is_the_references() {
             "origin": { "x": 0, "y": 0 }, "layers": layers, "activeLayer": "cizim", "entities": c["objects"],
             "styles": { "items": [], "categories": [] }
         });
-        let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&snapshot.to_string())
+        let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&snapshot.to_string())
             .expect("the case's drawing");
         let mut doc = kentos_domain::Document::from_snapshot(snapshot).expect("opens");
         let text = |v: &Value| v.as_str().unwrap_or_default().to_owned();
@@ -196,7 +196,7 @@ fn every_write_is_the_references() {
 /// A cell opens with its value whole, in a local project's unit.
 #[test]
 fn a_cell_opens_with_the_value_whole() {
-    let e: kentos_contracts::Entity = serde_json::from_value(json!({
+    let e: kentos_commands::Entity = serde_json::from_value(json!({
         "kind": "polyline", "id": 1, "layerId": "0", "attrs": {},
         "pts": [{ "x": 1.25, "y": 2.0 }, { "x": 3.0, "y": 4.5 }, { "x": 6.0, "y": 4.5 }],
         "bulges": [0.5, 0.0, 0.0], "zs": [10.0, null, null]
@@ -223,7 +223,7 @@ fn a_cell_opens_with_the_value_whole() {
 
 fn app_with_vertices() -> crate::app::App {
     let (mut app, _) = crate::app::App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../fixtures/interaction/v1/vertex-table.kcad"
     ))
     .expect("the drawing reads");
@@ -238,7 +238,7 @@ fn ev(app: &mut crate::app::App, e: super::Event) {
 
 fn parcel_x(app: &crate::app::App, i: usize) -> f64 {
     match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
-        Some(kentos_contracts::Entity::Polygon(a)) => a.pts[i].x,
+        Some(kentos_commands::Entity::Polygon(a)) => a.pts[i].x,
         _ => panic!("the parcel"),
     }
 }
@@ -316,7 +316,7 @@ fn the_table_selects_rows_and_edits_cells_in_place() {
     ev(&mut app, Event::Finish(Some(Walk::Down)));
     let outer =
         |app: &crate::app::App| match app.document.as_ref().and_then(|d| d.model.get(Slot(1))) {
-            Some(kentos_contracts::Entity::Polygon(a)) => a.pts.clone(),
+            Some(kentos_commands::Entity::Polygon(a)) => a.pts.clone(),
             _ => panic!("the parcel"),
         };
     assert_eq!(outer(&app).len(), 6);
@@ -365,7 +365,7 @@ fn with_topology_a_shared_vertex_takes_its_neighbour_along() {
         .as_ref()
         .and_then(|d| d.model.get(Slot(slot)))
     {
-        Some(kentos_contracts::Entity::Polygon(a)) => (a.pts[i].x, a.pts[i].y),
+        Some(kentos_commands::Entity::Polygon(a)) => (a.pts[i].x, a.pts[i].y),
         _ => panic!("a parcel"),
     };
     // Parcel 12's second vertex is parcel 13's fourth.

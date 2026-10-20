@@ -73,7 +73,7 @@ pub(crate) fn opened(app: &mut App, service: serde_json::Value, connections: ser
         "entities": entities,
         "styles": {"items": [], "categories": []}
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&drawing.to_string())
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string())
         .expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -114,7 +114,7 @@ fn connected(app: &mut App, kind: usize, url: &str, pick: &str) {
         .expect("a service kind");
     let answer = crate::services::window::connect_now(k, url, None);
     window(app, crate::services::window::Event::Connected(answer));
-    if !pick.is_empty() || k == kentos_contracts::ServiceKind::Arcgis {
+    if !pick.is_empty() || k == kentos_commands::ServiceKind::Arcgis {
         window(app, crate::services::window::Event::Pick(pick.into()));
     }
 }
@@ -138,7 +138,7 @@ fn states(app: &mut App) {
         "entities": [],
         "styles": {"items": [], "categories": []}
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&drawing.to_string())
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&drawing.to_string())
         .expect("the drawing reads");
     let doc = Document::new(snapshot, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
@@ -167,7 +167,7 @@ fn feed_connected(app: &mut App) {
     feed_event(app, crate::services::feed_window::Event::Url(url.into()));
     let answer = (|| {
         let (mut c, mut next) =
-            kentos_services::feed::FeedConnecting::start(kentos_contracts::FeedKind::Arcgis, url)?;
+            kentos_services::feed::FeedConnecting::start(kentos_commands::FeedKind::Arcgis, url)?;
         while let Some(req) = next {
             let body = crate::services::net::send_text(req, None, url, 6)?;
             next = c.answer(&body)?;
@@ -192,7 +192,7 @@ fn ogc_connected(app: &mut App) {
         "http://www.opengis.net/spec/ogcapi-features-2/1.0/conf/crs"]}"#;
     let answer = (|| {
         let (mut c, mut next) = kentos_services::feed::FeedConnecting::start(
-            kentos_contracts::FeedKind::OgcFeatures,
+            kentos_commands::FeedKind::OgcFeatures,
             url,
         )?;
         while next.is_some() {
@@ -426,7 +426,7 @@ pub(crate) fn pointed() -> Vec<Pointed> {
                             .find(|n| {
                                 n.service
                                     .as_ref()
-                                    .is_some_and(|s| s.kind == kentos_contracts::ServiceKind::Wms)
+                                    .is_some_and(|s| s.kind == kentos_commands::ServiceKind::Wms)
                             })
                             .map(|n| n.id.clone())
                     })

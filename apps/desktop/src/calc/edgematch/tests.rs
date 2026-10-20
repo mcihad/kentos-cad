@@ -6,7 +6,7 @@
 //! edge, a parcel. The steps of the web's `edgematch` scenes (shots.mjs),
 //! and their pictures.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::ops::edgematch::{Meet, Method};
 
 use super::*;
@@ -20,7 +20,7 @@ const EDGE_X: f64 = 487200.0;
 
 fn app_with_edge_drawing() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../../fixtures/interaction/v1/edgematch.kcad"
     ))
     .expect("the drawing reads");

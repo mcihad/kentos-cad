@@ -10,7 +10,7 @@ use std::fmt;
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationStyleKind, CommandResult, Entity, LeaderArrow, LeaderEdit, LeaderStyleDef,
     LeadersEdit, SnapFind, StyleEditOperation, StylesEdit, SubRef, Vec2,
 };
@@ -267,7 +267,7 @@ impl App {
                             output.snaps.into_iter().find_map(|s| {
                                 let u = Uuid::parse_str(s.uid.as_deref()?).ok()?;
                                 (u.to_string() != uid).then_some(SubRef {
-                                    uid: kentos_contracts::EntityId(*u.as_bytes()),
+                                    uid: kentos_commands::EntityId(*u.as_bytes()),
                                     place: s.place?,
                                     path: Vec::new(),
                                     broken: None,
@@ -631,7 +631,7 @@ impl App {
             }
             None => label::caption("Bir stil seçin.").into(),
         };
-        let problem = kentos_contracts::leader_styles_problem(&w.styles);
+        let problem = kentos_commands::leader_styles_problem(&w.styles);
         let mut body = Column::new()
             .spacing(12)
             .push(row![left, form].spacing(18).align_y(iced::Top));

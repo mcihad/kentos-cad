@@ -3,7 +3,7 @@
 //! the ones that fit), writes inside an open transaction, −0 carried over as
 //! given, and the undo step's names.
 
-use kentos_domain::contracts::{
+use kentos_commands::{
     CommandResult, CreateOperation, DocumentSnapshotV1, EntitiesCreate, Entity, EntityGeometry,
     NewObject, Vec2,
 };

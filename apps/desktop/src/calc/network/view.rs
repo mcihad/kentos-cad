@@ -5,7 +5,7 @@
 
 use iced::widget::{Column, column, container, row};
 use iced::{Center, Element, Fill, FillPortion};
-use kentos_contracts::AngleUnit;
+use kentos_commands::AngleUnit;
 use kentos_domain::Document as Model;
 use kentos_interaction::ground::grid_note;
 use kentos_interaction::{Format, fixed};

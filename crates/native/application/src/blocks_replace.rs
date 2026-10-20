@@ -11,7 +11,7 @@
 
 use std::collections::HashSet;
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockId, BlocksReplace, BlocksReplaced, CommandResult, CommandWarning, Entity,
 };
 use kentos_domain::{Document, Slot};
@@ -59,8 +59,8 @@ pub fn execute(
 ) -> CommandResult<BlocksReplaced> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_REPLACE,
-        kentos_contracts::CAD_BLOCKS_REPLACE_VERSION,
+        kentos_commands::CAD_BLOCKS_REPLACE,
+        kentos_commands::CAD_BLOCKS_REPLACE_VERSION,
         input,
         |cx, input| write(cx.doc, &input),
     )
@@ -168,7 +168,7 @@ fn check(doc: &Document, input: &BlocksReplace) -> Result<Checked, Stop> {
         .collect();
     let mut dropped: HashSet<String> = HashSet::new();
     let mut places = 0u32;
-    let mut replaced: Vec<(Slot, kentos_contracts::InsertEntity)> = Vec::with_capacity(open.len());
+    let mut replaced: Vec<(Slot, kentos_commands::InsertEntity)> = Vec::with_capacity(open.len());
     for (_, slot, e, _) in &open {
         let Entity::Insert(i) = e else { continue };
         let mut i = i.clone();

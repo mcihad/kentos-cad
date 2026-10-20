@@ -2,7 +2,7 @@
 //! drives its own (apps/web/scripts/e2e/smoke.mjs), and its pictures.
 
 use iced::keyboard::key::Named;
-use kentos_contracts::{DrawingUnit, Workspace};
+use kentos_commands::{DrawingUnit, Workspace};
 use kentos_project::wizard::{Coords, Kind, Step};
 
 use super::Event;
@@ -341,7 +341,7 @@ fn screens() {
 #[ignore = "pictures for the owner, run by hand"]
 fn axes_screens() {
     use iced::{Point, Size};
-    use kentos_contracts::{Entity, EntityBase, PathEntity, Vec2};
+    use kentos_commands::{Entity, EntityBase, PathEntity, Vec2};
     use kentos_ui::snapshot::Snapshot;
 
     use crate::bottom::BottomTab;

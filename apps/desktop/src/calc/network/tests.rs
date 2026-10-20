@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use serde_json::Value;
 
 use super::{
@@ -20,7 +20,7 @@ use crate::files_testing::last_said;
 /// The app with the scene drawing on screen.
 fn app_with_scene() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../../fixtures/interaction/v1/network-adjust.kcad"
     ))
     .expect("the drawing reads");
@@ -145,7 +145,7 @@ fn near(got: f64, want: f64, abs: f64, rel: f64) -> bool {
 }
 
 /// The drawing's point named `name`.
-fn point<'a>(app: &'a App, name: &str) -> Option<&'a kentos_contracts::PointEntity> {
+fn point<'a>(app: &'a App, name: &str) -> Option<&'a kentos_commands::PointEntity> {
     super::named_points(&app.document.as_ref()?.model, name)
         .first()
         .copied()
@@ -235,7 +235,7 @@ fn a_blunder_is_named_and_marked() {
             && said.ends_with("); önce bu ölçüyü denetleyin."),
         "{said}"
     );
-    let (rows, marked) = form.observation_rows(r, kentos_contracts::AngleUnit::Grad);
+    let (rows, marked) = form.observation_rows(r, kentos_commands::AngleUnit::Grad);
     assert!(marked[8], "the distance's row is marked");
     assert_eq!(
         (

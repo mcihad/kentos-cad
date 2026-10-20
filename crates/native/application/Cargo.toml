@@ -11,7 +11,7 @@ publish.workspace = true
 # its own TypeScript handlers (apps/web/src/product); this crate is never built for the
 # browser. The package is not `kentos-application`: that name is the server's use cases.
 [dependencies]
-kentos-contracts = { path = "../../shared/contracts", default-features = false }
+kentos-commands = { path = "../../shared/commands", default-features = false }
 kentos-domain = { path = "../domain" }
 # Patlat (docs/adr/0302): a dimension exploded writes its value as the project shows it (the project's Format).
 kentos-project = { path = "../project" }
@@ -48,7 +48,7 @@ serde_json = { workspace = true }
 [dev-dependencies]
 # The command catalog (tests/catalog.rs) needs the contracts' JSON Schema feature, as
 # the server's catalog test does.
-kentos-contracts = { path = "../../shared/contracts", default-features = false, features = ["schema"] }
+kentos-commands = { path = "../../shared/commands", default-features = false, features = ["schema"] }
 # The processing commands' shared cases run İşlemler's tools (docs/adr/0508); the crate is above this one, so only the
 # integration tests (one copy of this crate) link it.
 kentos-processing = { path = "../processing" }

@@ -30,7 +30,7 @@
 use std::cell::RefCell;
 
 use iced::Task;
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_geometry_core::ops::point_editor::{TableQuery, TableRow, point_table};
 
@@ -172,7 +172,7 @@ pub fn next_cell(ids: &[Slot], id: Slot, col: EditColumn, how: Walk) -> Option<(
 }
 
 /// A point as the table reads it (the core's `TableRow`; the web's `rowOf`).
-pub fn row_of(p: &kentos_contracts::PointEntity, layer: &str, selected: bool) -> TableRow {
+pub fn row_of(p: &kentos_commands::PointEntity, layer: &str, selected: bool) -> TableRow {
     TableRow {
         name: p.base.label.clone(),
         east: p.p.x,

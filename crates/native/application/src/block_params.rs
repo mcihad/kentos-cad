@@ -15,8 +15,8 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::block_dynamic::{number_problem, same_param_value, value_problem};
-use kentos_contracts::{
+use kentos_commands::block_dynamic::{number_problem, same_param_value, value_problem};
+use kentos_commands::{
     BlockDefinition, BlockParameter, BlocksParameters, BlocksParametersOut, CommandResult,
     CommandWarning, DynamicBlock, Entity, InsertParameters, ParamValue, ParametersOperation,
 };
@@ -116,7 +116,7 @@ fn derive(
     d: &DynamicBlock,
     values: &mut BTreeMap<String, ParamValue>,
 ) -> Result<(), (String, String)> {
-    let derived: Vec<(&str, &str, &kentos_contracts::NumberRule)> = d
+    let derived: Vec<(&str, &str, &kentos_commands::NumberRule)> = d
         .parameters
         .iter()
         .filter_map(|p| {
@@ -302,7 +302,7 @@ pub(crate) fn refit_inserts(doc: &Document, next: &BlockDefinition) -> crate::bl
         changes.push((Slot(i.base.id), Entity::Insert(i)));
     }
     crate::blocks_sync::Synced {
-        report: kentos_contracts::AttributeSync {
+        report: kentos_commands::AttributeSync {
             inserts: u32::try_from(changes.len()).unwrap_or(u32::MAX),
             parameters: dropped,
             ..Default::default()
@@ -358,7 +358,7 @@ fn check(doc: &Document, input: &BlocksParameters) -> Result<Checked, Stop> {
     // The names and values against every insert's block first: nothing is written when one does not take them.
     let mut next: Vec<(
         Slot,
-        &kentos_contracts::InsertEntity,
+        &kentos_commands::InsertEntity,
         BTreeMap<String, ParamValue>,
     )> = Vec::new();
     for (_, slot, e, _) in &named {
@@ -498,8 +498,8 @@ pub fn execute(
 ) -> CommandResult<BlocksParametersOut> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_PARAMETERS,
-        kentos_contracts::CAD_BLOCKS_PARAMETERS_VERSION,
+        kentos_commands::CAD_BLOCKS_PARAMETERS,
+        kentos_commands::CAD_BLOCKS_PARAMETERS_VERSION,
         input,
         |cx, input| {
             let c = match check(cx.doc, &input) {

@@ -1,7 +1,7 @@
 //! The JSON values of the parameters that have a shape, read and written
 //! (the web's `FeaturesValue`, `LayerValue` and `Vec2 | null`).
 
-use kentos_contracts::Vec2;
+use kentos_commands::Vec2;
 use serde_json::{Map, Value, json};
 
 /// Which objects a features value reads. `Ids` is what models pass between

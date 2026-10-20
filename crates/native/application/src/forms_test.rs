@@ -2,7 +2,7 @@
 //! release, writing nothing; each passes or says what differs. The shared cases are
 //! `fixtures/commands/v1/cad.forms.test.json`.
 
-use kentos_contracts::{CommandResult, FormTestResult, FormsTest, FormsTested};
+use kentos_commands::{CommandResult, FormTestResult, FormsTest, FormsTested};
 use kentos_domain::Document;
 
 use crate::ExecutionContext;
@@ -16,7 +16,7 @@ fn answer(doc: &Document, input: &FormsTest) -> Result<FormsTested, Stop> {
     // Scenarios read no moment and no person: they are run again later (docs/adr/0420 §1).
     let variables = forms::variables_given(doc, None, None)?;
     let prepared = forms::prepared(doc, form, body, &variables, "form")?;
-    let tests: Vec<&kentos_contracts::FormTest> = if input.names.is_empty() {
+    let tests: Vec<&kentos_commands::FormTest> = if input.names.is_empty() {
         body.tests.iter().collect()
     } else {
         let mut out = Vec::new();
@@ -54,8 +54,8 @@ fn answer(doc: &Document, input: &FormsTest) -> Result<FormsTested, Stop> {
 /// copy runs them as the command does; the reason it cannot be, else.
 pub fn prepared_for(
     doc: &Document,
-    form: &kentos_contracts::ProjectForm,
-    body: &kentos_contracts::FormBody,
+    form: &kentos_commands::ProjectForm,
+    body: &kentos_commands::FormBody,
 ) -> Result<kentos_forms::Prepared, String> {
     let variables = forms::variables_given(doc, None, None).map_err(|s| s.into_error().message)?;
     forms::prepared(doc, form, body, &variables, "form").map_err(|s| s.into_error().message)

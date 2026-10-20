@@ -11,7 +11,7 @@ pub mod tables;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::ops::convert::table::RowFault;
 use kentos_geometry_core::ops::convert::{Elevations, Zs};
@@ -139,7 +139,7 @@ pub fn unit_param() -> ParamDef {
         },
     )
     .default_from(|d| {
-        json!(if d.angle_unit == kentos_contracts::AngleUnit::Deg {
+        json!(if d.angle_unit == kentos_commands::AngleUnit::Deg {
             "deg"
         } else {
             "grad"

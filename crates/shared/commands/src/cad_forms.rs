@@ -17,6 +17,7 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[cfg(feature = "schema")]
+use crate::FormChange;
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::forms::{FormBody, FormIssue, FormItemState, ProjectForm, ProjectRelation};
 
@@ -796,45 +797,6 @@ pub struct FormsCompare {
     #[cfg_attr(feature = "ts", ts(optional))]
     #[cfg_attr(feature = "schema", schemars(extend("x-unit" = "version")))]
     pub to: Option<u32>,
-}
-
-/// What happened to an item from one version to the other.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub enum FormChangeKind {
-    Added,
-    Removed,
-    /// Under another tab or group, or elsewhere among its siblings.
-    Moved,
-    /// Its own properties (its items aside).
-    Changed,
-}
-
-/// One change of a form: an item's, or the form's own (`item` none: `clearHidden`, the scenarios).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "ts", derive(TS))]
-#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
-#[serde(rename_all = "camelCase")]
-#[cfg_attr(feature = "ts", ts(export))]
-pub struct FormChange {
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "ts", ts(optional))]
-    pub item: Option<String>,
-    pub kind: FormChangeKind,
-    /// The properties that changed, by their names in the form's JSON, in their order.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
-    pub properties: Vec<String>,
-    /// What the change touches (docs/adr/0442 §3), in this order: `layout`, `binding`, `rule`, `action`,
-    /// `workflow`, `tests`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<String>>", optional))]
-    pub areas: Vec<String>,
-    /// Turkish, for people.
-    pub words: String,
 }
 
 /// Output of `cad.forms.compare` v1.

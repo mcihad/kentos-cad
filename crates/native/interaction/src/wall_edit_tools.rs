@@ -11,7 +11,7 @@
 //! - Duvar birleşimi: a click near a wall's end picks that end; Otomatik (O), Yok (Y), Gönye (G), Alın (A), Geçen
 //!   (E) set its join, Temizlik (T) the wall's cleanup, Sıfırla (R) both ends and the cleanup back to the rule.
 
-use kentos_contracts::{Entity, WallEnd, WallJoin, WallsEdit, WallsEdited, WallsOperation};
+use kentos_commands::{Entity, WallEnd, WallJoin, WallsEdit, WallsEdited, WallsOperation};
 use kentos_domain::Slot;
 use kentos_geometry_core::tools::point_text::js_trim;
 use kentos_native_application::geometry::shape;
@@ -235,7 +235,7 @@ impl WallEditTool {
         if w.wall.closed {
             return None;
         }
-        let d = |p: &kentos_contracts::Vec2| (p.x - at.x).hypot(p.y - at.y);
+        let d = |p: &kentos_commands::Vec2| (p.x - at.x).hypot(p.y - at.y);
         let (first, last) = (&w.wall.pts[0], &w.wall.pts[w.wall.pts.len() - 1]);
         Some(if d(last) <= d(first) {
             WallEnd::End

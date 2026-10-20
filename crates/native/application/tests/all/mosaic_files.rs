@@ -6,7 +6,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{CommandResult, MosaicOrder, MosaicResolution, RastersMosaic};
+use kentos_commands::{CommandResult, MosaicOrder, MosaicResolution, RastersMosaic};
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, rasters_mosaic};
 
@@ -24,7 +24,7 @@ fn doc() -> Document {
                      "style": { "color": "fg", "lineType": "continuous", "lineWeight": 0.25 }, "children": [] }],
         "activeLayer": "altlik", "entities": [], "styles": { "items": [], "categories": [] }
     });
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 

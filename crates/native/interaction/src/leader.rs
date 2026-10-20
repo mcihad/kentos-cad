@@ -19,7 +19,7 @@
 //! through `cad.entities.create` (docs/adr/0146 §6): the active layer, the
 //! current colour and line weight, one undo step (“Kılavuz”).
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationKind, CreateOperation, EntityGeometry, LeaderArrow, MAX_LEADER_ARROW,
     MIN_LEADER_ARROW, leader_arrow_holds,
 };
@@ -179,7 +179,7 @@ pub fn arrow_from_name(typed: &str) -> Option<Option<LeaderArrow>> {
 /// landing (docs/adr/0146 §2). One without a note is laid out as if it had
 /// one, so that a field opens where its note will be (editing in place).
 pub fn note_place(
-    e: &kentos_contracts::Entity,
+    e: &kentos_commands::Entity,
 ) -> Option<(Vec2, kentos_geometry_core::text::TextAlign)> {
     let mut s = kentos_native_application::geometry::shape(e);
     let Shape::Leader { text, .. } = &mut s else {
@@ -349,7 +349,7 @@ impl Leader {
             rotation: 0.0,
             align: l
                 .note_align
-                .and_then(|a| kentos_contracts::TextAlign::from_name(a.name())),
+                .and_then(|a| kentos_commands::TextAlign::from_name(a.name())),
             width_factor: 1.0,
             initial: None,
             placeholder: Some("Notu yazın"),

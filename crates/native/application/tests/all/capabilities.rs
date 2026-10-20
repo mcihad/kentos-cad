@@ -7,8 +7,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 
-use kentos_contracts::capabilities::{KINDS, PROTOCOL_CODES, capabilities_of};
-use kentos_contracts::{CallOp, DocumentSnapshotV2, FILE_COMMANDS};
+use kentos_commands::capabilities::{KINDS, PROTOCOL_CODES, capabilities_of};
+use kentos_commands::{CallOp, DocumentSnapshotV2, FILE_COMMANDS};
 use kentos_domain::{Document, Uuid};
 use kentos_native_application::{DESKTOP_COMMANDS, ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -524,9 +524,9 @@ fn refusal(doc: &mut Document, command: &str, input: Value) -> Option<String> {
 /// The form a target's note names, given to a sample that is not in it
 /// before it is tried: Çoklu tara takes a closed curve (an open one is
 /// refused with `not_closed`, as its note says).
-type Form = fn(&mut kentos_contracts::Entity);
+type Form = fn(&mut kentos_commands::Entity);
 const FORMS: &[(&str, &str, Form)] = &[("cad.entities.hatch", "spline", |e| {
-    if let kentos_contracts::Entity::Spline(s) = e {
+    if let kentos_commands::Entity::Spline(s) = e {
         s.closed = true;
     }
 })];
@@ -706,7 +706,7 @@ fn a_listed_kind_is_taken_and_another_is_refused_with_the_listed_code() {
 #[test]
 fn selections_beyond_the_limit_are_refused() {
     let (mut doc, _) = one_of_each_kind().into_values().next().expect("a drawing");
-    let n = kentos_contracts::MAX_SELECT_ITEMS + 1;
+    let n = kentos_commands::MAX_SELECT_ITEMS + 1;
     let points: Vec<Value> = (0..n)
         .map(|i| json!({ "x": i as f64, "y": (i % 7) as f64 }))
         .collect();

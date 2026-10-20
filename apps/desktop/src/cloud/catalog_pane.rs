@@ -7,7 +7,7 @@
 use iced::widget::text::Wrapping;
 use iced::widget::{Column, Row, Space, button, column, container, row, scrollable};
 use iced::{Background, Border, Center, Element, Fill, Length, Theme};
-use kentos_contracts::{AccessSource, AreaUnit, ProjectState, ProjectSummary};
+use kentos_commands::{AccessSource, AreaUnit, ProjectState, ProjectSummary};
 use kentos_interaction::Format;
 use kentos_ui::icon::{Tone, icon};
 use kentos_ui::theme::{Tokens, typography};

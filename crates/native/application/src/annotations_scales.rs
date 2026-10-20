@@ -1,7 +1,7 @@
 //! `cad.annotations.scales` v1 (docs/adr/0323 §4): texts, dimensions and
 //! leaders made annotative, their scales added and removed, one scale's own
 //! values set and reset, as one undo step. The rules of a representation are
-//! the contracts' (`kentos_contracts::annotative`); the shared cases are
+//! the contracts' (`kentos_commands::annotative`); the shared cases are
 //! `fixtures/commands/v1/cad.annotations.scales.json`.
 //!
 //! The checks, in order: the ids, the operation's own input (`no_scales`,
@@ -10,7 +10,7 @@
 //! (`not_annotative` when none is left, `own_scale`, `scale_not_taken`,
 //! `invalid_annotative`).
 
-use kentos_contracts::{
+use kentos_commands::{
     AnnotationsScaled, AnnotationsScales, AnnotationsScalesPlan, Annotative, AnnotativeOperation,
     AnnotativeScale, CommandResult, CommandWarning, Entity, annotative_field, annotative_of,
     annotative_problem, annotative_scale_holds, entry_problem, same_scale, why_not_annotative,
@@ -57,8 +57,8 @@ pub fn execute(
 ) -> CommandResult<AnnotationsScaled> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_ANNOTATIONS_SCALES,
-        kentos_contracts::CAD_ANNOTATIONS_SCALES_VERSION,
+        kentos_commands::CAD_ANNOTATIONS_SCALES,
+        kentos_commands::CAD_ANNOTATIONS_SCALES_VERSION,
         input,
         write_execute,
     )

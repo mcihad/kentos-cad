@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, E, N, rel};
-use kentos_contracts::{Entity, EntityBase, PointEntity, TextEntity};
+use kentos_commands::{Entity, EntityBase, PointEntity, TextEntity};
 use kentos_domain::Slot;
 use kentos_interaction::{Level, ViewChange};
 
@@ -37,7 +37,7 @@ fn add_point(b: &mut Bench, at: [f64; 2], label: Option<&str>) -> Slot {
             label: label.map(str::to_owned),
             ..common::base("cizim")
         },
-        p: kentos_contracts::Vec2 {
+        p: kentos_commands::Vec2 {
             x: E + at[0],
             y: N + at[1],
         },
@@ -109,7 +109,7 @@ fn gives_the_points_their_name_code_and_elevation_the_name_moving_on() {
     };
     assert_eq!(
         (
-            rel(kentos_contracts::Vec2 {
+            rel(kentos_commands::Vec2 {
                 x: field.at.x,
                 y: field.at.y
             }),
@@ -309,7 +309,7 @@ fn named_point_gives_the_running_tool_its_place_as_if_clicked() {
         .add(Entity::Text(TextEntity {
             annotative: None,
             base: common::base("cizim"),
-            p: kentos_contracts::Vec2 {
+            p: kentos_commands::Vec2 {
                 x: E + 1.0,
                 y: N + 1.0,
             },

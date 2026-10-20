@@ -4,7 +4,7 @@
 //! selection, Koordinat sistemine dönüştür's refusal of the project's own
 //! system, and the pictures for the owner.
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
 
 use super::{Event, RunStatus};

@@ -20,7 +20,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{Column, button, column, container, row, scrollable, space, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     DomainsEdit, DomainsOp, FieldChoice, FieldDomain, LayerFieldKind, domain_id_of, domain_uses,
     domains_problem,
 };
@@ -429,12 +429,12 @@ impl App {
                 },
             );
             match result {
-                kentos_contracts::CommandResult::Completed { warnings: w, .. } => {
+                kentos_commands::CommandResult::Completed { warnings: w, .. } => {
                     warnings.extend(w)
                 }
-                kentos_contracts::CommandResult::Failed { error }
-                | kentos_contracts::CommandResult::Conflict { error }
-                | kentos_contracts::CommandResult::NeedsInput { error } => {
+                kentos_commands::CommandResult::Failed { error }
+                | kentos_commands::CommandResult::Conflict { error }
+                | kentos_commands::CommandResult::NeedsInput { error } => {
                     refused = Some(error.message);
                     break;
                 }
@@ -514,7 +514,7 @@ impl App {
         let doc = self.document.as_mut()?;
         let result = kentos_native_application::domains_export::execute(
             &mut ExecutionContext::new(&mut doc.model),
-            kentos_contracts::DomainsExport { ids: Vec::new() },
+            kentos_commands::DomainsExport { ids: Vec::new() },
         );
         let package = self.answered(result)?;
         serde_json::to_string_pretty(&package)
@@ -551,7 +551,7 @@ impl App {
     /// shows the project's lists anew.
     pub(crate) fn domains_imported(&mut self, read: Option<(String, String)>) {
         let Some((file, text)) = read else { return };
-        let package: kentos_contracts::DomainsPackage = match serde_json::from_str(&text) {
+        let package: kentos_commands::DomainsPackage = match serde_json::from_str(&text) {
             Ok(p) => p,
             Err(e) => {
                 self.warn(format!(
@@ -560,7 +560,7 @@ impl App {
                 return;
             }
         };
-        if package.format != kentos_contracts::DOMAINS_PACKAGE {
+        if package.format != kentos_commands::DOMAINS_PACKAGE {
             self.warn(format!("{file} bir KentOS değer listesi paketi değil."));
             return;
         }
@@ -772,7 +772,7 @@ impl App {
 /// A range's end as typed: a date in its one form once it reads (7.10.2026 → 2026-10-07), else as typed.
 fn canonical_end(kind: LayerFieldKind, text: String) -> String {
     if kind.is_temporal() {
-        kentos_contracts::check_value(&kentos_contracts::LayerField::new("aralık", kind), &text)
+        kentos_commands::check_value(&kentos_commands::LayerField::new("aralık", kind), &text)
             .unwrap_or(text)
     } else {
         text

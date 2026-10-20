@@ -9,7 +9,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CreateOperation, EditOperation, EntitiesEdit, EntitiesSetProperties, Entity, EntityEdit,
     EntityGeometry, PropertiesOperation, Vec2 as Wire,
 };

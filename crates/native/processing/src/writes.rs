@@ -10,7 +10,7 @@
 
 use std::collections::BTreeSet;
 
-use kentos_contracts::fields::check_value;
+use kentos_commands::fields::check_value;
 use kentos_domain::Document;
 
 use crate::types::ChangeSet;

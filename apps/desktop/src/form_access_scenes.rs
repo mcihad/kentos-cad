@@ -28,10 +28,10 @@ fn translated_form() -> Value {
             "tarih": { "label": "Date" }, "onay": { "label": "Approved" },
             "bilgi": { "label": "The inspector records it; approval changes only on a building under review." } } }
     });
-    let typed: kentos_contracts::FormBody = serde_json::from_value(body.clone()).expect("a body");
+    let typed: kentos_commands::FormBody = serde_json::from_value(body.clone()).expect("a body");
     f["draft"] = body.clone();
     f["releases"] =
-        json!([{ "version": 1, "digest": kentos_contracts::body_digest(&typed), "body": body }]);
+        json!([{ "version": 1, "digest": kentos_commands::body_digest(&typed), "body": body }]);
     f
 }
 
@@ -91,11 +91,11 @@ pub(crate) fn related_bounded(app: &mut App) {
 pub(crate) fn stale_release(app: &mut App) {
     // The release as a publish now writes it: its bound fields' digest.
     let mut f = form(true);
-    let body: kentos_contracts::FormBody =
+    let body: kentos_commands::FormBody =
         serde_json::from_value(f["draft"].clone()).expect("a body");
-    let fields: Vec<kentos_contracts::LayerField> =
+    let fields: Vec<kentos_commands::LayerField> =
         serde_json::from_value(crate::form_scenes::fields()).expect("fields");
-    f["releases"][0]["fields"] = json!(kentos_contracts::bound_fields_digest(&body, &fields));
+    f["releases"][0]["fields"] = json!(kentos_commands::bound_fields_digest(&body, &fields));
     buildings_with(app, f);
     let doc = app.document.as_mut().expect("a drawing");
     let mut fields = doc.model.layers().get("bina").expect("bina").fields.clone();
@@ -104,8 +104,8 @@ pub(crate) fn stale_release(app: &mut App) {
     }
     let _ = kentos_native_application::registry::run(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        kentos_contracts::CAD_LAYERS_EDIT,
-        kentos_contracts::CallOp::Execute,
+        kentos_commands::CAD_LAYERS_EDIT,
+        kentos_commands::CallOp::Execute,
         json!({ "operation": "fields", "layer": "bina", "fields": fields }),
     );
     app.selection.set([Slot(1)]);
@@ -405,7 +405,7 @@ mod tests {
         let mut stale = form.draft.clone();
         stale.translations.get_mut("de").unwrap().items.insert(
             "yok".into(),
-            kentos_contracts::ItemWords {
+            kentos_commands::ItemWords {
                 label: Some("X".into()),
                 ..Default::default()
             },
@@ -450,8 +450,8 @@ mod tests {
                 .collect();
             let got = kentos_native_application::registry::run(
                 &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-                kentos_contracts::CAD_FORMS_VALIDATE,
-                kentos_contracts::CallOp::Execute,
+                kentos_commands::CAD_FORMS_VALIDATE,
+                kentos_commands::CallOp::Execute,
                 json!({ "form": "bina-denetimi", "uid": uid, "values": given }),
             )
             .expect("runs");
@@ -560,7 +560,7 @@ mod tests {
         let fields = app.layer_fields_of("bina");
         assert_ne!(
             r.fields.as_deref(),
-            Some(kentos_contracts::bound_fields_digest(&r.body, &fields).as_str()),
+            Some(kentos_commands::bound_fields_digest(&r.body, &fields).as_str()),
             "the storeys' bound changed since"
         );
         assert!(app.form_entry.is_some());
@@ -597,7 +597,7 @@ mod tests {
         assert!(!app.project_forms()[0].withdrawn);
     }
 
-    fn app_body(app: &App) -> kentos_contracts::FormBody {
+    fn app_body(app: &App) -> kentos_commands::FormBody {
         app.forms_window
             .as_ref()
             .and_then(|w| w.body.clone())

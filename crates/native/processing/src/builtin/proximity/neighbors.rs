@@ -6,7 +6,7 @@
 //! neighbour count and names written to its attributes in one undo step. The
 //! pairs are the run's store's (`Store::neighbors`).
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use serde_json::{Value, json};
 

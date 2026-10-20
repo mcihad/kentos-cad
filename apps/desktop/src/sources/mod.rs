@@ -25,7 +25,7 @@ use std::sync::Arc;
 use iced::Task;
 use iced::futures::channel::mpsc;
 use kentos_cloud::CatalogQuery;
-use kentos_contracts::{
+use kentos_commands::{
     CatalogSort, CatalogView, DocumentSnapshotV2, ProjectStorage, ProjectSummary,
 };
 use kentos_interaction::sources::{Listing, SourceEntry, SourceFile, SourceKind, listing};

@@ -12,7 +12,7 @@
 //! own object and undo step (“Ekle”); the ring says nothing but its point,
 //! as on the web. The rings' points are the shared core's (`donut_rings`).
 
-use kentos_contracts::{EntityGeometry, HatchLoop, HatchPattern, HatchPatternType};
+use kentos_commands::{EntityGeometry, HatchLoop, HatchPattern, HatchPatternType};
 use kentos_geometry_core::tools::drawing::donut_rings;
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -74,8 +74,8 @@ impl Donut {
         // Its two circles exact (docs/adr/0328 §1): each two half arcs.
         let circle = |r: f64| HatchLoop {
             pts: vec![
-                kentos_contracts::Vec2 { x: p.x + r, y: p.y },
-                kentos_contracts::Vec2 { x: p.x - r, y: p.y },
+                kentos_commands::Vec2 { x: p.x + r, y: p.y },
+                kentos_commands::Vec2 { x: p.x - r, y: p.y },
             ],
             bulges: Some(vec![1.0, 1.0]),
             curves: None,

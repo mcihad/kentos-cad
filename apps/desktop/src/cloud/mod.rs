@@ -110,7 +110,7 @@ use iced::Task;
 use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt as _, Stream};
 use kentos_cloud::{ApiFailure, Cloud as Client, DraftStore};
-use kentos_contracts::{
+use kentos_commands::{
     EventPage, Me, MembershipView, ProjectInfo, ProjectPermission, ProjectState, ProjectStorage,
 };
 use kentos_domain::Uuid;
@@ -188,11 +188,11 @@ pub enum Event {
     CatalogPage {
         id: u64,
         more: bool,
-        result: Result<kentos_contracts::ProjectPage, ApiFailure>,
+        result: Result<kentos_commands::ProjectPage, ApiFailure>,
     },
     /// The type filter (none: “Tüm türler”), the order, “Kurum projeleri”'s organisation.
-    CatalogKind(Option<kentos_contracts::ProjectType>),
-    CatalogSort(kentos_contracts::CatalogSort),
+    CatalogKind(Option<kentos_commands::ProjectType>),
+    CatalogSort(kentos_commands::CatalogSort),
     CatalogOrg(String),
     /// ↑ ↓ Home End in the list.
     CatalogStep(catalog::Step),
@@ -228,16 +228,16 @@ pub enum Event {
     /// The project's events followed while the tab shows it.
     HistoryEvents {
         id: u64,
-        result: Result<kentos_contracts::EventPage, ApiFailure>,
+        result: Result<kentos_commands::EventPage, ApiFailure>,
     },
     HistoryRetry,
-    HistoryDownloadRevision(kentos_contracts::FileRevision),
-    HistoryDownloadCheckpoint(kentos_contracts::Checkpoint),
+    HistoryDownloadRevision(kentos_commands::FileRevision),
+    HistoryDownloadCheckpoint(kentos_commands::Checkpoint),
     /// Revizyonla karşılaştır (docs/adr/0210 §8).
     HistoryCompare(crate::cloud::catalog_history::Point),
     HistoryCreate,
     HistoryRestore(catalog_history::Point),
-    HistoryRemove(kentos_contracts::Checkpoint),
+    HistoryRemove(kentos_commands::Checkpoint),
     HistoryRemoveAnswer(bool),
     /// The forms' fields: a name, a note, the revision named, the new project's workspace.
     HistoryName(String),
@@ -276,11 +276,11 @@ pub enum Event {
     },
     Committed {
         session: u64,
-        result: Result<kentos_contracts::CommitResult, ApiFailure>,
+        result: Result<kentos_commands::CommitResult, ApiFailure>,
     },
     Events {
         session: u64,
-        result: Result<kentos_contracts::EventPage, ApiFailure>,
+        result: Result<kentos_commands::EventPage, ApiFailure>,
     },
     Fetched {
         session: u64,
@@ -303,17 +303,17 @@ pub enum Event {
     TheirBlocks {
         session: u64,
         info: Option<ProjectInfo>,
-        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+        result: Result<Vec<kentos_commands::BlockRecord>, ApiFailure>,
     },
     /// The same, for keeping mine over them.
     MineBlocks {
         session: u64,
-        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+        result: Result<Vec<kentos_commands::BlockRecord>, ApiFailure>,
     },
     /// The same, after the server refused to remove a definition still placed there.
     GiveBackBlocks {
         session: u64,
-        result: Result<Vec<kentos_contracts::BlockRecord>, ApiFailure>,
+        result: Result<Vec<kentos_commands::BlockRecord>, ApiFailure>,
     },
     /// The server's tree after it refused ours (docs/adr/0081).
     ServerTree {
@@ -323,7 +323,7 @@ pub enum Event {
     // ── A file project ──────────────────────────────────────────────────
     FileSaved {
         id: u64,
-        result: Result<kentos_contracts::FileCommitted, ApiFailure>,
+        result: Result<kentos_commands::FileCommitted, ApiFailure>,
     },
     /// The open file project's events (file_follow.rs), the newest revision
     /// asked for, its access, and the project asked in a resync.
@@ -333,7 +333,7 @@ pub enum Event {
     },
     FileNewest {
         session: u64,
-        result: Result<kentos_contracts::FileRevisions, ApiFailure>,
+        result: Result<kentos_commands::FileRevisions, ApiFailure>,
     },
     FileAccess {
         session: u64,
@@ -349,16 +349,16 @@ pub enum Event {
     KeptSent {
         session: u64,
         based_on: u64,
-        result: Result<kentos_contracts::FileCommitted, ApiFailure>,
+        result: Result<kentos_commands::FileCommitted, ApiFailure>,
     },
     /// While offline: the account asked for, to learn whether the server answers.
     Probed(Result<Me, ApiFailure>),
     // ── Buluta yükle ────────────────────────────────────────────────────
     UploadTenant(usize),
     UploadName(String),
-    UploadStorage(kentos_contracts::ProjectStorage),
+    UploadStorage(kentos_commands::ProjectStorage),
     /// The catalog's fields of the new project: its type, description and tags.
-    UploadType(kentos_contracts::ProjectType),
+    UploadType(kentos_commands::ProjectType),
     UploadDescription(iced::widget::text_editor::Action),
     UploadTags(String),
     /// How much of the file the server has, of all of it.
@@ -387,12 +387,12 @@ pub enum Event {
     RenameSubmit,
     Renamed {
         id: u64,
-        result: Result<kentos_contracts::ProjectCatalogChange, ApiFailure>,
+        result: Result<kentos_commands::ProjectCatalogChange, ApiFailure>,
     },
     TrashConfirm,
     Trashed {
         id: u64,
-        result: Result<kentos_contracts::ProjectCatalogChange, ApiFailure>,
+        result: Result<kentos_commands::ProjectCatalogChange, ApiFailure>,
     },
     /// A window's Vazgeç or ×.
     Close,
@@ -446,7 +446,7 @@ pub struct CloudState {
     /// Why the last leaving's draft could not be written (the question says it).
     pub leave_failure: Option<String>,
     /// The name and storage of the project about to be opened (its progress says them).
-    pub open_hint: Option<(String, kentos_contracts::ProjectStorage)>,
+    pub open_hint: Option<(String, kentos_commands::ProjectStorage)>,
     /// Yeniden adlandır's window (actions.rs).
     pub rename: Option<actions::Rename>,
     /// What waits for the open database project's autosave to send everything first.
@@ -555,8 +555,8 @@ impl App {
             return;
         };
         let entry = doc.cloud_source().is_some_and(|s| {
-            s.info.access.role == kentos_contracts::ProjectRole::Entry
-                && s.info.storage == kentos_contracts::ProjectStorage::Database
+            s.info.access.role == kentos_commands::ProjectRole::Entry
+                && s.info.storage == kentos_commands::ProjectStorage::Database
         });
         doc.model.set_object_policy(if entry {
             kentos_domain::ObjectPolicy::AttributesOnly

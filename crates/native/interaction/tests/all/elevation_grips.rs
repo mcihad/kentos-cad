@@ -6,7 +6,7 @@
 use crate::common;
 
 use common::{Bench, E, N};
-use kentos_contracts::{Entity, EntityBase, LineEntity, PathEntity, RingGeometry, Vec2};
+use kentos_commands::{Entity, EntityBase, LineEntity, PathEntity, RingGeometry, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::Format;
 

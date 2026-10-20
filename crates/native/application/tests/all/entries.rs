@@ -10,7 +10,7 @@
 use std::collections::BTreeMap;
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{CallOp, DocumentSnapshotV1};
+use kentos_commands::{CallOp, DocumentSnapshotV1};
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
 

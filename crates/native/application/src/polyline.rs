@@ -18,7 +18,7 @@
 //! polyline tool always wrote. Widths all 0 are none. Otherwise the input is
 //! stored as given (zero bulges too).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, PathEntity, PolylineCreate, PolylineCreated,
     PolylinePlan,
 };
@@ -66,8 +66,8 @@ pub fn execute(
 ) -> CommandResult<PolylineCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_POLYLINE_CREATE,
-        kentos_contracts::CAD_POLYLINE_CREATE_VERSION,
+        kentos_commands::CAD_POLYLINE_CREATE,
+        kentos_commands::CAD_POLYLINE_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -188,7 +188,7 @@ fn polyline(input: PolylineCreate, id: u32) -> Entity {
     Entity::Polyline(PathEntity {
         ms: None,
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

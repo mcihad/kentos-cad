@@ -8,7 +8,7 @@ pub mod editor;
 pub mod insert;
 pub mod update;
 
-use kentos_contracts::{TableEntity, TableSource};
+use kentos_commands::{TableEntity, TableSource};
 
 /// Where a table's rows came from, as Öznitelikler says it.
 pub fn source_words(t: &TableEntity) -> String {
@@ -57,7 +57,7 @@ impl crate::app::App {
         let model = &doc.model;
         let mut names: Vec<String> = Vec::new();
         for s in self.selection.ids() {
-            if let Some(kentos_contracts::Entity::Insert(i)) = model.get(*s)
+            if let Some(kentos_commands::Entity::Insert(i)) = model.get(*s)
                 && let Some(b) = model.blocks().iter().find(|b| b.id == i.block)
                 && !names.contains(&b.name)
             {
@@ -76,7 +76,7 @@ impl crate::app::App {
             ..Default::default()
         };
         let cells = kentos_geometry_core::ops::table::from_rows(rows, true);
-        let source = kentos_contracts::TableSource::Blocks { names, by: None };
+        let source = kentos_commands::TableSource::Blocks { names, by: None };
         let geometry = kentos_interaction::table::new_table(
             model,
             &cells,
@@ -89,7 +89,7 @@ impl crate::app::App {
 
     pub(crate) fn place_table(
         &mut self,
-        table: kentos_contracts::EntityGeometry,
+        table: kentos_commands::EntityGeometry,
         label: &'static str,
     ) {
         self.session.run(Box::new(

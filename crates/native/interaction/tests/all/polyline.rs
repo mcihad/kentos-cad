@@ -7,7 +7,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::Level;
 
 /// The newest object as a polyline: its points relative to (E, N), and its bulges.

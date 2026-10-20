@@ -15,7 +15,7 @@ use std::collections::BTreeMap;
 
 use iced::widget::{Column, Id, text, text_editor, text_input};
 use iced::{Element, Task};
-use kentos_contracts::BlockId;
+use kentos_commands::BlockId;
 use kentos_interaction::js_trim;
 use kentos_ui::style;
 use kentos_ui::widget::{Dialog as Frame, focus_ring, overlay};

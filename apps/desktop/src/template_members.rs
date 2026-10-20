@@ -11,7 +11,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, EntitiesCreate, Entity, EntityGeometry, NewObject, TextAlign, Vec2 as Wire,
 };
 use kentos_domain::Slot;

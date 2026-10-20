@@ -3,7 +3,7 @@
 //! object moves, and going to a view is the host's camera. The shared cases
 //! are `fixtures/commands/v1/cad.views.edit.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, MOST_NAMED_VIEWS, MOST_VIEW_SIZE, NamedView, ProjectSettings,
     VIEW_REACH, ViewsEdit, ViewsEdited, ViewsOp, normal_angle, view_name_ok,
 };
@@ -108,8 +108,8 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
                 .unwrap_or_default();
             // A new view whose name gives an id another view keeps (renamed from that name) takes the next free one.
             let id = if id.is_empty() && !s.named_views.iter().any(|v| v.name == name) {
-                let own = kentos_contracts::view_id_of_name(name);
-                let taken = |k: &str| s.named_views.iter().any(|v| kentos_contracts::view_key(v) == k);
+                let own = kentos_commands::view_id_of_name(name);
+                let taken = |k: &str| s.named_views.iter().any(|v| kentos_commands::view_key(v) == k);
                 if taken(&own) {
                     (2..)
                         .map(|k| format!("{own}-{k}"))
@@ -167,7 +167,7 @@ fn next(doc: &Document, input: &ViewsEdit) -> Result<Next, Stop> {
             }
             // The id the old name gave stays the view's (docs/adr/0345 §2): marks pointing at it keep pointing.
             if s.named_views[at].id.is_empty() && to != name {
-                s.named_views[at].id = kentos_contracts::view_key(&s.named_views[at]);
+                s.named_views[at].id = kentos_commands::view_key(&s.named_views[at]);
             }
             s.named_views[at].name = to.to_owned();
             Some(s.named_views[at].clone())
@@ -234,8 +234,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ViewsEdit) -> CommandResult<Views
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ViewsEdit) -> CommandResult<ViewsEdited> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_VIEWS_EDIT,
-        kentos_contracts::CAD_VIEWS_EDIT_VERSION,
+        kentos_commands::CAD_VIEWS_EDIT,
+        kentos_commands::CAD_VIEWS_EDIT_VERSION,
         input,
         write_execute,
     )

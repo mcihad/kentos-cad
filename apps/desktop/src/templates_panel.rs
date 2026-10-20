@@ -631,7 +631,7 @@ mod tests {
 
     use iced::keyboard::key::{Named, NativeCode, Physical};
     use iced::keyboard::{Key, Modifiers};
-    use kentos_contracts::ProjectStyles;
+    use kentos_commands::ProjectStyles;
     use kentos_native_style::library::Source;
     use serde_json::json;
 

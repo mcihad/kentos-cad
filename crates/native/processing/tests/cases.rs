@@ -14,7 +14,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, PoisonError};
 
-use kentos_contracts::{DocumentSnapshotV1, Entity};
+use kentos_commands::{DocumentSnapshotV1, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::Bounds;
 use kentos_processing::files::Files;
@@ -455,12 +455,12 @@ fn observed(s: &Seen) -> Value {
             // group (docs/adr/0217 §7).
             let mut groups = Vec::new();
             fn walk_now(
-                nodes: &[kentos_contracts::LayerNode],
+                nodes: &[kentos_commands::LayerNode],
                 known: &BTreeSet<String>,
                 groups: &mut Vec<Value>,
             ) {
                 for n in nodes {
-                    if n.kind == kentos_contracts::LayerNodeType::Group && !known.contains(&n.id) {
+                    if n.kind == kentos_commands::LayerNodeType::Group && !known.contains(&n.id) {
                         groups.push(json!({ "id": n.id, "name": n.name }));
                     }
                     walk_now(&n.children, known, groups);
@@ -2682,7 +2682,7 @@ fn a_layer_filter_leaves_its_objects_out_of_the_calls_to_other_layers() {
     let all = counts(&doc);
     doc.set_layer_filter(
         "agac",
-        Some(kentos_contracts::LayerFilter {
+        Some(kentos_commands::LayerFilter {
             expression: Some("Tür = 'Çam'".into()),
             objects: Vec::new(),
         }),

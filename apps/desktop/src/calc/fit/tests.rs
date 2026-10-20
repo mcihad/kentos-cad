@@ -108,7 +108,7 @@ fn the_report_lists_the_pairs_and_the_solution() {
 
 fn app_with_fit_drawing() -> App {
     let (mut app, _) = App::boot(None);
-    let snapshot = kentos_contracts::DocumentSnapshotV1::from_json(include_str!(
+    let snapshot = kentos_commands::DocumentSnapshotV1::from_json(include_str!(
         "../../../../../fixtures/interaction/v1/vector-fit.kcad"
     ))
     .expect("the drawing reads");
@@ -141,7 +141,7 @@ fn matched() -> App {
 }
 
 /// A named point's place on a layer.
-fn named(app: &App, layer: &str, name: &str) -> kentos_contracts::Vec2 {
+fn named(app: &App, layer: &str, name: &str) -> kentos_commands::Vec2 {
     let doc = app.document.as_ref().expect("open");
     doc.model
         .by_layer(layer)
@@ -406,7 +406,7 @@ fn parametrelerle_stretches_the_local_layer_about_its_base() {
     );
     fit(&mut app, Event::Apply);
     assert_eq!(app.dialog, None, "the window closes");
-    let close = |a: kentos_contracts::Vec2, x: f64, y: f64| {
+    let close = |a: kentos_commands::Vec2, x: f64, y: f64| {
         (a.x - x).abs() < 1e-9 && (a.y - y).abs() < 1e-9
     };
     assert!(
@@ -610,7 +610,7 @@ fn kaucuk_levha_needs_three_links() {
 /// out, then the window again over the moved local layer: Adla eşle,
 /// Kauçuk levha, P5 left out again, P3 a fixed point. P3's place before
 /// the sheet.
-fn sheet_after_helmert() -> (App, kentos_contracts::Vec2) {
+fn sheet_after_helmert() -> (App, kentos_commands::Vec2) {
     let mut app = matched();
     calc(&mut app, Calc::Cell(4, USE, "0".into()));
     fit(&mut app, Event::Apply);

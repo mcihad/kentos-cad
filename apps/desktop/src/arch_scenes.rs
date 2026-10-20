@@ -26,7 +26,7 @@ fn on_level(app: &mut App) {
         return;
     };
     let mut settings = doc.model.settings().clone();
-    settings.arch.get_or_insert_with(Default::default).levels = vec![kentos_contracts::ArchLevel {
+    settings.arch.get_or_insert_with(Default::default).levels = vec![kentos_commands::ArchLevel {
         id: "zemin".into(),
         name: "Zemin kat".into(),
         elevation: 0.0,
@@ -177,9 +177,9 @@ fn following(app: &mut App) {
         let uids = kentos_interaction::properties::uids_of(&doc.model, &[Slot(2)]);
         let _ = kentos_native_application::transform::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::EntitiesTransform {
+            kentos_commands::EntitiesTransform {
                 uids,
-                transform: kentos_contracts::Transform::Move { dx: 1.0, dy: 0.0 },
+                transform: kentos_commands::Transform::Move { dx: 1.0, dy: 0.0 },
                 copy: None,
                 expected_revision: None,
             },

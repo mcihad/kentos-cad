@@ -7,7 +7,7 @@
 //! with the letters), with Joker `cad.entities.edit`'s `replaceText` (the pattern takes the whole text). The window
 //! is the desktop's `find_replace`.
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::text::edit::{Find, replace};
 
@@ -47,7 +47,7 @@ pub fn matches(doc: &Document, scope: Option<&[Slot]>, q: &Query) -> Vec<Match> 
     if q.find.is_empty() {
         return Vec::new();
     }
-    let texts: Vec<(Slot, &kentos_contracts::TextEntity)> = match scope {
+    let texts: Vec<(Slot, &kentos_commands::TextEntity)> = match scope {
         Some(slots) => slots
             .iter()
             .filter_map(|&s| match doc.get(s) {
@@ -121,8 +121,8 @@ pub fn write_query(doc: &mut Document, picked: &[Match], q: &Query) -> (usize, V
     if uids.is_empty() {
         return (0, Vec::new());
     }
-    let input = kentos_contracts::TextsEdit {
-        edit: kentos_contracts::TextEdit::Replace {
+    let input = kentos_commands::TextsEdit {
+        edit: kentos_commands::TextEdit::Replace {
             uids,
             find: q.find.clone(),
             with: q.replace.clone(),
@@ -136,7 +136,7 @@ pub fn write_query(doc: &mut Document, picked: &[Match], q: &Query) -> (usize, V
         input,
     );
     let n = match &result {
-        kentos_contracts::CommandResult::Completed { output, .. } => output.changed.len(),
+        kentos_commands::CommandResult::Completed { output, .. } => output.changed.len(),
         _ => 0,
     };
     (n, properties::said(result))

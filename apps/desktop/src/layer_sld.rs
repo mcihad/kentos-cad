@@ -5,7 +5,7 @@
 use std::path::PathBuf;
 
 use iced::Task;
-use kentos_contracts::{CommandResult, ExportSld, ImportSld};
+use kentos_commands::{CommandResult, ExportSld, ImportSld};
 use kentos_interaction::Level;
 use kentos_native_application::{ExecutionContext, sld};
 

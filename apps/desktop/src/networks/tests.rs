@@ -4,7 +4,7 @@
 //! changed one, En yakın tesis writes its ways in one step; and the pictures
 //! for the owner (the web's `shots.mjs networks`).
 
-use kentos_contracts::DocumentSnapshotV1;
+use kentos_commands::DocumentSnapshotV1;
 use serde_json::json;
 
 use super::Event as Networks;
@@ -365,13 +365,13 @@ pub(crate) fn subscribers_app() -> App {
             .attrs
             .insert("hat".into(), pipe);
     }
-    v2.settings.relations = vec![kentos_contracts::ProjectRelation {
+    v2.settings.relations = vec![kentos_commands::ProjectRelation {
         id: "aboneler".into(),
         name: "Aboneler".into(),
         parent: "su".into(),
         child: "abone".into(),
         field: "hat".into(),
-        on_delete: kentos_contracts::RelationDelete::default(),
+        on_delete: kentos_commands::RelationDelete::default(),
     }];
     let doc = Document::from_v2(v2, None).expect("opens");
     let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));

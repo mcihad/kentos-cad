@@ -4,7 +4,7 @@
 //! `crates/native/interaction/tests/all/elevating.rs`. Test code only.
 
 use iced::{Point, Rectangle, Size};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 

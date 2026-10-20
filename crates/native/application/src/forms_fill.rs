@@ -4,7 +4,7 @@
 //! does not go in, none does. A unique field takes no value twice: not another object's, not
 //! another record's of the same call. The shared cases are `fixtures/commands/v1/cad.forms.fill.json`.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, FormSeverity, FormsFill, FormsFilled,
 };
 use kentos_domain::{Document, Slot};
@@ -24,7 +24,7 @@ struct Checked {
 }
 
 /// `form_invalid` for the record `uid`: its first issue, at the value that gave it.
-fn invalid(input: &FormsFill, uid: &str, issues: &[kentos_contracts::FormIssue]) -> Stop {
+fn invalid(input: &FormsFill, uid: &str, issues: &[kentos_commands::FormIssue]) -> Stop {
     let errors: Vec<_> = issues
         .iter()
         .filter(|i| i.severity == FormSeverity::Error)
@@ -190,8 +190,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &FormsFill) -> CommandResult<Forms
 pub fn execute(cx: &mut ExecutionContext<'_>, input: FormsFill) -> CommandResult<FormsFilled> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_FORMS_FILL,
-        kentos_contracts::CAD_FORMS_FILL_VERSION,
+        kentos_commands::CAD_FORMS_FILL,
+        kentos_commands::CAD_FORMS_FILL_VERSION,
         input,
         write_execute,
     )

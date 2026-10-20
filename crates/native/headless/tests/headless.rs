@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::{DrawingFont, Workspace};
+use kentos_commands::{DrawingFont, Workspace};
 use kentos_headless::{NewDrawing, Op, Session, catalog};
 use serde_json::{Value, json};
 
@@ -567,7 +567,7 @@ fn a_file_is_planned_without_writing_and_written_whole() {
         written["output"]["bytes"].as_u64().expect("bytes")
     );
     assert_eq!(
-        kentos_contracts::encoding::sha256_hex(&bytes),
+        kentos_commands::encoding::sha256_hex(&bytes),
         written["output"]["sha256"].as_str().expect("sha256")
     );
     // No temporary file is left beside it.
@@ -775,20 +775,20 @@ fn a_millimetre_detail_on_tm_coordinates_survives_measure_edits_and_files() {
     s.export_dxf(&path).expect("writes");
     let read = kentos_formats::dxf::read(
         &std::fs::read(&path).expect("the file"),
-        &kentos_contracts::DxfReadOptions::default(),
+        &kentos_commands::DxfReadOptions::default(),
     )
     .expect("reads");
     let back = read
         .entities
         .iter()
         .find_map(|e| match e {
-            kentos_contracts::Entity::Polygon(p) => Some(p.pts.clone()),
+            kentos_commands::Entity::Polygon(p) => Some(p.pts.clone()),
             _ => None,
         })
         .expect("the square");
-    let want: Vec<kentos_contracts::Vec2> = corners
+    let want: Vec<kentos_commands::Vec2> = corners
         .iter()
-        .map(|(px, py)| kentos_contracts::Vec2 { x: *px, y: *py })
+        .map(|(px, py)| kentos_commands::Vec2 { x: *px, y: *py })
         .collect();
     assert_eq!(back, want);
 }
@@ -845,7 +845,7 @@ fn a_block_is_written_to_a_file_and_read_into_another_drawing() {
         .find(|b| b.name == "kare")
         .expect("the block");
     assert_eq!(made.entities.len(), 1);
-    assert_eq!(made.base, kentos_contracts::Vec2 { x: 0.0, y: 0.0 });
+    assert_eq!(made.base, kentos_commands::Vec2 { x: 0.0, y: 0.0 });
     // A file there is kept unless asked.
     let again = s
         .call(json!({ "command": "file.export.block", "input": { "path": p, "block": block } }))
@@ -927,7 +927,7 @@ fn a_varied_dynamic_insert_goes_to_dxf_as_the_block_it_draws() {
     // Read back, the variant is a plain block whose leaf reaches 1.2 m from the hinge, to the left.
     let read = kentos_formats::dxf::read(
         &std::fs::read(&path).expect("written"),
-        &kentos_contracts::DxfReadOptions::default(),
+        &kentos_commands::DxfReadOptions::default(),
     )
     .expect("reads");
     let variant = read
@@ -940,7 +940,7 @@ fn a_varied_dynamic_insert_goes_to_dxf_as_the_block_it_draws() {
         .entities
         .iter()
         .filter_map(|e| match e {
-            kentos_contracts::Entity::Line(l) => Some(l.a.x.min(l.b.x)),
+            kentos_commands::Entity::Line(l) => Some(l.a.x.min(l.b.x)),
             _ => None,
         })
         .fold(f64::INFINITY, f64::min);
@@ -979,11 +979,11 @@ fn dxf_hatches_go_round() {
             .call(json!({ "command": "file.import.dxf", "input": { "path": input.display().to_string() } }))
             .expect("answers");
         assert_eq!(answer["status"], "completed", "{name}: {answer}");
-        let hatches: Vec<&kentos_contracts::HatchEntity> = s
+        let hatches: Vec<&kentos_commands::HatchEntity> = s
             .document()
             .entities()
             .filter_map(|e| match e {
-                kentos_contracts::Entity::Hatch(h) => Some(h),
+                kentos_commands::Entity::Hatch(h) => Some(h),
                 _ => None,
             })
             .collect();
@@ -991,7 +991,7 @@ fn dxf_hatches_go_round() {
             assert!(
                 hatches.iter().all(|h| h.assoc.as_ref().is_some_and(|a| a
                     .objects()
-                    .all(|id| kentos_contracts::import_placeholder_index(id).is_none()))),
+                    .all(|id| kentos_commands::import_placeholder_index(id).is_none()))),
                 "{name}: tied to the objects' own ids: {:?} {answer}",
                 hatches.iter().map(|h| &h.assoc).collect::<Vec<_>>()
             );
@@ -1209,7 +1209,7 @@ fn a_project_is_packed_with_its_files_and_opens_where_the_folder_goes() {
         .as_array_mut()
         .expect("sources")
         .push(db);
-    let typed: kentos_contracts::DocumentSnapshotV2 =
+    let typed: kentos_commands::DocumentSnapshotV2 =
         serde_json::from_value(snapshot).expect("a snapshot");
     let project = work.join("proje.kcad");
     std::fs::write(
@@ -1367,7 +1367,7 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     snapshot["uids"].as_array_mut().expect("uids").push(json!("0192f5a0-7c3e-7d4a-9b1e-4c2f8a6d3100"));
     snapshot["settings"]["xrefPaths"] = json!(["../ortak"]);
     snapshot["settings"]["textStyles"] = json!([{ "id": "s1", "name": "Pafta", "font": "barlow", "fontFile": "romans.shx" }]);
-    let typed: kentos_contracts::DocumentSnapshotV2 = serde_json::from_value(snapshot).expect("a snapshot");
+    let typed: kentos_commands::DocumentSnapshotV2 = serde_json::from_value(snapshot).expect("a snapshot");
     std::fs::write(&project, kentos_kcad::encode_verified(&typed).expect("encoded")).expect("written");
     let mut s = Session::open(&project).expect("opens");
     let out = dir.join("teslim");
@@ -1400,7 +1400,7 @@ fn a_package_carries_the_references_sources_and_says_the_fonts() {
     let manifest = out.join("paket.json");
     assert_eq!(done["output"]["manifest"], manifest.display().to_string());
     let text = std::fs::read(&manifest).expect("the manifest");
-    assert_eq!(done["output"]["manifestSha256"], kentos_contracts::encoding::sha256_hex(&text));
+    assert_eq!(done["output"]["manifestSha256"], kentos_commands::encoding::sha256_hex(&text));
     // Moved elsewhere, the reference is found where the package put it, its digest the same.
     let moved = dir.join("baska-bilgisayar");
     std::fs::rename(&out, &moved).expect("moved");
@@ -1479,8 +1479,8 @@ fn arch_room() -> Session {
     s
 }
 
-fn arch_kind(e: &kentos_contracts::Entity) -> bool {
-    use kentos_contracts::Entity as E;
+fn arch_kind(e: &kentos_commands::Entity) -> bool {
+    use kentos_commands::Entity as E;
     matches!(
         e,
         E::Wall(_) | E::Opening(_) | E::Space(_) | E::Grid(_) | E::Column(_) | E::Stair(_) | E::Ramp(_) | E::Tag(_) | E::ViewMark(_)
@@ -1509,7 +1509,7 @@ fn arch_dxf_goes_round() {
         .call(json!({ "command": "file.import.dxf", "input": { "path": file.display().to_string() } }))
         .expect("answers");
     assert_eq!(answer["status"], "completed", "{answer}");
-    let uid = |d: &kentos_domain::Document, e: &kentos_contracts::Entity| {
+    let uid = |d: &kentos_domain::Document, e: &kentos_commands::Entity| {
         d.uid(kentos_domain::Slot(e.base().id)).map(|u| u.to_string()).expect("an id")
     };
     let before: Vec<(String, Value)> = s

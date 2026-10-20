@@ -133,8 +133,8 @@ pub fn param_from_json(v: &Value) -> Option<ParamDef> {
         "addressSource" => ParamKind::AddressSource,
         "network" => ParamKind::Network {
             prefers: match text(o, "prefers").as_deref() {
-                Some("utility") => kentos_contracts::NetworkKind::Utility,
-                _ => kentos_contracts::NetworkKind::Road,
+                Some("utility") => kentos_commands::NetworkKind::Utility,
+                _ => kentos_commands::NetworkKind::Road,
             },
         },
         "rasterValues" => ParamKind::RasterValues {

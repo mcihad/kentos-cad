@@ -11,7 +11,7 @@
 //! 3. a curve: the degree, the counts, the knots (`invalid_nurbs`);
 //! 4. the line weight; 5. the expected revision; 6. the layer.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, NurbsBy, NurbsCreate, NurbsCreated,
     NurbsEntity, NurbsPlan, Vec2,
 };
@@ -58,8 +58,8 @@ pub fn plan_in(doc: &Document, input: &NurbsCreate) -> CommandResult<NurbsPlan> 
 pub fn execute(cx: &mut ExecutionContext<'_>, input: NurbsCreate) -> CommandResult<NurbsCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_NURBS_CREATE,
-        kentos_contracts::CAD_NURBS_CREATE_VERSION,
+        kentos_commands::CAD_NURBS_CREATE,
+        kentos_commands::CAD_NURBS_CREATE_VERSION,
         input,
         write_execute,
     )
@@ -214,7 +214,7 @@ fn check(doc: &Document, input: &NurbsCreate) -> Result<(Vec<CommandWarning>, Cu
             }
         }
     };
-    if let Some(why) = kentos_contracts::nurbs_problem(
+    if let Some(why) = kentos_commands::nurbs_problem(
         curve.degree,
         &curve.ctrl,
         &curve.knots,
@@ -242,7 +242,7 @@ fn check(doc: &Document, input: &NurbsCreate) -> Result<(Vec<CommandWarning>, Cu
 fn entity(input: NurbsCreate, curve: Curve) -> Entity {
     Entity::Nurbs(NurbsEntity {
         base: EntityBase {
-            look: kentos_contracts::ObjectLook {
+            look: kentos_commands::ObjectLook {
                 line_type: input.line_type,
                 ..Default::default()
             },

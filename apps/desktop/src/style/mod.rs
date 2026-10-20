@@ -36,7 +36,7 @@ pub mod user_library;
 use std::path::Path;
 use std::sync::Arc;
 
-use kentos_contracts::ProjectStyles;
+use kentos_commands::ProjectStyles;
 use kentos_native_style::library::{Source, StyleLibrary};
 
 /// The style library and what drawing with it needs.

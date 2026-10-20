@@ -217,7 +217,7 @@ fn paint_text(frame: &mut Frame, s: &Obj, view: &View, o: &Options, alpha: f32) 
         }
     } else {
         crate::drawing_fonts::font(
-            kentos_contracts::DrawingFont::Arimo,
+            kentos_commands::DrawingFont::Arimo,
             if weight >= 700.0 { 700 } else { 400 },
             false,
         )

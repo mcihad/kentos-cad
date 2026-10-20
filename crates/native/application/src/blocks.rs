@@ -6,7 +6,7 @@
 
 use std::sync::Arc;
 
-use kentos_contracts::{BlockDefinition, Entity, EntityBase};
+use kentos_commands::{BlockDefinition, Entity, EntityBase};
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::block::{Attribute, Blocks, Definition};
 use kentos_geometry_core::entity::Entity as CoreEntity;
@@ -130,7 +130,7 @@ pub fn place_point(
     blocks: &[Arc<BlockDefinition>],
     e: &Entity,
     path: &[u32],
-    place: kentos_contracts::SubPlace,
+    place: kentos_commands::SubPlace,
 ) -> Result<kentos_geometry_core::Vec2, PlaceMiss> {
     use kentos_geometry_core::ops::subref::{piece, point};
     let core = kentos_domain::dimension_ties::core_place(place);

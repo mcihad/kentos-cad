@@ -8,7 +8,7 @@
 //! ask the same (`kentos_interaction::neighbours`), so a tool and a command
 //! follow the same neighbours.
 
-use kentos_contracts::EntityEdit;
+use kentos_commands::EntityEdit;
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geom::bulge::has_bulges;

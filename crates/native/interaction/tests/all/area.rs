@@ -9,7 +9,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{Level, measures};
 
@@ -319,8 +319,8 @@ fn parts(b: &Bench, slot: u32) -> Vec<f64> {
     let Some(Entity::Polygon(p)) = b.doc.get(Slot(slot)) else {
         panic!("an area at {slot}");
     };
-    let one = |pts: &[kentos_contracts::Vec2],
-               holes: &Option<Vec<kentos_contracts::RingGeometry>>| {
+    let one = |pts: &[kentos_commands::Vec2],
+               holes: &Option<Vec<kentos_commands::RingGeometry>>| {
         let mut q = p.clone();
         (q.pts, q.holes, q.zs, q.parts) = (pts.to_vec(), holes.clone(), None, None);
         measures(&Entity::Polygon(q)).0.expect("an area")

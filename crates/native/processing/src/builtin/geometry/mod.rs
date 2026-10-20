@@ -16,7 +16,7 @@ pub mod validity;
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{Entity, EntityBase};
+use kentos_commands::{Entity, EntityBase};
 use kentos_geometry_core::entity::Shape;
 use kentos_native_application::geometry::{edit_geometry, entity_of, shape};
 
@@ -165,7 +165,7 @@ pub fn layer_param(name: &str, color: &str) -> crate::types::ParamDef {
 
 /// A result's geometry as a new object on the output layer, with its attributes (Ağ analizi's ways and lines).
 pub fn edit_object(
-    geometry: &kentos_contracts::EntityGeometry,
+    geometry: &kentos_commands::EntityGeometry,
     layer_id: &str,
     attrs: BTreeMap<String, String>,
 ) -> Option<Entity> {

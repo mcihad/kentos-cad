@@ -21,7 +21,7 @@ use crate::types::{
     EnumOption, Feedback, OutputDef, OutputKind, ParamDef, ParamKind, Resolved, RunContext,
     RunResult, Target, Tool, Values,
 };
-use kentos_contracts::{PointStyle, PointSymbol};
+use kentos_commands::{PointStyle, PointSymbol};
 
 fn input(description: &str) -> ParamDef {
     features_param("input", "Nesneler", &GEO_KINDS, geo_scopes(), description)

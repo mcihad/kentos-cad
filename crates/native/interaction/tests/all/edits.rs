@@ -11,7 +11,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_domain::Slot;
 use kentos_interaction::{Level, MarkerShape, Tone};
 
@@ -115,7 +115,7 @@ fn offset_copies_at_the_distance_or_through_a_point() {
 /// Python and MCP send it, bit for bit, on the same drawing.
 #[test]
 fn the_offset_tool_writes_what_the_semantic_command_writes() {
-    use kentos_contracts::{CommandResult, EntitiesOffset, OffsetBy, Vec2};
+    use kentos_commands::{CommandResult, EntitiesOffset, OffsetBy, Vec2};
     use kentos_native_application::{ExecutionContext, offset};
 
     /// The object, where its edge is clicked, the side, İki yana, Kaynağı sil.
@@ -222,7 +222,7 @@ fn trim_cuts_between_the_visible_edges_and_shift_extends() {
 /// the same drawing, the store it builds being the desktop's.
 #[test]
 fn the_trim_and_extend_tools_write_what_the_commands_write_without_a_store() {
-    use kentos_contracts::{CommandResult, EntitiesTrim, TrimBoundaries, TrimPick, Vec2};
+    use kentos_commands::{CommandResult, EntitiesTrim, TrimBoundaries, TrimPick, Vec2};
     use kentos_native_application::{ExecutionContext, entities_extend, entities_trim};
 
     for (extend, at) in [(false, [-26.0, 12.0]), (true, [-9.0, 12.0])] {
@@ -629,7 +629,7 @@ fn a_vertex_is_added_on_an_edge_and_removed_at_a_vertex() {
 /// The closed area 10 with a second part, a 6 m counter-clockwise square
 /// from (30, −14) (docs/adr/0143); its first part's points.
 fn with_second_part(b: &mut Bench) -> Vec<[f64; 2]> {
-    use kentos_contracts::{AreaPart, Vec2 as Wire};
+    use kentos_commands::{AreaPart, Vec2 as Wire};
     let Some(Entity::Polygon(mut area)) = b.doc.get(Slot(10)).cloned() else {
         panic!("the area");
     };
@@ -727,7 +727,7 @@ fn a_vertex_of_another_part_is_added_and_removed_there() {
 
 /// A circle made a 2 × 2 associative array through the array command (docs/adr/0300).
 fn arrayed(b: &mut Bench) {
-    use kentos_contracts::{ArrayLayout, EntitiesArray};
+    use kentos_commands::{ArrayLayout, EntitiesArray};
     use kentos_native_application::{ExecutionContext, array};
     let c = b.add_circle("cizim", [-40.0, 20.0], 1.0);
     let input = EntitiesArray {
@@ -743,7 +743,7 @@ fn arrayed(b: &mut Bench) {
     };
     let result = array::execute(&mut ExecutionContext::new(&mut b.doc), input);
     assert!(
-        matches!(result, kentos_contracts::CommandResult::Completed { .. }),
+        matches!(result, kentos_commands::CommandResult::Completed { .. }),
         "{result:?}"
     );
 }
@@ -751,7 +751,7 @@ fn arrayed(b: &mut Bench) {
 fn rows_and_items(b: &Bench) -> (u32, usize) {
     let a = &b.doc.arrays()[0];
     match a.layout {
-        kentos_contracts::ArrayLayout::Grid { rows, .. } => {
+        kentos_commands::ArrayLayout::Grid { rows, .. } => {
             (rows, a.items.iter().filter(|i| i.uid.is_some()).count())
         }
         _ => panic!("a grid"),

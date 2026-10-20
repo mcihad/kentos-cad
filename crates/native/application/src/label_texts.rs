@@ -7,7 +7,7 @@
 //! with the object's own label. A contour's class gives its height too (its
 //! first vertex's). The web's is `apps/web/src/model/labelTexts.ts`.
 
-use kentos_contracts::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, default_label};
+use kentos_commands::{Entity, LabelStyle, LabelsMode, LayerNode, LineLabelMode, default_label};
 use kentos_expression::rows::{As, RowsInput, TEXT, evaluate_rows_on};
 use kentos_expression::{Expr, Schema, Unit, compile_with};
 use kentos_geometry_core::entity::Shape;

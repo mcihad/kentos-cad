@@ -23,7 +23,7 @@ use std::collections::BTreeSet;
 
 use iced::widget::{Column, button, container, row, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::{LayerEditOperation, LayerNodeType, LayersEdit};
+use kentos_commands::{LayerEditOperation, LayerNodeType, LayersEdit};
 use kentos_domain::Slot;
 use kentos_interaction::Level;
 use kentos_ui::icon::{Icon, Tone, icon};
@@ -526,7 +526,7 @@ mod tests {
 
     #[test]
     fn a_copy_takes_the_fields_and_the_values_as_they_are() {
-        use kentos_contracts::{LayerField, LayerFieldKind};
+        use kentos_commands::{LayerField, LayerFieldKind};
         let mut app = app_with_drawing();
         {
             let model = &mut app.document.as_mut().expect("a drawing").model;

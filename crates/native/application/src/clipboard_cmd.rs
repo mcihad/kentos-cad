@@ -10,7 +10,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use kentos_contracts::{
+use kentos_commands::{
     BlockId, Clip, CommandResult, CommandWarning, DocumentSnapshotV2, DrawingUnit, EntitiesCopy,
     EntitiesPaste, EntitiesPastePlan, EntitiesPasted, Entity, EntityId, LayerNode, LayerNodeType,
     PasteConflicts, PasteRenamed, PasteReport, TableSource, Vec2 as Wire,
@@ -239,11 +239,11 @@ pub mod entities_copy {
         match copy_check(doc, input) {
             Ok(clip) => {
                 // The clipboard takes no constraints (docs/adr/0337 §3): said when the objects have some.
-                let ids: Vec<kentos_contracts::EntityId> = input
+                let ids: Vec<kentos_commands::EntityId> = input
                     .uids
                     .iter()
                     .filter_map(|u| {
-                        kentos_contracts::uuid_from_text(u).map(kentos_contracts::EntityId)
+                        kentos_commands::uuid_from_text(u).map(kentos_commands::EntityId)
                     })
                     .collect();
                 let held = crate::constraint_copy::any_constrained(doc, &ids);
@@ -893,8 +893,8 @@ pub mod entities_paste {
     ) -> CommandResult<EntitiesPasted> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_ENTITIES_PASTE,
-            kentos_contracts::CAD_ENTITIES_PASTE_VERSION,
+            kentos_commands::CAD_ENTITIES_PASTE,
+            kentos_commands::CAD_ENTITIES_PASTE_VERSION,
             input,
             |cx, input| match paste_check(cx.doc, &input) {
                 Ok(prepared) => write(cx.doc, prepared),

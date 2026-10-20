@@ -7,7 +7,7 @@
 use crate::common;
 
 use common::{Bench, rel};
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 use kentos_interaction::Level;
 
 const SCENE: &str = include_str!("../../../../../fixtures/interaction/v1/join-chain.kcad");

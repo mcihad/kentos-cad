@@ -13,8 +13,8 @@
 
 use std::collections::{BTreeMap, HashMap, HashSet};
 
-use kentos_contracts::blocks::name_key;
-use kentos_contracts::{
+use kentos_commands::blocks::name_key;
+use kentos_commands::{
     AttributeFilter, AttributeOp, BlockCount, BlockDefinition, BlockId, BlockReport, BlocksQueried,
     BlocksQuery, CommandResult, Entity, InsertEntity, ScheduleCell,
 };
@@ -47,8 +47,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &BlocksQuery) -> CommandResult<Blo
 pub fn execute(cx: &mut ExecutionContext<'_>, input: BlocksQuery) -> CommandResult<BlocksQueried> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_BLOCKS_QUERY,
-        kentos_contracts::CAD_BLOCKS_QUERY_VERSION,
+        kentos_commands::CAD_BLOCKS_QUERY,
+        kentos_commands::CAD_BLOCKS_QUERY_VERSION,
         input,
         |cx, input| answer(cx.doc, &input),
     )
@@ -275,7 +275,7 @@ fn counts(
         }
         let mut m: HashMap<BlockId, u64> = HashMap::new();
         if let Some(b) = doc.block(id)
-            && depth < kentos_contracts::MAX_BLOCK_DEPTH
+            && depth < kentos_commands::MAX_BLOCK_DEPTH
         {
             for e in &b.entities {
                 if let Entity::Insert(i) = e {

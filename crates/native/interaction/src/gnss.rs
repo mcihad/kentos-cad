@@ -17,7 +17,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::{
+use kentos_commands::{
     AreaPart, Entity, EntityBase, GnssLine, GnssPoint, HeightKind, LineError, PathEntity,
     PointEntity, Vec2 as Wire,
 };

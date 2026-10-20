@@ -12,7 +12,7 @@
 
 use iced::widget::{Column, Space, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     AddressLocator, AddressesDefine, AddressesDefineOperation, address_locators_problem,
     next_address_locator_id,
 };
@@ -300,8 +300,8 @@ impl App {
                         doors: None,
                         streets: None,
                         areas: Vec::new(),
-                        min_score: kentos_contracts::ADDRESS_MIN_SCORE,
-                        reach: kentos_contracts::ADDRESS_REACH,
+                        min_score: kentos_commands::ADDRESS_MIN_SCORE,
+                        reach: kentos_commands::ADDRESS_REACH,
                     })
                     .collect();
                 let mut name = "Numarataj".to_owned();
@@ -422,13 +422,13 @@ impl App {
             |input: AddressesDefine, doc: &mut kentos_domain::Document| -> Result<(), String> {
                 let mut cx = kentos_native_application::ExecutionContext::new(doc);
                 match kentos_native_application::address_define::execute(&mut cx, input) {
-                    kentos_contracts::CommandResult::Completed { warnings, .. } => {
+                    kentos_commands::CommandResult::Completed { warnings, .. } => {
                         said.extend(warnings.into_iter().map(|w| w.message));
                         Ok(())
                     }
-                    kentos_contracts::CommandResult::Failed { error }
-                    | kentos_contracts::CommandResult::Conflict { error }
-                    | kentos_contracts::CommandResult::NeedsInput { error } => Err(error.message),
+                    kentos_commands::CommandResult::Failed { error }
+                    | kentos_commands::CommandResult::Conflict { error }
+                    | kentos_commands::CommandResult::NeedsInput { error } => Err(error.message),
                     _ => Err("Adres verisi yazılamadı.".into()),
                 }
             };
@@ -567,7 +567,7 @@ impl App {
                 tool(
                     "plus",
                     ADD,
-                    (w.forms.len() < kentos_contracts::ADDRESS_LOCATOR_LIMIT)
+                    (w.forms.len() < kentos_commands::ADDRESS_LOCATOR_LIMIT)
                         .then(|| msg(Event::Add))
                 ),
                 tool("erase", REMOVE, w.chosen.map(|_| msg(Event::Remove)))

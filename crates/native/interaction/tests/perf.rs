@@ -7,7 +7,7 @@
 
 use std::time::{Duration, Instant};
 
-use kentos_contracts::{
+use kentos_commands::{
     DocumentSnapshotV1, Entity, EntityBase, EntityId, LayerFilter, LineEntity, PathEntity,
     Vec2 as Wire,
 };
@@ -357,7 +357,7 @@ fn layer_filter_on_a_large_layer() {
 #[test]
 #[ignore = "a measurement: run by hand in release"]
 fn label_texts_on_a_large_layer() {
-    use kentos_contracts::{LabelClass, LabelPlacement, LabelStyle, LabelsMode, LayerLabels};
+    use kentos_commands::{LabelClass, LabelPlacement, LabelStyle, LabelsMode, LayerLabels};
     let mut doc = drawing(316);
     let slots: Vec<Slot> = doc
         .entities()
@@ -433,7 +433,7 @@ fn label_texts_on_a_large_layer() {
 /// A layer of `n` points for the charts (docs/adr/0227 §11): Grup of 30 values,
 /// Değer with two fraction digits, and with `xy` a Yaş too; deterministic.
 fn chart_entities(n: usize, xy: bool) -> Vec<Entity> {
-    use kentos_contracts::PointEntity;
+    use kentos_commands::PointEntity;
     (0..n)
         .map(|i| {
             let mut b = base("nokta");
@@ -470,7 +470,7 @@ fn chart_entities(n: usize, xy: bool) -> Vec<Entity> {
 #[test]
 #[ignore = "a measurement: run by hand in release"]
 fn charts_on_a_large_layer() {
-    use kentos_contracts::{LayerField, LayerFieldKind};
+    use kentos_commands::{LayerField, LayerFieldKind};
     use kentos_geometry_core::ops::charts::Work;
     use kentos_geometry_core::ops::charts::data::DataSet;
     use kentos_geometry_core::ops::charts::layout::Frame;

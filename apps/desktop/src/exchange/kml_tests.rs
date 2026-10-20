@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::Entity;
+use kentos_commands::Entity;
 
 use super::gis_import::{self, Source};
 use super::tests::{count, run, said, send};
@@ -191,7 +191,7 @@ fn geojson_is_written_in_wgs84_when_asked() {
     assert!(!text.contains("\"crs\""));
     let back = kentos_formats::geojson::read(
         text.as_bytes(),
-        &kentos_contracts::GeoJsonReadOptions {
+        &kentos_commands::GeoJsonReadOptions {
             layer: "cizim".to_owned(),
             max_entities: 0,
         },

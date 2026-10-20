@@ -9,7 +9,7 @@
 //! on the active layer and the tool waits for the next pair. Esc and Ctrl+Z
 //! let the last side go; Esc with none leaves.
 
-use kentos_contracts::{CreateOperation, Entity, EntityGeometry};
+use kentos_commands::{CreateOperation, Entity, EntityGeometry};
 use kentos_domain::Slot;
 use kentos_geometry_core::api::json::Json;
 use kentos_geometry_core::entity::{Entity as CoreEntity, Shape, entity_outline};

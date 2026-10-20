@@ -5,7 +5,7 @@
 //! each link, the local correction the sheet makes beyond the best
 //! similarity. The summary, the report and the reasons there is no sheet.
 
-use kentos_contracts::RubberLink;
+use kentos_commands::RubberLink;
 use kentos_geometry_core::ops::fit::{self as solver, FitPair};
 use kentos_geometry_core::ops::rubber::{Link, RubberError, Sheet};
 use kentos_interaction::fixed;
@@ -46,11 +46,11 @@ impl Links {
         let links = core
             .iter()
             .map(|l| RubberLink {
-                from: kentos_contracts::Vec2 {
+                from: kentos_commands::Vec2 {
                     x: l.from.x,
                     y: l.from.y,
                 },
-                to: kentos_contracts::Vec2 {
+                to: kentos_commands::Vec2 {
                     x: l.to.x,
                     y: l.to.y,
                 },

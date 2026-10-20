@@ -12,7 +12,7 @@
 //! write; the object is replaced by its pieces, the first in its place:
 //! “Aradaki kısım silindi.”, “Nesne bölündü: 2 parça.”
 
-use kentos_contracts::{CommandResult, EntitiesBreak, Entity};
+use kentos_commands::{CommandResult, EntitiesBreak, Entity};
 use kentos_domain::{Document, Slot};
 use kentos_geometry_core::geometry::dist;
 use kentos_native_application::geometry::shape;

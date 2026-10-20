@@ -11,7 +11,7 @@ use iced::futures::channel::mpsc;
 use iced::futures::{SinkExt, Stream};
 use iced::widget::{Row as UiRow, button, column, container, row, scrollable, text_input};
 use iced::{Center, Element, Fill, Length, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CAD_PROCESSING_BATCH, CallAnswer, CallEnvelope, CallOp, CommandResult, JobPhase,
     ProcessingBatched, ProcessingRecord,
 };

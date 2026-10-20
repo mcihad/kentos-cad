@@ -3,7 +3,7 @@
 //! text styles of which ten are unused. The shared cases are `fixtures/commands/v1/cad.drawing.audit.json`.
 
 use kentos_domain::Document;
-use kentos_domain::contracts::{AuditPurge, CommandResult, DocumentSnapshotV1, DrawingAudit};
+use kentos_commands::{AuditPurge, CommandResult, DocumentSnapshotV1, DrawingAudit};
 use kentos_native_application::{ExecutionContext, drawing_audit};
 use serde_json::json;
 

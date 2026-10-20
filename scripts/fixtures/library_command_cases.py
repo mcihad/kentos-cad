@@ -1,6 +1,6 @@
 """Writes fixtures/commands/v1/cad.library.edit.json: the shared cases of `cad.library.edit` v1 (docs/adr/0314 §3).
 
-The expectations are built here from the contract's rules (crates/shared/contracts/src/cad_library.rs: the checks and
+The expectations are built here from the contract's rules (crates/shared/commands/src/cad_library.rs: the checks and
 their order, the codes, paths and words) and the style library's rules as docs/adr/0092, 0176 and docs/STYLE.md §5 give
 them (an item's id, kind, name and path; a copy “… (kopya)”; a blank name “Adsız”; a file's assets taken in before its
 symbols, its templates last), without KentOS code:

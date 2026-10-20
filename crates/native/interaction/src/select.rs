@@ -30,7 +30,7 @@
 //! corners and edges of the objects around it right too, in the same step
 //! (`neighbours`): they are drawn dashed while the grip moves.
 
-use kentos_contracts::{EditOperation, EntitiesEdit, EntityEdit};
+use kentos_commands::{EditOperation, EntitiesEdit, EntityEdit};
 use kentos_domain::{Slot, Uuid};
 use kentos_geometry_core::entity::Shape;
 use kentos_geometry_core::geometry::dist;
@@ -354,8 +354,8 @@ impl Select {
                     {
                         // A twisted view (docs/adr/0285 §2): the box drawn on the screen is a turned ring on the ground.
                         Some(ring) => ring,
-                        None if crossing => kentos_contracts::SelectRegion::Crossing { a, b },
-                        None => kentos_contracts::SelectRegion::Window { a, b },
+                        None if crossing => kentos_commands::SelectRegion::Crossing { a, b },
+                        None => kentos_commands::SelectRegion::Window { a, b },
                     };
                 let ids = crate::selectable::query(cx, region);
                 if p.shift {
@@ -628,7 +628,7 @@ impl Select {
 
     /// A transform mode's placement: the selection through `cad.entities.transform`, in place or as copies; with
     /// Kopya the grip stays hot, else the edit ends.
-    fn write_transform(&mut self, t: kentos_contracts::Transform, cx: &mut Context<'_>) {
+    fn write_transform(&mut self, t: kentos_commands::Transform, cx: &mut Context<'_>) {
         let Some(g) = self.grip.as_mut() else {
             return;
         };

@@ -22,7 +22,7 @@ mod wizard;
 
 use iced::widget::{Column, Row, button, column, container, row, text};
 use iced::{Center, Element, Fill, Task};
-use kentos_contracts::Workspace;
+use kentos_commands::Workspace;
 use kentos_ui::icon::{Icon, Tone, icon};
 use kentos_ui::theme::typography;
 use kentos_ui::{label, style};
@@ -145,8 +145,8 @@ impl App {
 }
 
 /// A drawing typeface's name; a project that names none draws in Barlow.
-pub fn font_label(font: Option<kentos_contracts::DrawingFont>) -> &'static str {
-    let font = font.unwrap_or(kentos_contracts::DrawingFont::Barlow);
+pub fn font_label(font: Option<kentos_commands::DrawingFont>) -> &'static str {
+    let font = font.unwrap_or(kentos_commands::DrawingFont::Barlow);
     settings::FONTS
         .iter()
         .find(|(f, _)| *f == font)
@@ -248,7 +248,7 @@ fn setting<'a, M: 'a>(
 
 #[cfg(test)]
 mod tests {
-    use kentos_contracts::{AreaUnit, DrawingUnit, Workspace};
+    use kentos_commands::{AreaUnit, DrawingUnit, Workspace};
 
     use super::Event;
     use super::settings::Event as Settings;
@@ -479,7 +479,7 @@ mod tests {
     /// A plate 120 × 80 mm with a hole of 25 mm radius at the origin of a
     /// local drawing (kept in metres); the plate's slot.
     fn local_plate(app: &mut App) -> kentos_domain::Slot {
-        use kentos_contracts::{CircleEntity, Entity, EntityBase, PathEntity, Vec2};
+        use kentos_commands::{CircleEntity, Entity, EntityBase, PathEntity, Vec2};
         let base = || EntityBase {
             look: Default::default(),
             id: 0,

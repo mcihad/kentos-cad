@@ -16,7 +16,7 @@ mod view;
 mod write;
 
 use iced::Task;
-use kentos_contracts::{AngleUnit, Entity, ProjectSettings};
+use kentos_commands::{AngleUnit, Entity, ProjectSettings};
 use kentos_domain::Document as Model;
 use kentos_geometry_core::survey::adjust::horizontal::{
     self, ApproxPoint, KnownPoint, NetRow, NetworkInput, NetworkResult,
@@ -265,7 +265,7 @@ fn cell(row: &[String], col: usize) -> &str {
 
 /// The drawing's points named `name` (its label or its `Ad`, compared the
 /// Turkish way, as the Hesap windows find a known point).
-pub fn named_points<'a>(model: &'a Model, name: &str) -> Vec<&'a kentos_contracts::PointEntity> {
+pub fn named_points<'a>(model: &'a Model, name: &str) -> Vec<&'a kentos_commands::PointEntity> {
     let key = upper_tr(js_trim(name));
     model
         .entities()

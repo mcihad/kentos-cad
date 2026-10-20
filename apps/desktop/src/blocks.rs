@@ -10,7 +10,7 @@
 
 use iced::widget::{Column, Id, text, text_input};
 use iced::{Element, Task};
-use kentos_contracts::BlocksDefine;
+use kentos_commands::BlocksDefine;
 use kentos_domain::Slot;
 use kentos_interaction::{Format, Level, Vec2, block_define};
 use kentos_ui::style;
@@ -65,7 +65,7 @@ struct Define {
     layer: String,
     layer_name: String,
     /// The drawing's unit, the block's (docs/adr/0315 §4).
-    units: kentos_contracts::BlockUnits,
+    units: kentos_commands::BlockUnits,
     /// The command's answer for the window as it is: its warnings' words, or its refusal's.
     answer: Result<Vec<String>, String>,
 }
@@ -77,7 +77,7 @@ impl Define {
         let about = self.description.trim();
         BlocksDefine {
             name: self.name.trim().to_owned(),
-            base: kentos_contracts::Vec2 {
+            base: kentos_commands::Vec2 {
                 x: self.base.x,
                 y: self.base.y,
             },
@@ -124,7 +124,7 @@ impl App {
             .get(&layer)
             .map_or_else(|| layer.clone(), |n| n.name.clone());
         let name =
-            kentos_contracts::blocks::free_name(model.blocks().iter().map(|b| b.name.as_str()));
+            kentos_commands::blocks::free_name(model.blocks().iter().map(|b| b.name.as_str()));
         self.blocks.define = Some(Define {
             base,
             uids,
@@ -133,7 +133,7 @@ impl App {
             replace: self.blocks.replace,
             layer,
             layer_name,
-            units: kentos_contracts::BlockUnits::of(
+            units: kentos_commands::BlockUnits::of(
                 model.settings().drawing_unit.unwrap_or_default(),
             ),
             answer: Ok(Vec::new()),

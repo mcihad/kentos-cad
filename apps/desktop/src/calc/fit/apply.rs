@@ -2,7 +2,7 @@
 //! controls, Adla eşle said in the log, a row's pick, and Uygula through
 //! `cad.entities.transform`.
 
-use kentos_contracts::{CommandResult, EntitiesTransform};
+use kentos_commands::{CommandResult, EntitiesTransform};
 use kentos_domain::Slot;
 use kentos_interaction::{Format, Level};
 use kentos_native_application::{ExecutionContext, transform};

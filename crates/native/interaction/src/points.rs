@@ -3,7 +3,7 @@
 //! cursor (ortho, polar tracking), the echo of a taken point, and how a
 //! product command's answer reaches the user.
 
-use kentos_contracts::CommandResult;
+use kentos_commands::CommandResult;
 use kentos_geometry_core::tools::locks::{Direction, constrain_locked, perpendicular};
 use kentos_geometry_core::tools::point_input::Tracking;
 use kentos_geometry_core::tools::ucs::constrain_cursor_in;
@@ -210,8 +210,8 @@ pub(crate) fn written<T>(result: CommandResult<T>, cx: &mut Context<'_>) -> Opti
 }
 
 /// `Vec2` as the contracts carry it.
-pub(crate) fn wire(p: Vec2) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 { x: p.x, y: p.y }
+pub(crate) fn wire(p: Vec2) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
 /// A closed shape a tool built (a rectangle, a regular polygon) written
@@ -225,7 +225,7 @@ pub(crate) fn write_ring(
     cx: &mut Context<'_>,
 ) -> bool {
     use kentos_native_application::{ExecutionContext, polygon};
-    let input = kentos_contracts::PolygonCreate {
+    let input = kentos_commands::PolygonCreate {
         line_type: cx.draft.line_type,
         wipeout: None,
         layer_id: cx.doc.layers().active().to_owned(),
@@ -336,21 +336,21 @@ pub(crate) fn write_area_by(
 /// web's `writeObjects`). One undo step, “Ekle” or the tool's `operation`.
 /// The command's answer, or `None` when it refused (its reason said).
 pub(crate) fn write_objects(
-    geometries: Vec<kentos_contracts::EntityGeometry>,
-    operation: Option<kentos_contracts::CreateOperation>,
+    geometries: Vec<kentos_commands::EntityGeometry>,
+    operation: Option<kentos_commands::CreateOperation>,
     cx: &mut Context<'_>,
-) -> Option<kentos_contracts::EntitiesCreated> {
+) -> Option<kentos_commands::EntitiesCreated> {
     write_objects_with(geometries, None, operation, cx)
 }
 
 /// `write_objects` with the objects' attributes (Blok ekle's values, docs/adr/0144 §7),
 /// over an object template's.
 pub(crate) fn write_objects_with(
-    geometries: Vec<kentos_contracts::EntityGeometry>,
+    geometries: Vec<kentos_commands::EntityGeometry>,
     attrs: Option<std::collections::BTreeMap<String, String>>,
-    operation: Option<kentos_contracts::CreateOperation>,
+    operation: Option<kentos_commands::CreateOperation>,
     cx: &mut Context<'_>,
-) -> Option<kentos_contracts::EntitiesCreated> {
+) -> Option<kentos_commands::EntitiesCreated> {
     let each = geometries.into_iter().map(|g| (g, attrs.clone())).collect();
     write_objects_each(each, operation, cx)
 }
@@ -359,18 +359,18 @@ pub(crate) fn write_objects_with(
 /// docs/adr/0189 §3), over an object template's.
 pub(crate) fn write_objects_each(
     objects: Vec<(
-        kentos_contracts::EntityGeometry,
+        kentos_commands::EntityGeometry,
         Option<std::collections::BTreeMap<String, String>>,
     )>,
-    operation: Option<kentos_contracts::CreateOperation>,
+    operation: Option<kentos_commands::CreateOperation>,
     cx: &mut Context<'_>,
-) -> Option<kentos_contracts::EntitiesCreated> {
+) -> Option<kentos_commands::EntitiesCreated> {
     use kentos_native_application::{ExecutionContext, create};
-    let input = kentos_contracts::EntitiesCreate {
+    let input = kentos_commands::EntitiesCreate {
         layer_id: cx.doc.layers().active().to_owned(),
         objects: objects
             .into_iter()
-            .map(|(geometry, attrs)| kentos_contracts::NewObject {
+            .map(|(geometry, attrs)| kentos_commands::NewObject {
                 // And the current line type (docs/adr/0260 §2).
                 line_type: geometry
                     .draws_lines()
@@ -401,7 +401,7 @@ pub(crate) fn write_objects_each(
 }
 
 /// Points as the contracts carry them.
-pub(crate) fn wire_all(pts: &[Vec2]) -> Vec<kentos_contracts::Vec2> {
+pub(crate) fn wire_all(pts: &[Vec2]) -> Vec<kentos_commands::Vec2> {
     pts.iter().map(|p| wire(*p)).collect()
 }
 

@@ -9,7 +9,7 @@
 //! drawing and the view stay), the click its execute, one undo step
 //! “Alan oluştur” on the active layer; its refusals and warnings are the tool's.
 
-use kentos_contracts::{EntitiesBoundary, NewLook, TrimBoundaries};
+use kentos_commands::{EntitiesBoundary, NewLook, TrimBoundaries};
 use kentos_domain::Slot;
 use kentos_geometry_core::entity::polygon_ring;
 use kentos_geometry_core::geom::arrangement::Area;

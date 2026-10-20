@@ -9,7 +9,7 @@
 
 use std::collections::BTreeMap;
 
-use kentos_contracts::fields::check_value;
+use kentos_commands::fields::check_value;
 use serde_json::json;
 
 use super::{copy_of, output_param};

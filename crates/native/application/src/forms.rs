@@ -2,7 +2,7 @@
 //! (the latest release or the draft), the form prepared over its layer's fields, the record an input
 //! names and the write profile a layer's enforcing forms make (`cad.entities.set`, §8).
 
-use kentos_contracts::{
+use kentos_commands::{
     Entity, FormBody, FormIssue, FormSeverity, FormSummary, LayerField, ProjectForm,
     ProjectSettings,
 };
@@ -144,7 +144,7 @@ pub(crate) fn body<'a>(
 }
 
 /// The layer's record rules (docs/adr/0438 §1), which a form over it shows.
-pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_contracts::LayerRule] {
+pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_commands::LayerRule] {
     doc.layers()
         .get(layer)
         .map_or(&[][..], |n| n.rules.as_slice())
@@ -154,7 +154,7 @@ pub(crate) fn rules<'d>(doc: &'d Document, layer: &str) -> &'d [kentos_contracts
 pub(crate) fn contingents<'d>(
     doc: &'d Document,
     layer: &str,
-) -> &'d [kentos_contracts::FieldGroup] {
+) -> &'d [kentos_commands::FieldGroup] {
     doc.layers()
         .get(layer)
         .map_or(&[][..], |n| n.contingents.as_slice())
@@ -164,7 +164,7 @@ pub(crate) fn contingents<'d>(
 pub(crate) fn subtypes<'d>(
     doc: &'d Document,
     layer: &str,
-) -> Option<&'d kentos_contracts::LayerSubtypes> {
+) -> Option<&'d kentos_commands::LayerSubtypes> {
     doc.layers().get(layer).and_then(|n| n.subtypes.as_ref())
 }
 
@@ -341,7 +341,7 @@ pub fn record_screen(
     draft: bool,
     moment: Option<&str>,
     user: Option<&str>,
-) -> Result<RecordScreen, Box<kentos_contracts::CommandError>> {
+) -> Result<RecordScreen, Box<kentos_commands::CommandError>> {
     let made = (|| {
         uid_text(uid, "uid")?;
         let variables = variables_given(doc, moment, user)?;
@@ -370,7 +370,7 @@ pub fn preview_screen(
     uid: Option<&str>,
     moment: Option<&str>,
     user: Option<&str>,
-) -> Result<RecordScreen, Box<kentos_contracts::CommandError>> {
+) -> Result<RecordScreen, Box<kentos_commands::CommandError>> {
     let made = (|| {
         let variables = variables_given(doc, moment, user)?;
         let form = self::form(doc.settings(), form, "form")?;
@@ -423,11 +423,11 @@ pub fn unique_on_layer(doc: &Document, screen: &RecordScreen, attrs: &Attrs) -> 
 }
 
 /// The warnings among `issues` as a command's warnings (the field's value their path).
-pub(crate) fn warnings_of(issues: &[FormIssue]) -> Vec<kentos_contracts::CommandWarning> {
+pub(crate) fn warnings_of(issues: &[FormIssue]) -> Vec<kentos_commands::CommandWarning> {
     issues
         .iter()
         .filter(|i| i.severity == FormSeverity::Warning)
-        .map(|i| kentos_contracts::CommandWarning {
+        .map(|i| kentos_commands::CommandWarning {
             code: i.code.clone(),
             message: i.message.clone(),
             path: i.field.as_ref().map(|k| format!("values.{k}")),
@@ -525,7 +525,7 @@ pub(crate) fn snapshot(
     layer: &str,
     uid: &str,
     attrs: &Attrs,
-    attachments: &[kentos_contracts::Attachment],
+    attachments: &[kentos_commands::Attachment],
     skip: &[&str],
     pending: &[Pending<'_>],
 ) -> String {
@@ -574,7 +574,7 @@ pub(crate) fn snapshot(
         "attachments": serde_json::to_value(attachments).unwrap_or_default(),
         "children": children,
     });
-    kentos_contracts::canonical::digest_of(&value, 16)
+    kentos_commands::canonical::digest_of(&value, 16)
 }
 
 /// The fields a form's workflow keeps out of the snapshot: its state's and its log's names.
@@ -625,7 +625,7 @@ pub fn logged_snapshot(log: &str) -> Option<&str> {
 pub(crate) fn bound_keys(body: &FormBody) -> Vec<String> {
     let mut out: Vec<String> = Vec::new();
     for (_, item) in body.walk() {
-        if let kentos_contracts::FormItem::Field(f) = item
+        if let kentos_commands::FormItem::Field(f) = item
             && !out.contains(&f.field)
         {
             out.push(f.field.clone());
@@ -658,7 +658,7 @@ pub(crate) fn record_errors(
                 .into_iter()
                 .filter(|i| !said.contains(&i.field)),
         );
-        issues.retain(|i| i.severity == kentos_contracts::FormSeverity::Error);
+        issues.retain(|i| i.severity == kentos_commands::FormSeverity::Error);
         out.push((uid, issues));
     }
     Some(out)
@@ -670,7 +670,7 @@ pub(crate) fn breaking(
     form: &ProjectForm,
     old: &FormBody,
     new: &FormBody,
-) -> Option<kentos_contracts::FormBreaking> {
+) -> Option<kentos_commands::FormBreaking> {
     let before = record_errors(doc, form, old)?;
     let after = record_errors(doc, form, new)?;
     let mut records = 0u32;
@@ -686,11 +686,11 @@ pub(crate) fn breaking(
             }
         }
     }
-    (records > 0).then(|| kentos_contracts::FormBreaking {
+    (records > 0).then(|| kentos_commands::FormBreaking {
         records,
         fields: by_field
             .into_iter()
-            .map(|(field, records)| kentos_contracts::FieldCount { field, records })
+            .map(|(field, records)| kentos_commands::FieldCount { field, records })
             .collect(),
     })
 }

@@ -6,7 +6,7 @@
 //! each raster's attributes (`stac.*`).
 //! The shared cases are `fixtures/commands/v1/cad.stac.prepare.json` (`scripts/fixtures/stac_cases.py`).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, RasterEntity, StacPrepare, StacPrepared,
 };
 use kentos_domain::{Document, NewLayer};
@@ -66,8 +66,8 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &StacPrepare) -> CommandResult<Sta
 pub fn execute(cx: &mut ExecutionContext<'_>, input: StacPrepare) -> CommandResult<StacPrepared> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_STAC_PREPARE,
-        kentos_contracts::CAD_STAC_PREPARE_VERSION,
+        kentos_commands::CAD_STAC_PREPARE,
+        kentos_commands::CAD_STAC_PREPARE_VERSION,
         input,
         write,
     )
@@ -97,7 +97,7 @@ fn put(doc: &mut Document, group: &str, plan: &RasterPlan) -> Result<(String, St
         .add_layer(NewLayer::layer(plan.layer.clone()), Some(group), false)
         .map_err(|r| {
             Stop::failed(checks::error(
-                kentos_contracts::codes::INVALID_GROUP_NAME,
+                kentos_commands::codes::INVALID_GROUP_NAME,
                 r.to_string(),
                 None,
             ))
@@ -117,7 +117,7 @@ fn write(cx: &mut ExecutionContext<'_>, input: StacPrepare) -> CommandResult<Sta
             .add_layer(NewLayer::group(planned.group.clone()), None, false)
             .map_err(|r| {
                 Stop::failed(checks::error(
-                    kentos_contracts::codes::INVALID_GROUP_NAME,
+                    kentos_commands::codes::INVALID_GROUP_NAME,
                     r.to_string(),
                     Some("group".into()),
                 ))

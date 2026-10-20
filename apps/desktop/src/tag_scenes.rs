@@ -10,7 +10,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{Entity, OpeningForm, OpeningsEdit, OpeningsOperation};
+use kentos_commands::{Entity, OpeningForm, OpeningsEdit, OpeningsOperation};
 use kentos_domain::Slot;
 use kentos_ui::widget::docking;
 
@@ -129,7 +129,7 @@ fn check(app: &mut App) {
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
             OpeningsEdit {
                 uids: p2,
-                operation: OpeningsOperation::Set(kentos_contracts::OpeningChange {
+                operation: OpeningsOperation::Set(kentos_commands::OpeningChange {
                     number: Some(Some("P1".into())),
                     ..Default::default()
                 }),
@@ -160,8 +160,8 @@ fn following(app: &mut App) {
             Entity::Table(t)
                 if matches!(
                     t.source,
-                    Some(kentos_contracts::TableSource::Schedule {
-                        of: kentos_contracts::ScheduleOf::Openings,
+                    Some(kentos_commands::TableSource::Schedule {
+                        of: kentos_commands::ScheduleOf::Openings,
                         ..
                     })
                 ) =>
@@ -176,9 +176,9 @@ fn following(app: &mut App) {
     if let (Some((uid, slot)), Some(doc)) = (found, app.document.as_mut()) {
         let _ = kentos_native_application::schedules_edit::execute(
             &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-            kentos_contracts::SchedulesEdit {
+            kentos_commands::SchedulesEdit {
                 uid,
-                operation: kentos_contracts::ScheduleOperation::Cell {
+                operation: kentos_commands::ScheduleOperation::Cell {
                     row: 1,
                     column: 0,
                     value: "B9".into(),

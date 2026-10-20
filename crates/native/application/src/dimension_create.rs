@@ -13,7 +13,7 @@
 //! `cad.entities.create` ([`crate::creating`]), its bound points read from
 //! their places there again (docs/adr/0249, 0250 §5).
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, DimensionEntity, DimensionLook, DimensionMeasure, DimensionRefs, DimensionRule,
     DimensionStyle, DimensionsCreate, EdgeNear, EntitiesCreatePlan, EntitiesCreated, Entity,
     EntityGeometry, EntityId, MeasuredPoint, STANDARD_STYLE, SubRef, Vec2 as Point,
@@ -523,7 +523,7 @@ pub struct Measured {
 /// the project's scale; Standart's when none is named (docs/adr/0183 §4, 0205).
 fn style_of(doc: &Document, name: Option<&str>) -> Result<(DimensionLook, f64), Stop> {
     let settings = doc.settings();
-    let standard = settings.annotation_height(kentos_contracts::AnnotationKind::Dimension);
+    let standard = settings.annotation_height(kentos_commands::AnnotationKind::Dimension);
     let same = |a: &str, b: &str| a.trim().to_lowercase() == b.trim().to_lowercase();
     match name {
         None => Ok((DimensionLook::default(), standard)),
@@ -592,7 +592,7 @@ fn check(doc: &Document, input: &DimensionsCreate) -> Result<Measured, Stop> {
     };
     // A centre mark's axis lines and an axis are centre lines (docs/adr/0322).
     if kind.is_mark() && look.ext_line_type.is_none() {
-        look.ext_line_type = Some(kentos_contracts::LineType::Dashdot);
+        look.ext_line_type = Some(kentos_commands::LineType::Dashdot);
     }
     let height = input.height.unwrap_or(style_height);
     let geom = |a, b, offset, angle, c| DimensionGeom {
@@ -982,7 +982,7 @@ fn wire(p: Vec2) -> Point {
 }
 
 /// The objects `cad.entities.create` writes for the dimension.
-fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::EntitiesCreate {
+fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_commands::EntitiesCreate {
     let g = &m.geom;
     let geometry = EntityGeometry::Dimension {
         annotative: None,
@@ -1005,10 +1005,10 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::Entities
     // Zincir ölçü and Baz ölçü keep their tools' step names (docs/adr/0140).
     let operation = match input.measure {
         DimensionMeasure::Continue { .. } => {
-            Some(kentos_contracts::CreateOperation::DimensionChain)
+            Some(kentos_commands::CreateOperation::DimensionChain)
         }
         DimensionMeasure::Baseline { .. } => {
-            Some(kentos_contracts::CreateOperation::DimensionBaseline)
+            Some(kentos_commands::CreateOperation::DimensionBaseline)
         }
         _ => None,
     };
@@ -1020,17 +1020,17 @@ fn objects(input: &DimensionsCreate, m: &Measured) -> kentos_contracts::Entities
 pub fn measured_in(
     doc: &Document,
     input: &DimensionsCreate,
-) -> Result<Measured, Box<kentos_contracts::CommandError>> {
+) -> Result<Measured, Box<kentos_commands::CommandError>> {
     check(doc, input).map_err(|stop| Box::new(stop.into_error()))
 }
 
 /// The warning a dimension bound to a PDF underlay's lines carries (docs/adr/0351 §6): its value is read off paper.
-fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_contracts::CommandWarning> {
+fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_commands::CommandWarning> {
     let refs = m.refs.as_ref()?;
     let on = [&refs.a, &refs.b, &refs.c].into_iter().flatten().any(|r| {
         !r.path.is_empty() && crate::snap_find::on_underlay(doc, &kentos_domain::Uuid::from_bytes(r.uid.0).to_string())
     });
-    on.then(|| kentos_contracts::CommandWarning {
+    on.then(|| kentos_commands::CommandWarning {
         code: codes::UNDERLAY_MEASURE.into(),
         message: "Ölçü bir PDF altlığının çizgilerine bağlı: değeri kâğıttan okunmuştur (çizimin doğruluğu kâğıdınkidir), kanıtlanmış CAD geometrisi değildir.".into(),
         path: Some("measure".into()),
@@ -1038,7 +1038,7 @@ fn paper_warning(doc: &Document, m: &Measured) -> Option<kentos_contracts::Comma
 }
 
 /// `result` with the underlay's warning added, when it was written or planned.
-fn said<T>(result: CommandResult<T>, warning: Option<kentos_contracts::CommandWarning>) -> CommandResult<T> {
+fn said<T>(result: CommandResult<T>, warning: Option<kentos_commands::CommandWarning>) -> CommandResult<T> {
     match (result, warning) {
         (CommandResult::Completed { output, mut warnings }, Some(w)) => {
             warnings.push(w);
@@ -1080,8 +1080,8 @@ pub mod dimensions_create {
     ) -> CommandResult<EntitiesCreated> {
         crate::call::recorded(
             cx,
-            kentos_contracts::CAD_DIMENSIONS_CREATE,
-            kentos_contracts::CAD_DIMENSIONS_CREATE_VERSION,
+            kentos_commands::CAD_DIMENSIONS_CREATE,
+            kentos_commands::CAD_DIMENSIONS_CREATE_VERSION,
             input,
             |cx, input| match check(cx.doc, &input) {
                 Ok(m) => {

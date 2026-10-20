@@ -11,7 +11,7 @@
 use crate::common;
 
 use common::{Bench, base, rel};
-use kentos_contracts::{Entity, PathEntity, Vec2};
+use kentos_commands::{Entity, PathEntity, Vec2};
 use kentos_domain::Slot;
 use kentos_interaction::{Level, Overlap};
 
@@ -280,7 +280,7 @@ fn a_rectangle_and_a_parcel_join_too() {
 #[test]
 fn a_point_is_a_corner_with_noktalar_da() {
     let mut b = bench();
-    let point = Entity::Point(kentos_contracts::PointEntity {
+    let point = Entity::Point(kentos_commands::PointEntity {
         base: base("cizim"),
         p: Vec2 {
             x: 487000.0,

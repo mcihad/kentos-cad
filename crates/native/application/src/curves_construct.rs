@@ -12,7 +12,7 @@
 //! their places; then what its kind asks: points apart, not on a line, angles, radii, chords and half-axes that
 //! make a curve, objects a circle can touch, a circle that touches them.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, ConstructedCurve, CurveConstruction, CurvesConstruct, CurvesConstructed,
     EdgeNear, MeasuredPoint, ObjectEnd, SubPlace,
 };
@@ -142,12 +142,12 @@ pub fn ellipse_geom(c: &ConstructedCurve) -> Option<EllipseGeom> {
     }
 }
 
-fn v(p: kentos_contracts::Vec2) -> Vec2 {
+fn v(p: kentos_commands::Vec2) -> Vec2 {
     Vec2::new(p.x, p.y)
 }
 
-fn w(p: Vec2) -> kentos_contracts::Vec2 {
-    kentos_contracts::Vec2 { x: p.x, y: p.y }
+fn w(p: Vec2) -> kentos_commands::Vec2 {
+    kentos_commands::Vec2 { x: p.x, y: p.y }
 }
 
 fn refuse(code: &str, message: &str, path: &str) -> Stop {
@@ -156,7 +156,7 @@ fn refuse(code: &str, message: &str, path: &str) -> Stop {
 
 fn construct(doc: &Document, input: &CurvesConstruct) -> Result<Vec<ConstructedCurve>, Stop> {
     let n = input.constructions.len();
-    if n == 0 || n > kentos_contracts::MAX_CONSTRUCTIONS {
+    if n == 0 || n > kentos_commands::MAX_CONSTRUCTIONS {
         return Err(refuse(
             codes::NO_CONSTRUCTIONS,
             &format!("{n} yapım verildi: bir ile 10 000 arasında yapım verin."),
@@ -551,7 +551,7 @@ fn tangent_edge(doc: Option<&Document>, e: &EdgeNear, path: &str) -> Result<Edge
             path,
         )
     };
-    if !kentos_contracts::capabilities::TANGENT_KINDS.contains(&entity.kind()) {
+    if !kentos_commands::capabilities::TANGENT_KINDS.contains(&entity.kind()) {
         return Err(not_tangent());
     }
     nearest_edge(&crate::geometry::shape(entity), v(e.near)).ok_or_else(not_tangent)

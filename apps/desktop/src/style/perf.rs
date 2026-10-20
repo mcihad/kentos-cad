@@ -11,7 +11,7 @@
 use std::collections::BTreeMap;
 use std::time::Instant;
 
-use kentos_contracts::{
+use kentos_commands::{
     DocumentSnapshotV1, Entity, EntityBase, LayerNode, LayerNodeType, LayerStyle, LineType,
     PathEntity, PointEntity, PointStyle, PointSymbol, ProjectSettings, ProjectStyles, Vec2,
 };
@@ -189,8 +189,8 @@ fn document(name: String, layers: Vec<LayerNode>, entities: Vec<Entity>) -> Docu
             srid: 5256,
             length_decimals: 3,
             area_decimals: 2,
-            area_unit: kentos_contracts::AreaUnit::M2,
-            angle_unit: kentos_contracts::AngleUnit::Grad,
+            area_unit: kentos_commands::AreaUnit::M2,
+            angle_unit: kentos_commands::AngleUnit::Grad,
             plot_scale: 1000.0,
             workspace: None,
             drawing_font: None,
@@ -449,7 +449,7 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
         })
         .collect();
     let mut parcels = layer("parsel", style("#E06C75", LineType::Continuous, 0.35));
-    parcels.time = Some(kentos_contracts::LayerTime {
+    parcels.time = Some(kentos_commands::LayerTime {
         start: "baslangic".into(),
         end: Some("bitis".into()),
         key: None,
@@ -555,8 +555,8 @@ fn temporal() {
     let t = Instant::now();
     let result = kentos_native_application::scenarios_edit::execute(
         &mut kentos_native_application::ExecutionContext::new(&mut doc.model),
-        kentos_contracts::ScenariosEdit {
-            operation: kentos_contracts::ScenarioOperation::Create,
+        kentos_commands::ScenariosEdit {
+            operation: kentos_commands::ScenarioOperation::Create,
             name: Some("Öneri".into()),
             layers: Some(vec!["parsel".into()]),
             copy_objects: None,
@@ -568,7 +568,7 @@ fn temporal() {
     let copied = ms(t);
     assert!(matches!(
         result,
-        kentos_contracts::CommandResult::Completed { .. }
+        kentos_commands::CommandResult::Completed { .. }
     ));
     assert_eq!(doc.model.len(), 200_000);
     row(

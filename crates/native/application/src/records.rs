@@ -7,7 +7,7 @@
 //! The checks, in order (the first that fails answers): the rows' count, the expected revision, the
 //! layer (every create command's), each row's attributes in the rows' order.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CommandWarning, Entity, EntityBase, MAX_RECORDS, RecordEntity, RecordsCreate,
     RecordsCreated, RecordsPlan,
 };
@@ -53,8 +53,8 @@ pub fn execute(
 ) -> CommandResult<RecordsCreated> {
     crate::call::recorded(
         cx,
-        kentos_contracts::CAD_RECORDS_CREATE,
-        kentos_contracts::CAD_RECORDS_CREATE_VERSION,
+        kentos_commands::CAD_RECORDS_CREATE,
+        kentos_commands::CAD_RECORDS_CREATE_VERSION,
         input,
         write_execute,
     )

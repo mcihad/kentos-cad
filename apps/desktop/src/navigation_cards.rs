@@ -158,7 +158,7 @@ impl App {
         rule::cards(
             (camera.width, camera.height),
             f64::from(header()),
-            self.work_mode() != kentos_contracts::Workspace::Cad,
+            self.work_mode() != kentos_commands::Workspace::Cad,
             self.overview_shown(),
         )
     }

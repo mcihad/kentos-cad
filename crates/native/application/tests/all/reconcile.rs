@@ -5,7 +5,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::CallOp;
+use kentos_commands::CallOp;
 use kentos_domain::Document;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::{Value, json};
@@ -34,7 +34,7 @@ fn doc() -> Document {
         "activeLayer": "cizim", "entities": [], "styles": { "items": [], "categories": [] }
     });
     let snapshot =
-        kentos_contracts::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
+        kentos_commands::DocumentSnapshotV1::from_json(&setup.to_string()).expect("setup");
     Document::from_snapshot(snapshot).expect("setup")
 }
 

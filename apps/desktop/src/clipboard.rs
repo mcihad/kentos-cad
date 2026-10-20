@@ -118,7 +118,7 @@ mod tests {
     use iced::keyboard::key::{Code, Physical};
     use iced::keyboard::{Key, Modifiers};
     use iced::{Point, Rectangle, Size};
-    use kentos_contracts::DocumentSnapshotV1;
+    use kentos_commands::DocumentSnapshotV1;
     use kentos_interaction::{Cursor, Vec2};
 
     use super::COMMANDS;
@@ -377,7 +377,7 @@ fn screens() {
                 let text = std::fs::read_to_string(crate::traces::folder().join(&trace.document))
                     .expect("the drawing");
                 let doc = crate::document::Document::new(
-                    kentos_contracts::DocumentSnapshotV1::from_json(&text).expect("reads"),
+                    kentos_commands::DocumentSnapshotV1::from_json(&text).expect("reads"),
                     None,
                 )
                 .expect("opens");

@@ -415,7 +415,7 @@ mod tests {
     #[ignore = "pictures for the owner, run by hand"]
     fn custom_screens() {
         use iced::{Point, Size};
-        use kentos_contracts::{CrsDefinition, DatumTransform, ProjectSettings};
+        use kentos_commands::{CrsDefinition, DatumTransform, ProjectSettings};
         use kentos_ui::snapshot::{Input, Snapshot};
 
         let municipal: CrsDefinition = serde_json::from_str(CUSTOM_SECOND).expect("a definition");

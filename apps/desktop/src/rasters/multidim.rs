@@ -15,7 +15,7 @@ use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, column, container, row, text_input};
 use iced::{Element, Fill, Task};
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, CreateOperation, DatasetDim, EntitiesCreate, EntityGeometry, NewObject,
     RasterDataset, RasterFields, RasterSample, RasterStyle,
 };

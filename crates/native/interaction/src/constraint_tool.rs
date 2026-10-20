@@ -6,7 +6,7 @@
 //! asks its value after its parts: Enter keeps what the drawing measures, a number or an expression drives it,
 //! Başvuru (B) makes it only measure. The tool waits for the next constraint of the same kind.
 
-use kentos_contracts::{
+use kentos_commands::{
     CadElement, CommandResult, ConstraintEdit, ConstraintRule, ConstraintSense, ConstraintsEdit,
     DistanceAxis, ElementRef, Entity, EntityId, NewConstraint, SolveStatus, SubPlace,
 };

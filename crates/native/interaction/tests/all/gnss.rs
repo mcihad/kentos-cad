@@ -4,8 +4,8 @@
 //! positions within the fixture's tolerance. The web checks the same file
 //! (`apps/web/src/model/gnssImport.test.ts`).
 
-use kentos_contracts::Entity;
-use kentos_contracts::{GnssLine, GnssPoint};
+use kentos_commands::Entity;
+use kentos_commands::{GnssLine, GnssPoint};
 use kentos_interaction::gnss::{Options, entities, line_entities, place, place_all};
 use serde_json::Value;
 
@@ -218,7 +218,7 @@ fn a_point_the_system_does_not_reach_is_said_with_why() {
 /// (30) reversed in 3D, WGS 84 to ED50 / TM33 promoted to 3D, gives 1000.0000193491578 m); orthometric, none, said.
 #[test]
 fn the_elevations_follow_what_the_project_says_its_heights_are() {
-    use kentos_contracts::HeightKind;
+    use kentos_commands::HeightKind;
     use kentos_interaction::gnss::place_all_in;
     let point = GnssPoint {
         kind: "wpt".into(),

@@ -5,7 +5,7 @@
 
 use iced::widget::{Column, button, container, row, text_input};
 use iced::{Center, Element, Fill, Length};
-use kentos_contracts::{ArchLevel, ArchSettings, WallDetail};
+use kentos_commands::{ArchLevel, ArchSettings, WallDetail};
 use kentos_ui::icon::icon;
 use kentos_ui::theme::typography;
 use kentos_ui::widget::Banner;
@@ -36,10 +36,10 @@ pub enum Edit {
 
 /// The detail list: by the scale, then each.
 /// The spaces' measurement methods Mimari offers (docs/adr/0342 §1): the office's profile; none: net.
-const METHODS: [(Option<kentos_contracts::SpaceMethod>, &str); 3] = [
+const METHODS: [(Option<kentos_commands::SpaceMethod>, &str); 3] = [
     (None, "Net (iç yüzler)"),
-    (Some(kentos_contracts::SpaceMethod::Centerline), "Duvar ekseni"),
-    (Some(kentos_contracts::SpaceMethod::Gross), "Brüt (dış yüzler)"),
+    (Some(kentos_commands::SpaceMethod::Centerline), "Duvar ekseni"),
+    (Some(kentos_commands::SpaceMethod::Gross), "Brüt (dış yüzler)"),
 ];
 
 const DETAILS: [(Option<WallDetail>, &str); 4] = [
@@ -121,7 +121,7 @@ pub fn edit(rows: &mut Vec<Row>, i: usize, e: Edit) {
 pub fn read(
     rows: &[Row],
     detail: Option<WallDetail>,
-    space_method: Option<kentos_contracts::SpaceMethod>,
+    space_method: Option<kentos_commands::SpaceMethod>,
 ) -> Result<ArchSettings, String> {
     let mut levels = Vec::with_capacity(rows.len());
     for r in rows {
@@ -182,8 +182,8 @@ pub(super) fn view<'a>(
     on: impl Fn(usize, Edit) -> Message + Copy + 'a,
     on_add: Message,
     on_detail: impl Fn(Option<WallDetail>) -> Message + 'a,
-    method: Option<kentos_contracts::SpaceMethod>,
-    on_method: impl Fn(Option<kentos_contracts::SpaceMethod>) -> Message + 'a,
+    method: Option<kentos_commands::SpaceMethod>,
+    on_method: impl Fn(Option<kentos_commands::SpaceMethod>) -> Message + 'a,
 ) -> Element<'a, Message> {
     let methods = Select::new(
         METHODS.iter().map(|(_, l)| Choice::new(*l)),

@@ -9,7 +9,7 @@
 //!
 //! Test code only.
 
-use kentos_contracts::{CommandResult, EntitiesEdit, StylesEdit};
+use kentos_commands::{CommandResult, EntitiesEdit, StylesEdit};
 use kentos_domain::Slot;
 use kentos_native_application::ExecutionContext;
 

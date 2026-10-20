@@ -9,7 +9,7 @@
 //! - Çizelge: Tür (T), Grup (G), Toplam (O), Sırala (S); the schedule hangs from the cursor by its top left corner, a
 //!   click places it.
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandResult, Entity, NewTag, ScheduleOf, ScheduleSort, SchedulesCreate, TagAll, TagShape,
     TaggedKind, TagsCreate,
 };
@@ -460,7 +460,7 @@ pub struct ScheduleTool {
     total: bool,
     sorted: bool,
     /// The plan's table at the origin, made again when an option changes.
-    table: Option<kentos_contracts::TableEntity>,
+    table: Option<kentos_commands::TableEntity>,
     problem: Option<String>,
     hover: Option<Vec2>,
     ghost: Preview,
@@ -592,9 +592,9 @@ impl ScheduleTool {
 const KINDS_OF: [ScheduleOf; 4] = ScheduleOf::ALL;
 
 /// A grouped schedule's columns: the fields the objects share, then how many and how much.
-fn grouped_columns(of: ScheduleOf) -> Vec<kentos_contracts::ScheduleColumn> {
-    use kentos_contracts::ScheduleField::*;
-    let fields: &[kentos_contracts::ScheduleField] = match of {
+fn grouped_columns(of: ScheduleOf) -> Vec<kentos_commands::ScheduleColumn> {
+    use kentos_commands::ScheduleField::*;
+    let fields: &[kentos_commands::ScheduleField] = match of {
         ScheduleOf::Openings => &[Type, Form, Width, Height, Count],
         ScheduleOf::Spaces => &[Usage, Count, Area],
         ScheduleOf::Columns => &[Type, Width, Count],
@@ -602,7 +602,7 @@ fn grouped_columns(of: ScheduleOf) -> Vec<kentos_contracts::ScheduleColumn> {
     };
     fields
         .iter()
-        .map(|&field| kentos_contracts::ScheduleColumn {
+        .map(|&field| kentos_commands::ScheduleColumn {
             field,
             title: None,
             attr: None,

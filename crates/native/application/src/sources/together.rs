@@ -8,7 +8,7 @@
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
-use kentos_contracts::{
+use kentos_commands::{
     CommandWarning, SourceLink, SourcesSynced, SyncTopology, SyncedLayer, SyncedRelation,
 };
 use kentos_domain::Document;
@@ -186,7 +186,7 @@ pub(super) fn write(
     }
     let path = links[0].path.clone();
     for (i, l) in links.iter().enumerate() {
-        if l.kind != kentos_contracts::SourceKind::Geopackage || l.path != path {
+        if l.kind != kentos_commands::SourceKind::Geopackage || l.path != path {
             return Err(refuse(
                 codes::TRANSACTION_SPLIT,
                 format!(

@@ -11,7 +11,7 @@
 
 use std::path::PathBuf;
 
-use kentos_contracts::CallOp;
+use kentos_commands::CallOp;
 use kentos_native_application::{ExecutionContext, registry};
 use serde_json::json;
 
@@ -35,7 +35,7 @@ fn on_inserts(app: &mut App) {
         .map(|d| {
             d.model
                 .entities()
-                .filter(|e| matches!(e, kentos_contracts::Entity::Insert(_)))
+                .filter(|e| matches!(e, kentos_commands::Entity::Insert(_)))
                 .map(|e| f64::from(e.base().id))
                 .collect()
         })
@@ -54,7 +54,7 @@ fn plan(app: &mut App) -> String {
     let slot = doc
         .model
         .entities()
-        .find(|e| matches!(e, kentos_contracts::Entity::Insert(_)))
+        .find(|e| matches!(e, kentos_commands::Entity::Insert(_)))
         .map(|e| e.base().id)
         .expect("the insert");
     doc.model.uid(kentos_domain::Slot(slot)).map(|u| u.to_string()).unwrap_or_default()
@@ -133,7 +133,7 @@ fn pdf_import_window(app: &mut App) {
         crate::exchange::pdf_import::Event::Picked(Some(fixture("pdf/v1/egriler.pdf"))),
     ))));
     let _ = app.update(Message::Exchange(Box::new(crate::exchange::Event::PdfImport(
-        crate::exchange::pdf_import::Event::Curves(kentos_contracts::PdfCurveOutput::Nurbs),
+        crate::exchange::pdf_import::Event::Curves(kentos_commands::PdfCurveOutput::Nurbs),
     ))));
 }
 

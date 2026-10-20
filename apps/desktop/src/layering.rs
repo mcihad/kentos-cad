@@ -22,7 +22,7 @@ use std::time::{Duration, Instant};
 
 use iced::widget::{button, container, row, tooltip};
 use iced::{Center, Element, Task};
-use kentos_contracts::{
+use kentos_commands::{
     LayerEditOperation, LayerNode, LayerNodeType, LayerSetOperation, LayersEdit, LayersSet,
     LineType,
 };
@@ -96,7 +96,7 @@ pub enum Event {
     Remove(String),
     /// A layer's own snapping, a group's on all its layers (the magnet, Kenet ▸;
     /// layer_snap.rs, docs/adr/0163 §4); none for the general kinds.
-    Snap(String, Option<kentos_contracts::LayerSnap>),
+    Snap(String, Option<kentos_commands::LayerSnap>),
     /// A row dragged onto another (layer_order.rs): the rows' places as the tree shows them, and where.
     Move(usize, usize, kentos_ui::widget::tree_view::Place),
     /// Sıra ▸ (layer_order.rs).
@@ -761,7 +761,7 @@ impl App {
                     style
                         .line_pattern
                         .as_deref()
-                        .is_some_and(|p| kentos_contracts::same_line_type_name(p, &t.name)),
+                        .is_some_and(|p| kentos_commands::same_line_type_name(p, &t.name)),
                     event(Event::LinePattern(id.clone(), t.name.clone())),
                 )
             })
@@ -791,8 +791,8 @@ impl App {
             // Etiketler (docs/adr/0212 §4): how its objects are labelled.
             .item(
                 match node.style.labels.as_ref().map(|l| l.mode) {
-                    Some(kentos_contracts::LabelsMode::Rules) => "Etiketler… (kurallı)",
-                    Some(kentos_contracts::LabelsMode::Off) => "Etiketler… (etiketsiz)",
+                    Some(kentos_commands::LabelsMode::Rules) => "Etiketler… (kurallı)",
+                    Some(kentos_commands::LabelsMode::Off) => "Etiketler… (etiketsiz)",
                     _ => "Etiketler…",
                 },
                 event(Event::Labels(id.clone())),
@@ -809,7 +809,7 @@ impl App {
             .item(
                 "Değişikliğin etkisi…",
                 Message::StyleImpact(crate::style_impact::Event::Open(
-                    kentos_contracts::ImpactTarget::Layer,
+                    kentos_commands::ImpactTarget::Layer,
                     id,
                 )),
             )
@@ -1391,13 +1391,13 @@ mod tests {
         layer(&mut app, Event::Color("bina".into(), "#4F8EF7".into()));
         layer(
             &mut app,
-            Event::LineType("bina".into(), kentos_contracts::LineType::Dashed),
+            Event::LineType("bina".into(), kentos_commands::LineType::Dashed),
         );
         layer(&mut app, Event::LineWeight("bina".into(), 0.35));
         let model = &app.document.as_ref().expect("open").model;
         let style = &model.layers().get("bina").expect("layer").style;
         assert_eq!(style.color, "#4F8EF7");
-        assert_eq!(style.line_type, kentos_contracts::LineType::Dashed);
+        assert_eq!(style.line_type, kentos_commands::LineType::Dashed);
         assert_eq!(style.line_weight, 0.35);
         let _ = app.update(Message::Run("edit.undo"));
         let model = &app.document.as_ref().expect("open").model;
