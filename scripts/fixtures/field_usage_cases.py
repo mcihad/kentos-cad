@@ -202,6 +202,15 @@ def node(id_, name, type_="layer", children=None, **extra):
             "style": copy.deepcopy(STYLE), "children": children or [], **extra}
 
 
+def malik_node():
+    """The owners' layer, its look categorized by an owner's name (ADR 0564)."""
+    n = node("malik", "Malik", fields=MALIK_FIELDS)
+    n["style"]["renderer"] = {"type": "categorized", "expr": "[Malik adı]", "categories": [
+        {"value": "Ayşe", "label": "Ayşe", "symbols": {"marker": {"type": "marker", "layers": [
+            {"id": "p", "type": "shape", "shape": "circle", "size": 3, "fill": "#e41a1c"}]}}}]}
+    return n
+
+
 BINA_STYLE = {**STYLE, "labels": {"mode": "rules", "classes": [
     {"name": "Yüksek", "when": "Kat > 5", "style": {"placement": "center", "size": 11, "text": "Ad"}},
 ]}}
@@ -211,10 +220,19 @@ BINA = node("bina", "Bina", fields=BINA_FIELDS,
             actions=[{"name": "Sorgu", "target": "https://ornek.example/bina/{Kat}/{Ad}"}],
             card={"title": "Bina {Ad}", "fields": ["Ad", "Kat"], "text": "Kat sayısı: {[Kat]} {{not}}"},
             tableStyles=[{"condition": "Kat > 5", "bold": True}, {"field": "Kat", "condition": "Kat >= 9", "color": "#B91C1C"}])
+# The look (ADR 0564): rules with filters, a nested rule, an inline line whose width is data-defined, a library
+# symbol (not walked).
+BINA_STYLE["renderer"] = {"type": "rules", "rules": [
+    {"id": "r1", "label": "Yüksek", "filter": "Kat > 5 ve Durum <> 'yok'", "symbols": {"fill": {"type": "fill", "layers": [
+        {"id": "f", "type": "simpleFill", "color": "#1b9e77"},
+        {"id": "o", "type": "simpleLine", "color": "#222222", "width": {"expr": "Kat / 10", "fallback": 0.3}}]}},
+     "children": [{"id": "r2", "label": "Çok yüksek", "filter": "[Kat] >= 9"}]},
+    {"id": "r3", "label": "Diğer", "isElse": True, "symbols": {"fill": {"ref": "kitaplik-dolgu"}}},
+]}
 BINA["style"] = copy.deepcopy(BINA_STYLE)
 SETUP_LAYERS = [
     BINA,
-    node("malik", "Malik", fields=MALIK_FIELDS),
+    malik_node(),
     node("koruma", "Koruma alanı", "group", [node("sit", "Sit alanı")]),
     node("altlik", "OpenStreetMap", service=dict(OSM)),
 ]
@@ -351,6 +369,26 @@ def items(out, layers, layer, list_, at, words, kept):
                 out.append((layer, "expression", f"{p}/visibleWhen", f"{w}{SEP}Görünme koşulu", it["visibleWhen"], kept))
 
 
+def renderer_sites(out, lid, v, at, place, rule):
+    """The look's expressions (ADR 0564): `expr`, `exprX`, `exprY` and a rule's `filter`, the inline symbols'
+    `{"expr": …}` too; keys in the order serde_json's map keeps them (sorted); a library symbol (`ref`) is not walked."""
+    if isinstance(v, dict):
+        if "ref" in v:
+            return
+        label = v.get("label")
+        here = f"{place}{SEP}“{label}” kuralı" if rule and isinstance(label, str) and label else place
+        for k in sorted(v):
+            child, path = v[k], f"{at}/{k}"
+            if (k in ("expr", "exprX", "exprY") or (rule and k == "filter")) and isinstance(child, str):
+                if child:
+                    out.append((lid, "expression", path, here, child, False))
+                continue
+            renderer_sites(out, lid, child, path, here, k in ("rules", "children"))
+    elif isinstance(v, list):
+        for i, item in enumerate(v):
+            renderer_sites(out, lid, item, f"{at}/{i}", place, rule)
+
+
 def layer_sites(out, nodes):
     for n in nodes:
         if n["type"] == "layer":
@@ -362,6 +400,8 @@ def layer_sites(out, nodes):
                 out.append((lid, "expression", f"{at}/tableStyles/{i}/condition", f"{rule}{SEP}Koşul", s["condition"], False))
             if (n.get("filter") or {}).get("expression"):
                 out.append((lid, "expression", f"{at}/filter/expression", f"{w}{SEP}Süzgeç", n["filter"]["expression"], False))
+            if n["style"].get("renderer"):
+                renderer_sites(out, lid, n["style"]["renderer"], f"{at}/style/renderer", f"{w}{SEP}Görünüş", False)
             label = (n["style"].get("label") or {})
             if label.get("text"):
                 out.append((lid, "expression", f"{at}/style/label/text", f"{w}{SEP}Etiket{SEP}Metin", label["text"], False))

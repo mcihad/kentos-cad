@@ -469,6 +469,18 @@ fn node_sites(node: &mut LayerNode, f: &mut Visit<'_>) {
             e,
         );
     }
+    // The look's expressions (docs/adr/0564): the renderer's own (`expr`, `exprX`, `exprY`, a rule's
+    // `filter`) and its inline symbols' data-defined values (`{"expr": …}`), the nested renderers' too. A
+    // symbol of the library (`{"ref": …}`) is the project's, shared by layers: it is not walked.
+    if let Some(renderer) = node.style.renderer.as_mut() {
+        renderer_sites(
+            renderer,
+            &format!("{at}/style/renderer"),
+            &format!("{w}{SEP}Görünüş"),
+            false,
+            &mut put,
+        );
+    }
     if let Some(t) = node
         .style
         .label
@@ -564,6 +576,48 @@ fn node_sites(node: &mut LayerNode, f: &mut Visit<'_>) {
             place,
             &mut a.target,
         );
+    }
+}
+
+/// The keys of a renderer's JSON whose text is an expression; a rule's `filter` is one too.
+const RENDERER_EXPRS: [&str; 3] = ["expr", "exprX", "exprY"];
+
+/// The expressions of a renderer's JSON at `at`, each through `put`; `rule` when `v` is a rule (an item of
+/// `rules` or `children`), whose `filter` is an expression.
+fn renderer_sites(
+    v: &mut serde_json::Value,
+    at: &str,
+    place: &str,
+    rule: bool,
+    put: &mut dyn FnMut(FieldUseHow, String, String, &mut String),
+) {
+    match v {
+        serde_json::Value::Object(map) => {
+            if map.contains_key("ref") {
+                return;
+            }
+            let here = match map.get("label").and_then(serde_json::Value::as_str) {
+                Some(l) if rule && !l.is_empty() => format!("{place}{SEP}“{l}” kuralı"),
+                _ => place.to_owned(),
+            };
+            for (k, child) in map.iter_mut() {
+                let path = format!("{at}/{k}");
+                let expression = RENDERER_EXPRS.contains(&k.as_str()) || (rule && k == "filter");
+                if let (true, serde_json::Value::String(text)) = (expression, &mut *child) {
+                    if !text.is_empty() {
+                        put(FieldUseHow::Expression, path, here.clone(), text);
+                    }
+                    continue;
+                }
+                renderer_sites(child, &path, &here, k == "rules" || k == "children", put);
+            }
+        }
+        serde_json::Value::Array(items) => {
+            for (i, item) in items.iter_mut().enumerate() {
+                renderer_sites(item, &format!("{at}/{i}"), place, rule, put);
+            }
+        }
+        _ => {}
     }
 }
 

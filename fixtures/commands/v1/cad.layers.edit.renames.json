@@ -163,6 +163,54 @@
                 }
               }
             ]
+          },
+          "renderer": {
+            "type": "rules",
+            "rules": [
+              {
+                "id": "r1",
+                "label": "Yüksek",
+                "filter": "Kat > 5 ve Durum <> 'yok'",
+                "symbols": {
+                  "fill": {
+                    "type": "fill",
+                    "layers": [
+                      {
+                        "id": "f",
+                        "type": "simpleFill",
+                        "color": "#1b9e77"
+                      },
+                      {
+                        "id": "o",
+                        "type": "simpleLine",
+                        "color": "#222222",
+                        "width": {
+                          "expr": "Kat / 10",
+                          "fallback": 0.3
+                        }
+                      }
+                    ]
+                  }
+                },
+                "children": [
+                  {
+                    "id": "r2",
+                    "label": "Çok yüksek",
+                    "filter": "[Kat] >= 9"
+                  }
+                ]
+              },
+              {
+                "id": "r3",
+                "label": "Diğer",
+                "isElse": true,
+                "symbols": {
+                  "fill": {
+                    "ref": "kitaplik-dolgu"
+                  }
+                }
+              }
+            ]
           }
         },
         "children": [],
@@ -244,7 +292,31 @@
         "style": {
           "color": "fg",
           "lineType": "continuous",
-          "lineWeight": 0.25
+          "lineWeight": 0.25,
+          "renderer": {
+            "type": "categorized",
+            "expr": "[Malik adı]",
+            "categories": [
+              {
+                "value": "Ayşe",
+                "label": "Ayşe",
+                "symbols": {
+                  "marker": {
+                    "type": "marker",
+                    "layers": [
+                      {
+                        "id": "p",
+                        "type": "shape",
+                        "shape": "circle",
+                        "size": 3,
+                        "fill": "#e41a1c"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         },
         "children": [],
         "fields": [
@@ -449,6 +521,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "[Kat sayısı] > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "[Kat sayısı] / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat sayısı] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -531,7 +651,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -768,6 +912,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -849,7 +1041,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -969,6 +1185,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "[Kat sayısı] > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "[Kat sayısı] / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat sayısı] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -1051,7 +1315,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -1240,6 +1528,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Katlar > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Katlar / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Katlar] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -1322,7 +1658,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -1559,6 +1919,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -1640,7 +2048,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -1829,6 +2261,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat_2 > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat_2 / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat_2] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -1911,7 +2391,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -2148,6 +2652,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -2229,7 +2781,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -2418,6 +2994,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "[2. kat] > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "[2. kat] / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[2. kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -2500,7 +3124,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -2737,6 +3385,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -2818,7 +3514,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -3007,6 +3727,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve [ve] <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -3089,7 +3857,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -3326,6 +4118,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -3407,7 +4247,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -3596,6 +4460,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve [değil] <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -3678,7 +4590,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -3915,6 +4851,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -3996,7 +4980,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -4185,6 +5193,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve [Hasar durumu] <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -4267,7 +5323,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -4504,6 +5584,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -4585,7 +5713,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -4774,6 +5926,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -4855,7 +6055,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -5092,6 +6316,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -5173,7 +6445,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -5362,6 +6658,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -5443,7 +6787,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -5680,6 +7048,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -5761,7 +7177,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -5950,6 +7390,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -6032,7 +7520,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -6269,6 +7781,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -6350,7 +7910,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -6539,6 +8123,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -6621,7 +8253,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -6858,6 +8514,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -6939,7 +8643,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -7128,6 +8856,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -7210,7 +8986,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -7447,6 +9247,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -7528,7 +9376,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -7721,6 +9593,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "K > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "K / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[K] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -7804,7 +9724,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -8041,6 +9985,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -8122,7 +10114,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -8319,6 +10335,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve D <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -8402,7 +10466,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -8639,6 +10727,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -8720,7 +10856,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -8883,6 +11043,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -8964,7 +11172,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -9191,6 +11423,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -9272,7 +11552,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -9424,6 +11728,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -9505,7 +11857,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Sahip]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -9732,6 +12108,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -9813,7 +12237,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -9969,6 +12417,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -10050,7 +12546,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[M]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -10278,6 +12798,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -10359,7 +12927,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -10468,6 +13060,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -10549,7 +13189,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[M]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -10731,6 +13395,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -10812,7 +13524,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -10972,6 +13708,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -11053,7 +13837,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [
@@ -11318,6 +14126,54 @@
                         }
                       }
                     ]
+                  },
+                  "renderer": {
+                    "type": "rules",
+                    "rules": [
+                      {
+                        "id": "r1",
+                        "label": "Yüksek",
+                        "filter": "Kat > 5 ve Durum <> 'yok'",
+                        "symbols": {
+                          "fill": {
+                            "type": "fill",
+                            "layers": [
+                              {
+                                "id": "f",
+                                "type": "simpleFill",
+                                "color": "#1b9e77"
+                              },
+                              {
+                                "id": "o",
+                                "type": "simpleLine",
+                                "color": "#222222",
+                                "width": {
+                                  "expr": "Kat / 10",
+                                  "fallback": 0.3
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        "children": [
+                          {
+                            "id": "r2",
+                            "label": "Çok yüksek",
+                            "filter": "[Kat] >= 9"
+                          }
+                        ]
+                      },
+                      {
+                        "id": "r3",
+                        "label": "Diğer",
+                        "isElse": true,
+                        "symbols": {
+                          "fill": {
+                            "ref": "kitaplik-dolgu"
+                          }
+                        }
+                      }
+                    ]
                   }
                 },
                 "children": [],
@@ -11399,7 +14255,31 @@
                 "style": {
                   "color": "fg",
                   "lineType": "continuous",
-                  "lineWeight": 0.25
+                  "lineWeight": 0.25,
+                  "renderer": {
+                    "type": "categorized",
+                    "expr": "[Malik adı]",
+                    "categories": [
+                      {
+                        "value": "Ayşe",
+                        "label": "Ayşe",
+                        "symbols": {
+                          "marker": {
+                            "type": "marker",
+                            "layers": [
+                              {
+                                "id": "p",
+                                "type": "shape",
+                                "shape": "circle",
+                                "size": 3,
+                                "fill": "#e41a1c"
+                              }
+                            ]
+                          }
+                        }
+                      }
+                    ]
+                  }
                 },
                 "children": [],
                 "fields": [

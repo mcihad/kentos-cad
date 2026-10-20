@@ -163,6 +163,54 @@
                 }
               }
             ]
+          },
+          "renderer": {
+            "type": "rules",
+            "rules": [
+              {
+                "id": "r1",
+                "label": "Yüksek",
+                "filter": "Kat > 5 ve Durum <> 'yok'",
+                "symbols": {
+                  "fill": {
+                    "type": "fill",
+                    "layers": [
+                      {
+                        "id": "f",
+                        "type": "simpleFill",
+                        "color": "#1b9e77"
+                      },
+                      {
+                        "id": "o",
+                        "type": "simpleLine",
+                        "color": "#222222",
+                        "width": {
+                          "expr": "Kat / 10",
+                          "fallback": 0.3
+                        }
+                      }
+                    ]
+                  }
+                },
+                "children": [
+                  {
+                    "id": "r2",
+                    "label": "Çok yüksek",
+                    "filter": "[Kat] >= 9"
+                  }
+                ]
+              },
+              {
+                "id": "r3",
+                "label": "Diğer",
+                "isElse": true,
+                "symbols": {
+                  "fill": {
+                    "ref": "kitaplik-dolgu"
+                  }
+                }
+              }
+            ]
           }
         },
         "children": [],
@@ -244,7 +292,31 @@
         "style": {
           "color": "fg",
           "lineType": "continuous",
-          "lineWeight": 0.25
+          "lineWeight": 0.25,
+          "renderer": {
+            "type": "categorized",
+            "expr": "[Malik adı]",
+            "categories": [
+              {
+                "value": "Ayşe",
+                "label": "Ayşe",
+                "symbols": {
+                  "marker": {
+                    "type": "marker",
+                    "layers": [
+                      {
+                        "id": "p",
+                        "type": "shape",
+                        "shape": "circle",
+                        "size": 3,
+                        "fill": "#e41a1c"
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
         },
         "children": [],
         "fields": [
@@ -436,6 +508,21 @@
                   "how": "expression"
                 },
                 {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı › “Çok yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/children/0/filter",
+                  "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/filter",
+                  "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/symbols/fill/layers/1/width/expr",
+                  "how": "expression"
+                },
+                {
                   "place": "“Bina” katmanı › “Yüksek” etiket sınıfı › Koşul",
                   "path": "layers/bina/style/labels/classes/0/when",
                   "how": "expression"
@@ -551,6 +638,21 @@
                   "how": "expression"
                 },
                 {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı › “Çok yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/children/0/filter",
+                  "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/filter",
+                  "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/symbols/fill/layers/1/width/expr",
+                  "how": "expression"
+                },
+                {
                   "place": "“Bina” katmanı › “Yüksek” etiket sınıfı › Koşul",
                   "path": "layers/bina/style/labels/classes/0/when",
                   "how": "expression"
@@ -629,6 +731,11 @@
                   "place": "“Bina” katmanı › Süzgeç",
                   "path": "layers/bina/filter/expression",
                   "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/filter",
+                  "how": "expression"
                 }
               ],
               "revision": "$current"
@@ -683,6 +790,11 @@
                 {
                   "place": "“Bina” katmanı › Süzgeç",
                   "path": "layers/bina/filter/expression",
+                  "how": "expression"
+                },
+                {
+                  "place": "“Bina” katmanı › Görünüş › “Yüksek” kuralı",
+                  "path": "layers/bina/style/renderer/rules/0/filter",
                   "how": "expression"
                 }
               ],
@@ -1135,6 +1247,11 @@
                   "place": "“Malik” formu › “Bina” öğesi › 1. eşleşmenin alanı",
                   "path": "settings/forms/1/draft/items/0/lookup/matches/0/field",
                   "how": "key"
+                },
+                {
+                  "place": "“Malik” katmanı › Görünüş",
+                  "path": "layers/malik/style/renderer/expr",
+                  "how": "expression"
                 }
               ],
               "revision": "$current"
@@ -1168,6 +1285,11 @@
                   "place": "“Malik” formu › “Bina” öğesi › 1. eşleşmenin alanı",
                   "path": "settings/forms/1/draft/items/0/lookup/matches/0/field",
                   "how": "key"
+                },
+                {
+                  "place": "“Malik” katmanı › Görünüş",
+                  "path": "layers/malik/style/renderer/expr",
+                  "how": "expression"
                 }
               ],
               "revision": "$current"

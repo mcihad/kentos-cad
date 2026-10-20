@@ -418,7 +418,8 @@ aşılmıştır. Bölüm numaraları mevcut kod/ADR atıfları için korunmuştu
   `.kcad` şema 86, `FORMATS_VERSION` 93, `cad.crs.transform` kotlarıyla ve işlemin kaydıyla, Proje ayarları › Kotlar ve epok); 0517 sanal raster mozaiği (GDAL VRT'si `kentos_formats::raster::vrt`,
   `Reader::mosaic`, `cad.rasters.mosaic` gdalbuildvrt'nin kuralıyla, Sanal mozaik penceresi); 0520 permütasyon çıkarımı (`kentos.spatial-inference/1`, katlanmış sözde
   p, koşullu permütasyon), Gi*'ın FDR ve Bonferroni'si, Yerel Moran `stats.localMoran`, deney profili; 0516 SLD alışverişi (`kentos_formats::sld`, SLD 1.1 / SE 1.1 iki yönde;
-  `file.export.sld` ve `file.import.sld`, kayıplar söylenir; Katmanlar'ın sağ tıkında; QGIS 4.2'yle denetlenir); 0555 QML alışverişi (`kentos_formats::qml`, QGIS'in
+  `file.export.sld` ve `file.import.sld`, kayıplar söylenir; Katmanlar'ın sağ tıkında; QGIS 4.2'yle denetlenir); 0564 görünüş alanın adını izler (`field_refs` işleyicinin ifadelerini, kuralların süzgeçlerini ve simgelerin veriye bağlı
+  değerlerini de yürür; `cad.fields.usage` sayar, yeniden adlandırma yazar); 0555 QML alışverişi (`kentos_formats::qml`, QGIS'in
   `renderer-v2`'si iki yönde: dört görünüş, dolgu, çizgi, işaret ve merkez dolgusu, birimleri ve saydamlığıyla; süzgeçler QGIS'in ifadesiyle;
   `file.export.qml` ve `file.import.qml`; Katmanlar'ın sağ tıkında; QGIS 4.2'nin `loadNamedStyle`'ıyla denetlenir); 0560 MapLibre stili alışverişi (`kentos_formats::maplibre`, stil sürüm 8 iki yönde:
   kategorili `match`, aralıklı `step`, süzgeçli kurallar, ölçek aralığı zoom; fill, line, circle ve etiket symbol katmanları; mm 96 dpi'de piksel, metre

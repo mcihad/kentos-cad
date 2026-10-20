@@ -2340,6 +2340,11 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   Katmanlar'ın sağ tıkında; Python ve MCP; 24 ortak durum `sld_cases.py`'nin bağımsız okuyucusundan, QGIS 4.2'nin SLD'leri ve
   KentOS'unkiler QGIS'te. Kalan: QML, MapLibre, etiketler, tematik işleyiciler, alan kimliklerine bağ. — **19 Ekim,
   [ADR 0516](docs/adr/0516-sld-style-exchange.md).**
+- [ ] `CBS-17` görünüş alanın adını izler (dilim): alanın kullanıldığı yerlere katmanın görünüşü eklendi (işleyicinin `expr`, `exprX`,
+  `exprY`'si, kuralların süzgeçleri, katmanda tanımlı simgelerin veriye bağlı değerleri, iç içe işleyiciler; kitaplığın simgesi değil);
+  `cad.fields.usage` onları sayar, `cad.layers.edit`'in yeniden adlandırması aynı adımda yazar; 40 ortak durum `field_usage_cases.py`'den.
+  Kalan: bağlı kaynağın sütunu kaynakta yeniden adlandırılınca izleme, kitaplığın simgeleri, yerel ve PostGIS katmanında aynı lejant.
+  — **21 Ekim, [ADR 0564](docs/adr/0564-look-follows-field-renames.md).**
 - [ ] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
   sınıfı, aralıklı, iç içe kurallı; basit dolgu, çizgi, işaret ve merkez dolgusu; birimler mm, piksel, haritada metre; simgenin
   saydamlığı, kapalı katman; süzgeçler QGIS'in ifadesinden ve ifadesine, IN de; tek geometri türü), `file.export.qml` ve
