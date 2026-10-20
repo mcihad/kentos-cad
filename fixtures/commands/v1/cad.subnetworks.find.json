@@ -10717,6 +10717,5536 @@
       ]
     },
     {
+      "name": "yapılandırma: tip=ters; kenarların terminalleri bu yapılandırmada yok, hepsine geçer (güvenilir değil)",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "ters"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 3
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yapılandırma değeri büyük küçük harf ayrımsız: TERS",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "TERS"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 3
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "yapılandırma değeri kırpılır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "  ters "
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 3
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "bilinmeyen yapılandırma değeri cihazın kendi terminallerini alır",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "bilinmeyen"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 0
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "seçen öznitelik noktada yoksa cihazın kendi terminalleri",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 0
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "boş seçen öznitelik cihazın kendi terminalleri",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "  "
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 0
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "üçlü yapılandırma: orta gerilim yalnız alçak gerilimle bağlı, 12. kenar kaynaksız",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "üçlü"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "ort"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 4,
+                  "junctions": 3,
+                  "length": 390.0,
+                  "unverified": 0
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 2,
+                "uids": [
+                  "$uidOf:8",
+                  "$uidOf:12"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 10,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cihazın kendi terminallerinde ort yok: 12. kenar her yönden geçer",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "ort"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 1
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bağlı + tip=ters",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "connected",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "ters"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "connected",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 7,
+                  "junctions": 4,
+                  "length": 650.0,
+                  "unverified": 3
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 7,
+                  "junctions": 4,
+                  "length": 650.0,
+                  "unverified": 3
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 11,
+                "uids": [
+                  "$uidOf:3",
+                  "$uidOf:4",
+                  "$uidOf:5",
+                  "$uidOf:6",
+                  "$uidOf:7",
+                  "$uidOf:11",
+                  "$uidOf:12",
+                  "$uidOf:1",
+                  "$uidOf:2",
+                  "$uidOf:10",
+                  "$uidOf:9"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "kapalı vana + tip=üçlü",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "üçlü"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "kapalı"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "yg"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 0
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
+      "name": "ters yapılandırma, terminal adıyla bağlanan uç: Giriş",
+      "setup": {
+        "format": "kentos.document",
+        "version": 1,
+        "name": "Elektrik şebekesi",
+        "settings": {
+          "srid": 5256,
+          "lengthDecimals": 3,
+          "areaDecimals": 2,
+          "areaUnit": "m2",
+          "angleUnit": "grad",
+          "plotScale": 1000,
+          "workspace": "gis",
+          "drawingFont": "barlow",
+          "networks": [
+            {
+              "id": "ag-1",
+              "name": "Elektrik",
+              "kind": "utility",
+              "edges": [
+                {
+                  "layer": "boru"
+                },
+                {
+                  "layer": "hat2"
+                },
+                {
+                  "layer": "kilitli"
+                }
+              ],
+              "junctions": [
+                {
+                  "layer": "kaynak",
+                  "role": "source"
+                },
+                {
+                  "layer": "vana",
+                  "role": "valve",
+                  "closed": "durum = 'kapalı'"
+                },
+                {
+                  "layer": "trafo",
+                  "role": "junction"
+                }
+              ],
+              "connect": "ends",
+              "tolerance": 0.01,
+              "direction": {
+                "kind": "digitized"
+              },
+              "terminals": {
+                "start": "uc_bas",
+                "end": "uc_son",
+                "devices": [
+                  {
+                    "layer": "trafo",
+                    "terminals": [
+                      {
+                        "id": "yg",
+                        "name": "Yüksek gerilim"
+                      },
+                      {
+                        "id": "ag",
+                        "name": "Alçak gerilim"
+                      }
+                    ],
+                    "paths": [
+                      [
+                        "yg",
+                        "ag"
+                      ]
+                    ],
+                    "by": "tip",
+                    "configs": [
+                      {
+                        "value": "ters",
+                        "terminals": [
+                          {
+                            "id": "x",
+                            "name": "Giriş"
+                          },
+                          {
+                            "id": "y",
+                            "name": "Çıkış"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      },
+                      {
+                        "value": "üçlü",
+                        "terminals": [
+                          {
+                            "id": "yg",
+                            "name": "Yüksek gerilim"
+                          },
+                          {
+                            "id": "ag",
+                            "name": "Alçak gerilim"
+                          },
+                          {
+                            "id": "ort",
+                            "name": "Orta gerilim"
+                          }
+                        ],
+                        "paths": [
+                          [
+                            "yg",
+                            "ag"
+                          ],
+                          [
+                            "ag",
+                            "ort"
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              "subnetworks": {
+                "attribute": "Alt ağ",
+                "reach": "downstream",
+                "name": "Ad"
+              }
+            }
+          ]
+        },
+        "origin": {
+          "x": 500000.0,
+          "y": 4400000.0
+        },
+        "layers": [
+          {
+            "id": "boru",
+            "name": "Boru",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "hat2",
+            "name": "Hat 2",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": [],
+            "fields": [
+              {
+                "name": "Ad",
+                "kind": "text"
+              }
+            ]
+          },
+          {
+            "id": "kilitli",
+            "name": "Kilitli",
+            "type": "layer",
+            "visible": true,
+            "locked": true,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "kaynak",
+            "name": "Kaynak",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "vana",
+            "name": "Vana",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "trafo",
+            "name": "Trafo",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          },
+          {
+            "id": "0",
+            "name": "0",
+            "type": "layer",
+            "visible": true,
+            "locked": false,
+            "expanded": true,
+            "style": {
+              "color": "ink",
+              "lineType": "continuous",
+              "lineWeight": 0.25
+            },
+            "children": []
+          }
+        ],
+        "activeLayer": "0",
+        "entities": [
+          {
+            "kind": "point",
+            "id": 1,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez A"
+            },
+            "p": {
+              "x": 500000.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 2,
+            "layerId": "kaynak",
+            "attrs": {
+              "Ad": "Merkez B"
+            },
+            "p": {
+              "x": 500500.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 3,
+            "layerId": "boru",
+            "attrs": {
+              "uc_son": "yg"
+            },
+            "a": {
+              "x": 500000.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 4,
+            "layerId": "boru",
+            "attrs": {
+              "uc_bas": "ag"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 5,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 6,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500400.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 7,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500500.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500400.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 8,
+            "layerId": "boru",
+            "attrs": {},
+            "a": {
+              "x": 500700.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500800.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 9,
+            "layerId": "trafo",
+            "attrs": {
+              "Ad": "T1",
+              "tip": "ters"
+            },
+            "p": {
+              "x": 500100.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "point",
+            "id": 10,
+            "layerId": "vana",
+            "attrs": {
+              "durum": "açık"
+            },
+            "p": {
+              "x": 500300.0,
+              "y": 4400000.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 11,
+            "layerId": "hat2",
+            "attrs": {},
+            "a": {
+              "x": 500200.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500200.0,
+              "y": 4400090.0
+            }
+          },
+          {
+            "kind": "line",
+            "id": 12,
+            "layerId": "kilitli",
+            "attrs": {
+              "uc_bas": "Giriş"
+            },
+            "a": {
+              "x": 500100.0,
+              "y": 4400000.0
+            },
+            "b": {
+              "x": 500100.0,
+              "y": 4400060.0
+            }
+          }
+        ],
+        "styles": {
+          "items": [],
+          "categories": []
+        }
+      },
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "network": "ag-1"
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "network": "ag-1",
+              "attribute": "Alt ağ",
+              "reach": "downstream",
+              "controllers": 2,
+              "subnetworks": [
+                {
+                  "name": "Merkez A",
+                  "controllers": [
+                    "$uidOf:1"
+                  ],
+                  "edges": 5,
+                  "junctions": 3,
+                  "length": 450.0,
+                  "unverified": 2
+                },
+                {
+                  "name": "Merkez B",
+                  "controllers": [
+                    "$uidOf:2"
+                  ],
+                  "edges": 2,
+                  "junctions": 2,
+                  "length": 200.0,
+                  "unverified": 0
+                }
+              ],
+              "orphans": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:8"
+                ]
+              },
+              "shared": {
+                "count": 1,
+                "uids": [
+                  "$uidOf:10"
+                ]
+              },
+              "stale": {
+                "changed": {
+                  "count": 0
+                },
+                "missing": {
+                  "count": 11,
+                  "uids": [
+                    "$uidOf:3",
+                    "$uidOf:4",
+                    "$uidOf:5",
+                    "$uidOf:6",
+                    "$uidOf:7",
+                    "$uidOf:11",
+                    "$uidOf:12",
+                    "$uidOf:1",
+                    "$uidOf:2",
+                    "$uidOf:10",
+                    "$uidOf:9"
+                  ]
+                },
+                "leftOver": {
+                  "count": 0
+                }
+              },
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same"
+          }
+        }
+      ]
+    },
+    {
       "name": "projede olmayan ağ",
       "setup": {
         "format": "kentos.document",

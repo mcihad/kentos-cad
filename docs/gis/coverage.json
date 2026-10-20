@@ -3970,7 +3970,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 155,
+   "cases": 157,
    "files": [
     "fixtures/commands/v1/cad.arrays.edit.json",
     "fixtures/commands/v1/cad.columns.create.json",
@@ -3992,6 +3992,7 @@
     "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.sources.sync.together.json",
     "fixtures/commands/v1/cad.spaces.edit.json",
+    "fixtures/commands/v1/cad.subnetworks.follow.json",
     "fixtures/commands/v1/cad.tables.edit.json",
     "fixtures/commands/v1/cad.tags.check.json",
     "fixtures/commands/v1/cad.tags.create.json",
@@ -7846,7 +7847,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 954,
+   "cases": 967,
    "files": [
     "fixtures/commands/v1/cad.entities.delete.relations.json",
     "fixtures/commands/v1/cad.entities.set.contingents.json",
@@ -7872,7 +7873,8 @@
     "fixtures/commands/v1/cad.sources.reconcile.json",
     "fixtures/commands/v1/cad.sources.relate.json",
     "fixtures/commands/v1/cad.sources.sync.json",
-    "fixtures/commands/v1/cad.sources.sync.together.json"
+    "fixtures/commands/v1/cad.sources.sync.together.json",
+    "fixtures/commands/v1/cad.subnetworks.follow.json"
    ],
    "options": [
     {
@@ -8021,7 +8023,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 308,
+   "cases": 310,
    "files": [
     "fixtures/commands/v1/cad.annotations.scales.json",
     "fixtures/commands/v1/cad.arrays.edit.json",
@@ -8048,6 +8050,7 @@
     "fixtures/commands/v1/cad.sources.describe.json",
     "fixtures/commands/v1/cad.sources.sync.json",
     "fixtures/commands/v1/cad.spaces.edit.json",
+    "fixtures/commands/v1/cad.subnetworks.follow.json",
     "fixtures/commands/v1/cad.tags.create.json",
     "fixtures/commands/v1/desktop/cad.entities.transform.json"
    ],
@@ -12106,10 +12109,11 @@
     "mcp": true,
     "server": false
    },
-   "cases": 78,
+   "cases": 89,
    "files": [
     "fixtures/commands/v1/cad.line.create.fields.json",
-    "fixtures/commands/v1/cad.line.create.json"
+    "fixtures/commands/v1/cad.line.create.json",
+    "fixtures/commands/v1/cad.subnetworks.follow.json"
    ],
    "options": [
     {
@@ -12267,7 +12271,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 23,
+   "cases": 38,
    "files": [
     "fixtures/commands/v1/cad.network.define.json"
    ],
@@ -12280,6 +12284,11 @@
     {
      "key": "connect",
      "value": "vertices",
+     "covered": true
+    },
+    {
+     "key": "keepCurrent",
+     "value": true,
      "covered": true
     },
     {
@@ -12325,12 +12334,12 @@
     {
      "key": "reach",
      "value": "connected",
-     "covered": false
+     "covered": true
     },
     {
      "key": "reach",
      "value": "downstream",
-     "covered": false
+     "covered": true
     },
     {
      "key": "role",
@@ -16604,7 +16613,7 @@
     "mcp": true,
     "server": false
    },
-   "cases": 26,
+   "cases": 37,
    "files": [
     "fixtures/commands/v1/cad.subnetworks.find.json"
    ],
@@ -16628,8 +16637,9 @@
     "mcp": true,
     "server": false
    },
-   "cases": 25,
+   "cases": 31,
    "files": [
+    "fixtures/commands/v1/cad.subnetworks.follow.json",
     "fixtures/commands/v1/cad.subnetworks.update.json"
    ],
    "options": [],
@@ -19756,6 +19766,11 @@
      "covered": false
     },
     {
+     "key": "keepCurrent",
+     "value": true,
+     "covered": false
+    },
+    {
      "key": "kept",
      "value": true,
      "covered": false
@@ -21975,6 +21990,11 @@
     {
      "key": "keep",
      "value": "matched",
+     "covered": false
+    },
+    {
+     "key": "keepCurrent",
+     "value": true,
      "covered": false
     },
     {

@@ -165,6 +165,8 @@ fn screens() {
         "alt-aglar",
         "alt-aglar-guncel",
         "alt-aglar-serit",
+        "yapilandirma",
+        "guncel-tut",
     ];
     for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
         for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
@@ -178,7 +180,9 @@ fn screens() {
                 let mut app = match name {
                     "iz-abone" => subscribers_app(),
                     "terminaller" | "terminal-iz" | "alt-aglar" | "alt-aglar-guncel"
-                    | "alt-aglar-serit" => super::terminal_tests::electric_app(),
+                    | "alt-aglar-serit" | "yapilandirma" | "guncel-tut" => {
+                        super::terminal_tests::electric_app()
+                    }
                     _ => app(),
                 };
                 let _ = app
@@ -241,6 +245,32 @@ fn screens() {
                     "alt-aglar-serit" => {
                         let _ = app.update(Message::RibbonTab("analysis"));
                     }
+                    // docs/adr/0562: a device's configurations by an attribute of its points, Güncel tut chosen.
+                    "yapilandirma" => {
+                        send(&mut app, Message::Run("network.manage"));
+                        window(&mut app, Event::DeviceBy(0, "tip".into()));
+                        window(
+                            &mut app,
+                            Event::DeviceConfigs(
+                                0,
+                                "ters = x: Giriş; y: Çıkış | x, y || üçlü = yg; ag; ort | yg, ag; ag, ort"
+                                    .into(),
+                            ),
+                        );
+                        window(&mut app, Event::SubnetReach(1));
+                        window(&mut app, Event::SubnetKeep(1));
+                    }
+                    // A pipe drawn at the valve of a network that keeps its names current: Alt ağlar finds nothing stale.
+                    "guncel-tut" => {
+                        send(&mut app, Message::Run("network.manage"));
+                        window(&mut app, Event::SubnetReach(1));
+                        window(&mut app, Event::SubnetKeep(1));
+                        window(&mut app, Event::Save);
+                        send(&mut app, Message::Run("tool.line"));
+                        click_at(&mut app, [300.0, 0.0]);
+                        click_at(&mut app, [300.0, 50.0]);
+                        send(&mut app, Message::Run("network.subnetworks"));
+                    }
                     "en-yakin" | "en-yakin-cizim" => {
                         send(
                             &mut app,
@@ -294,7 +324,7 @@ fn screens() {
                     snapshot.settle(&mut app, App::view, &mut update);
                 } else if matches!(
                     name,
-                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller"
+                    "matris" | "yollar" | "sebeke" | "donusler" | "terminaller" | "yapilandirma"
                 ) {
                     // The form scrolled to its end: the table, or Denetle's answer under the definition.
                     let x = if name == "matris" {
@@ -315,7 +345,7 @@ fn screens() {
                                     x: 0.0,
                                     y: match name {
                                         "donusler" => -14.0,
-                                        "terminaller" => -26.0,
+                                        "terminaller" | "yapilandirma" => -26.0,
                                         _ => -40.0,
                                     },
                                 },

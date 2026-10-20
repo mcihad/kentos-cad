@@ -358,6 +358,28 @@ impl Document {
         out
     }
 
+    /// The layers whose objects the open step added, removed or changed so far (an object that changed layer counts
+    /// for both), each once, in the order first touched (docs/adr/0562 §3).
+    pub fn step_layers(&self) -> Vec<String> {
+        let mut out: Vec<String> = Vec::new();
+        let mut note = |layer: &str| {
+            if !out.iter().any(|l| l == layer) {
+                out.push(layer.to_owned());
+            }
+        };
+        for op in self.step_ops() {
+            match op {
+                Op::Add(s) | Op::Remove(s) => note(&s.entity.base().layer_id),
+                Op::Update { before, after } => {
+                    note(&before.entity.base().layer_id);
+                    note(&after.entity.base().layer_id);
+                }
+                _ => {}
+            }
+        }
+        out
+    }
+
     /// Whether the open step changed the constraints itself (a constraint or parameter command, a copy).
     pub fn step_touches_constraints(&self) -> bool {
         self.step_ops()

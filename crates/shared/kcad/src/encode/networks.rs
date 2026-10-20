@@ -6,9 +6,9 @@
 //! network's `turns` and `levels` and a speed cost's `periods`.
 
 use kentos_contracts::{
-    JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind,
-    NetworkLevels, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
-    SubnetworkReach, TerminalDevice, TurnLayer, networks_problem,
+    DeviceTerminal, JunctionRole, NetworkConnect, NetworkCostKind, NetworkDef, NetworkDirection,
+    NetworkKind, NetworkLevels, NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns,
+    NetworkUTurns, SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, networks_problem,
 };
 
 use super::Encoder;
@@ -31,6 +31,10 @@ enum V<'d> {
     Periods(&'d [NetworkPeriod]),
     Terminals(&'d NetworkTerminals),
     Devices(&'d [TerminalDevice]),
+    Paths(&'d [Vec<String>]),
+    DeviceTerminals(&'d [DeviceTerminal]),
+    Configs(&'d [TerminalConfig]),
+    True,
     Subnetworks(&'d NetworkSubnetworks),
 }
 
@@ -135,41 +139,57 @@ impl<'d> Encoder<'d> {
                 self.open(list.len(), false)?;
                 for (i, d) in list.iter().enumerate() {
                     self.at(Seg::Index(i), |e| {
-                        e.open(3, true)?;
-                        let mut keys = [("layer", 0u8), ("paths", 1), ("terminals", 2)];
-                        keys.sort_by(|a, b| key_order(a.0, b.0));
-                        for (key, which) in keys {
-                            e.key(key);
-                            e.at(Seg::Name(key), |e| match which {
-                                0 => e.text(&d.layer),
-                                1 => {
-                                    e.open(d.paths.len(), false)?;
-                                    for (k, path) in d.paths.iter().enumerate() {
-                                        e.at(Seg::Index(k), |e| e.network_value(V::Texts(path)))?;
-                                    }
-                                    e.close();
-                                    Ok(())
-                                }
-                                _ => {
-                                    e.open(d.terminals.len(), false)?;
-                                    for (k, t) in d.terminals.iter().enumerate() {
-                                        e.at(Seg::Index(k), |e| {
-                                            e.network_map(vec![
-                                                ("id", V::Text(&t.id)),
-                                                ("name", V::Text(&t.name)),
-                                            ])
-                                        })?;
-                                    }
-                                    e.close();
-                                    Ok(())
-                                }
-                            })?;
+                        let mut f = vec![
+                            ("layer", V::Text(&d.layer)),
+                            ("paths", V::Paths(&d.paths)),
+                            ("terminals", V::DeviceTerminals(&d.terminals)),
+                        ];
+                        if let Some(by) = &d.by {
+                            f.push(("by", V::Text(by)));
                         }
-                        e.close();
-                        Ok(())
+                        if !d.configs.is_empty() {
+                            f.push(("configs", V::Configs(&d.configs)));
+                        }
+                        e.network_map(f)
                     })?;
                 }
                 self.close();
+                Ok(())
+            }
+            V::Configs(list) => {
+                self.open(list.len(), false)?;
+                for (i, c) in list.iter().enumerate() {
+                    self.at(Seg::Index(i), |e| {
+                        e.network_map(vec![
+                            ("value", V::Text(&c.value)),
+                            ("paths", V::Paths(&c.paths)),
+                            ("terminals", V::DeviceTerminals(&c.terminals)),
+                        ])
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::Paths(paths) => {
+                self.open(paths.len(), false)?;
+                for (k, path) in paths.iter().enumerate() {
+                    self.at(Seg::Index(k), |e| e.network_value(V::Texts(path)))?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::DeviceTerminals(list) => {
+                self.open(list.len(), false)?;
+                for (k, t) in list.iter().enumerate() {
+                    self.at(Seg::Index(k), |e| {
+                        e.network_map(vec![("id", V::Text(&t.id)), ("name", V::Text(&t.name))])
+                    })?;
+                }
+                self.close();
+                Ok(())
+            }
+            V::True => {
+                self.w.bool(true);
                 Ok(())
             }
             V::Subnetworks(s) => {
@@ -185,6 +205,9 @@ impl<'d> Encoder<'d> {
                 ];
                 if let Some(x) = &s.name {
                     f.push(("name", V::Text(x)));
+                }
+                if s.keep_current {
+                    f.push(("keepCurrent", V::True));
                 }
                 self.network_map(f)
             }

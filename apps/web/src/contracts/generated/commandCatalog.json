@@ -11340,6 +11340,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -17207,9 +17211,54 @@
             ],
             "type": "string"
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -25703,6 +25752,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -27623,9 +27676,54 @@
             ],
             "type": "object"
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -39692,6 +39790,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -45649,9 +45751,54 @@
               }
             ]
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -937741,6 +937888,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -937859,9 +938010,54 @@
               }
             ]
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -938362,6 +938558,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -938480,9 +938680,54 @@
               }
             ]
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -938967,6 +939212,10 @@
                 "description": "The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined\nwith `; ` where it is in more than one; taken away where it is in none.",
                 "type": "string"
               },
+              "keepCurrent": {
+                "description": "Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its\nown step; when it cannot, the command says `subnetwork_dirty`.",
+                "type": "boolean"
+              },
               "name": {
                 "description": "The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.",
                 "type": [
@@ -939085,9 +939334,54 @@
               }
             ]
           },
+          "TerminalConfig": {
+            "description": "A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds\n`value` (caseless).",
+            "properties": {
+              "paths": {
+                "description": "1–16 paths, as the device's.",
+                "items": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                "type": "array"
+              },
+              "terminals": {
+                "description": "2–8 terminals.",
+                "items": {
+                  "$ref": "#/$defs/DeviceTerminal"
+                },
+                "type": "array"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "value",
+              "terminals",
+              "paths"
+            ],
+            "type": "object"
+          },
           "TerminalDevice": {
             "description": "A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals\ngoes on through the device only to a terminal on a path with it; an edge that names none (or one the device does\nnot have) passes to every terminal and the trace is said to be unverified.",
             "properties": {
+              "by": {
+                "description": "The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is\na configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the\ndevice's own (an unknown value is said). None: every point has the device's own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "configs": {
+                "description": "The configurations besides the device's own: 1–16 when `by` is named, none otherwise.",
+                "items": {
+                  "$ref": "#/$defs/TerminalConfig"
+                },
+                "type": "array"
+              },
               "layer": {
                 "description": "A junction layer of the network (its id).",
                 "type": "string"
@@ -1061851,6 +1062145,12 @@
       "meaning": "Bir katmanın nesnelerine alt ağ adı yazılmadı (kilitli ya da özniteliğin alanı yok)."
     },
     {
+      "code": "subnetwork_dirty",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Ağ alt ağ adlarını güncel tutuyor ama bu yazma onları güncelleyemedi; Alt ağları güncelle ile yenileyin."
+    },
+    {
       "code": "unknown_layer",
       "kind": "warning",
       "retryable": false,
@@ -1065242,7 +1065542,8 @@
     "constraint_singular",
     "not_converged",
     "constraints_removed",
-    "constraints_relaxed"
+    "constraints_relaxed",
+    "subnetwork_dirty"
   ],
   "units": [
     {

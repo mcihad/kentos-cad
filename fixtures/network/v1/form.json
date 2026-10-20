@@ -1365,6 +1365,411 @@
      "reach": "connected"
     }
    }
+  },
+  {
+   "name": "yapılandırma: seçen alan ve bir yapılandırma",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "terminalStart": "uc_bas",
+    "terminalEnd": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": "giris: Giriş; cikis: Çıkış",
+      "paths": "giris, cikis",
+      "by": " tip ",
+      "configs": "üç yollu = a: A; b: B; c: C | a, b, c"
+     }
+    ]
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "terminals": {
+     "start": "uc_bas",
+     "end": "uc_son",
+     "devices": [
+      {
+       "layer": "vana",
+       "terminals": [
+        {
+         "id": "giris",
+         "name": "Giriş"
+        },
+        {
+         "id": "cikis",
+         "name": "Çıkış"
+        }
+       ],
+       "paths": [
+        [
+         "giris",
+         "cikis"
+        ]
+       ],
+       "by": "tip",
+       "configs": [
+        {
+         "value": "üç yollu",
+         "terminals": [
+          {
+           "id": "a",
+           "name": "A"
+          },
+          {
+           "id": "b",
+           "name": "B"
+          },
+          {
+           "id": "c",
+           "name": "C"
+          }
+         ],
+         "paths": [
+          [
+           "a",
+           "b",
+           "c"
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "yapılandırma: iki yapılandırma, boşluklar kırpılır",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "terminalStart": "uc_bas",
+    "terminalEnd": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": "a; b",
+      "paths": "a, b",
+      "by": "tip",
+      "configs": " üç yollu=a: A;b: B;c: C|a,b,c || trafo = yg: Yüksek gerilim; ag: Alçak gerilim | yg, ag ||"
+     }
+    ]
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "terminals": {
+     "start": "uc_bas",
+     "end": "uc_son",
+     "devices": [
+      {
+       "layer": "vana",
+       "terminals": [
+        {
+         "id": "a",
+         "name": "a"
+        },
+        {
+         "id": "b",
+         "name": "b"
+        }
+       ],
+       "paths": [
+        [
+         "a",
+         "b"
+        ]
+       ],
+       "by": "tip",
+       "configs": [
+        {
+         "value": "üç yollu",
+         "terminals": [
+          {
+           "id": "a",
+           "name": "A"
+          },
+          {
+           "id": "b",
+           "name": "B"
+          },
+          {
+           "id": "c",
+           "name": "C"
+          }
+         ],
+         "paths": [
+          [
+           "a",
+           "b",
+           "c"
+          ]
+         ]
+        },
+        {
+         "value": "trafo",
+         "terminals": [
+          {
+           "id": "yg",
+           "name": "Yüksek gerilim"
+          },
+          {
+           "id": "ag",
+           "name": "Alçak gerilim"
+          }
+         ],
+         "paths": [
+          [
+           "yg",
+           "ag"
+          ]
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "name": "alt ağlar: güncel tut",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "subnetReach": "downstream",
+    "subnetKeep": true
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    },
+    "subnetworks": {
+     "attribute": "Alt ağ",
+     "reach": "downstream",
+     "keepCurrent": true
+    }
+   }
+  },
+  {
+   "name": "alt ağlar: güncel tut, ulaşım yokken yazılmaz",
+   "unit": "m",
+   "form": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol",
+      "filter": ""
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve",
+      "filter": "",
+      "closed": ""
+     },
+     {
+      "layer": "depo",
+      "role": "source",
+      "filter": "",
+      "closed": ""
+     }
+    ],
+    "connect": "ends",
+    "tolerance": "0.01",
+    "direction": "digitized",
+    "field": "",
+    "forward": "",
+    "backward": "",
+    "shut": "",
+    "costs": [],
+    "closed": "",
+    "subnetKeep": true
+   },
+   "network": {
+    "id": "ag-2",
+    "name": "İçme suyu",
+    "kind": "utility",
+    "edges": [
+     {
+      "layer": "yol"
+     }
+    ],
+    "junctions": [
+     {
+      "layer": "vana",
+      "role": "valve"
+     },
+     {
+      "layer": "depo",
+      "role": "source"
+     }
+    ],
+    "connect": "ends",
+    "tolerance": 0.01,
+    "direction": {
+     "kind": "digitized"
+    }
+   }
   }
  ],
  "retype": [
@@ -2078,6 +2483,234 @@
    "subnetworks": {
     "attribute": "Alt ağ",
     "reach": "connected"
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "terminals": {
+    "start": "uc_bas",
+    "end": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": [
+       {
+        "id": "giris",
+        "name": "Giriş"
+       },
+       {
+        "id": "cikis",
+        "name": "Çıkış"
+       }
+      ],
+      "paths": [
+       [
+        "giris",
+        "cikis"
+       ]
+      ],
+      "by": "tip",
+      "configs": [
+       {
+        "value": "üç yollu",
+        "terminals": [
+         {
+          "id": "a",
+          "name": "A"
+         },
+         {
+          "id": "b",
+          "name": "B"
+         },
+         {
+          "id": "c",
+          "name": "C"
+         }
+        ],
+        "paths": [
+         [
+          "a",
+          "b",
+          "c"
+         ]
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "terminals": {
+    "start": "uc_bas",
+    "end": "uc_son",
+    "devices": [
+     {
+      "layer": "vana",
+      "terminals": [
+       {
+        "id": "a",
+        "name": "a"
+       },
+       {
+        "id": "b",
+        "name": "b"
+       }
+      ],
+      "paths": [
+       [
+        "a",
+        "b"
+       ]
+      ],
+      "by": "tip",
+      "configs": [
+       {
+        "value": "üç yollu",
+        "terminals": [
+         {
+          "id": "a",
+          "name": "A"
+         },
+         {
+          "id": "b",
+          "name": "B"
+         },
+         {
+          "id": "c",
+          "name": "C"
+         }
+        ],
+        "paths": [
+         [
+          "a",
+          "b",
+          "c"
+         ]
+        ]
+       },
+       {
+        "value": "trafo",
+        "terminals": [
+         {
+          "id": "yg",
+          "name": "Yüksek gerilim"
+         },
+         {
+          "id": "ag",
+          "name": "Alçak gerilim"
+         }
+        ],
+        "paths": [
+         [
+          "yg",
+          "ag"
+         ]
+        ]
+       }
+      ]
+     }
+    ]
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
+   },
+   "subnetworks": {
+    "attribute": "Alt ağ",
+    "reach": "downstream",
+    "keepCurrent": true
+   }
+  },
+  {
+   "id": "ag-2",
+   "name": "İçme suyu",
+   "kind": "utility",
+   "edges": [
+    {
+     "layer": "yol"
+    }
+   ],
+   "junctions": [
+    {
+     "layer": "vana",
+     "role": "valve"
+    },
+    {
+     "layer": "depo",
+     "role": "source"
+    }
+   ],
+   "connect": "ends",
+   "tolerance": 0.01,
+   "direction": {
+    "kind": "digitized"
    }
   }
  ]

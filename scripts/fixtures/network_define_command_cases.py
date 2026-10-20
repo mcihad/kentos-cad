@@ -51,7 +51,7 @@ SETUP = {
     "name": "Ağlar",
     "settings": {"srid": 5256, "lengthDecimals": 3, "areaDecimals": 2, "areaUnit": "m2", "angleUnit": "grad", "plotScale": 1000, "workspace": "gis", "drawingFont": "barlow", "networks": [copy.deepcopy(ROADS)]},
     "origin": {"x": 500000, "y": 4400000},
-    "layers": [node("yol", "Yol ekseni"), node("su", "Su hattı"), node("vana", "Vana"), node("0", "0")],
+    "layers": [node("yol", "Yol ekseni"), node("su", "Su hattı"), node("vana", "Vana"), node("depo", "Depo"), node("0", "0")],
     "activeLayer": "0",
     "entities": [{"kind": "line", "id": 1, "layerId": "yol", "attrs": {"yon": "FT"}, "a": {"x": 500000, "y": 4400000}, "b": {"x": 500100, "y": 4400000}}],
     "styles": {"items": [], "categories": []},
@@ -147,6 +147,44 @@ def cases():
         "name": "Plan: silmenin listesi; hiçbir şey yazılmaz",
         "steps": [step("plan", {"operation": "remove", "id": "ag-1"}, completed({"networks": [], "revision": "$current"}), {**UNCHANGED, "networks": [ROADS]})],
     })
+    # Docs/adr/0562: a device's configurations by an attribute of its points, the subnetworks kept current.
+    device = {"layer": "vana", "terminals": [{"id": "giris", "name": "Giriş"}, {"id": "cikis", "name": "Çıkış"}], "paths": [["giris", "cikis"]]}
+    config = {"value": "üç yollu", "terminals": [{"id": "a", "name": "A"}, {"id": "b", "name": "B"}, {"id": "c", "name": "C"}], "paths": [["a", "b", "c"]]}
+    sourced = {**WATER, "junctions": [{"layer": "vana", "role": "valve"}, {"layer": "depo", "role": "source"}]}
+    configured = {**sourced,
+                  "terminals": {"start": "uc_bas", "end": "uc_son", "devices": [{**device, "by": "tip", "configs": [config]}]},
+                  "subnetworks": {"name": "Ad", "attribute": "Alt ağ", "reach": "downstream", "keepCurrent": True}}
+    out.append({
+        "name": "Ekle: terminaller, cihazı seçen alan ve yapılandırması, alt ağlar güncel tutulur",
+        "steps": [step("execute", {"operation": "set", "network": configured}, completed({"networks": [ROADS, configured], "revision": "$current"}), {**WRITTEN, "networks": [ROADS, configured]})],
+    })
+    keeping = {**sourced, "subnetworks": {"attribute": "Alt ağ", "reach": "connected", "keepCurrent": True}}
+    out.append({
+        "name": "Ekle: yalnız güncel tutan alt ağlar",
+        "steps": [step("execute", {"operation": "set", "network": keeping}, completed({"networks": [ROADS, keeping], "revision": "$current"}), {**WRITTEN, "networks": [ROADS, keeping]})],
+    })
+    plainer = {**configured, "terminals": {"start": "uc_bas", "end": "uc_son", "devices": [device]},
+               "subnetworks": {"name": "Ad", "attribute": "Alt ağ", "reach": "downstream"}}
+    out.append({
+        "name": "Değiştir: güncel tutma kapatılır (alan yazılmaz), yapılandırma silinir",
+        "steps": [
+            step("execute", {"operation": "set", "network": configured}, completed({"networks": [ROADS, configured], "revision": "$current"})),
+            step("execute", {"operation": "set", "network": plainer}, completed({"networks": [ROADS, plainer], "revision": "$current"}),
+                 {**WRITTEN, "networks": [ROADS, plainer]}),
+        ],
+    })
+    out.append({
+        "name": "Doğrula: yapılandırmalı ağ yazılmadan kabul edilir",
+        "steps": [step("validate", {"operation": "set", "network": configured}, {"status": "completed", "output": None, "warnings": []}, {**UNCHANGED, "networks": [ROADS]})],
+    })
+    out.append({
+        "name": "Plan: yapılandırmalı ağın listesi; hiçbir şey yazılmaz",
+        "steps": [step("plan", {"operation": "set", "network": configured}, completed({"networks": [ROADS, configured], "revision": "$current"}), {**UNCHANGED, "networks": [ROADS]})],
+    })
+    for title in ("yapılandırma var, seçen alan yok", "seçen alan var, yapılandırma yok", "seçen alan boş", "17 yapılandırma", "yapılandırma değeri iki kez",
+                  "yapılandırma değeri boş", "yapılandırmada tek terminal", "yapılandırmada yolda olmayan terminal", "alt ağ özniteliği yapılandırmayı seçen alanla aynı"):
+        value, words = rule_words(title)
+        out.append(refused(f"kuralına uymayan ağ: {title}", {"operation": "set", "network": value}, "invalid_network", words, "network"))
     out.append(refused("ağsız yazma", {"operation": "set"}, "no_network", "Yazılacak ağ (network) verilmedi; ağın tanımını verin.", "network"))
     out.append(refused("kimliksiz silme", {"operation": "remove"}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))
     out.append(refused("boş kimlikle silme", {"operation": "remove", "id": ""}, "no_id", "Silinecek ağın kimliğini (id) verin.", "id"))

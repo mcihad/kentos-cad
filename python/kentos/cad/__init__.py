@@ -1806,6 +1806,7 @@ __all__ = [
     "TenantKind",
     "TenantKindName",
     "TenantRef",
+    "TerminalConfig",
     "TerminalDevice",
     "TextAlign",
     "TextAlignName",

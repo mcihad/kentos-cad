@@ -217,3 +217,93 @@ fn alt_aglar_says_what_each_source_reaches_and_guncelle_writes_the_names() {
     assert_eq!(doc.undo().as_deref(), Some("Alt ağları güncelle"));
     assert_eq!(attr(&app, 3, "Alt ağ"), None);
 }
+
+/// Docs/adr/0562 §2: Ağlar writes a device's configuration attribute and its configurations (as typed, with the
+/// contract's words for what is wrong), and shows them again as it wrote them.
+#[test]
+fn aglar_writes_a_devices_configurations_and_shows_them_again() {
+    let mut app = electric_app();
+    send(&mut app, Message::Run("network.manage"));
+    window(&mut app, Event::DeviceBy(0, " tip ".into()));
+    window(
+        &mut app,
+        Event::DeviceConfigs(
+            0,
+            "ters = x: Giriş; y: Çıkış | x, y || üçlü = a; b; c | a, b; b, c".into(),
+        ),
+    );
+    window(&mut app, Event::SubnetReach(1));
+    window(&mut app, Event::SubnetKeep(1));
+    window(&mut app, Event::Save);
+    assert!(app.networks.window.is_none(), "Kaydet closes the window");
+    let doc = &app.document.as_ref().expect("open").model;
+    let net = &doc.settings().networks[0];
+    let device = &net.terminals.as_ref().expect("terminals").devices[0];
+    assert_eq!(device.by.as_deref(), Some("tip"));
+    assert_eq!(device.configs.len(), 2);
+    assert_eq!(device.configs[0].value, "ters");
+    assert_eq!(device.configs[0].terminals[0].name, "Giriş");
+    assert_eq!(device.configs[1].paths, [["a", "b"], ["b", "c"]]);
+    assert!(net.subnetworks.as_ref().expect("subnetworks").keep_current);
+    // The form shows what was written; Güncel tut stays.
+    send(&mut app, Message::Run("network.manage"));
+    let shown = app
+        .networks
+        .window
+        .as_ref()
+        .and_then(|w| w.form())
+        .expect("the form")
+        .clone();
+    assert_eq!(shown.devices[0].by, "tip");
+    assert_eq!(
+        shown.devices[0].configs,
+        "ters = x: Giriş; y: Çıkış | x, y || üçlü = a; b; c | a, b; b, c"
+    );
+    assert!(shown.subnet_keep);
+    // A configuration the contract refuses is the form's last word: the window stays.
+    window(
+        &mut app,
+        Event::DeviceConfigs(0, "ters = x; y | x, z".into()),
+    );
+    window(&mut app, Event::Save);
+    assert!(app.networks.window.is_some(), "Kaydet waits");
+}
+
+/// Docs/adr/0562 §3: a network that keeps its names current is followed by a pipe drawn at its valve, in the pipe's own
+/// step: the new pipe has both sources' names, and one undo takes the pipe and the names back.
+#[test]
+fn a_pipe_drawn_at_the_valve_gets_its_names_in_its_own_step() {
+    let mut app = electric_app();
+    send(&mut app, Message::Run("network.manage"));
+    window(&mut app, Event::SubnetReach(1));
+    window(&mut app, Event::SubnetKeep(1));
+    window(&mut app, Event::Save);
+    assert!(app.networks.window.is_none());
+    // Not written yet: the names are Güncelle's until a write touches the network.
+    assert_eq!(attr(&app, 3, "Alt ağ"), None);
+    send(&mut app, Message::Run("tool.line"));
+    click_at(&mut app, [300.0, 0.0]);
+    click_at(&mut app, [300.0, 50.0]);
+    let new = {
+        let model = &app.document.as_ref().expect("open").model;
+        model
+            .entities()
+            .map(|e| e.base().id)
+            .max()
+            .expect("objects")
+    };
+    assert_eq!(new, 11, "the new pipe");
+    assert_eq!(
+        attr(&app, new, "Alt ağ").as_deref(),
+        Some("Merkez A; Merkez B")
+    );
+    assert_eq!(attr(&app, 3, "Alt ağ").as_deref(), Some("Merkez A"));
+    assert_eq!(attr(&app, 6, "Alt ağ").as_deref(), Some("Merkez B"));
+    assert_eq!(attr(&app, 7, "Alt ağ"), None, "the unfed pipe has none");
+    // One undo step: the pipe is gone and the names with it.
+    let doc = &mut app.document.as_mut().expect("open").model;
+    doc.undo();
+    assert_eq!(attr(&app, 3, "Alt ağ"), None);
+    let doc = &app.document.as_ref().expect("open").model;
+    assert!(doc.get(kentos_domain::Slot(11)).is_none());
+}

@@ -14,4 +14,9 @@ name?: string,
  * The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined
  * with `; ` where it is in more than one; taken away where it is in none.
  */
-attribute: string, reach: SubnetworkReach, };
+attribute: string, reach: SubnetworkReach, 
+/**
+ * Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its
+ * own step; when it cannot, the command says `subnetwork_dirty`.
+ */
+keepCurrent?: boolean, };

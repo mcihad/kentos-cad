@@ -57,6 +57,9 @@ pub const NETWORK_DEVICE_LIMIT: usize = 16;
 pub const NETWORK_TERMINAL_LIMIT: usize = 8;
 pub const NETWORK_PATH_LIMIT: usize = 16;
 
+/// The most configurations a device has besides its own terminals (docs/adr/0562 §2).
+pub const NETWORK_CONFIG_LIMIT: usize = 16;
+
 /// The longest id, name, value, field name, unit and expression (characters).
 const ID_LENGTH: usize = 40;
 const NAME_LENGTH: usize = 80;
@@ -148,6 +151,31 @@ pub struct TerminalDevice {
     pub terminals: Vec<DeviceTerminal>,
     /// 1–16 paths: each the ids of two or more terminals connected to one another through the device.
     pub paths: Vec<Vec<String>>,
+    /// The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is
+    /// a configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the
+    /// device's own (an unknown value is said). None: every point has the device's own.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub by: Option<String>,
+    /// The configurations besides the device's own: 1–16 when `by` is named, none otherwise.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<Vec<TerminalConfig>>", optional))]
+    pub configs: Vec<TerminalConfig>,
+}
+
+/// A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds
+/// `value` (caseless).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "ts", derive(TS))]
+#[cfg_attr(feature = "schema", derive(schemars::JsonSchema))]
+#[serde(rename_all = "camelCase")]
+#[cfg_attr(feature = "ts", ts(export))]
+pub struct TerminalConfig {
+    pub value: String,
+    /// 2–8 terminals.
+    pub terminals: Vec<DeviceTerminal>,
+    /// 1–16 paths, as the device's.
+    pub paths: Vec<Vec<String>>,
 }
 
 /// A terminal: its id (lower-case letters, digits and hyphens) and its name (what the tools say).
@@ -190,6 +218,11 @@ pub struct NetworkSubnetworks {
     /// with `; ` where it is in more than one; taken away where it is in none.
     pub attribute: String,
     pub reach: SubnetworkReach,
+    /// Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its
+    /// own step; when it cannot, the command says `subnetwork_dirty`.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
+    pub keep_current: bool,
 }
 
 /// Where U-turns are made (docs/adr/0521 §2).
@@ -722,66 +755,63 @@ impl NetworkDef {
             if t.devices[..i].iter().any(|o| o.layer == d.layer) {
                 return Some(format!("{n}. cihazın katmanı iki kez var"));
             }
-            if d.terminals.len() < 2 || d.terminals.len() > NETWORK_TERMINAL_LIMIT {
+            if let Some(p) = terminal_set_problem(&format!("{n}. cihazın"), &d.terminals, &d.paths)
+            {
+                return Some(p);
+            }
+            if let Some(p) = self.configs_problem(n, d) {
+                return Some(p);
+            }
+        }
+        None
+    }
+
+    /// What is wrong with a device's configurations (docs/adr/0562 §2), in words that continue “ağının …”.
+    fn configs_problem(&self, n: usize, d: &TerminalDevice) -> Option<String> {
+        match (&d.by, d.configs.is_empty()) {
+            (None, true) => return None,
+            (None, false) => {
                 return Some(format!(
-                    "{n}. cihazın terminalleri 2–{NETWORK_TERMINAL_LIMIT} olmalı"
+                    "{n}. cihazın yapılandırmaları var ama hangi öznitelikle seçildiği yok"
                 ));
             }
-            let mut keys: Vec<String> = Vec::new();
-            for tm in &d.terminals {
-                if !network_id_holds(&tm.id) {
-                    return Some(format!(
-                        "{n}. cihazın terminal kimliği “{}”; 1–{ID_LENGTH} küçük harf, rakam ya da tire olmalı",
-                        tm.id
-                    ));
-                }
-                let name = tm.name.trim();
-                if name.is_empty() || name != tm.name || chars(name) > VALUE_LENGTH {
-                    return Some(format!(
-                        "{n}. cihazın “{}” terminalinin adı boş, kırpılmamış ya da {VALUE_LENGTH} karakterden uzun",
-                        tm.id
-                    ));
-                }
-                let (id_key, name_key) = (network_caseless(&tm.id), network_caseless(name));
-                let mut mine = vec![id_key.clone()];
-                if name_key != id_key {
-                    mine.push(name_key);
-                }
-                for k in mine {
-                    if keys.contains(&k) {
-                        return Some(format!(
-                            "{n}. cihazın terminalleri karışıyor: “{k}” bir terminalin kimliği ya da adı olarak iki kez var"
-                        ));
-                    }
-                    keys.push(k);
-                }
-            }
-            if d.paths.is_empty() || d.paths.len() > NETWORK_PATH_LIMIT {
+            (Some(_), true) => {
                 return Some(format!(
-                    "{n}. cihazın yolu yok ya da çok; 1–{NETWORK_PATH_LIMIT} yol olmalı"
+                    "{n}. cihazın yapılandırma özniteliği var ama yapılandırması yok"
                 ));
             }
-            for (k, path) in d.paths.iter().enumerate() {
-                if path.len() < 2 {
+            (Some(by), false) => {
+                if field_bad(by) {
                     return Some(format!(
-                        "{n}. cihazın {}. yolu en az iki terminal içermeli",
-                        k + 1
+                        "{n}. cihazın yapılandırma özniteliği boş, kırpılmamış ya da çok uzun"
                     ));
                 }
-                for (m, id) in path.iter().enumerate() {
-                    if !d.terminals.iter().any(|tm| tm.id == *id) {
-                        return Some(format!(
-                            "{n}. cihazın {}. yolundaki “{id}” cihazın terminali değil",
-                            k + 1
-                        ));
-                    }
-                    if path[..m].contains(id) {
-                        return Some(format!(
-                            "{n}. cihazın {}. yolunda “{id}” iki kez var",
-                            k + 1
-                        ));
-                    }
-                }
+            }
+        }
+        if d.configs.len() > NETWORK_CONFIG_LIMIT {
+            return Some(format!(
+                "{n}. cihazın yapılandırması çok; en çok {NETWORK_CONFIG_LIMIT} olmalı"
+            ));
+        }
+        let mut seen: Vec<String> = Vec::new();
+        for c in &d.configs {
+            let value = c.value.trim();
+            if value.is_empty() || value != c.value || chars(value) > VALUE_LENGTH {
+                return Some(format!(
+                    "{n}. cihazın yapılandırma değeri boş, kırpılmamış ya da {VALUE_LENGTH} karakterden uzun"
+                ));
+            }
+            let key = network_caseless(value);
+            if seen.contains(&key) {
+                return Some(format!("{n}. cihazın “{value}” yapılandırması iki kez var"));
+            }
+            seen.push(key);
+            if let Some(p) = terminal_set_problem(
+                &format!("{n}. cihazın “{value}” yapılandırmasının"),
+                &c.terminals,
+                &c.paths,
+            ) {
+                return Some(p);
             }
         }
         None
@@ -805,6 +835,11 @@ impl NetworkDef {
             .iter()
             .map(String::as_str)
             .chain(self.terminals.iter().flat_map(|t| [t.start.as_str(), t.end.as_str()]))
+            .chain(
+                self.terminals
+                    .iter()
+                    .flat_map(|t| t.devices.iter().filter_map(|d| d.by.as_deref())),
+            )
             .chain(match &self.direction {
                 NetworkDirection::Field { field, .. } => Some(field.as_str()),
                 _ => None,
@@ -847,6 +882,69 @@ impl NetworkDef {
         }
         out
     }
+}
+
+/// What is wrong with a device's terminals and paths (docs/adr/0557 §1), `who` being the words they belong to
+/// (“1. cihazın”, “1. cihazın “x” yapılandırmasının”).
+fn terminal_set_problem(
+    who: &str,
+    terminals: &[DeviceTerminal],
+    paths: &[Vec<String>],
+) -> Option<String> {
+    if terminals.len() < 2 || terminals.len() > NETWORK_TERMINAL_LIMIT {
+        return Some(format!("{who} terminalleri 2–{NETWORK_TERMINAL_LIMIT} olmalı"));
+    }
+    let mut keys: Vec<String> = Vec::new();
+    for tm in terminals {
+        if !network_id_holds(&tm.id) {
+            return Some(format!(
+                "{who} terminal kimliği “{}”; 1–{ID_LENGTH} küçük harf, rakam ya da tire olmalı",
+                tm.id
+            ));
+        }
+        let name = tm.name.trim();
+        if name.is_empty() || name != tm.name || chars(name) > VALUE_LENGTH {
+            return Some(format!(
+                "{who} “{}” terminalinin adı boş, kırpılmamış ya da {VALUE_LENGTH} karakterden uzun",
+                tm.id
+            ));
+        }
+        let (id_key, name_key) = (network_caseless(&tm.id), network_caseless(name));
+        let mut mine = vec![id_key.clone()];
+        if name_key != id_key {
+            mine.push(name_key);
+        }
+        for k in mine {
+            if keys.contains(&k) {
+                return Some(format!(
+                    "{who} terminalleri karışıyor: “{k}” bir terminalin kimliği ya da adı olarak iki kez var"
+                ));
+            }
+            keys.push(k);
+        }
+    }
+    if paths.is_empty() || paths.len() > NETWORK_PATH_LIMIT {
+        return Some(format!(
+            "{who} yolu yok ya da çok; 1–{NETWORK_PATH_LIMIT} yol olmalı"
+        ));
+    }
+    for (k, path) in paths.iter().enumerate() {
+        if path.len() < 2 {
+            return Some(format!("{who} {}. yolu en az iki terminal içermeli", k + 1));
+        }
+        for (m, id) in path.iter().enumerate() {
+            if !terminals.iter().any(|tm| tm.id == *id) {
+                return Some(format!(
+                    "{who} {}. yolundaki “{id}” cihazın terminali değil",
+                    k + 1
+                ));
+            }
+            if path[..m].contains(id) {
+                return Some(format!("{who} {}. yolunda “{id}” iki kez var", k + 1));
+            }
+        }
+    }
+    None
 }
 
 /// Whether a field name a network's turns, levels or periods name is not one: empty, untrimmed or too long.
@@ -1138,12 +1236,15 @@ mod tests {
                     },
                 ],
                 paths: vec![vec!["yg".into(), "ag".into()]],
+                by: None,
+                configs: Vec::new(),
             }],
         });
         n.subnetworks = Some(NetworkSubnetworks {
             name: Some("Ad".into()),
             attribute: "Alt ağ".into(),
             reach: SubnetworkReach::Downstream,
+            keep_current: false,
         });
         n
     }
@@ -1177,6 +1278,52 @@ mod tests {
         let mut same = n.clone();
         same.terminals.as_mut().unwrap().devices[0].terminals[0].name = "YG".into();
         assert_eq!(same.problem(), None);
+    }
+
+    /// A device's configurations and `keepCurrent` (docs/adr/0562 §2, §3): what holds and what each rule says.
+    #[test]
+    fn configurations_and_keep_current_say_what_is_wrong() {
+        let config = |value: &str| TerminalConfig {
+            value: value.into(),
+            terminals: vec![
+                DeviceTerminal {
+                    id: "a".into(),
+                    name: "A".into(),
+                },
+                DeviceTerminal {
+                    id: "b".into(),
+                    name: "B".into(),
+                },
+            ],
+            paths: vec![vec!["a".into(), "b".into()]],
+        };
+        let mut n = utility();
+        {
+            let d = &mut n.terminals.as_mut().unwrap().devices[0];
+            d.by = Some("tip".into());
+            d.configs = vec![config("trafo"), config("ışık")];
+        }
+        n.subnetworks.as_mut().unwrap().keep_current = true;
+        assert_eq!(n.problem(), None);
+        let bad = |edit: &dyn Fn(&mut TerminalDevice)| {
+            let mut m = n.clone();
+            edit(&mut m.terminals.as_mut().unwrap().devices[0]);
+            m.problem().expect("a problem")
+        };
+        assert!(bad(&|d| d.by = None).contains("hangi öznitelikle"));
+        assert!(bad(&|d| d.configs.clear()).contains("yapılandırması yok"));
+        assert!(bad(&|d| d.by = Some(" tip".into())).contains("kırpılmamış"));
+        assert!(bad(&|d| d.configs[1].value = "TRAFO".into()).contains("iki kez"));
+        // Turkish I folds to ı: “IŞIK” is the second configuration's “ışık”.
+        assert!(bad(&|d| d.configs[0].value = "IŞIK".into()).contains("iki kez"));
+        assert!(bad(&|d| d.configs[0].value.clear()).contains("yapılandırma değeri"));
+        assert!(bad(&|d| d.configs[0].terminals.truncate(1)).contains("“trafo” yapılandırmasının"));
+        assert!(bad(&|d| d.configs[1].paths[0][1] = "z".into()).contains("“ışık” yapılandırmasının"));
+        assert!(bad(&|d| d.configs = (0..17).map(|i| config(&format!("v{i}"))).collect()).contains("en çok 16"));
+        // The attribute that chooses a configuration is read, so the subnetworks may not write it.
+        let mut over = n.clone();
+        over.subnetworks.as_mut().unwrap().attribute = "tip".into();
+        assert!(over.problem().expect("a problem").contains("üstüne"));
     }
 
     #[test]

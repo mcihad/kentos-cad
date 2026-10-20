@@ -96,6 +96,16 @@ def device(**over):
             "paths": [["giris", "cikis"]], **over}
 
 
+def config(value="üç yollu", **over):
+    return {"value": value, "terminals": [{"id": "a", "name": "A"}, {"id": "b", "name": "B"}, {"id": "c", "name": "C"}],
+            "paths": [["a", "b", "c"]], **over}
+
+
+def configured(*configs, **over):
+    """A device chosen by the attribute `tip` among `configs` (docs/adr/0562 §2)."""
+    return terminals(device(by="tip", configs=list(configs) or [config()], **over))
+
+
 def terminals(*devices, **over):
     return {"start": "uc_bas", "end": "uc_son", "devices": list(devices) or [device()], **over}
 
@@ -233,6 +243,35 @@ NETWORKS = [
     ("alt ağ özniteliği terminal alanıyla aynı", changed(water(), lambda n: (set_("terminals", terminals())(n), set_("subnetworks", subnets(attribute="uc_son"))(n)))),
     ("alt ağ özniteliği yön alanıyla aynı", changed(water(), lambda n: (set_("direction", field_direction(forward=["FT"]))(n), set_("subnetworks", subnets(attribute="yon"))(n)))),
     ("terminaller ve alt ağlar birlikte", changed(water(), lambda n: (set_("terminals", terminals())(n), set_("subnetworks", subnets())(n)))),
+    # Configurations by an attribute and keeping subnetworks current (docs/adr/0562).
+    ("yapılandırma: üç yollu", changed(water(), set_("terminals", configured()))),
+    ("yapılandırma: iki yapılandırma, biri trafo", changed(water(), set_("terminals", configured(
+        config(), config("trafo", terminals=[{"id": "yg", "name": "Yüksek gerilim"}, {"id": "ag", "name": "Alçak gerilim"}], paths=[["yg", "ag"]]))))),
+    ("yapılandırma: kimlikler cihazın kendisiyle aynı olabilir", changed(water(), set_("terminals", configured(
+        config("iki", terminals=[{"id": "giris", "name": "Giriş"}, {"id": "cikis", "name": "Çıkış"}], paths=[["giris", "cikis"]]))))),
+    ("yapılandırma: değerler I ile ı başka", changed(water(), set_("terminals", configured(config("ILIK"), config("ilik"))))),
+    ("yapılandırma var, seçen alan yok", changed(water(), set_("terminals", terminals(device(configs=[config()]))))),
+    ("seçen alan var, yapılandırma yok", changed(water(), set_("terminals", terminals(device(by="tip"))))),
+    ("seçen alan boş", changed(water(), set_("terminals", terminals(device(by="", configs=[config()]))))),
+    ("seçen alan kırpılmamış", changed(water(), set_("terminals", terminals(device(by=" tip", configs=[config()]))))),
+    ("seçen alan 65 karakter", changed(water(), set_("terminals", terminals(device(by="t" * 65, configs=[config()]))))),
+    ("17 yapılandırma", changed(water(), set_("terminals", configured(*[config(f"v{i}") for i in range(17)])))),
+    ("yapılandırma değeri boş", changed(water(), set_("terminals", configured(config(""))))),
+    ("yapılandırma değeri kırpılmamış", changed(water(), set_("terminals", configured(config("üç yollu "))))),
+    ("yapılandırma değeri 41 karakter", changed(water(), set_("terminals", configured(config("v" * 41))))),
+    ("yapılandırma değeri iki kez", changed(water(), set_("terminals", configured(config(), config())))),
+    ("yapılandırma değeri Türkçe harfle iki kez", changed(water(), set_("terminals", configured(config("IŞIK"), config("ışık"))))),
+    ("yapılandırmada tek terminal", changed(water(), set_("terminals", configured(config(terminals=[{"id": "a", "name": "A"}], paths=[["a", "a"]]))))),
+    ("yapılandırmada 9 terminal", changed(water(), set_("terminals", configured(config(terminals=[{"id": f"t{i}", "name": f"T{i}"} for i in range(9)], paths=[["t0", "t1"]]))))),
+    ("yapılandırmada terminal kimliği büyük harf", changed(water(), set_("terminals", configured(config(terminals=[{"id": "A", "name": "A"}, {"id": "b", "name": "B"}], paths=[["A", "b"]]))))),
+    ("yapılandırmada terminal adı öbürünün kimliği", changed(water(), set_("terminals", configured(config(terminals=[{"id": "a", "name": "b"}, {"id": "b", "name": "B"}], paths=[["a", "b"]]))))),
+    ("yapılandırmada yol yok", changed(water(), set_("terminals", configured(config(paths=[]))))),
+    ("yapılandırmada yolda tek terminal", changed(water(), set_("terminals", configured(config(paths=[["a"]]))))),
+    ("yapılandırmada yolda olmayan terminal", changed(water(), set_("terminals", configured(config(paths=[["a", "z"]]))))),
+    ("yapılandırmada yolda aynı terminal iki kez", changed(water(), set_("terminals", configured(config(paths=[["a", "a"]]))))),
+    ("alt ağlar: güncel tut", changed(water(), set_("subnetworks", subnets(keepCurrent=True)))),
+    ("alt ağlar: güncel tut, terminaller ve yapılandırmalarla", changed(water(), lambda n: (set_("terminals", configured())(n), set_("subnetworks", subnets(keepCurrent=True))(n)))),
+    ("alt ağ özniteliği yapılandırmayı seçen alanla aynı", changed(water(), lambda n: (set_("terminals", configured())(n), set_("subnetworks", subnets(attribute="tip"))(n)))),
 ]
 
 

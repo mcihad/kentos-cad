@@ -68,6 +68,8 @@ pub const PROTOCOL_CODES: &[&str] = &[
     "not_converged",
     "constraints_removed",
     "constraints_relaxed",
+    // Every write that touches the objects of a network that keeps its subnetworks current (docs/adr/0562 §3).
+    "subnetwork_dirty",
 ];
 
 /// The revision's two, every writing command's.

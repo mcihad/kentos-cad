@@ -134,6 +134,8 @@ where
                     match crate::constraint_follow::follow(inner.doc, command, relax, &stop) {
                         Ok(followed) => {
                             warnings.extend(followed.warnings);
+                            // The subnetwork names of the networks that keep them (docs/adr/0562 §3).
+                            warnings.extend(crate::subnetwork_follow::follow(inner.doc, command));
                             Ok((output, warnings, followed.relaxed))
                         }
                         Err(stop) => Err(Box::new(stop.into())),

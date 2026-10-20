@@ -395,7 +395,10 @@ impl Searcher {
     /// Searches `g` for `q`.
     pub fn search(&mut self, g: &Graph, q: &Query) -> Tree {
         let places = Places::new(g, q.origins, q.targets, q.barriers);
-        let states = g.turns.as_ref().map(|_| States {
+        // A network with turns or with devices goes by arcs: a device is crossed along its terminal paths, which the
+        // arc a way came by says (docs/adr/0562 §1).
+        let by_arcs = g.turns.is_some() || g.terms.is_some();
+        let states = by_arcs.then(|| States {
             arcs: 2 * g.pieces.len() as u32,
             base: g.nodes.len() as u32,
             virt: places.vnodes.len() as u32,

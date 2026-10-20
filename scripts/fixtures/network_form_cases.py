@@ -65,10 +65,10 @@ def periods_of(text):
     return out
 
 
-def device_of(row):
-    """A device row as typed: `yg: Yüksek gerilim; ag` (an id, its name after a colon) and `yg, ag; yg, c` (the paths)."""
+def terminals_of(text):
+    """Terminals as typed: `yg: Yüksek gerilim; ag` (an id, its name after a colon)."""
     terminals = []
-    for t in (x.strip() for x in row["terminals"].split(";")):
+    for t in (x.strip() for x in text.split(";")):
         if not t:
             continue
         if ":" in t:
@@ -76,8 +76,36 @@ def device_of(row):
             terminals.append({"id": i.strip(), "name": n.strip()})
         else:
             terminals.append({"id": t, "name": t})
-    paths = [[v.strip() for v in p.split(",") if v.strip()] for p in row["paths"].split(";")]
-    return {"layer": row["layer"], "terminals": terminals, "paths": [p for p in paths if p]}
+    return terminals
+
+
+def paths_of(text):
+    """Paths as typed: `yg, ag; yg, c`."""
+    paths = [[v.strip() for v in p.split(",") if v.strip()] for p in text.split(";")]
+    return [p for p in paths if p]
+
+
+def configs_of(text):
+    """Configurations as typed (docs/adr/0562 §2): `value = terminals | paths`, split at `||`."""
+    out = []
+    for c in (x.strip() for x in text.split("||")):
+        if not c:
+            continue
+        value, rest = c.split("=", 1) if "=" in c else ("", c)
+        terminals, paths = rest.split("|", 1) if "|" in rest else (rest, "")
+        out.append({"value": value.strip(), "terminals": terminals_of(terminals), "paths": paths_of(paths)})
+    return out
+
+
+def device_of(row):
+    """A device row as typed: its terminals and paths, the attribute that names a point's configuration and the configurations."""
+    d = {"layer": row["layer"], "terminals": terminals_of(row["terminals"]), "paths": paths_of(row["paths"])}
+    if row.get("by", "").strip():
+        d["by"] = row["by"].strip()
+    configs = configs_of(row.get("configs", ""))
+    if configs:
+        d["configs"] = configs
+    return d
 
 
 def def_of(form, unit):
@@ -140,7 +168,8 @@ def def_of(form, unit):
     subnetworks = None
     if form.get("subnetReach"):
         subnetworks = {"attribute": form.get("subnetAttribute", "").strip() or "Alt ağ", "reach": form["subnetReach"],
-                       **({"name": form["subnetName"].strip()} if form.get("subnetName", "").strip() else {})}
+                       **({"name": form["subnetName"].strip()} if form.get("subnetName", "").strip() else {}),
+                       **({"keepCurrent": True} if form.get("subnetKeep") else {})}
 
     d = {"id": form["id"], "name": name, "kind": form["kind"], "edges": [{"layer": e["layer"], **opt("filter", e["filter"])} for e in form["edges"]]}
     if form["junctions"]:
@@ -228,6 +257,15 @@ def cases():
     add("terminaller: cihaz var, alanlar yok", form(**water, devices=[{"layer": "vana", "terminals": "a; b", "paths": "a, b"}]))
     add("alt ağlar: akış aşağı, adı alanı, öznitelik kırpılır", form(**water, subnetReach="downstream", subnetName=" Ad ", subnetAttribute=" Alt ağ "))
     add("alt ağlar: öznitelik boşsa Alt ağ, adı alanı boşsa yok", form(**water, subnetReach="connected"))
+    # Configurations by an attribute and keeping subnetworks current (docs/adr/0562).
+    tri = "üç yollu = a: A; b: B; c: C | a, b, c"
+    add("yapılandırma: seçen alan ve bir yapılandırma", form(**water, terminalStart="uc_bas", terminalEnd="uc_son",
+        devices=[{"layer": "vana", "terminals": "giris: Giriş; cikis: Çıkış", "paths": "giris, cikis", "by": " tip ", "configs": tri}]))
+    add("yapılandırma: iki yapılandırma, boşluklar kırpılır", form(**water, terminalStart="uc_bas", terminalEnd="uc_son",
+        devices=[{"layer": "vana", "terminals": "a; b", "paths": "a, b", "by": "tip",
+                  "configs": " üç yollu=a: A;b: B;c: C|a,b,c || trafo = yg: Yüksek gerilim; ag: Alçak gerilim | yg, ag ||"}]))
+    add("alt ağlar: güncel tut", form(**water, subnetReach="downstream", subnetKeep=True))
+    add("alt ağlar: güncel tut, ulaşım yokken yazılmaz", form(**water, subnetKeep=True))
     return out
 
 

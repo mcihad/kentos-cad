@@ -17,13 +17,13 @@ use crate::fields_write::{Write, run as plan_fields};
 use crate::subnetworks::{Object, find_in};
 
 /// What an update writes: the writes, the answer and its warnings.
-struct Planned {
-    writes: Vec<Write>,
-    out: SubnetworksUpdated,
-    warnings: Vec<CommandWarning>,
+pub(crate) struct Planned {
+    pub(crate) writes: Vec<Write>,
+    pub(crate) out: SubnetworksUpdated,
+    pub(crate) warnings: Vec<CommandWarning>,
 }
 
-fn update_in(doc: &Document, input: &SubnetworksUpdate) -> Result<Planned, Stop> {
+pub(crate) fn update_in(doc: &Document, input: &SubnetworksUpdate) -> Result<Planned, Stop> {
     let found = find_in(
         doc,
         &SubnetworksFind {
@@ -171,22 +171,7 @@ fn written_execute(
         Ok(p) => p,
         Err(stop) => return stop.into(),
     };
-    if !planned.writes.is_empty() {
-        let updates: Vec<(Slot, Entity)> = planned
-            .writes
-            .iter()
-            .filter_map(|(slot, attrs, follows)| {
-                let mut e = cx.doc.get(*slot)?.clone();
-                let base = e.base_mut();
-                base.attrs = attrs.clone();
-                if let Some(l) = follows {
-                    base.label = l.clone();
-                }
-                Some((*slot, e))
-            })
-            .collect();
-        cx.doc.update_many(updates, "Alt ağları güncelle");
-    }
+    write_planned(cx.doc, planned.writes);
     let mut out = planned.out;
     out.revision = cx.doc.revision().to_string();
     out.found.revision = out.revision.clone();
@@ -194,4 +179,24 @@ fn written_execute(
         output: out,
         warnings: planned.warnings,
     }
+}
+
+/// Writes a plan's attribute values into the drawing (inside a step or as one undo step “Alt ağları güncelle”).
+pub(crate) fn write_planned(doc: &mut Document, writes: Vec<Write>) {
+    if writes.is_empty() {
+        return;
+    }
+    let updates: Vec<(Slot, Entity)> = writes
+        .iter()
+        .filter_map(|(slot, attrs, follows)| {
+            let mut e = doc.get(*slot)?.clone();
+            let base = e.base_mut();
+            base.attrs = attrs.clone();
+            if let Some(l) = follows {
+                base.label = l.clone();
+            }
+            Some((*slot, e))
+        })
+        .collect();
+    doc.update_many(updates, "Alt ağları güncelle");
 }
