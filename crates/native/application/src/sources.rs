@@ -1800,10 +1800,19 @@ pub fn edit_plan(cx: &ExecutionContext<'_>, input: &SourcesEdit) -> CommandResul
     }))
 }
 
-pub fn edit_execute(
-    cx: &mut ExecutionContext<'_>,
-    input: SourcesEdit,
-) -> CommandResult<SourcesEdited> {
+pub fn edit_execute(cx: &mut ExecutionContext<'_>, input: SourcesEdit) -> CommandResult<SourcesEdited> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_SOURCES_EDIT,
+        kentos_commands::CAD_SOURCES_EDIT_VERSION,
+        input,
+        written_edit_execute,
+    )
+}
+
+/// [`edit_execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_edit_execute(cx: &mut ExecutionContext<'_>, input: SourcesEdit) -> CommandResult<SourcesEdited> {
     completed(edit_run(cx.doc, &input))
 }
 
@@ -2350,10 +2359,19 @@ pub fn sync_plan(cx: &ExecutionContext<'_>, input: &SourcesSync) -> CommandResul
     completed(sync_run(&mut copy, input, false))
 }
 
-pub fn sync_execute(
-    cx: &mut ExecutionContext<'_>,
-    input: SourcesSync,
-) -> CommandResult<SourcesSynced> {
+pub fn sync_execute(cx: &mut ExecutionContext<'_>, input: SourcesSync) -> CommandResult<SourcesSynced> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_SOURCES_SYNC,
+        kentos_commands::CAD_SOURCES_SYNC_VERSION,
+        input,
+        written_sync_execute,
+    )
+}
+
+/// [`sync_execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_sync_execute(cx: &mut ExecutionContext<'_>, input: SourcesSync) -> CommandResult<SourcesSynced> {
     // A plan through the protocol runs this on a reading copy: it writes no file then (docs/adr/0532 §4).
     let write = !(cx.dry() && input.direction == SyncDirection::Write);
     completed(sync_run(cx.doc, &input, write))

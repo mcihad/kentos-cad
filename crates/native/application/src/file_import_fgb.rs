@@ -86,6 +86,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportFgb) -> CommandResult<GpkgI
 
 /// Takes the FlatGeobuf's features into the drawing, one undo step.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportFgb) -> CommandResult<GpkgImported> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::FILE_IMPORT_FGB,
+        kentos_commands::FILE_IMPORT_FGB_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(cx: &mut ExecutionContext<'_>, input: ImportFgb) -> CommandResult<GpkgImported> {
     match run(cx.doc, &input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),

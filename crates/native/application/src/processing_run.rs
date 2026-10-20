@@ -38,6 +38,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingRun,
 ) -> CommandResult<ProcessingRan> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PROCESSING_RUN,
+        kentos_commands::CAD_PROCESSING_RUN_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProcessingRun,
+) -> CommandResult<ProcessingRan> {
     // A plan through the protocol runs this on a reading copy: a sink's file is not written then (docs/adr/0532 §4).
     let dry = cx.dry();
     let flow = JobFlow(cx.job);

@@ -9,8 +9,6 @@
 - **Sonraya kalan:**
   - nokta bulutu ve çok boyutlu (NetCDF) araçların komutla eşdeğerliği: başsız dosyalar onları bilerek yalnız masaüstüne bırakır
     (ADR 0515);
-  - `cad.processing.run`'ın çağrı kaydı: komut olarak değil aracın düzenleme adımı olarak düşüyor (girdisi kayıtta yok), tekrar
-    oynatma onu yeniden çalıştıramaz;
   - komutların açık seçenek hücrelerine durum yazmak (matris onları sayar, kapatmaz);
   - doğal dil başarısının ölçümü.
 
@@ -96,8 +94,27 @@ Karar:
 Doğrulama `kentos-headless`'in `own_file` testleri: dosyadan açılan çizimin rasteri yanından okunur ve sonucu yanına yazılır; aynı
 çizim dosyasız açılınca rasteri bulunmaz; verilen dosya kalır, başka komutun girdisi değişmez.
 
+### 4. Her yazma kayıtta kendi komutuyla
+
+Başsız testte bir açık daha çıktı: `cad.processing.run`'ın yazması çağrı kaydına (`kentos.calls/1`) komut olarak değil, adsız bir
+düzenleme adımı olarak düşüyordu. Kayıtta girdisi yoktu, Komut geçmişi Python kodunu veremiyordu, tekrar oynatma onu çalıştıramıyordu.
+
+Ortak durum koşucusuna genel bir kural eklendi: çizimi değiştiren her `execute`'tan sonra kaydın son satırı o komutun `Command`
+satırı olmalı. Kural on bir komutu yakaladı. Hepsi `call::recorded` dışında yazıyordu:
+- `cad.processing.run`, `.batch`;
+- `file.import.gpkg`, `.gml`, `.fgb`, `.csv`, `.sld`;
+- `cad.fields.write`;
+- `cad.sources.edit`, `.sync`, `.reconcile`.
+
+Hepsi artık `call::recorded` ile çalışır: yazma çizimin tek adımı, kayıtta adı ve girdisiyle. Masaüstünün doğrudan çağırdığı
+yollar (bağlı katman, CSV, FlatGeobuf, GML, SLD, Alan hesapla) da böylece komut geçmişinde görünür.
+
+`recorded` adımın içinde iç bağlamı çağrının durumu olmadan kuruyordu. Bu yüzden protokolün planı (okuma kopyasında yürütme) içeride
+artık “kuru” değildi; `cad.sources.sync`'in planı dosyayı yazdı (`source_relations` testi). İç bağlam artık planın kuruluğunu taşır.
+
 ## Doğrulama
 
 - `cargo test -p kentos-processing --test cases equivalence` (420 durum).
 - `cargo test -p kentos-headless --test headless own_file`.
+- `cargo test -p kentos-native-application --test all` (ortak durumlar kayıt kuralıyla; `source_relations`'ın planı dosyayı yazmaz).
 - `.run/py/bin/python scripts/gis/coverage.py --check`.

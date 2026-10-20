@@ -265,6 +265,18 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportSld) -> CommandResult<SldIm
 
 /// Makes the SLD's look the layer's, one undo step “Katman stili” when it differs.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportSld) -> CommandResult<SldImported> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::FILE_IMPORT_SLD,
+        kentos_commands::FILE_IMPORT_SLD_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(cx: &mut ExecutionContext<'_>, input: ImportSld) -> CommandResult<SldImported> {
     match run(cx, &input, true) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),

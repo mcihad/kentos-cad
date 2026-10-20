@@ -52,6 +52,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: ProcessingBatch,
 ) -> CommandResult<ProcessingBatched> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_PROCESSING_BATCH,
+        kentos_commands::CAD_PROCESSING_BATCH_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ProcessingBatch,
+) -> CommandResult<ProcessingBatched> {
     let job = cx.job;
     let flow = JobFlow(job);
     let ran = host().and_then(|h| {

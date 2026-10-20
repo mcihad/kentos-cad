@@ -1,14 +1,14 @@
 """COG olarak kaydet from Python (plan/gis.md CBS-28, docs/adr/0515).
 
-The drawing of fixtures/cog/v1 (its rasters' files named from its `src` folder) run through `cad.processing.run`:
-the headless server reads the linked GeoTIFF and writes a cloud-optimized one. Checked here with the standard library
+The drawing of fixtures/cog/v1 (its rasters' files named from its `src` folder, found there through the project's
+search path, docs/adr/0548 §3) run through `cad.processing.run`: the headless server reads the linked GeoTIFF and
+writes a cloud-optimized one. Checked here with the standard library
 only: the header, GDAL's structural metadata naming the directories before the data, and every directory before every
 tile.
 """
 
 from __future__ import annotations
 
-import os
 import struct
 import tempfile
 import unittest
@@ -44,21 +44,18 @@ def layout(b: bytes) -> tuple[list[int], list[int]]:
 
 class CogTests(unittest.TestCase):
     def test_a_linked_geotiff_goes_out_as_a_cog(self) -> None:
-        here = os.getcwd()
-        os.chdir(FOLDER / "src")
-        try:
-            doc = cad.Document.open(FOLDER / "cog.kcad")
-            with tempfile.TemporaryDirectory() as tmp:
-                out = Path(tmp) / "kot-cog.tif"
-                ran = cad.processing.run(doc, tool="raster.cog", parameters={
-                    "input": {"scope": "layer", "layerId": "kot"},
-                    "output": str(out),
-                    "add": True,
-                })
-                self.assertEqual(len(ran.added), 1, "the COG's raster in the drawing")
-                b = out.read_bytes()
-        finally:
-            os.chdir(here)
+        doc = cad.Document.open(FOLDER / "cog.kcad")
+        # The rasters are in the drawing's `src` folder: a search path, from whatever folder Python runs in.
+        doc.call("cad.xrefs.edit", {"operation": {"kind": "paths", "paths": ["src"]}})
+        with tempfile.TemporaryDirectory() as tmp:
+            out = Path(tmp) / "kot-cog.tif"
+            ran = cad.processing.run(doc, tool="raster.cog", parameters={
+                "input": {"scope": "layer", "layerId": "kot"},
+                "output": str(out),
+                "add": True,
+            })
+            self.assertEqual(len(ran.added), 1, "the COG's raster in the drawing")
+            b = out.read_bytes()
         self.assertTrue(b[8:].startswith(b"GDAL_STRUCTURAL_METADATA_SIZE="))
         self.assertIn(b"LAYOUT=IFDS_BEFORE_DATA", b[:200])
         dirs, tiles = layout(b)

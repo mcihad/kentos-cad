@@ -2882,6 +2882,10 @@ const ENTRIES: &[Entry] = &[
             "file_exists",
             "file_unwritable",
             "nothing_to_export",
+            // docs/adr/0549: a sink into a GeoPackage that is there.
+            "file_not_found",
+            "import_unreadable",
+            "table_exists",
         ]],
         warnings: &["export_losses"],
         targets: none,

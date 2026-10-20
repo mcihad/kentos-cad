@@ -428,6 +428,21 @@ pub fn execute(
     cx: &mut ExecutionContext<'_>,
     input: SourcesReconcile,
 ) -> CommandResult<SourcesReconciled> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::CAD_SOURCES_RECONCILE,
+        kentos_commands::CAD_SOURCES_RECONCILE_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: SourcesReconcile,
+) -> CommandResult<SourcesReconciled> {
     // A plan through the protocol runs this on a reading copy: it writes no file then (docs/adr/0532 §4).
     let write = !cx.dry();
     completed(run(cx.doc, &input, write, true))

@@ -3491,13 +3491,24 @@ fn run_step(
             doc.set_relax(kentos_domain::Relax::Off);
             ran?
         }
-        "validate" | "plan" | "execute" => run_command(
-            step["command"].as_str().unwrap_or(command),
-            doc,
-            state,
-            step,
-            at,
-        )?,
+        "validate" | "plan" | "execute" => {
+            let name = step["command"].as_str().unwrap_or(command);
+            run_command(name, doc, state, step, at)?;
+            // A write is the command's own row in the journal (docs/adr/0253 §3, 0548 §4): its name and input, so
+            // the history says it and a replay runs it again; never an anonymous edit.
+            if step["op"] == "execute" && doc.revision() != before {
+                let last = doc.journal().last();
+                if !last.is_some_and(|r| {
+                    r.kind == kentos_commands::CallKind::Command && r.command.as_deref() == Some(name)
+                }) {
+                    return Err(format!(
+                        "{at}: {name} yazdı ama kayıtta komut olarak yok (son satır {:?} {:?})",
+                        last.map(|r| r.kind),
+                        last.and_then(|r| r.command.clone())
+                    ));
+                }
+            }
+        }
         op @ ("undo" | "redo") => {
             let label = if op == "undo" { doc.undo() } else { doc.redo() };
             if let Some(want) = step.get("returns") {

@@ -110,13 +110,18 @@ where
     let parts = (state.summary || state.plan.is_some()).then(|| PartStamps::of(cx.doc));
     let (store, job) = (cx.store, cx.job);
     let relax = state.relax;
+    // A plan's write on its reading copy stays dry inside the step: it writes no file (docs/adr/0532 §4).
+    let dry = state.dry;
     let mut outcome: Option<Outcome> = None;
     let result = cx.doc.run_step(
         |doc| {
             let mut inner = ExecutionContext {
                 doc,
                 store,
-                call: None,
+                call: dry.then(|| CallState {
+                    dry: true,
+                    ..CallState::default()
+                }),
                 job,
             };
             match write(&mut inner, input) {

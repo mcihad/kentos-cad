@@ -56,6 +56,21 @@ pub fn plan(cx: &ExecutionContext<'_>, input: &ImportGpkg) -> CommandResult<Gpkg
 
 /// Takes the file in.
 pub fn execute(cx: &mut ExecutionContext<'_>, input: ImportGpkg) -> CommandResult<GpkgImported> {
+    // One step of the drawing and its own row in the journal (docs/adr/0253 §3, 0548 §4).
+    crate::call::recorded(
+        cx,
+        kentos_commands::FILE_IMPORT_GPKG,
+        kentos_commands::FILE_IMPORT_GPKG_VERSION,
+        input,
+        written_execute,
+    )
+}
+
+/// [`execute`]'s write; `call::recorded` runs it as one step and journals it.
+fn written_execute(
+    cx: &mut ExecutionContext<'_>,
+    input: ImportGpkg,
+) -> CommandResult<GpkgImported> {
     match run(cx.doc, &input) {
         Ok((output, warnings)) => CommandResult::Completed { output, warnings },
         Err(stop) => stop.into(),

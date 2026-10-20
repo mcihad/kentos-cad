@@ -1001172,7 +1001172,10 @@
           "invalid_file_path",
           "file_exists",
           "file_unwritable",
-          "nothing_to_export"
+          "nothing_to_export",
+          "file_not_found",
+          "import_unreadable",
+          "table_exists"
         ],
         "warnings": [
           "export_losses"
