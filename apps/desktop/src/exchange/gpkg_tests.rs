@@ -173,12 +173,11 @@ fn a_table_bound_to_a_layer_is_written_back_and_read_again() {
         "{:?}",
         app.log.lines().last().map(|l| l.text.clone())
     );
+    // Kaynak durumu (a window since docs/adr/0543) now has nothing waiting on the layer.
     let _ = app.update(Message::Run("source.status"));
-    assert!(
-        says(&app, "ile aynı."),
-        "{:?}",
-        app.log.lines().last().map(|l| l.text.clone())
-    );
+    let row = app.source_status_row("import-parsel").expect("a row");
+    assert_eq!(app.source_status_next(row), kentos_commands::SourceNext::None);
+    let _ = app.update(Message::SourceStatus(crate::source_status::Event::Close));
     let _ = app.update(Message::Bound(crate::bound::Event::Unlink(Some(
         "import-parsel".into(),
     ))));
@@ -847,6 +846,150 @@ fn the_source_status_says_each_layers_way_out_and_takes_it() {
     let i = app.source_status_row(&layers[0]).expect("a row");
     let _ = app.update(Message::SourceStatus(S::Act(i)));
     assert!(app.reconcile.is_some() && app.source_status.is_none());
+}
+
+/// The state of the layer the table shows: its way out and whether the reading is of an earlier drawing.
+fn table_source(app: &mut App, layer: &str) -> Option<(kentos_commands::SourceNext, bool)> {
+    let _ = app.update(Message::Features(crate::features::Event::Layer(layer.to_owned())));
+    let doc = app.document.as_ref().expect("a drawing");
+    let rows = app.feature_rows(doc);
+    app.source_state(&rows).map(|(s, stale)| (s.next, stale))
+}
+
+#[test]
+fn the_table_of_a_bound_layer_says_its_state_and_takes_the_way_out() {
+    use crate::features::{Event as F, source::SourceEvent};
+    use kentos_commands::SourceNext;
+    let (mut app, points) = status_scene("gpkg-tablo");
+    let _ = app.update(Message::Run("data.featureTable"));
+    let layers: Vec<String> = app
+        .document
+        .as_ref()
+        .expect("a drawing")
+        .model
+        .settings()
+        .sources
+        .iter()
+        .map(|s| s.layer.clone())
+        .collect();
+    // The same four states Kaynak durumu reads, from the same rule.
+    let ways: Vec<_> = layers
+        .iter()
+        .map(|l| table_source(&mut app, l).map(|(n, _)| n))
+        .collect();
+    assert_eq!(
+        ways,
+        [
+            Some(SourceNext::Reconcile),
+            Some(SourceNext::Write),
+            Some(SourceNext::None),
+            Some(SourceNext::Relink)
+        ]
+    );
+    // A layer that is not bound has no source line.
+    let free = {
+        let doc = app.document.as_ref().expect("a drawing");
+        doc.model
+            .layers()
+            .leaves()
+            .iter()
+            .map(|n| n.id.clone())
+            .find(|id| !layers.contains(id))
+    };
+    if let Some(free) = free {
+        assert_eq!(table_source(&mut app, &free), None);
+    }
+    // Kaynağa yaz from the table's line: the file written, the line now the same.
+    let _ = table_source(&mut app, &layers[1]);
+    let before = std::fs::read(&points).expect("read");
+    let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
+    assert_ne!(std::fs::read(&points).expect("read"), before, "written");
+    assert_eq!(
+        table_source(&mut app, &layers[1]).map(|(n, _)| n),
+        Some(SourceNext::None)
+    );
+    // An edit of the layer is “Katmanda yazılmamış” at once, on a layer small enough to follow the drawing.
+    let uid = {
+        let doc = app.document.as_ref().expect("a drawing");
+        doc.model
+            .by_layer_with_uids(&layers[1])
+            .next()
+            .map(|(u, _)| u.to_string())
+            .expect("a point")
+    };
+    let input =
+        serde_json::json!({ "uids": [uid], "attrs": { "ad": "Başka ad" }, "operation": "attributes" });
+    let answer = kentos_native_application::registry::run(
+        &mut kentos_native_application::ExecutionContext::new(
+            &mut app.document.as_mut().expect("a drawing").model,
+        ),
+        "cad.entities.set",
+        kentos_commands::CallOp::Execute,
+        input,
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    assert_eq!(
+        table_source(&mut app, &layers[1]),
+        Some((SourceNext::Write, false))
+    );
+    // Uzlaştır… from the table opens its window.
+    let _ = table_source(&mut app, &layers[0]);
+    let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
+    assert!(app.reconcile.is_some());
+}
+
+/// Öznitelik tablosu's source line (docs/adr/0546 §3): a bound layer with changes on both sides, one with its own
+/// changes, one in its own system, one whose file is gone; the second after Kaynağa yaz
+/// (`.run/shots/gpkg-tablo-kaynak-*`).
+#[test]
+#[ignore = "pictures, run by hand"]
+fn table_source_screens() {
+    use crate::features::{Event as F, source::SourceEvent};
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (width, height, mode) in [(1440.0, 900.0, "dark"), (1100.0, 650.0, "dark"), (1440.0, 900.0, "light")] {
+        let (mut app, _) = status_scene(&format!("gpkg-tablo-{mode}-{width}"));
+        let _ = app
+            .settings
+            .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+        app.apply_settings();
+        let layers: Vec<String> = app
+            .document
+            .as_ref()
+            .expect("a drawing")
+            .model
+            .settings()
+            .sources
+            .iter()
+            .map(|s| s.layer.clone())
+            .collect();
+        let _ = app.update(Message::Run("data.featureTable"));
+        let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+        let mut picture = |app: &mut App, label: &str| {
+            snapshot.settle(app, App::view, &mut |app: &mut App, message| {
+                let _ = app.update(message);
+            });
+            let _ = snapshot.render(app.view(), &app.theme());
+            let path = out.join(format!("gpkg-tablo-kaynak-{mode}-{label}-{width}x{height}.png"));
+            snapshot
+                .render(app.view(), &app.theme())
+                .save(&path)
+                .expect("writes the picture");
+            println!("{}", path.display());
+        };
+        let _ = app.update(Message::WindowResized(Size::new(width, height)));
+        for (layer, label) in [(0, "uzlastir"), (1, "yaz"), (2, "wgs84"), (3, "yok")] {
+            let _ = app.update(Message::Features(F::Layer(layers[layer].clone())));
+            picture(&mut app, label);
+        }
+        let _ = app.update(Message::Features(F::Layer(layers[1].clone())));
+        let _ = app.update(Message::Features(F::Source(SourceEvent::Act)));
+        picture(&mut app, "yazildi");
+    }
 }
 
 #[test]

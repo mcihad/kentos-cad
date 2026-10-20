@@ -94,15 +94,15 @@ impl App {
         )
         .placeholder(texts::NO_LAYERS);
         let show = Select::new(
-            Show::ALL.iter().map(|s| Choice::new(s.label())),
-            Show::ALL.iter().position(|s| *s == self.charts.show),
-            |i| msg(Event::Show(Show::ALL[i])),
+            Show::WITH_TABLE.iter().map(|s| Choice::new(s.label())),
+            Show::WITH_TABLE.iter().position(|s| *s == self.charts.show),
+            |i| msg(Event::Show(Show::WITH_TABLE[i])),
         );
         let filters = row![
             container(label::muted(texts::LAYER)).padding([0, 2]),
             container(layer).width(Length::Fixed(220.0)),
             container(label::muted(texts::SHOW)).padding([0, 2]),
-            container(show).width(Length::Fixed(150.0)),
+            container(show).width(Length::Fixed(190.0)),
             label::muted(texts::objects(now.rows.len())),
         ]
         .spacing(8)

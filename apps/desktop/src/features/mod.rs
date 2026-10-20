@@ -22,6 +22,7 @@
 //! (while Göster takes the view's) and the query as they are (docs/adr/0120).
 
 use std::cell::RefCell;
+use std::collections::{BTreeMap, BTreeSet};
 
 use iced::Task;
 use kentos_commands::{EntitiesSetProperties, Entity, PropertiesOperation, js_trim};
@@ -36,7 +37,9 @@ use crate::points::{click_pick, focus_field};
 pub(crate) mod joins;
 #[cfg(test)]
 mod joins_tests;
+pub(crate) mod outgoing;
 mod records;
+pub(crate) mod source;
 #[cfg(test)]
 mod tests;
 pub(crate) mod view;
@@ -50,6 +53,8 @@ pub mod texts {
     pub const ALL: &str = "Tümü";
     pub const SELECTED: &str = "Seçililer";
     pub const IN_VIEW: &str = "Görünümdekiler";
+    /// Göster ▾ of İstatistik and Grafik: the rows this table shows.
+    pub const BY_TABLE: &str = "Tablonun süzgeciyle";
     pub const FILTER: &str = "İfade süzgeci";
     pub const FILTER_HINT: &str =
         "Yalnız koşulu sağlayan nesneler: Kat > 3 ve Kullanım = \u{2019}K\u{2019}. Boşsa hepsi.";
@@ -83,16 +88,21 @@ pub enum Show {
     All,
     Selected,
     InView,
+    /// İstatistik and Grafik only: the rows the table shows now (its Ara, Göster and İfade süzgeci).
+    Table,
 }
 
 impl Show {
     pub const ALL: [Show; 3] = [Show::All, Show::Selected, Show::InView];
+    /// Göster ▾ of İstatistik and Grafik: the table's three and the table's own filter (docs/adr/0546 §2).
+    pub const WITH_TABLE: [Show; 4] = [Show::All, Show::Selected, Show::InView, Show::Table];
 
     pub fn label(self) -> &'static str {
         match self {
             Show::All => texts::ALL,
             Show::Selected => texts::SELECTED,
             Show::InView => texts::IN_VIEW,
+            Show::Table => texts::BY_TABLE,
         }
     }
 
@@ -101,6 +111,8 @@ impl Show {
             Show::All => "all",
             Show::Selected => "selected",
             Show::InView => "inView",
+            // The table's own list never offers it; its rows are the table's.
+            Show::Table => "all",
         }
     }
 }
@@ -162,6 +174,14 @@ pub enum Event {
     Cancel,
     /// Alan hesapla and Yapıştır (write.rs, docs/adr/0507).
     Write(write::WriteEvent),
+    /// Sütunlar ▾ (outgoing.rs, docs/adr/0546 §1): a column hidden or shown.
+    Columns(outgoing::ColumnsEvent),
+    /// Kopyala: the rows shown on the clipboard.
+    Copy,
+    /// İncele ▾: İstatistik or Grafik over the rows shown.
+    Analyse(outgoing::Analyse),
+    /// The source line of a bound layer (source.rs, docs/adr/0546 §3).
+    Source(source::SourceEvent),
     /// Katman ▾: a join view by id (joins.rs, docs/adr/0527).
     View(String),
     /// A join view's row pressed: its records selected.
@@ -187,6 +207,8 @@ pub(crate) struct Rows {
     /// The rows shown, by their index in `slots`, in the order shown.
     pub shown: Vec<usize>,
     pub first_selected: Option<usize>,
+    /// The model's columns the table shows (the reader may hide some, docs/adr/0546 §1).
+    pub visible: Vec<usize>,
     /// Why the expression filter cannot be read.
     pub filter_error: Option<String>,
     /// The sorted column in the model's columns.
@@ -257,6 +279,11 @@ pub(crate) struct FeaturesPanel {
     pub(crate) write: Option<write::WriteWindow>,
     /// The join view shown instead of a layer (joins.rs, docs/adr/0527).
     pub(crate) join: joins::JoinPane,
+    /// The columns the reader hid, by layer and attribute key (outgoing.rs).
+    pub(crate) hidden: BTreeMap<String, BTreeSet<String>>,
+    /// A bound layer's state as last read, and Yenile's count (source.rs).
+    pub(crate) source: RefCell<Option<source::SourceLine>>,
+    pub(crate) source_refresh: u64,
 }
 
 impl FeaturesPanel {
@@ -291,7 +318,7 @@ fn next_sort(sort: &Option<String>, descending: bool, key: &str) -> (Option<Stri
 impl App {
     /// The layer shown: the one chosen while it is a layer, else the first
     /// selected object's, else the active one, else the first.
-    fn feature_layer(&self, doc: &Document) -> Option<String> {
+    pub(crate) fn feature_layer(&self, doc: &Document) -> Option<String> {
         let layers = doc.model.layers();
         let is_layer = |id: &str| {
             layers
@@ -443,6 +470,14 @@ impl App {
                 .unwrap_or_else(|| vec![false; entities.len()])
             })
             .collect();
+        let visible = kentos_interaction::feature_table::visible_columns(
+            &table,
+            &layer
+                .as_deref()
+                .and_then(|l| panel.hidden.get(l))
+                .cloned()
+                .unwrap_or_default(),
+        );
         let rows = Rows {
             layer,
             layers,
@@ -450,6 +485,7 @@ impl App {
             table,
             shown,
             first_selected,
+            visible,
             filter_error,
             sorted,
             styles,
@@ -498,6 +534,11 @@ impl App {
                 if self.form_entry.as_ref().is_some_and(|e| e.docked) {
                     self.form_entry = None;
                 }
+                // İstatistik and Grafik over the table's rows follow its layer.
+                if self.charts.show == Show::Table {
+                    self.charts.layer = Some(id.clone());
+                    self.charts.field = None;
+                }
                 self.features.layer = Some(id);
                 self.features.join.view = None;
                 self.features.sort = None;
@@ -518,6 +559,10 @@ impl App {
             }
             Event::Builder => return self.open_builder_for_features(),
             Event::Write(e) => return self.features_write_event(e),
+            Event::Columns(e) => self.features_columns_event(e),
+            Event::Copy => return self.features_copy(),
+            Event::Analyse(to) => self.features_analyse(to),
+            Event::Source(e) => return self.features_source_event(e),
             Event::View(id) => {
                 self.features.join.view = Some(id);
                 self.features.editing = None;
@@ -597,30 +642,7 @@ impl App {
                     return self.dock_form_on(slot);
                 }
             }
-            Event::Export(format) => {
-                let Some(doc) = &self.document else {
-                    return Task::none();
-                };
-                let rows = self.feature_rows(doc);
-                let name = rows
-                    .layer
-                    .as_deref()
-                    .and_then(|id| doc.model.layers().get(id))
-                    .map_or_else(|| "Tablo".to_owned(), |n| n.name.clone());
-                if rows.shown.is_empty() {
-                    self.say(
-                        kentos_interaction::Level::Info,
-                        "Dışa aktarılacak satır yok.",
-                    );
-                    return Task::none();
-                }
-                let sheet = kentos_interaction::feature_table::workbook_sheet(
-                    &rows.table,
-                    &rows.shown,
-                    &name,
-                );
-                return crate::table_write::save(vec![sheet], format, name);
-            }
+            Event::Export(format) => return self.features_export(format),
             Event::Fields => {
                 let layer = self
                     .document
@@ -732,10 +754,12 @@ impl App {
             self.features.editing = None;
             return Task::none();
         }
+        // The next column the table shows: a hidden one is passed over.
+        let shown = &rows.visible;
         let next = walk.and_then(|w| {
             let c = match w {
-                Walk::Right => column + 1,
-                Walk::Left => column.checked_sub(1)?,
+                Walk::Right => shown.iter().copied().find(|&j| j > column)?,
+                Walk::Left => shown.iter().rev().copied().find(|&j| j < column)?,
             };
             (1..=last).contains(&c).then_some((slot, c))
         });
@@ -763,17 +787,18 @@ impl App {
         }
         let doc = self.document.as_ref()?;
         let rows = self.feature_rows(doc);
-        let headers = (0..rows.table.columns.len())
-            .map(|j| Self::feature_header(&rows, j))
+        let headers = rows
+            .visible
+            .iter()
+            .map(|&j| Self::feature_header(&rows, j))
             .collect();
         let lines = rows
             .shown
             .iter()
             .map(|&i| {
-                rows.table.rows[i]
-                    .cells
+                rows.visible
                     .iter()
-                    .map(|c| c.shown.as_str())
+                    .map(|&j| rows.table.rows[i].cells[j].shown.as_str())
                     .collect::<Vec<_>>()
                     .join(" | ")
             })
@@ -815,7 +840,10 @@ impl App {
             }
             Control::Sort("Sıra") => msg(Event::Sort(0)),
             Control::Sort(header) => {
-                let j = (0..rows.table.columns.len())
+                let j = rows
+                    .visible
+                    .iter()
+                    .copied()
                     .find(|&j| Self::feature_header(&rows, j) == header)
                     .ok_or_else(|| format!("“{header}” başlığı yok"))?;
                 msg(Event::Sort(j + 1))

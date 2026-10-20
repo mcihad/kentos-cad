@@ -123,6 +123,57 @@ fn screens() {
     }
 }
 
+/// Sütunlar ▾ with a column hidden and the rows' copy and file, and İstatistik and Grafik over the table's rows,
+/// dark and light (`.run/shots/oznitelik-sutun-*`, `oznitelik-istatistik-*`, `oznitelik-grafik-*`):
+///
+/// ```text
+/// cargo test -p kentos-desktop features::tests::outgoing_screens -- --ignored --nocapture
+/// ```
+#[test]
+#[ignore = "pictures for the owner, run by hand"]
+fn outgoing_screens() {
+    use super::outgoing::{Analyse, ColumnsEvent};
+    use iced::Size;
+    use kentos_ui::snapshot::Snapshot;
+
+    let out = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.run/shots");
+    std::fs::create_dir_all(&out).expect("a folder for the pictures");
+    for (mode, suffix) in [("dark", ""), ("light", "-acik")] {
+        for (width, height) in [(1440.0, 900.0), (1100.0, 650.0)] {
+            for scene in ["sutun", "istatistik", "grafik"] {
+                let mut app = app_with_secret();
+                let _ = app
+                    .settings
+                    .choose(&[("appearance.theme", serde_json::Value::from(mode))]);
+                app.apply_settings();
+                let _ = app.update(Message::WindowResized(Size::new(width, height)));
+                ev(&mut app, Event::Columns(ColumnsEvent::Toggle("Ruhsat".into())));
+                ev(&mut app, Event::Search("102".into()));
+                match scene {
+                    "istatistik" => {
+                        ev(&mut app, Event::Analyse(Analyse::Statistics));
+                        // The summaries are counted as frames come: count them all for the picture.
+                        let _ = app.statistics_seen();
+                    }
+                    "grafik" => ev(&mut app, Event::Analyse(Analyse::Chart)),
+                    _ => {}
+                }
+                let mut snapshot = Snapshot::new(Size::new(width, height)).expect("a renderer");
+                let mut update = |app: &mut App, message| {
+                    let _ = app.update(message);
+                };
+                snapshot.settle(&mut app, App::view, &mut update);
+                let file = out.join(format!("oznitelik-{scene}-{width}x{height}{suffix}.png"));
+                snapshot
+                    .render(app.view(), &app.theme())
+                    .save(&file)
+                    .expect("writes the picture");
+                println!("{}", file.display());
+            }
+        }
+    }
+}
+
 fn write(app: &mut App, e: super::write::WriteEvent) {
     ev(app, Event::Write(e));
 }
@@ -223,4 +274,95 @@ fn write_screens() {
             }
         }
     }
+}
+
+/// The table's drawing with a form that marks the Tapu alanı field (`Alan`) `redact` (docs/adr/0443 §2).
+fn app_with_secret() -> App {
+    let mut value: serde_json::Value = serde_json::from_str(include_str!(
+        "../../../../fixtures/interaction/v1/feature-table.kcad"
+    ))
+    .expect("the drawing is JSON");
+    value["settings"]["forms"] = serde_json::json!([{
+        "id": "parsel-formu", "name": "Parsel formu", "layer": "parsel",
+        "draft": {"revision": 1, "items": [{"type": "field", "id": "alan", "field": "Alan", "redact": true}]}
+    }]);
+    let snapshot =
+        kentos_commands::DocumentSnapshotV1::from_json(&value.to_string()).expect("the drawing reads");
+    let (mut app, _) = App::boot(None);
+    let doc = crate::document::Document::new(snapshot, None).expect("opens");
+    let _ = app.update(Message::Opened(Some(Ok(Box::new(doc)))));
+    app.features.reset(None);
+    let _ = app.update(Message::Run("data.featureTable"));
+    app
+}
+
+fn headers(app: &App) -> Vec<String> {
+    app.features_seen().map(|(_, h, _)| h).unwrap_or_default()
+}
+
+#[test]
+fn a_hidden_column_is_out_of_the_table_the_copy_and_the_file_and_a_redacted_field_is_out_of_the_last_two() {
+    use super::outgoing::ColumnsEvent as C;
+    let mut app = app_with_secret();
+    // The table shows the redacted field; what leaves it does not carry it (docs/adr/0546 §1).
+    assert!(headers(&app).contains(&"Tapu alanı".to_owned()));
+    let (text, count, withheld) = app.features_copy_text().expect("rows");
+    assert_eq!(count, 5);
+    assert_eq!(withheld, ["Tapu alanı"]);
+    assert_eq!(
+        text.lines().next(),
+        Some("Ada\tParsel\tKullanım\tRuhsat\tTescil\tNot")
+    );
+    assert!(!text.contains("400.50") && !text.contains("1200"), "{text}");
+    let (sheet, left_out) = app.features_sheet().expect("rows");
+    assert_eq!(left_out, ["Tapu alanı"]);
+    let names: Vec<&str> = sheet.columns.iter().map(|c| c.name.as_str()).collect();
+    assert_eq!(names, ["Tür", "Ada", "Parsel", "Kullanım", "Ruhsat", "Tescil", "Not"]);
+    // A column the reader hides leaves the table, the copy and the file.
+    ev(&mut app, Event::Columns(C::Toggle("Parsel".into())));
+    assert!(!headers(&app).contains(&"Parsel".to_owned()));
+    let (text, _, _) = app.features_copy_text().expect("rows");
+    assert_eq!(text.lines().next(), Some("Ada\tKullanım\tRuhsat\tTescil\tNot"));
+    let (sheet, _) = app.features_sheet().expect("rows");
+    assert!(sheet.columns.iter().all(|c| c.name != "Parsel"));
+    // The copy is what the table shows: a search narrows its rows (and the lines under the header).
+    ev(&mut app, Event::Search("102".into()));
+    let (text, count, _) = app.features_copy_text().expect("rows");
+    assert_eq!((count, text.lines().count()), (2, 3));
+    // A hidden column is no column to paste into: Yapıştır reads the shown ones.
+    let rows = app.feature_rows(app.document.as_ref().expect("a drawing"));
+    assert!(rows.visible.iter().all(|&j| rows.table.columns[j].key.as_deref() != Some("Parsel")));
+    ev(&mut app, Event::Columns(C::ShowAll));
+    assert!(headers(&app).contains(&"Parsel".to_owned()));
+}
+
+#[test]
+fn statistics_and_charts_over_the_tables_rows_follow_its_filter_and_leave_redacted_fields_out() {
+    use super::outgoing::Analyse;
+    let mut app = app_with_secret();
+    ev(&mut app, Event::Search("102".into()));
+    ev(&mut app, Event::Analyse(Analyse::Statistics));
+    assert_eq!(app.charts.show, Show::Table);
+    let (objects, summaries) = app.statistics_seen().expect("the tab is open");
+    assert_eq!(objects, "2 nesne");
+    // No summary of the redacted field, the others are there.
+    assert!(summaries.iter().all(|s| !s.starts_with("Tapu alanı")), "{summaries:?}");
+    assert!(summaries.iter().any(|s| s.starts_with("Kullanım")), "{summaries:?}");
+    // The table's filter changes: the tab follows; its own Göster takes the whole layer.
+    ev(&mut app, Event::Search(String::new()));
+    assert_eq!(app.statistics_seen().expect("open").0, "5 nesne");
+    ev(&mut app, Event::Search("102".into()));
+    assert_eq!(app.statistics_seen().expect("open").0, "2 nesne");
+    let _ = app.update(Message::Statistics(crate::statistics::Event::Show(Show::All)));
+    assert_eq!(app.statistics_seen().expect("open").0, "5 nesne");
+    // A chart over the same rows: Çubuk by Kullanım counts only them.
+    let _ = app.update(Message::Statistics(crate::statistics::Event::Show(Show::Table)));
+    ev(&mut app, Event::Analyse(Analyse::Chart));
+    let seen = app.chart_seen().expect("a chart");
+    let total: u32 = seen
+        .rows
+        .iter()
+        .filter_map(|r| r.split(" | ").nth(1)?.parse::<u32>().ok())
+        .sum();
+    assert_eq!(total, 2, "{seen:?}");
 }

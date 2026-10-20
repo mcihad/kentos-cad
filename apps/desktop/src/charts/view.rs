@@ -252,9 +252,9 @@ impl App {
         let mut rows = vec![setting(texts::SOURCE, source)];
         if !table {
             let show = Select::new(
-                Show::ALL.iter().map(|s| Choice::new(s.label())),
-                Show::ALL.iter().position(|s| *s == self.charts.show),
-                |i| msg(Event::Show(Show::ALL[i])),
+                Show::WITH_TABLE.iter().map(|s| Choice::new(s.label())),
+                Show::WITH_TABLE.iter().position(|s| *s == self.charts.show),
+                |i| msg(Event::Show(Show::WITH_TABLE[i])),
             );
             rows.push(setting(texts::SHOW, show));
         }

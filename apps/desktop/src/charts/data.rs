@@ -18,6 +18,8 @@ use crate::features::Show;
 
 /// A layer's data in the core.
 pub(crate) struct LayerData {
+    /// The layer the data is of.
+    layer: String,
     pub slots: Vec<Slot>,
     pub work: Work,
     at: HashMap<Slot, u32>,
@@ -40,13 +42,17 @@ impl LayerData {
             .unwrap_or_default();
         // Alan and Uzunluk are readings: in the project's unit (docs/adr/0165 §2).
         let per_metre = model.settings().unit().per_metre();
-        let columns = layer_columns(&fields, &entities, Some(&records), per_metre);
+        let mut columns = layer_columns(&fields, &entities, Some(&records), per_metre);
+        // A field a form marks `redact` is in no chart, count or copy (docs/adr/0546 §1).
+        let redacted = app.redacted_fields();
+        columns.retain(|c| !redacted.contains(&c.key) && !redacted.contains(&c.label));
         let at = slots
             .iter()
             .enumerate()
             .map(|(i, s)| (*s, i as u32))
             .collect();
         LayerData {
+            layer: layer.to_owned(),
             work: Work::new(DataSet {
                 rows: slots.len(),
                 columns,
@@ -61,6 +67,19 @@ impl LayerData {
         match show {
             Show::All => (0..self.slots.len() as u32).collect(),
             Show::Selected => self.selected_rows(app),
+            // The rows the Tablo tab shows, by its Ara, Göster and İfade süzgeci (docs/adr/0546 §2); the table
+            // on another layer says nothing of this one.
+            Show::Table => match app.table_rows_of(&self.layer) {
+                Some(shown) => {
+                    let mut rows: Vec<u32> = shown
+                        .iter()
+                        .filter_map(|s| self.at.get(s).copied())
+                        .collect();
+                    rows.sort_unstable();
+                    rows
+                }
+                None => (0..self.slots.len() as u32).collect(),
+            },
             Show::InView => {
                 let view = app.viewport.camera.visible_bounds();
                 let a = kentos_interaction::Vec2 {

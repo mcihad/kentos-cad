@@ -238,9 +238,21 @@ fn listed(f: &LayerField) -> bool {
 /// text (a value list's label), one that does not keep its field's rules as
 /// written; another key's as written.
 pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> WorkbookSheet {
-    let columns = table
-        .columns
+    let all: Vec<usize> = (0..table.columns.len()).collect();
+    workbook_sheet_of(table, shown, name, &all)
+}
+
+/// [`workbook_sheet`] with only the model's columns `kept` (in that order): what the table lets out of
+/// itself (docs/adr/0546 §1), a hidden or withheld column nowhere in the sheet.
+pub fn workbook_sheet_of(
+    table: &FeatureTable,
+    shown: &[usize],
+    name: &str,
+    kept: &[usize],
+) -> WorkbookSheet {
+    let columns = kept
         .iter()
+        .filter_map(|&j| table.columns.get(j))
         .map(|c| {
             let (kind, decimals) = match &c.field {
                 Some(f) if listed(f) => (CellKind::Text, None),
@@ -266,9 +278,8 @@ pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> Work
         .iter()
         .filter_map(|&i| Some((i, table.rows.get(i)?)))
         .map(|(i, row)| {
-            row.cells
-                .iter()
-                .enumerate()
+            kept.iter()
+                .filter_map(|&j| Some((j, row.cells.get(j)?)))
                 .map(|(j, cell)| match (&table.columns[j].field, &cell.key) {
                     (Some(f), Some(key)) if !listed(f) && !table.problems.contains_key(&(i, j)) => {
                         key.clone()
@@ -283,6 +294,89 @@ pub fn workbook_sheet(table: &FeatureTable, shown: &[usize], name: &str) -> Work
         columns,
         rows,
     }
+}
+
+/// The model's columns the table shows: all but those the reader `hidden` (by attribute key; the Tür column,
+/// which has none, is never hidden).
+pub fn visible_columns(table: &FeatureTable, hidden: &BTreeSet<String>) -> Vec<usize> {
+    table
+        .columns
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| c.key.as_deref().is_none_or(|k| !hidden.contains(k)))
+        .map(|(j, _)| j)
+        .collect()
+}
+
+/// What the table lets out of itself (docs/adr/0546 §1): the columns it shows, less the ones a form marks
+/// `redact`; and the headers of the latter, for the sentence that says they stayed.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Outgoing {
+    /// The model's columns written to a copy, a file or a chart, in the table's order.
+    pub columns: Vec<usize>,
+    /// The headers of the shown columns left out because they are redacted.
+    pub withheld: Vec<String>,
+}
+
+/// The columns that may leave the table: shown (not in `hidden`) and not named in `redacted` (the layer fields'
+/// keys and names a form marks `redact`). A hidden column is left out silently, a redacted one is counted in
+/// `withheld`.
+pub fn outgoing_columns(
+    table: &FeatureTable,
+    hidden: &BTreeSet<String>,
+    redacted: &[String],
+) -> Outgoing {
+    let mut out = Outgoing::default();
+    let named = |n: &str| redacted.iter().any(|r| r == n);
+    for j in visible_columns(table, hidden) {
+        let c = &table.columns[j];
+        let secret = c.key.as_deref().is_some_and(named)
+            || c.field.as_ref().is_some_and(|f| named(&f.name) || named(f.label()));
+        if secret {
+            out.withheld.push(c.label.clone());
+        } else {
+            out.columns.push(j);
+        }
+    }
+    out
+}
+
+/// A cell's text in a copy: tabs and line breaks become spaces, so a cell stays one cell.
+fn flat(text: &str) -> String {
+    text.chars()
+        .map(|c| if matches!(c, '\t' | '\n' | '\r') { ' ' } else { c })
+        .collect()
+}
+
+/// The rows `shown` as tab-separated lines (docs/adr/0546 §1; Yapıştır reads them back): a header line of the
+/// attributes' keys, then each row's cells as the table shows them; only the model's columns `kept`, and not
+/// Tür, which no field holds.
+pub fn copy_text(table: &FeatureTable, shown: &[usize], kept: &[usize]) -> String {
+    let columns: Vec<usize> = kept
+        .iter()
+        .copied()
+        .filter(|&j| table.columns.get(j).is_some_and(|c| c.key.is_some()))
+        .collect();
+    let mut lines = vec![
+        columns
+            .iter()
+            .map(|&j| flat(table.columns[j].key.as_deref().unwrap_or_default()))
+            .collect::<Vec<_>>()
+            .join("\t"),
+    ];
+    for &i in shown {
+        let Some(row) = table.rows.get(i) else {
+            continue;
+        };
+        lines.push(
+            columns
+                .iter()
+                .map(|&j| flat(row.cells.get(j).map_or("", |c| c.shown.as_str())))
+                .collect::<Vec<_>>()
+                .join("\t"),
+        );
+    }
+    lines.join("\n")
 }
 
 #[cfg(test)]
@@ -395,5 +489,54 @@ mod tests {
         assert!(t.problems[&(1, 2)].contains("tam sayı ister"));
         assert_eq!(t.problems.len(), 1);
         assert!(t.rows[0].selected && !t.rows[0].in_view && t.rows[0].passes);
+    }
+
+    fn secret_table() -> FeatureTable {
+        let fields = vec![
+            LayerField::new("Ad", LayerFieldKind::Text),
+            LayerField::new("Gizli no", LayerFieldKind::Text),
+            LayerField::new("Kat", LayerFieldKind::Integer),
+        ];
+        let a = point(&[("Ad", "Ev\t1"), ("Gizli no", "123"), ("Kat", "3")]);
+        let b = point(&[("Ad", "Dükkân"), ("Gizli no", "456"), ("Kat", "1")]);
+        feature_table_of(&fields, &[&a, &b], &|_| false, &|_| false, None)
+    }
+
+    #[test]
+    fn hidden_columns_leave_the_view_and_redacted_ones_leave_everything_that_goes_out() {
+        let t = secret_table();
+        let none = BTreeSet::new();
+        assert_eq!(visible_columns(&t, &none), [0, 1, 2, 3]);
+        let hidden: BTreeSet<String> = ["Kat".to_owned()].into();
+        assert_eq!(visible_columns(&t, &hidden), [0, 1, 2]);
+        // Tür is never hidden, even by a key that is its label.
+        let kind: BTreeSet<String> = ["Tür".to_owned()].into();
+        assert_eq!(visible_columns(&t, &kind), [0, 1, 2, 3]);
+        let out = outgoing_columns(&t, &hidden, &["Gizli no".to_owned()]);
+        assert_eq!(out.columns, [0, 1]);
+        assert_eq!(out.withheld, ["Gizli no"]);
+        // A column both hidden and redacted is hidden: nothing to say about it.
+        let both: BTreeSet<String> = ["Gizli no".to_owned()].into();
+        let out = outgoing_columns(&t, &both, &["Gizli no".to_owned()]);
+        assert_eq!(out.columns, [0, 1, 3]);
+        assert!(out.withheld.is_empty());
+    }
+
+    #[test]
+    fn a_copy_and_a_sheet_hold_the_kept_columns_of_the_rows_shown_in_their_order() {
+        let t = secret_table();
+        let out = outgoing_columns(&t, &BTreeSet::new(), &["Gizli no".to_owned()]);
+        // Row 1 first (the table sorted it so), Tür out of the copy, the tab in a value flattened.
+        let text = copy_text(&t, &[1, 0], &out.columns);
+        assert_eq!(text, "Ad\tKat\nDükkân\t1\nEv 1\t3");
+        let sheet = workbook_sheet_of(&t, &[1, 0], "Tablo", &out.columns);
+        let names: Vec<&str> = sheet.columns.iter().map(|c| c.name.as_str()).collect();
+        assert_eq!(names, ["Tür", "Ad", "Kat"]);
+        assert_eq!(sheet.rows[0], ["Nokta", "Dükkân", "1"]);
+        assert!(sheet.rows.iter().flatten().all(|v| v != "123" && v != "456"));
+        // The whole table is the same sheet as before.
+        let all = workbook_sheet(&t, &[0, 1], "Tablo");
+        assert_eq!(all.columns.len(), 4);
+        assert_eq!(all.rows[1], ["Nokta", "Dükkân", "456", "1"]);
     }
 }

@@ -148,12 +148,15 @@ impl App {
     /// Göster's rows of the layer and what they depend on.
     fn rows_key(&self) -> RowsKey {
         let show = self.charts.show;
-        let selection = if show == Show::Selected {
-            self.selection.version()
-        } else {
-            0
+        let (table_stamp, table_view) = self.table_rows_stamp();
+        let selection = match show {
+            Show::Selected => self.selection.version(),
+            Show::Table => table_stamp,
+            _ => 0,
         };
-        let view = if show == Show::InView {
+        let view = if show == Show::Table {
+            table_view
+        } else if show == Show::InView {
             let v = self.viewport.camera.visible_bounds();
             [
                 v.min_x.to_bits(),
