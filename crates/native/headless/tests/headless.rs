@@ -2033,6 +2033,29 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 { "id": "g", "type": "shape", "shape": "gear", "size": 2.0, "unit": "mm", "fill": "#00ff00" } ] } } }),
             "single",
         ),
+        (
+            "kentos-tarama.qml",
+            parsel.clone(),
+            json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+                { "id": "f", "type": "simpleFill", "color": "#ffffff" },
+                { "id": "h", "type": "hatchFill", "angle": 30.0, "spacing": 2.5, "width": 0.2, "color": "#336699",
+                  "unit": "mm", "offset": 0.5 },
+                { "id": "o", "type": "simpleLine", "color": "#aa0000", "unit": "mm",
+                  "width": { "expr": "[alan] / 1000", "fallback": 0.5 } } ] } } }),
+            "single",
+        ),
+        (
+            "kentos-isaretli.qml",
+            yol.clone(),
+            json!({ "type": "single", "symbols": { "line": { "type": "line", "layers": [
+                { "id": "l", "type": "simpleLine", "color": "#3366cc", "width": 0.6, "unit": "mm" },
+                { "id": "m", "type": "markerLine", "placement": "interval", "interval": 4.0, "offsetAlong": 1.0,
+                  "unit": "mm", "marker": { "type": "marker", "layers": [
+                    { "id": "p", "type": "shape", "shape": "triangle", "unit": "mm", "fill": "#ff0000",
+                      "size": { "expr": "[kat] * 2 + 1", "fallback": 2.0 },
+                      "rotation": { "expr": "[yon]", "fallback": 0.0 } } ] } } ] } } }),
+            "single",
+        ),
     ];
     let dir = std::env::temp_dir().join(format!("kentos-qml-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
@@ -2096,6 +2119,24 @@ fn layer_looks_go_out_as_qml_and_come_back() {
                 let m = &r["symbols"]["marker"]["layers"][0];
                 assert_eq!(m["rotation"], -30.0);
                 assert_eq!(m["strokeWidth"], 0.3);
+            }
+            "kentos-tarama.qml" => {
+                let l = &r["symbols"]["fill"]["layers"];
+                assert_eq!(l[1]["type"], "hatchFill", "{r}");
+                assert_eq!(l[1]["angle"], 30.0);
+                assert_eq!(l[1]["spacing"], 2.5);
+                assert_eq!(l[1]["offset"], 0.5);
+                assert_eq!(l[2]["width"], json!({ "expr": "[alan] / 1000", "fallback": 0.5 }));
+            }
+            "kentos-isaretli.qml" => {
+                let m = &r["symbols"]["line"]["layers"][1];
+                assert_eq!(m["type"], "markerLine", "{r}");
+                assert_eq!(m["interval"], 4.0);
+                assert_eq!(m["offsetAlong"], 1.0);
+                let p = &m["marker"]["layers"][0];
+                assert_eq!(p["size"], json!({ "expr": "[kat] * 2 + 1", "fallback": 2.0 }));
+                // Turned twice, the angle comes back as written; a zero angle is QGIS's default and not written.
+                assert_eq!(p["rotation"], json!({ "expr": "[yon]" }));
             }
             _ => {}
         }

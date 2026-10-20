@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""QML'den görünüş al'ın ortak durumları ve QML'in QGIS 4.2 ile iki yönlü denetimi (docs/adr/0555), KentOS kodu olmadan.
+"""QML'den görünüş al'ın ortak durumları ve QML'in QGIS 4.2 ile iki yönlü denetimi (docs/adr/0555, 0565), KentOS kodu olmadan.
 
     python3 scripts/fixtures/qml_cases.py --files    # QGIS 4.2'nin QML'lerini ve elle yazılanları fixtures/qml/v1'e yazar
     python3 scripts/fixtures/qml_cases.py            # fixtures/commands/v1/file.import.qml.json'u yazar
@@ -7,7 +7,7 @@
 
 Okuma kuralları ADR'den, bu betikte yeniden yazılmıştır (xml.etree ile): QGIS'in tek simge, kategorili, aralıklı ve
 kurallı görünüşü KentOS'un aynı türü; basit dolgu (kenarı ayrı çizgi), basit çizgi (Qt'nin kesik desenleri ya da özel
-kesikler), basit işaret ve merkez dolgusu; renkler `r,g,b,a`'dan #rrggbb(aa); mm, nokta, inç, piksel ve harita birimi;
+kesikler), basit işaret, merkez dolgusu, çizgi deseni (tarama) ve işaretli çizgi; veriye bağlı kalınlık, boy ve dönüş; renkler `r,g,b,a`'dan #rrggbb(aa); mm, nokta, inç, piksel ve harita birimi;
 kuralların süzgeci QGIS'in ifadesinden KentOS'unkine (bu betiğin kendi ayrıştırıcısıyla). Alınamayanların cümleleri de
 ADR'nin sözleridir.
 
@@ -346,14 +346,150 @@ def size_as(v, unit, to):
     return got[0] if got is not None and got[1] == to else None
 
 
-def data_defined(layer, lost, what):
-    for d in layer:
-        if d.tag != "data_defined_properties":
+PLACEMENTS = [("interval", "Interval"), ("vertex", "Vertex"), ("innerVertex", "InnerVertices"),
+              ("first", "FirstVertex"), ("last", "LastVertex"), ("center", "CentralPoint"),
+              ("segmentCenter", "SegmentCenter")]
+
+
+def value_tokens(src, qgis):
+    """A value expression's tokens: fields, numbers, + - * / % and parentheses; anything else says nothing."""
+    c, out, i = src, [], 0
+    while i < len(c):
+        ch = c[i]
+        if ch.isspace():
+            i += 1
+        elif not qgis and ch == "[":
+            j = c.find("]", i + 1)
+            if j < 0:
+                return None
+            name = c[i + 1:j].strip()
+            if not name:
+                return None
+            out.append(("field", name))
+            i = j + 1
+        elif qgis and ch == '"':
+            name, j = "", i + 1
+            while True:
+                if j >= len(c):
+                    return None
+                if c[j] == '"':
+                    if j + 1 < len(c) and c[j + 1] == '"':
+                        name += '"'
+                        j += 2
+                        continue
+                    break
+                name += c[j]
+                j += 1
+            out.append(("field", name))
+            i = j + 1
+        elif ch in "0123456789" or (ch == "." and i + 1 < len(c) and c[i + 1] in "0123456789"):
+            j = i + 1
+            while j < len(c) and (c[j] in "0123456789."):
+                j += 1
+            try:
+                float(c[i:j])
+            except ValueError:
+                return None
+            out.append(("num", c[i:j]))
+            i = j
+        elif ch in "+-*/%":
+            out.append(("op", ch))
+            i += 1
+        elif ch == "(":
+            out.append(("open",))
+            i += 1
+        elif ch == ")":
+            out.append(("close",))
+            i += 1
+        elif ch.isalpha() or ch == "_":
+            j = i + 1
+            while j < len(c) and (c[j].isalnum() or c[j] == "_"):
+                j += 1
+            w = c[i:j]
+            if c[j:].lstrip()[:1] == "(" or not bare_field(w):
+                return None
+            out.append(("field", w))
+            i = j
+        else:
+            return None
+    return out or None
+
+
+def value_text(toks, field):
+    s, prev, sign = "", None, False
+    for t in toks:
+        if not (prev is None or prev == ("open",) or t == ("close",) or sign):
+            s += " "
+        sign = t[0] == "op" and t[1] in "-+" and (prev is None or prev[0] == "op" or prev == ("open",))
+        if t[0] == "field":
+            s += field(t[1])
+        elif t[0] in ("num", "op"):
+            s += t[1]
+        elif t[0] == "open":
+            s += "("
+        else:
+            s += ")"
+        prev = t
+    return s
+
+
+def kentos_value(q):
+    toks = value_tokens(q, True)
+    return None if toks is None else value_text(toks, lambda n: f"[{n}]")
+
+
+def negated(e):
+    if e.startswith("-(") and e.endswith(")"):
+        inner, depth, ok = e[2:-1], 0, True
+        for ch in inner:
+            depth += {"(": 1, ")": -1}.get(ch, 0)
+            if depth < 0:
+                ok = False
+                break
+        if ok and depth == 0:
+            return inner
+    return f"-({e})"
+
+
+def dd_props(layer):
+    """The layer's active data-defined properties in order: name and QGIS expression (a field is "field")."""
+    d = child(layer, "data_defined_properties")
+    m = child(d, "Option") if d is not None else None
+    props_ = next((c for c in m if c.get("name") == "properties"), None) if m is not None else None
+    out = []
+    if props_ is None:
+        return out
+    for p in props_:
+        get = lambda k: next((c.get("value") for c in p if c.get("name") == k), None)  # noqa: E731
+        if get("active") != "true":
             continue
-        for o in d.iter():
-            if o.get("name") == "active" and o.get("value") == "true":
-                lost.append(f"{what}: veriye bağlı değerler (data defined) alınmadı; sabit değerleri alındı")
-                return
+        t, f, e = get("type"), get("field"), get("expression")
+        if t == "2" and f is not None:
+            q = '"' + f.replace('"', '""') + '"'
+        elif e is not None:
+            q = e
+        elif f is not None:
+            q = '"' + f.replace('"', '""') + '"'
+        else:
+            continue
+        out.append((p.get("name") or "", q))
+    return out
+
+
+def take_dd(layer, supported, target, lost, what):
+    for name, q in dd_props(layer):
+        found = next((s for s in supported if s[0] == name), None)
+        if found is None:
+            lost.append(f"{what}: QGIS'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı")
+            continue
+        e = kentos_value(q)
+        if e is None:
+            lost.append(f"{what}: “{name}” değerinin “{q}” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı")
+            continue
+        if target is not None:
+            _, key, neg = found
+            expr = negated(e) if neg else e
+            target[key] = {"expr": expr, "fallback": target[key]} if key in target else {"expr": expr}
 
 
 def nonzero_pair(text):
@@ -450,6 +586,93 @@ def read_marker(m, lost, what):
     return v
 
 
+def read_hatch(layer, m, i, lost, what):
+    dist = fnum(m.get("distance"))
+    got = size_in(5.0 if dist is None else dist, m.get("distance_unit"))
+    if got is None:
+        lost.append(f"{what}: çizgi deseninin yüzde aralığı KentOS'ta yok; tarama alınmadı")
+        return None
+    spacing, unit = got
+    angle = fnum(m.get("angle"))
+    if angle is None:
+        angle = fnum(m.get("lineangle"))
+    if angle is None:
+        angle = 45.0
+    sub = child(layer, "symbol")
+    sym = read_symbol(sub, lost, what) if sub is not None else None
+    if sym is None:
+        lost.append(f"{what}: çizgi deseninin çizgisi alınmadı")
+        return None
+    k, body = sym
+    first = body["layers"][0] if body["layers"] else None
+    if k != "line" or first is None or first.get("type") != "simpleLine":
+        lost.append(f"{what}: çizgi deseninin çizgisi basit çizgi değil; tarama alınmadı")
+        return None
+    if len(body["layers"]) > 1:
+        lost.append(f"{what}: çizgi deseninin çizgisinin yalnız ilk katmanı alındı")
+    h = {"id": f"h{i}", "type": "hatchFill", "angle": angle, "spacing": spacing, "unit": unit,
+         "color": first.get("color", "#000000"), "width": 0.0}
+    if first.get("unit") == unit:
+        h["width"] = first.get("width", 0.0)
+        if "dash" in first:
+            h["dash"] = first["dash"]
+    elif isinstance(first.get("width"), (int, float)) and first["width"] > 0:
+        lost.append(f"{what}: çizgi deseninin çizgisinin birimi aralığınkinden başka; kalınlığı ve kesikleri alınmadı")
+    off = fnum(m.get("offset"))
+    if off is not None and off != 0.0:
+        o = size_as(off, m.get("offset_unit"), unit)
+        if o is None:
+            lost.append(f"{what}: çizgi deseninin kaydırmasının birimi aralığınkinden başka; alınmadı")
+        else:
+            h["offset"] = o
+    return h
+
+
+def read_marker_line(layer, m, i, lost, what):
+    names = m.get("placements", m.get("placement", "Interval"))
+    placement = None
+    for n in [x.strip() for x in names.replace(",", "|").split("|")]:
+        if not n:
+            continue
+        found = next((k for k, q in PLACEMENTS if q.lower() == n.lower()), None)
+        if found is not None and placement is None:
+            placement = found
+        else:
+            lost.append(f"{what}: işaretli çizginin “{n}” yerleşimi alınmadı (KentOS'ta tek yerleşim)")
+    if placement is None:
+        lost.append(f"{what}: işaretli çizginin yerleşimi KentOS'ta yok; katman alınmadı")
+        return None
+    iv = fnum(m.get("interval"))
+    got = size_in(3.0 if iv is None else iv, m.get("interval_unit"))
+    if got is None:
+        lost.append(f"{what}: işaretli çizginin yüzde aralığı KentOS'ta yok; katman alınmadı")
+        return None
+    interval, unit = got
+    sub = child(layer, "symbol")
+    sym = read_symbol(sub, lost, what) if sub is not None else None
+    if sym is None or sym[0] != "marker":
+        lost.append(f"{what}: işaretli çizginin işareti alınmadı")
+        return None
+    v = {"id": f"m{i}", "type": "markerLine", "marker": sym[1], "placement": placement,
+         "interval": interval, "unit": unit, "rotate": m.get("rotate") != "0"}
+    oa = fnum(m.get("offset_along_line"))
+    if oa is not None and oa != 0.0:
+        o = size_as(oa, m.get("offset_along_line_unit"), unit)
+        if o is None:
+            lost.append(f"{what}: işaretli çizginin baştan uzaklığının birimi aralığınkinden başka; alınmadı")
+        else:
+            v["offsetAlong"] = o
+    ring = m.get("ring_filter")
+    if ring == "1":
+        v["rings"] = "exterior"
+    elif ring == "2":
+        v["rings"] = "interior"
+    off = fnum(m.get("offset"))
+    if off is not None and off != 0.0:
+        lost.append(f"{what}: işaretli çizginin paralel kaydırması alınmadı")
+    return v
+
+
 def read_symbol(s, lost, what):
     key = s.get("type", "")
     if key not in ("fill", "line", "marker"):
@@ -459,8 +682,8 @@ def read_symbol(s, lost, what):
     for i, layer in enumerate([c for c in s if c.tag == "layer"]):
         cls = layer.get("class", "")
         m = props(layer)
-        data_defined(layer, lost, what)
         taken = []
+        supported = []
         if key == "fill" and cls == "SimpleFill":
             style = m.get("style", "solid")
             if style == "solid":
@@ -480,11 +703,21 @@ def read_symbol(s, lost, what):
             if nonzero_pair(m.get("offset")):
                 lost.append(f"{what}: dolgunun kaydırması alınmadı")
         elif key in ("fill", "line") and cls == "SimpleLine":
+            supported = [("outlineWidth", "width", False)]
             got = read_line(m, f"l{i}", lost, what)
             if got is not None:
                 taken.append(got)
         elif key == "marker" and cls == "SimpleMarker":
+            supported = [("size", "size", False), ("angle", "rotation", True)]
             taken.append(read_marker(m, lost, what))
+        elif key == "fill" and cls == "LinePatternFill":
+            got = read_hatch(layer, m, i, lost, what)
+            if got is not None:
+                taken.append(got)
+        elif key in ("fill", "line") and cls == "MarkerLine":
+            got = read_marker_line(layer, m, i, lost, what)
+            if got is not None:
+                taken.append(got)
         elif key == "fill" and cls == "CentroidFill":
             sub = child(layer, "symbol")
             got = read_symbol(sub, lost, what) if sub is not None else None
@@ -497,6 +730,7 @@ def read_symbol(s, lost, what):
                 lost.append(f"{what}: merkez işaretinin simgesi alınmadı")
         else:
             lost.append(f"{what}: QGIS'in “{cls}” simge katmanı KentOS'un katmanına çevrilmedi")
+        take_dd(layer, supported, taken[0] if taken else None, lost, what)
         if layer.get("enabled") == "0":
             for t in taken:
                 t["enabled"] = False
@@ -755,6 +989,24 @@ cen = QgsCentroidFillSymbolLayer(); cen.setPointOnSurface(False)
 cen.setSubSymbol(QgsMarkerSymbol.createSimple({{'name': 'star', 'color': '#ffcc00', 'size': '4'}}))
 fs = QgsFillSymbol.createSimple({{'color': '#ffffff', 'outline_color': '#000000'}}); fs.appendSymbolLayer(cen)
 parsel.setRenderer(QgsSingleSymbolRenderer(fs)); parsel.saveNamedStyle(out + 'qgis-merkez.qml')
+lp = QgsLinePatternFillSymbolLayer(); lp.setLineAngle(30); lp.setDistance(3); lp.setOffset(0.5)
+lp.setSubSymbol(QgsLineSymbol.createSimple({{'line_color': '#336699', 'line_width': '0.3'}}))
+ts = QgsFillSymbol.createSimple({{'color': '#ffffff', 'outline_color': '#000000', 'outline_width': '0.4'}}); ts.appendSymbolLayer(lp)
+edge = QgsSimpleLineSymbolLayer.create({{'line_color': '#aa0000', 'line_width': '0.5'}})
+edge.setDataDefinedProperty(QgsSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression('"alan" / 1000'))
+edge.setDataDefinedProperty(QgsSymbolLayer.Property.StrokeColor, QgsProperty.fromField('renk'))
+ts.appendSymbolLayer(edge)
+parsel.setRenderer(QgsSingleSymbolRenderer(ts)); parsel.saveNamedStyle(out + 'qgis-tarama.qml')
+ml = QgsMarkerLineSymbolLayer(); ml.setPlacements(Qgis.MarkerLinePlacement.Interval | Qgis.MarkerLinePlacement.FirstVertex)
+ml.setInterval(4); ml.setOffsetAlongLine(1)
+mk = QgsMarkerSymbol.createSimple({{'name': 'triangle', 'color': '#ff0000', 'outline_style': 'no', 'size': '2'}})
+mk.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.Size, QgsProperty.fromExpression('"kat" * 2 + 1'))
+mk.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.Angle, QgsProperty.fromField('yon'))
+mk.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.FillColor, QgsProperty.fromExpression("if(\"kat\" > 2, 'red', 'blue')"))
+ml.setSubSymbol(mk)
+ls = QgsLineSymbol.createSimple({{'line_color': '#3366cc', 'line_width': '0.6'}}); ls.appendSymbolLayer(ml)
+ls.symbolLayer(0).setDataDefinedProperty(QgsSymbolLayer.Property.StrokeWidth, QgsProperty.fromExpression('round("genislik", 1)'))
+yol.setRenderer(QgsSingleSymbolRenderer(ls)); yol.saveNamedStyle(out + 'qgis-isaretli.qml')
 print('ok')
 """
 
@@ -775,7 +1027,7 @@ def write_files() -> None:
                        timeout=300)
     if "ok" not in r.stdout:
         sys.exit(f"QGIS QML yazamadı: {r.stderr[-600:]}")
-    print(f"{len(HAND)} elle yazılmış ve 7 QGIS QML'i: {DIR}")
+    print(f"{len(HAND)} elle yazılmış ve 9 QGIS QML'i: {DIR}")
 
 
 # ─── The cases ─────────────────────────────────────────────────────────────────────────────────────────
@@ -874,6 +1126,10 @@ def build_cases():
         ok_case("Piksel birimi ve saydam dolgu: çarpı işareti dolgusuz", "durak", "qgis-piksel.qml"),
         ok_case("Merkez dolgusu: yıldız ağırlık merkezinde, dolgu ve kenarı ayrı katmanlar", "parsel",
                 "qgis-merkez.qml"),
+        ok_case("QGIS'in çizgi deseni: tarama açısı, aralığı ve kaydırmasıyla; kenarın veriye bağlı kalınlığı ifadesiyle, "
+                "veriye bağlı rengi söylenir", "parsel", "qgis-tarama.qml"),
+        ok_case("QGIS'in işaretli çizgisi: ilk yerleşim alınır, ikincisi söylenir; işaretin veriye bağlı boyu ve dönüşü, "
+                "çevrilemeyen ifadeler söylenir", "yol", "qgis-isaretli.qml"),
         ok_case("Alınamayanlar söylenir: SVG işareti, bilinmeyen şekil, veriye bağlı boy, kaydırma, etiketler, katmanın "
                 "saydamlığı", "durak", "kayipli.qml"),
         ok_case("QGIS 2'nin prop'ları: nokta ve inç mm'ye, kapalı katman kapalı, fırça deseni söylenir", "parsel",
@@ -936,7 +1192,7 @@ def build_cases():
     return {
         "format": "kentos.command-cases", "version": 1, "command": "file.import.qml", "commandVersion": 1,
         "title": "QML'den görünüş al",
-        "note": "ADR 0555. QGIS 4.2'nin yazdığı ve elle yazılmış QML'ler (fixtures/qml/v1); görünüşler ADR'nin okuma kuralıyla burada, xml.etree'yle kurulur. Bağımsız başvuru: scripts/fixtures/qml_cases.py; elle düzenlemeyin.",
+        "note": "ADR 0555, 0565. QGIS 4.2'nin yazdığı ve elle yazılmış QML'ler (fixtures/qml/v1); görünüşler ADR'nin okuma kuralıyla burada, xml.etree'yle kurulur. Bağımsız başvuru: scripts/fixtures/qml_cases.py; elle düzenlemeyin.",
         "setup": SETUP,
         "cases": cases,
     }
@@ -965,6 +1221,22 @@ def sym(s):
             d['shape'] = QgsSimpleMarkerSymbolLayerBase.encodeShape(sl.shape())
             d['size'] = [round(sl.size(), 4), QgsUnitTypes.encodeUnit(sl.sizeUnit())]
             d['angle'] = round(sl.angle(), 4)
+        if sl.layerType() == 'LinePatternFill':
+            d['line'] = [round(sl.lineAngle(), 4), round(sl.distance(), 4), round(sl.offset(), 4),
+                         QgsUnitTypes.encodeUnit(sl.distanceUnit())]
+            d['sub'] = sym(sl.subSymbol())
+        if sl.layerType() == 'MarkerLine':
+            d['marks'] = [round(sl.interval(), 4), round(sl.offsetAlongLine(), 4), int(sl.placements()),
+                          sl.rotateSymbols()]
+            d['sub'] = sym(sl.subSymbol())
+        dd = sl.dataDefinedProperties()
+        found = {{}}
+        for k in dd.propertyKeys():
+            pr = dd.property(k)
+            if pr.isActive():
+                found[QgsSymbolLayer.propertyDefinitions()[k].name()] = pr.expressionString()
+        if found:
+            d['dd'] = found
         out['layers'].append(d)
     return out
 def rule(x):
@@ -1013,6 +1285,19 @@ WANT = {
         {"class": "SimpleLine", "enabled": True, "colour": "#ff3366cc", "width": [0.8, "MM"], "dash": [3.0, 1.5]},
         {"class": "SimpleLine", "enabled": True, "colour": "#ffffffff", "width": [2.0, "RenderMetersInMapUnits"],
          "dash": []}]}}),
+    "kentos-tarama.qml": ("parsel", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "SimpleFill", "enabled": True, "colour": "#ffffffff"},
+        {"class": "LinePatternFill", "enabled": True, "colour": "#ff336699", "line": [30.0, 2.5, 0.5, "MM"],
+         "sub": {"opacity": 1.0, "layers": [{"class": "SimpleLine", "enabled": True, "colour": "#ff336699",
+                                             "width": [0.2, "MM"], "dash": []}]}},
+        {"class": "SimpleLine", "enabled": True, "colour": "#ffaa0000", "width": [0.5, "MM"], "dash": [],
+         "dd": {"outlineWidth": '"alan" / 1000'}}]}}),
+    "kentos-isaretli.qml": ("yol", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
+        {"class": "SimpleLine", "enabled": True, "colour": "#ff3366cc", "width": [0.6, "MM"], "dash": []},
+        {"class": "MarkerLine", "enabled": True, "colour": "#ffff0000", "marks": [4.0, 1.0, 1, True],
+         "sub": {"opacity": 1.0, "layers": [{"class": "SimpleMarker", "enabled": True, "colour": "#ffff0000",
+                                             "shape": "triangle", "size": [2.0, "MM"], "angle": 0.0,
+                                             "dd": {"size": '"kat" * 2 + 1', "angle": '-("yon")'}}]}}]}}),
     "kentos-nokta.qml": ("nokta", {"type": "singleSymbol", "symbol": {"opacity": 1.0, "layers": [
         {"class": "SimpleMarker", "enabled": True, "colour": "#ffff0000", "shape": "triangle", "size": [3.0, "MM"],
          "angle": 30.0}]}}),

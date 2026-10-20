@@ -16,8 +16,8 @@ use std::fmt::Write as _;
 use serde_json::{Map, Value, json};
 
 use crate::sld::{
-    Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, fixed, num, parse_filter,
-    parse_qgis, round3,
+    self, Filter, Lit, Op, colour, colour_with, esc, field_of, filter_text, fixed, num,
+    parse_filter, parse_qgis, round3,
 };
 pub use crate::sld::{Kinds, Read, Written};
 
@@ -139,6 +139,212 @@ fn options(pairs: &[(&str, String)], pad: &str) -> String {
     s
 }
 
+// ─── Data-defined values ───────────────────────────────────────────────────────────────────────────────
+
+/// A value expression's tokens: fields, numbers, `+ - * / %` and parentheses; anything else (a text, a function,
+/// a comparison) is not said across the two languages.
+#[derive(Clone, Debug, PartialEq)]
+enum VTok {
+    Field(String),
+    Num(String),
+    Op(char),
+    Open,
+    Close,
+}
+
+/// The tokens of `src`, KentOS's (`[Ad]` or a bare word a field) or QGIS's (`"Ad"` or a bare word a field).
+fn value_tokens(src: &str, qgis: bool) -> Option<Vec<VTok>> {
+    let c: Vec<char> = src.chars().collect();
+    let mut out = Vec::new();
+    let mut i = 0;
+    while i < c.len() {
+        let ch = c[i];
+        if ch.is_whitespace() {
+            i += 1;
+        } else if !qgis && ch == '[' {
+            let j = c[i + 1..].iter().position(|&x| x == ']')? + i + 1;
+            let name: String = c[i + 1..j].iter().collect::<String>().trim().to_owned();
+            if name.is_empty() {
+                return None;
+            }
+            out.push(VTok::Field(name));
+            i = j + 1;
+        } else if qgis && ch == '"' {
+            let mut name = String::new();
+            let mut j = i + 1;
+            loop {
+                let x = *c.get(j)?;
+                if x == '"' {
+                    if c.get(j + 1) == Some(&'"') {
+                        name.push('"');
+                        j += 2;
+                        continue;
+                    }
+                    break;
+                }
+                name.push(x);
+                j += 1;
+            }
+            out.push(VTok::Field(name));
+            i = j + 1;
+        } else if ch.is_ascii_digit()
+            || (ch == '.' && c.get(i + 1).is_some_and(char::is_ascii_digit))
+        {
+            let mut j = i + 1;
+            while j < c.len() && (c[j].is_ascii_digit() || c[j] == '.') {
+                j += 1;
+            }
+            let text: String = c[i..j].iter().collect();
+            text.parse::<f64>().ok()?;
+            out.push(VTok::Num(text));
+            i = j;
+        } else if "+-*/%".contains(ch) {
+            out.push(VTok::Op(ch));
+            i += 1;
+        } else if ch == '(' {
+            out.push(VTok::Open);
+            i += 1;
+        } else if ch == ')' {
+            out.push(VTok::Close);
+            i += 1;
+        } else if ch.is_alphabetic() || ch == '_' {
+            let mut j = i + 1;
+            while j < c.len() && (c[j].is_alphanumeric() || c[j] == '_') {
+                j += 1;
+            }
+            let w: String = c[i..j].iter().collect();
+            // A word before a parenthesis is a function; a keyword is no field.
+            if c[j..].iter().find(|x| !x.is_whitespace()) == Some(&'(') || !sld::bare_field(&w) {
+                return None;
+            }
+            out.push(VTok::Field(w));
+            i = j;
+        } else {
+            return None;
+        }
+    }
+    (!out.is_empty()).then_some(out)
+}
+
+/// Tokens as text: fields by `field`, a space around binary operators, none inside parentheses or after a sign.
+fn value_text(toks: &[VTok], field: &dyn Fn(&str) -> String) -> String {
+    let mut s = String::new();
+    let mut prev: Option<&VTok> = None;
+    let mut sign = false;
+    for t in toks {
+        let space = !(prev.is_none()
+            || matches!(prev, Some(VTok::Open))
+            || matches!(t, VTok::Close)
+            || sign);
+        if space {
+            s.push(' ');
+        }
+        sign = matches!(t, VTok::Op('-') | VTok::Op('+'))
+            && matches!(prev, None | Some(VTok::Op(_)) | Some(VTok::Open));
+        match t {
+            VTok::Field(n) => s.push_str(&field(n)),
+            VTok::Num(n) => s.push_str(n),
+            VTok::Op(o) => s.push(*o),
+            VTok::Open => s.push('('),
+            VTok::Close => s.push(')'),
+        }
+        prev = Some(t);
+    }
+    s
+}
+
+/// KentOS's value expression as QGIS's, when it is fields, numbers and arithmetic.
+fn qgis_value(kentos: &str) -> Option<String> {
+    let toks = value_tokens(kentos, false)?;
+    Some(value_text(&toks, &|n| {
+        format!("\"{}\"", n.replace('"', "\"\""))
+    }))
+}
+
+/// QGIS's value expression as KentOS's, when it is fields, numbers and arithmetic.
+fn kentos_value(qgis: &str) -> Option<String> {
+    let toks = value_tokens(qgis, true)?;
+    Some(value_text(&toks, &|n| format!("[{n}]")))
+}
+
+/// `-(e)`, or `e` when `e` is that already (an angle turned twice comes back as written).
+fn negated(e: &str) -> String {
+    if let Some(inner) = e.strip_prefix("-(").and_then(|r| r.strip_suffix(')')) {
+        let mut depth = 0i32;
+        let balanced = inner.chars().all(|ch| {
+            match ch {
+                '(' => depth += 1,
+                ')' => depth -= 1,
+                _ => {}
+            }
+            depth >= 0
+        }) && depth == 0;
+        if balanced {
+            return inner.to_owned();
+        }
+    }
+    format!("-({e})")
+}
+
+/// A layer's number at `key`: fixed, or data-defined when its expression says itself in QGIS's (then QGIS's
+/// property `prop` takes it, `negate` for an angle turned the other way) and the fallback is written.
+fn num_value(
+    layer: &Value,
+    key: &str,
+    prop: &'static str,
+    negate: bool,
+    dds: &mut Vec<(&'static str, String)>,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<f64> {
+    let v = layer.get(key)?;
+    if let Some(e) = v.get("expr").and_then(Value::as_str)
+        && let Some(q) = qgis_value(e)
+    {
+        dds.push((prop, if negate { negated(&q) } else { q }));
+        return v.get("fallback").and_then(Value::as_f64);
+    }
+    fixed(layer, key, lost, what).and_then(Value::as_f64)
+}
+
+/// A symbol layer's `<data_defined_properties>` of expressions.
+fn dd_xml(dds: &[(&'static str, String)], pad: &str) -> String {
+    let mut s = format!("{pad}<data_defined_properties>\n{pad}  <Option type=\"Map\">\n");
+    let _ = writeln!(
+        s,
+        "{pad}    <Option name=\"name\" type=\"QString\" value=\"\"/>"
+    );
+    if dds.is_empty() {
+        let _ = writeln!(s, "{pad}    <Option name=\"properties\"/>");
+    } else {
+        let _ = writeln!(s, "{pad}    <Option name=\"properties\" type=\"Map\">");
+        for (name, e) in dds {
+            let _ = writeln!(s, "{pad}      <Option name=\"{name}\" type=\"Map\">");
+            let _ = writeln!(
+                s,
+                "{pad}        <Option name=\"active\" type=\"bool\" value=\"true\"/>"
+            );
+            let _ = writeln!(
+                s,
+                "{pad}        <Option name=\"expression\" type=\"QString\" value=\"{}\"/>",
+                esc(e)
+            );
+            let _ = writeln!(
+                s,
+                "{pad}        <Option name=\"type\" type=\"int\" value=\"3\"/>"
+            );
+            let _ = writeln!(s, "{pad}      </Option>");
+        }
+        let _ = writeln!(s, "{pad}    </Option>");
+    }
+    let _ = writeln!(
+        s,
+        "{pad}    <Option name=\"type\" type=\"QString\" value=\"collection\"/>"
+    );
+    let _ = writeln!(s, "{pad}  </Option>\n{pad}</data_defined_properties>");
+    s
+}
+
 fn enabled_of(layer: &Value) -> &'static str {
     if layer.get("enabled") == Some(&Value::Bool(false)) {
         "0"
@@ -180,9 +386,9 @@ fn line_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
         lost.push(format!("{what}: çizginin rengi QML'in renklerinden değil"));
         return None;
     };
-    let width = fixed(layer, "width", lost, what)
-        .and_then(Value::as_f64)
-        .unwrap_or(0.0);
+    let mut dds = Vec::new();
+    let width =
+        num_value(layer, "width", "outlineWidth", false, &mut dds, lost, what).unwrap_or(0.0);
     let cap = match layer.get("cap").and_then(Value::as_str).unwrap_or("butt") {
         "round" => "round",
         "square" => "square",
@@ -240,6 +446,7 @@ fn line_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) -> O
         ],
         &format!("{pad}  "),
     ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
     let _ = writeln!(s, "{pad}</layer>");
     Some(s)
 }
@@ -302,9 +509,8 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
         }
     };
     let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
-    let size = fixed(layer, "size", lost, what)
-        .and_then(Value::as_f64)
-        .unwrap_or(2.0);
+    let mut dds = Vec::new();
+    let size = num_value(layer, "size", "size", false, &mut dds, lost, what).unwrap_or(2.0);
     let fill = fixed(layer, "fill", lost, what)
         .and_then(rgba)
         .unwrap_or_else(|| "0,0,0,0".into());
@@ -314,8 +520,7 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
         .and_then(Value::as_f64)
         .unwrap_or(0.0);
     // KentOS turns counter-clockwise, QGIS clockwise.
-    let angle = fixed(layer, "rotation", lost, what)
-        .and_then(Value::as_f64)
+    let angle = num_value(layer, "rotation", "angle", true, &mut dds, lost, what)
         .map_or(0.0, |r| if r == 0.0 { 0.0 } else { -r });
     if layer
         .get("offset")
@@ -371,6 +576,166 @@ fn marker_layer(layer: &Value, pad: &str, lost: &mut Vec<String>, what: &str) ->
         ],
         &format!("{pad}  "),
     ));
+    s.push_str(&dd_xml(&dds, &format!("{pad}  ")));
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// A hatch as QGIS's line pattern fill: the lines' angle (both counter-clockwise from east), spacing and offset,
+/// its line a simple line of the hatch's colour, width and dashes.
+fn hatch_layer(
+    layer: &Value,
+    name: &str,
+    i: usize,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let spacing = layer.get("spacing").and_then(Value::as_f64).unwrap_or(0.0);
+    if spacing <= 0.0 {
+        lost.push(format!("{what}: aralığı olmayan tarama QML'e yazılmadı"));
+        return None;
+    }
+    let line = json!({
+        "type": "simpleLine", "color": layer.get("color").cloned().unwrap_or(Value::Null),
+        "width": layer.get("width").cloned().unwrap_or(json!(0)), "unit": unit, "cap": "butt",
+        "dash": layer.get("dash").cloned().unwrap_or(Value::Null),
+    });
+    let at = format!("{pad}  ");
+    let sub = symbol_xml(
+        &json!({ "type": "line", "layers": [line] }),
+        "line",
+        &format!("@{name}@{i}"),
+        &at,
+        lost,
+        what,
+    )?;
+    for (key, words) in [
+        ("stagger", "kaydırması"),
+        ("dashOffset", "kesik başlangıcı"),
+    ] {
+        if layer
+            .get(key)
+            .and_then(Value::as_f64)
+            .is_some_and(|v| v != 0.0)
+        {
+            lost.push(format!("{what}: taramanın {words} QML'e yazılmadı"));
+        }
+    }
+    layer_losses(layer, lost, what);
+    let u = unit_out(unit).to_owned();
+    let mut s = layer_open("LinePatternFill", layer, pad);
+    s.push_str(&options(
+        &[
+            (
+                "angle",
+                num(round3(
+                    layer.get("angle").and_then(Value::as_f64).unwrap_or(0.0),
+                )),
+            ),
+            ("clip_mode", "during_render".into()),
+            ("coordinate_reference", "feature".into()),
+            ("distance", num(round3(spacing))),
+            ("distance_unit", u.clone()),
+            (
+                "offset",
+                num(round3(
+                    layer.get("offset").and_then(Value::as_f64).unwrap_or(0.0),
+                )),
+            ),
+            ("offset_unit", u),
+        ],
+        &at,
+    ));
+    s.push_str(&sub);
+    let _ = writeln!(s, "{pad}</layer>");
+    Some(s)
+}
+
+/// KentOS's marker line placements and QGIS's names for them.
+const PLACEMENTS: [(&str, &str); 7] = [
+    ("interval", "Interval"),
+    ("vertex", "Vertex"),
+    ("innerVertex", "InnerVertices"),
+    ("first", "FirstVertex"),
+    ("last", "LastVertex"),
+    ("center", "CentralPoint"),
+    ("segmentCenter", "SegmentCenter"),
+];
+
+/// A marker line as QGIS's: its placement, interval, offset along the line, rotation and marker.
+fn marker_line_layer(
+    layer: &Value,
+    name: &str,
+    i: usize,
+    pad: &str,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<String> {
+    let placement = layer.get("placement").and_then(Value::as_str).unwrap_or("");
+    let Some(&(_, q)) = PLACEMENTS.iter().find(|(k, _)| *k == placement) else {
+        lost.push(format!(
+            "{what}: işaretli çizginin “{placement}” yerleşimi QGIS'te yok; katman yazılmadı"
+        ));
+        return None;
+    };
+    let unit = layer.get("unit").and_then(Value::as_str).unwrap_or("mm");
+    let marker = layer.get("marker").cloned().unwrap_or(Value::Null);
+    let at = format!("{pad}  ");
+    let sub = symbol_xml(&marker, "marker", &format!("@{name}@{i}"), &at, lost, what)?;
+    for (key, words) in [("offset", "paralel kaydırması"), ("group", "işaret grubu")] {
+        if layer
+            .get(key)
+            .is_some_and(|v| !v.is_null() && v != &json!(0))
+        {
+            lost.push(format!("{what}: işaretli çizginin {words} QML'e yazılmadı"));
+        }
+    }
+    layer_losses(layer, lost, what);
+    let ring = match layer.get("rings").and_then(Value::as_str) {
+        Some("exterior") => "1",
+        Some("interior") => "2",
+        _ => "0",
+    };
+    let u = unit_out(unit).to_owned();
+    let mut s = layer_open("MarkerLine", layer, pad);
+    s.push_str(&options(
+        &[
+            (
+                "interval",
+                num(round3(
+                    layer.get("interval").and_then(Value::as_f64).unwrap_or(3.0),
+                )),
+            ),
+            ("interval_unit", u.clone()),
+            ("offset", "0".into()),
+            (
+                "offset_along_line",
+                num(round3(
+                    layer
+                        .get("offsetAlong")
+                        .and_then(Value::as_f64)
+                        .unwrap_or(0.0),
+                )),
+            ),
+            ("offset_along_line_unit", u),
+            ("offset_unit", "MM".into()),
+            ("placements", q.into()),
+            ("ring_filter", ring.into()),
+            (
+                "rotate",
+                if layer.get("rotate") == Some(&Value::Bool(false)) {
+                    "0"
+                } else {
+                    "1"
+                }
+                .into(),
+            ),
+        ],
+        &at,
+    ));
+    s.push_str(&sub);
     let _ = writeln!(s, "{pad}</layer>");
     Some(s)
 }
@@ -423,13 +788,17 @@ fn symbol_xml(
                     None => None,
                 }
             }
+            ("fill", "hatchFill") => hatch_layer(layer, name, i, &inner, lost, what),
+            (_, "markerLine") if key != "marker" => {
+                marker_line_layer(layer, name, i, &inner, lost, what)
+            }
             (_, other) => {
                 let words = match other {
-                    "hatchFill" => "tarama dolgusu",
+                    "hatchFill" => "tarama dolgusu (çizgi simgesinde)",
                     "gradientFill" => "degrade dolgu",
                     "patternFill" => "desen dolgusu",
                     "imageFill" => "resim dolgusu",
-                    "markerLine" => "işaretli çizgi",
+                    "markerLine" => "işaretli çizgi (işaret simgesinde)",
                     "geometryGenerator" => "geometri üretici",
                     "simpleFill" => "dolgu (çizgi simgesinde)",
                     _ => "katman",
@@ -887,19 +1256,72 @@ fn size_as(v: f64, unit: Option<&str>, to: &str) -> Option<f64> {
 }
 
 /// What a symbol layer has that the reader leaves.
-fn data_defined(layer: Node<'_, '_>, lost: &mut Vec<String>, what: &str) {
-    let dd = layer
+/// A symbol layer's active data-defined properties, in order: the property's name and its expression as QGIS writes
+/// it (a field is `"field"`).
+fn dd_props(layer: Node<'_, '_>) -> Vec<(String, String)> {
+    let mut out = Vec::new();
+    let Some(props) = layer
         .children()
-        .filter(|c| c.is_element() && c.tag_name().name() == "data_defined_properties")
-        .flat_map(|d| d.descendants())
-        .any(|o| {
-            o.attribute("name") == Some("active")
-                && o.attribute("value").is_some_and(|v| v == "true")
-        });
-    if dd {
-        lost.push(format!(
-            "{what}: veriye bağlı değerler (data defined) alınmadı; sabit değerleri alındı"
-        ));
+        .find(|c| c.is_element() && c.tag_name().name() == "data_defined_properties")
+        .and_then(|d| child(d, "Option"))
+        .and_then(|m| {
+            m.children()
+                .find(|c| c.is_element() && c.attribute("name") == Some("properties"))
+        })
+    else {
+        return out;
+    };
+    for p in props.children().filter(|c| c.is_element()) {
+        let get = |k: &str| {
+            p.children()
+                .find(|c| c.is_element() && c.attribute("name") == Some(k))
+                .and_then(|c| c.attribute("value"))
+        };
+        if get("active") != Some("true") {
+            continue;
+        }
+        let name = p.attribute("name").unwrap_or("").to_owned();
+        let expr = match (get("type"), get("field"), get("expression")) {
+            (Some("2"), Some(f), _) => format!("\"{}\"", f.replace('"', "\"\"")),
+            (_, _, Some(e)) => e.to_owned(),
+            (_, Some(f), None) => format!("\"{}\"", f.replace('"', "\"\"")),
+            _ => continue,
+        };
+        out.push((name, expr));
+    }
+    out
+}
+
+/// The layer's data-defined values KentOS takes: `supported` names QGIS's property, the KentOS key it becomes
+/// and whether it turns the other way (an angle); the static value stays the fallback. The others are said.
+fn take_dd(
+    layer: Node<'_, '_>,
+    supported: &[(&str, &str, bool)],
+    target: Option<&mut Value>,
+    lost: &mut Vec<String>,
+    what: &str,
+) {
+    let mut target = target;
+    for (name, q) in dd_props(layer) {
+        let Some(&(_, key, negate)) = supported.iter().find(|(p, _, _)| *p == name) else {
+            lost.push(format!(
+                "{what}: QGIS'in “{name}” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
+            ));
+            continue;
+        };
+        let Some(e) = kentos_value(&q) else {
+            lost.push(format!(
+                "{what}: “{name}” değerinin “{q}” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı"
+            ));
+            continue;
+        };
+        if let Some(t) = target.as_deref_mut() {
+            let expr = if negate { negated(&e) } else { e };
+            t[key] = match t.get(key).cloned() {
+                Some(fallback) => json!({ "expr": expr, "fallback": fallback }),
+                None => json!({ "expr": expr }),
+            };
+        }
     }
 }
 
@@ -1037,6 +1459,158 @@ fn read_marker(m: &Map<String, Value>, lost: &mut Vec<String>, what: &str) -> Va
     v
 }
 
+/// A line pattern fill as KentOS's hatch: its angle, spacing and offset, its line's colour, width and dashes.
+fn read_hatch(
+    layer: Node<'_, '_>,
+    m: &Map<String, Value>,
+    i: usize,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<Value> {
+    let Some((spacing, unit)) = size_in(
+        prop_num(m, "distance").unwrap_or(5.0),
+        prop(m, "distance_unit"),
+    ) else {
+        lost.push(format!(
+            "{what}: çizgi deseninin yüzde aralığı KentOS'ta yok; tarama alınmadı"
+        ));
+        return None;
+    };
+    let angle = prop_num(m, "angle")
+        .or_else(|| prop_num(m, "lineangle"))
+        .unwrap_or(45.0);
+    let Some((k, sym)) = child(layer, "symbol").and_then(|sub| read_symbol(sub, lost, what)) else {
+        lost.push(format!("{what}: çizgi deseninin çizgisi alınmadı"));
+        return None;
+    };
+    let line = sym
+        .get("layers")
+        .and_then(Value::as_array)
+        .and_then(|l| l.first())
+        .filter(|l| k == "line" && l.get("type").and_then(Value::as_str) == Some("simpleLine"))
+        .cloned();
+    let Some(line) = line else {
+        lost.push(format!(
+            "{what}: çizgi deseninin çizgisi basit çizgi değil; tarama alınmadı"
+        ));
+        return None;
+    };
+    if sym
+        .get("layers")
+        .and_then(Value::as_array)
+        .is_some_and(|l| l.len() > 1)
+    {
+        lost.push(format!(
+            "{what}: çizgi deseninin çizgisinin yalnız ilk katmanı alındı"
+        ));
+    }
+    let mut h = json!({
+        "id": format!("h{i}"), "type": "hatchFill", "angle": angle, "spacing": spacing, "unit": unit,
+        "color": line.get("color").cloned().unwrap_or(json!("#000000")), "width": 0.0,
+    });
+    let same = line.get("unit").and_then(Value::as_str) == Some(unit);
+    if same {
+        h["width"] = line.get("width").cloned().unwrap_or(json!(0.0));
+        if let Some(d) = line.get("dash") {
+            h["dash"] = d.clone();
+        }
+    } else if line
+        .get("width")
+        .and_then(Value::as_f64)
+        .is_some_and(|w| w > 0.0)
+    {
+        lost.push(format!(
+            "{what}: çizgi deseninin çizgisinin birimi aralığınkinden başka; kalınlığı ve kesikleri alınmadı"
+        ));
+    }
+    if let Some(o) = prop_num(m, "offset").filter(|o| *o != 0.0) {
+        match size_as(o, prop(m, "offset_unit"), unit) {
+            Some(o) => h["offset"] = json!(o),
+            None => lost.push(format!(
+                "{what}: çizgi deseninin kaydırmasının birimi aralığınkinden başka; alınmadı"
+            )),
+        }
+    }
+    Some(h)
+}
+
+/// A marker line as KentOS's: its first placement KentOS has, interval, offset along the line, rotation and marker.
+fn read_marker_line(
+    layer: Node<'_, '_>,
+    m: &Map<String, Value>,
+    i: usize,
+    lost: &mut Vec<String>,
+    what: &str,
+) -> Option<Value> {
+    let names = prop(m, "placements")
+        .or_else(|| prop(m, "placement"))
+        .unwrap_or("Interval");
+    let mut placement = None;
+    for n in names
+        .split(['|', ','])
+        .map(str::trim)
+        .filter(|n| !n.is_empty())
+    {
+        let found = PLACEMENTS
+            .iter()
+            .find(|(_, q)| q.eq_ignore_ascii_case(n))
+            .map(|(k, _)| *k);
+        match (found, placement) {
+            (Some(k), None) => placement = Some(k),
+            _ => lost.push(format!(
+                "{what}: işaretli çizginin “{n}” yerleşimi alınmadı (KentOS'ta tek yerleşim)"
+            )),
+        }
+    }
+    let Some(placement) = placement else {
+        lost.push(format!(
+            "{what}: işaretli çizginin yerleşimi KentOS'ta yok; katman alınmadı"
+        ));
+        return None;
+    };
+    let Some((interval, unit)) = size_in(
+        prop_num(m, "interval").unwrap_or(3.0),
+        prop(m, "interval_unit"),
+    ) else {
+        lost.push(format!(
+            "{what}: işaretli çizginin yüzde aralığı KentOS'ta yok; katman alınmadı"
+        ));
+        return None;
+    };
+    let Some((k, marker)) = child(layer, "symbol").and_then(|sub| read_symbol(sub, lost, what))
+    else {
+        lost.push(format!("{what}: işaretli çizginin işareti alınmadı"));
+        return None;
+    };
+    if k != "marker" {
+        lost.push(format!("{what}: işaretli çizginin işareti alınmadı"));
+        return None;
+    }
+    let mut l = json!({
+        "id": format!("m{i}"), "type": "markerLine", "marker": marker, "placement": placement,
+        "interval": interval, "unit": unit, "rotate": prop(m, "rotate") != Some("0"),
+    });
+    if let Some(o) = prop_num(m, "offset_along_line").filter(|o| *o != 0.0) {
+        match size_as(o, prop(m, "offset_along_line_unit"), unit) {
+            Some(o) => l["offsetAlong"] = json!(o),
+            None => lost.push(format!(
+                "{what}: işaretli çizginin baştan uzaklığının birimi aralığınkinden başka; alınmadı"
+            )),
+        }
+    }
+    match prop(m, "ring_filter") {
+        Some("1") => l["rings"] = json!("exterior"),
+        Some("2") => l["rings"] = json!("interior"),
+        _ => {}
+    }
+    if prop_num(m, "offset").is_some_and(|o| o != 0.0) {
+        lost.push(format!(
+            "{what}: işaretli çizginin paralel kaydırması alınmadı"
+        ));
+    }
+    Some(l)
+}
+
 /// A QGIS `<symbol>` as KentOS's, and its class key.
 fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(String, Value)> {
     let t = s.attribute("type").unwrap_or("");
@@ -1055,8 +1629,8 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
     {
         let class = layer.attribute("class").unwrap_or("");
         let m = props(layer);
-        data_defined(layer, lost, what);
         let mut taken: Vec<Value> = Vec::new();
+        let mut supported: &[(&str, &str, bool)] = &[];
         match (key.as_str(), class) {
             ("fill", "SimpleFill") => {
                 if prop(&m, "style").unwrap_or("solid") == "solid" {
@@ -1094,11 +1668,25 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                 }
             }
             ("fill" | "line", "SimpleLine") => {
+                supported = &[("outlineWidth", "width", false)];
                 if let Some(l) = read_line(&m, format!("l{i}"), lost, what) {
                     taken.push(l);
                 }
             }
-            ("marker", "SimpleMarker") => taken.push(read_marker(&m, lost, what)),
+            ("marker", "SimpleMarker") => {
+                supported = &[("size", "size", false), ("angle", "rotation", true)];
+                taken.push(read_marker(&m, lost, what));
+            }
+            ("fill", "LinePatternFill") => {
+                if let Some(h) = read_hatch(layer, &m, i, lost, what) {
+                    taken.push(h);
+                }
+            }
+            ("fill" | "line", "MarkerLine") => {
+                if let Some(l) = read_marker_line(layer, &m, i, lost, what) {
+                    taken.push(l);
+                }
+            }
             ("fill", "CentroidFill") => {
                 match child(layer, "symbol").and_then(|sub| read_symbol(sub, lost, what)) {
                     Some((k, sym)) if k == "marker" => {
@@ -1115,6 +1703,7 @@ fn read_symbol(s: Node<'_, '_>, lost: &mut Vec<String>, what: &str) -> Option<(S
                 "{what}: QGIS'in “{other}” simge katmanı KentOS'un katmanına çevrilmedi"
             )),
         }
+        take_dd(layer, supported, taken.first_mut(), lost, what);
         if layer.attribute("enabled") == Some("0") {
             for l in &mut taken {
                 l["enabled"] = json!(false);
@@ -1225,8 +1814,8 @@ fn read_rules(
 
 /// KentOS's renderer of a QML: its `renderer-v2` as the renderer of the same kind.
 pub fn read(text: &str) -> Result<Read, String> {
-    let doc =
-        crate::xml::document_with_dtd(text).map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
+    let doc = crate::xml::document_with_dtd(text)
+        .map_err(|_| "Dosya okunabilir bir XML değil.".to_owned())?;
     let root = doc.root_element();
     if root.tag_name().name() != "qgis" {
         return Err("Dosya bir QGIS stil dosyası (QML) değil: kök öğe <qgis> değil.".into());
@@ -1476,15 +2065,66 @@ mod tests {
     #[test]
     fn what_a_qml_cannot_say_is_named() {
         let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
-            { "id": "h", "type": "hatchFill", "angle": 45, "spacing": 2, "width": 0.2, "color": "#000000" },
+            { "id": "h", "type": "gradientFill", "color2": "#ffffff", "angle": 45, "spacing": 2, "width": 0.2, "color": "#000000" },
             { "id": "f", "type": "simpleFill", "color": "#ffffff" },
         ] } } });
         let w = write(&r, Kinds::ALL, &none);
         assert_eq!(w.rules, 1);
         assert!(
-            w.lost.iter().any(|l| l.contains("tarama dolgusu")),
+            w.lost.iter().any(|l| l.contains("degrade dolgu")),
             "{:?}",
             w.lost
         );
+    }
+
+    #[test]
+    fn a_hatch_a_marker_line_and_data_defined_values_go_out_and_come_back() {
+        let r = json!({ "type": "single", "symbols": { "fill": { "type": "fill", "layers": [
+            { "id": "h", "type": "hatchFill", "angle": 30, "spacing": 2.5, "width": 0.2, "color": "#336699", "unit": "mm" },
+            { "id": "o", "type": "simpleLine", "color": "#000000", "width": { "expr": "[Kat] / 10", "fallback": 0.3 }, "unit": "mm" },
+            { "id": "m", "type": "markerLine", "placement": "interval", "interval": 4, "offsetAlong": 1, "unit": "mm",
+              "marker": { "type": "marker", "layers": [{ "id": "p", "type": "shape", "shape": "triangle", "size": { "expr": "[Kat] * 2 + 1", "fallback": 2 },
+                "rotation": { "expr": "[yön]", "fallback": 0 }, "unit": "mm", "fill": "#ff0000" }] } },
+        ] } } });
+        let w = write(&r, area(), &none);
+        assert!(w.lost.is_empty(), "{:?}", w.lost);
+        assert!(w.xml.contains("class=\"LinePatternFill\""), "{}", w.xml);
+        assert!(
+            w.xml.contains("value=\"&quot;Kat&quot; / 10\""),
+            "{}",
+            w.xml
+        );
+        assert!(w.xml.contains("value=\"-(&quot;yön&quot;)\""), "{}", w.xml);
+        let back = read(&w.xml).expect("reads");
+        let layers = &back.renderer["symbols"]["fill"]["layers"];
+        assert_eq!(layers[0]["type"], "hatchFill");
+        assert_eq!(layers[0]["angle"], 30.0);
+        assert_eq!(layers[0]["spacing"], 2.5);
+        assert_eq!(
+            layers[1]["width"],
+            json!({ "expr": "[Kat] / 10", "fallback": 0.3 })
+        );
+        assert_eq!(layers[2]["type"], "markerLine");
+        assert_eq!(layers[2]["offsetAlong"], 1.0);
+        let p = &layers[2]["marker"]["layers"][0];
+        assert_eq!(p["size"]["expr"], "[Kat] * 2 + 1");
+        assert_eq!(p["rotation"]["expr"], "[yön]");
+        assert_eq!(back.lost, Vec::<String>::new());
+    }
+
+    #[test]
+    fn value_expressions_say_themselves_or_not() {
+        assert_eq!(
+            qgis_value("-([a] + 2) * b").as_deref(),
+            Some("-(\"a\" + 2) * \"b\"")
+        );
+        assert_eq!(
+            kentos_value("\"Ad Soyad\" % 3").as_deref(),
+            Some("[Ad Soyad] % 3")
+        );
+        assert_eq!(qgis_value("abs([a])"), None);
+        assert_eq!(qgis_value("[a] ve [b]"), None);
+        assert_eq!(kentos_value("'x'"), None);
+        assert_eq!(negated(&negated("\"a\" * 2")), "\"a\" * 2");
     }
 }

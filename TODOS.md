@@ -219,7 +219,7 @@ Liste:
   (`sld`'nin WASM bağlayıcısı), Katmanlar'ın sağ tık menüsünde iki öğe; TS türleri üretildi.
 - [ ] `CBS-17` QML alışverişi (ADR 0555, 20 Ekim): web'de gerekenler: `file.export.qml` ve `file.import.qml`'nin işleyicileri
   (`qml`'in WASM bağlayıcısı, `formats-wasm`'e), Katmanlar'ın sağ tık menüsünde iki öğe (ikonlar `qmlExport`, `qmlImport`); TS
-  türleri üretildi.
+  türleri üretildi. ADR 0565'ten beri tarama, işaretli çizgi ve veriye bağlı değerler de aynı çekirdekten gelir; web'e ek iş yok.
 - [ ] `CBS-17` MapLibre alışverişi (ADR 0560, 20 Ekim): web'de gerekenler: `file.export.maplibre` ve `file.import.maplibre`'nin
   işleyicileri (`maplibre`'nin WASM bağlayıcısı, `formats-wasm`'e; GeoJSON yazımı mevcut `writeGeoJsonWgs84`'le), Katmanlar'ın sağ
   tık menüsünde iki öğe ve Veri › Dosya alışverişi'nde ikisi (ikonlar `maplibreExport`, `maplibreImport`); TS türleri üretildi.
@@ -2345,6 +2345,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   `cad.fields.usage` onları sayar, `cad.layers.edit`'in yeniden adlandırması aynı adımda yazar; 40 ortak durum `field_usage_cases.py`'den.
   Kalan: bağlı kaynağın sütunu kaynakta yeniden adlandırılınca izleme, kitaplığın simgeleri, yerel ve PostGIS katmanında aynı lejant.
   — **21 Ekim, [ADR 0564](docs/adr/0564-look-follows-field-renames.md).**
+- [ ] `CBS-17` QML'de tarama, işaretli çizgi ve veriye bağlı değerler (dilim): `hatchFill` QGIS'in `LinePatternFill`'i (açı, aralık,
+  kaydırma, alt simgenin çizgisi), `markerLine` QGIS'in `MarkerLine`'ı (yedi yerleşim, aralık, baştan uzaklık, dönme, halkalar,
+  işaret); çizginin kalınlığı (`outlineWidth`), işaretin boyu ve dönüşü veriye bağlı değer olarak iki yönde, ifadeler alanlar,
+  sayılar ve dört işlemse çevrilir, öbürleri ve renkler adıyla söylenir; 29 ortak durum `qml_cases.py`'den, QGIS 4.2'nin iki
+  yeni QML'i ve KentOS'unkiler QGIS'te. Kalan: degrade, nokta deseni, SVG ve yazı işareti, renklerin veriye bağlı değerleri,
+  işlevli ifadeler. — **21 Ekim, [ADR 0565](docs/adr/0565-qml-hatch-marker-line-and-data-defined-values.md).**
 - [ ] `CBS-17` QML alışverişi (ikinci dilim): `kentos_formats::qml` (QGIS 4.2'nin `renderer-v2`'si: tek simge, kategorili ve NULL
   sınıfı, aralıklı, iç içe kurallı; basit dolgu, çizgi, işaret ve merkez dolgusu; birimler mm, piksel, haritada metre; simgenin
   saydamlığı, kapalı katman; süzgeçler QGIS'in ifadesinden ve ifadesine, IN de; tek geometri türü), `file.export.qml` ve

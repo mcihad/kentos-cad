@@ -18,6 +18,13 @@
             <Option name="ring_filter" type="QString" value="0"/>
             <Option name="use_custom_dash" type="QString" value="1"/>
           </Option>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option name="name" type="QString" value=""/>
+              <Option name="properties"/>
+              <Option name="type" type="QString" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
         <layer class="SimpleLine" enabled="1" locked="0" pass="0">
           <Option type="Map">
@@ -34,6 +41,13 @@
             <Option name="ring_filter" type="QString" value="0"/>
             <Option name="use_custom_dash" type="QString" value="0"/>
           </Option>
+          <data_defined_properties>
+            <Option type="Map">
+              <Option name="name" type="QString" value=""/>
+              <Option name="properties"/>
+              <Option name="type" type="QString" value="collection"/>
+            </Option>
+          </data_defined_properties>
         </layer>
       </symbol>
     </symbols>

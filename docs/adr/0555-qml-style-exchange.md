@@ -6,9 +6,9 @@
   (`cad.layers.renderer`), 0100 (ifade dili), 0090–0094 (stil sistemi).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - QGIS'in öbür simge katmanları: çizgi deseni dolgusu (KentOS'un taramasıyla), degrade, nokta deseni, işaretli çizgi,
-    SVG işareti, yazı işareti;
-  - veriye bağlı değerler (QGIS'in ifadesi KentOS'unkine çevrilerek);
+  - QGIS'in öbür simge katmanları: degrade, nokta deseni, SVG işareti, yazı işareti (çizgi deseni dolgusu ve işaretli çizgi
+    ADR 0565'te);
+  - renklerin ve işlevli ifadelerin veriye bağlı değerleri (kalınlık, boy ve dönüş ADR 0565'te);
   - etiketler (`labeling`), katmanın saydamlığı ve karışım kipi (Katman çizimi, ADR 0226);
   - tematik işleyiciler (ısı haritası, nokta yoğunluğu, kümeleme …) ve MapLibre stili;
   - QGIS'in kendi arayüzüyle elle denetim.

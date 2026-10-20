@@ -4,7 +4,7 @@
  "command": "file.import.qml",
  "commandVersion": 1,
  "title": "QML'den görünüş al",
- "note": "ADR 0555. QGIS 4.2'nin yazdığı ve elle yazılmış QML'ler (fixtures/qml/v1); görünüşler ADR'nin okuma kuralıyla burada, xml.etree'yle kurulur. Bağımsız başvuru: scripts/fixtures/qml_cases.py; elle düzenlemeyin.",
+ "note": "ADR 0555, 0565. QGIS 4.2'nin yazdığı ve elle yazılmış QML'ler (fixtures/qml/v1); görünüşler ADR'nin okuma kuralıyla burada, xml.etree'yle kurulur. Bağımsız başvuru: scripts/fixtures/qml_cases.py; elle düzenlemeyin.",
  "setup": {
   "format": "kentos.document",
   "version": 1,
@@ -1928,6 +1928,462 @@
    ]
   },
   {
+   "name": "QGIS'in çizgi deseni: tarama açısı, aralığı ve kaydırmasıyla; kenarın veriye bağlı kalınlığı ifadesiyle, veriye bağlı rengi söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "path": "$fixture:qml/v1/qgis-tarama.qml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "kind": "single",
+       "rules": 1,
+       "renderer": {
+        "type": "single",
+        "symbols": {
+         "fill": {
+          "type": "fill",
+          "layers": [
+           {
+            "id": "f0",
+            "type": "simpleFill",
+            "color": "#ffffff"
+           },
+           {
+            "id": "o0",
+            "type": "simpleLine",
+            "color": "#000000",
+            "width": 0.4,
+            "unit": "mm",
+            "cap": "square",
+            "join": "bevel"
+           },
+           {
+            "id": "h1",
+            "type": "hatchFill",
+            "angle": 30.0,
+            "spacing": 3.0,
+            "unit": "mm",
+            "color": "#336699",
+            "width": 0.3,
+            "offset": 0.5
+           },
+           {
+            "id": "l2",
+            "type": "simpleLine",
+            "color": "#aa0000",
+            "width": {
+             "expr": "[alan] / 1000",
+             "fallback": 0.5
+            },
+            "unit": "mm",
+            "cap": "square",
+            "join": "bevel"
+           }
+          ]
+         }
+        }
+       },
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“0” simgesi: QGIS'in “outlineColor” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: QGIS'in “outlineColor” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "fill": {
+            "type": "fill",
+            "layers": [
+             {
+              "id": "f0",
+              "type": "simpleFill",
+              "color": "#ffffff"
+             },
+             {
+              "id": "o0",
+              "type": "simpleLine",
+              "color": "#000000",
+              "width": 0.4,
+              "unit": "mm",
+              "cap": "square",
+              "join": "bevel"
+             },
+             {
+              "id": "h1",
+              "type": "hatchFill",
+              "angle": 30.0,
+              "spacing": 3.0,
+              "unit": "mm",
+              "color": "#336699",
+              "width": 0.3,
+              "offset": 0.5
+             },
+             {
+              "id": "l2",
+              "type": "simpleLine",
+              "color": "#aa0000",
+              "width": {
+               "expr": "[alan] / 1000",
+               "fallback": 0.5
+              },
+              "unit": "mm",
+              "cap": "square",
+              "join": "bevel"
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "name": "QGIS'in işaretli çizgisi: ilk yerleşim alınır, ikincisi söylenir; işaretin veriye bağlı boyu ve dönüşü, çevrilemeyen ifadeler söylenir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yol",
+      "path": "$fixture:qml/v1/qgis-isaretli.qml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "yol",
+       "kind": "single",
+       "rules": 1,
+       "renderer": {
+        "type": "single",
+        "symbols": {
+         "line": {
+          "type": "line",
+          "layers": [
+           {
+            "id": "l0",
+            "type": "simpleLine",
+            "color": "#3366cc",
+            "width": 0.6,
+            "unit": "mm",
+            "cap": "square",
+            "join": "bevel"
+           },
+           {
+            "id": "m1",
+            "type": "markerLine",
+            "marker": {
+             "type": "marker",
+             "layers": [
+              {
+               "id": "p",
+               "type": "shape",
+               "shape": "triangle",
+               "size": {
+                "expr": "[kat] * 2 + 1",
+                "fallback": 2.0
+               },
+               "unit": "mm",
+               "fill": "#ff0000",
+               "rotation": {
+                "expr": "-([yon])"
+               }
+              }
+             ]
+            },
+            "placement": "interval",
+            "interval": 4.0,
+            "unit": "mm",
+            "rotate": true,
+            "offsetAlong": 1.0
+           }
+          ]
+         }
+        }
+       },
+       "changed": true,
+       "revision": "$current",
+       "lost": [
+        "“0” simgesi: “outlineWidth” değerinin “round(\"genislik\", 1)” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı",
+        "“0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim)",
+        "“0” simgesi: QGIS'in “fillColor” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı"
+       ]
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "QML'in bazı parçaları alınamadı: “0” simgesi: “outlineWidth” değerinin “round(\"genislik\", 1)” ifadesi KentOS'un ifadesine çevrilemedi; sabit değeri alındı; “0” simgesi: işaretli çizginin “FirstVertex” yerleşimi alınmadı (KentOS'ta tek yerleşim); “0” simgesi: QGIS'in “fillColor” veriye bağlı değeri KentOS'un bu katmanında yok; sabit değeri alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "canUndo": true,
+      "dirty": true,
+      "revision": "changed",
+      "layers": [
+       {
+        "id": "parsel",
+        "name": "Parsel",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "yol",
+        "name": "Yol",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25,
+         "renderer": {
+          "type": "single",
+          "symbols": {
+           "line": {
+            "type": "line",
+            "layers": [
+             {
+              "id": "l0",
+              "type": "simpleLine",
+              "color": "#3366cc",
+              "width": 0.6,
+              "unit": "mm",
+              "cap": "square",
+              "join": "bevel"
+             },
+             {
+              "id": "m1",
+              "type": "markerLine",
+              "marker": {
+               "type": "marker",
+               "layers": [
+                {
+                 "id": "p",
+                 "type": "shape",
+                 "shape": "triangle",
+                 "size": {
+                  "expr": "[kat] * 2 + 1",
+                  "fallback": 2.0
+                 },
+                 "unit": "mm",
+                 "fill": "#ff0000",
+                 "rotation": {
+                  "expr": "-([yon])"
+                 }
+                }
+               ]
+              },
+              "placement": "interval",
+              "interval": 4.0,
+              "unit": "mm",
+              "rotate": true,
+              "offsetAlong": 1.0
+             }
+            ]
+           }
+          }
+         }
+        },
+        "children": []
+       },
+       {
+        "id": "durak",
+        "name": "Durak",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": []
+       },
+       {
+        "id": "imar",
+        "name": "İmar",
+        "type": "group",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [
+         {
+          "id": "imar-alan",
+          "name": "İmar alanı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+           "color": "fg",
+           "lineType": "continuous",
+           "lineWeight": 0.25
+          },
+          "children": []
+         }
+        ]
+       },
+       {
+        "id": "altlik",
+        "name": "OpenStreetMap",
+        "type": "layer",
+        "visible": true,
+        "locked": false,
+        "expanded": true,
+        "style": {
+         "color": "fg",
+         "lineType": "continuous",
+         "lineWeight": 0.25
+        },
+        "children": [],
+        "service": {
+         "kind": "xyz",
+         "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+         "maxZoom": 19
+        }
+       }
+      ]
+     }
+    }
+   ]
+  },
+  {
    "name": "Alınamayanlar söylenir: SVG işareti, bilinmeyen şekil, veriye bağlı boy, kaydırma, etiketler, katmanın saydamlığı",
    "steps": [
     {
@@ -1952,7 +2408,10 @@
             "id": "p",
             "type": "shape",
             "shape": "square",
-            "size": 4.0,
+            "size": {
+             "expr": "[boy]",
+             "fallback": 4.0
+            },
             "unit": "mm",
             "fill": "#ff0000"
            }
@@ -1966,7 +2425,6 @@
         "etiketler alınmadı; KentOS'ta etiketler ayrıdır",
         "katmanın saydamlığı alınmadı (Katman çizimi ayrıdır)",
         "“0” simgesi: QGIS'in “SvgMarker” simge katmanı KentOS'un katmanına çevrilmedi",
-        "“0” simgesi: veriye bağlı değerler (data defined) alınmadı; sabit değerleri alındı",
         "“0” simgesi: “heart” işareti KentOS'ta yok; kare alındı",
         "“0” simgesi: işaretin kaydırması alınmadı"
        ]
@@ -1974,7 +2432,7 @@
       "warnings": [
        {
         "code": "import_losses",
-        "message": "QML'in bazı parçaları alınamadı: etiketler alınmadı; KentOS'ta etiketler ayrıdır; katmanın saydamlığı alınmadı (Katman çizimi ayrıdır); “0” simgesi: QGIS'in “SvgMarker” simge katmanı KentOS'un katmanına çevrilmedi; “0” simgesi: veriye bağlı değerler (data defined) alınmadı; sabit değerleri alındı; “0” simgesi: “heart” işareti KentOS'ta yok; kare alındı; “0” simgesi: işaretin kaydırması alınmadı.",
+        "message": "QML'in bazı parçaları alınamadı: etiketler alınmadı; KentOS'ta etiketler ayrıdır; katmanın saydamlığı alınmadı (Katman çizimi ayrıdır); “0” simgesi: QGIS'in “SvgMarker” simge katmanı KentOS'un katmanına çevrilmedi; “0” simgesi: “heart” işareti KentOS'ta yok; kare alındı; “0” simgesi: işaretin kaydırması alınmadı.",
         "path": "path"
        }
       ]
@@ -2038,7 +2496,10 @@
               "id": "p",
               "type": "shape",
               "shape": "square",
-              "size": 4.0,
+              "size": {
+               "expr": "[boy]",
+               "fallback": 4.0
+              },
               "unit": "mm",
               "fill": "#ff0000"
              }

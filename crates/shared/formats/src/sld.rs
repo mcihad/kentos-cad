@@ -143,7 +143,7 @@ const KEYWORDS: [&str; 17] = [
 ];
 
 /// Whether `w` is a bare field name of KentOS's expressions: a word of letters, digits and `_`, not a keyword.
-fn bare_field(w: &str) -> bool {
+pub(crate) fn bare_field(w: &str) -> bool {
     let mut chars = w.chars();
     chars.next().is_some_and(|c| c.is_alphabetic() || c == '_')
         && w.chars().all(|c| c.is_alphanumeric() || c == '_')
