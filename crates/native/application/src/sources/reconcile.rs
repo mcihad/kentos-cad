@@ -87,7 +87,7 @@ enum Target {
     /// The table's state goes into the layer.
     Table,
     /// This object (a merge) goes into the layer and is written to the table.
-    Made(Entity),
+    Made(Box<Entity>),
 }
 
 /// One bound layer of the reconcile, read.
@@ -284,9 +284,7 @@ fn classify(lays: &[Lay]) -> (Vec<Obj>, u32, u32) {
                 _ => match (l, t) {
                     (Some(l), Some(t)) if same_essence(l, t) => Way::Agreed,
                     (Some(l), Some(t)) => {
-                        let three = detail
-                            .as_ref()
-                            .and_then(|d| merge::merge(l, t, d, None));
+                        let three = detail.as_ref().and_then(|d| merge::merge(l, t, d, None));
                         match three {
                             Some(m) if m.conflicts.is_empty() && !m.geometry_conflict => {
                                 if same_essence(&m.entity, l) {
@@ -366,6 +364,9 @@ struct Grp {
     reasons: BTreeSet<u8>,
 }
 
+/// An object's vertex hashes: at the base, in the layer, in the table.
+type Sets = (Vec<u32>, Vec<u32>, Vec<u32>);
+
 const VERTEX: u8 = 0;
 const RELATION: u8 = 1;
 
@@ -381,7 +382,7 @@ fn groups_of(doc: &Document, lays: &[Lay], objs: &[Obj]) -> Vec<Grp> {
     let mut tied: Vec<(usize, usize, u8)> = Vec::new();
 
     // Neighbours that shared a vertex at the base, which both sides moved.
-    let sets: Vec<Option<(Vec<u32>, Vec<u32>, Vec<u32>)>> = objs
+    let sets: Vec<Option<Sets>> = objs
         .iter()
         .map(|o| {
             if !active(o) {
@@ -412,7 +413,8 @@ fn groups_of(doc: &Document, lays: &[Lay], objs: &[Obj]) -> Vec<Grp> {
                 let (Some((_, li, ti)), Some((_, lj, tj))) = (&sets[i], &sets[j]) else {
                     continue;
                 };
-                let held = |a: &[u32], b: &[u32]| a.binary_search(q).is_ok() && b.binary_search(q).is_ok();
+                let held =
+                    |a: &[u32], b: &[u32]| a.binary_search(q).is_ok() && b.binary_search(q).is_ok();
                 if !held(li, lj) && !held(ti, tj) {
                     tied.push((i, j, VERTEX));
                 }
@@ -458,8 +460,14 @@ fn groups_of(doc: &Document, lays: &[Lay], objs: &[Obj]) -> Vec<Grp> {
                     continue;
                 }
                 let new = |d: Did| matches!(d, Did::Added | Did::Changed);
-                let clash = (p.ld == Did::Removed && p.td != Did::Removed && new(c.td) && rt.contains(text))
-                    || (p.td == Did::Removed && p.ld != Did::Removed && new(c.ld) && rl.contains(text));
+                let clash = (p.ld == Did::Removed
+                    && p.td != Did::Removed
+                    && new(c.td)
+                    && rt.contains(text))
+                    || (p.td == Did::Removed
+                        && p.ld != Did::Removed
+                        && new(c.ld)
+                        && rl.contains(text));
                 if clash {
                     tied.push((ci, pi, RELATION));
                 }
@@ -623,7 +631,10 @@ fn run(
         if !named.insert(c) {
             return Err(refuse(
                 codes::INVALID_INPUT,
-                format!("{} için iki kez yan seçilmiş; her çatışma bir kez.", t.object),
+                format!(
+                    "{} için iki kez yan seçilmiş; her çatışma bir kez.",
+                    t.object
+                ),
                 &path,
             ));
         }
@@ -683,7 +694,7 @@ fn run(
             (_, true) => Some(pick(side_of(i))),
             (Way::ToTable, _) => Some(Target::Layer),
             (Way::FromTable, _) => Some(Target::Table),
-            (Way::Merged(m), _) => Some(Target::Made(m.entity.clone())),
+            (Way::Merged(m), _) => Some(Target::Made(Box::new(m.entity.clone()))),
             (Way::Conflict(own), _) => {
                 let side = side_of(i);
                 let made = match (&o.layer, &o.table, &o.detail, own.kind) {
@@ -693,7 +704,7 @@ fn run(
                     _ => None,
                 };
                 Some(match (made, side) {
-                    (Some(e), Some(_)) => Target::Made(e),
+                    (Some(e), Some(_)) => Target::Made(Box::new(e)),
                     _ => pick(side),
                 })
             }
@@ -820,7 +831,11 @@ fn run(
         .enumerate()
         .map(|(g, grp)| ReconcileGroup {
             id: objs[grp.members[0]].uid.to_string(),
-            objects: grp.members.iter().map(|m| objs[*m].uid.to_string()).collect(),
+            objects: grp
+                .members
+                .iter()
+                .map(|m| objs[*m].uid.to_string())
+                .collect(),
             reasons: grp
                 .reasons
                 .iter()

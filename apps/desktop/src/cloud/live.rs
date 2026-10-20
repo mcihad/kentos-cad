@@ -439,7 +439,7 @@ impl App {
                     doc.model.mark_saved(revision);
                 }
             }
-            Err(failure) => match {
+            Err(failure) => {
                 // Objects the server and this device changed in different fields are put together first.
                 let (after, merged) = live.sync.failed_in(&mut doc.model, &failure);
                 if merged > 0 {
@@ -450,32 +450,32 @@ impl App {
                         ),
                     ));
                 }
-                after
-            } {
-                After::Retry(wait) => live.retry_at = Some(Instant::now() + wait),
-                After::Stop => {
-                    if live.sync.state() != SaveState::Revoked {
-                        live.sent = None;
-                    }
-                    ended = live.sync.state().ended();
-                    // The server's guard may have refused our tree for a layer
-                    // someone drew on meanwhile, or the removal of a block
-                    // definition someone placed: the missed events come first,
-                    // then those layers or definitions are given back (follow.rs,
-                    // docs/adr/0081, 0144 §5); the conflict is said then, if it stays.
-                    give_back = !ended
-                        && (live.sync.may_give_back(&doc.model)
-                            || live.sync.may_give_back_blocks());
-                    if give_back {
-                        live.give_back = true;
-                    } else if !ended {
-                        say.push(stopped(&live.sync, &failure));
-                    }
-                    if failure.signed_out() {
-                        self.cloud.me = None;
+                match after {
+                    After::Retry(wait) => live.retry_at = Some(Instant::now() + wait),
+                    After::Stop => {
+                        if live.sync.state() != SaveState::Revoked {
+                            live.sent = None;
+                        }
+                        ended = live.sync.state().ended();
+                        // The server's guard may have refused our tree for a layer
+                        // someone drew on meanwhile, or the removal of a block
+                        // definition someone placed: the missed events come first,
+                        // then those layers or definitions are given back (follow.rs,
+                        // docs/adr/0081, 0144 §5); the conflict is said then, if it stays.
+                        give_back = !ended
+                            && (live.sync.may_give_back(&doc.model)
+                                || live.sync.may_give_back_blocks());
+                        if give_back {
+                            live.give_back = true;
+                        } else if !ended {
+                            say.push(stopped(&live.sync, &failure));
+                        }
+                        if failure.signed_out() {
+                            self.cloud.me = None;
+                        }
                     }
                 }
-            },
+            }
         }
         for (warn, text) in say {
             if warn {

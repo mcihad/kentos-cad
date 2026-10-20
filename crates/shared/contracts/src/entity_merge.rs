@@ -70,7 +70,9 @@ pub fn merge_entities(
         }
         if key == "attrs" {
             let empty = Map::new();
-            let attrs = |side: &'_ Map<String, Value>| side.get("attrs").and_then(Value::as_object).cloned();
+            let attrs = |side: &'_ Map<String, Value>| {
+                side.get("attrs").and_then(Value::as_object).cloned()
+            };
             let (ba, ma, ta) = (attrs(&b), attrs(&m), attrs(&t));
             let (ba, ma, ta) = (
                 ba.as_ref().unwrap_or(&empty),
@@ -159,12 +161,18 @@ mod tests {
         let mine = point(5.0, None, json!({ "a": "9", "b": "1" }));
         let theirs = point(1.0, Some("kapı"), json!({ "a": "1", "b": "7" }));
         let m = merge_entities(&base, &mine, &theirs).expect("merged");
-        assert_eq!(m.entity, point(5.0, Some("kapı"), json!({ "a": "9", "b": "7" })));
+        assert_eq!(
+            m.entity,
+            point(5.0, Some("kapı"), json!({ "a": "9", "b": "7" }))
+        );
         assert_eq!(m.from_mine, ["attrs.a", "p"]);
         assert_eq!(m.from_theirs, ["attrs.b", "label"]);
         // Both changed `a`, differently: only that is a clash.
         let theirs = point(1.0, None, json!({ "a": "3", "b": "1" }));
-        assert_eq!(merge_entities(&base, &mine, &theirs).unwrap_err(), ["attrs.a"]);
+        assert_eq!(
+            merge_entities(&base, &mine, &theirs).unwrap_err(),
+            ["attrs.a"]
+        );
         // Both changed it alike: no clash.
         let theirs = point(1.0, None, json!({ "a": "9", "b": "1" }));
         let m = merge_entities(&base, &mine, &theirs).expect("agreed");

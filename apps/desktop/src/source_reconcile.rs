@@ -355,7 +355,11 @@ impl App {
         let named: Vec<String> = match attrs {
             Some(a) => fields
                 .iter()
-                .filter_map(|f| a.get(f).filter(|v| !v.is_empty()).map(|v| format!("{f} {v}")))
+                .filter_map(|f| {
+                    a.get(f)
+                        .filter(|v| !v.is_empty())
+                        .map(|v| format!("{f} {v}"))
+                })
                 .take(2)
                 .collect(),
             // The layer removed it: the table's values, as the differences say them.
@@ -366,7 +370,11 @@ impl App {
                 .take(2)
                 .collect(),
         };
-        if named.is_empty() { short } else { named.join(" · ") }
+        if named.is_empty() {
+            short
+        } else {
+            named.join(" · ")
+        }
     }
 
     fn reconcile_apply(&mut self) {
@@ -436,7 +444,10 @@ impl App {
         if p.agreed > 0 {
             lines.push(words::text_line(
                 Kind::Ok,
-                format!("İki yanın aynı biçimde değiştirdiği {} nesne uyuşuyor.", p.agreed),
+                format!(
+                    "İki yanın aynı biçimde değiştirdiği {} nesne uyuşuyor.",
+                    p.agreed
+                ),
             ));
         }
         if !p.merged.is_empty() {
@@ -497,17 +508,27 @@ impl App {
                     side: None,
                 };
                 merged = merged.push(
-                    label::caption(format!("{} — {}", self.reconcile_name(&w.layer, &c), merge_words(m)))
-                        .style(|theme: &iced::Theme| iced::widget::text::Style {
-                            color: Some(Tokens::of(theme).muted),
-                        }),
+                    label::caption(format!(
+                        "{} — {}",
+                        self.reconcile_name(&w.layer, &c),
+                        merge_words(m)
+                    ))
+                    .style(|theme: &iced::Theme| iced::widget::text::Style {
+                        color: Some(Tokens::of(theme).muted),
+                    }),
                 );
             }
             if p.merged.len() > 6 {
-                merged = merged.push(label::caption(format!("… {} nesne daha", p.merged.len() - 6)));
+                merged = merged.push(label::caption(format!(
+                    "… {} nesne daha",
+                    p.merged.len() - 6
+                )));
             }
             body = body
-                .push(label::caption(format!("Birleştirilenler ({})", p.merged.len())))
+                .push(label::caption(format!(
+                    "Birleştirilenler ({})",
+                    p.merged.len()
+                )))
                 .push(merged);
         }
         if !p.conflicts.is_empty() {
@@ -533,22 +554,29 @@ impl App {
                             g.objects.len(),
                             reason_words(&g.reasons)
                         ))
-                        .style(|theme: &iced::Theme| iced::widget::text::Style {
-                            color: Some(Tokens::of(theme).muted),
+                        .style(|theme: &iced::Theme| {
+                            iced::widget::text::Style {
+                                color: Some(Tokens::of(theme).muted),
+                            }
                         }),
                     );
                 }
                 if !detail.is_empty() {
-                    words_col = words_col.push(label::caption(detail).style(
-                        |theme: &iced::Theme| iced::widget::text::Style {
-                            color: Some(Tokens::of(theme).muted),
-                        },
-                    ));
+                    words_col =
+                        words_col.push(label::caption(detail).style(|theme: &iced::Theme| {
+                            iced::widget::text::Style {
+                                color: Some(Tokens::of(theme).muted),
+                            }
+                        }));
                 }
                 let shown = self
                     .document
                     .as_ref()
-                    .and_then(|d| kentos_domain::Uuid::parse_str(&c.object).ok().and_then(|u| d.model.slot_of(u)))
+                    .and_then(|d| {
+                        kentos_domain::Uuid::parse_str(&c.object)
+                            .ok()
+                            .and_then(|u| d.model.slot_of(u))
+                    })
                     .is_some();
                 let face = button(words_col.width(Fill))
                     .on_press_maybe(shown.then(|| msg(Event::Show(c.object.clone()))))
@@ -598,7 +626,11 @@ impl App {
 }
 
 /// The command's input: the sides taken, one by one.
-fn input(layer: &str, with: &[String], sides: &BTreeMap<String, ReconcileSide>) -> SourcesReconcile {
+fn input(
+    layer: &str,
+    with: &[String],
+    sides: &BTreeMap<String, ReconcileSide>,
+) -> SourcesReconcile {
     SourcesReconcile {
         layer: layer.to_owned(),
         with: with.to_vec(),

@@ -370,8 +370,8 @@ pub fn base_details_text(details: &[BaseDetail]) -> Option<String> {
     for d in details {
         bytes.extend_from_slice(&d.shape.0.to_be_bytes());
         bytes.extend_from_slice(&d.shape.1.to_be_bytes());
-        let flags = u8::from(d.attrs.is_some()) * FIELDS_FLAG_ATTRS
-            | u8::from(d.vertices.is_some()) * FIELDS_FLAG_VERTICES;
+        let flags = (u8::from(d.attrs.is_some()) * FIELDS_FLAG_ATTRS)
+            | (u8::from(d.vertices.is_some()) * FIELDS_FLAG_VERTICES);
         bytes.push(flags);
         let attrs = d.attrs.as_deref().unwrap_or(&[]);
         bytes.extend_from_slice(&u16::try_from(attrs.len()).ok()?.to_be_bytes());

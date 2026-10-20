@@ -6,9 +6,7 @@
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-use kentos_commands::{
-    BaseDetail, ConflictField, Entity, MAX_BASE_VERTICES, ReconcileSide,
-};
+use kentos_commands::{BaseDetail, ConflictField, Entity, MAX_BASE_VERTICES, ReconcileSide};
 use serde_json::Value as J;
 use sha2::{Digest, Sha256};
 
@@ -24,6 +22,11 @@ pub(super) enum Table<'a> {
     Is(&'a Entity),
 }
 
+/// The first 8 bytes of a digest, big-endian.
+fn first8(d: &[u8; 32]) -> u64 {
+    u64::from_be_bytes([d[0], d[1], d[2], d[3], d[4], d[5], d[6], d[7]])
+}
+
 fn digest(bytes: &[u8]) -> [u8; 32] {
     Sha256::digest(bytes).into()
 }
@@ -36,8 +39,7 @@ pub(super) fn name_hash(name: &str) -> u32 {
 
 /// An attribute value's hash: the first 8 bytes of its SHA-256.
 pub(super) fn value_hash(value: &str) -> u64 {
-    let d = digest(value.as_bytes());
-    u64::from_be_bytes(d[..8].try_into().expect("8 bytes"))
+    first8(&digest(value.as_bytes()))
 }
 
 /// The essence of an object without its attributes: its kind and geometry.
@@ -52,7 +54,7 @@ fn shape_value(e: &Entity) -> J {
 /// The hash of an object's kind and geometry: the first 8 bytes of the SHA-256 of their canonical JSON.
 pub(super) fn shape_hash(e: &Entity) -> u64 {
     let text = kentos_commands::canonical::canonical_json(&shape_value(e));
-    u64::from_be_bytes(digest(text.as_bytes())[..8].try_into().expect("8 bytes"))
+    first8(&digest(text.as_bytes()))
 }
 
 /// Whether two objects' kinds or geometries differ.
@@ -63,8 +65,10 @@ pub(super) fn shapes_differ(a: &Entity, b: &Entity) -> bool {
 fn collect(v: &J, out: &mut Vec<(u64, u64)>) {
     match v {
         J::Object(m) => {
-            if let (Some(x), Some(y)) = (m.get("x").and_then(J::as_f64), m.get("y").and_then(J::as_f64))
-                && m.len() <= 4
+            if let (Some(x), Some(y)) = (
+                m.get("x").and_then(J::as_f64),
+                m.get("y").and_then(J::as_f64),
+            ) && m.len() <= 4
             {
                 out.push((x.to_bits(), y.to_bits()));
                 return;
@@ -192,7 +196,11 @@ pub(super) fn merge(
                     layer: lv.cloned(),
                     table: tv.cloned(),
                 });
-                if prefer == Some(ReconcileSide::Table) { tv } else { lv }
+                if prefer == Some(ReconcileSide::Table) {
+                    tv
+                } else {
+                    lv
+                }
             }
         };
         if let Some(v) = pick {
@@ -207,7 +215,11 @@ pub(super) fn merge(
         (false, true) => (table, Some(ReconcileSide::Table), false),
         (true, true) if ls == ts => (layer, None, false),
         (true, true) => (
-            if prefer == Some(ReconcileSide::Table) { table } else { layer },
+            if prefer == Some(ReconcileSide::Table) {
+                table
+            } else {
+                layer
+            },
             None,
             true,
         ),

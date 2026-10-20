@@ -79,11 +79,10 @@ pub(super) struct BaseObj {
 
 /// The base of `link` by lasting id, when it was taken at the link's revision and digest.
 pub(super) fn of(doc: &Document, link: &SourceLink) -> Option<HashMap<Uuid, BaseObj>> {
-    let b = doc
-        .settings()
-        .source_bases
-        .iter()
-        .find(|b| b.source == link.id && b.revision == link.revision && b.digest == link.digest)?;
+    let b =
+        doc.settings().source_bases.iter().find(|b| {
+            b.source == link.id && b.revision == link.revision && b.digest == link.digest
+        })?;
     let rows = kentos_commands::base_rows(&b.rows)?;
     let mut details = b
         .fields
@@ -111,7 +110,11 @@ pub(super) fn of(doc: &Document, link: &SourceLink) -> Option<HashMap<Uuid, Base
 /// bit for bit as its object is kept as the table holds it. A table that cannot be read again (gone the moment after)
 /// leaves the old base, which the new revision makes stale.
 pub(super) fn after_write(doc: &mut Document, link: &SourceLink) {
-    if doc.by_layer_with_uids(&link.layer).nth(MAX_BASE_ROWS).is_some() {
+    if doc
+        .by_layer_with_uids(&link.layer)
+        .nth(MAX_BASE_ROWS)
+        .is_some()
+    {
         take(doc, link, None);
         return;
     }
