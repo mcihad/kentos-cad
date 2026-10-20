@@ -74,7 +74,7 @@ impl VariableValue {
 
 /// The built-in variables every host gives, with what they hold: a
 /// project's variable may not take one of these names.
-pub const BUILTIN_VARIABLES: [(&str, &str); 9] = [
+pub const BUILTIN_VARIABLES: [(&str, &str); 10] = [
     ("proje_adi", "Projenin adı"),
     ("koordinat_sistemi", "Koordinat sisteminin adı"),
     ("epsg", "Koordinat sisteminin EPSG kodu"),
@@ -84,6 +84,7 @@ pub const BUILTIN_VARIABLES: [(&str, &str); 9] = [
     ("katman_adi", "Değerlendirilen nesnenin katmanının adı"),
     ("katman", "Değerlendirilen nesnenin katmanının adı"),
     ("kullanici", "Oturumdaki kullanıcının adı"),
+    ("kullanici_eposta", "Oturumdaki kullanıcının e-postası"),
 ];
 
 /// A name as it is looked for: Turkish letters and case aside (`Proje_Adı` is `proje_adi`).

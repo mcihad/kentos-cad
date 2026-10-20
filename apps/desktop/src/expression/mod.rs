@@ -315,12 +315,10 @@ impl App {
             .map_or(0, |d| d.as_millis() as i64);
         let offset = crate::cloud::local_time::Zone::system().offset_at(utc.div_euclid(1000));
         let now = (utc + i64::from(offset) * 1000) as f64;
-        let user = self
-            .cloud
-            .me
-            .as_ref()
-            .map_or("", |m| m.user.display_name.as_str());
-        kentos_project::variables::expression_variables(name, settings, now, user)
+        let me = self.cloud.me.as_ref().map(|m| &m.user);
+        let user = me.map_or("", |u| u.display_name.as_str());
+        let email = me.and_then(|u| u.email.as_deref()).unwrap_or("");
+        kentos_project::variables::expression_variables_of(name, settings, now, user, email)
     }
 }
 

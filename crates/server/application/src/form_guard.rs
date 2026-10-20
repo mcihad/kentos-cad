@@ -358,6 +358,54 @@ fn first_error(issues: &[FormIssue]) -> String {
         .map_or_else(String::new, |i| i.message.clone())
 }
 
+/// The `@` values a project's forms judge with on the server for `actor`: the project's variables
+/// and the built-in ones, the signed-in person's name and e-mail (docs/adr/0539), the moment's left
+/// out as the document does.
+pub fn variables_for(
+    name: &str,
+    settings: &ProjectSettings,
+    actor: &crate::identity::Actor,
+) -> Vec<Variable> {
+    let mut variables = kentos_project::variables::expression_variables_of(
+        name,
+        settings,
+        0.0,
+        &actor.display_name,
+        actor.email.as_deref().unwrap_or(""),
+    );
+    variables.retain(|v| !kentos_forms::MOMENT.contains(&v.name.as_str()));
+    variables
+}
+
+/// The scopes of a project's layers (docs/adr/0539): which records a Veri girişi reads and writes.
+pub fn scopes_of(
+    settings: &ProjectSettings,
+    tree: &[LayerNode],
+    variables: &[Variable],
+) -> kentos_forms::scope::Scopes {
+    let empty: &[LayerField] = &[];
+    kentos_forms::scope::Scopes::new(
+        &settings.forms,
+        |layer| find(tree, layer).map_or(empty, |n| n.fields.as_slice()),
+        variables,
+        Unit::per_metre(settings.unit().per_metre()),
+    )
+}
+
+/// Whether a stored object is within a Veri girişi's reach (docs/adr/0539).
+pub fn in_scope(
+    scopes: &kentos_forms::scope::Scopes,
+    tree: &[LayerNode],
+    e: &Entity,
+    uid: &str,
+) -> bool {
+    let layer = &e.base().layer_id;
+    let name = find(tree, layer).map_or("", |n| n.name.as_str());
+    let mut object = kentos_forms::object_of(e, name, 0.0);
+    object.uid = Some(uid.to_owned());
+    scopes.sees(layer, &e.base().attrs, &object)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -145,7 +145,17 @@ pub struct FormBody {
         )
     )]
     pub translations: std::collections::BTreeMap<String, FormTranslation>,
+    /// Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi
+    /// reads and writes, through this form, only the records it holds true for (`@kullanici`,
+    /// `@kullanici_eposta` the person signed in). None: every record of the layer. At most
+    /// `MOST_SCOPE_LETTERS` letters.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub scope: Option<String>,
 }
+
+/// The longest a form's scope may be, in letters (docs/adr/0539).
+pub const MOST_SCOPE_LETTERS: usize = 2000;
 
 /// A form's words in one language (docs/adr/0443 §5).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -1508,6 +1518,13 @@ fn text_ok(text: &str, most: usize) -> bool {
 /// tabs only at the top and alone there, at most four levels and 500 items, texts and rules within
 /// their lengths, one or two columns, a check's rule and message not empty.
 pub fn body_problem(body: &FormBody) -> Option<String> {
+    if let Some(scope) = &body.scope
+        && (scope.trim().is_empty() || scope.chars().count() > MOST_SCOPE_LETTERS)
+    {
+        return Some(format!(
+            "Formun kapsamı boş olamaz ve en çok {MOST_SCOPE_LETTERS} harftir; bütün kayıtlar için kapsamı kaldırın."
+        ));
+    }
     let all = body.walk();
     if all.len() > MOST_FORM_ITEMS {
         return Some(format!(

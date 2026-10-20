@@ -226,6 +226,19 @@ pub fn compare(old: &FormBody, new: &FormBody) -> Vec<FormChange> {
             },
         });
     }
+    // docs/adr/0539: the records a Veri girişi reaches through the form.
+    if old.scope != new.scope {
+        out.push(FormChange {
+            item: None,
+            kind: FormChangeKind::Changed,
+            properties: vec!["scope".into()],
+            areas: areas(&["rule"]),
+            words: match &new.scope {
+                Some(s) => format!("Kapsam: {s}."),
+                None => "Kapsam kaldırıldı: bütün kayıtlar.".into(),
+            },
+        });
+    }
     // docs/adr/0437: the tabs taken as steps.
     if old.steps != new.steps {
         out.push(FormChange {
@@ -301,6 +314,7 @@ mod tests {
         let field = |id: &str, f: &str| FormItem::Field(FormField::new(id, f));
         let old = FormBody {
             translations: Default::default(),
+            scope: None,
             revision: 1,
             items: vec![field("a", "A"), field("b", "B"), field("c", "C")],
             clear_hidden: false,
@@ -312,6 +326,7 @@ mod tests {
         changed.required = true;
         let new = FormBody {
             translations: Default::default(),
+            scope: None,
             revision: 2,
             items: vec![field("c", "C"), FormItem::Field(changed), field("d", "D")],
             clear_hidden: true,

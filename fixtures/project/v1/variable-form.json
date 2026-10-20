@@ -829,6 +829,11 @@
           "name": "kullanici",
           "value": "Ayşe Yılmaz",
           "description": "Oturumdaki kullanıcının adı"
+        },
+        {
+          "name": "kullanici_eposta",
+          "value": null,
+          "description": "Oturumdaki kullanıcının e-postası"
         }
       ]
     },
@@ -877,6 +882,11 @@
           "name": "kullanici",
           "value": null,
           "description": "Oturumdaki kullanıcının adı"
+        },
+        {
+          "name": "kullanici_eposta",
+          "value": null,
+          "description": "Oturumdaki kullanıcının e-postası"
         }
       ]
     },
@@ -939,6 +949,11 @@
           "name": "kullanici",
           "value": "M. Demir",
           "description": "Oturumdaki kullanıcının adı"
+        },
+        {
+          "name": "kullanici_eposta",
+          "value": null,
+          "description": "Oturumdaki kullanıcının e-postası"
         }
       ]
     }

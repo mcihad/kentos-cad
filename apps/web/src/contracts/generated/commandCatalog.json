@@ -5841,6 +5841,13 @@
                 "type": "integer",
                 "x-unit": "version"
               },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
                 "type": "boolean"
@@ -21876,6 +21883,13 @@
                 "type": "integer",
                 "x-unit": "version"
               },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
                 "type": "boolean"
@@ -33894,6 +33908,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
@@ -967520,6 +967541,13 @@
                 "type": "integer",
                 "x-unit": "version"
               },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
                 "type": "boolean"
@@ -969023,6 +969051,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
@@ -970579,6 +970614,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
@@ -976320,6 +976362,13 @@
                 "type": "integer",
                 "x-unit": "version"
               },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
                 "type": "boolean"
@@ -977920,6 +977969,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",
@@ -979553,6 +979609,13 @@
                 "minimum": 0,
                 "type": "integer",
                 "x-unit": "version"
+              },
+              "scope": {
+                "description": "Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi\nreads and writes, through this form, only the records it holds true for (`@kullanici`,\n`@kullanici_eposta` the person signed in). None: every record of the layer. At most\n`MOST_SCOPE_LETTERS` letters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
               },
               "steps": {
                 "description": "Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with\nan error is not left forward. Only a form of tabs; written only as `true`.",

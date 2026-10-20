@@ -508,7 +508,7 @@ fn at_help(name: &str, schema: &Schema) -> Help {
 }
 
 /// The built-in `@` names a host gives (docs/adr/0214 §2.3).
-const BUILTIN_AT: [&str; 7] = [
+const BUILTIN_AT: [&str; 8] = [
     "proje_adi",
     "koordinat_sistemi",
     "epsg",
@@ -516,6 +516,7 @@ const BUILTIN_AT: [&str; 7] = [
     "tarih",
     "simdi",
     "kullanici",
+    "kullanici_eposta",
 ];
 
 /// The help of what is at the cursor: the name or operator it is in or

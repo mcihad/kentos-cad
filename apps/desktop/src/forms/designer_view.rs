@@ -2070,7 +2070,36 @@ impl App {
         ]
         .spacing(8)
         .align_y(Center);
-        column![top, actions].spacing(10).into()
+        // Kapsam (docs/adr/0539): which records a Veri girişi reaches through the form.
+        let scope_text = w
+            .body
+            .as_ref()
+            .and_then(|b| b.scope.clone())
+            .unwrap_or_default();
+        let mut scope_input = text_input(
+            "Bütün kayıtlar (ör. Sorumlu = @kullanici_eposta)",
+            &scope_text,
+        )
+        .size(typography::body())
+        .padding([5, 8])
+        .width(Fill)
+        .style(style::field::input);
+        if editable {
+            scope_input = scope_input.on_input(|t| msg(Event::Scope(t)));
+        }
+        let scope = row![
+            kentos_ui::widget::tip(
+                label::body("Kapsam"),
+                kentos_ui::widget::Tip::new("Kapsam").body(
+                    "Veri girişi bu formla yalnız ifadenin doğru olduğu kayıtları görür, sayar ve yazar; @kullanici_eposta oturumdaki kişidir. Boş: katmanın bütün kayıtları.",
+                ),
+                iced::widget::tooltip::Position::Top,
+            ),
+            focus_ring(scope_input),
+        ]
+        .spacing(10)
+        .align_y(Center);
+        column![top, scope, actions].spacing(10).into()
     }
 }
 

@@ -31,12 +31,24 @@ fn kind_name(k: VariableKind) -> &'static str {
 
 /// A project's variables, then the built-in ones. `now` is the local wall
 /// time in milliseconds since 1970 (the device's clock in its zone); `user`
-/// the signed-in person's name, empty when none.
+/// the signed-in person's name, empty when none (`@kullanici_eposta` none).
 pub fn expression_variables(
     name: &str,
     settings: &ProjectSettings,
     now: f64,
     user: &str,
+) -> Vec<Variable> {
+    expression_variables_of(name, settings, now, user, "")
+}
+
+/// [`expression_variables`] with the signed-in person's e-mail too (`@kullanici_eposta`, docs/adr/0539:
+/// what a form's scope tells people apart by), empty when none.
+pub fn expression_variables_of(
+    name: &str,
+    settings: &ProjectSettings,
+    now: f64,
+    user: &str,
+    email: &str,
 ) -> Vec<Variable> {
     let mut out: Vec<Variable> = settings
         .variables
@@ -61,7 +73,7 @@ pub fn expression_variables(
         .then_some(f64::from(settings.srid));
     let second = (now / 1000.0).floor() * 1000.0;
     let day = (now / 86_400_000.0).floor() * 86_400_000.0;
-    let builtins: [(&str, Value<'static>); 7] = [
+    let builtins: [(&str, Value<'static>); 8] = [
         ("proje_adi", Value::text(name.to_owned())),
         (
             "koordinat_sistemi",
@@ -77,6 +89,14 @@ pub fn expression_variables(
                 Value::Null
             } else {
                 Value::text(user.to_owned())
+            },
+        ),
+        (
+            "kullanici_eposta",
+            if email.is_empty() {
+                Value::Null
+            } else {
+                Value::text(email.to_owned())
             },
         ),
     ];

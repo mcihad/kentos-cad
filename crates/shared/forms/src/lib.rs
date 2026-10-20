@@ -26,6 +26,7 @@ mod preflight;
 mod record;
 mod requirements;
 pub mod scenario;
+pub mod scope;
 mod session;
 
 pub use generate::{generate, item_id_of, widget_of};
@@ -125,6 +126,8 @@ pub mod codes {
     pub const COMBINATION: &str = "form_combination";
     /// The form's workflow does not fit the layer's fields (docs/adr/0428 §1).
     pub const WORKFLOW_INVALID: &str = "form_workflow_invalid";
+    /// The form's scope does not compile over the layer's fields (docs/adr/0539).
+    pub const SCOPE_INVALID: &str = "form_scope_invalid";
     /// A record rule of the layer the record breaks (docs/adr/0438 §1): an error, or a warning for a
     /// warning rule.
     pub const LAYER_RULE: &str = "form_layer_rule";

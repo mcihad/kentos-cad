@@ -2664,6 +2664,20 @@ fn designing(app: &mut App) {
     designer(app, designer::Event::SelectItem("aciklama".into()));
 }
 
+/// Formlar: the form's scope (docs/adr/0539), the records a Veri girişi reaches through it.
+fn designing_scope(app: &mut App) {
+    buildings(app, true);
+    run(app, "data.forms");
+    designer(app, designer::Event::Scope("Durum = 'inceleme'".into()));
+}
+
+/// Formlar: a scope reading a field the layer does not have: the preflight's issue, Yayınla off.
+fn designing_scope_issue(app: &mut App) {
+    buildings(app, true);
+    run(app, "data.forms");
+    designer(app, designer::Event::Scope("Sorumlu = @kullanici_eposta".into()));
+}
+
 /// Formlar: a field moved into the group of a hidden-able box while the layer requires it, a rule that
 /// does not read: the preflight's issues, Yayınla off.
 fn designing_issues(app: &mut App) {
@@ -2808,6 +2822,8 @@ pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         ("form-tasarim", designing),
         ("form-tasarim-sorun", designing_issues),
+        ("form-kapsam", designing_scope),
+        ("form-kapsam-sorun", designing_scope_issue),
         ("form-yeni", new_form),
         ("form-duzenle", editing),
         ("form-duzenle-sorun", editing_issue),

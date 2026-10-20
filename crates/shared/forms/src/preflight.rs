@@ -64,6 +64,19 @@ pub fn preflight_in(
         }
     }
     p.calc_cycle();
+    // The scope over the layer's fields (docs/adr/0539).
+    if let Some(problem) =
+        crate::scope::scope_problem(body, fields, variables, kentos_expression::Unit::METRE)
+    {
+        p.issues.push(issue(
+            codes::SCOPE_INVALID,
+            FormSeverity::Error,
+            None,
+            None,
+            Some("scope"),
+            problem,
+        ));
+    }
     // The workflow over the layer's fields (docs/adr/0428 §1).
     if let Some(problem) = body
         .workflow

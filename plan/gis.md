@@ -490,6 +490,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
   **Bağımlılık ve tamamlanma ölçütü:** CBS-02/04/09/15/35/37/41/43. Formda gizli alan tablo export'u veya MCP sorgusundan okunamamalı; erişilemeyen kaydın varlığı autocomplete/sayımda açığa çıkmamalı. Yetki işlem çalışırken kaldırılırsa commit reddedilmeli. İndirilmiş bir offline kopyanın uzaktan geri alınabileceği iddia edilmemeli; geri alınabilen erişim ile önceden indirilmiş veri ayrılmalı.
 
+  *Kısmen (20 Ekim 2026; [ADR 0539](../docs/adr/0539-form-scope.md)): Veri girişinin satır kapsamı. Formun gövdesinde `scope` ifadesi (katmanın alanları ve `@` değerleri; yeni `@kullanici_eposta` oturumdaki kişinin e-postası), çekirdek `kentos_forms::scope` (canlı formlardan biri ulaşırsa kayıt erişilebilir; boş, yanlış ya da derlenmeyen kapsam hiçbir şey vermez), ön denetimin `form_scope_invalid`'i ve sürüm farkı. Sunucuda Veri girişinin nesne sayfaları, kimlikle okuması ve projenin nesne sayısı kapsamın dışındakileri görmez; kapsam dışındaki kayda yazma 404, kaydı kapsamın dışına çıkaran yazma 403, denetim proje kilidi altındaki commit'te. Masaüstünde Formlar penceresinde Kapsam. Geçici PostGIS'te iki Veri girişi ve düzenleyiciyle uçtan uca test. Kalan: olayların kimlik listesi, sağlayıcıya ve DB rolüne taşınma, dataset/katman/alan/dışa aktarma/medya/işlem/onay yetkilerinin ortak çözücüsü, yapay zekâ bağlamı ve önbellekler.*
+
 - [ ] **CBS-39 — Yerel arka plan işleminin yanına dayanıklı server job ve restore kabulü ekle — P1**
 
   **Mevcut:** Native background thread, iptal, raster/service cache ve sunucu outbox var; kalıcı server worker ayrı teslim [K09/K11/K12].

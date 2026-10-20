@@ -212,8 +212,9 @@ async fn guard_forms(
             (layer, id.to_string(), attrs)
         })
         .collect();
-    let mut variables = kentos_project::variables::expression_variables(name, settings, 0.0, "");
-    variables.retain(|v| !kentos_forms::MOMENT.contains(&v.name.as_str()));
+    let variables = crate::form_guard::variables_for(name, settings, &access.actor);
+    // A Veri girişi writes only the records its forms' scopes reach (docs/adr/0539).
+    let scopes = entry.then(|| crate::form_guard::scopes_of(settings, tree, &variables));
     let judge = crate::form_guard::Judge {
         settings,
         tree,
@@ -234,6 +235,17 @@ async fn guard_forms(
                     "Veri girişi nesne oluşturmaz; yalnız var olan kayıtları formla düzenler.",
                 ));
             };
+            if let Some(scopes) = &scopes {
+                // A record out of reach is not there for it; one it would take out of reach is refused.
+                if !crate::form_guard::in_scope(scopes, tree, &old.entity, id) {
+                    return Err(AppError::not_found("Kayıt bulunamadı."));
+                }
+                if !crate::form_guard::in_scope(scopes, tree, after, id) {
+                    return Err(AppError::forbidden(
+                        "Bu değişiklik kaydı formun kapsamının dışına çıkarır; kapsamdaki değerlerle yazın ya da proje yöneticisine başvurun.",
+                    ));
+                }
+            }
             judge
                 .entry_write(id, &old.entity, after)
                 .map_err(AppError::forbidden)?;

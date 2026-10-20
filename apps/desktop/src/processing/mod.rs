@@ -791,7 +791,7 @@ impl App {
             });
         let outcome = match (work, answer, &mut stage) {
             (Work::Tool(job), Ok(Answer::Tool(result)), Some(stage)) => {
-                runner.finish(stage, *job, result, false, &mut log)
+                runner.finish(stage, *job, *result, false, &mut log)
             }
             (Work::Tool(job), Ok(_), None) => runner.stop(*job),
             (Work::Tool(job), Ok(Answer::Model { .. }), Some(_)) => {

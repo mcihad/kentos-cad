@@ -551,6 +551,11 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
     .await?;
     // Its block definitions, in the same moment (docs/adr/0144 §5).
     let blocks = crate::blocks::read(&mut tx, access.tenant, access.project, false).await?;
+    // A Veri girişi counts only the records in its reach (docs/adr/0539): the others are not there.
+    let reached = match reading_for(&mut tx, access).await? {
+        Some(reading) if reading.narrows() => Some(reached_count(&mut tx, access, &reading).await?),
+        _ => None,
+    };
     tx.commit().await?;
     let (
         name,
@@ -610,7 +615,7 @@ pub async fn info(db: &kentos_postgres::Db, access: &ProjectAccess) -> AppResult
             .unwrap_or_default(),
         meta_version: meta.to_string(),
         data_revision: rev.to_string(),
-        feature_count: count.to_string(),
+        feature_count: reached.unwrap_or(count).to_string(),
         event_cursor: cursor.to_string(),
         storage: storage_of(&storage),
     })
@@ -680,17 +685,42 @@ pub(crate) fn record(
     })
 }
 
-/// The fields a Veri girişi reads on each layer with a published form (docs/adr/0411 §6); none for
-/// anyone else, who reads everything.
-pub(crate) async fn shown_fields_for(
+/// What a Veri girişi reads (docs/adr/0411 §6, docs/adr/0539): the fields its forms show on each
+/// layer with a published form, and the records their scopes reach.
+pub(crate) struct Reading {
+    pub shown: BTreeMap<String, BTreeSet<String>>,
+    scopes: kentos_forms::scope::Scopes,
+    tree: Vec<LayerNode>,
+}
+
+impl Reading {
+    /// Whether any layer is narrowed by a scope.
+    pub fn narrows(&self) -> bool {
+        self.scopes.narrows()
+    }
+
+    /// The layers a scope narrows.
+    pub fn scoped_layers(&self) -> Vec<String> {
+        self.scopes.scoped_layers()
+    }
+
+    /// Whether a stored object is within reach.
+    pub fn sees(&self, r: &FeatureRecord) -> bool {
+        crate::form_guard::in_scope(&self.scopes, &self.tree, &r.entity, &r.id)
+    }
+}
+
+/// How `access` reads the objects: through its forms for a Veri girişi; none for anyone else, who
+/// reads everything.
+pub(crate) async fn reading_for(
     tx: &mut Transaction<'static, Postgres>,
     access: &ProjectAccess,
-) -> AppResult<Option<BTreeMap<String, BTreeSet<String>>>> {
+) -> AppResult<Option<Reading>> {
     if !access.through_forms() {
         return Ok(None);
     }
-    let (settings, layers): (Value, Value) = sqlx::query_as(
-        "select settings, layers from kentos.project where tenant_id = $1 and id = $2",
+    let (name, settings, layers): (String, Value, Value) = sqlx::query_as(
+        "select name, settings, layers from kentos.project where tenant_id = $1 and id = $2",
     )
     .bind(access.tenant)
     .bind(access.project)
@@ -698,22 +728,68 @@ pub(crate) async fn shown_fields_for(
     .await?;
     let settings: kentos_contracts::ProjectSettings = serde_json::from_value(settings)
         .map_err(|e| AppError::invalid(format!("Projenin ayarları okunamadı: {e}")))?;
-    let layers: Vec<LayerNode> = serde_json::from_value(layers)
+    let tree: Vec<LayerNode> = serde_json::from_value(layers)
         .map_err(|e| AppError::invalid(format!("Proje katmanları okunamadı: {e}")))?;
-    Ok(Some(crate::form_guard::shown_fields(&settings, &layers)))
+    let variables = crate::form_guard::variables_for(&name, &settings, &access.actor);
+    Ok(Some(Reading {
+        shown: crate::form_guard::shown_fields(&settings, &tree),
+        scopes: crate::form_guard::scopes_of(&settings, &tree, &variables),
+        tree,
+    }))
 }
 
-/// `records` as `access` reads them: a Veri girişi's through its forms (docs/adr/0411 §6).
-pub(crate) fn as_read(
-    records: Vec<FeatureRecord>,
-    shown: Option<&BTreeMap<String, BTreeSet<String>>>,
-) -> Vec<FeatureRecord> {
-    match shown {
+/// How many objects a narrowed Veri girişi reads: the unscoped layers' counted, the scoped ones'
+/// read and judged.
+async fn reached_count(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+    reading: &Reading,
+) -> AppResult<i64> {
+    let scoped = reading.scoped_layers();
+    let others: i64 = sqlx::query_scalar(
+        "select count(*) from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id <> all($3)",
+    )
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(&scoped)
+    .fetch_one(&mut **tx)
+    .await?;
+    let rows: Vec<FeatureRow> = sqlx::query_as(sqlx::AssertSqlSafe(format!(
+        "select {FEATURE_COLUMNS} from kentos.feature where tenant_id = $1 and project_id = $2 and layer_id = any($3)"
+    )))
+    .bind(access.tenant)
+    .bind(access.project)
+    .bind(&scoped)
+    .fetch_all(&mut **tx)
+    .await?;
+    let mut seen = 0i64;
+    for row in rows {
+        if reading.sees(&record(row)?) {
+            seen += 1;
+        }
+    }
+    Ok(others + seen)
+}
+
+/// The fields a Veri girişi reads on each layer with a published form (docs/adr/0411 §6); none for
+/// anyone else, who reads everything.
+pub(crate) async fn shown_fields_for(
+    tx: &mut Transaction<'static, Postgres>,
+    access: &ProjectAccess,
+) -> AppResult<Option<BTreeMap<String, BTreeSet<String>>>> {
+    Ok(reading_for(tx, access).await?.map(|r| r.shown))
+}
+
+/// `records` as `access` reads them: a Veri girişi's through its forms (docs/adr/0411 §6), the records
+/// out of its forms' scopes left out as if they were not there (docs/adr/0539).
+pub(crate) fn as_read(records: Vec<FeatureRecord>, reading: Option<&Reading>) -> Vec<FeatureRecord> {
+    match reading {
         None => records,
-        Some(shown) => records
+        Some(reading) => records
             .into_iter()
+            .filter(|r| reading.sees(r))
             .map(|mut r| {
-                r.entity = crate::form_guard::projected(r.entity, shown);
+                r.entity = crate::form_guard::projected(r.entity, &reading.shown);
                 r
             })
             .collect(),
@@ -764,7 +840,7 @@ pub async fn features(
     .bind(limit + 1)
     .fetch_all(&mut *tx)
     .await?;
-    let shown = shown_fields_for(&mut tx, access).await?;
+    let reading = reading_for(&mut tx, access).await?;
     tx.commit().await?;
     let more = rows.len() as i64 > limit;
     let features: Vec<FeatureRecord> = rows
@@ -772,10 +848,11 @@ pub async fn features(
         .take(limit as usize)
         .map(record)
         .collect::<AppResult<_>>()?;
-    let features = as_read(features, shown.as_ref());
+    // The cursor is the page's last row read, in reach or not: the next page starts after it.
     let next = more
         .then(|| features.last().map(|f| f.id.clone()))
         .flatten();
+    let features = as_read(features, reading.as_ref());
     Ok(FeaturePage { features, next })
 }
 
@@ -801,13 +878,13 @@ pub async fn features_by_id(
     .bind(ids)
     .fetch_all(&mut *tx)
     .await?;
-    let shown = shown_fields_for(&mut tx, access).await?;
+    let reading = reading_for(&mut tx, access).await?;
     tx.commit().await?;
     let records = rows
         .into_iter()
         .map(record)
         .collect::<AppResult<Vec<_>>>()?;
-    Ok(as_read(records, shown.as_ref()))
+    Ok(as_read(records, reading.as_ref()))
 }
 
 #[cfg(test)]

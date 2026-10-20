@@ -83,7 +83,7 @@ impl ModelRun {
 /// What the thread computed.
 pub(crate) enum Answer {
     /// The tool's result, to apply on the drawing.
-    Tool(RunResult),
+    Tool(Box<RunResult>),
     /// The model's steps as they went on the copy, and their messages.
     Model {
         steps: Vec<RecordedStep>,
@@ -132,7 +132,7 @@ pub(crate) fn start_tool<M: Send + 'static>(
         session,
         files,
         to,
-        move |feedback| Answer::Tool(Runner::compute(&work, &copy, feedback)),
+        move |feedback| Answer::Tool(Box::new(Runner::compute(&work, &copy, feedback))),
     )
 }
 

@@ -17601,6 +17601,10 @@ class FormBody(_Model):
         revision: Raised by one with every saved change to the draft: an update names the revision it was made on. Unit: version.
         clear_hidden: A write through the form empties the fields the record hides (docs/adr/0402 §3); written only
             as `true`. Without it a hidden field keeps its value.
+        scope: Kapsam (docs/adr/0539): an expression over the layer's fields and the `@` values; a Veri girişi
+            reads and writes, through this form, only the records it holds true for (`@kullanici`,
+            `@kullanici_eposta` the person signed in). None: every record of the layer. At most
+            `MOST_SCOPE_LETTERS` letters.
         steps: Adım adım (docs/adr/0437): the tabs are steps, taken in order with Geri and İleri; a step with
             an error is not left forward. Only a form of tabs; written only as `true`.
         tests: The designer's scenarios (docs/adr/0420): values typed into a record and what the form made of
@@ -17614,6 +17618,7 @@ class FormBody(_Model):
     revision: int
     items: list[FormItem]
     clear_hidden: bool | Unset = UNSET
+    scope: str | None | Unset = UNSET
     steps: bool | Unset = UNSET
     tests: list[FormTest] | Unset = UNSET
     translations: dict[str, FormTranslation] | Unset = UNSET
@@ -17625,6 +17630,8 @@ class FormBody(_Model):
         out["items"] = [e0.to_json() for e0 in self.items]
         if self.clear_hidden is not UNSET:
             out["clearHidden"] = self.clear_hidden
+        if self.scope is not UNSET:
+            out["scope"] = self.scope
         if self.steps is not UNSET:
             out["steps"] = self.steps
         if self.tests is not UNSET:
@@ -17641,6 +17648,7 @@ class FormBody(_Model):
             revision=data["revision"],
             items=[FormItem.from_json(e0) for e0 in data["items"]],
             clear_hidden=data.get("clearHidden", UNSET),
+            scope=data.get("scope", UNSET),
             steps=data.get("steps", UNSET),
             tests=[FormTest.from_json(e0) for e0 in data["tests"]] if "tests" in data else UNSET,
             translations={k0: FormTranslation.from_json(e0) for k0, e0 in data["translations"].items()} if "translations" in data else UNSET,

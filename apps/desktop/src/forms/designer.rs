@@ -380,6 +380,8 @@ pub enum Event {
     ClearHidden(bool),
     /// Adım adım (docs/adr/0437).
     Steps(bool),
+    /// Kapsam (docs/adr/0539): the records a Veri girişi reaches through the form; empty: all.
+    Scope(String),
     Columns(u8),
     RuleText(Rule, String),
     Builder(Rule),
@@ -650,6 +652,7 @@ fn pasted(
         .collect();
     let mut holder = FormBody {
         translations: Default::default(),
+        scope: None,
         revision: 1,
         items: vec![item],
         clear_hidden: false,
@@ -761,7 +764,10 @@ pub(crate) fn id_at(body: &FormBody, index: usize) -> Option<String> {
 
 /// Two copies of a form's draft are the same form, whatever their revision.
 fn same_form(a: &FormBody, b: &FormBody) -> bool {
-    a.items == b.items && a.clear_hidden == b.clear_hidden && a.translations == b.translations
+    a.items == b.items
+        && a.clear_hidden == b.clear_hidden
+        && a.translations == b.translations
+        && a.scope == b.scope
 }
 
 fn remove(body: &mut FormBody, id: &str) {
@@ -2222,6 +2228,11 @@ impl App {
             }
             Event::Steps(on) => {
                 edited(&mut w, &|b| b.steps = on);
+            }
+            Event::Scope(text) => {
+                edited(&mut w, &|b| {
+                    b.scope = (!text.is_empty()).then(|| text.clone());
+                });
             }
             Event::LanguageText(text) => w.new_language = text,
             Event::LanguageAdd => {

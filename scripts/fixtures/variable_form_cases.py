@@ -54,6 +54,7 @@ BUILTINS = [
     ("katman_adi", "Değerlendirilen nesnenin katmanının adı"),
     ("katman", "Değerlendirilen nesnenin katmanının adı"),
     ("kullanici", "Oturumdaki kullanıcının adı"),
+    ("kullanici_eposta", "Oturumdaki kullanıcının e-postası"),
 ]
 # The two systems the cases name, as the registry names them.
 REGISTRY = {5254: "TUREF / TM30", 2320: "ED50 / TM30"}
@@ -227,7 +228,8 @@ def builtins(case):
     epsg = None if custom or s["srid"] == 0 else float(s["srid"])
     today, now = wall(case["now"])
     values = [("proje_adi", case["name"]), ("koordinat_sistemi", system), ("epsg", epsg), ("olcek", float(s["plotScale"])),
-              ("tarih", today), ("simdi", now), ("kullanici", case["user"] or None)]
+              ("tarih", today), ("simdi", now), ("kullanici", case["user"] or None),
+              ("kullanici_eposta", case.get("email") or None)]
     described = dict(BUILTINS)
     return own + [{"name": n, "value": v, "description": described[n]} for n, v in values]
 

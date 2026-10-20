@@ -221,6 +221,9 @@ Liste:
 - [ ] `CBS-37` kaynakla uzlaştırma (ADR 0538, 20 Ekim): web'de gerekenler: `.kcad` şema 91'in `sourceBases`'i web'in kodeğinde
   (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.sources.reconcile`'ın işleyicisi (web bağlı katmana geri döndüğünde), ortak durumların
   `copyFile` adımı web'in oynatıcısında, Kaynakla uzlaştır penceresi.
+- [ ] `CBS-38` Veri girişinin satır kapsamı (ADR 0539, 20 Ekim): web'de gerekenler: formun `scope`'u web'in form tasarımcısında
+  (Kapsam alanı ve ön denetimin `form_scope_invalid`'i), `@kullanici_eposta` web'in `model/projectVariables.ts`'inde ve İfade
+  oluşturucu'da; sunucu tarafı ortaktır.
 - [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
   kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
   sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
@@ -2024,6 +2027,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-38` yetki kapsamı (dilim): Veri girişinin satır kapsamı. Formun `scope`'u (alanlar ve `@` değerleri; `@kullanici_eposta`),
+  `kentos_forms::scope` (canlı formlardan biri ulaşırsa; boş, yanlış ve derlenmeyen kapsam hiçbir şey vermez), `form_scope_invalid`,
+  sürüm farkında Kapsam; sunucuda Veri girişinin okuması, sayımı ve kimlikle okuması kapsamla süzülür, kapsam dışına yazma 404, kapsam
+  dışına çıkaran yazma 403, commit'te kilit altında; masaüstünde Formlar penceresinin Kapsam'ı. Kalan: olayların kimlik listesi,
+  sağlayıcıya ve kaynağın DB rolüne taşınma, kaynak, dataset, katman, alan, dışa aktarma, medya, işlem ve onay yetkilerinin ortak
+  çözücüsü, yapay zekâ bağlamı ve önbellekler, Düzenleyici için kapsam. — **20 Ekim, [ADR 0539](docs/adr/0539-form-scope.md).**
 - [ ] `CBS-37` kaynakla uzlaştırma (dilim): bağın tabanı (projenin `sourceBases`'i, `.kcad` şema 91: son eşleşmede her nesnenin
   katmandaki ve tablodaki özeti; bağlama, okuma ve yazma yeniden alır), `cad.sources.reconcile` (tabana göre iki yanın ekleme, değiştirme
   ve silmeleri; yalnız bir yanın değiştirdiği o yandan, aynı biçimde değişen uyuşur; öbürleri çatışma: farklı öznitelikler iki yanın
