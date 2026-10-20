@@ -2876,6 +2876,58 @@ PolygonSelectModeName = Literal["inside", "crossing", "outside"]
 """The names of :class:`PolygonSelectMode`, for a plain string."""
 
 
+class ProfileFindingKind(_StrEnum):
+    """What a finding is about.
+
+    - ``missingLayer``: The class's layer is not in the drawing (`cad.profiles.apply` adds it).
+    - ``missingField``: A field of the class the layer has not (apply adds it).
+    - ``fieldKind``: A field the layer has with another kind (apply keeps it).
+    - ``missingDomain``: A value list of the profile the project has not (apply adds it).
+    - ``missingRelation``: A relation of the profile the project has not (apply adds it).
+    - ``missingAddress``: The profile's address data is not defined (apply adds it).
+    - ``wrongGeometry``: Objects of another kind of geometry on the class's layer.
+    - ``requiredEmpty``: A required field left empty.
+    - ``badValue``: A value its field's rules refuse (kind, length, range, value list).
+    - ``duplicateKey``: An identifier more than one object holds.
+    - ``areaDifference``: A registered area farther from the geometric area than the tolerance (one that is not a number is a
+    - ``relationBroken``: A relation's field naming no object of the parent class.
+    """
+    MISSING_LAYER = "missingLayer"
+    MISSING_FIELD = "missingField"
+    FIELD_KIND = "fieldKind"
+    MISSING_DOMAIN = "missingDomain"
+    MISSING_RELATION = "missingRelation"
+    MISSING_ADDRESS = "missingAddress"
+    WRONG_GEOMETRY = "wrongGeometry"
+    REQUIRED_EMPTY = "requiredEmpty"
+    BAD_VALUE = "badValue"
+    DUPLICATE_KEY = "duplicateKey"
+    AREA_DIFFERENCE = "areaDifference"
+    RELATION_BROKEN = "relationBroken"
+
+
+ProfileFindingKindName = Literal["missingLayer", "missingField", "fieldKind", "missingDomain", "missingRelation", "missingAddress", "wrongGeometry", "requiredEmpty", "badValue", "duplicateKey", "areaDifference", "relationBroken"]
+"""The names of :class:`ProfileFindingKind`, for a plain string."""
+
+
+class ProfileGeometry(_StrEnum):
+    """A class's objects' kind of geometry.
+
+    - ``area``: Alan: a polygon (holes and parts allowed).
+    - ``line``: Çizgi: a line or a polyline.
+    - ``point``: Nokta.
+    - ``record``: Geometrisiz kayıt (docs/adr/0410).
+    """
+    AREA = "area"
+    LINE = "line"
+    POINT = "point"
+    RECORD = "record"
+
+
+ProfileGeometryName = Literal["area", "line", "point", "record"]
+"""The names of :class:`ProfileGeometry`, for a plain string."""
+
+
 class ProjectPermission(_StrEnum):
     """A permission in a project. The names are fixed: commands (`permissions`
     in the catalog), the web, the desktop, Python and AI use them as they are.
@@ -11711,6 +11763,58 @@ class CustomDatum(_Model):
             name=data["name"],
             ellipsoid=Ellipsoid.from_json(data["ellipsoid"]),
             to_wgs84=UNSET if "toWgs84" not in data else None if data["toWgs84"] is None else Helmert.from_json(data["toWgs84"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class DataProfile(_Model):
+    """A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.
+    Attributes:
+        format: `kentos.data-profile`.
+        version: Unit: count.
+        basis: What it rests on and what it is not (a working profile, not an official application schema).
+    """
+    format: str
+    version: int
+    name: str
+    title: str
+    description: str
+    basis: str
+    classes: list[ProfileClass]
+    address: ProfileAddress | None | Unset = UNSET
+    domains: list[FieldDomain] | Unset = UNSET
+    relations: list[ProfileRelation] | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["format"] = self.format
+        out["version"] = self.version
+        out["name"] = self.name
+        out["title"] = self.title
+        out["description"] = self.description
+        out["basis"] = self.basis
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        if self.address is not UNSET:
+            out["address"] = None if self.address is None else self.address.to_json()
+        if self.domains is not UNSET:
+            out["domains"] = [e0.to_json() for e0 in self.domains]
+        if self.relations is not UNSET:
+            out["relations"] = [e0.to_json() for e0 in self.relations]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> DataProfile:
+        return cls(
+            format=data["format"],
+            version=data["version"],
+            name=data["name"],
+            title=data["title"],
+            description=data["description"],
+            basis=data["basis"],
+            classes=[ProfileClass.from_json(e0) for e0 in data["classes"]],
+            address=UNSET if "address" not in data else None if data["address"] is None else ProfileAddress.from_json(data["address"]),
+            domains=[FieldDomain.from_json(e0) for e0 in data["domains"]] if "domains" in data else UNSET,
+            relations=[ProfileRelation.from_json(e0) for e0 in data["relations"]] if "relations" in data else UNSET,
         )
 
 
@@ -31091,6 +31195,372 @@ class ProcessingToolsListed(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class ProfileAddress(_Model):
+    """How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.
+    Attributes:
+        min_score: Unit: percent.
+        reach: Unit: length.
+    """
+    min_score: int
+    reach: float
+    areas: list[AreaSource] | Unset = UNSET
+    doors: DoorSource | None | Unset = UNSET
+    streets: StreetSource | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["minScore"] = self.min_score
+        out["reach"] = float(self.reach)
+        if self.areas is not UNSET:
+            out["areas"] = [e0.to_json() for e0 in self.areas]
+        if self.doors is not UNSET:
+            out["doors"] = None if self.doors is None else self.doors.to_json()
+        if self.streets is not UNSET:
+            out["streets"] = None if self.streets is None else self.streets.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileAddress:
+        return cls(
+            min_score=data["minScore"],
+            reach=float(data["reach"]),
+            areas=[AreaSource.from_json(e0) for e0 in data["areas"]] if "areas" in data else UNSET,
+            doors=UNSET if "doors" not in data else None if data["doors"] is None else DoorSource.from_json(data["doors"]),
+            streets=UNSET if "streets" not in data else None if data["streets"] is None else StreetSource.from_json(data["streets"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileClass(_Model):
+    """A class of the profile: a layer by its path, its objects' geometry, its fields.
+    Attributes:
+        id: Letters, digits, `-`; unique in the profile.
+        theme: The theme it belongs to, as the profile names it (“Kadastro”).
+        layer: The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).
+        color: The layer's colour when the profile adds it (a palette name or `#RRGGBB`).
+        key: The identifier field: unique among the class's objects.
+    """
+    id: str
+    title: str
+    theme: str
+    layer: list[str]
+    color: str
+    geometry: ProfileGeometry | ProfileGeometryName
+    fields: list[LayerField]
+    key: str | None | Unset = UNSET
+    registered_area: RegisteredArea | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["title"] = self.title
+        out["theme"] = self.theme
+        out["layer"] = list(self.layer)
+        out["color"] = self.color
+        out["geometry"] = _enum_out(self.geometry)
+        out["fields"] = [e0.to_json() for e0 in self.fields]
+        if self.key is not UNSET:
+            out["key"] = self.key
+        if self.registered_area is not UNSET:
+            out["registeredArea"] = None if self.registered_area is None else self.registered_area.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileClass:
+        return cls(
+            id=data["id"],
+            title=data["title"],
+            theme=data["theme"],
+            layer=list(data["layer"]),
+            color=data["color"],
+            geometry=_enum_in(ProfileGeometry, data["geometry"]),
+            fields=[LayerField.from_json(e0) for e0 in data["fields"]],
+            key=data.get("key", UNSET),
+            registered_area=UNSET if "registeredArea" not in data else None if data["registeredArea"] is None else RegisteredArea.from_json(data["registeredArea"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileClassSummary(_Model):
+    """A class's line of the report.
+    Attributes:
+        objects: Unit: count.
+        findings: Unit: count.
+        layer: The layer's id; none when the drawing has not the layer.
+    """
+    class_: str
+    title: str
+    objects: int
+    findings: int
+    layer: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["class"] = self.class_
+        out["title"] = self.title
+        out["objects"] = self.objects
+        out["findings"] = self.findings
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileClassSummary:
+        return cls(
+            class_=data["class"],
+            title=data["title"],
+            objects=data["objects"],
+            findings=data["findings"],
+            layer=data.get("layer", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileFinding(_Model):
+    """One finding of `cad.profiles.check`.
+    Attributes:
+        uids: The objects it is about, in the drawing's order, at most 1000.
+        count: How many objects it is about. Unit: count.
+        fixable: Whether `cad.profiles.apply` fixes it.
+        class_: The class's id; none for a value list.
+        geometric: For an area difference: the geometric area, the registered area and their difference, square metres. Unit: area.
+        layer: The layer's id, when the drawing has it.
+        registered: Unit: area.
+        subject: The field, the value list's or the relation's id.
+        value: The value: the duplicate identifier, the value refused.
+    """
+    kind: ProfileFindingKind | ProfileFindingKindName
+    uids: list[str]
+    count: int
+    fixable: bool
+    message: str
+    class_: str | None | Unset = UNSET
+    geometric: float | None | Unset = UNSET
+    layer: str | None | Unset = UNSET
+    registered: float | None | Unset = UNSET
+    subject: str | None | Unset = UNSET
+    value: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["kind"] = _enum_out(self.kind)
+        out["uids"] = list(self.uids)
+        out["count"] = self.count
+        out["fixable"] = self.fixable
+        out["message"] = self.message
+        if self.class_ is not UNSET:
+            out["class"] = self.class_
+        if self.geometric is not UNSET:
+            out["geometric"] = None if self.geometric is None else float(self.geometric)
+        if self.layer is not UNSET:
+            out["layer"] = self.layer
+        if self.registered is not UNSET:
+            out["registered"] = None if self.registered is None else float(self.registered)
+        if self.subject is not UNSET:
+            out["subject"] = self.subject
+        if self.value is not UNSET:
+            out["value"] = self.value
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileFinding:
+        return cls(
+            kind=_enum_in(ProfileFindingKind, data["kind"]),
+            uids=list(data["uids"]),
+            count=data["count"],
+            fixable=data["fixable"],
+            message=data["message"],
+            class_=data.get("class", UNSET),
+            geometric=UNSET if "geometric" not in data else None if data["geometric"] is None else float(data["geometric"]),
+            layer=data.get("layer", UNSET),
+            registered=UNSET if "registered" not in data else None if data["registered"] is None else float(data["registered"]),
+            subject=data.get("subject", UNSET),
+            value=data.get("value", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfileRelation(_Model):
+    """A relation between two classes: the child class's field holds a parent object's persistent id.
+    Attributes:
+        parent: The parent class's id.
+        child: The child class's id.
+        field: The child class's field.
+    """
+    id: str
+    name: str
+    parent: str
+    child: str
+    field: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["id"] = self.id
+        out["name"] = self.name
+        out["parent"] = self.parent
+        out["child"] = self.child
+        out["field"] = self.field
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfileRelation:
+        return cls(
+            id=data["id"],
+            name=data["name"],
+            parent=data["parent"],
+            child=data["child"],
+            field=data["field"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesApplied(_Model):
+    """Output (and plan) of `cad.profiles.apply` v1.
+    Attributes:
+        changed: Whether anything was written.
+        layers: The layers and groups added, by their ids, groups before their layers.
+        fields: The fields added to layers the drawing had, as “layer name.field”.
+        domains: The value lists added, by their ids.
+        relations: The relations added, by their ids.
+        address: Whether the profile's address data was added.
+    """
+    changed: bool
+    layers: list[str]
+    fields: list[str]
+    domains: list[str]
+    relations: list[str]
+    address: bool
+    revision: str
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["changed"] = self.changed
+        out["layers"] = list(self.layers)
+        out["fields"] = list(self.fields)
+        out["domains"] = list(self.domains)
+        out["relations"] = list(self.relations)
+        out["address"] = self.address
+        out["revision"] = self.revision
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesApplied:
+        return cls(
+            changed=data["changed"],
+            layers=list(data["layers"]),
+            fields=list(data["fields"]),
+            domains=list(data["domains"]),
+            relations=list(data["relations"]),
+            address=data["address"],
+            revision=data["revision"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesApply(_Model):
+    """Input of `cad.profiles.apply` v1 (“Veri profilini uygula”): the profile's layers (with their groups), fields, value
+    lists, relations and address data the drawing lacks; what it has is kept and said. The layers and their fields are
+    one undo step “Veri profili”; the value lists, relations and address data are project settings, no undo step.
+
+    The profile is `profile` when given, else the built-in `name`. Refusals, in this order: `unknown_profile` (neither, or
+    a name KentOS has not), `invalid_profile`, `invalid_revision`, `revision_conflict`. Warnings: `profile_field_differs`,
+    `profile_domain_differs`, `profile_layer_skipped`.
+    Attributes:
+        name: A built-in profile's name: `tucbs-temel`. `profile`, when given, goes first.
+        profile: Or the profile itself.
+    """
+    expected_revision: str | None | Unset = UNSET
+    name: str | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.expected_revision is not UNSET:
+            out["expectedRevision"] = self.expected_revision
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesApply:
+        return cls(
+            expected_revision=data.get("expectedRevision", UNSET),
+            name=data.get("name", UNSET),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesCheck(_Model):
+    """Input of `cad.profiles.check` v1 (“Veri profilini denetle”): where the drawing's data departs from a profile. It
+    changes nothing; its plan gives the same answer.
+
+    Refusals: `unknown_profile`, `invalid_profile`.
+    """
+    name: str | None | Unset = UNSET
+    profile: DataProfile | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        if self.name is not UNSET:
+            out["name"] = self.name
+        if self.profile is not UNSET:
+            out["profile"] = None if self.profile is None else self.profile.to_json()
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesCheck:
+        return cls(
+            name=data.get("name", UNSET),
+            profile=UNSET if "profile" not in data else None if data["profile"] is None else DataProfile.from_json(data["profile"]),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class ProfilesReport(_Model):
+    """Output (and plan) of `cad.profiles.check` v1.
+    Attributes:
+        version: Unit: count.
+        basis: The profile's basis, said with the answer.
+        findings: The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'
+            geometry, required, values, identifiers, areas), then the relations and the address data.
+        clean: No finding. It says the data holds to this profile, not that it conforms to any regulation.
+    """
+    profile: str
+    title: str
+    version: int
+    basis: str
+    classes: list[ProfileClassSummary]
+    findings: list[ProfileFinding]
+    clean: bool
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["profile"] = self.profile
+        out["title"] = self.title
+        out["version"] = self.version
+        out["basis"] = self.basis
+        out["classes"] = [e0.to_json() for e0 in self.classes]
+        out["findings"] = [e0.to_json() for e0 in self.findings]
+        out["clean"] = self.clean
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> ProfilesReport:
+        return cls(
+            profile=data["profile"],
+            title=data["title"],
+            version=data["version"],
+            basis=data["basis"],
+            classes=[ProfileClassSummary.from_json(e0) for e0 in data["classes"]],
+            findings=[ProfileFinding.from_json(e0) for e0 in data["findings"]],
+            clean=data["clean"],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class ProjectAccessChange(_Model):
     """The result of `project.share` and `project.access.revoke`; a retry with the
     same idempotency key gets the same one (`replayed`).
@@ -34098,6 +34568,31 @@ class RectangleCreate(_Model):
             line_weight=UNSET if "lineWeight" not in data else None if data["lineWeight"] is None else float(data["lineWeight"]),
             rotation=UNSET if "rotation" not in data else None if data["rotation"] is None else float(data["rotation"]),
             symbol=data.get("symbol", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class RegisteredArea(_Model):
+    """A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the
+    other; `cad.profiles.check` says where they differ by more than `tolerance`.
+    Attributes:
+        field: The field that holds it, in square metres.
+        tolerance: The difference the profile lets pass, in square metres. It is the profile's, not the law's error limit. Unit: area.
+    """
+    field: str
+    tolerance: float
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["field"] = self.field
+        out["tolerance"] = float(self.tolerance)
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> RegisteredArea:
+        return cls(
+            field=data["field"],
+            tolerance=float(data["tolerance"]),
         )
 
 
@@ -54522,6 +55017,7 @@ __all__ = [
     "CurvesConstructed",
     "CurvesEdit",
     "CustomDatum",
+    "DataProfile",
     "DatasetDim",
     "DatumTransform",
     "DecurveCurveEdit",
@@ -55349,6 +55845,19 @@ __all__ = [
     "ProcessingTool",
     "ProcessingTools",
     "ProcessingToolsListed",
+    "ProfileAddress",
+    "ProfileClass",
+    "ProfileClassSummary",
+    "ProfileFinding",
+    "ProfileFindingKind",
+    "ProfileFindingKindName",
+    "ProfileGeometry",
+    "ProfileGeometryName",
+    "ProfileRelation",
+    "ProfilesApplied",
+    "ProfilesApply",
+    "ProfilesCheck",
+    "ProfilesReport",
     "ProjectAccessChange",
     "ProjectAccessRevoke",
     "ProjectAccessView",
@@ -55450,6 +55959,7 @@ __all__ = [
     "RectangleCreate",
     "RectangleFrame",
     "RefreshTablesOperation",
+    "RegisteredArea",
     "RegistryDatum",
     "RegistryDatumName",
     "RegularFrame",

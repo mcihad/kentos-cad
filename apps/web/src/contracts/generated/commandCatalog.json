@@ -545669,6 +545669,2168 @@
       ]
     },
     {
+      "id": "cad.profiles.apply",
+      "version": 1,
+      "title": "Veri profilini uygula",
+      "summary": "Bir veri profilinin (yerleşik tucbs-temel ya da profile ile verilen) çizimde olmayan parçalarını ekler; var olanı korur. Profil veridir: sınıfları katman yollarıyla (grupları ve katmanı adlarıyla, Türkçe büyük küçük harf ayrımsız bulunur), geometrileri, alanları, kimlik alanları ve kayıtlı alanlarıyla; projenin değer listeleri, sınıflar arası ilişkiler ve adres verisi. Eksik gruplar ve katmanlar alanlarıyla açılır, var olan katmana eksik alanları eklenir; türü farklı alan (profile_field_differs), farklı değer listesi (profile_domain_differs) korunur, kilitli katman ve yolunda katman olmayan sınıf atlanır (profile_layer_skipped). Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur.",
+      "aliases": [
+        "veriprofili"
+      ],
+      "effect": "document",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "step",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DataProfile": {
+            "additionalProperties": false,
+            "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProfileAddress"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "basis": {
+                "description": "What it rests on and what it is not (a working profile, not an official application schema).",
+                "type": "string"
+              },
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/ProfileClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "domains": {
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
+                },
+                "type": "array"
+              },
+              "format": {
+                "description": "`kentos.data-profile`.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "relations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileRelation"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "description",
+              "basis",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "description": {
+                "description": "What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "description": "The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not\noffer it, as a retired one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
+              },
+              "until": {
+                "description": "The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` itself left out of the range; written only as `true`.",
+                "type": "boolean"
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` itself left out of the range (docs/adr/0438 §4); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "description": "The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` is not itself in the range; only with `max`; written only as `true`.",
+                "type": "boolean"
+              },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.",
+                "type": "boolean"
+              },
+              "multiple": {
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
+              },
+              "unique": {
+                "description": "No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every\nwrite is refused `not_unique` that would; written only as `true`.",
+                "type": "boolean"
+              },
+              "unit": {
+                "description": "The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value\nstays the number.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileAddress": {
+            "additionalProperties": false,
+            "description": "How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.",
+            "properties": {
+              "areas": {
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minScore": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              },
+              "reach": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "ProfileClass": {
+            "additionalProperties": false,
+            "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
+            "properties": {
+              "color": {
+                "description": "The layer's colour when the profile adds it (a palette name or `#RRGGBB`).",
+                "type": "string"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "$ref": "#/$defs/ProfileGeometry"
+              },
+              "id": {
+                "description": "Letters, digits, `-`; unique in the profile.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The identifier field: unique among the class's objects.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registeredArea": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RegisteredArea"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "theme": {
+                "description": "The theme it belongs to, as the profile names it (“Kadastro”).",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "theme",
+              "layer",
+              "color",
+              "geometry",
+              "fields"
+            ],
+            "type": "object"
+          },
+          "ProfileGeometry": {
+            "description": "A class's objects' kind of geometry.",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "Alan: a polygon (holes and parts allowed).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "Çizgi: a line or a polyline.",
+                "type": "string"
+              },
+              {
+                "const": "point",
+                "description": "Nokta.",
+                "type": "string"
+              },
+              {
+                "const": "record",
+                "description": "Geometrisiz kayıt (docs/adr/0410).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileRelation": {
+            "additionalProperties": false,
+            "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
+            "properties": {
+              "child": {
+                "description": "The child class's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child class's field.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "description": "The parent class's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RegisteredArea": {
+            "additionalProperties": false,
+            "description": "A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the\nother; `cad.profiles.check` says where they differ by more than `tolerance`.",
+            "properties": {
+              "field": {
+                "description": "The field that holds it, in square metres.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "The difference the profile lets pass, in square metres. It is the profile's, not the law's error limit.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              }
+            },
+            "required": [
+              "field",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.apply` v1 (“Veri profilini uygula”): the profile's layers (with their groups), fields, value\nlists, relations and address data the drawing lacks; what it has is kept and said. The layers and their fields are\none undo step “Veri profili”; the value lists, relations and address data are project settings, no undo step.\n\nThe profile is `profile` when given, else the built-in `name`. Refusals, in this order: `unknown_profile` (neither, or\na name KentOS has not), `invalid_profile`, `invalid_revision`, `revision_conflict`. Warnings: `profile_field_differs`,\n`profile_domain_differs`, `profile_layer_skipped`.",
+        "properties": {
+          "expectedRevision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "name": {
+            "description": "A built-in profile's name: `tucbs-temel`. `profile`, when given, goes first.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Or the profile itself."
+          }
+        },
+        "title": "ProfilesApply",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.apply` v1.",
+        "properties": {
+          "address": {
+            "description": "Whether the profile's address data was added.",
+            "type": "boolean"
+          },
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "domains": {
+            "description": "The value lists added, by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "The fields added to layers the drawing had, as “layer name.field”.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers and groups added, by their ids, groups before their layers.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "relations": {
+            "description": "The relations added, by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "layers",
+          "fields",
+          "domains",
+          "relations",
+          "address",
+          "revision"
+        ],
+        "title": "ProfilesApplied",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.apply` v1.",
+        "properties": {
+          "address": {
+            "description": "Whether the profile's address data was added.",
+            "type": "boolean"
+          },
+          "changed": {
+            "description": "Whether anything was written.",
+            "type": "boolean"
+          },
+          "domains": {
+            "description": "The value lists added, by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "fields": {
+            "description": "The fields added to layers the drawing had, as “layer name.field”.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "layers": {
+            "description": "The layers and groups added, by their ids, groups before their layers.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "relations": {
+            "description": "The relations added, by their ids.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "pattern": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "changed",
+          "layers",
+          "fields",
+          "domains",
+          "relations",
+          "address",
+          "revision"
+        ],
+        "title": "ProfilesApplied",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "invalid_profile",
+          "invalid_revision",
+          "revision_conflict"
+        ],
+        "warnings": [
+          "profile_field_differs",
+          "profile_domain_differs",
+          "profile_layer_skipped"
+        ]
+      },
+      "examples": [
+        {
+          "title": "TUCBS temel belediye profilini uygula",
+          "input": {
+            "name": "tucbs-temel"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.profiles.check",
+      "version": 1,
+      "title": "Veri profilini denetle",
+      "summary": "Çizimin verisinin bir veri profilinden nerede ayrıldığını söyler; hiçbir şeyi değiştirmez, plan aynı cevabı verir. Bulgular sırasıyla: projede olmayan değer listeleri; sınıf sınıf eksik katman, eksik alan, türü farklı alan, başka geometrideki nesneler, boş zorunlu alanlar, alanın kuralına uymayan değerler (değer başına), birden çok nesnedeki kimlikler, kayıtlı alanı geometrik alanından profilin toleransından çok ayrılan nesneler (iki alan da söylenir; hiçbiri öbürünün yerine yazılmaz); sonra projede olmayan ilişkiler ve üst sınıfta olmayan nesneyi anan bağlar, en sonda adres verisi. Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil.",
+      "aliases": [
+        "profildenetle"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$defs": {
+          "AreaLevel": {
+            "description": "What an area layer's areas are.",
+            "oneOf": [
+              {
+                "const": "neighbourhood",
+                "description": "Mahalle (or köy).",
+                "type": "string"
+              },
+              {
+                "const": "district",
+                "description": "İlçe.",
+                "type": "string"
+              },
+              {
+                "const": "province",
+                "description": "İl.",
+                "type": "string"
+              }
+            ]
+          },
+          "AreaSource": {
+            "description": "An area layer: its level and which attribute names its areas.",
+            "properties": {
+              "district": {
+                "description": "A neighbourhood's district; only at that level.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "level": {
+                "$ref": "#/$defs/AreaLevel"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "level",
+              "name"
+            ],
+            "type": "object"
+          },
+          "DataProfile": {
+            "additionalProperties": false,
+            "description": "A data profile as `catalog/v1/profiles/*.json` keeps it, or as a command gives it.",
+            "properties": {
+              "address": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/ProfileAddress"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "basis": {
+                "description": "What it rests on and what it is not (a working profile, not an official application schema).",
+                "type": "string"
+              },
+              "classes": {
+                "items": {
+                  "$ref": "#/$defs/ProfileClass"
+                },
+                "type": "array"
+              },
+              "description": {
+                "type": "string"
+              },
+              "domains": {
+                "items": {
+                  "$ref": "#/$defs/FieldDomain"
+                },
+                "type": "array"
+              },
+              "format": {
+                "description": "`kentos.data-profile`.",
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "relations": {
+                "items": {
+                  "$ref": "#/$defs/ProfileRelation"
+                },
+                "type": "array"
+              },
+              "title": {
+                "type": "string"
+              },
+              "version": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "format",
+              "version",
+              "name",
+              "title",
+              "description",
+              "basis",
+              "classes"
+            ],
+            "type": "object"
+          },
+          "DoorSource": {
+            "description": "The doors' layer and which of its attributes say what.",
+            "properties": {
+              "building": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "code": {
+                "description": "Adres kodu (UAVT): a query that is one finds its door.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "door": {
+                "description": "Kapı no: the outer door number (“12”, “12/A”).",
+                "type": "string"
+              },
+              "layer": {
+                "description": "The layer's id. A layer the project no longer has is said when the locator is built.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "postcode": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "province": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "street": {
+                "description": "Yol: the street's name, with its kind as written (“Atatürk Bulvarı”).",
+                "type": "string"
+              }
+            },
+            "required": [
+              "layer",
+              "street",
+              "door"
+            ],
+            "type": "object"
+          },
+          "FieldChoice": {
+            "description": "One value of a field's value list: the code written to the attribute\nand the label shown for it.",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "description": {
+                "description": "What the value means, said beside it in a list (docs/adr/0438 §5): 1–500 characters.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "from": {
+                "description": "The first day the value holds (`YYYY-AA-GG`, docs/adr/0438 §5); before it a new choice does not\noffer it, as a retired one.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "label": {
+                "type": "string"
+              },
+              "retired": {
+                "description": "Kullanımdan kalktı (docs/adr/0418): a record that holds it keeps it and shows it, a new\nchoice does not offer it, a form does not write it anew. Written only as `true`.",
+                "type": "boolean"
+              },
+              "until": {
+                "description": "The last day the value holds (`YYYY-AA-GG`); after it a new choice does not offer it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "label"
+            ],
+            "type": "object"
+          },
+          "FieldDomain": {
+            "additionalProperties": false,
+            "description": "A value list of the project: a coded list (`values`) or a range (`min`, `max`), never both.",
+            "properties": {
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "Its stable id: what a field links to.",
+                "type": "string"
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind",
+                "description": "The kind of field it fits: a field linking it is of this kind."
+              },
+              "max": {
+                "description": "A range's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` itself left out of the range; written only as `true`.",
+                "type": "boolean"
+              },
+              "min": {
+                "description": "A range's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` itself left out of the range (docs/adr/0438 §4); written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "unit": {
+                "description": "The unit a number list's values are in (`m²`; docs/adr/0438 §4), copied to the fields linking it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "A coded list's values, in their order (labels, retired codes as a field's list has them).",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerField": {
+            "description": "A field of a layer (docs/adr/0199 §1): its name is the attribute's key.",
+            "properties": {
+              "alias": {
+                "description": "The name the table and the form show.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "default": {
+                "description": "The value a new object takes, in its canonical text.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "domain": {
+                "description": "The project's value list it links (docs/adr/0430): its `values` (or `min` and `max`) are that\nlist's copy, written anew whenever the list changes. None: its own.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "description": "The field's stable id (docs/adr/0401 §2): what a form binds to. None: its name is its id; a\nrename writes the old name here so a binding holds. Unique among the layer's fields' keys.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "kind": {
+                "$ref": "#/$defs/LayerFieldKind"
+              },
+              "length": {
+                "description": "A text's most characters (1–10 000).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "max": {
+                "description": "A number's greatest value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "maxExclusive": {
+                "description": "`max` is not itself in the range; only with `max`; written only as `true`.",
+                "type": "boolean"
+              },
+              "merge": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MergePolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes when objects are merged into one (Alan birleştir, Birleştir,\nParçaları birleştir; docs/adr/0419). None: the first object's."
+              },
+              "min": {
+                "description": "A number's least value, in its canonical text; included.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "minExclusive": {
+                "description": "`min` is not itself in the range (docs/adr/0438 §4); only with `min`; written only as `true`.",
+                "type": "boolean"
+              },
+              "multiple": {
+                "description": "A text field holds several values (docs/adr/0408 §1, 0409 §1): a listed one its codes in the\nlist's order, an unlisted one its values in their order (objects' persistent ids for a\nmany-to-many reference), joined with `; `; written only as `true`.",
+                "type": "boolean"
+              },
+              "name": {
+                "type": "string"
+              },
+              "required": {
+                "description": "An object may not leave it empty; written only as `true`.",
+                "type": "boolean"
+              },
+              "scale": {
+                "description": "A decimal's most fraction digits (0–15).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "count"
+              },
+              "split": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/SplitPolicy"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the field's value becomes in the pieces when its object is split (Alan böl, Parçala,\nKır, Parçalara ayır; docs/adr/0419). None: each piece keeps it."
+              },
+              "unique": {
+                "description": "No two objects of the layer hold the same value (empty ones aside; docs/adr/0438 §3): every\nwrite is refused `not_unique` that would; written only as `true`.",
+                "type": "boolean"
+              },
+              "unit": {
+                "description": "The unit a number is in, shown after it (`m²`, `kg`; 1–16 characters; docs/adr/0438 §4); the value\nstays the number.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "values": {
+                "description": "The values a text or a number takes, when only some.",
+                "items": {
+                  "$ref": "#/$defs/FieldChoice"
+                },
+                "type": [
+                  "array",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "kind"
+            ],
+            "type": "object"
+          },
+          "LayerFieldKind": {
+            "description": "What a field holds (docs/adr/0199 §1).",
+            "oneOf": [
+              {
+                "enum": [
+                  "text",
+                  "integer",
+                  "decimal",
+                  "date",
+                  "boolean"
+                ],
+                "type": "string"
+              },
+              {
+                "const": "datetime",
+                "description": "A date and a time of day, local (docs/adr/0412 §1): `YYYY-AA-GGTSS:DD:SS`.",
+                "type": "string"
+              },
+              {
+                "const": "time",
+                "description": "A time of day (docs/adr/0412 §1): `SS:DD:SS`.",
+                "type": "string"
+              }
+            ]
+          },
+          "MergePolicy": {
+            "description": "A field's value in the object merged from several (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "first",
+                "description": "The first object's value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "Empty.",
+                "type": "string"
+              },
+              {
+                "const": "sum",
+                "description": "The values' sum, exact to the field's last digit: integers and decimals with fraction digits.",
+                "type": "string"
+              },
+              {
+                "const": "min",
+                "description": "The least value (numbers).",
+                "type": "string"
+              },
+              {
+                "const": "max",
+                "description": "The greatest value (numbers).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileAddress": {
+            "additionalProperties": false,
+            "description": "How the profile's address data is read (docs/adr/0229): the sources' `layer` names a class.",
+            "properties": {
+              "areas": {
+                "items": {
+                  "$ref": "#/$defs/AreaSource"
+                },
+                "type": "array"
+              },
+              "doors": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/DoorSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "minScore": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "percent"
+              },
+              "reach": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "streets": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/StreetSource"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "minScore",
+              "reach"
+            ],
+            "type": "object"
+          },
+          "ProfileClass": {
+            "additionalProperties": false,
+            "description": "A class of the profile: a layer by its path, its objects' geometry, its fields.",
+            "properties": {
+              "color": {
+                "description": "The layer's colour when the profile adds it (a palette name or `#RRGGBB`).",
+                "type": "string"
+              },
+              "fields": {
+                "items": {
+                  "$ref": "#/$defs/LayerField"
+                },
+                "type": "array"
+              },
+              "geometry": {
+                "$ref": "#/$defs/ProfileGeometry"
+              },
+              "id": {
+                "description": "Letters, digits, `-`; unique in the profile.",
+                "type": "string"
+              },
+              "key": {
+                "description": "The identifier field: unique among the class's objects.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "description": "The layer's path: its groups' names, then its own; found by the names folded (Turkish case aside).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "registeredArea": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/RegisteredArea"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "theme": {
+                "description": "The theme it belongs to, as the profile names it (“Kadastro”).",
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "theme",
+              "layer",
+              "color",
+              "geometry",
+              "fields"
+            ],
+            "type": "object"
+          },
+          "ProfileGeometry": {
+            "description": "A class's objects' kind of geometry.",
+            "oneOf": [
+              {
+                "const": "area",
+                "description": "Alan: a polygon (holes and parts allowed).",
+                "type": "string"
+              },
+              {
+                "const": "line",
+                "description": "Çizgi: a line or a polyline.",
+                "type": "string"
+              },
+              {
+                "const": "point",
+                "description": "Nokta.",
+                "type": "string"
+              },
+              {
+                "const": "record",
+                "description": "Geometrisiz kayıt (docs/adr/0410).",
+                "type": "string"
+              }
+            ]
+          },
+          "ProfileRelation": {
+            "additionalProperties": false,
+            "description": "A relation between two classes: the child class's field holds a parent object's persistent id.",
+            "properties": {
+              "child": {
+                "description": "The child class's id.",
+                "type": "string"
+              },
+              "field": {
+                "description": "The child class's field.",
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "parent": {
+                "description": "The parent class's id.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "parent",
+              "child",
+              "field"
+            ],
+            "type": "object"
+          },
+          "RegisteredArea": {
+            "additionalProperties": false,
+            "description": "A class's registered area (tapu ya da kayıt alanı): a field kept apart from the geometric area. Neither overwrites the\nother; `cad.profiles.check` says where they differ by more than `tolerance`.",
+            "properties": {
+              "field": {
+                "description": "The field that holds it, in square metres.",
+                "type": "string"
+              },
+              "tolerance": {
+                "description": "The difference the profile lets pass, in square metres. It is the profile's, not the law's error limit.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "area"
+              }
+            },
+            "required": [
+              "field",
+              "tolerance"
+            ],
+            "type": "object"
+          },
+          "SplitPolicy": {
+            "description": "A field's value in the pieces of a split object (docs/adr/0419).",
+            "oneOf": [
+              {
+                "const": "copy",
+                "description": "Each piece keeps the value.",
+                "type": "string"
+              },
+              {
+                "const": "clear",
+                "description": "The pieces' values are emptied.",
+                "type": "string"
+              },
+              {
+                "const": "default",
+                "description": "The pieces take the field's default (none: empty).",
+                "type": "string"
+              },
+              {
+                "const": "ratio",
+                "description": "The value is shared by the pieces' areas (lines: lengths), the total kept to the field's last\ndigit: integers and decimals with fraction digits.",
+                "type": "string"
+              }
+            ]
+          },
+          "StreetSource": {
+            "description": "The streets' layer and which of its attributes say what.",
+            "properties": {
+              "district": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "layer": {
+                "type": "string"
+              },
+              "name": {
+                "description": "Yol adı.",
+                "type": "string"
+              },
+              "neighbourhood": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "layer",
+              "name"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.profiles.check` v1 (“Veri profilini denetle”): where the drawing's data departs from a profile. It\nchanges nothing; its plan gives the same answer.\n\nRefusals: `unknown_profile`, `invalid_profile`.",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "profile": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/DataProfile"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "title": "ProfilesCheck",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "ProfileClassSummary": {
+            "description": "A class's line of the report.",
+            "properties": {
+              "class": {
+                "type": "string"
+              },
+              "findings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer's id; none when the drawing has not the layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "class",
+              "title",
+              "objects",
+              "findings"
+            ],
+            "type": "object"
+          },
+          "ProfileFinding": {
+            "description": "One finding of `cad.profiles.check`.",
+            "properties": {
+              "class": {
+                "description": "The class's id; none for a value list.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "How many objects it is about.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "fixable": {
+                "description": "Whether `cad.profiles.apply` fixes it.",
+                "type": "boolean"
+              },
+              "geometric": {
+                "description": "For an area difference: the geometric area, the registered area and their difference, square metres.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "kind": {
+                "$ref": "#/$defs/ProfileFindingKind"
+              },
+              "layer": {
+                "description": "The layer's id, when the drawing has it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "registered": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "subject": {
+                "description": "The field, the value list's or the relation's id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "uids": {
+                "description": "The objects it is about, in the drawing's order, at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "value": {
+                "description": "The value: the duplicate identifier, the value refused.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "uids",
+              "count",
+              "fixable",
+              "message"
+            ],
+            "type": "object"
+          },
+          "ProfileFindingKind": {
+            "description": "What a finding is about.",
+            "oneOf": [
+              {
+                "const": "missingLayer",
+                "description": "The class's layer is not in the drawing (`cad.profiles.apply` adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingField",
+                "description": "A field of the class the layer has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "fieldKind",
+                "description": "A field the layer has with another kind (apply keeps it).",
+                "type": "string"
+              },
+              {
+                "const": "missingDomain",
+                "description": "A value list of the profile the project has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingRelation",
+                "description": "A relation of the profile the project has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingAddress",
+                "description": "The profile's address data is not defined (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "wrongGeometry",
+                "description": "Objects of another kind of geometry on the class's layer.",
+                "type": "string"
+              },
+              {
+                "const": "requiredEmpty",
+                "description": "A required field left empty.",
+                "type": "string"
+              },
+              {
+                "const": "badValue",
+                "description": "A value its field's rules refuse (kind, length, range, value list).",
+                "type": "string"
+              },
+              {
+                "const": "duplicateKey",
+                "description": "An identifier more than one object holds.",
+                "type": "string"
+              },
+              {
+                "const": "areaDifference",
+                "description": "A registered area farther from the geometric area than the tolerance (one that is not a number is a\n`badValue`).",
+                "type": "string"
+              },
+              {
+                "const": "relationBroken",
+                "description": "A relation's field naming no object of the parent class.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.check` v1.",
+        "properties": {
+          "basis": {
+            "description": "The profile's basis, said with the answer.",
+            "type": "string"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/ProfileClassSummary"
+            },
+            "type": "array"
+          },
+          "clean": {
+            "description": "No finding. It says the data holds to this profile, not that it conforms to any regulation.",
+            "type": "boolean"
+          },
+          "findings": {
+            "description": "The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'\ngeometry, required, values, identifiers, areas), then the relations and the address data.",
+            "items": {
+              "$ref": "#/$defs/ProfileFinding"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "profile",
+          "title",
+          "version",
+          "basis",
+          "classes",
+          "findings",
+          "clean"
+        ],
+        "title": "ProfilesReport",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "ProfileClassSummary": {
+            "description": "A class's line of the report.",
+            "properties": {
+              "class": {
+                "type": "string"
+              },
+              "findings": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "layer": {
+                "description": "The layer's id; none when the drawing has not the layer.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "objects": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "class",
+              "title",
+              "objects",
+              "findings"
+            ],
+            "type": "object"
+          },
+          "ProfileFinding": {
+            "description": "One finding of `cad.profiles.check`.",
+            "properties": {
+              "class": {
+                "description": "The class's id; none for a value list.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "count": {
+                "description": "How many objects it is about.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "fixable": {
+                "description": "Whether `cad.profiles.apply` fixes it.",
+                "type": "boolean"
+              },
+              "geometric": {
+                "description": "For an area difference: the geometric area, the registered area and their difference, square metres.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "kind": {
+                "$ref": "#/$defs/ProfileFindingKind"
+              },
+              "layer": {
+                "description": "The layer's id, when the drawing has it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "message": {
+                "type": "string"
+              },
+              "registered": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "area"
+              },
+              "subject": {
+                "description": "The field, the value list's or the relation's id.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "uids": {
+                "description": "The objects it is about, in the drawing's order, at most 1000.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "value": {
+                "description": "The value: the duplicate identifier, the value refused.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "uids",
+              "count",
+              "fixable",
+              "message"
+            ],
+            "type": "object"
+          },
+          "ProfileFindingKind": {
+            "description": "What a finding is about.",
+            "oneOf": [
+              {
+                "const": "missingLayer",
+                "description": "The class's layer is not in the drawing (`cad.profiles.apply` adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingField",
+                "description": "A field of the class the layer has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "fieldKind",
+                "description": "A field the layer has with another kind (apply keeps it).",
+                "type": "string"
+              },
+              {
+                "const": "missingDomain",
+                "description": "A value list of the profile the project has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingRelation",
+                "description": "A relation of the profile the project has not (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "missingAddress",
+                "description": "The profile's address data is not defined (apply adds it).",
+                "type": "string"
+              },
+              {
+                "const": "wrongGeometry",
+                "description": "Objects of another kind of geometry on the class's layer.",
+                "type": "string"
+              },
+              {
+                "const": "requiredEmpty",
+                "description": "A required field left empty.",
+                "type": "string"
+              },
+              {
+                "const": "badValue",
+                "description": "A value its field's rules refuse (kind, length, range, value list).",
+                "type": "string"
+              },
+              {
+                "const": "duplicateKey",
+                "description": "An identifier more than one object holds.",
+                "type": "string"
+              },
+              {
+                "const": "areaDifference",
+                "description": "A registered area farther from the geometric area than the tolerance (one that is not a number is a\n`badValue`).",
+                "type": "string"
+              },
+              {
+                "const": "relationBroken",
+                "description": "A relation's field naming no object of the parent class.",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output (and plan) of `cad.profiles.check` v1.",
+        "properties": {
+          "basis": {
+            "description": "The profile's basis, said with the answer.",
+            "type": "string"
+          },
+          "classes": {
+            "items": {
+              "$ref": "#/$defs/ProfileClassSummary"
+            },
+            "type": "array"
+          },
+          "clean": {
+            "description": "No finding. It says the data holds to this profile, not that it conforms to any regulation.",
+            "type": "boolean"
+          },
+          "findings": {
+            "description": "The findings: the value lists, then class by class in the profile's order (the layer, its fields, its objects'\ngeometry, required, values, identifiers, areas), then the relations and the address data.",
+            "items": {
+              "$ref": "#/$defs/ProfileFinding"
+            },
+            "type": "array"
+          },
+          "profile": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "version": {
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "profile",
+          "title",
+          "version",
+          "basis",
+          "classes",
+          "findings",
+          "clean"
+        ],
+        "title": "ProfilesReport",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "unknown_profile",
+          "invalid_profile"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Çizimi TUCBS temel belediye profiliyle denetle",
+          "input": {
+            "name": "tucbs-temel"
+          }
+        }
+      ]
+    },
+    {
       "id": "cad.sheets.set",
       "version": 1,
       "title": "Pafta seti",
@@ -1048343,6 +1050505,36 @@
       "kind": "conflict",
       "retryable": true,
       "meaning": "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin."
+    },
+    {
+      "code": "unknown_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin."
+    },
+    {
+      "code": "invalid_profile",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Veri profili geçersiz; iletisi neyin tutmadığını söyler."
+    },
+    {
+      "code": "profile_field_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Katmanın alanı profilinkinden başka türde; katmanınki korundu."
+    },
+    {
+      "code": "profile_domain_differs",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Projenin değer listesi profilinkinden farklı; projeninki korundu."
+    },
+    {
+      "code": "profile_layer_skipped",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler."
     },
     {
       "code": "invalid_period",

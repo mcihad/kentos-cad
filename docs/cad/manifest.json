@@ -6287,6 +6287,23 @@
    "tests": 1
   },
   {
+   "id": "profile.window",
+   "kind": "command",
+   "title": "Veri profili",
+   "level": "semantic",
+   "via": [
+    "cad.profiles.check",
+    "cad.profiles.apply"
+   ],
+   "operation": null,
+   "python": "kentos.cad.profiles.check, kentos.cad.profiles.apply",
+   "mcp": "cad.profiles.check, cad.profiles.apply",
+   "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541).",
+   "scope": "gis",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "raster.add",
    "kind": "command",
    "title": "Raster ekle…",

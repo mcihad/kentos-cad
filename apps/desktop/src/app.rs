@@ -178,6 +178,8 @@ pub enum Dialog {
     LayerTranslate,
     /// Çizim standardı (drawing_standard.rs, docs/adr/0312 §7); the window is `App::drawing_standard`.
     DrawingStandard,
+    /// Veri profili (data_profile.rs, docs/adr/0541); the window is `App::data_profile`.
+    DataProfile,
     /// Çizgi tipleri (line_types_window.rs, docs/adr/0313 §7); the window is `App::line_types_window`.
     LineTypes,
     /// Parametreler (parameters_window.rs, docs/adr/0338 §1); the window is `App::parameters_window`.
@@ -487,6 +489,8 @@ pub enum Message {
     LayerTranslate(crate::layer_translate::Event),
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     DrawingStandard(crate::drawing_standard::Event),
+    /// Veri profili's window (data_profile.rs, docs/adr/0541).
+    DataProfile(crate::data_profile::Event),
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     LineTypes(crate::line_types_window::Event),
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -949,6 +953,8 @@ pub struct App {
     pub(crate) layer_translate: Option<crate::layer_translate::Window>,
     /// Çizim standardı's window (drawing_standard.rs, docs/adr/0312 §7).
     pub(crate) drawing_standard: Option<crate::drawing_standard::Window>,
+    /// Veri profili's window (data_profile.rs, docs/adr/0541).
+    pub(crate) data_profile: Option<crate::data_profile::Window>,
     /// Çizgi tipleri's window (line_types_window.rs, docs/adr/0313 §7).
     pub(crate) line_types_window: Option<crate::line_types_window::Window>,
     /// Parametreler's window (parameters_window.rs, docs/adr/0338 §1).
@@ -1321,6 +1327,7 @@ impl App {
             layer_merge: None,
             layer_translate: None,
             drawing_standard: None,
+            data_profile: None,
             line_types_window: None,
             parameters_window: None,
             constraint_view: Default::default(),
@@ -1894,6 +1901,7 @@ impl App {
             Message::LayerMerge(event) => return self.layer_merge_event(event),
             Message::LayerTranslate(event) => return self.layer_translate_event(event),
             Message::DrawingStandard(event) => return self.drawing_standard_event(event),
+            Message::DataProfile(event) => return self.data_profile_event(event),
             Message::LineTypes(event) => return self.line_types_event(event),
             Message::Parameters(event) => return self.parameters_event(event),
             Message::HatchPatterns(event) => return self.hatch_patterns_event(event),
@@ -2821,6 +2829,7 @@ impl App {
             "layer.translate" => self.open_layer_translate(),
             // Standardı denetle and Standardı uygula: one window (docs/adr/0312 §7).
             "standards.check" | "standards.apply" => self.open_drawing_standard(),
+            "profile.window" => self.open_data_profile(),
             // Çizgi tipleri (docs/adr/0313 §7).
             "lineTypes.manage" => self.open_line_types(),
             "hatchPatterns.manage" => self.open_hatch_patterns(),

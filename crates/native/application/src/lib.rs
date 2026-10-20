@@ -244,6 +244,7 @@ pub mod set;
 pub mod settings_set;
 pub mod sheets_edit;
 pub mod snap_find;
+pub mod profiles;
 pub mod standards;
 pub mod stretch;
 pub mod style_tables;
@@ -932,6 +933,15 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::CAD_STANDARDS_APPLY,
         kentos_commands::CAD_STANDARDS_APPLY_VERSION,
+    ),
+    // A data profile applied and checked ([`profiles`], docs/adr/0541).
+    (
+        kentos_commands::CAD_PROFILES_APPLY,
+        kentos_commands::CAD_PROFILES_APPLY_VERSION,
+    ),
+    (
+        kentos_commands::CAD_PROFILES_CHECK,
+        kentos_commands::CAD_PROFILES_CHECK_VERSION,
     ),
     // The project's line types with patterns ([`line_types_edit`], docs/adr/0313).
     (

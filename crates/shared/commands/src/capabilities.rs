@@ -1560,6 +1560,19 @@ const ENTRIES: &[Entry] = &[
         warnings: &["template_unit_kept"],
         targets: none,
     },
+    // Data profiles (docs/adr/0541).
+    Entry {
+        id: "cad.profiles.apply",
+        refusals: &[&["unknown_profile", "invalid_profile"], REVISION],
+        warnings: &["profile_field_differs", "profile_domain_differs", "profile_layer_skipped"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.profiles.check",
+        refusals: &[&["unknown_profile", "invalid_profile"]],
+        warnings: &[],
+        targets: none,
+    },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.
     Entry {
         id: "cad.walls.joins",

@@ -1190,6 +1190,14 @@
       ],
       "note": "Pencerenin önizlemesi komutun planıdır (ADR 0311 §5)."
     },
+    "profile.window": {
+      "level": "semantic",
+      "via": [
+        "cad.profiles.check",
+        "cad.profiles.apply"
+      ],
+      "note": "Bulgular cad.profiles.check'in cevabı, Uygula'nın önizlemesi cad.profiles.apply'ın planı (ADR 0541)."
+    },
     "standards.check": {
       "level": "query",
       "via": [

@@ -122,6 +122,7 @@ mod draw_order;
 mod drawing_exchange;
 mod drawing_fonts;
 mod drawing_menus;
+mod data_profile;
 mod drawing_standard;
 #[cfg(test)]
 mod edge_shift_scenes;
@@ -292,6 +293,8 @@ mod settings_look;
 mod settings_look_tests;
 mod settings_sections;
 mod settings_view;
+#[cfg(test)]
+mod profile_scenes;
 #[cfg(test)]
 mod standard_scenes;
 #[cfg(test)]

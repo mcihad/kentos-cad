@@ -33,6 +33,7 @@ use kentos_commands::{
     UnitsChange,
 };
 use kentos_domain::{Document, Slot, Uuid};
+use kentos_native_application::profiles::{apply as profiles_apply, check as profiles_check};
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
@@ -2244,6 +2245,19 @@ impl Input for kentos_commands::SourcesSync {
     }
 }
 
+impl Input for kentos_commands::ProfilesApply {
+    /// No number to move: a profile.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ProfilesCheck {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::SourcesReconcile {
     /// No number: a layer and the sides taken.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3198,6 +3212,8 @@ fn run_op(
         kentos_commands::CAD_LAYERS_TRANSLATE => run!(layers_translate, LayersTranslate),
         kentos_commands::CAD_STANDARDS_CHECK => run!(standards_check, StandardsCheck),
         kentos_commands::CAD_STANDARDS_APPLY => run!(standards_apply, StandardsApply),
+        kentos_commands::CAD_PROFILES_APPLY => run!(profiles_apply, kentos_commands::ProfilesApply),
+        kentos_commands::CAD_PROFILES_CHECK => run!(profiles_check, kentos_commands::ProfilesCheck),
         kentos_commands::CAD_LINE_TYPES_EDIT => run!(line_types_edit, LineTypesEdit),
         kentos_commands::CAD_HATCH_PATTERNS_EDIT => run!(hatch_patterns_edit, HatchPatternsEdit),
         kentos_commands::CAD_LIBRARY_EDIT => run!(library_edit, LibraryEdit),
@@ -3799,7 +3815,7 @@ fn check(
                 for (k, v) in want.as_object().unwrap_or(&empty) {
                     expect_same(
                         got.get(k).unwrap_or(&Value::Null),
-                        &setup_paths(v),
+                        &fill(&setup_paths(v), doc, state, at)?,
                         &format!("ayar {k}"),
                         at,
                     )?;
@@ -3824,7 +3840,7 @@ fn check(
             "addressLocators" => {
                 let got = serde_json::to_value(&doc.settings().address_locators)
                     .map_err(|e| format!("{at}: {e}"))?;
-                expect_same(&got, want, "adres verileri", at)?;
+                expect_same(&got, &fill(want, doc, state, at)?, "adres verileri", at)?;
             }
             // A misspelt expectation would otherwise pass unchecked.
             other => return Err(format!("{at}: bilinmeyen beklenti “{other}”")),

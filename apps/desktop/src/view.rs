@@ -1808,6 +1808,7 @@ impl App {
             Asking::LayerMerge => self.layer_merge_view(),
             Asking::LayerTranslate => self.layer_translate_view(),
             Asking::DrawingStandard => self.drawing_standard_view(),
+            Asking::DataProfile => self.data_profile_view(),
             Asking::LineTypes => self.line_types_view(),
             Asking::Parameters => self.parameters_view(),
             Asking::HatchPatterns => self.hatch_patterns_view(),

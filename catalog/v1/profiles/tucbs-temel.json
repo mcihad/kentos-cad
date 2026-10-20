@@ -1,0 +1,191 @@
+{
+  "format": "kentos.data-profile",
+  "version": 1,
+  "name": "tucbs-temel",
+  "title": "TUCBS temel belediye profili",
+  "description": "Bir belediyenin günlük CBS verisi: mahalle, ada, parsel, bina, yol, adres ve imar kullanımı; kimlikleri, değer listeleri, parsel–bina ve bina–adres ilişkileri ve adres araması.",
+  "basis": "TUCBS veri temalarının (İdari birimler, Kadastro, Binalar, Ulaşım, Adres, Planlı alan kullanımı) adlarına göre düzenlenmiş KentOS çalışma profili, sürüm 1. Resmî TUCBS uygulama şeması değildir; alan adları ve değer listeleri kurumun kendi profiliyle eşlenip kurumca kabul edilmeden mevzuata uygunluk iddia edilmez. Kayıtlı alanın toleransı profilin değeridir, mevzuattaki hata sınırı değildir.",
+  "domains": [
+    {
+      "id": "parsel-nitelik",
+      "name": "Parsel niteliği",
+      "kind": "text",
+      "values": [
+        {"code": "arsa", "label": "Arsa"},
+        {"code": "tarla", "label": "Tarla"},
+        {"code": "bahce", "label": "Bahçe"},
+        {"code": "bina", "label": "Kargir bina ve arsası"},
+        {"code": "diger", "label": "Diğer"}
+      ]
+    },
+    {
+      "id": "bina-kullanim",
+      "name": "Binanın kullanımı",
+      "kind": "text",
+      "values": [
+        {"code": "konut", "label": "Konut"},
+        {"code": "ticaret", "label": "Ticaret"},
+        {"code": "karma", "label": "Konut ve ticaret"},
+        {"code": "kamu", "label": "Kamu"},
+        {"code": "sanayi", "label": "Sanayi"}
+      ]
+    },
+    {
+      "id": "yol-tur",
+      "name": "Yolun türü",
+      "kind": "text",
+      "values": [
+        {"code": "bulvar", "label": "Bulvar"},
+        {"code": "cadde", "label": "Cadde"},
+        {"code": "sokak", "label": "Sokak"},
+        {"code": "yaya", "label": "Yaya yolu"}
+      ]
+    },
+    {
+      "id": "imar-kullanim",
+      "name": "Planlı alan kullanımı",
+      "kind": "text",
+      "values": [
+        {"code": "konut", "label": "Konut alanı"},
+        {"code": "ticaret", "label": "Ticaret alanı"},
+        {"code": "karma", "label": "Konut + ticaret alanı"},
+        {"code": "yesil", "label": "Park ve yeşil alan"},
+        {"code": "egitim", "label": "Eğitim tesisi alanı"},
+        {"code": "saglik", "label": "Sağlık tesisi alanı"},
+        {"code": "yol", "label": "Yol"}
+      ]
+    }
+  ],
+  "classes": [
+    {
+      "id": "mahalle",
+      "title": "Mahalle",
+      "theme": "İdari birimler",
+      "layer": ["İdari birimler", "Mahalle"],
+      "color": "#8A94A6",
+      "geometry": "area",
+      "key": "MahalleKodu",
+      "fields": [
+        {"name": "MahalleKodu", "kind": "text", "length": 20, "required": true},
+        {"name": "Ad", "kind": "text", "length": 100, "required": true},
+        {"name": "Ilce", "alias": "İlçe", "kind": "text", "length": 100},
+        {"name": "Il", "alias": "İl", "kind": "text", "length": 100}
+      ]
+    },
+    {
+      "id": "ada",
+      "title": "Ada",
+      "theme": "Kadastro",
+      "layer": ["Kadastro", "Ada"],
+      "color": "#C8A165",
+      "geometry": "area",
+      "key": "AdaKimlik",
+      "fields": [
+        {"name": "AdaKimlik", "alias": "Ada kimliği", "kind": "text", "length": 40, "required": true},
+        {"name": "AdaNo", "alias": "Ada no", "kind": "text", "length": 20, "required": true},
+        {"name": "MahalleKodu", "alias": "Mahalle kodu", "kind": "text", "length": 20}
+      ]
+    },
+    {
+      "id": "parsel",
+      "title": "Parsel",
+      "theme": "Kadastro",
+      "layer": ["Kadastro", "Parsel"],
+      "color": "#E5484D",
+      "geometry": "area",
+      "key": "ParselKimlik",
+      "fields": [
+        {"name": "ParselKimlik", "alias": "Parsel kimliği", "kind": "text", "length": 40, "required": true},
+        {"name": "AdaNo", "alias": "Ada no", "kind": "text", "length": 20, "required": true},
+        {"name": "ParselNo", "alias": "Parsel no", "kind": "text", "length": 20, "required": true},
+        {"name": "TapuAlani", "alias": "Tapu alanı (m²)", "kind": "decimal", "scale": 2, "min": "0"},
+        {"name": "Nitelik", "kind": "text", "domain": "parsel-nitelik"}
+      ],
+      "registeredArea": {"field": "TapuAlani", "tolerance": 1.0}
+    },
+    {
+      "id": "bina",
+      "title": "Bina",
+      "theme": "Binalar",
+      "layer": ["Binalar", "Bina"],
+      "color": "#0090FF",
+      "geometry": "area",
+      "key": "BinaKimlik",
+      "fields": [
+        {"name": "BinaKimlik", "alias": "Bina kimliği", "kind": "text", "length": 40, "required": true},
+        {"name": "KatSayisi", "alias": "Kat sayısı", "kind": "integer", "min": "0", "max": "200"},
+        {"name": "Kullanim", "alias": "Kullanım", "kind": "text", "domain": "bina-kullanim"},
+        {"name": "Parsel", "kind": "text", "length": 36}
+      ]
+    },
+    {
+      "id": "yol",
+      "title": "Yol",
+      "theme": "Ulaşım",
+      "layer": ["Ulaşım", "Yol orta hattı"],
+      "color": "#F5A524",
+      "geometry": "line",
+      "key": "YolKimlik",
+      "fields": [
+        {"name": "YolKimlik", "alias": "Yol kimliği", "kind": "text", "length": 40, "required": true},
+        {"name": "Ad", "kind": "text", "length": 100, "required": true},
+        {"name": "Tur", "alias": "Tür", "kind": "text", "domain": "yol-tur"},
+        {"name": "Mahalle", "kind": "text", "length": 100}
+      ]
+    },
+    {
+      "id": "adres",
+      "title": "Adres",
+      "theme": "Adres",
+      "layer": ["Adres", "Kapı"],
+      "color": "#30A46C",
+      "geometry": "point",
+      "key": "AdresKodu",
+      "fields": [
+        {"name": "AdresKodu", "alias": "Adres kodu", "kind": "text", "length": 10, "required": true},
+        {"name": "Yol", "kind": "text", "length": 100, "required": true},
+        {"name": "KapiNo", "alias": "Kapı no", "kind": "text", "length": 10, "required": true},
+        {"name": "Mahalle", "kind": "text", "length": 100},
+        {"name": "Ilce", "alias": "İlçe", "kind": "text", "length": 100},
+        {"name": "Il", "alias": "İl", "kind": "text", "length": 100},
+        {"name": "PostaKodu", "alias": "Posta kodu", "kind": "text", "length": 5},
+        {"name": "Bina", "kind": "text", "length": 36}
+      ]
+    },
+    {
+      "id": "imar",
+      "title": "Planlı alan kullanımı",
+      "theme": "Planlı alan kullanımı",
+      "layer": ["İmar", "Plan kullanımı"],
+      "color": "#AB4ABA",
+      "geometry": "area",
+      "key": "PlanKimlik",
+      "fields": [
+        {"name": "PlanKimlik", "alias": "Plan kimliği", "kind": "text", "length": 40, "required": true},
+        {"name": "Kullanim", "alias": "Kullanım", "kind": "text", "domain": "imar-kullanim", "required": true},
+        {"name": "Emsal", "kind": "decimal", "scale": 2, "min": "0", "max": "10"},
+        {"name": "Hmax", "alias": "Yükseklik (m)", "kind": "decimal", "scale": 2, "min": "0"}
+      ]
+    }
+  ],
+  "relations": [
+    {"id": "parsel-bina", "name": "Parselin binaları", "parent": "parsel", "child": "bina", "field": "Parsel"},
+    {"id": "bina-adres", "name": "Binanın adresleri", "parent": "bina", "child": "adres", "field": "Bina"}
+  ],
+  "address": {
+    "doors": {
+      "layer": "adres",
+      "street": "Yol",
+      "door": "KapiNo",
+      "neighbourhood": "Mahalle",
+      "district": "Ilce",
+      "province": "Il",
+      "postcode": "PostaKodu",
+      "code": "AdresKodu"
+    },
+    "streets": {"layer": "yol", "name": "Ad", "neighbourhood": "Mahalle"},
+    "areas": [{"layer": "mahalle", "level": "neighbourhood", "name": "Ad", "district": "Ilce"}],
+    "minScore": 70,
+    "reach": 50
+  }
+}

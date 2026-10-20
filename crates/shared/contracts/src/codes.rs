@@ -1151,6 +1151,16 @@ codes! {
     NOT_A_CONFLICT = "not_a_conflict", Failed, false, "Nesne bir çatışma değil; yalnız çatışmalar için yan seçilir.";
     /// A reconcile with conflicts no side was taken for (docs/adr/0538 §2).
     UNRESOLVED_CONFLICTS = "unresolved_conflicts", Conflict, true, "Çözülmemiş çatışmalar var; her biri için take ya da rest ile bir yan seçin.";
+    /// A data profile KentOS has not by that name, or none given (docs/adr/0541).
+    UNKNOWN_PROFILE = "unknown_profile", Failed, false, "Bu adda veri profili yok; profili adıyla (tucbs-temel) ya da kendisini verin.";
+    /// A data profile whose shape does not hold (docs/adr/0541).
+    INVALID_PROFILE = "invalid_profile", Failed, false, "Veri profili geçersiz; iletisi neyin tutmadığını söyler.";
+    /// A field the layer has with another kind than the profile's; the layer's was kept (docs/adr/0541).
+    PROFILE_FIELD_DIFFERS = "profile_field_differs", Warning, false, "Katmanın alanı profilinkinden başka türde; katmanınki korundu.";
+    /// A value list the project has with other values than the profile's; the project's was kept (docs/adr/0541).
+    PROFILE_DOMAIN_DIFFERS = "profile_domain_differs", Warning, false, "Projenin değer listesi profilinkinden farklı; projeninki korundu.";
+    /// A class left out: its path names something not a layer, or its layer is locked (docs/adr/0541).
+    PROFILE_LAYER_SKIPPED = "profile_layer_skipped", Warning, false, "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).

@@ -2553,6 +2553,62 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // Veri profilleri (docs/adr/0541), held together by fixtures/commands/v1/cad.profiles.{apply,check}.json.
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_APPLY.into(),
+            version: crate::CAD_PROFILES_APPLY_VERSION,
+            title: "Veri profilini uygula".into(),
+            summary: "Bir veri profilinin (yerleşik tucbs-temel ya da profile ile verilen) çizimde olmayan parçalarını ekler; var olanı korur. \
+                      Profil veridir: sınıfları katman yollarıyla (grupları ve katmanı adlarıyla, Türkçe büyük küçük harf ayrımsız bulunur), geometrileri, alanları, kimlik alanları ve kayıtlı alanlarıyla; projenin değer listeleri, sınıflar arası ilişkiler ve adres verisi. \
+                      Eksik gruplar ve katmanlar alanlarıyla açılır, var olan katmana eksik alanları eklenir; türü farklı alan (profile_field_differs), farklı değer listesi (profile_domain_differs) korunur, kilitli katman ve yolunda katman olmayan sınıf atlanır (profile_layer_skipped). \
+                      Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. \
+                      expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["veriprofili".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesApply>(),
+            output: schema::<crate::ProfilesApplied>(),
+            plan: Some(schema::<crate::ProfilesApplied>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "TUCBS temel belediye profilini uygula".into(),
+                input: json!({ "name": "tucbs-temel" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_CHECK.into(),
+            version: crate::CAD_PROFILES_CHECK_VERSION,
+            title: "Veri profilini denetle".into(),
+            summary: "Çizimin verisinin bir veri profilinden nerede ayrıldığını söyler; hiçbir şeyi değiştirmez, plan aynı cevabı verir. \
+                      Bulgular sırasıyla: projede olmayan değer listeleri; sınıf sınıf eksik katman, eksik alan, türü farklı alan, başka geometrideki nesneler, boş zorunlu alanlar, alanın kuralına uymayan değerler (değer başına), birden çok nesnedeki kimlikler, \
+                      kayıtlı alanı geometrik alanından profilin toleransından çok ayrılan nesneler (iki alan da söylenir; hiçbiri öbürünün yerine yazılmaz); sonra projede olmayan ilişkiler ve üst sınıfta olmayan nesneyi anan bağlar, en sonda adres verisi. \
+                      Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil."
+                .into(),
+            aliases: vec!["profildenetle".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesCheck>(),
+            output: schema::<crate::ProfilesReport>(),
+            plan: Some(schema::<crate::ProfilesReport>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Çizimi TUCBS temel belediye profiliyle denetle".into(),
+                input: json!({ "name": "tucbs-temel" }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_SHEETS_SET.into(),
             version: crate::CAD_SHEETS_SET_VERSION,
@@ -8236,6 +8292,12 @@ mod tests {
                     }
                     crate::CAD_TEMPLATES_APPLY => {
                         serde_json::from_value::<crate::TemplatesApply>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_APPLY => {
+                        serde_json::from_value::<crate::ProfilesApply>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_CHECK => {
+                        serde_json::from_value::<crate::ProfilesCheck>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())

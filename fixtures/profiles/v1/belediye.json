@@ -1,0 +1,972 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Belediye örnek projesi",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "domains": [
+      {
+        "id": "parsel-nitelik",
+        "name": "Parsel niteliği",
+        "kind": "text",
+        "values": [
+          {
+            "code": "arsa",
+            "label": "Arsa"
+          },
+          {
+            "code": "tarla",
+            "label": "Tarla"
+          },
+          {
+            "code": "bahce",
+            "label": "Bahçe"
+          },
+          {
+            "code": "bina",
+            "label": "Kargir bina ve arsası"
+          },
+          {
+            "code": "diger",
+            "label": "Diğer"
+          }
+        ]
+      },
+      {
+        "id": "bina-kullanim",
+        "name": "Binanın kullanımı",
+        "kind": "text",
+        "values": [
+          {
+            "code": "konut",
+            "label": "Konut"
+          },
+          {
+            "code": "ticaret",
+            "label": "Ticaret"
+          },
+          {
+            "code": "karma",
+            "label": "Konut ve ticaret"
+          },
+          {
+            "code": "kamu",
+            "label": "Kamu"
+          }
+        ]
+      }
+    ],
+    "relations": [
+      {
+        "id": "parsel-bina",
+        "name": "Parselin binaları",
+        "parent": "parsel",
+        "child": "bina",
+        "field": "Parsel"
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000,
+    "y": 4400000
+  },
+  "layers": [
+    {
+      "id": "idari",
+      "name": "İdari birimler",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "mahalle",
+          "name": "Mahalle",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#8A94A6",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "MahalleKodu",
+              "kind": "text",
+              "length": 20,
+              "required": true
+            },
+            {
+              "name": "Ad",
+              "kind": "text",
+              "length": 100,
+              "required": true
+            },
+            {
+              "name": "Ilce",
+              "alias": "İlçe",
+              "kind": "text",
+              "length": 100
+            },
+            {
+              "name": "Il",
+              "alias": "İl",
+              "kind": "text",
+              "length": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kadastro",
+      "name": "Kadastro",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "ada",
+          "name": "Ada",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#C8A165",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "AdaKimlik",
+              "alias": "Ada kimliği",
+              "kind": "text",
+              "length": 40,
+              "required": true
+            },
+            {
+              "name": "AdaNo",
+              "alias": "Ada no",
+              "kind": "text",
+              "length": 20,
+              "required": true
+            },
+            {
+              "name": "MahalleKodu",
+              "alias": "Mahalle kodu",
+              "kind": "text",
+              "length": 20
+            }
+          ]
+        },
+        {
+          "id": "parsel",
+          "name": "Parsel",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#E5484D",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "ParselKimlik",
+              "alias": "Parsel kimliği",
+              "kind": "text",
+              "length": 40,
+              "required": true
+            },
+            {
+              "name": "AdaNo",
+              "alias": "Ada no",
+              "kind": "text",
+              "length": 20,
+              "required": true
+            },
+            {
+              "name": "ParselNo",
+              "alias": "Parsel no",
+              "kind": "text",
+              "length": 20,
+              "required": true
+            },
+            {
+              "name": "TapuAlani",
+              "alias": "Tapu alanı (m²)",
+              "kind": "decimal",
+              "scale": 2,
+              "min": "0"
+            },
+            {
+              "name": "Nitelik",
+              "kind": "text",
+              "domain": "parsel-nitelik",
+              "values": [
+                {
+                  "code": "arsa",
+                  "label": "Arsa"
+                },
+                {
+                  "code": "tarla",
+                  "label": "Tarla"
+                },
+                {
+                  "code": "bahce",
+                  "label": "Bahçe"
+                },
+                {
+                  "code": "bina",
+                  "label": "Kargir bina ve arsası"
+                },
+                {
+                  "code": "diger",
+                  "label": "Diğer"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "binalar",
+      "name": "Binalar",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "bina",
+          "name": "Bina",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#0090FF",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "BinaKimlik",
+              "alias": "Bina kimliği",
+              "kind": "text",
+              "length": 40,
+              "required": true
+            },
+            {
+              "name": "KatSayisi",
+              "alias": "Kat sayısı",
+              "kind": "integer",
+              "min": "0",
+              "max": "200"
+            },
+            {
+              "name": "Parsel",
+              "kind": "text",
+              "length": 36
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ulasim",
+      "name": "Ulaşım",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "yol",
+          "name": "Yol orta hattı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#F5A524",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "YolKimlik",
+              "alias": "Yol kimliği",
+              "kind": "text",
+              "length": 40,
+              "required": true
+            },
+            {
+              "name": "Ad",
+              "kind": "text",
+              "length": 100,
+              "required": true
+            },
+            {
+              "name": "Tur",
+              "alias": "Tür",
+              "kind": "text"
+            },
+            {
+              "name": "Mahalle",
+              "kind": "text",
+              "length": 100
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "adresler",
+      "name": "Adres",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "kapi",
+          "name": "Kapı",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#30A46C",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "AdresKodu",
+              "alias": "Adres kodu",
+              "kind": "text",
+              "length": 10,
+              "required": true
+            },
+            {
+              "name": "Yol",
+              "kind": "text",
+              "length": 100,
+              "required": true
+            },
+            {
+              "name": "KapiNo",
+              "alias": "Kapı no",
+              "kind": "text",
+              "length": 10,
+              "required": true
+            },
+            {
+              "name": "Mahalle",
+              "kind": "text",
+              "length": 100
+            },
+            {
+              "name": "Ilce",
+              "alias": "İlçe",
+              "kind": "text",
+              "length": 100
+            },
+            {
+              "name": "Il",
+              "alias": "İl",
+              "kind": "text",
+              "length": 100
+            },
+            {
+              "name": "PostaKodu",
+              "alias": "Posta kodu",
+              "kind": "text",
+              "length": 5
+            },
+            {
+              "name": "Bina",
+              "kind": "text",
+              "length": 36
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "mahalle",
+      "attrs": {
+        "MahalleKodu": "MH-01",
+        "Ad": "Cumhuriyet",
+        "Ilce": "Merkez",
+        "Il": "Sivas"
+      },
+      "pts": [
+        {
+          "x": 500000,
+          "y": 4400000
+        },
+        {
+          "x": 500200,
+          "y": 4400000
+        },
+        {
+          "x": 500200,
+          "y": 4400120
+        },
+        {
+          "x": 500000,
+          "y": 4400120
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 2,
+      "layerId": "ada",
+      "attrs": {
+        "AdaKimlik": "MH-01/101",
+        "AdaNo": "101",
+        "MahalleKodu": "MH-01"
+      },
+      "pts": [
+        {
+          "x": 500010,
+          "y": 4400010
+        },
+        {
+          "x": 500090,
+          "y": 4400010
+        },
+        {
+          "x": 500090,
+          "y": 4400050
+        },
+        {
+          "x": 500010,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 3,
+      "layerId": "ada",
+      "attrs": {
+        "AdaKimlik": "MH-01/102",
+        "AdaNo": "102",
+        "MahalleKodu": "MH-01"
+      },
+      "pts": [
+        {
+          "x": 500110,
+          "y": 4400010
+        },
+        {
+          "x": 500190,
+          "y": 4400010
+        },
+        {
+          "x": 500190,
+          "y": 4400050
+        },
+        {
+          "x": 500110,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 4,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "101/1",
+        "AdaNo": "101",
+        "ParselNo": "1",
+        "TapuAlani": "800.00",
+        "Nitelik": "arsa"
+      },
+      "pts": [
+        {
+          "x": 500010,
+          "y": 4400010
+        },
+        {
+          "x": 500030,
+          "y": 4400010
+        },
+        {
+          "x": 500030,
+          "y": 4400050
+        },
+        {
+          "x": 500010,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 5,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "101/2",
+        "AdaNo": "101",
+        "ParselNo": "2",
+        "TapuAlani": "799.50",
+        "Nitelik": "arsa"
+      },
+      "pts": [
+        {
+          "x": 500030,
+          "y": 4400010
+        },
+        {
+          "x": 500050,
+          "y": 4400010
+        },
+        {
+          "x": 500050,
+          "y": 4400050
+        },
+        {
+          "x": 500030,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 6,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "101/3",
+        "AdaNo": "101",
+        "ParselNo": "3",
+        "TapuAlani": "812.40",
+        "Nitelik": "arsa"
+      },
+      "pts": [
+        {
+          "x": 500050,
+          "y": 4400010
+        },
+        {
+          "x": 500070,
+          "y": 4400010
+        },
+        {
+          "x": 500070,
+          "y": 4400050
+        },
+        {
+          "x": 500050,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 7,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "101/4",
+        "AdaNo": "101",
+        "ParselNo": "4",
+        "TapuAlani": "820",
+        "Nitelik": "konut"
+      },
+      "pts": [
+        {
+          "x": 500070,
+          "y": 4400010
+        },
+        {
+          "x": 500090.5,
+          "y": 4400010
+        },
+        {
+          "x": 500090.5,
+          "y": 4400050
+        },
+        {
+          "x": 500070,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 8,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "102/1",
+        "AdaNo": "102",
+        "ParselNo": "1",
+        "TapuAlani": "1500",
+        "Nitelik": "arsa"
+      },
+      "pts": [
+        {
+          "x": 500110,
+          "y": 4400010
+        },
+        {
+          "x": 500150,
+          "y": 4400010
+        },
+        {
+          "x": 500150,
+          "y": 4400050
+        },
+        {
+          "x": 500110,
+          "y": 4400050
+        }
+      ],
+      "holes": [
+        {
+          "pts": [
+            {
+              "x": 500120,
+              "y": 4400020
+            },
+            {
+              "x": 500130,
+              "y": 4400020
+            },
+            {
+              "x": 500130,
+              "y": 4400030
+            },
+            {
+              "x": 500120,
+              "y": 4400030
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "parsel",
+      "attrs": {
+        "ParselKimlik": "101/1",
+        "AdaNo": "102",
+        "ParselNo": "",
+        "TapuAlani": "1600",
+        "Nitelik": "arsa"
+      },
+      "pts": [
+        {
+          "x": 500150,
+          "y": 4400010
+        },
+        {
+          "x": 500190,
+          "y": 4400010
+        },
+        {
+          "x": 500190,
+          "y": 4400050
+        },
+        {
+          "x": 500150,
+          "y": 4400050
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 10,
+      "layerId": "bina",
+      "attrs": {
+        "BinaKimlik": "B-1",
+        "KatSayisi": "4",
+        "Kullanim": "konut"
+      },
+      "pts": [
+        {
+          "x": 500012,
+          "y": 4400015
+        },
+        {
+          "x": 500028,
+          "y": 4400015
+        },
+        {
+          "x": 500028,
+          "y": 4400035
+        },
+        {
+          "x": 500012,
+          "y": 4400035
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 11,
+      "layerId": "bina",
+      "attrs": {
+        "BinaKimlik": "B-2",
+        "KatSayisi": "250",
+        "Kullanim": "ticaret"
+      },
+      "pts": [
+        {
+          "x": 500032,
+          "y": 4400015
+        },
+        {
+          "x": 500048,
+          "y": 4400015
+        },
+        {
+          "x": 500048,
+          "y": 4400035
+        },
+        {
+          "x": 500032,
+          "y": 4400035
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 12,
+      "layerId": "bina",
+      "attrs": {
+        "BinaKimlik": "B-3",
+        "KatSayisi": "2",
+        "Parsel": "00000000-0000-7000-8000-000000000000"
+      },
+      "pts": [
+        {
+          "x": 500115,
+          "y": 4400030
+        },
+        {
+          "x": 500135,
+          "y": 4400030
+        },
+        {
+          "x": 500135,
+          "y": 4400045
+        },
+        {
+          "x": 500115,
+          "y": 4400045
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 13,
+      "layerId": "bina",
+      "attrs": {
+        "BinaKimlik": "B-4",
+        "KatSayisi": "3"
+      },
+      "pts": [
+        {
+          "x": 500052,
+          "y": 4400015
+        },
+        {
+          "x": 500068,
+          "y": 4400015
+        },
+        {
+          "x": 500068,
+          "y": 4400035
+        },
+        {
+          "x": 500052,
+          "y": 4400035
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 14,
+      "layerId": "bina",
+      "attrs": {
+        "BinaKimlik": "B-5"
+      },
+      "p": {
+        "x": 500080,
+        "y": 4400030
+      }
+    },
+    {
+      "kind": "polyline",
+      "id": 15,
+      "layerId": "yol",
+      "attrs": {
+        "YolKimlik": "Y-1",
+        "Ad": "Atatürk Caddesi",
+        "Tur": "cadde",
+        "Mahalle": "Cumhuriyet"
+      },
+      "pts": [
+        {
+          "x": 500000,
+          "y": 4400005
+        },
+        {
+          "x": 500200,
+          "y": 4400005
+        }
+      ]
+    },
+    {
+      "kind": "polyline",
+      "id": 16,
+      "layerId": "yol",
+      "attrs": {
+        "YolKimlik": "Y-2",
+        "Ad": "İstasyon Sokak",
+        "Tur": "otoyol",
+        "Mahalle": "Cumhuriyet"
+      },
+      "pts": [
+        {
+          "x": 500100,
+          "y": 4400000
+        },
+        {
+          "x": 500100,
+          "y": 4400120
+        }
+      ]
+    },
+    {
+      "kind": "point",
+      "id": 17,
+      "layerId": "kapi",
+      "attrs": {
+        "AdresKodu": "1000000001",
+        "Yol": "Atatürk Caddesi",
+        "KapiNo": "12",
+        "Mahalle": "Cumhuriyet",
+        "Ilce": "Merkez",
+        "Il": "Sivas",
+        "PostaKodu": "58040"
+      },
+      "p": {
+        "x": 500020,
+        "y": 4400012
+      }
+    },
+    {
+      "kind": "point",
+      "id": 18,
+      "layerId": "kapi",
+      "attrs": {
+        "AdresKodu": "1000000002",
+        "Yol": "Atatürk Caddesi",
+        "KapiNo": "14",
+        "Mahalle": "Cumhuriyet",
+        "Ilce": "Merkez",
+        "Il": "Sivas",
+        "PostaKodu": "58040"
+      },
+      "p": {
+        "x": 500040,
+        "y": 4400012
+      }
+    },
+    {
+      "kind": "point",
+      "id": 19,
+      "layerId": "kapi",
+      "attrs": {
+        "AdresKodu": "1000000003",
+        "Yol": "Atatürk Caddesi",
+        "KapiNo": " ",
+        "Mahalle": "Cumhuriyet",
+        "Ilce": "Merkez",
+        "Il": "Sivas",
+        "PostaKodu": "58040"
+      },
+      "p": {
+        "x": 500130,
+        "y": 4400012
+      }
+    },
+    {
+      "kind": "point",
+      "id": 20,
+      "layerId": "kapi",
+      "attrs": {
+        "AdresKodu": "1000000004",
+        "Yol": "Atatürk Caddesi",
+        "KapiNo": "5/A",
+        "Mahalle": "Cumhuriyet",
+        "Ilce": "Merkez",
+        "Il": "Sivas",
+        "PostaKodu": "580400"
+      },
+      "p": {
+        "x": 500170,
+        "y": 4400012
+      }
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}

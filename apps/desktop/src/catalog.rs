@@ -570,6 +570,8 @@ pub const PORTED: &[&str] = &[
     // docs/adr/0312: Standardı denetle and Standardı uygula (drawing_standard.rs).
     "standards.check",
     "standards.apply",
+    // docs/adr/0541: Veri profili (data_profile.rs).
+    "profile.window",
     // docs/adr/0313: Çizgi tipleri (line_types_window.rs).
     "lineTypes.manage",
     // docs/adr/0331 §1: Tarama desenleri (hatch_patterns_window.rs).

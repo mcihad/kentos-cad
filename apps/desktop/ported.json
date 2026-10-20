@@ -387,6 +387,7 @@
     "layer.translate",
     "standards.check",
     "standards.apply",
+    "profile.window",
     "lineTypes.manage",
     "hatchPatterns.manage",
     "tool.layerMatch",

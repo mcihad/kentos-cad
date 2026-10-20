@@ -16,8 +16,8 @@ use serde::{Deserialize, Serialize};
 #[cfg(feature = "ts")]
 use ts_rs::TS;
 
-#[cfg(feature = "schema")]
 use crate::FormChange;
+#[cfg(feature = "schema")]
 use crate::cad::{REVISION_TEXT, UID_TEXT};
 use crate::forms::{FormBody, FormIssue, FormItemState, ProjectForm, ProjectRelation};
 
