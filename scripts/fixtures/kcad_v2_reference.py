@@ -1045,8 +1045,15 @@ def device_terminal(t):
     return cmap(fields(t, {"id": (text, True), "name": (text, True)}, "terminal"))
 
 
+def device_config(c):
+    table = {"value": (text, True), "terminals": (nonempty(device_terminal), True), "paths": (nonempty(nonempty(text)), True)}
+    return cmap(fields(c, table, "yapılandırma"))
+
+
 def terminal_device(d):
     table = {"layer": (text, True), "terminals": (nonempty(device_terminal), True), "paths": (nonempty(nonempty(text)), True)}
+    # Schema 94 (docs/adr/0562 §2): the attribute that names a point's configuration and the configurations.
+    table.update({"by": (text, False), "configs": (nonempty(device_config), False)})
     return cmap(fields(d, table, "cihaz"))
 
 
@@ -1057,6 +1064,9 @@ def network_terminals(t):
 
 def network_subnetworks(s_):
     table = {"name": (text, False), "attribute": (text, True), "reach": (enum(SUBNETWORK_REACHES), True)}
+    # Schema 94 (docs/adr/0562 §3): keep the attribute current, a flag only when on.
+    table["keepCurrent"] = (lambda b: boolean(b) if b is True else None, False)
+    assert s_.get("keepCurrent", True) is not False, "keepCurrent yalnız true yazılır"
     return cmap(fields(s_, table, "alt ağlar"))
 
 
@@ -2167,6 +2177,10 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 94 (docs/adr/0562): a device's configurations, the subnetworks' keepCurrent.
+    if any(any("by" in d or "configs" in d for d in n.get("terminals", {}).get("devices", []))
+           or n.get("subnetworks", {}).get("keepCurrent") for n in (settings or {}).get("networks", [])):
+        return 94
     # Schema 93 (docs/adr/0557): a network's terminals or subnetworks.
     if any("terminals" in n or "subnetworks" in n for n in (settings or {}).get("networks", [])):
         return 93
@@ -2725,7 +2739,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-94.kcad"] = container(root(cmap(parts), version=uint(94)))
+    files["schema-version-95.kcad"] = container(root(cmap(parts), version=uint(95)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -3646,6 +3660,24 @@ def broken(minimal_content, minimal_file):
     files["network-subnetworks-unknown-reach.kcad"] = networked([on_valve(subnetworks=subnet(reach=text("upstream")))], schema=93)
     files["network-subnetworks-over-a-read-field.kcad"] = networked([on_valve(subnetworks=subnet(name=text("Ad"), attribute=text("Ad")))], schema=93)
 
+    # A device's configurations and the subnetworks' keepCurrent are schema 94's (docs/adr/0562): in schema 93 unknown
+    # fields; every rule of the contract's `configs_problem` broken one at a time.
+    config = lambda value="üç-yollu", **c: cmap({"value": text(value), "terminals": array([cmap({"id": text("a"), "name": text("A")}), cmap({"id": text("b"), "name": text("B")}), cmap({"id": text("c"), "name": text("C")})]),  # noqa: E731
+                                                  "paths": array([array([text("a"), text("b"), text("c")])]), **c})
+    configured = lambda *configs, **d: terminalled(device(by=text("tip"), configs=array(list(configs) or [config()]), **d))  # noqa: E731
+    files["network-configs-in-schema-93.kcad"] = networked([on_valve(terminals=configured())], schema=93)
+    files["network-keep-current-in-schema-93.kcad"] = networked([on_valve(subnetworks=subnet(keepCurrent=boolean(True)))], schema=93)
+    files["network-configs-without-by.kcad"] = networked([on_valve(terminals=terminalled(device(configs=array([config()]))))], schema=94)
+    files["network-configs-by-without-configs.kcad"] = networked([on_valve(terminals=terminalled(device(by=text("tip"))))], schema=94)
+    files["network-configs-by-blank.kcad"] = networked([on_valve(terminals=terminalled(device(by=text(" "), configs=array([config()]))))], schema=94)
+    files["network-configs-value-twice.kcad"] = networked([on_valve(terminals=configured(config(), config(value="ÜÇ-YOLLU")))], schema=94)
+    files["network-configs-value-blank.kcad"] = networked([on_valve(terminals=configured(config(value=" ")))], schema=94)
+    files["network-configs-path-unknown.kcad"] = networked([on_valve(terminals=configured(config(paths=array([array([text("a"), text("z")])]))))], schema=94)
+    files["network-configs-one-terminal.kcad"] = networked([on_valve(terminals=configured(config(terminals=array([cmap({"id": text("a"), "name": text("A")})]))))], schema=94)
+    files["network-configs-unknown-field.kcad"] = networked([on_valve(terminals=configured(config(slow=text("?"))))], schema=94)
+    files["network-configs-by-over-subnetworks.kcad"] = networked([on_valve(terminals=configured(), subnetworks=subnet(attribute=text("tip")))], schema=94)
+    files["network-keep-current-false.kcad"] = networked([on_valve(subnetworks=subnet(keepCurrent=boolean(False)))], schema=94)
+
     # The project's address data is schema 42's (docs/adr/0229 §2): in schema 41 an unknown field; every rule of the
     # contract's `address_locators_problem` broken one at a time; an empty list, an empty area list and a field's empty
     # name refused as such.
@@ -4114,6 +4146,7 @@ def build():
     out["networks.kcad"] = container(document(load("networks.json")))
     out["network-turns.kcad"] = container(document(load("network-turns.json")))
     out["network-terminals.kcad"] = container(document(load("network-terminals.json")))
+    out["network-configs.kcad"] = container(document(load("network-configs.json")))
     out["scenarios.kcad"] = container(document(load("scenarios.json")))
     out["filters.kcad"] = container(document(load("filters.json")))
     out["labels.kcad"] = container(document(load("labels.json")))

@@ -231,6 +231,12 @@ Liste:
 - [ ] `CBS-27` şebekede terminaller ve alt ağlar (ADR 0557, 20 Ekim): web'de gerekenler: ağın `terminals` ve `subnetworks`'ının
   TS türleri (üretilir) ve `.kcad` şema 93'ün web kodeğinde okunması, ağın işçisinde terminal yolları (çekirdekten),
   Ağlar penceresinin Terminaller ve Alt ağlar bölümleri, Alt ağlar penceresi, `cad.subnetworks.*` komutlarının web işleyicisi.
+- [ ] `CBS-27` terminaller her yerde ve alt ağ adları güncel (ADR 0562, 21 Ekim): web'de gerekenler: ağın aramalarının (en kısa yol,
+  hizmet alanı, en yakın tesis, maliyet matrisi) terminal yollarından geçmesi (çekirdekten: WASM'la gelir, ağın işçisinde (düğüm, terminal)
+  durumları), `TerminalDevice.by` ve `configs` ile `NetworkSubnetworks.keepCurrent`'ın TS türleri (üretilir), `.kcad` şema 94'ün web
+  kodeğinde okunması, `model/networkRules.ts`'in ve `networkForm.ts`'in yapılandırma kuralları (`rules.json` ve `form.json`'un yeni
+  durumları), `call.recorded`'ın alt ağ izleyicisinin web karşılığı (belgenin ardından aynı adımda yazma), Ağlar penceresinin seçen alan,
+  yapılandırmalar ve Güncelleme alanları.
 - [ ] `CBS-37` alan alan birleştirme (ADR 0553, 20 Ekim): web'de gerekenler: `kentos_contracts::merge_entities`'in TS karşılığı
   (nesnenin JSON'unun üst düzey alanları, öznitelikler tek tek) ve web bulut istemcisinin iki çatışma yolunda (dışarıdan gelen değişiklik,
   409) kullanması; Kaynakla uzlaştır web'de yok.
@@ -2102,6 +2108,14 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   `cad.subnetworks.find` ve `.update`, `.kcad` şema 93, Ağlar'da Terminaller ve Alt ağlar, Alt ağlar penceresi, Python, MCP.
   Kalan: en kısa yol, hizmet alanı ve maliyet matrisinde terminal yolları, alt ağın kendiliğinden güncellenmesi, artımlı graf.
   — **20 Ekim, [ADR 0557](docs/adr/0557-network-terminals-and-subnetworks.md).**
+- [x] `CBS-27` terminaller her yerde ve alt ağ adları güncel (dilim): en kısa yol, hizmet alanı, en yakın tesis ve maliyet matrisi cihazdan
+  yalnız terminal yollarıyla geçer (terminalli ağın aramaları (düğüm, terminal) durumlarıyla; dönüş ve seviye kuralları yine uygulanır; cihazsız
+  ağın hızı değişmez); cihazın terminalleri ve yolları noktasının özniteliğinden de gelir (`TerminalDevice.by`, `configs`; bilinmeyen değer
+  cihazın kendisi ve Denetle'de söylenir); `NetworkSubnetworks.keepCurrent`: ağın katmanlarına dokunan her yazma alt ağ özniteliğini aynı
+  adımda yeniden yazar, yazamazsa `subnetwork_dirty`; `.kcad` şema 94; Ağlar'da seçen alan, yapılandırmalar ve Güncelleme. Kalan: artımlı graf
+  kurulumu (yalnız dokunulan parçaların yeniden kurulması), `cad.network.define` ağın tanımını değiştirince alt ağ özniteliğinin kendiliğinden
+  yeniden yazılması, yapılandırmanın cihaz katmanı yerine nesnenin türünden okunması (varlık türü tablosu), güncel tutmanın uzun işlerde
+  (sunucu işi) kopyada çalışması. — **21 Ekim, [ADR 0562](docs/adr/0562-network-terminals-everywhere-and-subnetworks-kept-current.md).**
 - [ ] `CBS-34` TUCBS profili (dilim): veri profilleri veri olarak (`catalog/v1/profiles/tucbs-temel.json`: mahalle, ada, parsel, bina,
   yol, adres, imar; alanlar, kimlikler, kayıtlı alan ve toleransı, değer listeleri, ilişkiler, adres eşlemesi; kolon adı kodda yok),
   `cad.profiles.apply` (eksik grup, katman, alan, değer listesi, ilişki ve adres verisi; var olan korunur, tek geri alma adımı) ve salt

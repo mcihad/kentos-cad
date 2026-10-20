@@ -117,6 +117,9 @@ pub struct DeviceRule {
     pub keys: Vec<[String; 2]>,
     /// `link[a * terminals + b]`: terminal `a` connects to `b` through the device (a path holds both, or `a == b`).
     pub link: Vec<bool>,
+    /// The device's configurations (docs/adr/0562 §2): the value (caseless) of the attribute that names one, and the
+    /// index of its rule in the rules' devices (after all the definition's own); only on a device's own rule.
+    pub configs: Vec<(String, u32)>,
 }
 
 impl DeviceRule {
@@ -190,12 +193,31 @@ fn texts(v: &Json, what: &str) -> Result<Vec<String>, String> {
     }
 }
 
-/// A terminal device of the definition's JSON (`TerminalDevice`).
-fn device_of(d: &Json) -> Result<DeviceRule, String> {
+/// A terminal device of the definition's JSON (`TerminalDevice`): its own rule and its configurations' (`TerminalConfig`),
+/// each with the value that names it.
+fn device_of(d: &Json) -> Result<(DeviceRule, Vec<(String, DeviceRule)>), String> {
     let layer = match d.get("layer") {
         Json::Str(s) => s.clone(),
         _ => return Err("ağın cihazının katmanı metin olmalı".into()),
     };
+    let own = terminal_set(&layer, d)?;
+    let configs = match d.get("configs") {
+        Json::Null => Vec::new(),
+        Json::Arr(list) => list
+            .iter()
+            .map(|c| match c.get("value") {
+                Json::Str(v) => Ok((caseless(v), terminal_set(&layer, c)?)),
+                _ => Err("ağın cihazının yapılandırma değeri metin olmalı".to_string()),
+            })
+            .collect::<Result<Vec<_>, String>>()?,
+        _ => return Err("ağın cihazının yapılandırmaları liste olmalı".into()),
+    };
+    Ok((own, configs))
+}
+
+/// The terminals and paths of `d` (a device or a configuration) on junction layer `layer`.
+fn terminal_set(layer: &str, d: &Json) -> Result<DeviceRule, String> {
+    let layer = layer.to_string();
     let text = |v: &Json| match v {
         Json::Str(s) => Ok(s.clone()),
         _ => Err("ağın terminali metin olmalı".to_string()),
@@ -245,7 +267,12 @@ fn device_of(d: &Json) -> Result<DeviceRule, String> {
         }
         _ => return Err("ağın cihazının yolları liste olmalı".into()),
     }
-    Ok(DeviceRule { layer, keys, link })
+    Ok(DeviceRule {
+        layer,
+        keys,
+        link,
+        configs: Vec::new(),
+    })
 }
 
 impl Rules {
@@ -343,15 +370,25 @@ impl Rules {
         };
         let terminals = match def.get("terminals") {
             Json::Null => None,
-            t => Some(TerminalRules {
-                devices: match t.get("devices") {
-                    Json::Arr(list) => list
-                        .iter()
-                        .map(device_of)
-                        .collect::<Result<Vec<_>, _>>()?,
+            t => {
+                let list = match t.get("devices") {
+                    Json::Arr(list) => list.iter().map(device_of).collect::<Result<Vec<_>, _>>()?,
                     _ => return Err("ağın terminalli cihazları liste olmalı".into()),
-                },
-            }),
+                };
+                // The devices' own rules first, then every configuration's.
+                let own = list.len() as u32;
+                let mut devices: Vec<DeviceRule> = Vec::with_capacity(list.len());
+                let mut extra: Vec<DeviceRule> = Vec::new();
+                for (mut rule, configs) in list {
+                    for (value, c) in configs {
+                        rule.configs.push((value, own + extra.len() as u32));
+                        extra.push(c);
+                    }
+                    devices.push(rule);
+                }
+                devices.extend(extra);
+                Some(TerminalRules { devices })
+            }
         };
         Ok(Rules {
             connect,
@@ -365,14 +402,33 @@ impl Rules {
         })
     }
 
-    /// The device (an index into `terminals.devices`) the junction layer `layer` is, if it is one.
+    /// The device (an index into `terminals.devices`) the junction layer `layer` is, if it is one: its own rule, not a
+    /// configuration's.
     pub fn device_of_layer(&self, layer: &str) -> Option<u32> {
-        self.terminals
-            .as_ref()?
-            .devices
+        let t = self.terminals.as_ref()?;
+        let own = t.devices.len() - t.devices.iter().map(|d| d.configs.len()).sum::<usize>();
+        t.devices[..own]
             .iter()
             .position(|d| d.layer == layer)
             .map(|i| i as u32)
+    }
+
+    /// The device rule of a point of junction layer `layer` whose configuration attribute holds `value`
+    /// (docs/adr/0562 §2): the configuration it names, or the device's own when it names none; the flag says a value
+    /// was given that no configuration has.
+    pub fn device_for(&self, layer: &str, value: Option<&str>) -> Option<(u32, bool)> {
+        let d = self.device_of_layer(layer)?;
+        let rule = &self.terminals.as_ref()?.devices[d as usize];
+        let key = value.map(caseless).filter(|k| !k.is_empty());
+        match key {
+            None => Some((d, false)),
+            Some(k) => Some(
+                rule.configs
+                    .iter()
+                    .find(|(v, _)| *v == k)
+                    .map_or((d, true), |(_, i)| (*i, false)),
+            ),
+        }
     }
 
     /// Whether cost `c` is a time (a speed cost, minutes): turn delays are added to it.
@@ -483,5 +539,40 @@ mod tests {
         assert_eq!(r.rate(2, Some("2,5"), 100.0), (Some(0.025), false));
         assert_eq!(r.rate(2, Some("-1"), 100.0), (None, true));
         assert_eq!(r.rate(2, None, 100.0), (None, true));
+    }
+
+    /// A device with two configurations (docs/adr/0562 §2): the device's own rule, then the configurations' after
+    /// every device's own; a point's attribute value picks one, caseless; none or an unknown value is the device's own.
+    #[test]
+    fn a_devices_configuration_is_picked_by_its_points_value() {
+        let r = Rules::from_json(
+            &Json::parse(
+                r#"{"connect":"ends","tolerance":0.01,"direction":{"kind":"both"},
+                "terminals":{"start":"s","end":"e","devices":[
+                  {"layer":"x","terminals":[{"id":"p","name":"P"},{"id":"q","name":"Q"}],"paths":[["p","q"]],
+                   "by":"tip","configs":[
+                    {"value":"Trafo","terminals":[{"id":"yg","name":"YG"},{"id":"ag","name":"AG"}],"paths":[["yg","ag"]]},
+                    {"value":"üçlü","terminals":[{"id":"a","name":"A"},{"id":"b","name":"B"},{"id":"c","name":"C"}],"paths":[["a","b"]]}]},
+                  {"layer":"y","terminals":[{"id":"u","name":"U"},{"id":"v","name":"V"}],"paths":[["u","v"]]}]}}"#,
+            )
+            .expect("JSON"),
+        )
+        .expect("rules");
+        let devices = &r.terminals.as_ref().expect("terminals").devices;
+        // Two own rules, then the two configurations.
+        assert_eq!(devices.len(), 4);
+        assert_eq!(r.device_of_layer("x"), Some(0));
+        assert_eq!(r.device_of_layer("y"), Some(1));
+        assert_eq!(r.device_of_layer("z"), None);
+        assert_eq!(r.device_for("x", None), Some((0, false)));
+        assert_eq!(r.device_for("x", Some("  ")), Some((0, false)));
+        assert_eq!(r.device_for("x", Some(" TRAFO ")), Some((2, false)));
+        assert_eq!(r.device_for("x", Some("ÜÇLÜ")), Some((3, false)));
+        assert_eq!(r.device_for("x", Some("dörtlü")), Some((0, true)));
+        assert_eq!(r.device_for("y", Some("trafo")), Some((1, true)));
+        assert_eq!(devices[3].count(), 3);
+        assert!(devices[3].connects(0, 1) && !devices[3].connects(0, 2));
+        assert_eq!(devices[2].terminal("ag"), Some(1));
+        assert_eq!(devices[0].terminal("ag"), None);
     }
 }

@@ -6,12 +6,11 @@
 - **Bağlam belgesi:** ADR 0209 (ağ analizi, Denetle), 0521 (dönüşler ve seviyeler), 0525 (ilişkili kayıtlar ve doğrulanmamış
   bağlantılar), 0199 (katman alanları), 0265 (`.kcad` şemasının altı adımı), 0508 ve 0529 (komutla çalışan işlemler).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
-- **Sonraya kalan:**
-  - En kısa yol, hizmet alanı ve maliyet matrisi terminal yollarını bilmez (çizgi ağı gibi düğümden düğüme gider); yalnız
-    Şebeke izleme (Bağlı, Akış yukarı, Akış aşağı, Yalıtım) ve Denetle terminalleri uygular.
-  - Alt ağ adının kendiliğinden yeniden yazılması (bugün Güncelle ile, tek adımda); alt ağ kapsamı değişince bildirim.
-  - Cihazın terminallerinin cihazın özniteliğinden (varlık türü) okunması; bugün cihaz bir düğüm katmanıdır.
-  - Artımlı graf kurulumu (ADR 0525'ten kalan).
+- **Sonraya kalan** (ilk üçü [ADR 0562](0562-network-terminals-everywhere-and-subnetworks-kept-current.md)'de yapıldı):
+  - ~~En kısa yol, hizmet alanı ve maliyet matrisi terminal yollarını bilmez~~: bilir (ADR 0562 §1; en yakın tesis de).
+  - ~~Alt ağ adının kendiliğinden yeniden yazılması~~: `keepCurrent` (ADR 0562 §3); alt ağ kapsamı değişince bildirim hâlâ yok.
+  - ~~Cihazın terminallerinin cihazın özniteliğinden okunması~~: `by` ve `configs` (ADR 0562 §2); varlık türü tablosu hâlâ yok.
+  - Artımlı graf kurulumu (ADR 0525'ten kalan; ADR 0562 §6'da neden bu dilimde yapılmadığı).
 
 ## Bağlam
 

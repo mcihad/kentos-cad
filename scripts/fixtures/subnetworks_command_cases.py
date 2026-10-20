@@ -53,7 +53,8 @@ def point(id_, layer, p, attrs=None, label=None):
     return e
 
 
-def netdef(reach="downstream", name="Ad", attribute=ATTRIBUTE, device_terminals=None, paths=None, subnetworks=True, terminals=True):
+def netdef(reach="downstream", name="Ad", attribute=ATTRIBUTE, device_terminals=None, paths=None, subnetworks=True, terminals=True,
+           by=None, configs=None, keep=False):
     d = {
         "id": "ag-1",
         "name": "Elektrik",
@@ -69,22 +70,29 @@ def netdef(reach="downstream", name="Ad", attribute=ATTRIBUTE, device_terminals=
         "direction": {"kind": "digitized"},
     }
     if terminals:
-        d["terminals"] = {"start": "uc_bas", "end": "uc_son", "devices": [{
+        device = {
             "layer": "trafo",
             "terminals": device_terminals or [{"id": "yg", "name": "Yüksek gerilim"}, {"id": "ag", "name": "Alçak gerilim"}],
             "paths": paths or [["yg", "ag"]],
-        }]}
+        }
+        # Docs/adr/0562 §2: the attribute of the device's points that names their configuration, and the configurations.
+        if by is not None:
+            device["by"] = by
+            device["configs"] = configs
+        d["terminals"] = {"start": "uc_bas", "end": "uc_son", "devices": [device]}
     if subnetworks:
         s = {"attribute": attribute, "reach": reach}
         if name is not None:
             s["name"] = name
+        if keep:
+            s["keepCurrent"] = True
         d["subnetworks"] = s
     return d
 
 
 def scene(reach="downstream", name="Ad", attribute=ATTRIBUTE, s1=None, s2=None, valve="açık", preset=None, hat2_fields=None,
           locked=False, sources=True, subnetworks=True, extra=(), edge12=("yg", None), device_terminals=None, paths=None, terminals=True,
-          net_override=None):
+          net_override=None, by=None, configs=None, keep=False, trafo_attrs=None):
     """The default drawing: two sources (Merkez A at 0,0 and Merkez B at 500,0), a transformer at 100,0 (terminals yg
     and ag, one path), pipes 3 (0→100, ends at yg), 4 (100→200, starts at ag), 5 (200→300), 6 (400→300), 7 (500→400), an
     unfed pipe 8, a pipe 11 on a typed layer without the attribute's field, a pipe 12 on a locked layer from the
@@ -98,7 +106,7 @@ def scene(reach="downstream", name="Ad", attribute=ATTRIBUTE, s1=None, s2=None, 
         line(6, "boru", (400, 0), (300, 0)),
         line(7, "boru", (500, 0), (400, 0)),
         line(8, "boru", (700, 0), (800, 0)),
-        point(9, "trafo", (100, 0), {"Ad": "T1"}),
+        point(9, "trafo", (100, 0), {"Ad": "T1", **(trafo_attrs or {})}),
         point(10, "vana", (300, 0), {"durum": valve}),
         line(11, "hat2", (200, 0), (200, 90)),
         line(12, "kilitli", (100, 0), (100, 60), {k: v for k, v in zip(("uc_bas", "uc_son"), edge12) if v is not None}),
@@ -109,7 +117,7 @@ def scene(reach="downstream", name="Ad", attribute=ATTRIBUTE, s1=None, s2=None, 
     for e in ents:
         if preset and e["id"] in preset:
             e["attrs"][attribute] = preset[e["id"]]
-    network = netdef(reach, name, attribute, device_terminals, paths, subnetworks, terminals)
+    network = netdef(reach, name, attribute, device_terminals, paths, subnetworks, terminals, by, configs, keep)
     if net_override:
         network.update(net_override)
     return {
@@ -125,6 +133,19 @@ def scene(reach="downstream", name="Ad", attribute=ATTRIBUTE, s1=None, s2=None, 
         "entities": ents,
         "styles": {"items": [], "categories": []},
     }
+
+
+# The trafo's configurations (docs/adr/0562 §2): chosen by the `tip` attribute of its points.
+CONFIGS = [
+    {"value": "ters", "terminals": [{"id": "x", "name": "Giriş"}, {"id": "y", "name": "Çıkış"}], "paths": [["x", "y"]]},
+    {"value": "üçlü", "terminals": [{"id": "yg", "name": "Yüksek gerilim"}, {"id": "ag", "name": "Alçak gerilim"}, {"id": "ort", "name": "Orta gerilim"}],
+     "paths": [["yg", "ag"], ["ag", "ort"]]},
+]
+
+
+def with_tip(tip, **kw):
+    """The default drawing whose trafo is configured by `tip` and holds `tip` (None: no value)."""
+    return scene(by="tip", configs=copy.deepcopy(CONFIGS), trafo_attrs=None if tip is None else {"tip": tip}, **kw)
 
 
 # ── The reference ───────────────────────────────────────────────────────────────────────────────────────────────
@@ -157,7 +178,10 @@ def read(setup, network_id="ag-1"):
                 continue
             closed = layer.get("closed") is not None and e["attrs"].get("durum") == "kapalı"
             device = next((i for i, d in enumerate(devices) if d["layer"] == layer["layer"]), None)
-            junction_list.append({"id": e["id"], "p": [e["p"]["x"], e["p"]["y"]], "role": layer["role"], "closed": closed, "device": device, "layer": e["layerId"]})
+            j = {"id": e["id"], "p": [e["p"]["x"], e["p"]["y"]], "role": layer["role"], "closed": closed, "device": device, "layer": e["layerId"]}
+            if device is not None and devices[device].get("by") is not None and e["attrs"].get(devices[device]["by"]) is not None:
+                j["config"] = e["attrs"][devices[device]["by"]]
+            junction_list.append(j)
     rules = {"connect": "ends", "tolerance": 0.01, "direction": net["direction"]}
     if terminals:
         rules["terminals"] = terminals
@@ -343,6 +367,18 @@ def find_cases():
     ok("terminaller tanımsız: cihaz bir nokta", scene(terminals=False))
     off = scene(extra=[point(13, "kaynak", (900, 900), {"Ad": "Uzak"})])
     ok("kenara değmeyen kaynak yalnız kendisine ulaşır; güvenilir değil", off)
+    # Docs/adr/0562 §2: the device's terminals by the attribute of its point.
+    ok("yapılandırma: tip=ters; kenarların terminalleri bu yapılandırmada yok, hepsine geçer (güvenilir değil)", with_tip("ters"))
+    ok("yapılandırma değeri büyük küçük harf ayrımsız: TERS", with_tip("TERS"))
+    ok("yapılandırma değeri kırpılır", with_tip("  ters "))
+    ok("bilinmeyen yapılandırma değeri cihazın kendi terminallerini alır", with_tip("bilinmeyen"))
+    ok("seçen öznitelik noktada yoksa cihazın kendi terminalleri", with_tip(None))
+    ok("boş seçen öznitelik cihazın kendi terminalleri", with_tip("  "))
+    ok("üçlü yapılandırma: orta gerilim yalnız alçak gerilimle bağlı, 12. kenar kaynaksız", with_tip("üçlü", edge12=("ort", None)))
+    ok("cihazın kendi terminallerinde ort yok: 12. kenar her yönden geçer", with_tip(None, edge12=("ort", None)))
+    ok("Bağlı + tip=ters", with_tip("ters", reach="connected"))
+    ok("kapalı vana + tip=üçlü", with_tip("üçlü", valve="kapalı"))
+    ok("ters yapılandırma, terminal adıyla bağlanan uç: Giriş", with_tip("ters", edge12=("Giriş", None)))
     refused("projede olmayan ağ", scene(), "unknown_network", "“ag-9” kimlikli ağ projede yok. Var olan bir ağın kimliğini verin.", network="ag-9")
     refused("alt ağları tanımlı olmayan ağ", scene(subnetworks=False), "no_subnetworks",
             "“Elektrik” ağının alt ağları tanımlı değil; ağın subnetworks alanını yazın (cad.network.define).")
@@ -462,6 +498,10 @@ def update_cases():
     written("kilidi açık katmana da yazılır", unlocked)
     written("terminal yolu dışındaki kenar kaynaksız: değeri varsa alınır", scene(device_terminals=[{"id": "yg", "name": "Yüksek gerilim"}, {"id": "ag", "name": "Alçak gerilim"}, {"id": "ort", "name": "Orta gerilim"}], edge12=("ort", None), preset={12: "Eski"}))
     written("kenara değmeyen kaynak da adını alır", scene(extra=[point(13, "kaynak", (900, 900), {"Ad": "Uzak"})]))
+    written("yapılandırma: tip=ters ile yazılır", with_tip("ters"), undo=True)
+    written("yapılandırma: tip=üçlü, 12. kenar kaynaksız", with_tip("üçlü", edge12=("ort", None)))
+    written("bilinmeyen yapılandırma cihazın kendi terminallerini alır", with_tip("bilinmeyen"), again=True)
+    written("kimliği ve adı bir terminal: Çıkış", with_tip("ters", edge12=("Çıkış", None)))
     refused("projede olmayan ağ", scene(), {"network": "ag-9"}, "unknown_network", "“ag-9” kimlikli ağ projede yok. Var olan bir ağın kimliğini verin.")
     refused("alt ağları tanımlı olmayan ağ", scene(subnetworks=False), {"network": "ag-1"}, "no_subnetworks",
             "“Elektrik” ağının alt ağları tanımlı değil; ağın subnetworks alanını yazın (cad.network.define).")

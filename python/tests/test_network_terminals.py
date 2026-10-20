@@ -51,6 +51,9 @@ def drawing(scene: dict[str, Any], reach: str = "downstream", names: dict[int, s
             layers.append(layer(layer_id, f"Düğüm {k}"))
             junction_layers.append({"layer": layer_id, "role": j["role"], "closed": "durum = 'kapalı'"})
         attrs = {"durum": "kapalı"} if j.get("closed") else {}
+        # A device's configuration is named by the attribute `by` of its point (docs/adr/0562 §2).
+        if device is not None and j.get("config") is not None and devices[device].get("by"):
+            attrs[devices[device]["by"]] = j["config"]
         if names and k in names:
             attrs["Ad"] = names[k]
         entities.append({"kind": "point", "id": int(j["id"]), "layerId": layer_id, "attrs": attrs, "p": {"x": j["p"][0], "y": j["p"][1]}})
@@ -74,7 +77,64 @@ def drawing(scene: dict[str, Any], reach: str = "downstream", names: dict[int, s
     return cad.Document.from_bytes(json.dumps(doc, ensure_ascii=False).encode("utf-8"))
 
 
+def where(scene: dict[str, Any], loc: dict[str, Any]) -> tuple[float, float]:
+    """A reference location (an edge and the fraction of its length, or a node) as a point."""
+    if "node" in loc:
+        return (float(loc["node"][0]), float(loc["node"][1]))
+    (ax, ay), (bx, by) = scene["edges"][loc["edge"]]["pts"][0], scene["edges"][loc["edge"]]["pts"][-1]
+    t = loc.get("at", 0.5)
+    return (ax + t * (bx - ax), ay + t * (by - ay))
+
+
+def length_of(line: Any) -> float:
+    """The length of a service line's straight stretches."""
+    return sum(((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5 for a, b in zip(line.pts, line.pts[1:]))
+
+
 class TerminalsTest(unittest.TestCase):
+    def test_routes_matrices_and_areas_cross_devices_only_along_their_paths(self) -> None:
+        routes = matrices = areas = 0
+        for case in CASES["cases"]:
+            scene = case["scene"]
+            net = network.Network(drawing(scene), "ag-1")
+            for q in case["routes"]:
+                stops = [where(scene, s) for s in q["query"]["stops"]]
+                title = f"{scene['name']}: {q['query']}"
+                if q["cost"] is None:
+                    with self.assertRaises(network.NetworkError, msg=title):
+                        net.route(stops, reach=1.0)
+                else:
+                    got = net.route(stops, reach=1.0)
+                    self.assertLessEqual(abs(got.cost - q["cost"]), 1e-9 * max(q["cost"], 1.0), title)
+                routes += 1
+            for q in case["matrices"]:
+                query = q["query"]
+                origins = [where(scene, p) for p in query["origins"]]
+                targets = [where(scene, p) for p in query["targets"]]
+                title = f"{scene['name']}: {query}"
+                rows = net.od_matrix(origins, targets, reach=1.0)
+                for row, want in zip(rows, q["from"]):
+                    self.assertEqual(sorted(r.target for r in row), [j for j, c in enumerate(want) if c is not None], title)
+                    for r in row:
+                        self.assertLessEqual(abs(r.cost - want[r.target]), 1e-9 * max(want[r.target], 1.0), title)
+                for k in q["closest"]:
+                    rows = net.closest_facility(origins, targets, count=k["k"], cutoff=k["cutoff"], reach=1.0)
+                    for row, want in zip(rows, k["rows"]):
+                        self.assertEqual(len(row), len(want), title)
+                        for r, (_, cost) in zip(row, want):
+                            self.assertLessEqual(abs(r.cost - cost), 1e-9 * max(cost, 1.0), title)
+                matrices += 1
+            for q in case["areas"]:
+                query = q["query"]
+                places = [where(scene, p) for p in query["facilities"]]
+                title = f"{scene['name']}: {query}"
+                got = net.service_area(places, [query["break"]], toward=bool(query.get("toward")), areas=False, reach=1.0)
+                total = sum(length_of(x.line) for x in got.lines)
+                want = sum(v for _, v in q["lengths"])
+                self.assertLessEqual(abs(total - want), 1e-6 * max(want, 1.0), title)
+                areas += 1
+        self.assertGreaterEqual((routes, matrices, areas), (20, 6, 15))
+
     def test_every_trace_as_the_reference(self) -> None:
         asked = 0
         for case in CASES["cases"]:

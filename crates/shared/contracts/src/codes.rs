@@ -513,6 +513,8 @@ codes! {
     NO_CONTROLLERS = "no_controllers", Failed, false, "Ağın çizimde Kaynak düğümü yok; alt ağ denetleyicisi bulunamadı.";
     /// A layer left as it is by Alt ağları güncelle: locked, or typed without the attribute's field (docs/adr/0557).
     SUBNETWORK_LAYER_SKIPPED = "subnetwork_layer_skipped", Warning, false, "Bir katmanın nesnelerine alt ağ adı yazılmadı (kilitli ya da özniteliğin alanı yok).";
+    /// A write left a network's subnetwork attribute out of date though the network keeps it current (docs/adr/0562 §3).
+    SUBNETWORK_DIRTY = "subnetwork_dirty", Warning, false, "Ağ alt ağ adlarını güncel tutuyor ama bu yazma onları güncelleyemedi; Alt ağları güncelle ile yenileyin.";
     /// A warning: a network or a locator names a layer the drawing does not have.
     UNKNOWN_LAYER = "unknown_layer", Warning, false, "Tanım çizimde olmayan bir katmanı adlıyor.";
     /// `set` without a locator.

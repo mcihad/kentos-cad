@@ -261,6 +261,7 @@ pub mod profile_files;
 pub mod profiles;
 pub mod standards;
 pub mod stretch;
+pub mod subnetwork_follow;
 pub mod subnetworks;
 pub mod subnetworks_update;
 pub mod style_tables;

@@ -29205,16 +29205,21 @@ class NetworkSubnetworks(_Model):
     Attributes:
         attribute: The attribute `cad.subnetworks.update` writes on every object of the network: its subnetworks' names, joined
             with `; ` where it is in more than one; taken away where it is in none.
+        keep_current: Güncel tut (docs/adr/0562 §3): a write that touches the network's layers also rewrites the attribute, in its
+            own step; when it cannot, the command says `subnetwork_dirty`.
         name: The controller's attribute holding its subnetwork's name; none: its label, else its `Ad`, else `Kaynak <no>`.
     """
     attribute: str
     reach: SubnetworkReach | SubnetworkReachName
+    keep_current: bool | Unset = UNSET
     name: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["attribute"] = self.attribute
         out["reach"] = _enum_out(self.reach)
+        if self.keep_current is not UNSET:
+            out["keepCurrent"] = self.keep_current
         if self.name is not UNSET:
             out["name"] = self.name
         return out
@@ -29224,6 +29229,7 @@ class NetworkSubnetworks(_Model):
         return cls(
             attribute=data["attribute"],
             reach=_enum_in(SubnetworkReach, data["reach"]),
+            keep_current=data.get("keepCurrent", UNSET),
             name=data.get("name", UNSET),
         )
 
@@ -44503,6 +44509,34 @@ class TemplatesApply(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TerminalConfig(_Model):
+    """A configuration of a device (docs/adr/0562 §2): the terminals and paths of the points whose `by` attribute holds
+    `value` (caseless).
+    Attributes:
+        terminals: 2–8 terminals.
+        paths: 1–16 paths, as the device's.
+    """
+    value: str
+    terminals: list[DeviceTerminal]
+    paths: list[list[str]]
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["value"] = self.value
+        out["terminals"] = [e0.to_json() for e0 in self.terminals]
+        out["paths"] = [list(e0) for e0 in self.paths]
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TerminalConfig:
+        return cls(
+            value=data["value"],
+            terminals=[DeviceTerminal.from_json(e0) for e0 in data["terminals"]],
+            paths=[list(e0) for e0 in data["paths"]],
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TerminalDevice(_Model):
     """A device: every point of the junction layer `layer` has these terminals. An edge attached to one of its terminals
     goes on through the device only to a terminal on a path with it; an edge that names none (or one the device does
@@ -44511,16 +44545,26 @@ class TerminalDevice(_Model):
         layer: A junction layer of the network (its id).
         terminals: 2–8 terminals.
         paths: 1–16 paths: each the ids of two or more terminals connected to one another through the device.
+        by: The attribute of the device's points that names their configuration (docs/adr/0562 §2): a point whose value is
+            a configuration's has that configuration's terminals and paths; one with none, or an unknown value, has the
+            device's own (an unknown value is said). None: every point has the device's own.
+        configs: The configurations besides the device's own: 1–16 when `by` is named, none otherwise.
     """
     layer: str
     terminals: list[DeviceTerminal]
     paths: list[list[str]]
+    by: str | None | Unset = UNSET
+    configs: list[TerminalConfig] | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
         out["layer"] = self.layer
         out["terminals"] = [e0.to_json() for e0 in self.terminals]
         out["paths"] = [list(e0) for e0 in self.paths]
+        if self.by is not UNSET:
+            out["by"] = self.by
+        if self.configs is not UNSET:
+            out["configs"] = [e0.to_json() for e0 in self.configs]
         return out
 
     @classmethod
@@ -44529,6 +44573,8 @@ class TerminalDevice(_Model):
             layer=data["layer"],
             terminals=[DeviceTerminal.from_json(e0) for e0 in data["terminals"]],
             paths=[list(e0) for e0 in data["paths"]],
+            by=data.get("by", UNSET),
+            configs=[TerminalConfig.from_json(e0) for e0 in data["configs"]] if "configs" in data else UNSET,
         )
 
 
@@ -60232,6 +60278,7 @@ __all__ = [
     "TemplatesApply",
     "TenantKind",
     "TenantKindName",
+    "TerminalConfig",
     "TerminalDevice",
     "TextAlign",
     "TextAlignName",

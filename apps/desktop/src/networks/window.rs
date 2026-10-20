@@ -80,6 +80,12 @@ const REACHES: [(Option<SubnetworkReach>, &str); 3] = [
     (Some(SubnetworkReach::Downstream), "Akış aşağı"),
     (Some(SubnetworkReach::Connected), "Bağlı (her yön)"),
 ];
+/// How the subnetwork names are kept: by hand (Alt ağları güncelle) or by every write that touches the network
+/// (docs/adr/0562 §3).
+const KEEPS: [(bool, &str); 2] = [
+    (false, "Elle: Alt ağları güncelle yazar"),
+    (true, "Güncel tut: her yazma yeniden yazar"),
+];
 const COST_KINDS: [(NetworkCostKind, &str); 2] = [
     (NetworkCostKind::Speed, "Süre (hızdan)"),
     (NetworkCostKind::Field, "Alandan"),
@@ -128,6 +134,11 @@ pub struct Window {
 }
 
 impl Window {
+    /// The form of the network the window shows, as typed.
+    pub fn form(&self) -> Option<&NetworkForm> {
+        self.chosen.and_then(|i| self.forms.get(i))
+    }
+
     /// Whether Denetle waits for this ticket.
     pub fn waits_for(&self, ticket: u64) -> bool {
         self.check
@@ -195,10 +206,15 @@ pub enum Event {
     DeviceLayer(usize, usize),
     DeviceTerminals(usize, String),
     DevicePaths(usize, String),
+    /// A device's configuration attribute and its configurations as typed (docs/adr/0562 §2).
+    DeviceBy(usize, String),
+    DeviceConfigs(usize, String),
     /// The way subnetworks reach (a choice of `REACHES`), the controller's name field and the attribute written.
     SubnetReach(usize),
     SubnetName(String),
     SubnetAttribute(String),
+    /// Keep the names current (a choice of `KEEPS`).
+    SubnetKeep(usize),
     Builder(Field),
     Check,
     Problem(usize),
@@ -1157,6 +1173,25 @@ impl App {
                 .spacing(6)
                 .align_y(Center),
             );
+            // The terminals by an attribute of the device's points (docs/adr/0562 §2).
+            form = form.push(
+                row![
+                    container(input(
+                        "seçen alan: tip (boş: hepsi yukarıdaki)",
+                        &d.by,
+                        Box::new(move |t| Event::DeviceBy(i, t))
+                    ))
+                    .width(Length::FillPortion(2)),
+                    container(input(
+                        "yapılandırmalar: üç yollu = a; b; c | a, b, c || trafo = yg; ag | yg, ag",
+                        &d.configs,
+                        Box::new(move |t| Event::DeviceConfigs(i, t))
+                    ))
+                    .width(Length::FillPortion(5)),
+                ]
+                .spacing(6)
+                .align_y(Center),
+            );
         }
         if f.devices.is_empty() {
             form = form.push(label::muted("Cihaz yok: izleme her düğümden her yöne geçer. Vana ya da trafo gibi cihazın terminallerini ve aralarındaki yolları yazın; kenarın ucu hangi terminale bağlıysa o alana yazılır."));
@@ -1188,6 +1223,15 @@ impl App {
                     &f.subnet_attribute,
                     Box::new(Event::SubnetAttribute),
                 ),
+            ));
+            form = form.push(labelled(
+                "Güncelleme",
+                Select::new(
+                    KEEPS.iter().map(|(_, n)| Choice::new(*n)),
+                    KEEPS.iter().position(|(k, _)| *k == f.subnet_keep),
+                    |k| msg(Event::SubnetKeep(k)),
+                )
+                .into(),
             ));
         } else {
             form = form.push(label::muted("Alt ağ yok: Kaynak düğümleri denetleyici sayılmaz. Alt ağ, bir denetleyicinin ağın kurallarıyla ulaştığı yerdir; adları Alt ağları güncelle bir özniteliğe yazar."));
@@ -1572,6 +1616,8 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
                 layer,
                 terminals: "giris: Giriş; cikis: Çıkış".into(),
                 paths: "giris, cikis".into(),
+                by: String::new(),
+                configs: String::new(),
             });
             if f.terminal_start.trim().is_empty() && f.terminal_end.trim().is_empty() {
                 f.terminal_start = "uc_bas".into();
@@ -1602,12 +1648,27 @@ fn edit(f: &mut NetworkForm, e: Event, layers: &[(String, String)]) {
                 d.paths = t;
             }
         }
+        Event::DeviceBy(i, t) => {
+            if let Some(d) = f.devices.get_mut(i) {
+                d.by = t;
+            }
+        }
+        Event::DeviceConfigs(i, t) => {
+            if let Some(d) = f.devices.get_mut(i) {
+                d.configs = t;
+            }
+        }
         Event::SubnetReach(k) => {
             if let Some(&(r, _)) = REACHES.get(k) {
                 f.subnet_reach = r;
                 if r.is_some() && f.subnet_attribute.trim().is_empty() {
                     f.subnet_attribute = kentos_interaction::network::form::DEFAULT_SUBNET_ATTRIBUTE.into();
                 }
+            }
+        }
+        Event::SubnetKeep(k) => {
+            if let Some(&(keep, _)) = KEEPS.get(k) {
+                f.subnet_keep = keep;
             }
         }
         Event::SubnetName(t) => f.subnet_name = t,

@@ -165,6 +165,7 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
             )
         })
         .collect();
+    let rules = def.terminals.as_ref().and_then(|_| rules_of(def).ok());
     let mut junctions = Vec::new();
     let mut taken_j: HashSet<u32> = HashSet::new();
     for (i, l) in def.junctions.iter().enumerate() {
@@ -201,15 +202,28 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
             JunctionRole::Valve => Role::Valve,
             JunctionRole::Junction => Role::Junction,
         };
-        // The device its layer is, by the terminals' devices (docs/adr/0557 §1).
-        let device = def
+        // The device its layer is, by the terminals' devices (docs/adr/0557 §1); a point's configuration is the one
+        // its attribute names (docs/adr/0562 §2).
+        let by = def
             .terminals
             .as_ref()
-            .and_then(|t| t.devices.iter().position(|d| d.layer == l.layer))
-            .map(|d| d as u32);
+            .and_then(|t| t.devices.iter().find(|d| d.layer == l.layer))
+            .and_then(|d| d.by.as_deref());
+        let mut unknown: Vec<String> = Vec::new();
         for (e, closed) in mine.into_iter().zip(shut) {
             taken_j.insert(e.base().id);
             let level = level_of(e, levels.map(|l| &l.start));
+            let device = rules.as_ref().and_then(|r| {
+                let given = by.and_then(|b| value(e, b));
+                let (d, odd) = r.device_for(&l.layer, given.as_deref())?;
+                if odd {
+                    let g = given.unwrap_or_default();
+                    if !unknown.contains(&g) {
+                        unknown.push(g);
+                    }
+                }
+                Some(d)
+            });
             junctions.push((
                 f64::from(e.base().id),
                 JunctionValues {
@@ -218,6 +232,13 @@ pub fn network_input(def: &NetworkDef, src: &Source<'_>) -> NetworkInput {
                     level,
                     device,
                 },
+            ));
+        }
+        if !unknown.is_empty() {
+            problems.push(format!(
+                "{}. düğüm katmanının cihaz yapılandırması “{}” için tanımlı değil; bu noktalar cihazın kendi terminallerini aldı.",
+                i + 1,
+                unknown.join("”, “")
             ));
         }
     }

@@ -995,15 +995,40 @@ impl Graph {
     /// What turning at `node` from arc `in_arc` to arc `out_arc` adds to cost `c`; none when it is forbidden. Every
     /// turn is free in a network without turns.
     pub fn turn(&self, in_arc: u32, out_arc: u32, node: u32, c: usize) -> Option<f64> {
+        if !self.crosses(node, in_arc, out_arc) {
+            return None;
+        }
         match &self.turns {
             Some(t) => t.turn(in_arc, out_arc, node, c),
             None => Some(0.0),
         }
     }
 
+    /// Whether a way arriving at `node` along `in_arc` may leave along `out_arc` through the node's device
+    /// (docs/adr/0562 §1): only along a terminal path; always at a point and in a network without devices.
+    fn crosses(&self, node: u32, in_arc: u32, out_arc: u32) -> bool {
+        match &self.terms {
+            None => true,
+            // A virtual node (a stop inside an edge, a barrier) is no device.
+            Some(t) if node as usize >= t.node_device.len() => true,
+            Some(t) => t.passes(
+                &self.rules,
+                node,
+                t.arc_terminal[(in_arc ^ 1) as usize],
+                t.arc_terminal[out_arc as usize],
+            ),
+        }
+    }
+
     /// The turn at graph node `node` from the arc arriving along its `k`th piece to the arc leaving along its `m`th
     /// (`at_node`'s order); every turn is free in a network without turns.
     pub fn turn_at(&self, node: u32, k: usize, m: usize, c: usize) -> Option<f64> {
+        if self.terms.is_some() {
+            let at = self.at_node(node);
+            if !self.crosses(node, at[k] ^ 1, at[m]) {
+                return None;
+            }
+        }
         match &self.turns {
             Some(t) => t.turn_at(node, self.at_node(node), k, m, c),
             None => Some(0.0),

@@ -17,7 +17,7 @@ use kentos_commands::{
     DeviceTerminal, JunctionLayer, JunctionRole, NETWORK_TOLERANCE, NetworkConnect, NetworkCost,
     NetworkCostKind, NetworkDef, NetworkDirection, NetworkKind, NetworkLayer, NetworkLevels,
     NetworkPeriod, NetworkSubnetworks, NetworkTerminals, NetworkTurns, NetworkUTurns,
-    SubnetworkReach, TerminalDevice, TurnLayer, clock_text,
+    SubnetworkReach, TerminalConfig, TerminalDevice, TurnLayer, clock_text,
 };
 use kentos_geometry_core::tools::point_text::js_trim;
 
@@ -62,6 +62,11 @@ pub struct DeviceRow {
     pub terminals: String,
     /// `yg, ag; yg, c`: each path's terminal ids, split at commas, the paths at semicolons.
     pub paths: String,
+    /// The attribute of its points that names their configuration (docs/adr/0562 §2); empty: none.
+    pub by: String,
+    /// `üç yollu = a: A; b: B | a, b || trafo = yg: Yüksek; ag: Alçak | yg, ag`: each configuration's value, after
+    /// an equals sign its terminals and after a bar its paths, the configurations split at double bars.
+    pub configs: String,
 }
 
 /// Yön as the form offers it.
@@ -109,6 +114,8 @@ pub struct NetworkForm {
     pub subnet_reach: Option<SubnetworkReach>,
     pub subnet_name: String,
     pub subnet_attribute: String,
+    /// Güncel tut (docs/adr/0562 §3): the attribute is rewritten by every write that touches the network.
+    pub subnet_keep: bool,
 }
 
 /// The attribute the subnetworks' names are written to when none is typed.
@@ -269,6 +276,40 @@ pub fn paths_text(paths: &[Vec<String>]) -> String {
         .join("; ")
 }
 
+/// A device's configurations as typed (docs/adr/0562 §2): `value = terminals | paths`, split at double bars; a
+/// configuration with no bar has no paths, one with no equals sign no value (the contract says both).
+pub fn configs_of(text: &str) -> Vec<TerminalConfig> {
+    text.split("||")
+        .map(js_trim)
+        .filter(|c| !c.is_empty())
+        .map(|c| {
+            let (value, rest) = c.split_once('=').unwrap_or(("", c));
+            let (terminals, paths) = rest.split_once('|').unwrap_or((rest, ""));
+            TerminalConfig {
+                value: js_trim(value).to_owned(),
+                terminals: terminals_of(terminals),
+                paths: paths_of(paths),
+            }
+        })
+        .collect()
+}
+
+/// A device's configurations as the form shows them.
+pub fn configs_text(configs: &[TerminalConfig]) -> String {
+    configs
+        .iter()
+        .map(|c| {
+            format!(
+                "{} = {} | {}",
+                c.value,
+                terminals_text(&c.terminals),
+                paths_text(&c.paths)
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" || ")
+}
+
 /// A delay as the form shows it: empty for none.
 fn delay_text(d: f64) -> String {
     if d == 0.0 { String::new() } else { shown(d) }
@@ -410,6 +451,8 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
                 layer: d.layer.clone(),
                 terminals: terminals_text(&d.terminals),
                 paths: paths_text(&d.paths),
+                by: d.by.clone().unwrap_or_default(),
+                configs: configs_text(&d.configs),
             })
             .collect(),
         subnet_reach: def.subnetworks.as_ref().map(|s| s.reach),
@@ -423,6 +466,7 @@ pub fn form_of(def: &NetworkDef, from_metres: impl Fn(f64) -> f64) -> NetworkFor
             .as_ref()
             .map(|s| s.attribute.clone())
             .unwrap_or_default(),
+        subnet_keep: def.subnetworks.as_ref().is_some_and(|s| s.keep_current),
     }
 }
 
@@ -492,6 +536,7 @@ pub fn new_form(
         subnet_reach: None,
         subnet_name: String::new(),
         subnet_attribute: String::new(),
+        subnet_keep: false,
     }
 }
 
@@ -626,6 +671,8 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
                     layer: d.layer.clone(),
                     terminals: terminals_of(&d.terminals),
                     paths: paths_of(&d.paths),
+                    by: opt(&d.by),
+                    configs: configs_of(&d.configs),
                 })
                 .collect(),
         }),
@@ -640,6 +687,7 @@ pub fn def_of(form: &NetworkForm, to_metres: impl Fn(f64) -> f64) -> Result<Netw
         attribute: opt(&form.subnet_attribute)
             .unwrap_or_else(|| DEFAULT_SUBNET_ATTRIBUTE.to_owned()),
         reach,
+        keep_current: form.subnet_keep,
     });
     let def = NetworkDef {
         id: form.id.clone(),
@@ -847,11 +895,14 @@ mod tests {
                     layer: text(d, "layer"),
                     terminals: text(d, "terminals"),
                     paths: text(d, "paths"),
+                    by: text(d, "by"),
+                    configs: text(d, "configs"),
                 })
                 .collect(),
             subnet_reach: (!v["subnetReach"].is_null()).then(|| enum_of(&v["subnetReach"])),
             subnet_name: text(v, "subnetName"),
             subnet_attribute: text(v, "subnetAttribute"),
+            subnet_keep: v["subnetKeep"].as_bool().unwrap_or(false),
         }
     }
 

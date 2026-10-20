@@ -1800,6 +1800,15 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
                 || recorded(&n.children)
         })
     }
+    // Schema 94 (docs/adr/0562): a device's configurations, the subnetworks' keepCurrent.
+    if doc.settings.networks.iter().any(|n| {
+        n.terminals
+            .as_ref()
+            .is_some_and(|t| t.devices.iter().any(|d| d.by.is_some() || !d.configs.is_empty()))
+            || n.subnetworks.as_ref().is_some_and(|s| s.keep_current)
+    }) {
+        return crate::SCHEMA_WITH_NETWORK_CONFIGS;
+    }
     // Schema 93 (docs/adr/0557): a network's terminals or subnetworks.
     if doc
         .settings

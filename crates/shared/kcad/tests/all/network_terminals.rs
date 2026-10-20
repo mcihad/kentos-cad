@@ -91,3 +91,87 @@ fn the_writer_refuses_what_the_reader_refuses() {
     });
     assert!(e.message.contains("üstüne"), "{e}");
 }
+
+#[test]
+fn a_devices_configurations_and_keep_current_are_schema_94_and_one_without_stays_93() {
+    let doc = content("network-configs.json");
+    let written = kentos_kcad::encode(&doc).expect("writes");
+    assert_eq!(schema(&written), 94);
+    assert!(
+        written == read("network-configs.kcad"),
+        "the reference's bytes"
+    );
+    let back = kentos_kcad::decode(&written).expect("reads");
+    assert_eq!(back.settings.networks, doc.settings.networks);
+    // Configurations alone, then keepCurrent alone: both schema 94.
+    let mut configs_only = doc.clone();
+    for n in &mut configs_only.settings.networks {
+        if let Some(s) = n.subnetworks.as_mut() {
+            s.keep_current = false;
+        }
+    }
+    assert_eq!(
+        schema(&kentos_kcad::encode(&configs_only).expect("writes")),
+        94
+    );
+    let mut keep_only = doc.clone();
+    for n in &mut keep_only.settings.networks {
+        for d in n.terminals.iter_mut().flat_map(|t| t.devices.iter_mut()) {
+            d.by = None;
+            d.configs.clear();
+        }
+    }
+    assert_eq!(
+        schema(&kentos_kcad::encode(&keep_only).expect("writes")),
+        94
+    );
+    // Without both: schema 93's drawing, byte for byte.
+    let mut plain = doc.clone();
+    for n in &mut plain.settings.networks {
+        if let Some(s) = n.subnetworks.as_mut() {
+            s.keep_current = false;
+        }
+        for d in n.terminals.iter_mut().flat_map(|t| t.devices.iter_mut()) {
+            d.by = None;
+            d.configs.clear();
+        }
+    }
+    assert!(kentos_kcad::encode(&plain).expect("writes") == read("network-terminals.kcad"));
+}
+
+#[test]
+fn the_writer_refuses_configurations_the_reader_refuses() {
+    let refused = |change: &dyn Fn(&mut DocumentSnapshotV2)| {
+        let mut doc = content("network-configs.json");
+        change(&mut doc);
+        kentos_kcad::encode(&doc).expect_err("refused")
+    };
+    let e = refused(&|d| {
+        d.settings.networks[1].terminals.as_mut().unwrap().devices[0].by = None;
+    });
+    assert!(e.message.contains("hangi öznitelikle"), "{e}");
+    let e = refused(&|d| {
+        d.settings.networks[1].terminals.as_mut().unwrap().devices[0]
+            .configs
+            .clear();
+    });
+    assert!(e.message.contains("yapılandırması yok"), "{e}");
+    let e = refused(&|d| {
+        d.settings.networks[1].terminals.as_mut().unwrap().devices[0].configs[1].value =
+            "ÜÇ YOLLU".into();
+    });
+    assert!(e.message.contains("iki kez"), "{e}");
+    let e = refused(&|d| {
+        d.settings.networks[1].terminals.as_mut().unwrap().devices[0].configs[0].paths[0] =
+            vec!["a".into(), "z".into()];
+    });
+    assert!(e.message.contains("cihazın terminali değil"), "{e}");
+    let e = refused(&|d| {
+        d.settings.networks[1]
+            .subnetworks
+            .as_mut()
+            .unwrap()
+            .attribute = "tip".into();
+    });
+    assert!(e.message.contains("üstüne"), "{e}");
+}
