@@ -23974,11 +23974,16 @@ class LayerTime(_Model):
         cumulative: Birikimli: an object shows from its start on, whatever its end; written only as `true`.
         end: The attribute holding the end; absent, the objects are moments.
         key: The attribute naming an object across its versions (Zamanı karşılaştır's key).
+        recorded_end: The attribute holding when the version was superseded (its system time's end); empty: still current.
+        recorded_start: The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):
+            what was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.
     """
     start: str
     cumulative: bool | Unset = UNSET
     end: str | None | Unset = UNSET
     key: str | None | Unset = UNSET
+    recorded_end: str | None | Unset = UNSET
+    recorded_start: str | None | Unset = UNSET
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
@@ -23989,6 +23994,10 @@ class LayerTime(_Model):
             out["end"] = self.end
         if self.key is not UNSET:
             out["key"] = self.key
+        if self.recorded_end is not UNSET:
+            out["recordedEnd"] = self.recorded_end
+        if self.recorded_start is not UNSET:
+            out["recordedStart"] = self.recorded_start
         return out
 
     @classmethod
@@ -23998,6 +24007,8 @@ class LayerTime(_Model):
             cumulative=data.get("cumulative", UNSET),
             end=data.get("end", UNSET),
             key=data.get("key", UNSET),
+            recorded_end=data.get("recordedEnd", UNSET),
+            recorded_start=data.get("recordedStart", UNSET),
         )
 
 
@@ -40810,6 +40821,110 @@ class TileMatrix(_Model):
 
 
 @dataclass(kw_only=True, slots=True)
+class TimeQueried(_Model):
+    """Output of `cad.time.query` v1: the objects shown (persistent ids, in the drawing's order) and why the others are
+    not; the moments read, in UTC.
+    Attributes:
+        not_valid: Objects with a valid time the window does not show. Unit: count.
+        not_known: Objects whose version was not known on the day (recorded later, superseded by then, or never recorded). Unit: count.
+        timeless: Objects without a valid time (shown: a timeless object shows at every time). Unit: count.
+        unrecorded: Objects without a recorded start (with `knownAt` not shown). Unit: count.
+        unreadable: Values of the layer's time attributes that are not moments. Unit: count.
+        revision: ^(0|[1-9][0-9]*)$
+        at: The instant read (`YYYY-MM-DDTHH:MM:SSZ`, a midnight `YYYY-MM-DD`).
+    """
+    layer: str
+    shown: list[str]
+    not_valid: int
+    not_known: int
+    timeless: int
+    unrecorded: int
+    unreadable: int
+    revision: str
+    at: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    known_at: str | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        out["shown"] = list(self.shown)
+        out["notValid"] = self.not_valid
+        out["notKnown"] = self.not_known
+        out["timeless"] = self.timeless
+        out["unrecorded"] = self.unrecorded
+        out["unreadable"] = self.unreadable
+        out["revision"] = self.revision
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.known_at is not UNSET:
+            out["knownAt"] = self.known_at
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TimeQueried:
+        return cls(
+            layer=data["layer"],
+            shown=list(data["shown"]),
+            not_valid=data["notValid"],
+            not_known=data["notKnown"],
+            timeless=data["timeless"],
+            unrecorded=data["unrecorded"],
+            unreadable=data["unreadable"],
+            revision=data["revision"],
+            at=data.get("at", UNSET),
+            from_=data.get("from", UNSET),
+            known_at=data.get("knownAt", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
+class TimeQuery(_Model):
+    """Input of `cad.time.query` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`,
+    `invalid_window`, `not_recorded`.
+    Attributes:
+        layer: The temporal layer's id.
+        at: The valid time's instant; with `from` and `to` refused.
+        from_: The valid time's period [from, to): both or neither.
+        known_at: The day known: only the versions recorded by then and not yet superseded (a layer that records them).
+    """
+    layer: str
+    at: str | None | Unset = UNSET
+    from_: str | None | Unset = UNSET
+    known_at: str | None | Unset = UNSET
+    to: str | None | Unset = UNSET
+
+    def to_json(self) -> dict[str, Any]:
+        out: dict[str, Any] = {}
+        out["layer"] = self.layer
+        if self.at is not UNSET:
+            out["at"] = self.at
+        if self.from_ is not UNSET:
+            out["from"] = self.from_
+        if self.known_at is not UNSET:
+            out["knownAt"] = self.known_at
+        if self.to is not UNSET:
+            out["to"] = self.to
+        return out
+
+    @classmethod
+    def from_json(cls, data: Mapping[str, Any]) -> TimeQuery:
+        return cls(
+            layer=data["layer"],
+            at=data.get("at", UNSET),
+            from_=data.get("from", UNSET),
+            known_at=data.get("knownAt", UNSET),
+            to=data.get("to", UNSET),
+        )
+
+
+@dataclass(kw_only=True, slots=True)
 class TmDefinition(_Model):
     """A transverse Mercator grid: its origin's latitude (0 when left out),
     central meridian, scale and false origin.
@@ -55393,6 +55508,8 @@ __all__ = [
     "ThroughOffsetBy",
     "TileGrid",
     "TileMatrix",
+    "TimeQueried",
+    "TimeQuery",
     "TmCrsSystem",
     "TmDefinition",
     "ToBoundChange",

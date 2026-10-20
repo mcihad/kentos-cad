@@ -910,6 +910,8 @@ mod tests {
             end: end.map(str::to_owned),
             key: None,
             cumulative: false,
+            recorded_start: None,
+            recorded_end: None,
         };
         let mut timed = node("a", LayerNodeType::Layer, None, Vec::new());
         timed.time = Some(time("baslangic", Some("bitis")));

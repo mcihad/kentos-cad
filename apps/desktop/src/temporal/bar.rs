@@ -39,7 +39,7 @@ struct Shown {
 /// What a bar `width` wide shows (the web's `TimeBar.fit`): the ends' dates
 /// give way first, then the words, then Hız, then Döngü, each as soon as the
 /// slider would have less than [`TRACK_MIN`]; the texts measured as drawn.
-fn shown(width: f32, when: &str, ends: [&str; 2]) -> Shown {
+fn shown(width: f32, when: &str, ends: [&str; 2], known: bool) -> Shown {
     let measured = typography::measured_width;
     let (body, caption) = (typography::body(), typography::caption());
     let gap = 10.0;
@@ -53,7 +53,13 @@ fn shown(width: f32, when: &str, ends: [&str; 2]) -> Shown {
         + typography::scaled(86.0)
         + kind
         + BUTTON
-        + 6.0 * gap;
+        + 6.0 * gap
+        // Bilinen gün's word and field, when a layer records its versions (docs/adr/0537).
+        + if known {
+            measured("Bilinen", caption, false) + 6.0 + typography::scaled(96.0) + gap
+        } else {
+            0.0
+        };
     let mut room = width - fixed;
     let mut take = |w: f32| {
         let fits = room - w >= TRACK_MIN;
@@ -149,7 +155,7 @@ impl App {
         .step(1.0)
         .width(Fill);
         let [first, last] = s.ends();
-        let show = shown(width, &s.label(), [&first, &last]);
+        let show = shown(width, &s.label(), [&first, &last], self.time_recorded());
         let mut middle = row![].spacing(8).align_y(Center).width(Fill);
         if show.ends {
             middle = middle.push(label::caption(first).style(kentos_ui::style::text::muted));
@@ -197,6 +203,25 @@ impl App {
             line = line.push(label::caption("Adım"));
         }
         line = line.push(count).push(unit).push(kind);
+        // Bilinen gün (docs/adr/0537): the drawing as known on a day, its versions recorded by then.
+        if self.time_recorded() {
+            let known = text_input("Bugün", &s.known)
+                .on_input(|t| msg(Event::Known(t)))
+                .on_submit(msg(Event::KnownDone))
+                .size(typography::body())
+                .padding([3, 6])
+                .width(typography::scaled(96.0))
+                .style(style::field::input);
+            line = line.push(tip(
+                row![label::caption("Bilinen"), known]
+                    .spacing(6)
+                    .align_y(Center),
+                Tip::new("Bilinen gün").body(
+                    "Çizim o gün bilindiği gibi: o güne dek kaydedilmiş, henüz yerine başkası geçmemiş sürümler. Boş: bütün sürümler.",
+                ),
+                iced::widget::tooltip::Position::Top,
+            ));
+        }
         if show.words {
             line = line.push(label::caption("Hız"));
         }

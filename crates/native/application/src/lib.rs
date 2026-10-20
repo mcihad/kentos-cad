@@ -231,6 +231,7 @@ pub mod walls_from_lines;
 pub mod offset;
 pub mod point;
 pub mod pointclouds;
+pub mod time_query;
 pub mod points_construct;
 pub mod polygon;
 pub mod polyline;
@@ -586,6 +587,11 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_contracts::CAD_STAC_PREPARE,
         kentos_contracts::CAD_STAC_PREPARE_VERSION,
+    ),
+    // Zamanda sorgu ([`time_query`], docs/adr/0537).
+    (
+        kentos_contracts::CAD_TIME_QUERY,
+        kentos_contracts::CAD_TIME_QUERY_VERSION,
     ),
     // Nokta bulutunun bilgisi ve XYZ sor ([`pointclouds`], docs/adr/0536).
     (

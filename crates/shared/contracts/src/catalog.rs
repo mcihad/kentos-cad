@@ -2941,6 +2941,43 @@ pub fn catalog() -> CommandCatalog {
                 },
             ],
         },
+        // A temporal layer's state as valid and as known (docs/adr/0537), held together by
+        // fixtures/commands/v1/cad.time.query.json. The web is paused.
+        CommandDescriptor {
+            id: crate::CAD_TIME_QUERY.into(),
+            version: crate::CAD_TIME_QUERY_VERSION,
+            title: "Zamanda sorgu".into(),
+            summary: "Zamansal bir katmanın (layer) hangi nesnelerinin bir geçerlilik zamanında ve bilinen bir günde gösterildiğini söyler; çizimi değiştirmez. \
+                      Geçerlilik zamanı bir an (at) ya da [from, to) aralığıdır, katmanın zaman ayarının kuralıyla (aralıklı, anlık, birikimli); zamansız nesne her zaman gösterilir. \
+                      Bilinen gün (knownAt) yalnız o güne dek kaydedilmiş ve henüz yerine başkası geçmemiş sürümleri bırakır: katmanın recordedStart ve recordedEnd alanlarıyla (.kcad şema 90); kayıt zamanı tutmayan katmanda not_recorded. \
+                      “O gün geçerli olan” ile “o gün sistemde bilinen” ayrı sorulur. An bir tarih ya da tarih ve saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar. \
+                      Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable."
+                .into(),
+            aliases: vec!["zamandasor".into(), "bilinendurum".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::TimeQuery>(),
+            output: schema::<crate::TimeQueried>(),
+            plan: Some(schema::<crate::TimeQueried>()),
+            capabilities: None,
+            examples: vec![
+                CommandExample {
+                    title: "1 Haziran 2024'te geçerli parseller, 1 Ocak 2025'te bilindiği gibi".into(),
+                    input: json!({ "layer": "parsel", "at": "2024-06-01", "knownAt": "2025-01-01" }),
+                    output: None,
+                },
+                CommandExample {
+                    title: "2023 içinde geçerli olanlar".into(),
+                    input: json!({ "layer": "parsel", "from": "2023-01-01", "to": "2024-01-01" }),
+                    output: None,
+                },
+            ],
+        },
         // A point cloud's source metadata and its points by a lasting id (docs/adr/0536), held together by
         // fixtures/commands/v1/cad.pointclouds.{describe,query}.json. The web is paused.
         CommandDescriptor {
@@ -8382,6 +8419,9 @@ mod tests {
                     }
                     crate::CAD_STAC_PREPARE => {
                         serde_json::from_value::<crate::StacPrepare>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_TIME_QUERY => {
+                        serde_json::from_value::<crate::TimeQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_POINTCLOUDS_DESCRIBE => {
                         serde_json::from_value::<crate::PointCloudsDescribe>(e.input.clone()).map(|_| ())

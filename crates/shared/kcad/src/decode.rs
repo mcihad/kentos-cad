@@ -1517,7 +1517,7 @@ fn layer(r: &mut Reader<'_>, has: Features) -> Result<LayerNode, KcadError> {
                 plot = Some(false);
             }
             "filter" if has.filters => filter = Some(filter::layer_filter(r)?),
-            "time" if has.temporal => time = Some(temporal::layer_time(r)?),
+            "time" if has.temporal => time = Some(temporal::layer_time(r, has.recorded_time)?),
             "scenario" if has.temporal => scenario = Some(temporal::scenario(r)?),
             "replaces" if has.temporal => replaces = Some(text(r)?),
             "snap" if has.layer_snap => snap = Some(layer_snap(r)?),

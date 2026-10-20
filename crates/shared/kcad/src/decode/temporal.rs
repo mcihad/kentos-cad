@@ -12,14 +12,18 @@ use super::{map, required, text, unknown};
 use crate::cbor::Reader;
 use crate::error::{Code, KcadError};
 
-pub(super) fn layer_time(r: &mut Reader<'_>) -> Result<LayerTime, KcadError> {
+pub(super) fn layer_time(r: &mut Reader<'_>, recorded: bool) -> Result<LayerTime, KcadError> {
     let at = r.position();
     let (mut start, mut end, mut key, mut cumulative) = (None, None, None, false);
+    let (mut recorded_start, mut recorded_end) = (None, None);
     map(r, |r, k| {
         match k {
             "end" => end = Some(text(r)?),
             "key" => key = Some(text(r)?),
             "start" => start = Some(text(r)?),
+            // Schema 90 (docs/adr/0537): the attributes of a version's system time.
+            "recordedEnd" if recorded => recorded_end = Some(text(r)?),
+            "recordedStart" if recorded => recorded_start = Some(text(r)?),
             "cumulative" => {
                 let flag = r.position();
                 if !r.bool()? {
@@ -40,6 +44,8 @@ pub(super) fn layer_time(r: &mut Reader<'_>) -> Result<LayerTime, KcadError> {
         end,
         key,
         cumulative,
+        recorded_start,
+        recorded_end,
     };
     match time.problem() {
         Some(problem) => Err(r.fail_at(Code::BadValue, at, &problem)),

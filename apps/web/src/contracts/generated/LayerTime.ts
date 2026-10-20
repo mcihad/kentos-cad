@@ -20,4 +20,13 @@ key?: string,
 /**
  * Birikimli: an object shows from its start on, whatever its end; written only as `true`.
  */
-cumulative?: boolean, };
+cumulative?: boolean, 
+/**
+ * The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):
+ * what was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.
+ */
+recordedStart?: string, 
+/**
+ * The attribute holding when the version was superseded (its system time's end); empty: still current.
+ */
+recordedEnd?: string, };

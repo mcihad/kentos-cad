@@ -49,6 +49,10 @@ pub struct Slider {
     pub looping: bool,
     /// Adım's number as typed.
     pub count: String,
+    /// Bilinen gün as typed (docs/adr/0537): empty, every version; else the day the drawing is shown as known.
+    pub known: String,
+    /// The day read from it.
+    pub known_at: Option<f64>,
     /// When playback last took a step.
     stepped: Option<Instant>,
 }
@@ -70,6 +74,8 @@ impl Default for Slider {
             speed: 1,
             looping: false,
             count: "1".to_owned(),
+            known: String::new(),
+            known_at: None,
             stepped: None,
         }
     }
@@ -201,6 +207,9 @@ pub enum Event {
     CountDone,
     /// Adım's unit, by its index in `Unit::ALL`.
     Unit(usize),
+    /// Bilinen gün typed, and taken (docs/adr/0537).
+    Known(String),
+    KnownDone,
     Ranged(bool),
     /// Hız, by its index in [`SPEEDS`].
     Speed(usize),
@@ -319,6 +328,21 @@ impl App {
     fn time_apply(&mut self) {
         let window = self.time.slider.window();
         self.spatial.set_time_window(window);
+        // Bilinen gün holds while the slider is open (docs/adr/0537).
+        let s = &self.time.slider;
+        self.spatial
+            .set_known_at(if s.open { s.known_at } else { None });
+    }
+
+    /// Whether a shown layer records its versions' system time (Bilinen gün's field shows).
+    pub(crate) fn time_recorded(&self) -> bool {
+        self.document.as_ref().is_some_and(|d| {
+            d.model.layers().leaves().iter().any(|l| {
+                l.time
+                    .as_ref()
+                    .is_some_and(kentos_contracts::LayerTime::recorded)
+            })
+        })
     }
 
     /// Opens the slider at its last position (the latest state); the reason when it does not.
@@ -476,6 +500,22 @@ impl App {
                 self.time.slider.stepped = Some(Instant::now());
             }
             Event::Count(text) => self.time.slider.count = text,
+            Event::Known(text) => self.time.slider.known = text,
+            Event::KnownDone => {
+                let text = self.time.slider.known.clone();
+                match time::read(&text) {
+                    time::Read::Empty => self.time.slider.known_at = None,
+                    time::Read::Moment(t) => {
+                        self.time.slider.known_at = Some(t);
+                        self.time.slider.known = time::show(t, Unit::Day);
+                    }
+                    time::Read::Unreadable => {
+                        self.warn("Bilinen gün bir tarih olmalı (01.06.2024 ya da 2024-06-01); boş bırakılırsa bütün sürümler.");
+                        return Task::none();
+                    }
+                }
+                self.time_apply();
+            }
             Event::CountDone => {
                 let s = &self.time.slider;
                 let n = s

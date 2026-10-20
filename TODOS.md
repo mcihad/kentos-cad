@@ -218,6 +218,9 @@ Liste:
 - [ ] `CBS-27` şebeke izlemede ilişkili kayıtlar ve doğrulanmamış bağlantılar (ADR 0525, 19 Ekim): web'de gerekenler: ağın
   işçisinin cevabında `junctions` ve `unverified` (çekirdekten gelir), `tools/networkTraceTool.ts`'te ilişkili kayıtlar (belgenin
   ilişkileriyle, TS'te ya da WASM'la) ve doğrulanmamış bağlantıların işareti ve uyarısı.
+- [ ] `CBS-33` iki zamanlı katmanlar (ADR 0537, 20 Ekim): web'de gerekenler: `.kcad` şema 90'ın `recordedStart` ve `recordedEnd`'i web'in
+  kodeğinde (`io/kcad.ts`) ve `model/snapshot.ts`'te, `cad.time.query`'nin işleyicisi, Zaman ayarları'nın kayıt alanları, Zaman
+  sürgüsünün Bilinen günü (WASM deposunun `set_recorded`, `set_known_at`'i), `cad.layers.time`'ın yeni durumları web'in oynatıcısında.
 - [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (ADR 0536, 20 Ekim): web'de gerekenler: nokta bulutu web'e
   gelince (ADR 0207) `cad.pointclouds.describe` ve `cad.pointclouds.query`'nin işleyicileri (nokta bulutu çekirdeğinin WASM
   bağlayıcısıyla), Öznitelikler'in başlık satırları; ortak durumlar `fixtures/commands/v1/cad.pointclouds.*.json` web'in oynatıcısında
@@ -2018,6 +2021,12 @@ plan/gis.md'dedir; burada bitenler kanıtıyla yazılır. ADR'ler 0500'den başl
   ilişkileriyle bağlı ve içeren kayıtlar (`Document::related_of`), Denetle'nin bağlantı sorunlarından geçen izlemenin uyarısı
   (`TraceAnswer.unverified`); araçta sayılır, işaretlenir ve seçilir; Python. Kalan: terminaller, alt ağlar, artımlı graf, LRS
   olaylarının kayma raporu. — **19 Ekim, [ADR 0525](docs/adr/0525-network-related-records-and-unverified-traces.md).**
+- [ ] `CBS-33` iki zamanlı katmanlar (dilim): katmanın zaman ayarında sürümlerin kayıt zamanı (`recordedStart`, `recordedEnd`; `.kcad`
+  şema 90), çekirdekte bilinen günün kuralı (`time::recorded_interval`, `known`; [kayıt, yerine geçiş)), salt okunur `cad.time.query`
+  (geçerlilik anı ya da aralığı ve bilinen gün; gösterilenler ve nedenler; bölgeli anlar, UTC cevap), masaüstünde Zaman ayarları'nda kayıt
+  alanları ve Zaman sürgüsünde Bilinen gün (çizim, seçim, kenet o günün sürümleriyle). Kalan: süzgecin sağlayıcıya taşınması (CBS-02),
+  kayıt zamanının projenin değişmez revizyonlarına bağlanması, sensör ve gözlem akışı (alım zamanı, kalite, geç ve yinelenen kayıt,
+  kopan akış), aynı süzgecin İşlemler'e, tabloya ve dışa aktarmaya, projenin saat dilimi. — **20 Ekim, [ADR 0537](docs/adr/0537-bitemporal-layers.md).**
 - [ ] `CBS-32` nokta bulutunun kaynak bilgisi ve kalıcı nokta kimliği (dilim): `cad.pointclouds.describe` (her kaynağın başlığı: tür,
   sürüm, biçim, sayı, kutu, ölçek, yatay ve düşey sistem, oluşturulma günü, GPS zamanının türü, yazan, GUID, boyutlar ve ek baytlar,
   dönüşe göre sayılar, COPC düğümleri; `classes` ile bütün okunarak sınıf sayıları; okunamayan kaynak nedeniyle) ve

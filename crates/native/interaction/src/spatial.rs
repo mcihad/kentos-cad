@@ -640,6 +640,7 @@ impl Spatial {
             .collect();
         for id in gone {
             let ids: Vec<f64> = doc.by_layer(&id).map(|e| f64::from(e.base().id)).collect();
+            self.store.set_recorded([], ids.iter().copied());
             self.store.set_times(ids.into_iter().map(|id| (id, None)));
         }
         let whole: Vec<String> = next
@@ -673,6 +674,7 @@ impl Spatial {
             let layer = layer.to_owned();
             self.time(&list, &layer);
         }
+        self.store.set_recorded([], off.iter().copied());
         self.store.set_times(off.into_iter().map(|id| (id, None)));
     }
 
@@ -703,8 +705,33 @@ impl Spatial {
             }),
         );
         let ids: Vec<f64> = list.iter().map(|e| f64::from(e.base().id)).collect();
+        // The versions' system time (docs/adr/0537): a layer recording them gives each its interval.
+        match &rule.recorded_start {
+            Some(start) => {
+                let read = |e: &Entity, key: Option<&String>| {
+                    key.and_then(|k| e.base().attrs.get(k))
+                        .map_or(kentos_geometry_core::time::Read::Empty, |v| {
+                            kentos_geometry_core::time::read(v)
+                        })
+                };
+                let recorded = list.iter().map(|e| {
+                    kentos_geometry_core::time::recorded_interval(
+                        read(e, Some(start)),
+                        read(e, rule.recorded_end.as_ref()),
+                    )
+                });
+                self.store
+                    .set_recorded(ids.iter().copied().zip(recorded), []);
+            }
+            None => self.store.set_recorded([], ids.iter().copied()),
+        }
         self.store.set_times(ids.into_iter().zip(times));
         self.timed = true;
+    }
+
+    /// The day the drawing is shown as known (docs/adr/0537): the versions not known then are left out; none ends it.
+    pub fn set_known_at(&mut self, at: Option<f64>) {
+        self.store.set_known_at(at);
     }
 
     /// The time slider's window (docs/adr/0210 §5): queries leave out the

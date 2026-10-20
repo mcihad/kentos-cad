@@ -3355,6 +3355,974 @@
       ]
     },
     {
+      "name": "Kayıt zamanı: sürümlerin kayıt başlangıcı ve bitişi alanları",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "yol",
+            "time": {
+              "start": "yapim_tarihi",
+              "end": "yikim_tarihi",
+              "recordedStart": "kayit_tarihi",
+              "recordedEnd": "kayit_bitis"
+            }
+          },
+          "result": {
+            "status": "completed",
+            "output": {
+              "layer": "yol",
+              "changed": true,
+              "revision": "$current"
+            },
+            "warnings": []
+          },
+          "expect": {
+            "layers": [
+              {
+                "id": "alt-a",
+                "name": "Yol genişletme A",
+                "type": "group",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "alt-a-yol",
+                    "name": "Yol",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "replaces": "yol"
+                  },
+                  {
+                    "id": "alt-a-park",
+                    "name": "Yeni park",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#30A46C",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ],
+                "scenario": {
+                  "note": "12 m'lik yol önerisi"
+                }
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E5484D",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "genislik",
+                    "kind": "decimal"
+                  }
+                ],
+                "time": {
+                  "start": "yapim_tarihi",
+                  "end": "yikim_tarihi",
+                  "recordedStart": "kayit_tarihi",
+                  "recordedEnd": "kayit_bitis"
+                }
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "time": {
+                  "start": "gecerlilik_baslangic",
+                  "end": "gecerlilik_bitis",
+                  "key": "parsel_no"
+                },
+                "snap": {
+                  "kinds": [
+                    "endpoint",
+                    "midpoint"
+                  ]
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ],
+            "canUndo": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk ayar: kayıt bitişi başlangıçsız",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "yol",
+            "time": {
+              "start": "tarih",
+              "recordedEnd": "kayit_bitis"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_time",
+              "message": "Katmanın zamanı: kayıt bitişi kayıt başlangıcı ister.",
+              "path": "time"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "alt-a",
+                "name": "Yol genişletme A",
+                "type": "group",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "alt-a-yol",
+                    "name": "Yol",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "replaces": "yol"
+                  },
+                  {
+                    "id": "alt-a-park",
+                    "name": "Yeni park",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#30A46C",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ],
+                "scenario": {
+                  "note": "12 m'lik yol önerisi"
+                }
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E5484D",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "genislik",
+                    "kind": "decimal"
+                  }
+                ]
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "time": {
+                  "start": "gecerlilik_baslangic",
+                  "end": "gecerlilik_bitis",
+                  "key": "parsel_no"
+                },
+                "snap": {
+                  "kinds": [
+                    "endpoint",
+                    "midpoint"
+                  ]
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk ayar: kayıt başlangıcı geçerlilik başlangıcıyla aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "yol",
+            "time": {
+              "start": "tarih",
+              "recordedStart": "tarih"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_time",
+              "message": "Katmanın zamanı: kayıt zamanının “tarih” alanı geçerlilik zamanının ya da kimliğin alanı olamaz.",
+              "path": "time"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "alt-a",
+                "name": "Yol genişletme A",
+                "type": "group",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "alt-a-yol",
+                    "name": "Yol",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "replaces": "yol"
+                  },
+                  {
+                    "id": "alt-a-park",
+                    "name": "Yeni park",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#30A46C",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ],
+                "scenario": {
+                  "note": "12 m'lik yol önerisi"
+                }
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E5484D",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "genislik",
+                    "kind": "decimal"
+                  }
+                ]
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "time": {
+                  "start": "gecerlilik_baslangic",
+                  "end": "gecerlilik_bitis",
+                  "key": "parsel_no"
+                },
+                "snap": {
+                  "kinds": [
+                    "endpoint",
+                    "midpoint"
+                  ]
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk ayar: kayıt başlangıcı ve bitişi aynı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "yol",
+            "time": {
+              "start": "tarih",
+              "recordedStart": "kayit",
+              "recordedEnd": "kayit"
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_time",
+              "message": "Katmanın zamanı: kayıt başlangıcı ve bitişi aynı alan olamaz.",
+              "path": "time"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "alt-a",
+                "name": "Yol genişletme A",
+                "type": "group",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "alt-a-yol",
+                    "name": "Yol",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "replaces": "yol"
+                  },
+                  {
+                    "id": "alt-a-park",
+                    "name": "Yeni park",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#30A46C",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ],
+                "scenario": {
+                  "note": "12 m'lik yol önerisi"
+                }
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E5484D",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "genislik",
+                    "kind": "decimal"
+                  }
+                ]
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "time": {
+                  "start": "gecerlilik_baslangic",
+                  "end": "gecerlilik_bitis",
+                  "key": "parsel_no"
+                },
+                "snap": {
+                  "kinds": [
+                    "endpoint",
+                    "midpoint"
+                  ]
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bozuk ayar: boş kayıt başlangıcı",
+      "steps": [
+        {
+          "op": "execute",
+          "input": {
+            "layer": "yol",
+            "time": {
+              "start": "tarih",
+              "recordedStart": ""
+            }
+          },
+          "result": {
+            "status": "failed",
+            "error": {
+              "code": "invalid_time",
+              "message": "Katmanın zamanı: kayıt başlangıcı alanının adı boş.",
+              "path": "time"
+            }
+          },
+          "expect": {
+            "ids": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7
+            ],
+            "canUndo": false,
+            "canRedo": false,
+            "dirty": false,
+            "revision": "same",
+            "layers": [
+              {
+                "id": "alt-a",
+                "name": "Yol genişletme A",
+                "type": "group",
+                "visible": false,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "alt-a-yol",
+                    "name": "Yol",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#E5484D",
+                      "lineType": "continuous",
+                      "lineWeight": 0.35
+                    },
+                    "children": [],
+                    "replaces": "yol"
+                  },
+                  {
+                    "id": "alt-a-park",
+                    "name": "Yeni park",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "#30A46C",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ],
+                "scenario": {
+                  "note": "12 m'lik yol önerisi"
+                }
+              },
+              {
+                "id": "yol",
+                "name": "Yol",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#E5484D",
+                  "lineType": "continuous",
+                  "lineWeight": 0.35
+                },
+                "children": [],
+                "fields": [
+                  {
+                    "name": "genislik",
+                    "kind": "decimal"
+                  }
+                ]
+              },
+              {
+                "id": "parsel",
+                "name": "Parsel",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "#0090FF",
+                  "lineType": "dashed",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "time": {
+                  "start": "gecerlilik_baslangic",
+                  "end": "gecerlilik_bitis",
+                  "key": "parsel_no"
+                },
+                "snap": {
+                  "kinds": [
+                    "endpoint",
+                    "midpoint"
+                  ]
+                }
+              },
+              {
+                "id": "koruma",
+                "name": "Koruma alanı",
+                "type": "group",
+                "visible": true,
+                "locked": true,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [
+                  {
+                    "id": "bina",
+                    "name": "Bina",
+                    "type": "layer",
+                    "visible": true,
+                    "locked": false,
+                    "expanded": true,
+                    "style": {
+                      "color": "fg",
+                      "lineType": "continuous",
+                      "lineWeight": 0.25
+                    },
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "id": "altlik",
+                "name": "OpenStreetMap",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": [],
+                "service": {
+                  "kind": "xyz",
+                  "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+                  "maxZoom": 19
+                }
+              },
+              {
+                "id": "0",
+                "name": "0",
+                "type": "layer",
+                "visible": true,
+                "locked": false,
+                "expanded": true,
+                "style": {
+                  "color": "fg",
+                  "lineType": "continuous",
+                  "lineWeight": 0.25
+                },
+                "children": []
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
       "name": "bozuk ayar: boş başlangıç",
       "steps": [
         {

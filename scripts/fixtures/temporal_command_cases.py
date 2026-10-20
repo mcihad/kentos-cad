@@ -249,6 +249,25 @@ def time_cases():
         "name": "Plan: aynı ayar, changed false",
         "steps": [step("plan", {"layer": "parsel", "time": PARSEL_TIME}, completed({"node": get(tree(), "parsel"), "changed": False, "revision": "$current"}), UNCHANGED)],
     })
+    # The versions' system time (docs/adr/0537, `.kcad` schema 90): its own fields, its end only with its start.
+    recorded = {"start": "yapim_tarihi", "end": "yikim_tarihi", "recordedStart": "kayit_tarihi",
+                "recordedEnd": "kayit_bitis"}
+    out.append({
+        "name": "Kayıt zamanı: sürümlerin kayıt başlangıcı ve bitişi alanları",
+        "steps": [step("execute", {"layer": "yol", "time": recorded}, timed("yol"),
+                       {"layers": changed(tree(), "yol", time=recorded), "canUndo": True})],
+    })
+    for name, value, problem in (
+        ("kayıt bitişi başlangıçsız", {"start": "tarih", "recordedEnd": "kayit_bitis"},
+         "kayıt bitişi kayıt başlangıcı ister"),
+        ("kayıt başlangıcı geçerlilik başlangıcıyla aynı", {"start": "tarih", "recordedStart": "tarih"},
+         "kayıt zamanının “tarih” alanı geçerlilik zamanının ya da kimliğin alanı olamaz"),
+        ("kayıt başlangıcı ve bitişi aynı", {"start": "tarih", "recordedStart": "kayit", "recordedEnd": "kayit"},
+         "kayıt başlangıcı ve bitişi aynı alan olamaz"),
+        ("boş kayıt başlangıcı", {"start": "tarih", "recordedStart": ""}, "kayıt başlangıcı alanının adı boş"),
+    ):
+        out.append(time_refused(f"bozuk ayar: {name}", {"layer": "yol", "time": value}, "invalid_time",
+                                f"Katmanın zamanı: {problem}.", "time"))
     # The refusals, in the contract's order: the setting's rules first.
     for name, value, rule in (
         ("boş başlangıç", {"start": ""}, "boş başlangıç"),

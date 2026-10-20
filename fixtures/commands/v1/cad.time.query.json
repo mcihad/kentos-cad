@@ -1,0 +1,1583 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "cad.time.query",
+ "commandVersion": 1,
+ "title": "Zamanda sorgu",
+ "note": "ADR 0537. Bağımsız başvuru scripts/fixtures/time_query_cases.py: anların okunuşu, geçerlilik zamanı ve pencerenin kuralı temporal_cases.py'den (ADR 0210), kayıt zamanı ADR 0537'nin kuralıyla; KentOS kodu yok.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Zamanda sorgu",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 500000.0,
+   "y": 4400000.0
+  },
+  "layers": [
+   {
+    "id": "parsel",
+    "name": "Parsel",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "gecerlilik_baslangic",
+     "end": "gecerlilik_bitis",
+     "key": "parsel_no",
+     "recordedStart": "kayit_baslangic",
+     "recordedEnd": "kayit_bitis"
+    }
+   },
+   {
+    "id": "ariza",
+    "name": "Arıza",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "an"
+    }
+   },
+   {
+    "id": "birikim",
+    "name": "Yapı",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "baslangic",
+     "end": "bitis",
+     "cumulative": true
+    }
+   },
+   {
+    "id": "plan",
+    "name": "Plan",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [],
+    "time": {
+     "start": "baslangic",
+     "end": "bitis"
+    }
+   },
+   {
+    "id": "zamansiz",
+    "name": "Zamansız",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": [
+     {
+      "id": "ic",
+      "name": "İç",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ]
+   }
+  ],
+  "activeLayer": "parsel",
+  "entities": [
+   {
+    "kind": "polygon",
+    "id": 1,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "101",
+     "gecerlilik_baslangic": "2020-01-01",
+     "gecerlilik_bitis": "2024-03-01",
+     "kayit_baslangic": "2020-01-05",
+     "kayit_bitis": "2024-03-02"
+    },
+    "pts": [
+     {
+      "x": 500030,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400000
+     },
+     {
+      "x": 500050,
+      "y": 4400020
+     },
+     {
+      "x": 500030,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 2,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "101",
+     "gecerlilik_baslangic": "2024-03-01",
+     "kayit_baslangic": "2024-03-02"
+    },
+    "pts": [
+     {
+      "x": 500060,
+      "y": 4400000
+     },
+     {
+      "x": 500080,
+      "y": 4400000
+     },
+     {
+      "x": 500080,
+      "y": 4400020
+     },
+     {
+      "x": 500060,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 3,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "102",
+     "gecerlilik_baslangic": "2022-06-01",
+     "kayit_baslangic": "2025-01-10T09:00:00+03:00"
+    },
+    "pts": [
+     {
+      "x": 500090,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400000
+     },
+     {
+      "x": 500110,
+      "y": 4400020
+     },
+     {
+      "x": 500090,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 4,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "103",
+     "gecerlilik_baslangic": "2021-01-01",
+     "gecerlilik_bitis": "2023-01-01",
+     "kayit_baslangic": "2021-01-02",
+     "kayit_bitis": "2023-01-01"
+    },
+    "pts": [
+     {
+      "x": 500120,
+      "y": 4400000
+     },
+     {
+      "x": 500140,
+      "y": 4400000
+     },
+     {
+      "x": 500140,
+      "y": 4400020
+     },
+     {
+      "x": 500120,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 5,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "104",
+     "kayit_baslangic": "2022-01-01"
+    },
+    "pts": [
+     {
+      "x": 500150,
+      "y": 4400000
+     },
+     {
+      "x": 500170,
+      "y": 4400000
+     },
+     {
+      "x": 500170,
+      "y": 4400020
+     },
+     {
+      "x": 500150,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 6,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "105",
+     "gecerlilik_baslangic": "2019-01-01"
+    },
+    "pts": [
+     {
+      "x": 500180,
+      "y": 4400000
+     },
+     {
+      "x": 500200,
+      "y": 4400000
+     },
+     {
+      "x": 500200,
+      "y": 4400020
+     },
+     {
+      "x": 500180,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 7,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "106",
+     "gecerlilik_baslangic": "dün",
+     "kayit_baslangic": "?"
+    },
+    "pts": [
+     {
+      "x": 500210,
+      "y": 4400000
+     },
+     {
+      "x": 500230,
+      "y": 4400000
+     },
+     {
+      "x": 500230,
+      "y": 4400020
+     },
+     {
+      "x": 500210,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 8,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "107",
+     "gecerlilik_baslangic": "2023-05-05",
+     "gecerlilik_bitis": "2023-05-05",
+     "kayit_baslangic": "2023-05-05"
+    },
+    "pts": [
+     {
+      "x": 500240,
+      "y": 4400000
+     },
+     {
+      "x": 500260,
+      "y": 4400000
+     },
+     {
+      "x": 500260,
+      "y": 4400020
+     },
+     {
+      "x": 500240,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 9,
+    "layerId": "parsel",
+    "attrs": {
+     "parsel_no": "108",
+     "gecerlilik_baslangic": "2024-06-01T00:30:00+03:00",
+     "kayit_baslangic": "2024-06-01"
+    },
+    "pts": [
+     {
+      "x": 500270,
+      "y": 4400000
+     },
+     {
+      "x": 500290,
+      "y": 4400000
+     },
+     {
+      "x": 500290,
+      "y": 4400020
+     },
+     {
+      "x": 500270,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 10,
+    "layerId": "ariza",
+    "attrs": {
+     "an": "2024-06-01T10:00:00Z"
+    },
+    "pts": [
+     {
+      "x": 500300,
+      "y": 4400000
+     },
+     {
+      "x": 500320,
+      "y": 4400000
+     },
+     {
+      "x": 500320,
+      "y": 4400020
+     },
+     {
+      "x": 500300,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 11,
+    "layerId": "ariza",
+    "attrs": {
+     "an": "2024-06-02"
+    },
+    "pts": [
+     {
+      "x": 500330,
+      "y": 4400000
+     },
+     {
+      "x": 500350,
+      "y": 4400000
+     },
+     {
+      "x": 500350,
+      "y": 4400020
+     },
+     {
+      "x": 500330,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 12,
+    "layerId": "birikim",
+    "attrs": {
+     "baslangic": "2020-01-01",
+     "bitis": "2021-01-01"
+    },
+    "pts": [
+     {
+      "x": 500360,
+      "y": 4400000
+     },
+     {
+      "x": 500380,
+      "y": 4400000
+     },
+     {
+      "x": 500380,
+      "y": 4400020
+     },
+     {
+      "x": 500360,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 13,
+    "layerId": "birikim",
+    "attrs": {
+     "baslangic": "2025-01-01"
+    },
+    "pts": [
+     {
+      "x": 500390,
+      "y": 4400000
+     },
+     {
+      "x": 500410,
+      "y": 4400000
+     },
+     {
+      "x": 500410,
+      "y": 4400020
+     },
+     {
+      "x": 500390,
+      "y": 4400020
+     }
+    ]
+   },
+   {
+    "kind": "polygon",
+    "id": 14,
+    "layerId": "plan",
+    "attrs": {
+     "baslangic": "2020-01-01",
+     "bitis": "2030-01-01"
+    },
+    "pts": [
+     {
+      "x": 500420,
+      "y": 4400000
+     },
+     {
+      "x": 500440,
+      "y": 4400000
+     },
+     {
+      "x": 500440,
+      "y": 4400020
+     },
+     {
+      "x": 500420,
+      "y": 4400020
+     }
+    ]
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "1 Haziran 2024'te geçerli parseller, bugün bilindiği gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "1 Haziran 2024'te geçerli, 1 Ocak 2025'te bilinen: geç gelen düzeltme yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-01-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-01-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 3,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "1 Haziran 2024'te geçerli, 1 Şubat 2025'te bilinen: geç gelen düzeltme var",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geç gelen kaydın bilinmeye başladığı an, bölgesiyle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-01-10T06:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-01-10T06:00:00Z",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir dakika önce bilinmiyordu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-01-10T05:59:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-01-10T05:59:00Z",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 3,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2023 ortasında geçerli olan, o gün bilindiği gibi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2023-06-01",
+      "knownAt": "2023-06-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2023-06-01",
+       "knownAt": "2023-06-01",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:5"
+       ],
+       "notValid": 4,
+       "notKnown": 3,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "sürümün bittiği an: aralık bitişi içermez, yenisi geçerli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-03-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-03-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "notValid": 4,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "eski sürümün yerine başkasının geçtiği gün eski sürüm bilinmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-02-01",
+      "knownAt": "2024-03-02"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-02-01",
+       "knownAt": "2024-03-02",
+       "shown": [
+        "$uidOf:5"
+       ],
+       "notValid": 4,
+       "notKnown": 4,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bir gün önce eski sürüm bilinir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-02-01",
+      "knownAt": "2024-03-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-02-01",
+       "knownAt": "2024-03-01",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:5"
+       ],
+       "notValid": 4,
+       "notKnown": 3,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "2022 boyunca geçerli olanlar (aralık)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2022-01-01",
+      "to": "2023-01-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "from": "2022-01-01",
+       "to": "2023-01-01",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "notValid": 3,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş geçerlilik aralığı: bir anda hiç, onu içeren aralıkta görünür",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2023-05-01",
+      "to": "2023-06-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "from": "2023-05-01",
+       "to": "2023-06-01",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8"
+       ],
+       "notValid": 3,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "boş geçerlilik aralığı kendi anında görünmez",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2023-05-05"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2023-05-05",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "notValid": 4,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bölge: Türkiye'de 1 Haziran 00:30, UTC'de 31 Mayıs 21:30",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2024-05-31T21:00:00Z",
+      "to": "2024-05-31T22:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "from": "2024-05-31T21:00:00Z",
+       "to": "2024-05-31T22:00:00Z",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "bölgeli an: 1 Haziran 00:00 Türkiye saati",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01T00:00:00+03:00"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-05-31T21:00:00Z",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7"
+       ],
+       "notValid": 4,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "gün.ay.yıl biçimi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "01.06.2024"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "yalnız bilinen gün: geçerlilikten bağımsız o gün bilinenler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "knownAt": "2024-01-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "knownAt": "2024-01-01",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:5",
+        "$uidOf:8"
+       ],
+       "notValid": 0,
+       "notKnown": 6,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "geçerlilik de bilinen gün de yoksa hepsi",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "shown": [
+        "$uidOf:1",
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:4",
+        "$uidOf:5",
+        "$uidOf:6",
+        "$uidOf:7",
+        "$uidOf:8",
+        "$uidOf:9"
+       ],
+       "notValid": 0,
+       "notKnown": 0,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "anlık katman: tam anında",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "ariza",
+      "at": "2024-06-01T10:00:00Z"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "ariza",
+       "at": "2024-06-01T10:00:00Z",
+       "shown": [
+        "$uidOf:10"
+       ],
+       "notValid": 1,
+       "notKnown": 0,
+       "timeless": 0,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "anlık katman: bir aralıkta",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "ariza",
+      "from": "2024-06-01",
+      "to": "2024-06-03"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "ariza",
+       "from": "2024-06-01",
+       "to": "2024-06-03",
+       "shown": [
+        "$uidOf:10",
+        "$uidOf:11"
+       ],
+       "notValid": 0,
+       "notKnown": 0,
+       "timeless": 0,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "birikimli katman: başladıktan sonra hep",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "birikim",
+      "at": "2026-01-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "birikim",
+       "at": "2026-01-01",
+       "shown": [
+        "$uidOf:12",
+        "$uidOf:13"
+       ],
+       "notValid": 0,
+       "notKnown": 0,
+       "timeless": 0,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt zamanı tutmayan katman: geçerlilikle",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "plan",
+      "at": "2025-01-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "plan",
+       "at": "2025-01-01",
+       "shown": [
+        "$uidOf:14"
+       ],
+       "notValid": 0,
+       "notKnown": 0,
+       "timeless": 0,
+       "unrecorded": 0,
+       "unreadable": 0,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan aynı cevabı verir",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01",
+      "knownAt": "2025-02-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "layer": "parsel",
+       "at": "2024-06-01",
+       "knownAt": "2025-02-01",
+       "shown": [
+        "$uidOf:2",
+        "$uidOf:3",
+        "$uidOf:5",
+        "$uidOf:9"
+       ],
+       "notValid": 3,
+       "notKnown": 2,
+       "timeless": 2,
+       "unrecorded": 2,
+       "unreadable": 2,
+       "revision": "$current"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-06-01"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "kayıt zamanı tutmayan katmanda bilinen gün sorulamaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "plan",
+      "knownAt": "2025-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_recorded",
+       "message": "“Plan” katmanı sürümlerinin kayıt zamanını tutmuyor; Zaman ayarları'nda kayıt başlangıcı alanını seçin.",
+       "path": "knownAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "zaman ayarı olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "zamansiz",
+      "at": "2024-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_temporal",
+       "message": "“Zamansız” katmanının zaman ayarı yok; önce Zaman ayarları ile başlangıç alanını seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir katman grubu; zaman katmanın ayarıdır. Grubun içinden bir katman seçin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "olmayan katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok. Var olan bir katmanın kimliğini verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okunmayan an",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "geçen yıl"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“geçen yıl” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "okunmayan bilinen gün",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "knownAt": "31.02.2024"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_moment",
+       "message": "“31.02.2024” bir an değil: bir tarih (2024-06-01 ya da 01.06.2024) ya da tarih ve saat (2024-06-01T14:30, bölgesiyle 2024-06-01T14:30+03:00) yazın.",
+       "path": "knownAt"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "an ve aralık birlikte",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "at": "2024-01-01",
+      "from": "2024-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Geçerlilik zamanı ya bir an (at) ya bir aralıktır (from ve to); ikisi birden verilmez.",
+       "path": "at"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralığın yalnız başlangıcı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2024-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Aralığın başlangıcı (from) ve bitişi (to) birlikte verilir.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralığın bitişi başlangıcından önce",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2024-01-02",
+      "to": "2024-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Aralığın bitişi başlangıcından sonra olmalı; [from, to) bitişi içermez.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  },
+  {
+   "name": "aralığın bitişi başlangıcına eşit",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "layer": "parsel",
+      "from": "2024-01-01",
+      "to": "2024-01-01"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_period",
+       "message": "Aralığın bitişi başlangıcından sonra olmalı; [from, to) bitişi içermez.",
+       "path": "to"
+      }
+     },
+     "expect": {
+      "revision": "same"
+     }
+    }
+   ]
+  }
+ ]
+}

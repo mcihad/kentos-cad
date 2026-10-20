@@ -1778,6 +1778,18 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
             .iter()
             .any(|n| n.compose.is_some() || composed(&n.children))
     }
+    // Schema 90 (docs/adr/0537): a layer time's system time attributes.
+    fn recorded(nodes: &[LayerNode]) -> bool {
+        nodes.iter().any(|n| {
+            n.time
+                .as_ref()
+                .is_some_and(kentos_contracts::LayerTime::recorded)
+                || recorded(&n.children)
+        })
+    }
+    if recorded(&doc.layers) {
+        return crate::SCHEMA_WITH_RECORDED_TIME;
+    }
     // Schema 89 (docs/adr/0527): the project's join views.
     if !doc.settings.join_views.is_empty() {
         return crate::SCHEMA_WITH_JOIN_VIEWS;

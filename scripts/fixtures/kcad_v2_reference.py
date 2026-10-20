@@ -1185,7 +1185,9 @@ def layer_time(t):
     """A layer's time setting (schema 34, docs/adr/0210 §2): the start's field, the end's and the key's when given,
     Birikimli only when true."""
     assert t.get("cumulative", True) is True, "cumulative yalnız true yazılır"
-    return cmap(fields(t, {"start": (text, True), "end": (text, False), "key": (text, False), "cumulative": (only_true, False)}, "time"))
+    return cmap(fields(t, {"start": (text, True), "end": (text, False), "key": (text, False), "cumulative": (only_true, False),
+                           # Schema 90 (docs/adr/0537): the attributes of the versions' system time.
+                           "recordedStart": (text, False), "recordedEnd": (text, False)}, "time"))
 
 
 def scenario(s):
@@ -2137,6 +2139,11 @@ def schema_of(entities, blocks=None, layers=(), settings=None, has_sheets=False,
     (docs/adr/0145), 6 with block definitions (docs/adr/0144), 5 with an area's parts (docs/adr/0143), 4 with a
     vertex elevation (docs/adr/0142), 3 with an object's own line weight (docs/adr/0139), else 2: a drawing without
     any stays as it was, byte for byte."""
+    # Schema 90 (docs/adr/0537): a layer time's system time attributes.
+    def recorded(nodes):
+        return any(any(k in n.get("time", {}) for k in ("recordedStart", "recordedEnd")) or recorded(n["children"]) for n in nodes)
+    if recorded(layers):
+        return 90
     # Schema 89 (docs/adr/0527): the project's join views.
     if "joinViews" in (settings or {}):
         return 89
@@ -2681,7 +2688,7 @@ def broken(minimal_content, minimal_file):
 
     # The document schema.
     files["wrong-format.kcad"] = container(head(5, 3) + text("format") + text("kentos.style") + text("version") + b"\x02" + text("document") + cmap(parts))
-    files["schema-version-90.kcad"] = container(root(cmap(parts), version=uint(90)))
+    files["schema-version-91.kcad"] = container(root(cmap(parts), version=uint(91)))
     files["unknown-field.kcad"] = container(with_parts({**parts, "extra": text("?")}))
     files["missing-field.kcad"] = container(with_parts({k: v for k, v in parts.items() if k != "activeLayer"}))
     files["int-for-float.kcad"] = container(with_parts({**parts, "settings": cmap({**{k: v for k, v in settings_parts(m["settings"]).items()}, "plotScale": uint(1000)})}))
@@ -4455,6 +4462,23 @@ def build():
     out["broken/join-views-empty.kcad"] = join_broken(lambda d: d["settings"].update(joinViews=[]))
     out["broken/join-views-empty-fields.kcad"] = join_broken(lambda d: d["settings"]["joinViews"][0].update(fields=[]))
     out["broken/join-views-same-id.kcad"] = join_broken(lambda d: d["settings"]["joinViews"].append(dict(d["settings"]["joinViews"][0])))
+    # Recorded time (docs/adr/0537): schema 90's; in schema 89 an unknown field; an end without a start, a field the
+    # valid time holds.
+    out["recorded-time.kcad"] = container(document(load("recorded-time.json")))
+    rec_payload = document(load("recorded-time.json"))
+    assert rec_payload.count(b"\x67version\x18\x5a") == 1, "the recorded time is schema 90"
+    out["broken/recorded-time-in-schema-89.kcad"] = container(rec_payload.replace(b"\x67version\x18\x5a", b"\x67version\x18\x59"))
+
+    def rec_broken(change):
+        d = copy.deepcopy(load("recorded-time.json"))
+        change(d)
+        return container(document(d))
+
+    def rec_time(d):
+        return next(n for n in d["layers"] if n["id"] == "parsel")["time"]
+
+    out["broken/recorded-time-end-only.kcad"] = rec_broken(lambda d: rec_time(d).pop("recordedStart"))
+    out["broken/recorded-time-valid-field.kcad"] = rec_broken(lambda d: rec_time(d).update(recordedStart="gecerlilik_baslangic"))
     out["arch-elements.kcad"] = container(document(load("arch-elements.json")))
     arch_payload = document(load("arch-elements.json"))
     assert arch_payload.count(b"\x67version\x18\x4f") == 1, "the grids are schema 79"

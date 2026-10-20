@@ -6,7 +6,7 @@
 //! and the light theme at 1440×900 and 1100×650:
 //!
 //! ```text
-//! KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
+//! KENTOS_SHOTS_ONLY=zaman-serit,zaman-surgu,zaman-bilinen,zaman-ayarlari-kayit,zaman-surgu-2015,zaman-ayarlari,senaryo-olustur,senaryo-gosterilen,senaryo-uygula,zaman-karsilastir cargo test -p kentos-desktop tools_screens -- --ignored --nocapture
 //! ```
 //!
 //! Test code only.
@@ -43,6 +43,52 @@ fn run(app: &mut App, id: &'static str) {
     crate::files_testing::drive(app, task);
 }
 
+/// The parcels' versions given their system time (docs/adr/0537): each recorded a few days after it began, 104's
+/// recorded late (in 2024, though valid since 2022); the parcel layer told which attributes hold it.
+fn recorded(app: &mut App) {
+    use kentos_native_application::{ExecutionContext, registry};
+    let doc = app.document.as_mut().expect("open");
+    let days = [
+        (1, "2010-03-10", Some("2018-06-05")),
+        (2, "2018-06-05", None),
+        (3, "2018-06-05", None),
+        (4, "2012-01-03", None),
+        (5, "2015-07-10", Some("2021-01-04")),
+        (6, "2024-01-15", None),
+    ];
+    for (slot, start, end) in days {
+        let uid = doc
+            .model
+            .uid(kentos_domain::Slot(slot))
+            .expect("a parcel")
+            .to_string();
+        let mut attrs = serde_json::json!({ "kayit_tarihi": start });
+        if let Some(e) = end {
+            attrs["kayit_bitis"] = serde_json::json!(e);
+        }
+        let answer = registry::run(
+            &mut ExecutionContext::new(&mut doc.model),
+            "cad.entities.set",
+            kentos_contracts::CallOp::Execute,
+            serde_json::json!({ "uids": [uid], "attrs": attrs, "operation": "attributes" }),
+        )
+        .expect("runs");
+        assert_eq!(answer["status"], "completed", "{answer}");
+    }
+    let answer = registry::run(
+        &mut ExecutionContext::new(&mut doc.model),
+        "cad.layers.time",
+        kentos_contracts::CallOp::Execute,
+        serde_json::json!({ "layer": "parsel", "time": {
+            "start": "gecerlilik_baslangic", "end": "gecerlilik_bitis", "key": "parsel_no",
+            "recordedStart": "kayit_tarihi", "recordedEnd": "kayit_bitis" } }),
+    )
+    .expect("runs");
+    assert_eq!(answer["status"], "completed", "{answer}");
+    let doc = app.document.as_ref().expect("open");
+    app.spatial.sync(&doc.model);
+}
+
 pub(crate) fn scenes() -> Vec<Scene> {
     vec![
         // The CBS ribbon's Harita tab with its Zaman and Senaryo panels.
@@ -63,6 +109,22 @@ pub(crate) fn scenes() -> Vec<Scene> {
         ("zaman-ayarlari", |app| {
             opened(app);
             run(app, "time.layer");
+        }),
+        // Zaman ayarları with the versions' system time: Kayıt başlangıcı and Kayıt bitişi (docs/adr/0537).
+        ("zaman-ayarlari-kayit", |app| {
+            opened(app);
+            recorded(app);
+            run(app, "time.layer");
+        }),
+        // 2024 as it was known on 1 January 2023: parcel 104 (recorded only in 2024) not yet there.
+        ("zaman-bilinen", |app| {
+            opened(app);
+            recorded(app);
+            run(app, "time.slider");
+            let _ = app.update(Message::Time(crate::temporal::Event::Known(
+                "01.01.2023".into(),
+            )));
+            let _ = app.update(Message::Time(crate::temporal::Event::KnownDone));
         }),
         // Senaryo oluştur with the road and the parcels checked.
         ("senaryo-olustur", |app| {

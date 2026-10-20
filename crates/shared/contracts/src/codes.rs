@@ -1141,6 +1141,12 @@ codes! {
     INVALID_REACH = "invalid_reach", Failed, false, "Aramanın erimi sıfırdan büyük olmalı.";
     /// A point cloud's source that could not be read (docs/adr/0536): the rest are read.
     CLOUD_SOURCE_UNREADABLE = "cloud_source_unreadable", Warning, false, "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu.";
+    /// A time query on a layer without a time setting (docs/adr/0537).
+    NOT_TEMPORAL = "not_temporal", Failed, false, "Katmanın zaman ayarı yok; zamanla sorulamaz.";
+    /// A day known asked of a layer that does not record its versions (docs/adr/0537).
+    NOT_RECORDED = "not_recorded", Failed, false, "Katman sürümlerinin kayıt zamanını tutmuyor; bilinen günle sorulamaz.";
+    /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
+    INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).
     INVALID_ADDRESS = "invalid_address", Failed, false, "Veritabanı adresi geçersiz ya da parola taşıyor; parola projeye yazılmaz.";
     /// The database cannot be reached, refuses the login, or this host has no provider for it (docs/adr/0505).

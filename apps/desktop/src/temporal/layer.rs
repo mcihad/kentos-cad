@@ -5,7 +5,9 @@
 //! attribute names. What the values give is said as they are chosen: how
 //! many objects have a time, how many have none, values that do not read as
 //! a date, the range. Kaydet writes through `cad.layers.time` (one step
-//! “Zaman ayarları”); Zamanı kaldır takes the setting away.
+//! “Zaman ayarları”); Zamanı kaldır takes the setting away. Kayıt başlangıcı
+//! and Kayıt bitişi (Yok) are the versions' system time (docs/adr/0537): when
+//! each was recorded and superseded, what Bilinen gün asks.
 
 use iced::widget::{Column, container, row, text};
 use iced::{Element, Fill, Task};
@@ -38,6 +40,8 @@ pub struct Window {
     end: String,
     key: String,
     cumulative: bool,
+    recorded_start: String,
+    recorded_end: String,
 }
 
 #[derive(Debug, Clone)]
@@ -46,6 +50,8 @@ pub enum Event {
     Start(usize),
     End(usize),
     Key(usize),
+    RecordedStart(usize),
+    RecordedEnd(usize),
     Cumulative,
     Save,
     Remove,
@@ -64,6 +70,8 @@ impl Window {
             end: (!self.end.is_empty()).then(|| self.end.clone()),
             key: (!self.key.is_empty()).then(|| self.key.clone()),
             cumulative: self.cumulative,
+            recorded_start: (!self.recorded_start.is_empty()).then(|| self.recorded_start.clone()),
+            recorded_end: (!self.recorded_end.is_empty()).then(|| self.recorded_end.clone()),
         })
     }
 }
@@ -125,6 +133,8 @@ impl App {
                 end: t.end.unwrap_or_default(),
                 key: t.key.unwrap_or_default(),
                 cumulative: t.cumulative,
+                recorded_start: t.recorded_start.unwrap_or_default(),
+                recorded_end: t.recorded_end.unwrap_or_default(),
             },
             None => Window {
                 start: names
@@ -137,6 +147,8 @@ impl App {
                 end: String::new(),
                 key: String::new(),
                 cumulative: false,
+                recorded_start: String::new(),
+                recorded_end: String::new(),
             },
         }
     }
@@ -180,6 +192,15 @@ impl App {
             // The first item of Bitiş and Kimlik is Yok.
             Event::End(i) => next.end = if i == 0 { String::new() } else { named(i - 1) },
             Event::Key(i) => next.key = if i == 0 { String::new() } else { named(i - 1) },
+            Event::RecordedStart(i) => {
+                next.recorded_start = if i == 0 { String::new() } else { named(i - 1) };
+                if next.recorded_start.is_empty() {
+                    next.recorded_end.clear();
+                }
+            }
+            Event::RecordedEnd(i) => {
+                next.recorded_end = if i == 0 { String::new() } else { named(i - 1) }
+            }
             Event::Cumulative => next.cumulative = !next.cumulative,
             Event::Save => {
                 if let Some(t) = w.chosen() {
@@ -360,6 +381,19 @@ impl App {
             },
             |i| msg(Event::Key(i)),
         );
+        let none_or = |value: &str| {
+            if value.is_empty() {
+                Some(0)
+            } else {
+                picked(value).map(|i| i + 1)
+            }
+        };
+        let recorded_start = Select::new(with_none(NONE), none_or(&w.recorded_start), |i| {
+            msg(Event::RecordedStart(i))
+        });
+        let recorded_end = Select::new(with_none(NONE), none_or(&w.recorded_end), |i| {
+            msg(Event::RecordedEnd(i))
+        });
         let (ready, said) = self.time_layer_summary(w);
         let lines = said
             .into_iter()
@@ -386,6 +420,28 @@ impl App {
                 words::check(w.cumulative, CUMULATIVE, Some(msg(Event::Cumulative))),
                 None,
             ))
+            .push(
+                row![
+                    container(words::field(
+                        "Kayıt başlangıcı",
+                        recorded_start,
+                        Some(
+                            "Sürümün sisteme kaydedildiği an: Bilinen gün bununla sorulur."
+                                .to_owned()
+                        ),
+                    ))
+                    .width(Fill),
+                    container(words::field(
+                        "Kayıt bitişi",
+                        recorded_end,
+                        Some(
+                            "Yerine başka sürümün geçtiği an; boş: hâlâ geçerli kayıt.".to_owned()
+                        ),
+                    ))
+                    .width(Fill),
+                ]
+                .spacing(10),
+            )
             .push(words::summary(lines));
         overlay::modal(
             Frame::new(TITLE)

@@ -436,6 +436,8 @@ Bu altı işaret bütün ürünün kabulünün tamamlandığı iddiası değildi
 
 - [ ] **CBS-33 — Zaman filtresini provider'a taşı; bitemporal/sensör kaynağı ekle — P1/P2**
 
+  *Kısmen (20 Ekim 2026; [ADR 0537](../docs/adr/0537-bitemporal-layers.md)): geçerlilik zamanı ile kayıt zamanı ayrı modellenir (katmanın zaman ayarında sürümlerin `recordedStart` ve `recordedEnd`'i, `.kcad` şema 90); “şu tarihte geçerli” ile “o gün bilinen” `cad.time.query` ile ayrı sorulur (an ya da aralık, açık uç, eşit başlangıç ve bitiş, bölgeli anlar ve UTC, geç gelen kayıt); Zaman sürgüsünde Bilinen gün harita, seçim ve kenette aynı kuralla. Kalan: süzgecin sağlayıcıya itilmesi, değişmez revizyona bağlı tarihsel sorgu, sensör ve gözlem akışı (varlık kimliği, alım zamanı, kalite, geç ve yinelenen kayıt politikası), tablo, analiz ve dışa aktarmada aynı süzgeç.*
+
   **Mevcut:** Zaman sürgüsü, temporal filtre, raster time slice ve senaryo katmanları var [K12]. Görünürlük senaryosu, kayıt geçmişi ve fiziksel gözlem zamanı farklı kavramlardır.
 
   **Yapılacak kalan iş:** Instant/interval, açık uç, timezone/UTC ve takvim sözleşmesiyle zaman filtresi provider'a itilebilsin. Verinin gerçek dünyada geçerli olduğu zaman ile sisteme kayıt/işlem zamanı ayrı modellensin; tarihsel sorgu immutable revision'a bağlansın. “Şu tarihte geçerli imar durumu” ile “o gün sistemde bildiğimiz durum” gerektiğinde farklı cevap verebilsin. Sensör/gözlem akışı; asset ID, event/ingest time, quality ve geç gelen/tekrarlanan kayıt politikasını taşısın. OGC SensorThings ve QGIS 4.2'nin sürüm/extension discovery yaklaşımı ileri entegrasyon referansıdır. [S07], [Q02]

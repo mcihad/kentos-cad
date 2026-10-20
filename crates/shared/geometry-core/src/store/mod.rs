@@ -228,6 +228,11 @@ pub struct Store {
     times: IdMap<crate::time::Time>,
     /// The time slider's window (`set_time_window`); none, no object is left out by its time.
     time_window: Option<crate::time::Window>,
+    /// The system times of the objects of layers recording their versions (`set_recorded`, docs/adr/0537): none, a
+    /// version never recorded.
+    recorded: IdMap<Option<(f64, f64)>>,
+    /// The day the drawing is shown as known (`set_known_at`); none, no version is left out by it.
+    known_at: Option<f64>,
     /// The objects their layer's filter leaves out (`set_filtered`, docs/adr/0211 §3).
     filtered: IdSet,
     /// The areas that are masks (`set_masks`, docs/adr/0310 §4): picked by their boundary only.
@@ -593,6 +598,7 @@ impl Store {
         let wall_view = self.wall_view;
         let blocks = std::mem::take(&mut self.blocks);
         let window = self.time_window;
+        let known_at = self.known_at;
         let labelling = placing::Labels {
             layers: std::mem::take(&mut self.labelling.layers),
             defaults: std::mem::take(&mut self.labelling.defaults),
@@ -605,6 +611,7 @@ impl Store {
         self.wall_view = wall_view;
         self.blocks = blocks;
         self.time_window = window;
+        self.known_at = known_at;
     }
 
     /// The objects whose label a text writes (docs/adr/0175 §4): `labels`
@@ -636,6 +643,32 @@ impl Store {
     /// Forgets every object's time (the drawing reloaded, or its last temporal layer gone).
     pub fn clear_times(&mut self) {
         self.times.clear();
+        self.recorded.clear();
+    }
+
+    /// Objects' system times (docs/adr/0537): an object of a layer that records its versions has its interval, or
+    /// none when it was never recorded; an object left out (`forget`) is of no such layer.
+    pub fn set_recorded(
+        &mut self,
+        entries: impl IntoIterator<Item = (f64, Option<(f64, f64)>)>,
+        forget: impl IntoIterator<Item = f64>,
+    ) {
+        for (id, r) in entries {
+            self.recorded.insert(id.to_bits(), r);
+        }
+        for id in forget {
+            self.recorded.remove(&id.to_bits());
+        }
+    }
+
+    /// The day the drawing is shown as known (docs/adr/0537): queries leave out the versions not known then; none
+    /// ends it.
+    pub fn set_known_at(&mut self, at: Option<f64>) {
+        self.known_at = at;
+    }
+
+    pub fn known_at(&self) -> Option<f64> {
+        self.known_at
     }
 
     /// The time slider's window (docs/adr/0210 §5): queries leave out the
@@ -719,6 +752,13 @@ impl Store {
 
     /// Whether the object shows at the slider's window: always without a window or a time of its own.
     pub fn time_shown(&self, id: f64) -> bool {
+        // Known on the day asked (docs/adr/0537): an object of a layer recording its versions.
+        if let Some(at) = self.known_at
+            && let Some(r) = self.recorded.get(&id.to_bits())
+            && !crate::time::known(*r, at)
+        {
+            return false;
+        }
         let Some(w) = &self.time_window else {
             return true;
         };
@@ -1139,6 +1179,32 @@ mod tests {
         assert_eq!(s.time_mask(&[1.0, 2.0]), [0, 1]);
         s.set_time_window(None);
         assert_eq!(near(&s, 0.0), [1.0]);
+    }
+
+    #[test]
+    fn the_day_known_leaves_out_the_versions_not_known_then() {
+        // docs/adr/0537: a version recorded on 10 and superseded on 20; one never recorded; one of a layer that
+        // records nothing.
+        use crate::Vec2;
+        let mut s = Store::new();
+        s.put_json(&format!(
+            "[{},{},{}]",
+            line(1.0, "a", 0.0),
+            line(2.0, "a", 5.0),
+            line(3.0, "a", 10.0)
+        ))
+        .unwrap();
+        s.set_recorded([(1.0, Some((10.0, 20.0))), (2.0, None)], []);
+        let near = |s: &Store, x: f64| s.near(Vec2::new(x, 5.0), 0.5).len();
+        assert_eq!((near(&s, 0.0), near(&s, 5.0), near(&s, 10.0)), (1, 1, 1), "without a day all show");
+        s.set_known_at(Some(15.0));
+        assert_eq!(s.time_mask(&[1.0, 2.0, 3.0]), [1, 0, 1]);
+        s.set_known_at(Some(20.0));
+        assert_eq!(s.time_mask(&[1.0, 2.0, 3.0]), [0, 0, 1], "superseded on the day itself");
+        s.set_known_at(Some(9.0));
+        assert_eq!(s.time_mask(&[1.0]), [0], "not yet recorded");
+        s.set_recorded([], [1.0, 2.0]);
+        assert_eq!(s.time_mask(&[1.0, 2.0]), [1, 1], "of no recording layer");
     }
 
     #[test]

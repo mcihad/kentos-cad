@@ -453,6 +453,8 @@ fn temporal_drawing(n: usize, in_order: bool) -> Document {
         end: Some("bitis".into()),
         key: None,
         cumulative: false,
+        recorded_start: None,
+        recorded_end: None,
     });
     document(format!("zaman-{n}"), vec![parcels], entities)
 }

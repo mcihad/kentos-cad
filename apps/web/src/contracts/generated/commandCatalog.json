@@ -10020,6 +10020,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -24661,6 +24675,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -37971,6 +37999,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -236865,6 +236907,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -250492,6 +250548,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -264250,6 +264320,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -549395,6 +549479,280 @@
               "/veri/dem/a.tif",
               "/veri/dem/b.tif"
             ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.time.query",
+      "version": 1,
+      "title": "Zamanda sorgu",
+      "summary": "Zamansal bir katmanın (layer) hangi nesnelerinin bir geçerlilik zamanında ve bilinen bir günde gösterildiğini söyler; çizimi değiştirmez. Geçerlilik zamanı bir an (at) ya da [from, to) aralığıdır, katmanın zaman ayarının kuralıyla (aralıklı, anlık, birikimli); zamansız nesne her zaman gösterilir. Bilinen gün (knownAt) yalnız o güne dek kaydedilmiş ve henüz yerine başkası geçmemiş sürümleri bırakır: katmanın recordedStart ve recordedEnd alanlarıyla (.kcad şema 90); kayıt zamanı tutmayan katmanda not_recorded. “O gün geçerli olan” ile “o gün sistemde bilinen” ayrı sorulur. An bir tarih ya da tarih ve saattir, bölgesiyle (Z, +03:00); bölgesiz saat UTC'dir; cevap anları UTC yazar. Cevap gösterilenlerin kalıcı kimliklerini çizimin sırasıyla ve öbürlerinin nedenlerini sayar: notValid (geçerlilik zamanı göstermiyor), notKnown (geçerli ama o gün bilinmiyor), timeless, unrecorded, unreadable.",
+      "aliases": [
+        "zamandasor",
+        "bilinendurum"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "instant",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.time.query` v1. Refusals: `layer_not_found`, `not_a_layer`, `not_temporal`, `invalid_moment`,\n`invalid_window`, `not_recorded`.",
+        "properties": {
+          "at": {
+            "description": "The valid time's instant; with `from` and `to` refused.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "description": "The valid time's period [from, to): both or neither.",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "knownAt": {
+            "description": "The day known: only the versions recorded by then and not yet superseded (a layer that records them).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "description": "The temporal layer's id.",
+            "type": "string"
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "layer"
+        ],
+        "title": "TimeQuery",
+        "type": "object"
+      },
+      "output": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.time.query` v1: the objects shown (persistent ids, in the drawing's order) and why the others are\nnot; the moments read, in UTC.",
+        "properties": {
+          "at": {
+            "description": "The instant read (`YYYY-MM-DDTHH:MM:SSZ`, a midnight `YYYY-MM-DD`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "knownAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "notKnown": {
+            "description": "Objects whose version was not known on the day (recorded later, superseded by then, or never recorded).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notValid": {
+            "description": "Objects with a valid time the window does not show.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "shown": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "timeless": {
+            "description": "Objects without a valid time (shown: a timeless object shows at every time).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unreadable": {
+            "description": "Values of the layer's time attributes that are not moments.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unrecorded": {
+            "description": "Objects without a recorded start (with `knownAt` not shown).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "shown",
+          "notValid",
+          "notKnown",
+          "timeless",
+          "unrecorded",
+          "unreadable",
+          "revision"
+        ],
+        "title": "TimeQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.time.query` v1: the objects shown (persistent ids, in the drawing's order) and why the others are\nnot; the moments read, in UTC.",
+        "properties": {
+          "at": {
+            "description": "The instant read (`YYYY-MM-DDTHH:MM:SSZ`, a midnight `YYYY-MM-DD`).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "from": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "knownAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "layer": {
+            "type": "string"
+          },
+          "notKnown": {
+            "description": "Objects whose version was not known on the day (recorded later, superseded by then, or never recorded).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "notValid": {
+            "description": "Objects with a valid time the window does not show.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "shown": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "timeless": {
+            "description": "Objects without a valid time (shown: a timeless object shows at every time).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "to": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "unreadable": {
+            "description": "Values of the layer's time attributes that are not moments.",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "unrecorded": {
+            "description": "Objects without a recorded start (with `knownAt` not shown).",
+            "format": "uint32",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          }
+        },
+        "required": [
+          "layer",
+          "shown",
+          "notValid",
+          "notKnown",
+          "timeless",
+          "unrecorded",
+          "unreadable",
+          "revision"
+        ],
+        "title": "TimeQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "refusals": [
+          "layer_not_found",
+          "not_a_layer",
+          "not_temporal",
+          "invalid_moment",
+          "invalid_period",
+          "not_recorded"
+        ]
+      },
+      "examples": [
+        {
+          "title": "1 Haziran 2024'te geçerli parseller, 1 Ocak 2025'te bilindiği gibi",
+          "input": {
+            "at": "2024-06-01",
+            "knownAt": "2025-01-01",
+            "layer": "parsel"
+          }
+        },
+        {
+          "title": "2023 içinde geçerli olanlar",
+          "input": {
+            "from": "2023-01-01",
+            "layer": "parsel",
+            "to": "2024-01-01"
           }
         }
       ]
@@ -925978,6 +926336,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -929106,6 +929478,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -930888,6 +931274,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -933677,6 +934077,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -936188,6 +936602,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -938664,6 +939092,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -941204,6 +941646,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -943765,6 +944221,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -946287,6 +946757,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -948802,6 +949286,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -952103,6 +952601,20 @@
                   "null"
                 ]
               },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
               "start": {
                 "description": "The attribute holding the start (an instant layer's moment).",
                 "type": "string"
@@ -955341,6 +955853,20 @@
               },
               "key": {
                 "description": "The attribute naming an object across its versions (Zamanı karşılaştır's key).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedEnd": {
+                "description": "The attribute holding when the version was superseded (its system time's end); empty: still current.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "recordedStart": {
+                "description": "The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):\nwhat was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.",
                 "type": [
                   "string",
                   "null"
@@ -1047126,6 +1047652,24 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu."
+    },
+    {
+      "code": "not_temporal",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katmanın zaman ayarı yok; zamanla sorulamaz."
+    },
+    {
+      "code": "not_recorded",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Katman sürümlerinin kayıt zamanını tutmuyor; bilinen günle sorulamaz."
+    },
+    {
+      "code": "invalid_period",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı."
     },
     {
       "code": "invalid_address",

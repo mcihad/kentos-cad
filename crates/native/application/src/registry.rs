@@ -36,7 +36,8 @@ use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
-use kentos_contracts::{PointCloudsDescribe, PointCloudsQuery};
+use kentos_contracts::{PointCloudsDescribe, PointCloudsQuery, TimeQuery};
+use crate::time_query;
 use kentos_contracts::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, relate as sources_relate, sync as sources_sync};
 use crate::records_page;
@@ -168,6 +169,7 @@ macro_rules! by_command {
             kentos_contracts::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_contracts::CAD_POINTCLOUDS_DESCRIBE => $then!(pointclouds_describe, PointCloudsDescribe),
             kentos_contracts::CAD_POINTCLOUDS_QUERY => $then!(pointclouds_query, PointCloudsQuery),
+            kentos_contracts::CAD_TIME_QUERY => $then!(time_query, TimeQuery),
             kentos_contracts::CAD_INSERTS_CLIP => $then!(inserts_clip, InsertsClip),
             kentos_contracts::CAD_RASTERS_GEOREF => $then!(rasters_georef, RastersGeoref),
             kentos_contracts::CAD_SCHEDULES_CREATE => $then!(schedules_create, SchedulesCreate),

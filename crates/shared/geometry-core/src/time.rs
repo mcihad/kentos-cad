@@ -519,6 +519,23 @@ pub fn object_time(rule: Rule, start: Read, end: Read) -> Option<Time> {
     }
 }
 
+/// A version's system time from its recorded start and end texts (docs/adr/0537): [recorded, superseded), an empty
+/// end still current (+∞); none when its start is empty or unreadable (a version never recorded is known on no day).
+pub fn recorded_interval(start: Read, end: Read) -> Option<(f64, f64)> {
+    let s = start.moment()?;
+    let e = match end {
+        Read::Empty => f64::INFINITY,
+        Read::Moment(e) => e,
+        Read::Unreadable => return None,
+    };
+    Some((s, e))
+}
+
+/// Whether a version with system time `recorded` was known at `at`: recorded by then and not yet superseded.
+pub fn known(recorded: Option<(f64, f64)>, at: f64) -> bool {
+    recorded.is_some_and(|(s, e)| s <= at && at < e)
+}
+
 /// The slider's window (§4): a moment, or [a, b).
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Window {

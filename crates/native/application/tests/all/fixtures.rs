@@ -37,6 +37,7 @@ use kentos_native_application::standards::{apply as standards_apply, check as st
 use kentos_native_application::fields_write;
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
 use kentos_native_application::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
+use kentos_native_application::time_query;
 use kentos_native_application::{processing_batch, processing_run, processing_tools};
 use kentos_native_application::{arch_edit, columns_create, grids_create, ramps_create, stairs_create};
 use kentos_native_application::{schedules_create, schedules_edit, tags_check, tags_create, tags_edit};
@@ -918,6 +919,12 @@ impl Input for kentos_domain::contracts::StacPrepare {
 }
 
 impl Input for kentos_domain::contracts::PointCloudsDescribe {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_domain::contracts::TimeQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3108,6 +3115,9 @@ fn run_op(
         }
         kentos_domain::contracts::CAD_POINTCLOUDS_DESCRIBE => {
             run!(pointclouds_describe, kentos_domain::contracts::PointCloudsDescribe)
+        }
+        kentos_domain::contracts::CAD_TIME_QUERY => {
+            run!(time_query, kentos_domain::contracts::TimeQuery)
         }
         kentos_domain::contracts::CAD_POINTCLOUDS_QUERY => {
             run!(pointclouds_query, kentos_domain::contracts::PointCloudsQuery)

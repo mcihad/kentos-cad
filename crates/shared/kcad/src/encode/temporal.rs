@@ -1,7 +1,7 @@
 //! A layer's time setting, a group's scenario and a scenario layer's base
 //! layer (document schema 34, docs/specs/kcad-v2.md §6.5, docs/adr/0210 §2):
 //! each checked by the contract's rules, as the readers check it, its keys
-//! sorted as RFC 8949 sorts them (`end`, `key`, `start`, `cumulative`). An
+//! sorted as RFC 8949 sorts them (`end`, `key`, `start`, `cumulative`, `recordedEnd`, `recordedStart`). An
 //! optional field is written only when it has a value, Birikimli only when true.
 
 use kentos_contracts::{LayerNodeType, LayerTime, ScenarioInfo};
@@ -29,7 +29,9 @@ impl<'d> Encoder<'d> {
         let n = 1
             + usize::from(time.end.is_some())
             + usize::from(time.key.is_some())
-            + usize::from(time.cumulative);
+            + usize::from(time.cumulative)
+            + usize::from(time.recorded_end.is_some())
+            + usize::from(time.recorded_start.is_some());
         self.open(n, true)?;
         if let Some(end) = &time.end {
             self.key("end");
@@ -44,6 +46,14 @@ impl<'d> Encoder<'d> {
         if time.cumulative {
             self.key("cumulative");
             self.w.bool(true);
+        }
+        if let Some(end) = &time.recorded_end {
+            self.key("recordedEnd");
+            self.at(Seg::Name("recordedEnd"), |e| e.text(end))?;
+        }
+        if let Some(start) = &time.recorded_start {
+            self.key("recordedStart");
+            self.at(Seg::Name("recordedStart"), |e| e.text(start))?;
         }
         self.close();
         Ok(())

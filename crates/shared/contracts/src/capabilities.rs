@@ -1507,6 +1507,13 @@ const ENTRIES: &[Entry] = &[
         warnings: &["mosaic_resampled", "mosaic_undated", "layer_hidden"],
         targets: none,
     },
+    // Zamanda sorgu (docs/adr/0537).
+    Entry {
+        id: "cad.time.query",
+        refusals: &[&["layer_not_found", "not_a_layer", "not_temporal", "invalid_moment", "invalid_period", "not_recorded"]],
+        warnings: &[],
+        targets: none,
+    },
     // Nokta bulutunun bilgisi ve XYZ sor (docs/adr/0536).
     Entry {
         id: "cad.pointclouds.describe",

@@ -39,6 +39,15 @@ pub struct LayerTime {
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
     #[cfg_attr(feature = "ts", ts(as = "Option<bool>", optional))]
     pub cumulative: bool,
+    /// The attribute holding when the object's version was recorded (its system time's start, docs/adr/0537):
+    /// what was known on a day is the versions recorded by then and not yet superseded. `.kcad` schema 90.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub recorded_start: Option<String>,
+    /// The attribute holding when the version was superseded (its system time's end); empty: still current.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "ts", ts(optional))]
+    pub recorded_end: Option<String>,
 }
 
 fn field_problem(what: &str, name: &str) -> Option<String> {
@@ -69,6 +78,38 @@ impl LayerTime {
                 (self.end.as_deref() == Some(self.start.as_str()))
                     .then(|| "başlangıç ve bitiş aynı alan olamaz".to_owned())
             })
+            .or_else(|| {
+                self.recorded_start
+                    .as_deref()
+                    .and_then(|f| field_problem("kayıt başlangıcı", f))
+            })
+            .or_else(|| {
+                self.recorded_end
+                    .as_deref()
+                    .and_then(|f| field_problem("kayıt bitişi", f))
+            })
+            .or_else(|| {
+                (self.recorded_end.is_some() && self.recorded_start.is_none())
+                    .then(|| "kayıt bitişi kayıt başlangıcı ister".to_owned())
+            })
+            .or_else(|| {
+                // A system time is its own attributes: never the valid time's, never each other.
+                let valid = [Some(self.start.as_str()), self.end.as_deref(), self.key.as_deref()];
+                [self.recorded_start.as_deref(), self.recorded_end.as_deref()]
+                    .into_iter()
+                    .flatten()
+                    .find(|f| valid.contains(&Some(*f)))
+                    .map(|f| format!("kayıt zamanının “{f}” alanı geçerlilik zamanının ya da kimliğin alanı olamaz"))
+                    .or_else(|| {
+                        (self.recorded_start.is_some() && self.recorded_start == self.recorded_end)
+                            .then(|| "kayıt başlangıcı ve bitişi aynı alan olamaz".to_owned())
+                    })
+            })
+    }
+
+    /// Whether its objects carry a system time (when each version was recorded).
+    pub fn recorded(&self) -> bool {
+        self.recorded_start.is_some()
     }
 }
 
@@ -305,8 +346,38 @@ mod tests {
             end: Some("bitis".into()),
             key: None,
             cumulative: false,
+            recorded_start: None,
+            recorded_end: None,
         };
         assert_eq!(ok.problem(), None);
+        // A system time: its own fields, its end only with its start (docs/adr/0537).
+        let recorded = LayerTime {
+            recorded_start: Some("kayit".into()),
+            recorded_end: Some("kayit_bitis".into()),
+            ..ok.clone()
+        };
+        assert_eq!(recorded.problem(), None);
+        assert!(recorded.recorded());
+        let only_end = LayerTime {
+            recorded_start: None,
+            ..recorded.clone()
+        };
+        assert!(
+            only_end
+                .problem()
+                .unwrap()
+                .contains("kayıt başlangıcı ister")
+        );
+        let shared = LayerTime {
+            recorded_start: Some("baslangic".into()),
+            ..recorded.clone()
+        };
+        assert!(shared.problem().unwrap().contains("geçerlilik zamanının"));
+        let twice = LayerTime {
+            recorded_end: Some("kayit".into()),
+            ..recorded
+        };
+        assert!(twice.problem().unwrap().contains("aynı alan"));
         let same = LayerTime {
             end: Some("baslangic".into()),
             ..ok.clone()
