@@ -2562,6 +2562,7 @@ pub fn catalog() -> CommandCatalog {
                       Profil veridir: sınıfları katman yollarıyla (grupları ve katmanı adlarıyla, Türkçe büyük küçük harf ayrımsız bulunur), geometrileri, alanları, kimlik alanları ve kayıtlı alanlarıyla; projenin değer listeleri, sınıflar arası ilişkiler ve adres verisi. \
                       Eksik gruplar ve katmanlar alanlarıyla açılır, var olan katmana eksik alanları eklenir; türü farklı alan (profile_field_differs), farklı değer listesi (profile_domain_differs) korunur, kilitli katman ve yolunda katman olmayan sınıf atlanır (profile_layer_skipped). \
                       Katmanlar ve alanları tek geri alma adımıdır (“Veri profili”); değer listeleri, ilişkiler ve adres verisi proje ayarıdır. Profil resmî bir uygulama şeması değildir; temeli profilin basis'inde yazılıdır. Plan yazmadan aynısını söyler. \
+                      Profil kurumun kendi adlarıyla da uygulanır (docs/adr/0558): name yerleşik olmayan bir ad verilirse profil çizimin “profiller” klasöründeki dosyasından (drawing çizimin dosyası) okunur; mapping (ya da projenin eşlemesinin adı, mappingName) verilirse profil o eşlemeden okunur: kurumun katman yolları, alan adları ve kodlarıyla bulunur ve eklenir, hiçbir şey kendiliğinden yeniden adlandırılmaz (unknown_mapping, invalid_profile_mapping). \
                       expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
                 .into(),
             aliases: vec!["veriprofili".into()],
@@ -2589,7 +2590,8 @@ pub fn catalog() -> CommandCatalog {
             summary: "Çizimin verisinin bir veri profilinden nerede ayrıldığını söyler; hiçbir şeyi değiştirmez, plan aynı cevabı verir. \
                       Bulgular sırasıyla: projede olmayan değer listeleri; sınıf sınıf eksik katman, eksik alan, türü farklı alan, başka geometrideki nesneler, boş zorunlu alanlar, alanın kuralına uymayan değerler (değer başına), birden çok nesnedeki kimlikler, \
                       kayıtlı alanı geometrik alanından profilin toleransından çok ayrılan nesneler (iki alan da söylenir; hiçbiri öbürünün yerine yazılmaz); sonra projede olmayan ilişkiler ve üst sınıfta olmayan nesneyi anan bağlar, en sonda adres verisi. \
-                      Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil."
+                      Her bulgu türü, sınıfı, katmanı, konusu, değeri, nesnelerin kalıcı kimlikleri (en çok 1000) ve sayısı, Veri profilini uygula'nın düzeltip düzeltmediği ve Türkçe iletisiyle gelir; sınıfların nesne ve bulgu sayıları da. clean bulgu olmadığını söyler, mevzuata uygunluğu değil. \
+                      Profil, Veri profilini uygula gibi, çizimin klasöründeki bir dosyadan (name, drawing) ve bir eşlemeden (mapping, mappingName) okunabilir: bulgular kurumun adlarıyla gelir, raporda mapping eşlemenin adını söyler (docs/adr/0558)."
                 .into(),
             aliases: vec!["profildenetle".into()],
             effect: CommandEffect::Query,
@@ -2606,6 +2608,93 @@ pub fn catalog() -> CommandCatalog {
             examples: vec![CommandExample {
                 title: "Çizimi TUCBS temel belediye profiliyle denetle".into(),
                 input: json!({ "name": "tucbs-temel" }),
+                output: None,
+            }],
+        },
+        // A profile of an institution's own, its releases and mappings (docs/adr/0558), held together by
+        // fixtures/commands/v1/cad.profiles.{import,list,migrate}.json.
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_IMPORT.into(),
+            version: crate::CAD_PROFILES_IMPORT_VERSION,
+            title: "Veri profili içe aktar".into(),
+            summary: "Kurumun kendi veri profilini ya da eşlemesini projeye alır: bir JSON dosyası (source: mutlak yol ya da çizimin klasöründen), profilin kendisi (profile) ya da eşlemenin kendisi (mapping), yalnız biri. \
+                      Dosya biçimiyle tanınır: kentos.data-profile bir veri profili, kentos.profile-mapping bir eşlemedir; başka biçim unknown_profile_format, 1'den başka biçim sürümü unsupported_profile_version, okunmayan JSON ya da tutmayan profil invalid_profile, tutmayan eşleme invalid_profile_mapping ile reddedilir (eşleme profiliyle denetlenir: sınıflar, alanlar, kodlar profilde olmalı, kurumdaki adlar çakışmamalı). \
+                      Profil çizimin dosyasının yanındaki “profiller” klasörüne <ad>.profil.json, eşleme <ad>.eslem.json olarak yazılır (ad küçük harf, rakam ve tire; klasör yoksa açılır): çizimin dosyası yoksa invalid_file_path. KentOS'un kendi profilinin adı alınamaz (profile_name_taken). \
+                      Aynı adlı profil var ve daha yeni sürümdeyse profile_downgrade, aynı sürümdeyse file_exists; daha eski sürümdeyse değiştirilir ve söylenir (profile_replaced); overwrite her birinin üzerine yazar. Dosya geçici adla yazılıp geri okunur, sonra yerine konur: bütün ya da hiç. Çizim değişmez, geri alma adımı yoktur; plan yazmadan aynısını söyler. \
+                      Profilin sürümü kendi release sayısıdır (biçim sürümü version değil) ve migrations'ı bir sürümden sonrakine veriyi taşıyan adımlardır; Veri profili göçü onları çalıştırır."
+                .into(),
+            aliases: vec!["profilal".into(), "profiliceaktar".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesImport>(),
+            output: schema::<crate::ProfileImported>(),
+            plan: Some(schema::<crate::ProfileImported>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurumun profilini çizimin klasöründen projeye al".into(),
+                input: json!({
+                    "source": "kurum-profili.json",
+                    "drawing": "/projeler/belediye/imar.kcad"
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_LIST.into(),
+            version: crate::CAD_PROFILES_LIST_VERSION,
+            title: "Veri profillerini listele".into(),
+            summary: "KentOS'un yerleşik veri profillerini ve çizimin “profiller” klasöründeki profil ve eşleme dosyalarını listeler; hiçbir şeyi değiştirmez. \
+                      Önce yerleşik profiller kendi sırasıyla, sonra projenin dosyaları adıyla (aynı adda önce profil). Her satır: türü (profil ya da eşleme), kaynağı (builtin ya da project), komutlara verilen adı (dosyanın adı), başlığı, profilin sürümü (release) ve sınıf ve göç sayısı; eşlemede hangi profil için olduğu ve anan sınıf sayısı; proje dosyasında yolu. \
+                      Okunmayan ya da tutmayan dosya listeden düşmez, problem alanında nedeniyle gelir (profilin adı dosyanın adıyla aynı olmalı; eşleme profiliyle denetlenir, profili bulunamayan eşleme denetlenmeden listelenir). Çizimin dosyası yoksa (drawing) yalnız yerleşik profiller gelir; folder çizimin klasörünü söyler."
+                .into(),
+            aliases: vec!["profiller".into(), "profillistesi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Instant,
+            input: schema::<crate::ProfilesList>(),
+            output: schema::<crate::ProfilesListed>(),
+            plan: Some(schema::<crate::ProfilesListed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Yerleşik ve projenin profillerini listele".into(),
+                input: json!({ "drawing": "/projeler/belediye/imar.kcad" }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_PROFILES_MIGRATE.into(),
+            version: crate::CAD_PROFILES_MIGRATE_VERSION,
+            title: "Veri profili göçü".into(),
+            summary: "Projenin verisini bir profilin from sürümünden to sürümüne (verilmezse profilin kendi sürümüne) profilin kendi göç adımlarıyla taşır. Profil profile ile ya da adıyla (yerleşik ya da projenin dosyası) verilir. \
+                      Göç bir sürümden sonrakine gider ve profilin migrations listesinde yazılıdır; from'dan to'ya kesintisiz bir yol yoksa migration_gap, to from'dan büyük değilse ya da profilin sürümünü aşıyorsa invalid_migration. Adımlar sırasıyla, her biri çizimin o anki hâline göre: \
+                      renameLayer (katman yolundaki son ad değişir; aynı yerde o ad varsa layer_refused), renameField (alan adı ve nesnelerin değerleri taşınır; formların, ilişkilerin ve ifadelerin anması izler), changeFieldType (alanın yeni tanımı; her değer yeni kuraldan geçip kanonik metniyle yazılır; uymayan onFail'e göre olduğu gibi kalır ya da boşaltılır ve değer değer raporlanır), mapValues (eski değerler yenisi olur; birkaçı birleşebilir, bir eski değer başka alanın değerine göre ikiye ayrılabilir; çok değerli alanda her kod), retireCode (projenin değer listesinde kod kullanımdan kalkar; replaceWith ile ona bağlı alanların o kodlu değerleri başka kod olur). \
+                      Katmanı, alanı ya da değer listesi çizimde olmayan adım atlanır ve söylenir (migration_step_skipped); zaten uygulanmış adım sessiz atlanır, kilitli katman atlanır (profile_layer_skipped). Hepsi tek geri alma adımıdır (“Profil göçü”, değer listeleri dahil); yalnız katman adları adımın dışındadır: katmanın adı çizimin bayrağıdır, hiçbir katman yeniden adlandırması geri alınmaz (docs/adr/0020), geri alma alanları, değerleri ve listeleri geri verir. layer_refused'ta hiçbir şey yazılmaz. Göç yeni sürümün getirdiklerini eklemez: Veri profilini uygula ekler, Veri profilini denetle verinin hâlâ ayrıldığı yeri söyler; önce göç, sonra uygula. \
+                      Cevapta adım adım ne yapıldığı, kaç nesneye yazıldığı ve uymayan değerler (katman, alan, değer, nesnelerin kalıcı kimlikleri en çok 1000, sayı) vardır. Plan yazmadan aynısını söyler. expectedRevision verilmişse ve çizim o sürümde değilse hiçbir şey yazılmaz, sonuç conflict olur."
+                .into(),
+            aliases: vec!["profilgoc".into(), "profilgocu".into()],
+            effect: CommandEffect::Document,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::Step,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::ProfilesMigrate>(),
+            output: schema::<crate::ProfilesMigrated>(),
+            plan: Some(schema::<crate::ProfilesMigrated>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Kurumun profilini 1. sürümden 2. sürüme taşı".into(),
+                input: json!({ "name": "kurum-profili", "from": 1, "to": 2 }),
                 output: None,
             }],
         },
@@ -8631,6 +8720,15 @@ mod tests {
                     }
                     crate::CAD_PROFILES_CHECK => {
                         serde_json::from_value::<crate::ProfilesCheck>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_IMPORT => {
+                        serde_json::from_value::<crate::ProfilesImport>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_LIST => {
+                        serde_json::from_value::<crate::ProfilesList>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_PROFILES_MIGRATE => {
+                        serde_json::from_value::<crate::ProfilesMigrate>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SHEETS_SET => {
                         serde_json::from_value::<crate::SheetsSet>(e.input.clone()).map(|_| ())

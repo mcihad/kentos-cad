@@ -49,6 +49,7 @@ use kentos_commands::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
 use crate::records_page;
 use crate::profiles::{apply as profiles_apply, check as profiles_check};
+use crate::profile_files::{import as profiles_import, list as profiles_list, migrate as profiles_migrate};
 use crate::standards::{apply as standards_apply, check as standards_check};
 use crate::{
     DESKTOP_COMMANDS, ExecutionContext, address_define, annotations_scales, arc, array, arrays_edit, constraints_edit, constraints_query, parameters_edit, blocks_define,
@@ -278,6 +279,9 @@ macro_rules! by_command {
             kentos_commands::CAD_STANDARDS_APPLY => $then!(standards_apply, StandardsApply),
             kentos_commands::CAD_PROFILES_APPLY => $then!(profiles_apply, kentos_commands::ProfilesApply),
             kentos_commands::CAD_PROFILES_CHECK => $then!(profiles_check, kentos_commands::ProfilesCheck),
+            kentos_commands::CAD_PROFILES_IMPORT => $then!(profiles_import, kentos_commands::ProfilesImport),
+            kentos_commands::CAD_PROFILES_LIST => $then!(profiles_list, kentos_commands::ProfilesList),
+            kentos_commands::CAD_PROFILES_MIGRATE => $then!(profiles_migrate, kentos_commands::ProfilesMigrate),
             kentos_commands::CAD_LINE_TYPES_EDIT => $then!(line_types_edit, LineTypesEdit),
             kentos_commands::CAD_HATCH_PATTERNS_EDIT => $then!(hatch_patterns_edit, HatchPatternsEdit),
             kentos_commands::CAD_LIBRARY_EDIT => $then!(library_edit, LibraryEdit),

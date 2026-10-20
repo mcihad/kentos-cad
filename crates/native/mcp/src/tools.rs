@@ -566,6 +566,10 @@ fn command_tool(c: &Value) -> Value {
             // there (docs/adr/0556 §3, §4).
             | "cad.rasters.gpkgread"
             | "cad.rasters.gpkgwrite"
+            // An import writes over a profile or a mapping of the same name with overwrite (or a newer release); a
+            // migration renames fields and layers and rewrites values (docs/adr/0558).
+            | "cad.profiles.import"
+            | "cad.profiles.migrate"
             | "cad.inserts.clip"
             // It moves a raster, or points it at a resampled file, and replaces its record (docs/adr/0518).
             | "cad.rasters.georef"
@@ -698,7 +702,7 @@ fn command_tool(c: &Value) -> Value {
         "inputSchema": schema,
         // They write nothing: the points, the curves, the snaps and the selections are their answers (docs/adr/0270,
         // 0289, 0272, 0275).
-        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report"), destructive),
+        "annotations": annotations(matches!(id, "cad.points.construct" | "cad.curves.construct" | "cad.snap.find" | "cad.entities.select" | "cad.entities.pick" | "cad.entities.relate" | "cad.sources.describe" | "cad.records.page" | "cad.crs.transform" | "cad.stac.search" | "cad.labels.report" | "cad.profiles.check" | "cad.profiles.list"), destructive),
     })
 }
 

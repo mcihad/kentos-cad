@@ -1614,14 +1614,44 @@ const ENTRIES: &[Entry] = &[
     // Data profiles (docs/adr/0541).
     Entry {
         id: "cad.profiles.apply",
-        refusals: &[&["unknown_profile", "invalid_profile"], REVISION],
+        refusals: &[
+            &["unknown_profile", "invalid_profile", "unknown_mapping", "invalid_profile_mapping"],
+            REVISION,
+        ],
         warnings: &["profile_field_differs", "profile_domain_differs", "profile_layer_skipped"],
         targets: none,
     },
     Entry {
         id: "cad.profiles.check",
-        refusals: &[&["unknown_profile", "invalid_profile"]],
+        refusals: &[&["unknown_profile", "invalid_profile", "unknown_mapping", "invalid_profile_mapping"]],
         warnings: &[],
+        targets: none,
+    },
+    // An institution's own profile (docs/adr/0558).
+    Entry {
+        id: "cad.profiles.import",
+        refusals: &[
+            &["profile_source_missing", "invalid_file_path", "file_not_found"],
+            &["invalid_profile", "unknown_profile_format", "unsupported_profile_version", "invalid_profile_mapping"],
+            &["profile_name_taken", "profile_downgrade", "file_exists", "file_unwritable"],
+        ],
+        warnings: &["mapping_unchecked", "profile_replaced"],
+        targets: none,
+    },
+    Entry {
+        id: "cad.profiles.list",
+        refusals: &[],
+        warnings: &[],
+        targets: none,
+    },
+    Entry {
+        id: "cad.profiles.migrate",
+        refusals: &[
+            &["unknown_profile", "invalid_profile", "invalid_migration", "migration_gap"],
+            &["layer_refused"],
+            REVISION,
+        ],
+        warnings: &["migration_step_skipped", "profile_layer_skipped", "values_unfit"],
         targets: none,
     },
     // Duvar birleşimleri (docs/adr/0340 §2): read-only.

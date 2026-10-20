@@ -644,7 +644,7 @@
       "title": "Veri profili",
       "short": "Veri profili",
       "icon": "dataProfile",
-      "description": "Çizimin verisini bir veri profiliyle (TUCBS temel belediye profili: mahalle, ada, parsel, bina, yol, adres, imar) denetler ve profilin eksik katmanlarını, alanlarını, değer listelerini, ilişkilerini ve adres verisini ekler. Bulgular sınıf sınıf; satır nesneleri seçer. Kayıtlı alan geometrik alanın yerine yazılmaz. cad.profiles.check ve cad.profiles.apply ile; profil resmî bir uygulama şeması değildir.",
+      "description": "Çizimin verisini bir veri profiliyle (TUCBS temel belediye profili: mahalle, ada, parsel, bina, yol, adres, imar) denetler ve profilin eksik katmanlarını, alanlarını, değer listelerini, ilişkilerini ve adres verisini ekler. Bulgular sınıf sınıf; satır nesneleri seçer. Kayıtlı alan geometrik alanın yerine yazılmaz. Kurumun kendi profili (JSON) ve eşlemesi içe alınır, çizimin yanındaki profiller klasöründe durur; profilin sürümleri arasında veri kendi göç adımlarıyla taşınır (tek geri alma adımı; uymayan değerler raporlanır); eşlemeyle profil kurumun katman, alan ve kod adlarıyla okunur, hiçbir ad kendiliğinden değişmez. cad.profiles.check, apply, import, list ve migrate ile; profil resmî bir uygulama şeması değildir.",
       "aliases": [
         "VERIPROFILI",
         "VERİPROFİLİ",

@@ -9,10 +9,10 @@ use std::collections::{BTreeMap, HashMap, HashSet};
 
 use kentos_commands::{
     AddressLocator, CommandResult, CommandWarning, DataProfile, Entity, FieldDomain, LayerField,
-    LayerNode, LayerNodeType, LayerStyle, ProfileClass, ProfileClassSummary, ProfileFinding,
-    ProfileFindingKind, ProfileRelation, ProfilesApplied, ProfilesApply,
-    ProfilesCheck, ProfilesReport, ProjectRelation, MAX_FINDING_UIDS, builtin_profile,
-    check_value, fold_name, follow_domains, profile_problem, relations_problem,
+    LayerNode, LayerNodeType, LayerStyle, MAX_FINDING_UIDS, ProfileClass, ProfileClassSummary,
+    ProfileFinding, ProfileFindingKind, ProfileMapping, ProfileRelation, ProfilesApplied,
+    ProfilesApply, ProfilesCheck, ProfilesReport, ProjectRelation, builtin_profile, check_value,
+    fold_name, follow_domains, mapping_problem, profile_problem, relations_problem, through,
 };
 use kentos_domain::{Document, NewLayer, default_style};
 use kentos_geometry_core::entity::entity_area;
@@ -27,17 +27,44 @@ fn fail(code: &str, message: String, path: &str) -> Stop {
     Stop::failed(error(code, message, Some(path.into())))
 }
 
-/// The profile a command names: `profile` when given, else the built-in `name`.
-pub(crate) fn profile_of(name: Option<&str>, given: Option<&DataProfile>) -> Result<DataProfile, Stop> {
+/// The profile a command names, as the profile's own file says it: `profile` when given, else the built-in `name`, else
+/// the project's file of that name (`drawing`'s folder, docs/adr/0558).
+pub(crate) fn profile_only(
+    name: Option<&str>,
+    given: Option<&DataProfile>,
+    drawing: Option<&str>,
+) -> Result<DataProfile, Stop> {
     let profile = match (given, name) {
         (Some(p), _) => p.clone(),
-        (None, Some(n)) => builtin_profile(n).ok_or_else(|| {
-            fail(
-                codes::UNKNOWN_PROFILE,
-                format!("“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel."),
-                "name",
-            )
-        })?,
+        (None, Some(n)) => match builtin_profile(n) {
+            Some(p) => p,
+            None => match crate::profile_files::load_profile(drawing, n) {
+                Ok(Some(p)) => p,
+                Ok(None) => {
+                    return Err(fail(
+                        codes::UNKNOWN_PROFILE,
+                        match crate::profile_files::folder_of(drawing) {
+                            Some(_) => format!(
+                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel; çizimin “{}” klasöründe de “{n}{}” yok.",
+                                kentos_commands::PROFILE_FOLDER,
+                                kentos_commands::PROFILE_SUFFIX
+                            ),
+                            None => format!(
+                                "“{n}” adlı veri profili yok; KentOS'un profili: tucbs-temel."
+                            ),
+                        },
+                        "name",
+                    ));
+                }
+                Err(why) => {
+                    return Err(fail(
+                        codes::INVALID_PROFILE,
+                        format!("Veri profili geçersiz: {why}"),
+                        "profile",
+                    ));
+                }
+            },
+        },
         (None, None) => {
             return Err(fail(
                 codes::UNKNOWN_PROFILE,
@@ -56,8 +83,81 @@ pub(crate) fn profile_of(name: Option<&str>, given: Option<&DataProfile>) -> Res
     Ok(profile)
 }
 
+/// The profile a command works with and the mapping it was read through.
+pub(crate) struct Resolved {
+    pub profile: DataProfile,
+    pub mapping: Option<String>,
+}
+
+/// The profile of a command's input; with a mapping (`mapping`, else the project's `mapping_name`) the profile read
+/// through it (docs/adr/0558): the mapping must hold for the profile, and the profile it gives holds too.
+pub(crate) fn resolve(
+    name: Option<&str>,
+    given: Option<&DataProfile>,
+    mapping: Option<&ProfileMapping>,
+    mapping_name: Option<&str>,
+    drawing: Option<&str>,
+) -> Result<Resolved, Stop> {
+    let profile = profile_only(name, given, drawing)?;
+    let found: Option<ProfileMapping> = match (mapping, mapping_name) {
+        (Some(m), _) => Some(m.clone()),
+        (None, Some(n)) => match crate::profile_files::load_mapping(drawing, n) {
+            Ok(Some(m)) => Some(m),
+            Ok(None) => {
+                return Err(fail(
+                    codes::UNKNOWN_MAPPING,
+                    match crate::profile_files::folder_of(drawing) {
+                        Some(_) => format!(
+                            "“{n}” adlı eşleme yok: çizimin “{}” klasöründe “{n}{}” yok.",
+                            kentos_commands::PROFILE_FOLDER,
+                            kentos_commands::MAPPING_SUFFIX
+                        ),
+                        None => format!(
+                            "“{n}” adlı eşleme bulunamaz: çizimin dosyası yok; eşlemeyi kendisiyle (mapping) verin."
+                        ),
+                    },
+                    "mappingName",
+                ));
+            }
+            Err(why) => {
+                return Err(fail(
+                    codes::INVALID_PROFILE_MAPPING,
+                    format!("Eşleme geçersiz: {why}"),
+                    "mapping",
+                ));
+            }
+        },
+        (None, None) => None,
+    };
+    let Some(m) = found else {
+        return Ok(Resolved {
+            profile,
+            mapping: None,
+        });
+    };
+    if let Some(why) = mapping_problem(&m, &profile) {
+        return Err(fail(
+            codes::INVALID_PROFILE_MAPPING,
+            format!("Eşleme geçersiz: {why}"),
+            "mapping",
+        ));
+    }
+    let through = through(&profile, &m);
+    if let Some(why) = profile_problem(&through) {
+        return Err(fail(
+            codes::INVALID_PROFILE_MAPPING,
+            format!("Eşleme geçersiz: profil eşlemeyle okununca tutmuyor: {why}"),
+            "mapping",
+        ));
+    }
+    Ok(Resolved {
+        profile: through,
+        mapping: Some(m.name),
+    })
+}
+
 /// Where a class's layer path leads in the tree.
-enum Place {
+pub(crate) enum Place {
     /// The layer, by its id.
     Layer(String),
     /// The path's last name is a group, or one before it a layer: the class has no layer there.
@@ -66,7 +166,7 @@ enum Place {
     Missing(Option<String>, usize),
 }
 
-fn find(nodes: &[LayerNode], path: &[String]) -> Place {
+pub(crate) fn find(nodes: &[LayerNode], path: &[String]) -> Place {
     let mut here = nodes;
     let mut parent: Option<String> = None;
     for (i, name) in path.iter().enumerate() {
@@ -87,12 +187,12 @@ fn find(nodes: &[LayerNode], path: &[String]) -> Place {
     Place::Missing(parent, path.len())
 }
 
-fn path_words(path: &[String]) -> String {
+pub(crate) fn path_words(path: &[String]) -> String {
     path.join(" › ")
 }
 
 /// A field of the layer that stands for the profile's field: the same name, or the same key.
-fn layer_field<'a>(fields: &'a [LayerField], name: &str) -> Option<&'a LayerField> {
+pub(crate) fn layer_field<'a>(fields: &'a [LayerField], name: &str) -> Option<&'a LayerField> {
     fields
         .iter()
         .find(|f| f.name == name)
@@ -114,7 +214,14 @@ fn warn(code: &str, message: String) -> CommandWarning {
 // ── Apply ────────────────────────────────────────────────────────────────────
 
 fn check_apply(doc: &Document, input: &ProfilesApply) -> Result<DataProfile, Stop> {
-    let p = profile_of(input.name.as_deref(), input.profile.as_ref())?;
+    let p = resolve(
+        input.name.as_deref(),
+        input.profile.as_ref(),
+        input.mapping.as_ref(),
+        input.mapping_name.as_deref(),
+        input.drawing.as_deref(),
+    )?
+    .profile;
     checks::revision(doc, input.expected_revision.as_deref())?;
     Ok(p)
 }
@@ -167,14 +274,16 @@ fn write(
     settings.domains = domains;
     let mut relations = settings.relations.clone();
     for r in &p.relations {
-        let (Some(parent), Some(child)) = (layer_of.get(r.parent.as_str()), layer_of.get(r.child.as_str()))
-        else {
+        let (Some(parent), Some(child)) = (
+            layer_of.get(r.parent.as_str()),
+            layer_of.get(r.child.as_str()),
+        ) else {
             continue;
         };
         let key = relation_key(doc, child, r);
-        let held = relations.iter().any(|x| {
-            x.id == r.id || (x.parent == *parent && x.child == *child && x.field == key)
-        });
+        let held = relations
+            .iter()
+            .any(|x| x.id == r.id || (x.parent == *parent && x.child == *child && x.field == key));
         if !held {
             relations.push(ProjectRelation {
                 id: r.id.clone(),
@@ -362,7 +471,10 @@ pub mod apply {
     }
 
     /// The preview: the same write on a reading copy; the drawing stays.
-    pub fn plan(cx: &ExecutionContext<'_>, input: &ProfilesApply) -> CommandResult<ProfilesApplied> {
+    pub fn plan(
+        cx: &ExecutionContext<'_>,
+        input: &ProfilesApply,
+    ) -> CommandResult<ProfilesApplied> {
         plan_in(cx.doc, input)
     }
 
@@ -570,6 +682,7 @@ pub fn report(doc: &Document, p: &DataProfile) -> ProfilesReport {
         title: p.title.clone(),
         version: p.version,
         basis: p.basis.clone(),
+        mapping: None,
         classes: summaries,
         clean: findings.is_empty(),
         findings,
@@ -621,9 +734,9 @@ fn class_findings(
                         kind_word(f)
                     ),
                 ));
-                keys.push((f.clone(), h.key().to_owned()));
+                keys.push((f.clone(), h.name.clone()));
             }
-            Some(h) => keys.push((f.clone(), h.key().to_owned())),
+            Some(h) => keys.push((f.clone(), h.name.clone())),
         }
     }
     let objects: Vec<(String, &Entity)> = doc
@@ -795,14 +908,17 @@ fn relation_findings(
 ) {
     let class = |id: &str| p.classes.iter().find(|c| c.id == id);
     for r in &p.relations {
-        let (Some(parent), Some(child)) = (layer_of.get(r.parent.as_str()), layer_of.get(r.child.as_str()))
-        else {
+        let (Some(parent), Some(child)) = (
+            layer_of.get(r.parent.as_str()),
+            layer_of.get(r.child.as_str()),
+        ) else {
             continue;
         };
         let key = relation_key(doc, child, r);
-        let held = doc.settings().relations.iter().any(|x| {
-            x.id == r.id || (x.parent == *parent && x.child == *child && x.field == key)
-        });
+        let held =
+            doc.settings().relations.iter().any(|x| {
+                x.id == r.id || (x.parent == *parent && x.child == *child && x.field == key)
+            });
         if !held {
             findings.push(finding(
                 ProfileFindingKind::MissingRelation,
@@ -822,10 +938,15 @@ fn relation_findings(
             .filter(|(_, e)| e.base().layer_id == *parent)
             .map(|(u, _)| u.to_string())
             .collect();
+        let attr = doc
+            .layers()
+            .get(child)
+            .and_then(|n| n.fields.iter().find(|f| f.key() == key))
+            .map_or_else(|| key.clone(), |f| f.name.clone());
         let broken: Vec<String> = doc
             .entities_with_uids()
             .filter(|(_, e)| e.base().layer_id == *child)
-            .filter(|(_, e)| value_of(e, &key).is_some_and(|v| !parents.contains(v)))
+            .filter(|(_, e)| value_of(e, &attr).is_some_and(|v| !parents.contains(v)))
             .map(|(u, _)| u.to_string())
             .collect();
         if broken.is_empty() {
@@ -857,8 +978,18 @@ fn relation_findings(
 pub mod check {
     use super::*;
 
+    fn resolved(input: &ProfilesCheck) -> Result<Resolved, Stop> {
+        resolve(
+            input.name.as_deref(),
+            input.profile.as_ref(),
+            input.mapping.as_ref(),
+            input.mapping_name.as_deref(),
+            input.drawing.as_deref(),
+        )
+    }
+
     pub fn validate(_cx: &ExecutionContext<'_>, input: &ProfilesCheck) -> CommandResult<()> {
-        match profile_of(input.name.as_deref(), input.profile.as_ref()) {
+        match resolved(input) {
             Ok(_) => CommandResult::Completed {
                 output: (),
                 warnings: Vec::new(),
@@ -879,11 +1010,15 @@ pub mod check {
     }
 
     pub fn run(doc: &Document, input: &ProfilesCheck) -> CommandResult<ProfilesReport> {
-        match profile_of(input.name.as_deref(), input.profile.as_ref()) {
-            Ok(p) => CommandResult::Completed {
-                output: report(doc, &p),
-                warnings: Vec::new(),
-            },
+        match resolved(input) {
+            Ok(r) => {
+                let mut report = report(doc, &r.profile);
+                report.mapping = r.mapping;
+                CommandResult::Completed {
+                    output: report,
+                    warnings: Vec::new(),
+                }
+            }
             Err(stop) => stop.into(),
         }
     }

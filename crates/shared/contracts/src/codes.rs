@@ -1184,6 +1184,30 @@ codes! {
     PROFILE_DOMAIN_DIFFERS = "profile_domain_differs", Warning, false, "Projenin değer listesi profilinkinden farklı; projeninki korundu.";
     /// A class left out: its path names something not a layer, or its layer is locked (docs/adr/0541).
     PROFILE_LAYER_SKIPPED = "profile_layer_skipped", Warning, false, "Profilin bir sınıfı ya da parçası atlandı; iletisi nedenini söyler.";
+    /// Nothing to import: no source file, no profile and no mapping given (docs/adr/0558).
+    PROFILE_SOURCE_MISSING = "profile_source_missing", Failed, false, "İçe aktarılacak tek bir kaynak verilmedi: bir JSON dosyası (source), profil (profile) ya da eşleme (mapping) verin; yalnız biri.";
+    /// A JSON file that is neither a data profile nor a mapping by its `format` (docs/adr/0558).
+    UNKNOWN_PROFILE_FORMAT = "unknown_profile_format", Failed, false, "Dosyanın biçimi tanınmıyor: veri profili (kentos.data-profile) ya da eşleme (kentos.profile-mapping) olmalı.";
+    /// A profile or a mapping of a format version this KentOS does not read (docs/adr/0558).
+    UNSUPPORTED_PROFILE_VERSION = "unsupported_profile_version", Failed, false, "Profilin ya da eşlemenin biçim sürümü bu KentOS'un okuduğu değil; bu KentOS 1. sürümü okur.";
+    /// A profile named as a built-in one: it would shadow it (docs/adr/0558).
+    PROFILE_NAME_TAKEN = "profile_name_taken", Failed, false, "Bu ad KentOS'un kendi profilinin adı; projenin profiline başka bir ad verin.";
+    /// A profile of an earlier release than the project's file of the name (docs/adr/0558).
+    PROFILE_DOWNGRADE = "profile_downgrade", Failed, false, "Projedeki aynı adlı profil içe aktarılandan daha yeni sürümde; üzerine yazmak için overwrite verin.";
+    /// A mapping named that the project has not (docs/adr/0558).
+    UNKNOWN_MAPPING = "unknown_mapping", Failed, false, "Bu adda eşleme yok; projenin profiller klasöründeki bir eşlemenin adını ya da eşlemenin kendisini (mapping) verin.";
+    /// A mapping whose shape does not hold for its profile (docs/adr/0558).
+    INVALID_PROFILE_MAPPING = "invalid_profile_mapping", Failed, false, "Eşleme geçersiz; iletisi neyin tutmadığını söyler.";
+    /// A migration whose releases do not go forward within the profile's release (docs/adr/0558).
+    INVALID_MIGRATION = "invalid_migration", Failed, false, "Göçün sürümleri geçersiz: hedef sürüm kaynaktan büyük ve profilin sürümünü aşmayan bir sayı olmalı.";
+    /// No unbroken chain of the profile's migrations between two releases (docs/adr/0558).
+    MIGRATION_GAP = "migration_gap", Failed, false, "Profilin göçlerinde bu iki sürüm arasında kesintisiz bir yol yok.";
+    /// A step of a migration left out: its layer, field or list is not in the drawing (docs/adr/0558).
+    MIGRATION_STEP_SKIPPED = "migration_step_skipped", Warning, false, "Bir göç adımı atlandı: katmanı, alanı ya da değer listesi çizimde yok.";
+    /// A mapping brought for a profile this project cannot find: its names were not checked (docs/adr/0558).
+    MAPPING_UNCHECKED = "mapping_unchecked", Warning, false, "Eşlemenin profili bulunamadı; adları profille denetlenmedi.";
+    /// A profile file replaced by a later or an equal release (docs/adr/0558).
+    PROFILE_REPLACED = "profile_replaced", Warning, false, "Projedeki aynı adlı profil ya da eşleme değiştirildi; iletisi eski sürümünü söyler.";
     /// A valid time's period that does not hold: an instant and a period together, an end alone, an end not after the start (docs/adr/0537).
     INVALID_PERIOD = "invalid_period", Failed, false, "Geçerlilik zamanı bir an ya da başlangıcı bitişinden önce bir aralık olmalı.";
     /// A database address that cannot be kept: a password in it, no host or no database (docs/adr/0505).

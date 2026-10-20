@@ -10,8 +10,8 @@
   - 0540 (komut türleri `kentos-commands`'ta).
 - **Web:** ertelendi (ADR 0228). Web'de gerekenler TODOS.md §0.2'de.
 - **Sonraya kalan:**
-  - kurumun kendi TUCBS profilinin (alan adları, kodlar, metadata) içe alınması ve profil sürümleri arasında göç;
-  - kurum eşlemeleri (bir alanın kurumdaki adı);
+  - kurumun kendi TUCBS profilinin (alan adları, kodlar, metadata) içe alınması ve profil sürümleri arasında göç: ADR 0558 yaptı;
+  - kurum eşlemeleri (bir alanın kurumdaki adı): ADR 0558 yaptı;
   - adres normalizasyonunun profile bağlı ayarları;
   - yinelenen adres kodunun adres sekmesinde gösterilmesi;
   - ifraz, tevhit, hisse dağıtımı ve PlanGML (bağımsız kurum kabulüne tabi uzman teslimleri);

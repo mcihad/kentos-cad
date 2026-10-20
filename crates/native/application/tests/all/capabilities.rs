@@ -443,6 +443,11 @@ const UNREACHED: &[(&str, &str, &str)] = &[
         "yazılamayan disk ya da geri okununca aynı çıkmayan GeoTIFF ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp geri okunarak yerine konması gpkg_tiles_files.rs'te sınanır (ADR 0556 §3)",
     ),
     (
+        "cad.profiles.import",
+        "file_unwritable",
+        "yazılamayan klasör ortak durumda kurulamaz (plan dosya yazmaz); klasörün yerinde dosya olması ve eski dosyanın olduğu gibi kalması, yazılan dosyanın geri okunması ve yarım dosyanın kalmaması profile_files.rs'te sınanır (ADR 0558 §3)",
+    ),
+    (
         "cad.rasters.gpkgwrite",
         "file_unwritable",
         "yazılamayan disk ya da geri okununca aynı çıkmayan GeoPackage ortak durumda kurulamaz (plan dosya yazmaz); geçici adla yazılıp geri okunarak yerine konması ve yarım dosyanın kalmaması gpkg_tiles_files.rs'te sınanır (ADR 0556 §4)",

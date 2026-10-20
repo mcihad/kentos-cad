@@ -1,0 +1,347 @@
+{
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Belediye örnek projesi",
+  "settings": {
+    "srid": 5256,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000,
+    "workspace": "gis",
+    "relations": [
+      {
+        "id": "agac-yesil",
+        "name": "Ağacın alanı",
+        "parent": "yesil",
+        "child": "agac",
+        "field": "Alan"
+      }
+    ]
+  },
+  "origin": {
+    "x": 500000,
+    "y": 4400000
+  },
+  "layers": [
+    {
+      "id": "peyzaj",
+      "name": "Peyzaj",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [
+        {
+          "id": "agac",
+          "name": "Ağaçlar",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#30A46C",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "No",
+              "kind": "text"
+            },
+            {
+              "name": "Tur",
+              "kind": "text"
+            },
+            {
+              "name": "Yas",
+              "kind": "text"
+            },
+            {
+              "name": "Sulama",
+              "kind": "text"
+            },
+            {
+              "name": "Alan",
+              "kind": "text"
+            }
+          ]
+        },
+        {
+          "id": "yesil",
+          "name": "Yeşil alan",
+          "type": "layer",
+          "visible": true,
+          "locked": false,
+          "expanded": true,
+          "style": {
+            "color": "#46A758",
+            "lineType": "continuous",
+            "lineWeight": 0.18
+          },
+          "children": [],
+          "fields": [
+            {
+              "name": "Ad",
+              "kind": "text"
+            },
+            {
+              "name": "Bolge",
+              "kind": "text"
+            },
+            {
+              "name": "Tip",
+              "kind": "text"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "activeLayer": "agac",
+  "entities": [
+    {
+      "kind": "point",
+      "id": 1,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-1",
+        "Tur": "Çınar",
+        "Yas": "12",
+        "Sulama": "Damla"
+      },
+      "p": {
+        "x": 500001,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 2,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-2",
+        "Tur": "çınar",
+        "Yas": "on beş",
+        "Sulama": "Yağmurlama"
+      },
+      "p": {
+        "x": 500002,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 3,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-3",
+        "Tur": "Palmiye",
+        "Yas": "600",
+        "Sulama": "Bilinmiyor"
+      },
+      "p": {
+        "x": 500003,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 4,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-4",
+        "Tur": "Akasya",
+        "Yas": "7",
+        "Sulama": "damla"
+      },
+      "p": {
+        "x": 500004,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 5,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-5",
+        "Tur": " ",
+        "Yas": "",
+        "Sulama": ""
+      },
+      "p": {
+        "x": 500005,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 6,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-6",
+        "Tur": "Meşe",
+        "Yas": "3,5",
+        "Sulama": "Yok"
+      },
+      "p": {
+        "x": 500006,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 7,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-7",
+        "Tur": "Palmiye",
+        "Yas": "020",
+        "Sulama": "yagmur"
+      },
+      "p": {
+        "x": 500007,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "point",
+      "id": 8,
+      "layerId": "agac",
+      "attrs": {
+        "No": "A-8",
+        "Tur": "Çınar; Palmiye",
+        "Yas": "on beş",
+        "Sulama": "Bilinmiyor"
+      },
+      "p": {
+        "x": 500008,
+        "y": 4400001
+      }
+    },
+    {
+      "kind": "polygon",
+      "id": 9,
+      "layerId": "yesil",
+      "attrs": {
+        "Ad": "Park",
+        "Bolge": "orman",
+        "Tip": "Bitki"
+      },
+      "pts": [
+        {
+          "x": 500000,
+          "y": 4400010
+        },
+        {
+          "x": 500010,
+          "y": 4400010
+        },
+        {
+          "x": 500010,
+          "y": 4400020
+        },
+        {
+          "x": 500000,
+          "y": 4400020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 10,
+      "layerId": "yesil",
+      "attrs": {
+        "Ad": "Bahçe",
+        "Bolge": "bahce",
+        "Tip": "Bitki"
+      },
+      "pts": [
+        {
+          "x": 500020,
+          "y": 4400010
+        },
+        {
+          "x": 500030,
+          "y": 4400010
+        },
+        {
+          "x": 500030,
+          "y": 4400020
+        },
+        {
+          "x": 500020,
+          "y": 4400020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 11,
+      "layerId": "yesil",
+      "attrs": {
+        "Ad": "Meydan",
+        "Bolge": "meydan",
+        "Tip": "Bitki"
+      },
+      "pts": [
+        {
+          "x": 500040,
+          "y": 4400010
+        },
+        {
+          "x": 500050,
+          "y": 4400010
+        },
+        {
+          "x": 500050,
+          "y": 4400020
+        },
+        {
+          "x": 500040,
+          "y": 4400020
+        }
+      ]
+    },
+    {
+      "kind": "polygon",
+      "id": 12,
+      "layerId": "yesil",
+      "attrs": {
+        "Ad": "Çim",
+        "Bolge": "orman",
+        "Tip": "Çim"
+      },
+      "pts": [
+        {
+          "x": 500060,
+          "y": 4400010
+        },
+        {
+          "x": 500070,
+          "y": 4400010
+        },
+        {
+          "x": 500070,
+          "y": 4400020
+        },
+        {
+          "x": 500060,
+          "y": 4400020
+        }
+      ]
+    }
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  }
+}
