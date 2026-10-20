@@ -4718,6 +4718,16 @@ def build():
     out["broken/domains-coded-and-ranged.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(min="1"))
     out["broken/domains-id-twice.kcad"] = domains_broken(lambda d: d["settings"]["domains"][1].update(id="durum"))
     out["broken/domains-unknown-key.kcad"] = domains_broken(lambda d: d["settings"]["domains"][0].update(color="#FF0000"))
+    # Each of schema 72's keys alone picks schema 72 (docs/adr/0430, 0405, 0438; the ek of docs/adr/0265 §2 in docs/adr/0558's
+    # 21 Ekim fix): the project's value lists, a field's link to a list, the project's relations and a range's left-out upper
+    # end, none beside a form, a field id or another of its kind. The Rust writer once chose an older schema for them and the
+    # drawing could not be read back; each file is the sample the carriage test (kentos-kcad `carriage`) writes alone, and
+    # in schema 71 each is an unknown field.
+    for alone in ("domains-alone", "field-domain-alone", "relations-alone", "field-max-exclusive"):
+        out[f"{alone}.kcad"] = container(document(load(f"{alone}.json")))
+        alone_payload = document(load(f"{alone}.json"))
+        assert alone_payload.count(b"\x67version\x18\x48") == 1, f"{alone} alone is schema 72"
+        out[f"broken/{alone}-in-schema-71.kcad"] = container(alone_payload.replace(b"\x67version\x18\x48", b"\x67version\x18\x47"))
     # A layer's record rules and its fields' unique, left-out ends, unit and values' descriptions and days are schema
     # 72's (docs/adr/0438): in schema 71 unknown; an empty rule list, a rule on a field the layer lacks, a rule twice,
     # `unique: false` and a day that is no date refused.

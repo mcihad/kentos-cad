@@ -1,0 +1,83 @@
+{
+  "format": "kentos.document",
+  "version": 2,
+  "name": "Alanın liste bağı tek başına",
+  "settings": {
+    "srid": 0,
+    "lengthDecimals": 3,
+    "areaDecimals": 2,
+    "areaUnit": "m2",
+    "angleUnit": "grad",
+    "plotScale": 1000.0,
+    "workspace": "gis"
+  },
+  "origin": {
+    "x": 0.0,
+    "y": 0.0
+  },
+  "layers": [
+    {
+      "id": "bina",
+      "name": "Bina",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+        "color": "fg",
+        "lineType": "continuous",
+        "lineWeight": 0.25
+      },
+      "children": [],
+      "fields": [
+        {
+          "name": "Durum",
+          "kind": "text",
+          "domain": "durum"
+        },
+        {
+          "name": "Not",
+          "kind": "text",
+          "length": 500
+        }
+      ]
+    }
+  ],
+  "activeLayer": "bina",
+  "uids": [
+    "0192f5a1-25a0-7000-8000-000000000212"
+  ],
+  "styles": {
+    "items": [],
+    "categories": []
+  },
+  "entities": [
+    {
+      "kind": "polygon",
+      "id": 1,
+      "layerId": "bina",
+      "attrs": {
+        "Durum": "inceleme",
+        "Not": "Çatı arası ayrıca bakılmalı."
+      },
+      "pts": [
+        {
+          "x": 0.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 0.0
+        },
+        {
+          "x": 12.0,
+          "y": 9.0
+        },
+        {
+          "x": 0.0,
+          "y": 9.0
+        }
+      ]
+    }
+  ]
+}

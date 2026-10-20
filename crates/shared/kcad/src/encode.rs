@@ -1903,13 +1903,14 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     if !doc.settings.sources.is_empty() {
         return crate::SCHEMA_WITH_SOURCES;
     }
-    // Schema 72 (docs/adr/0401, 0408, 0410, 0412, 0413, 0418): a form of the project, a layer field's
-    // stable id, its several values, a retired value or its date-and-time or time kind, a layer's
-    // table rules, or a record without a geometry.
+    // Schema 72 (docs/adr/0401, 0405, 0408, 0410, 0412, 0413, 0418, 0430): a form, a value list or a relation of the
+    // project, a layer field's stable id, its several values, its link to a list, a retired value or its date-and-time
+    // or time kind, a layer's table rules, or a record without a geometry.
     fn keyed(nodes: &[LayerNode]) -> bool {
         let later = |f: &kentos_contracts::LayerField| {
             f.id.is_some()
                 || f.multiple
+                || f.domain.is_some()
                 || f.values.as_ref().is_some_and(|v| v.iter().any(|c| c.retired))
                 || f.split.is_some()
                 || f.merge.is_some()
@@ -1940,7 +1941,10 @@ fn schema_of(doc: &DocumentSnapshotV2) -> u32 {
     if !doc.constraints.is_empty() {
         return crate::SCHEMA_WITH_CONSTRAINTS;
     }
+    // The project's value lists and relations and a field's link to a list are schema 72's too (docs/adr/0430, 0405).
     if !doc.settings.forms.is_empty()
+        || !doc.settings.domains.is_empty()
+        || !doc.settings.relations.is_empty()
         || keyed(&doc.layers)
         || doc.entities.iter().any(|e| matches!(e, Entity::Record(_)))
     {
