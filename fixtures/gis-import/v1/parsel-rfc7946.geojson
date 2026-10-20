@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "parsel",
+"features": [
+{"type":"Feature","properties":{"ada":"Çağlayan","parsel_no":5,"alan":1234.56,"kimlik":9007199254740993,"tescil":"2024-02-29","guncelleme":"2024-03-01T10:20:30Z","tapulu":true,"not":""},"geometry":{"type":"MultiPolygon","coordinates":[[[[35.8479547,39.9140793],[35.8481886,39.9140796],[35.8481882,39.9142598],[35.8479543,39.9142595],[35.8479547,39.9140793]],[[35.848013,39.9141244],[35.8480129,39.9141695],[35.8480714,39.9141696],[35.8480715,39.9141245],[35.848013,39.9141244]]],[[[35.8483055,39.9140798],[35.8484225,39.91408],[35.8484223,39.91417],[35.8483055,39.9140798]]]]}},
+{"type":"Feature","properties":{"ada":"Işık-Ğüşöç","parsel_no":null,"alan":null,"kimlik":null,"tescil":null,"guncelleme":null,"tapulu":false,"not":null},"geometry":{"type":"MultiPolygon","coordinates":[[[[35.8491242,39.9140809],[35.8492412,39.914081],[35.849241,39.9141711],[35.849124,39.9141709],[35.8491242,39.9140809]]]]}},
+{"type":"Feature","properties":{"ada":"geometrisiz","parsel_no":7,"alan":null,"kimlik":null,"tescil":null,"guncelleme":null,"tapulu":null,"not":null},"geometry":{"type":"MultiPolygon","coordinates":[]}}
+]
+}

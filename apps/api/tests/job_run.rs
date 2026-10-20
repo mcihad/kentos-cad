@@ -287,6 +287,9 @@ const GPKG: &[u8] = include_bytes!("../../../fixtures/geopackage/v1/kentos-expor
 const GPKG_WGS84: &[u8] =
     include_bytes!("../../../fixtures/geopackage/v1/kentos-synced-wgs84.gpkg");
 const DXF_BLOCKS: &[u8] = include_bytes!("../../../fixtures/formats/v1/blocks.dxf");
+const SHP_ZIP: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanlar.zip");
+const GEOJSON: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/katmanli.geojson");
+const KML_WGS84: &[u8] = include_bytes!("../../../fixtures/gis-import/v1/nokta.kml");
 
 /// A file staged for an import: the bytes in a file of their own, as the object store keeps them.
 fn staged(name: &str, bytes: &[u8]) -> StagedFile {
@@ -398,6 +401,63 @@ fn a_file_in_another_system_is_refused_with_the_commands_own_code_and_taken_when
         )
         .expect("moved into the project's system");
     assert!(moved.delta.expect("a delta").added > 0);
+}
+
+/// A Shapefile archive, a GeoJSON file and a KML are taken in by their own import commands in the child
+/// (docs/adr/0563 §3), and the command's refusals are the job's.
+#[test]
+fn a_shapefile_archive_a_geojson_file_and_a_kml_are_taken_in_by_their_commands() {
+    let shp = processor()
+        .process(
+            &import_task(
+                "katmanlar.zip",
+                SHP_ZIP,
+                ImportFormat::Shp,
+                serde_json::json!({ "entry": "veri/yol" }),
+            ),
+            &hooks(),
+        )
+        .expect("the archive's road layer was taken in");
+    assert_eq!(shp.delta.expect("a delta").added, 2);
+    assert_eq!(shp.details["sourceLayers"], serde_json::json!(["yol"]));
+    let geojson = processor()
+        .process(
+            &import_task(
+                "katmanli.geojson",
+                GEOJSON,
+                ImportFormat::Geojson,
+                serde_json::json!({}),
+            ),
+            &hooks(),
+        )
+        .expect("the GeoJSON file was taken in");
+    assert_eq!(geojson.delta.expect("a delta").added, 3);
+    // A KML is in WGS 84: refused as it is, taken when asked to move.
+    let failure = processor()
+        .process(
+            &import_task(
+                "nokta.kml",
+                KML_WGS84,
+                ImportFormat::Kml,
+                serde_json::json!({}),
+            ),
+            &hooks(),
+        )
+        .expect_err("another system");
+    assert_eq!(failure.code, "crs_mismatch", "{failure:?}");
+    let moved = processor()
+        .process(
+            &import_task(
+                "nokta.kml",
+                KML_WGS84,
+                ImportFormat::Kml,
+                serde_json::json!({ "reproject": true }),
+            ),
+            &hooks(),
+        )
+        .expect("moved into the project's system");
+    assert_eq!(moved.delta.expect("a delta").added, 1);
+    assert_eq!(moved.details["moved"]["from"], 4326);
 }
 
 #[test]

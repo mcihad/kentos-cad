@@ -84,7 +84,11 @@ pub mod gis_derivation;
 pub mod gis_derive;
 pub mod file_import_csv;
 pub mod file_import_fgb;
+pub mod file_import_geojson;
+pub mod file_import_gis;
 pub mod file_import_gml;
+pub mod file_import_kml;
+pub mod file_import_shp;
 pub mod shapefile;
 pub mod maplibre;
 pub mod qml;
@@ -1144,6 +1148,19 @@ pub const DESKTOP_COMMANDS: &[(&str, u32)] = &[
     (
         kentos_commands::FILE_IMPORT_GML,
         kentos_commands::FILE_IMPORT_GML_VERSION,
+    ),
+    // A Shapefile, a GeoJSON file and a KML/KMZ into the drawing ([`file_import_gis`], docs/adr/0563).
+    (
+        kentos_commands::FILE_IMPORT_SHP,
+        kentos_commands::FILE_IMPORT_SHP_VERSION,
+    ),
+    (
+        kentos_commands::FILE_IMPORT_GEOJSON,
+        kentos_commands::FILE_IMPORT_GEOJSON_VERSION,
+    ),
+    (
+        kentos_commands::FILE_IMPORT_KML,
+        kentos_commands::FILE_IMPORT_KML_VERSION,
     ),
     // A derived GIS dataset against the drawing ([`gis_derivation`], docs/adr/0530).
     (

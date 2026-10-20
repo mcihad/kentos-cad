@@ -1120,6 +1120,15 @@ codes! {
     CRS_MISMATCH = "crs_mismatch", Failed, false, "Dosyanın koordinat sistemi projeninkinden başka; çevirmeyi isteyin ya da projeyi o sistemde açın.";
     /// The file declares no coordinate system: its numbers went in as they are (docs/adr/0502).
     CRS_UNDECLARED = "crs_undeclared", Warning, false, "Dosya koordinat sistemi bildirmiyor; koordinatlar olduğu gibi alındı.";
+    /// The file's system is not one KentOS can use: its statement could not be read or names a code the registry lacks
+    /// (docs/adr/0563).
+    CRS_UNKNOWN = "crs_unknown", Failed, false, "Dosyanın koordinat sistemi okunamadı ya da KentOS'ta tanımlı değil; koordinatların sistemini srid ile verin.";
+    /// The system the input gave is not the one the file says (docs/adr/0563).
+    CRS_OVERRIDDEN = "crs_overridden", Warning, false, "Verilen srid dosyanın bildirdiğinden başka; koordinatlar dönüştürülmeden verilen sistemde sayıldı.";
+    /// The move into the project's system rests on an operation that is not the official one (docs/adr/0222, 0563).
+    CRS_UNOFFICIAL = "crs_unofficial", Warning, false, "Koordinatlar resmî olmayan bir dönüşümle projenin sistemine çevrildi; doğruluğu çıktıda yazılı.";
+    /// A zip archive's layer the input names is not in it (docs/adr/0563).
+    ENTRY_NOT_FOUND = "entry_not_found", Failed, false, "Adı verilen katman arşivde yok.";
     /// A row's lasting id is an object of the drawing already (docs/adr/0502).
     ENTITY_EXISTS = "entity_exists", Failed, false, "Dosyadaki bir kaydın kalıcı kimliği çizimde zaten bir nesnenin; aynı dosya ikinci kez alınamaz.";
     /// A layer or a table bound already (docs/adr/0503).

@@ -215,10 +215,24 @@ pub enum ImportFormat {
     Gml,
     Csv,
     Dxf,
+    /// A Shapefile as a zip archive: its `.shp`, `.shx`, `.dbf`, `.prj` and `.cpg` staged together (docs/adr/0563 §3).
+    Shp,
+    Geojson,
+    /// A KML file or a KMZ archive.
+    Kml,
 }
 
 impl ImportFormat {
-    pub const ALL: [ImportFormat; 5] = [Self::Gpkg, Self::Fgb, Self::Gml, Self::Csv, Self::Dxf];
+    pub const ALL: [ImportFormat; 8] = [
+        Self::Gpkg,
+        Self::Fgb,
+        Self::Gml,
+        Self::Csv,
+        Self::Dxf,
+        Self::Shp,
+        Self::Geojson,
+        Self::Kml,
+    ];
 
     /// The command that reads the file.
     pub fn command(self) -> &'static str {
@@ -228,6 +242,9 @@ impl ImportFormat {
             Self::Gml => "file.import.gml",
             Self::Csv => "file.import.csv",
             Self::Dxf => "file.import.dxf",
+            Self::Shp => "file.import.shp",
+            Self::Geojson => "file.import.geojson",
+            Self::Kml => "file.import.kml",
         }
     }
 
@@ -239,6 +256,9 @@ impl ImportFormat {
             Self::Gml => "gml",
             Self::Csv => "csv",
             Self::Dxf => "dxf",
+            Self::Shp => "zip",
+            Self::Geojson => "geojson",
+            Self::Kml => "kml",
         }
     }
 
@@ -251,6 +271,9 @@ impl ImportFormat {
             "gml" | "xml" => Some(Self::Gml),
             "csv" | "txt" => Some(Self::Csv),
             "dxf" => Some(Self::Dxf),
+            "zip" => Some(Self::Shp),
+            "geojson" | "json" => Some(Self::Geojson),
+            "kml" | "kmz" => Some(Self::Kml),
             _ => None,
         }
     }

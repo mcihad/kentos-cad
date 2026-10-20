@@ -1,0 +1,7 @@
+{
+"type": "FeatureCollection",
+"name": "nokta",
+"features": [
+{"type":"Feature","properties":{"ad":"N1","kot":101.75},"geometry":{"type":"Point","coordinates":[35.8479692,39.9140929,101.75]}}
+]
+}

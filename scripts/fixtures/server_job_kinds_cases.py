@@ -175,13 +175,17 @@ def atlas_cases() -> list[dict]:
     return [{"name": n, "input": i, "fault": atlas_fault(i)} for n, i in inputs]
 
 
-FORMATS = {"gpkg": "gpkg", "fgb": "fgb", "gml": "gml", "xml": "gml", "csv": "csv", "txt": "csv", "dxf": "dxf"}
+FORMATS = {"gpkg": "gpkg", "fgb": "fgb", "gml": "gml", "xml": "gml", "csv": "csv", "txt": "csv", "dxf": "dxf",
+           "zip": "shp", "geojson": "geojson", "json": "geojson", "kml": "kml", "kmz": "kml"}
 COMMANDS = {
     "gpkg": "file.import.gpkg",
     "fgb": "file.import.fgb",
     "gml": "file.import.gml",
     "csv": "file.import.csv",
     "dxf": "file.import.dxf",
+    "shp": "file.import.shp",
+    "geojson": "file.import.geojson",
+    "kml": "file.import.kml",
 }
 
 
@@ -195,6 +199,7 @@ def format_cases() -> list[dict]:
     names = [
         "parsel.gpkg", "PARSEL.GPKG", "ada.fgb", "binalar.gml", "binalar.xml", "noktalar.csv", "noktalar.TXT", "cizim.dxf",
         "CIZIM.Dxf", "a.b.c.gpkg", ".gpkg", "gpkg", "parsel.", "parsel.shp", "parsel.zip", "parsel.geojson", "parsel.kcad", "",
+        "PARSEL.ZIP", "arsiv.tar.zip", "noktalar.json", "NOKTALAR.GeoJSON", "yerler.kml", "yerler.KMZ", "yerler.kmz",
     ]
     return [{"name": n, "format": format_of(n), "command": COMMANDS.get(format_of(n) or "")} for n in names]
 

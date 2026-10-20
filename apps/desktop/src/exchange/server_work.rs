@@ -148,6 +148,9 @@ pub fn format_name(format: ImportFormat) -> &'static str {
         ImportFormat::Gml => "GML",
         ImportFormat::Csv => "CSV",
         ImportFormat::Dxf => "DXF",
+        ImportFormat::Shp => "Shapefile",
+        ImportFormat::Geojson => "GeoJSON",
+        ImportFormat::Kml => "KML/KMZ",
     }
 }
 

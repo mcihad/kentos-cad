@@ -175,8 +175,95 @@ fn plan_of(
     source: &[ImportLayer],
     file: &str,
 ) -> Result<ImportPlan, Stop> {
-    let skip: HashSet<String> = input.skip_layers.iter().map(|n| fold_turkish(n)).collect();
-    let routes: HashMap<String, (&String, &String)> = input
+    let routing = Routing {
+        skip_layers: &input.skip_layers,
+        layers: &input.layers,
+        all_onto: None,
+        group: input.group.as_ref(),
+    };
+    let (layers, objects) = route_layers(doc, &routing, source)?;
+    nothing_to_import(
+        file,
+        source.is_empty(),
+        layers.is_empty(),
+        objects,
+        &input.skip_layers,
+    )?;
+    Ok(ImportPlan {
+        label: step_name(file),
+        layers,
+        group: group_of(routing.group, file),
+    })
+}
+
+/// How a file's layers are sent to the drawing's, the DXF's and the GIS files' alike (docs/adr/0257 §3, 0563 §1).
+pub(crate) struct Routing<'a> {
+    /// The file's layers (their names in the file) left out.
+    pub skip_layers: &'a [String],
+    /// A file's layer → the drawing's layer (its id).
+    pub layers: &'a BTreeMap<String, String>,
+    /// The drawing's layer every layer `layers` does not name goes onto, at `layer`.
+    pub all_onto: Option<&'a String>,
+    pub group: Option<&'a String>,
+}
+
+/// The group the new layers go into: the one named, else one named after the file, none when the name is empty.
+pub(crate) fn group_of(group: Option<&String>, file: &str) -> Option<String> {
+    match group {
+        None => Some(file.to_owned()),
+        Some(name) if name.trim().is_empty() => None,
+        Some(name) => Some(name.trim().to_owned()),
+    }
+}
+
+/// The checks of a target the objects go onto: a layer of the drawing, not a group, not locked.
+fn existing_target(
+    doc: &Document,
+    id: &String,
+    source: &str,
+    at: &str,
+) -> Result<LayerTarget, Stop> {
+    match doc.layers().get(id) {
+        None => Err(refuse(
+            codes::LAYER_NOT_FOUND,
+            format!(
+                "“{id}” kimlikli katman çizimde yok; “{source}” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin."
+            ),
+            at,
+        )),
+        Some(node) if node.kind != LayerNodeType::Layer => Err(refuse(
+            codes::NOT_A_LAYER,
+            format!(
+                "“{}” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+                node.name
+            ),
+            at,
+        )),
+        Some(node) if doc.layers().is_locked(id) => Err(refuse(
+            codes::LAYER_LOCKED,
+            format!(
+                "“{}” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+                node.name
+            ),
+            at,
+        )),
+        Some(_) => Ok(LayerTarget::Existing(id.clone())),
+    }
+}
+
+/// Where each source layer goes, and how many objects go: the layers left out skipped, the routed ones (`layers`,
+/// else `all_onto`) checked, the others onto the drawing's layer of the same name or a new one with the file's look.
+pub(crate) fn route_layers(
+    doc: &Document,
+    routing: &Routing<'_>,
+    source: &[ImportLayer],
+) -> Result<(Vec<(String, LayerTarget)>, u64), Stop> {
+    let skip: HashSet<String> = routing
+        .skip_layers
+        .iter()
+        .map(|n| fold_turkish(n))
+        .collect();
+    let routes: HashMap<String, (&String, &String)> = routing
         .layers
         .iter()
         .map(|(source, id)| (fold_turkish(source), (source, id)))
@@ -189,40 +276,9 @@ fn plan_of(
             continue;
         }
         let target = if let Some((source, id)) = routes.get(&key) {
-            let at = format!("layers.{source}");
-            match doc.layers().get(id) {
-                None => {
-                    return Err(refuse(
-                        codes::LAYER_NOT_FOUND,
-                        format!(
-                            "“{id}” kimlikli katman çizimde yok; “{}” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin.",
-                            l.name
-                        ),
-                        &at,
-                    ));
-                }
-                Some(node) if node.kind != LayerNodeType::Layer => {
-                    return Err(refuse(
-                        codes::NOT_A_LAYER,
-                        format!(
-                            "“{}” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
-                            node.name
-                        ),
-                        &at,
-                    ));
-                }
-                Some(node) if doc.layers().is_locked(id) => {
-                    return Err(refuse(
-                        codes::LAYER_LOCKED,
-                        format!(
-                            "“{}” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
-                            node.name
-                        ),
-                        &at,
-                    ));
-                }
-                Some(_) => LayerTarget::Existing((*id).clone()),
-            }
+            existing_target(doc, id, &l.name, &format!("layers.{source}"))?
+        } else if let Some(id) = routing.all_onto {
+            existing_target(doc, id, &l.name, "layer")?
         } else if let Some(node) = layer_named(doc, &l.name) {
             if doc.layers().is_locked(&node.id) {
                 return Err(refuse(
@@ -260,33 +316,33 @@ fn plan_of(
         objects += u64::from(l.count);
         layers.push((l.name.clone(), target));
     }
-    if objects == 0 {
-        return Err(refuse(
-            codes::NOTHING_TO_IMPORT,
-            if source.is_empty() {
-                format!("{file} dosyasında alınacak nesne yok.")
-            } else {
-                format!(
-                    "{file} dosyasının seçilen katmanlarında nesne yok; skipLayers'ı denetleyin."
-                )
-            },
-            if layers.is_empty() && !input.skip_layers.is_empty() {
-                "skipLayers"
-            } else {
-                "path"
-            },
-        ));
+    Ok((layers, objects))
+}
+
+/// The refusal of an import with no object left to take.
+pub(crate) fn nothing_to_import(
+    file: &str,
+    no_layers_read: bool,
+    none_chosen: bool,
+    objects: u64,
+    skip_layers: &[String],
+) -> Result<(), Stop> {
+    if objects > 0 {
+        return Ok(());
     }
-    let group = match &input.group {
-        None => Some(file.to_owned()),
-        Some(name) if name.trim().is_empty() => None,
-        Some(name) => Some(name.trim().to_owned()),
-    };
-    Ok(ImportPlan {
-        label: step_name(file),
-        layers,
-        group,
-    })
+    Err(refuse(
+        codes::NOTHING_TO_IMPORT,
+        if no_layers_read {
+            format!("{file} dosyasında alınacak nesne yok.")
+        } else {
+            format!("{file} dosyasının seçilen katmanlarında nesne yok; skipLayers'ı denetleyin.")
+        },
+        if none_chosen && !skip_layers.is_empty() {
+            "skipLayers"
+        } else {
+            "path"
+        },
+    ))
 }
 
 /// The plan `input` takes `read` (the file `file`) in by, the command's own

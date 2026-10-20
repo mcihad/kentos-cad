@@ -66,7 +66,7 @@ use kentos_native_application::{
     arrays_edit, changeset, constraints_edit, constraints_query, parameters_edit, create, curves_edit, dimensions_create, divide, drawing_audit,
     entities_boundary, entities_break, entities_cleanup, entities_copy, entities_explode,
     entities_hatch, entities_join, entities_lengthen, entities_match, entities_paste,
-    entities_reverse, file_import, file_import_csv, file_import_fgb, file_import_gml, file_import_gpkg, file_import_pdf, gis_derivation, maplibre, qml, sld, stretch,
+    entities_reverse, file_import, file_import_csv, file_import_fgb, file_import_geojson, file_import_gml, file_import_gpkg, file_import_kml, file_import_shp, file_import_pdf, gis_derivation, qml, sld, stretch, maplibre,
 };
 use kentos_native_application::{
     block_params, blocks_freeze, blocks_insert, blocks_proxy, blocks_query, blocks_replace,
@@ -2227,6 +2227,27 @@ impl Input for kentos_commands::ImportGml {
     }
 }
 
+impl Input for kentos_commands::ImportShp {
+    /// No number: a path, an entry, layers and a system.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ImportGeojson {
+    /// No number: a path, layers and a system.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::ImportKml {
+    /// No number: a path, layers and a system.
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
 impl Input for kentos_commands::ImportFgb {
     /// No number: a path and a layer.
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
@@ -3381,6 +3402,15 @@ fn run_op(
         kentos_commands::FILE_IMPORT_GML => {
             run!(file_import_gml, kentos_commands::ImportGml)
         }
+        kentos_commands::FILE_IMPORT_SHP => {
+            run!(file_import_shp, kentos_commands::ImportShp)
+        }
+        kentos_commands::FILE_IMPORT_GEOJSON => {
+            run!(file_import_geojson, kentos_commands::ImportGeojson)
+        }
+        kentos_commands::FILE_IMPORT_KML => {
+            run!(file_import_kml, kentos_commands::ImportKml)
+        }
         kentos_commands::CAD_GIS_DERIVATION => {
             run!(gis_derivation, kentos_commands::GisDerivation)
         }
@@ -3746,12 +3776,17 @@ fn check(
                         .ok_or_else(|| format!("{at}: {id} yuvasında nesne yok"))?;
                     for (k, v) in fields.as_object().unwrap_or(&empty) {
                         let v = block_ids(v, doc, state, at)?;
-                        expect_same(
-                            got.get(k).unwrap_or(&Value::Null),
-                            &v,
-                            &format!("nesne {id}.{k}"),
-                            at,
-                        )?;
+                        let have = got.get(k).unwrap_or(&Value::Null);
+                        match within {
+                            // Coordinates a reference moved by PROJ (docs/adr/0563 §1): within the step's `within`.
+                            Some(w) if !close(have, &v, w) => {
+                                return Err(format!(
+                                    "{at}: nesne {id}.{k} (±{w}): beklenen {v}, bulunan {have}"
+                                ));
+                            }
+                            Some(_) => {}
+                            None => expect_same(have, &v, &format!("nesne {id}.{k}"), at)?,
+                        }
                     }
                 }
             }

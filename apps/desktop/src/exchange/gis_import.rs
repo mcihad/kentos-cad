@@ -15,29 +15,87 @@
 //! what will come in. Nothing is transformed or guessed silently (CLAUDE.md
 //! §5); an import is one undo step.
 
-use std::collections::BTreeSet;
+use std::collections::{BTreeMap, BTreeSet};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 use iced::widget::{Column, column, row};
 use iced::{Center, Element, Fill, Length, Task};
 use kentos_commands::{
-    GeoJsonReadOptions, ImportLayer, ImportResult, LayerStyle, ShapefileReadOptions,
+    CommandResult, GeoJsonReadOptions, ImportGeojson, ImportKml, ImportLayer, ImportResult,
+    ImportShp, ShapefileReadOptions,
 };
+use kentos_domain::Slot;
 use kentos_formats::shp;
 use kentos_interaction::Level;
+use kentos_native_application::file_import_gis::{Premoved, ReadGis};
+use kentos_native_application::{
+    ExecutionContext, file_import_geojson, file_import_kml, file_import_shp,
+};
 use kentos_ui::label;
 use kentos_ui::widget::select::{Choice, Select};
 use kentos_ui::widget::table::{Column as TableColumn, Row as TableRow, Table};
 use kentos_ui::widget::tree_view::{Check, check_box};
 use kentos_ui::widget::{Dialog, overlay, swatch};
 
-use super::apply::{self, ImportPlan, LayerTarget};
+use super::apply;
 use super::words::{self, Kind as Line};
 use super::{Event as Exchange, Kind, Picked, Window, message, off_thread};
 use crate::app::{App, Message};
 use crate::crs::{CrsQuestion, Statement};
 use crate::view::hex_color;
+
+/// What the window's choices ask of the command of its source (docs/adr/0563 §2): the three inputs share them.
+struct GisInput {
+    path: String,
+    /// A zip archive's layer (its path without `.shp`).
+    entry: Option<String>,
+    srid: Option<u32>,
+    reproject: bool,
+    skip_layers: Vec<String>,
+}
+
+impl GisInput {
+    fn shp(&self) -> ImportShp {
+        ImportShp {
+            path: self.path.clone(),
+            entry: self.entry.clone(),
+            srid: self.srid,
+            reproject: self.reproject,
+            skip_layers: self.skip_layers.clone(),
+            layers: BTreeMap::new(),
+            layer: None,
+            group: None,
+            expected_revision: None,
+        }
+    }
+
+    fn geojson(&self) -> ImportGeojson {
+        ImportGeojson {
+            path: self.path.clone(),
+            srid: self.srid,
+            reproject: self.reproject,
+            skip_layers: self.skip_layers.clone(),
+            layers: BTreeMap::new(),
+            layer: None,
+            group: None,
+            expected_revision: None,
+        }
+    }
+
+    fn kml(&self) -> ImportKml {
+        ImportKml {
+            path: self.path.clone(),
+            srid: self.srid,
+            reproject: self.reproject,
+            skip_layers: self.skip_layers.clone(),
+            layers: BTreeMap::new(),
+            layer: None,
+            group: None,
+            expected_revision: None,
+        }
+    }
+}
 
 /// Reads told apart: a late answer to an older read is dropped.
 static READS: AtomicU64 = AtomicU64::new(0);
@@ -540,6 +598,52 @@ impl App {
             && placed
     }
 
+    /// The input the window's choices make for the command of its source (docs/adr/0563 §2): the file's path (a zip's
+    /// layer as its `entry`), the system answer when it is not the one the file or the project gives, the move when
+    /// asked, and the layers left out (the ones the user took off and those whose same-named layer is locked).
+    fn gis_input(&self, s: &State, original: &ImportResult) -> GisInput {
+        let project = self.project_srid();
+        // What the command takes by itself: the file's own system when the registry knows it, the project's when the
+        // file says nothing; the user's other answer is the input's `srid`.
+        let said = original
+            .declared_crs
+            .as_ref()
+            .and_then(|d| d.srid)
+            .filter(|srid| crate::crs::system(*srid).is_some());
+        let inferred = if original.declared_crs.is_some() {
+            said
+        } else {
+            Some(project)
+        };
+        let skip_layers: Vec<String> = original
+            .layers
+            .iter()
+            .filter(|l| s.excluded.contains(&l.name) || self.gis_target(l).1)
+            .map(|l| l.name.clone())
+            .collect();
+        let (path, entry) = match &s.source {
+            Source::GeoJson(f) | Source::Kml(f) => (f.path.clone(), None),
+            Source::Shapefile(files) => (
+                shapefile_set(files)
+                    .ok()
+                    .and_then(|set| files[set.shp].path.clone()),
+                None,
+            ),
+            Source::Zip {
+                file,
+                layers,
+                layer,
+            } => (file.path.clone(), layers.get(*layer).cloned()),
+        };
+        GisInput {
+            path: path.map_or_else(|| s.name(), |p| p.display().to_string()),
+            entry,
+            srid: s.crs.srid.filter(|chosen| Some(*chosen) != inferred),
+            reproject: s.crs.convert,
+            skip_layers,
+        }
+    }
+
     fn run_gis_import(&mut self) {
         let Some(Window::GisImport(s)) = &self.exchange else {
             return;
@@ -547,79 +651,95 @@ impl App {
         if !self.gis_can_import(s) {
             return;
         }
-        let Some(result) = s.effective().cloned() else {
+        let Some(original) = s.result.clone() else {
             return;
         };
         let name = s.name();
-        let kind = s.kind().1;
-        let layers: Vec<(String, LayerTarget)> = self
-            .gis_included(s)
-            .into_iter()
-            .map(|l| {
-                let target = match self.gis_target(l).0 {
-                    Some(id) => LayerTarget::Existing(id),
-                    None => LayerTarget::New {
-                        frozen: None,
-                        plot: None,
-                        name: l.name.clone(),
-                        style: Box::new(LayerStyle {
-                            color: l.color.clone(),
-                            line_type: l.line_type,
-                            ..kentos_domain::default_style()
-                        }),
-                        visible: l.visible,
-                        locked: l.locked,
-                        // The file's fields (docs/adr/0199 §6): a DBF's, a GeoJSON's properties' kinds.
-                        fields: l.fields.clone(),
-                    },
-                };
-                (l.name.clone(), target)
-            })
-            .collect();
-        let chosen = layers.len();
-        let plan = ImportPlan {
-            label: format!("{kind}: {name}"),
-            layers,
-            group: Some(name.clone()),
+        let input = self.gis_input(s, &original);
+        // The file as the window read it: the objects moved into the project's system off the UI thread when the
+        // move was asked, the command taking that move as made (`Premoved`).
+        let bytes: Arc<[u8]> = match &s.source {
+            Source::GeoJson(f) | Source::Kml(f) | Source::Zip { file: f, .. } => f.bytes.clone(),
+            Source::Shapefile(files) => shapefile_set(files)
+                .ok()
+                .map_or_else(|| Arc::from(Vec::new()), |set| files[set.shp].bytes.clone()),
         };
+        let mut read = match (&s.moved, s.crs.convert) {
+            (Some((from, moved)), true) if Some(*from) == s.crs.srid => {
+                let mut read = ReadGis::of(&name, &bytes, (**moved).clone());
+                read.premoved = Some(Premoved {
+                    from: *from,
+                    bounds: original.bounds,
+                    left: u32::try_from(
+                        original.entities.len().saturating_sub(moved.entities.len()),
+                    )
+                    .unwrap_or(u32::MAX),
+                });
+                read
+            }
+            _ => ReadGis::of(&name, &bytes, (*original).clone()),
+        };
+        let skipped = read.result.report.skipped.clone();
+        let source = s.source.clone();
+        // The Shapefile of a pick that is not on disk (its path unknown) is the file's name only.
+        read.file = name.clone();
         let Some(doc) = &mut self.document else {
             return;
         };
-        match apply::apply_import(&mut doc.model, result.entities.clone(), Vec::new(), &plan) {
-            Err(error) => {
+        let first = doc.model.next_slot();
+        let answer = {
+            let cx = &mut ExecutionContext::new(&mut doc.model);
+            match source {
+                Source::Shapefile(_) | Source::Zip { .. } => {
+                    file_import_shp::execute_read(cx, input.shp(), read)
+                }
+                Source::GeoJson(_) => file_import_geojson::execute_read(cx, input.geojson(), read),
+                Source::Kml(_) => file_import_kml::execute_read(cx, input.kml(), read),
+            }
+        };
+        let output = match answer {
+            CommandResult::Completed { output, .. } => output,
+            CommandResult::Failed { error } | CommandResult::Conflict { error } => {
                 if let Some(Window::GisImport(s)) = &mut self.exchange {
-                    s.status = Some((true, error));
+                    s.status = Some((true, error.message));
                 }
+                return;
             }
-            Ok(applied) => {
-                self.zoom_to(&applied.slots);
-                let into = if applied.created.is_empty() {
-                    String::new()
-                } else {
-                    format!("; {} yeni katman “{name}” grubunda", applied.created.len())
-                };
-                self.say(
-                    Level::Success,
-                    format!(
-                        "“{name}”: {} nesne {chosen} katmana alındı{into}. Tek adımda geri alınabilir.",
-                        applied.slots.len()
-                    ),
-                );
-                if !result.report.skipped.is_empty() {
-                    let skipped: Vec<String> = result
-                        .report
-                        .skipped
-                        .iter()
-                        .map(words::report_text)
-                        .collect();
-                    self.warn(format!(
-                        "“{name}” içinde alınmayanlar: {}",
-                        skipped.join(" ")
-                    ));
+            other => {
+                if let Some(Window::GisImport(s)) = &mut self.exchange {
+                    s.status = Some((true, format!("İçe aktarılamadı: {other:?}")));
                 }
-                self.close_exchange();
+                return;
             }
+        };
+        let last = doc.model.next_slot();
+        let slots: Vec<Slot> = (first..last)
+            .filter_map(|n| u32::try_from(n).ok())
+            .map(Slot)
+            .filter(|slot| doc.model.get(*slot).is_some())
+            .collect();
+        self.zoom_to(&slots);
+        let into = if output.layers.is_empty() {
+            String::new()
+        } else {
+            format!("; {} yeni katman “{name}” grubunda", output.layers.len())
+        };
+        self.say(
+            Level::Success,
+            format!(
+                "“{name}”: {} nesne {} katmana alındı{into}. Tek adımda geri alınabilir.",
+                output.objects,
+                output.targets.len()
+            ),
+        );
+        if !skipped.is_empty() {
+            let skipped: Vec<String> = skipped.iter().map(words::report_text).collect();
+            self.warn(format!(
+                "“{name}” içinde alınmayanlar: {}",
+                skipped.join(" ")
+            ));
         }
+        self.close_exchange();
     }
 
     pub(super) fn gis_import_view<'a>(&'a self, s: &'a State) -> Element<'a, Message> {

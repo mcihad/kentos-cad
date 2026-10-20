@@ -307,7 +307,11 @@
       "note": "Pencere dosyayı okuyup gösterir, komutla yazar (file_import::execute_read); 20 000'den çok nesne kare kare, komutun planıyla ve kaydıyla (ADR 0257)."
     },
     "file.import.geojson": {
-      "level": "none"
+      "level": "semantic",
+      "via": [
+        "file.import.geojson"
+      ],
+      "note": "GeoJSON penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563)."
     },
     "file.import.gnss": {
       "level": "none"
@@ -320,7 +324,11 @@
       "note": "Pencere dosyanın tablolarını ve sistemini gösterir, komutla yazar; başka sistemdeki dosya reproject onayıyla (ADR 0502)."
     },
     "file.import.kml": {
-      "level": "none"
+      "level": "semantic",
+      "via": [
+        "file.import.kml"
+      ],
+      "note": "KML/KMZ penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563)."
     },
     "file.import.ncn": {
       "level": "none"
@@ -332,7 +340,11 @@
       "level": "none"
     },
     "file.import.shp": {
-      "level": "none"
+      "level": "semantic",
+      "via": [
+        "file.import.shp"
+      ],
+      "note": "Shapefile penceresi dosyayı bir kez okur, sistemin sorusunu ve katmanların yerini gösterir; İçe aktar komutla (execute_read) tek adımda alır, günlükte komutun adıyla (ADR 0563)."
     },
     "cloud.rename": {
       "level": "semantic",

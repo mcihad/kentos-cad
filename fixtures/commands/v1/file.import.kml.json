@@ -1,0 +1,3568 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.kml",
+ "commandVersion": 1,
+ "title": "KML/KMZ içe aktar: klasörler katman, biçemler, sistem sorusu, çevirme",
+ "note": "ADR 0563. Dosyaları GDAL (QGIS 4.2.3) yazar ya da elle yazılmıştır (fixtures/formats/v1); beklenenler bağımsız başvurulardan kurulur: Shapefile ve GeoJSON tools/formats/gis.py'den, KML scripts/fixtures/kml_cases.py'den, çevirme PROJ'dan (±1e-6 m); komutun sistem sorusu, katman yönlendirmesi ve kimlikleri ADR'nin kuralından. Bağımsız başvuru: scripts/fixtures/gis_import_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Shapefile, GeoJSON ve KML alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "parsel.kml: klasörler katman, biçemin rengi ve kalınlığı, ad, veriler; WGS 84 çevirme ister",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "parsel.kml EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "parsel.kml reproject ile TM36'ya çevrilir (PROJ, EPSG:5261); kotlar kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 486512.3520294986,
+          "y": 4420187.531034513
+         },
+         {
+          "x": 486535.7489586432,
+          "y": 4420188.714989182
+         },
+         {
+          "x": 486538.23297134566,
+          "y": 4420218.9769913
+         },
+         {
+          "x": 486514.3380095252,
+          "y": 4420220.545983969
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 486513.9999818679,
+          "y": 4420218.000029107
+         },
+         {
+          "x": 486513.6000221864,
+          "y": 4420210.499982599
+         },
+         {
+          "x": 486513.1999764622,
+          "y": 4420203.000047384
+         },
+         {
+          "x": 486512.8000152985,
+          "y": 4420195.500001091
+         },
+         {
+          "x": 486512.3999678951,
+          "y": 4420187.999955055
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 486523.7213371907,
+         "y": 4420204.090136601
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz; execute bir adımda yazar ve geri alınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 486512.3520294986,
+          "y": 4420187.531034513
+         },
+         {
+          "x": 486535.7489586432,
+          "y": 4420188.714989182
+         },
+         {
+          "x": 486538.23297134566,
+          "y": 4420218.9769913
+         },
+         {
+          "x": 486514.3380095252,
+          "y": 4420220.545983969
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 486513.9999818679,
+          "y": 4420218.000029107
+         },
+         {
+          "x": 486513.6000221864,
+          "y": 4420210.499982599
+         },
+         {
+          "x": 486513.1999764622,
+          "y": 4420203.000047384
+         },
+         {
+          "x": 486512.8000152985,
+          "y": 4420195.500001091
+         },
+         {
+          "x": 486512.3999678951,
+          "y": 4420187.999955055
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 486523.7213371907,
+         "y": 4420204.090136601
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    },
+    {
+     "op": "undo",
+     "returns": "KML: parsel.kml",
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "alanlar.kmz: KMZ'nin doc.kml'i, adsız belge, göreli yükseklik notu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/alanlar.kmz",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "alanlar.kmz",
+       "bytes": 549,
+       "sha256": "e3c434da32eb1bc3309eecf8ccae27ac5f3a662d2686b329a36f495f54892cfa",
+       "objects": 2,
+       "sourceLayers": [
+        "KML",
+        "Bina"
+       ],
+       "targets": {
+        "KML": "import-kml",
+        "Bina": "import-bina"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        },
+        {
+         "id": "import-bina",
+         "name": "Bina"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-alanlar-kmz"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Meydan"
+        },
+        "pts": [
+         {
+          "x": -89150.50119325775,
+          "y": 4564247.755488166
+         },
+         {
+          "x": -88308.28372413677,
+          "y": 4564179.958291695
+         },
+         {
+          "x": -88218.85088078014,
+          "y": 4565291.637872891
+         },
+         {
+          "x": -89060.9388598327,
+          "y": 4565359.438253259
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-bina",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Kule"
+        },
+        "color": "#996633",
+        "pts": [
+         {
+          "x": -88964.15165084903,
+          "y": 4564456.524703182
+         },
+         {
+          "x": -88879.93243319052,
+          "y": 4564449.742467451
+         },
+         {
+          "x": -88870.9805319343,
+          "y": 4564560.91067219
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-alanlar-kmz"
+       },
+       "import-bina": {
+        "name": "Bina",
+        "type": "layer",
+        "parent": "import-alanlar-kmz"
+       },
+       "import-alanlar-kmz": {
+        "name": "alanlar.kmz",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "gezi.kml: klasör yolları, izler, karışık MultiGeometry, zaman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/gezi.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "gezi.kml",
+       "bytes": 6114,
+       "sha256": "363a30057eb350d5ca4e84cadaedf8a40a5168ee6a42f52d0caa7707863eeb7d",
+       "objects": 14,
+       "sourceLayers": [
+        "Gezi",
+        "Yollar / Ana yollar",
+        "Yollar",
+        "Parseller",
+        "Adsız klasör"
+       ],
+       "targets": {
+        "Gezi": "import-gezi",
+        "Yollar / Ana yollar": "import-yollar-ana-yollar",
+        "Yollar": "import-yollar",
+        "Parseller": "import-parseller",
+        "Adsız klasör": "import-adsiz-klasor"
+       },
+       "layers": [
+        {
+         "id": "import-gezi",
+         "name": "Gezi"
+        },
+        {
+         "id": "import-yollar-ana-yollar",
+         "name": "Yollar / Ana yollar"
+        },
+        {
+         "id": "import-yollar",
+         "name": "Yollar"
+        },
+        {
+         "id": "import-parseller",
+         "name": "Parseller"
+        },
+        {
+         "id": "import-adsiz-klasor",
+         "name": "Adsız klasör"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 14,
+        "left": 0
+       },
+       "group": "import-gezi-kml"
+      },
+      "warnings": [
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6,
+       7,
+       8,
+       9,
+       10,
+       11,
+       12,
+       13,
+       14,
+       15
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-gezi",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Başlangıç",
+         "Açıklama": "<b>Kamp</b> yeri",
+         "Zaman": "2026-10-04T10:15:00Z"
+        },
+        "color": "#0000ff",
+        "p": {
+         "x": 231553.42172736314,
+         "y": 4426858.9286117945
+        },
+        "z": 850.25
+       },
+       "3": {
+        "layerId": "import-yollar-ana-yollar",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "D-750",
+         "Kaplama": "asfalt",
+         "Şerit": "4"
+        },
+        "color": "#ff0000",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 226315.99073982518,
+          "y": 4423330.866605097
+         },
+         {
+          "x": 227211.1213520383,
+          "y": 4424410.872236545
+         },
+         {
+          "x": 228106.00917369907,
+          "y": 4425490.971484745
+         },
+         {
+          "x": 228980.9146398885,
+          "y": 4426015.847073738
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-yollar-ana-yollar",
+        "kind": "line",
+        "attrs": {
+         "Ad": "Bağlantı"
+        },
+        "color": "#ff0000",
+        "lineWeight": 0.7,
+        "a": {
+         "x": 229000.65413924982,
+         "y": 4426571.16437633
+        },
+        "b": {
+         "x": 229895.05618310574,
+         "y": 4427651.450937879
+        }
+       },
+       "5": {
+        "layerId": "import-yollar",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Halka yol",
+         "Başlangıç": "2026-01-01",
+         "Bitiş": "2026-12-31"
+        },
+        "color": "#ffff00",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 230789.2152396539,
+          "y": 4428731.831195913
+         },
+         {
+          "x": 231644.0042698409,
+          "y": 4428701.672544013
+         },
+         {
+          "x": 231683.13124325481,
+          "y": 4429812.305176888
+         },
+         {
+          "x": 230789.2152396539,
+          "y": 4428731.831195913
+         }
+        ]
+       },
+       "6": {
+        "layerId": "import-yollar",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Sarı"
+        },
+        "color": "#ffff00",
+        "lineWeight": 1.4,
+        "pts": [
+         {
+          "x": 232576.8041282437,
+          "y": 4430892.8729072055
+         },
+         {
+          "x": 233470.2338289275,
+          "y": 4431973.534413208
+         },
+         {
+          "x": 234285.875264909,
+          "y": 4430833.028850331
+         }
+        ]
+       },
+       "7": {
+        "layerId": "import-parseller",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Ada 101",
+         "Ada": "101",
+         "Parsel": "7"
+        },
+        "color": "#00cc00",
+        "lineWeight": 0.25,
+        "pts": [
+         {
+          "x": 234870.13098967378,
+          "y": 4423028.893736972
+         },
+         {
+          "x": 234908.71779751306,
+          "y": 4424139.512128088
+         },
+         {
+          "x": 235763.99905020825,
+          "y": 4424109.841561324
+         },
+         {
+          "x": 235725.53702425718,
+          "y": 4422999.225033844
+         }
+        ],
+        "zs": [
+         10.0,
+         13.0,
+         12.0,
+         11.0
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 235048.92403420288,
+            "y": 4423245.07580322
+           },
+           {
+            "x": 235220.00030769024,
+            "y": 4423239.138144034
+           },
+           {
+            "x": 235227.70736304735,
+            "y": 4423461.261618569
+           }
+          ],
+          "zs": [
+           10.0,
+           10.0,
+           10.0
+          ]
+         }
+        ]
+       },
+       "8": {
+        "layerId": "import-parseller",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kesişen alanlar"
+        },
+        "color": "#ff0000",
+        "p": {
+         "x": 239337.04118639923,
+         "y": 4428434.570608472
+        },
+        "parts": [
+         {
+          "p": {
+           "x": 240229.6938646404,
+           "y": 4429515.987439181
+          }
+         }
+        ]
+       },
+       "9": {
+        "layerId": "import-parseller",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Kesişen alanlar"
+        },
+        "color": "#ff0000",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 236657.6241659858,
+          "y": 4425190.883134294
+         },
+         {
+          "x": 237512.7777582648,
+          "y": 4425161.402922601
+         },
+         {
+          "x": 237551.00627118105,
+          "y": 4426272.018482267
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 238367.9299311537,
+            "y": 4425132.018815018
+           },
+           {
+            "x": 239223.08068921382,
+            "y": 4425102.730809258
+           },
+           {
+            "x": 239261.05955493086,
+            "y": 4426213.342697528
+           }
+          ]
+         }
+        ]
+       },
+       "10": {
+        "layerId": "import-parseller",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Kapanışı farklı"
+        },
+        "pts": [
+         {
+          "x": 240857.94326775882,
+          "y": 4422823.230768267
+         },
+         {
+          "x": 241713.3393570971,
+          "y": 4422794.234694916
+         },
+         {
+          "x": 241750.9279930107,
+          "y": 4423904.838343286
+         }
+        ],
+        "zs": [
+         1.0,
+         2.0,
+         3.0
+        ]
+       },
+       "11": {
+        "layerId": "import-adsiz-klasor",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "İz"
+        },
+        "pts": [
+         {
+          "x": 217351.34554086416,
+          "y": 4412535.953309904
+         },
+         {
+          "x": 218248.90045883262,
+          "y": 4413615.024251769
+         },
+         {
+          "x": 219105.45700981392,
+          "y": 4413583.547221657
+         }
+        ]
+       },
+       "12": {
+        "layerId": "import-adsiz-klasor",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Göreli"
+        },
+        "p": {
+         "x": 219146.21324034553,
+         "y": 4414694.18854079
+        }
+       },
+       "13": {
+        "layerId": "import-adsiz-klasor",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "İki iz"
+        },
+        "pts": [
+         {
+          "x": 220043.2838201148,
+          "y": 4415773.44620419
+         },
+         {
+          "x": 220940.11213282676,
+          "y": 4416852.797269138
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 221836.69811313722,
+            "y": 4417932.241762735
+           },
+           {
+            "x": 222733.041695679,
+            "y": 4419011.77971203
+           },
+           {
+            "x": 223629.14281505602,
+            "y": 4420091.411144015
+           }
+          ],
+          "zs": [
+           1.0,
+           2.0,
+           3.0
+          ]
+         }
+        ]
+       },
+       "14": {
+        "layerId": "import-gezi",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Delik bozuk"
+        },
+        "pts": [
+         {
+          "x": 207941.44524114847,
+          "y": 4390643.918832833
+         },
+         {
+          "x": 216533.2241375909,
+          "y": 4390323.341636499
+         },
+         {
+          "x": 216941.85250921355,
+          "y": 4401429.58330431
+         }
+        ]
+       },
+       "15": {
+        "layerId": "import-gezi",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Dış biçem"
+        },
+        "p": {
+         "x": 198916.94618549576,
+         "y": 4379867.544464646
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-gezi": {
+        "name": "Gezi",
+        "type": "layer",
+        "parent": "import-gezi-kml"
+       },
+       "import-yollar-ana-yollar": {
+        "name": "Yollar / Ana yollar",
+        "type": "layer",
+        "parent": "import-gezi-kml"
+       },
+       "import-yollar": {
+        "name": "Yollar",
+        "type": "layer",
+        "parent": "import-gezi-kml"
+       },
+       "import-parseller": {
+        "name": "Parseller",
+        "type": "layer",
+        "parent": "import-gezi-kml"
+       },
+       "import-adsiz-klasor": {
+        "name": "Adsız klasör",
+        "type": "layer",
+        "parent": "import-gezi-kml"
+       },
+       "import-gezi-kml": {
+        "name": "gezi.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın LIBKML parselleri (TM36'dan WGS 84'e GDAL çevirdi, TM36'ya KentOS çevirir)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 3723,
+       "sha256": "540b7de9573d9fa13247d38f0215dee5aba1a5651290831dc44146b0c82557c6",
+       "objects": 2,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "import-kml"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "alan": "1234.56",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "kimlik": "9007199254740993",
+         "parsel_no": "5",
+         "tapulu": "true",
+         "tescil": "2024/02/29"
+        },
+        "pts": [
+         {
+          "x": 486999.99999999953,
+          "y": 4419999.999999998
+         },
+         {
+          "x": 487020.0000000044,
+          "y": 4420000.000000001
+         },
+         {
+          "x": 487019.9999999981,
+          "y": 4420019.999999995
+         },
+         {
+          "x": 486999.9999999973,
+          "y": 4420019.999999996
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487004.99999999587,
+            "y": 4420005.000000003
+           },
+           {
+            "x": 487005.00000000355,
+            "y": 4420010.000000006
+           },
+           {
+            "x": 487010.000000002,
+            "y": 4420009.999999997
+           },
+           {
+            "x": 487010.0000000027,
+            "y": 4420004.999999996
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0000000033,
+            "y": 4419999.999999996
+           },
+           {
+            "x": 487040.00000000244,
+            "y": 4419999.999999998
+           },
+           {
+            "x": 487040.0000000023,
+            "y": 4420009.999999999
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487099.9999999966,
+          "y": 4419999.999999999
+         },
+         {
+          "x": 487110.00000000146,
+          "y": 4420000.000000006
+         },
+         {
+          "x": 487109.9999999998,
+          "y": 4420009.999999995
+         },
+         {
+          "x": 487100.0000000025,
+          "y": 4420009.999999998
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın LIBKML noktaları, kotlarıyla",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.kml",
+       "bytes": 745,
+       "sha256": "0f71a70f5846721b2aac42a4432ca32203bac890fe073e37e3828ab92124f17a",
+       "objects": 1,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "import-kml"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-nokta-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.2499999957,
+         "y": 4420001.499999996
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-nokta-kml"
+       },
+       "import-nokta-kml": {
+        "name": "nokta.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın LIBKML yolları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yol.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.kml",
+       "bytes": 982,
+       "sha256": "1c088f02a85a4ffe9dccd376aea37bbf6c3a022513478405c7efc19af247bec8",
+       "objects": 2,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "import-kml"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-yol-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0000000031,
+          "y": 4420050.000000005
+         },
+         {
+          "x": 487049.99999999686,
+          "y": 4420049.999999999
+         },
+         {
+          "x": 487099.9999999989,
+          "y": 4420060.000000005
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-kml",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 486999.9999999978,
+         "y": 4420069.999999997
+        },
+        "b": {
+         "x": 487010.0000000018,
+         "y": 4420070.000000001
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-yol-kml"
+       },
+       "import-yol-kml": {
+        "name": "yol.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın KMZ'si: üç klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/hepsi.kmz",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "hepsi.kmz",
+       "bytes": 1220,
+       "sha256": "c62b4d1fc39ea2acbe798dcd5a6e81d547ebf5b65299c9691bd4cc4be12b3403",
+       "objects": 5,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "import-kml"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 5,
+        "left": 0
+       },
+       "group": "import-hepsi-kmz"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "alan": "1234.56",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "kimlik": "9007199254740993",
+         "parsel_no": "5",
+         "tapulu": "true",
+         "tescil": "2024/02/29"
+        },
+        "pts": [
+         {
+          "x": 486999.99999999953,
+          "y": 4419999.999999998
+         },
+         {
+          "x": 487020.0000000044,
+          "y": 4420000.000000001
+         },
+         {
+          "x": 487019.9999999981,
+          "y": 4420019.999999995
+         },
+         {
+          "x": 486999.9999999973,
+          "y": 4420019.999999996
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487004.99999999587,
+            "y": 4420005.000000003
+           },
+           {
+            "x": 487005.00000000355,
+            "y": 4420010.000000006
+           },
+           {
+            "x": 487010.000000002,
+            "y": 4420009.999999997
+           },
+           {
+            "x": 487010.0000000027,
+            "y": 4420004.999999996
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0000000033,
+            "y": 4419999.999999996
+           },
+           {
+            "x": 487040.00000000244,
+            "y": 4419999.999999998
+           },
+           {
+            "x": 487040.0000000023,
+            "y": 4420009.999999999
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487099.9999999966,
+          "y": 4419999.999999999
+         },
+         {
+          "x": 487110.00000000146,
+          "y": 4420000.000000006
+         },
+         {
+          "x": 487109.9999999998,
+          "y": 4420009.999999995
+         },
+         {
+          "x": 487100.0000000025,
+          "y": 4420009.999999998
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-kml",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0000000031,
+          "y": 4420050.000000005
+         },
+         {
+          "x": 487049.99999999686,
+          "y": 4420049.999999999
+         },
+         {
+          "x": 487099.9999999989,
+          "y": 4420060.000000005
+         }
+        ]
+       },
+       "5": {
+        "layerId": "import-kml",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 486999.9999999978,
+         "y": 4420069.999999997
+        },
+        "b": {
+         "x": 487010.0000000018,
+         "y": 4420070.000000001
+        }
+       },
+       "6": {
+        "layerId": "import-kml",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.2499999957,
+         "y": 4420001.499999996
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-hepsi-kmz"
+       },
+       "import-hepsi-kmz": {
+        "name": "hepsi.kmz",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "layer var olan katmana",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.kml",
+      "reproject": true,
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.kml",
+       "bytes": 745,
+       "sha256": "0f71a70f5846721b2aac42a4432ca32203bac890fe073e37e3828ab92124f17a",
+       "objects": 1,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "cizim"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       }
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "cizim",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.2499999957,
+         "y": 4420001.499999996
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "layers klasörün adıyla yönlendirir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "layers": {
+       "Kadastro": "cizim"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "cizim",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "cizim",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 486512.3520294986,
+          "y": 4420187.531034513
+         },
+         {
+          "x": 486535.7489586432,
+          "y": 4420188.714989182
+         },
+         {
+          "x": 486538.23297134566,
+          "y": 4420218.9769913
+         },
+         {
+          "x": 486514.3380095252,
+          "y": 4420220.545983969
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 486513.9999818679,
+          "y": 4420218.000029107
+         },
+         {
+          "x": 486513.6000221864,
+          "y": 4420210.499982599
+         },
+         {
+          "x": 486513.1999764622,
+          "y": 4420203.000047384
+         },
+         {
+          "x": 486512.8000152985,
+          "y": 4420195.500001091
+         },
+         {
+          "x": 486512.3999678951,
+          "y": 4420187.999955055
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 486523.7213371907,
+         "y": 4420204.090136601
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "Çizimde aynı adlı katman varsa nesneler ona gider",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.kml",
+       "bytes": 745,
+       "sha256": "0f71a70f5846721b2aac42a4432ca32203bac890fe073e37e3828ab92124f17a",
+       "objects": 1,
+       "sourceLayers": [
+        "KML"
+       ],
+       "targets": {
+        "KML": "import-kml"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-nokta-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.75"
+        },
+        "p": {
+         "x": 487001.2499999957,
+         "y": 4420001.499999996
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-nokta-kml"
+       },
+       "import-nokta-kml": {
+        "name": "nokta.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Aynı adlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parcel-var",
+      "name": "PARSEL",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "nokta-var",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel-grubu",
+      "name": "Parsel.shp",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "skipLayers bir klasörü bırakır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "skipLayers": [
+       "Saha"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 1,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 486512.3520294986,
+          "y": 4420187.531034513
+         },
+         {
+          "x": 486535.7489586432,
+          "y": 4420188.714989182
+         },
+         {
+          "x": 486538.23297134566,
+          "y": 4420218.9769913
+         },
+         {
+          "x": 486514.3380095252,
+          "y": 4420220.545983969
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "skipLayers hepsini bırakırsa alınacak nesne kalmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/alanlar.kmz",
+      "reproject": true,
+      "skipLayers": [
+       "KML",
+       "Bina"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "alanlar.kmz dosyasının seçilen katmanlarında nesne yok; skipLayers'ı denetleyin.",
+       "path": "skipLayers"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "group adı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "group": "Google Earth"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 3,
+        "left": 0
+       },
+       "group": "import-google-earth"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 486512.3520294986,
+          "y": 4420187.531034513
+         },
+         {
+          "x": 486535.7489586432,
+          "y": 4420188.714989182
+         },
+         {
+          "x": 486538.23297134566,
+          "y": 4420218.9769913
+         },
+         {
+          "x": 486514.3380095252,
+          "y": 4420220.545983969
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 486513.9999818679,
+          "y": 4420218.000029107
+         },
+         {
+          "x": 486513.6000221864,
+          "y": 4420210.499982599
+         },
+         {
+          "x": 486513.1999764622,
+          "y": 4420203.000047384
+         },
+         {
+          "x": 486512.8000152985,
+          "y": 4420195.500001091
+         },
+         {
+          "x": 486512.3999678951,
+          "y": 4420187.999955055
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 486523.7213371907,
+         "y": 4420204.090136601
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-google-earth"
+       },
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-google-earth"
+       },
+       "import-google-earth": {
+        "name": "Google Earth",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "srid KML'in WGS 84'ünü ezer: crs_overridden",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 5256,
+       "group": "import-parsel-kml"
+      },
+      "warnings": [
+       {
+        "code": "crs_overridden",
+        "message": "parsel.kml EPSG:4326 diyor; srid ile EPSG:5256 verildi: koordinatlar EPSG:5256 sayıldı, dönüştürülmeden (reproject verilirse yalnız EPSG:5256'den projenin sistemine çevrilir).",
+        "path": "srid"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 35.842247366,
+          "y": 39.915760683
+         },
+         {
+          "x": 35.842520993,
+          "y": 39.915771718
+         },
+         {
+          "x": 35.842549422,
+          "y": 39.916044306
+         },
+         {
+          "x": 35.842269912,
+          "y": 39.916058057
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 35.842266011,
+          "y": 39.916035122
+         },
+         {
+          "x": 35.842261488,
+          "y": 39.915967568
+         },
+         {
+          "x": 35.842256964,
+          "y": 39.915900015
+         },
+         {
+          "x": 35.842252441,
+          "y": 39.915832461
+         },
+         {
+          "x": 35.842247917,
+          "y": 39.915764907
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 35.84238,
+         "y": 39.91591
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerel proje koordinatları olduğu gibi alır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.kml",
+       "bytes": 1659,
+       "sha256": "38b995bea9e3a932ba10c8e36f40767f6a9b5356de53dc3bb900e94c57e6025f",
+       "objects": 3,
+       "sourceLayers": [
+        "Kadastro",
+        "Saha"
+       ],
+       "targets": {
+        "Kadastro": "import-kadastro",
+        "Saha": "import-saha"
+       },
+       "layers": [
+        {
+         "id": "import-kadastro",
+         "name": "Kadastro"
+        },
+        {
+         "id": "import-saha",
+         "name": "Saha"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "group": "import-parsel-kml"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kadastro",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "101/7",
+         "Ada": "101",
+         "Açıklama": "Saha ölçüsüyle, 4 Ekim 2026",
+         "Parsel": "7"
+        },
+        "color": "#2f8f2f",
+        "lineWeight": 0.7,
+        "pts": [
+         {
+          "x": 35.842247366,
+          "y": 39.915760683
+         },
+         {
+          "x": 35.842520993,
+          "y": 39.915771718
+         },
+         {
+          "x": 35.842549422,
+          "y": 39.916044306
+         },
+         {
+          "x": 35.842269912,
+          "y": 39.916058057
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-saha",
+        "kind": "polyline",
+        "attrs": {
+         "Ad": "Batı sınırı"
+        },
+        "color": "#d96f1c",
+        "lineWeight": 0.5,
+        "pts": [
+         {
+          "x": 35.842266011,
+          "y": 39.916035122
+         },
+         {
+          "x": 35.842261488,
+          "y": 39.915967568
+         },
+         {
+          "x": 35.842256964,
+          "y": 39.915900015
+         },
+         {
+          "x": 35.842252441,
+          "y": 39.915832461
+         },
+         {
+          "x": 35.842247917,
+          "y": 39.915764907
+         }
+        ],
+        "zs": [
+         1062.6,
+         1062.28,
+         1061.96,
+         1061.64,
+         1061.32
+        ]
+       },
+       "4": {
+        "layerId": "import-saha",
+        "kind": "point",
+        "attrs": {
+         "Ad": "Kuyu"
+        },
+        "color": "#1c8ad9",
+        "p": {
+         "x": 35.84238,
+         "y": 39.91591
+        },
+        "z": 1062.1
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kadastro": {
+        "name": "Kadastro",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-saha": {
+        "name": "Saha",
+        "type": "layer",
+        "parent": "import-parsel-kml"
+       },
+       "import-parsel-kml": {
+        "name": "parsel.kml",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Yerel projede reproject reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "parsel.kml EPSG:4326 sisteminde; projenin koordinat sistemi yok (yerel proje), çevrilecek bir sistem yok. Projeyi bir koordinat sisteminde açın ya da reproject vermeyin: koordinatlar olduğu gibi alınır.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "ED50 projesine: datum dönüşümü ve resmî olmayan uyarısı",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/alanlar.kmz",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "alanlar.kmz",
+       "bytes": 549,
+       "sha256": "e3c434da32eb1bc3309eecf8ccae27ac5f3a662d2686b329a36f495f54892cfa",
+       "objects": 2,
+       "sourceLayers": [
+        "KML",
+        "Bina"
+       ],
+       "targets": {
+        "KML": "import-kml",
+        "Bina": "import-bina"
+       },
+       "layers": [
+        {
+         "id": "import-kml",
+         "name": "KML"
+        },
+        {
+         "id": "import-bina",
+         "name": "Bina"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS 84 (KML)",
+        "source": "kml",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 2320,
+        "via": "EPSG:1784",
+        "accuracy": 2.0,
+        "unofficial": true,
+        "text": "±2 m, EPSG:1784; resmî dönüşüm değil",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-alanlar-kmz"
+      },
+      "warnings": [
+       {
+        "code": "crs_unofficial",
+        "message": "alanlar.kmz koordinatları resmî olmayan bir dönüşümle projenin sistemine çevrildi (±2 m, EPSG:1784; resmî dönüşüm değil); resmî dönüşümü olan bir dosya gerekiyorsa dosyayı o dönüşümle çevirip verin.",
+        "path": "reproject"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kml",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Meydan"
+        },
+        "pts": [
+         {
+          "x": 415898.94687005825,
+          "y": 4541241.4466179265
+         },
+         {
+          "x": 416740.32102658204,
+          "y": 4541231.858317197
+         },
+         {
+          "x": 416752.9147359413,
+          "y": 4542342.427563747
+         },
+         {
+          "x": 415911.6678032199,
+          "y": 4542352.01633919
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-bina",
+        "kind": "polygon",
+        "attrs": {
+         "Ad": "Kule"
+        },
+        "color": "#996633",
+        "pts": [
+         {
+          "x": 416069.76062227966,
+          "y": 4541461.6350231925
+         },
+         {
+          "x": 416153.8955026569,
+          "y": 4541460.673774197
+         },
+         {
+          "x": 416155.16371506976,
+          "y": 4541571.730685245
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kml": {
+        "name": "KML",
+        "type": "layer",
+        "parent": "import-alanlar-kmz"
+       },
+       "import-bina": {
+        "name": "Bina",
+        "type": "layer",
+        "parent": "import-alanlar-kmz"
+       },
+       "import-alanlar-kmz": {
+        "name": "alanlar.kmz",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "ED50 / TM30",
+    "settings": {
+     "srid": 2320,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Hedef kilitli",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "layers": {
+       "Kadastro": "kilitli"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layers.Kadastro"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef bir grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Nesnesiz belge",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bos.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "bos.kml EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "XML olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/bozuk.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "bozuk.kml KML olarak okunamadı: KML okunamadı: dosya XML değil; hiçbir şey alınmadı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "kml olmayan kök",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/kok.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "kok.kml KML olarak okunamadı: KML değil: kök öğe “gpx” (kml bekleniyordu); hiçbir şey alınmadı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "İçinde KML olmayan KMZ",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/kml-yok.kmz"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "kml-yok.kmz KML olarak okunamadı: KMZ arşivinde .kml dosyası yok; hiçbir şey alınmadı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Hedef katman yok",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "reproject": true,
+      "layers": {
+       "Kadastro": "yok"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “Kadastro” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layers.Kadastro"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm bir tamsayı değilse",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm değişmişse çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/parsel.kml",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/kml/yok.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:formats/v1/kml/yok.kml yok; dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "veri/yerler.kml"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“veri/yerler.kml” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.kml).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

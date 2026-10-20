@@ -251,7 +251,7 @@ class Case:
                     assert record is not None, f"{at}: no object in slot {slot}"
                     data = record.entity.to_json()
                     for k, v in fields.items():
-                        same(data.get(k), self.block_ids(v, at), f"{at}: object {slot}.{k}")
+                        same(data.get(k), self.block_ids(v, at), f"{at}: object {slot}.{k}", within)
             elif key == "nodes":
                 # Only the fields named of each layer-tree node; `parent` the group it is in (docs/adr/0257 §3).
                 found: dict[str, tuple[dict[str, Any], str | None]] = {}

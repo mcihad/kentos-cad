@@ -138,6 +138,26 @@ fn check_len(what: &str, n: usize, min: usize) -> Result<(), String> {
     Ok(())
 }
 
+/// A closed ring's corners: three, or two when one of its two edges is an arc (a bulge that is not 0), the desktop's
+/// rule (docs/adr/0069, `ring_closes`; docs/adr/0563 §4).
+fn check_ring_len(what: &str, n: usize, bulges: &Option<Vec<f64>>) -> Result<(), String> {
+    let arc = |i: usize| {
+        bulges
+            .as_ref()
+            .and_then(|b| b.get(i))
+            .is_some_and(|b| *b != 0.0)
+    };
+    if n == 2 && (arc(0) || arc(1)) {
+        return Ok(());
+    }
+    if n == 2 {
+        return Err(format!(
+            "{what} en az 3 köşe ister; kenarlarından biri yaysa 2 yeter, bu ikisi de düz ({n} verildi)"
+        ));
+    }
+    check_len(what, n, 3)
+}
+
 fn check_bulges(what: &str, bulges: &Option<Vec<f64>>, points: usize) -> Result<(), String> {
     match bulges {
         Some(b) if b.len() > points => Err(format!(
@@ -251,18 +271,18 @@ fn validate(e: &Entity, in_block: bool) -> Result<(), String> {
             }
         }
         Polygon(x) => {
-            check_len("Alan", x.pts.len(), 3)?;
+            check_ring_len("Alan", x.pts.len(), &x.bulges)?;
             check_bulges("Alan", &x.bulges, x.pts.len())?;
             for h in x.holes.iter().flatten() {
-                check_len("Ada", h.pts.len(), 3)?;
+                check_ring_len("Ada", h.pts.len(), &h.bulges)?;
                 check_bulges("Ada", &h.bulges, h.pts.len())?;
             }
             // A multi-part area's other parts, each as the area's own ring (docs/adr/0143).
             for p in x.parts.iter().flatten() {
-                check_len("Alanın parçası", p.pts.len(), 3)?;
+                check_ring_len("Alanın parçası", p.pts.len(), &p.bulges)?;
                 check_bulges("Alanın parçası", &p.bulges, p.pts.len())?;
                 for h in p.holes.iter().flatten() {
-                    check_len("Ada", h.pts.len(), 3)?;
+                    check_ring_len("Ada", h.pts.len(), &h.bulges)?;
                     check_bulges("Ada", &h.bulges, h.pts.len())?;
                 }
             }
@@ -563,8 +583,21 @@ fn core_image(x: &kentos_contracts::ImageEntity) -> kentos_geometry_core::entity
 }
 
 /// The linear PostGIS geometry of an object (`None`: nothing finite to
-/// draw); a block insert's from the project's blocks.
+/// draw); a block insert's from the project's blocks. An area whose ring the
+/// arcs leave with fewer than three points (a two-corner ring whose arc is
+/// flatter than the tolerance) is no polygon PostGIS holds: none
+/// (docs/adr/0563 §4).
 fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
+    let g = projection_of(e, blocks)?;
+    let thin = |rings: &[Vec<P>]| rings.iter().any(|r| r.len() < 3);
+    match &g {
+        Geometry::Polygon(rings) if thin(rings) => None,
+        Geometry::MultiPolygon(polygons) if polygons.iter().any(|rings| thin(rings)) => None,
+        _ => Some(g),
+    }
+}
+
+fn projection_of(e: &Entity, blocks: &Placing) -> Option<Geometry> {
     let tol = PROJECTION_TOLERANCE;
     let ring = |r: &[kentos_contracts::Vec2], b: &Option<Vec<f64>>| {
         bulge_path(&pts(r), b.as_deref(), true, tol)
@@ -734,7 +767,12 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
         // Its area, as an area object's (docs/adr/0342 §1); its source is its definition.
         Entity::Space(x) => return projection(&Entity::Polygon(x.as_polygon()), blocks),
         // A grid's path, a column's, stair's or ramp's outline (docs/adr/0343 §5); its source is its definition.
-        Entity::Grid(_) | Entity::Column(_) | Entity::Stair(_) | Entity::Ramp(_) | Entity::Tag(_) | Entity::ViewMark(_) => {
+        Entity::Grid(_)
+        | Entity::Column(_)
+        | Entity::Stair(_)
+        | Entity::Ramp(_)
+        | Entity::Tag(_)
+        | Entity::ViewMark(_) => {
             return projection(&kentos_formats::arch_elements::simple(e)?, blocks);
         }
         // Its jambs' footprint (docs/adr/0341 §1); its source is its definition.
@@ -743,7 +781,9 @@ fn projection(e: &Entity, blocks: &Placing) -> Option<Geometry> {
             if q.len() != 4 {
                 return None;
             }
-            Geometry::Polygon(vec![[q[0], q[2], q[3], q[1], q[0]].into_iter().map(p).collect()])
+            Geometry::Polygon(vec![
+                [q[0], q[2], q[3], q[1], q[0]].into_iter().map(p).collect(),
+            ])
         }
         // Its plan's rectangle (docs/adr/0207 §11): its points are its files'.
         Entity::PointCloud(x) => {

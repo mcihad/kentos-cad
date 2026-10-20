@@ -18876,6 +18876,30 @@
    "kinds": []
   },
   {
+   "id": "file.import.geojson",
+   "title": "GeoJSON içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 34,
+   "files": [
+    "fixtures/commands/v1/file.import.geojson.json"
+   ],
+   "options": [
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
    "id": "file.import.gml",
    "title": "GML içe aktar",
    "effect": "document",
@@ -18915,6 +18939,30 @@
     "fixtures/commands/v1/cad.gis.derivation.json",
     "fixtures/commands/v1/cad.sources.edit.json",
     "fixtures/commands/v1/file.import.gpkg.json"
+   ],
+   "options": [
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    }
+   ],
+   "kinds": []
+  },
+  {
+   "id": "file.import.kml",
+   "title": "KML/KMZ içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 32,
+   "files": [
+    "fixtures/commands/v1/file.import.kml.json"
    ],
    "options": [
     {
@@ -18998,11 +19046,35 @@
     "mcp": true,
     "server": false
    },
-   "cases": 28,
+   "cases": 30,
    "files": [
     "fixtures/commands/v1/file.import.qml.json"
    ],
    "options": [],
+   "kinds": []
+  },
+  {
+   "id": "file.import.shp",
+   "title": "Shapefile içe aktar",
+   "effect": "document",
+   "hosts": {
+    "desktop": true,
+    "headless": true,
+    "python": true,
+    "mcp": true,
+    "server": false
+   },
+   "cases": 51,
+   "files": [
+    "fixtures/commands/v1/file.import.shp.json"
+   ],
+   "options": [
+    {
+     "key": "reproject",
+     "value": true,
+     "covered": true
+    }
+   ],
    "kinds": []
   },
   {

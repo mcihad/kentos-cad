@@ -3402,6 +3402,42 @@ const ENTRIES: &[Entry] = &[
         targets: none,
     },
     Entry {
+        id: "file.import.shp",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["file_not_found", "import_unreadable", "entry_not_found", "crs_unknown"],
+            LAYER,
+            &["crs_mismatch", "nothing_to_import"],
+        ],
+        warnings: &["crs_undeclared", "crs_overridden", "crs_unofficial", "import_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.geojson",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["file_not_found", "import_unreadable", "crs_unknown"],
+            LAYER,
+            &["crs_mismatch", "nothing_to_import"],
+        ],
+        warnings: &["crs_overridden", "crs_unofficial", "import_losses"],
+        targets: none,
+    },
+    Entry {
+        id: "file.import.kml",
+        refusals: &[
+            &["invalid_file_path"],
+            REVISION,
+            &["file_not_found", "import_unreadable"],
+            LAYER,
+            &["crs_mismatch", "nothing_to_import"],
+        ],
+        warnings: &["crs_overridden", "crs_unofficial", "import_losses"],
+        targets: none,
+    },
+    Entry {
         id: "file.export.gml",
         refusals: &[&[
             "invalid_file_path",

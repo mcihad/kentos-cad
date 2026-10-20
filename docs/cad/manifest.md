@@ -17,10 +17,10 @@ Satırlar arayüzün komutları, araçları ve araçların yöntemleridir; tamam
 
 | Düzey | cad | shared | none | gis | Toplam |
 |---|---|---|---|---|---|
-| semantic | 127 | 149 | 41 | 66 | 383 |
+| semantic | 127 | 152 | 41 | 66 | 386 |
 | geometry | 16 | 58 | 0 | 8 | 82 |
 | processing | 0 | 11 | 2 | 141 | 154 |
-| none | 0 | 20 | 0 | 6 | 26 |
+| none | 0 | 17 | 0 | 6 | 23 |
 | query | 7 | 27 | 2 | 4 | 40 |
 | session | 0 | 85 | 57 | 5 | 147 |
 | host | 0 | 17 | 14 | 4 | 35 |
@@ -31,7 +31,7 @@ komut satırı).
 
 ## CAD tarafı: Python ve AI'ın arayüz gibi yapamadıkları
 
-CBS'ye özgü olmayan 633 satırdan 135'i: geometry 74, none 20, processing 13, query 28.
+CBS'ye özgü olmayan 633 satırdan 132'i: geometry 74, none 17, processing 13, query 28.
 
 ### Sonucu çağıran hesaplar (geometry) — 74
 
@@ -112,7 +112,7 @@ CBS'ye özgü olmayan 633 satırdan 135'i: geometry 74, none 20, processing 13, 
 | `tool.xline#Açıortay` | Yardımcı çizgi: Açıortay | cad | cad.entities.create |  |
 | `tool.xline#Paralel` | Yardımcı çizgi: Paralel | cad | cad.entities.create |  |
 
-### Ürün komutu yok (none) — 20
+### Ürün komutu yok (none) — 17
 
 | Öğe | Ad | Kapsam | Komut | Not |
 |---|---|---|---|---|
@@ -124,13 +124,10 @@ CBS'ye özgü olmayan 633 satırdan 135'i: geometry 74, none 20, processing 13, 
 | `file.export.kml` | KML/KMZ… | shared | — |  |
 | `file.export.ncn` | Koordinat listesi (NCN, TXT, CSV)… | shared | — |  |
 | `file.export.pdf` | PDF pafta… | shared | — |  |
-| `file.import.geojson` | GeoJSON… | shared | — |  |
 | `file.import.gnss` | GNSS (GPX, NMEA)… | shared | — |  |
-| `file.import.kml` | KML/KMZ… | shared | — |  |
 | `file.import.ncn` | Koordinat listesi (NCN, TXT, CSV)… | shared | — |  |
 | `file.import.ncz` | Netcad NCZ… | shared | — |  |
 | `file.import.photos` | Konumlu fotoğraflar… | shared | — |  |
-| `file.import.shp` | Shapefile… | shared | — |  |
 | `file.print` | Yazdır ve pafta çıktısı… | shared | — |  |
 | `file.saveSelection` | Seçilenleri dosyaya kaydet… | shared | — |  |
 | `file.takeFrom` | Başka çizimden al… | shared | — |  |

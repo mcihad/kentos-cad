@@ -1,0 +1,1 @@
+{"type": "FeatureCollection", "name": "belirsiz", "crs": {"type": "name", "properties": {"name": "yerel şantiye sistemi"}}, "features": [{"type": "Feature", "properties": {"ad": "a"}, "geometry": {"type": "Point", "coordinates": [486512.25, 4420187.5]}}]}

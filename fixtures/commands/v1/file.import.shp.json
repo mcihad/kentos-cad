@@ -1,0 +1,5193 @@
+{
+ "format": "kentos.command-cases",
+ "version": 1,
+ "command": "file.import.shp",
+ "commandVersion": 1,
+ "title": "Shapefile içe aktar: dosyalar ve zip, alanlar türleriyle, sistem sorusu, çevirme",
+ "note": "ADR 0563. Dosyaları GDAL (QGIS 4.2.3) yazar ya da elle yazılmıştır (fixtures/formats/v1); beklenenler bağımsız başvurulardan kurulur: Shapefile ve GeoJSON tools/formats/gis.py'den, KML scripts/fixtures/kml_cases.py'den, çevirme PROJ'dan (±1e-6 m); komutun sistem sorusu, katman yönlendirmesi ve kimlikleri ADR'nin kuralından. Bağımsız başvuru: scripts/fixtures/gis_import_cases.py; elle düzenlemeyin.",
+ "setup": {
+  "format": "kentos.document",
+  "version": 1,
+  "name": "Shapefile, GeoJSON ve KML alma",
+  "settings": {
+   "srid": 5256,
+   "lengthDecimals": 3,
+   "areaDecimals": 2,
+   "areaUnit": "m2",
+   "angleUnit": "grad",
+   "plotScale": 1000,
+   "workspace": "gis"
+  },
+  "origin": {
+   "x": 0.0,
+   "y": 0.0
+  },
+  "layers": [
+   {
+    "id": "cizim",
+    "name": "Çizim",
+    "type": "layer",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "kilitli",
+    "name": "Kilitli",
+    "type": "layer",
+    "visible": true,
+    "locked": true,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   },
+   {
+    "id": "grup",
+    "name": "Grup",
+    "type": "group",
+    "visible": true,
+    "locked": false,
+    "expanded": true,
+    "style": {
+     "color": "fg",
+     "lineType": "continuous",
+     "lineWeight": 0.25
+    },
+    "children": []
+   }
+  ],
+  "activeLayer": "cizim",
+  "entities": [
+   {
+    "kind": "point",
+    "id": 1,
+    "layerId": "cizim",
+    "attrs": {},
+    "p": {
+     "x": 487500.0,
+     "y": 4420500.0
+    }
+   }
+  ],
+  "styles": {
+   "items": [],
+   "categories": []
+  }
+ },
+ "cases": [
+  {
+   "name": "GDAL'ın parselleri: çok parçalı alan, geometrisiz satır, alanlar türleriyle (TM36)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.shp",
+       "bytes": 536,
+       "sha256": "509349109f04292eaaf4d7210a2238205db0af3beebe7fd7903dd0ac68233c0f",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-parsel-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Ça?layan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "I??k-?ü?öç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-shp",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-shp": {
+        "name": "parsel.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "plan hiçbir şey yazmaz, execute bir adımda yazar ve geri alınır",
+   "steps": [
+    {
+     "op": "plan",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.shp",
+       "bytes": 536,
+       "sha256": "509349109f04292eaaf4d7210a2238205db0af3beebe7fd7903dd0ac68233c0f",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-parsel-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    },
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.shp",
+       "bytes": 536,
+       "sha256": "509349109f04292eaaf4d7210a2238205db0af3beebe7fd7903dd0ac68233c0f",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-parsel-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Ça?layan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "I??k-?ü?öç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-shp",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-shp": {
+        "name": "parsel.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    },
+    {
+     "op": "undo",
+     "returns": "Shapefile: parsel.shp",
+     "expect": {
+      "ids": [
+       1
+      ],
+      "canUndo": false,
+      "canRedo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "validate yalnız denetler",
+   "steps": [
+    {
+     "op": "validate",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": null,
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın Z'li ve ölçülü yolları (PolyLineZ): kotlar ve ölçüler",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yol.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.shp",
+       "bytes": 436,
+       "sha256": "6c18c45ce3d380f8f0cc16bdc236dca88bb291da3c5ad66d5f771dcb1300f6d5",
+       "objects": 2,
+       "sourceLayers": [
+        "yol"
+       ],
+       "targets": {
+        "yol": "import-yol"
+       },
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-yol-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "import-yol-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-yol-shp": {
+        "name": "yol.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "GDAL'ın Z'li noktaları",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-nokta-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-nokta-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-nokta-shp": {
+        "name": "nokta.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "noktalar.shp: Windows-1254 .cpg'siz, N, F, L ve D alanları, Z",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/noktalar.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "noktalar.shp",
+       "bytes": 232,
+       "sha256": "2828ffbe9f84e12349182557a66175bcce1e747c609f267acf5e9e7c52692736",
+       "objects": 3,
+       "sourceLayers": [
+        "noktalar"
+       ],
+       "targets": {
+        "noktalar": "import-noktalar"
+       },
+       "layers": [
+        {
+         "id": "import-noktalar",
+         "name": "noktalar"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-noktalar-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-noktalar",
+        "kind": "point",
+        "attrs": {
+         "AD": "ÇŞĞÜÖİ çşğüöı",
+         "KOT": "105.200",
+         "ALAN": "1234.56780000",
+         "VAR": "true",
+         "TARIH": "2026-09-26"
+        },
+        "p": {
+         "x": 512345.678,
+         "y": 4423456.789
+        },
+        "z": 105.2
+       },
+       "3": {
+        "layerId": "import-noktalar",
+        "kind": "point",
+        "attrs": {
+         "AD": "Işıklı Köprü",
+         "KOT": "107.850",
+         "ALAN": "-0.450000000000",
+         "VAR": "false",
+         "ACIKLAMA": "Sınır taşı"
+        },
+        "p": {
+         "x": 512400.125,
+         "y": 4423500.5
+        },
+        "z": 107.85
+       },
+       "4": {
+        "layerId": "import-noktalar",
+        "kind": "point",
+        "attrs": {
+         "AD": " Kuzey Çeşme",
+         "ALAN": "0.00000000000"
+        },
+        "p": {
+         "x": 512450.0,
+         "y": 4423400.25
+        },
+        "z": 99.5
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-noktalar": {
+        "name": "noktalar",
+        "type": "layer",
+        "parent": "import-noktalar-shp",
+        "fields": [
+         {
+          "name": "AD",
+          "kind": "text",
+          "length": 30
+         },
+         {
+          "name": "KOT",
+          "kind": "decimal",
+          "scale": 3
+         },
+         {
+          "name": "ALAN",
+          "kind": "decimal"
+         },
+         {
+          "name": "VAR",
+          "kind": "boolean"
+         },
+         {
+          "name": "TARIH",
+          "kind": "date"
+         },
+         {
+          "name": "ACIKLAMA",
+          "kind": "text",
+          "length": 20
+         }
+        ]
+       },
+       "import-noktalar-shp": {
+        "name": "noktalar.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "kuyular.shp: .prj yok, çok noktalı nesne; crs_undeclared",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/kuyular.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "kuyular.shp",
+       "bytes": 420,
+       "sha256": "57f02d9b2cdf0891cfc93d9f4ef5851c1b1f5d4e6033e83069f2b7ad3e2aa106",
+       "objects": 2,
+       "sourceLayers": [
+        "kuyular"
+       ],
+       "targets": {
+        "kuyular": "import-kuyular"
+       },
+       "layers": [
+        {
+         "id": "import-kuyular",
+         "name": "kuyular"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "group": "import-kuyular-shp"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "kuyular.shp koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-kuyular",
+        "kind": "point",
+        "attrs": {
+         "AD": "Şifalı Kuyu 1",
+         "DERINLIK": "120.50",
+         "SU": "true",
+         "OLCUM": "2025-03-14"
+        },
+        "p": {
+         "x": 452001.25,
+         "y": 4401002.5
+        },
+        "z": 850.75,
+        "parts": [
+         {
+          "p": {
+           "x": 452010.5,
+           "y": 4401020.0
+          },
+          "z": 851.0
+         },
+         {
+          "p": {
+           "x": 452030.0,
+           "y": 4401005.75
+          },
+          "z": 849.5
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-kuyular",
+        "kind": "point",
+        "attrs": {
+         "AD": "Işıklı Çeşme Kuyusu",
+         "DERINLIK": "85.00",
+         "SU": "false",
+         "OLCUM": "1.3.25"
+        },
+        "p": {
+         "x": 452100.0,
+         "y": 4401100.0
+        },
+        "z": 860.25,
+        "parts": [
+         {
+          "p": {
+           "x": 452120.5,
+           "y": 4401130.5
+          },
+          "z": 861.5
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-kuyular": {
+        "name": "kuyular",
+        "type": "layer",
+        "parent": "import-kuyular-shp",
+        "fields": [
+         {
+          "name": "AD",
+          "kind": "text",
+          "length": 25
+         },
+         {
+          "name": "DERINLIK",
+          "kind": "decimal",
+          "scale": 2
+         },
+         {
+          "name": "SU",
+          "kind": "boolean"
+         },
+         {
+          "name": "OLCUM",
+          "kind": "date"
+         }
+        ]
+       },
+       "import-kuyular-shp": {
+        "name": "kuyular.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "sistemsiz.shp: GDAL'ın .prj'siz dosyası olduğu gibi alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/sistemsiz.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "sistemsiz.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "sistemsiz"
+       ],
+       "targets": {
+        "sistemsiz": "import-sistemsiz"
+       },
+       "layers": [
+        {
+         "id": "import-sistemsiz",
+         "name": "sistemsiz"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "group": "import-sistemsiz-shp"
+      },
+      "warnings": [
+       {
+        "code": "crs_undeclared",
+        "message": "sistemsiz.shp koordinat sistemi bildirmiyor; koordinatlar projenin sisteminde sayılıp olduğu gibi alındı.",
+        "path": "path"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-sistemsiz",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-sistemsiz": {
+        "name": "sistemsiz",
+        "type": "layer",
+        "parent": "import-sistemsiz-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-sistemsiz-shp": {
+        "name": "sistemsiz.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan katmana: layer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "layer": "cizim"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "cizim"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "cizim",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Var olan katmana: layers dosyanın katman adıyla (büyük küçük harf ayırmadan)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "layers": {
+       "NOKTA": "cizim"
+      }
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "cizim"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "cizim",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ]
+  },
+  {
+   "name": "Çizimde aynı adlı katman varsa nesneler ona gider, yeni katman açılmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "nokta-var"
+       },
+       "layers": [],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "nokta-var",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Aynı adlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parcel-var",
+      "name": "PARSEL",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "nokta-var",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel-grubu",
+      "name": "Parsel.shp",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Grup adı: var olan grup adıyla bulunur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yol.shp",
+      "group": "PARSEL.SHP"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yol.shp",
+       "bytes": 436,
+       "sha256": "6c18c45ce3d380f8f0cc16bdc236dca88bb291da3c5ad66d5f771dcb1300f6d5",
+       "objects": 2,
+       "sourceLayers": [
+        "yol"
+       ],
+       "targets": {
+        "yol": "import-yol"
+       },
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "parsel-grubu"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "parsel-grubu",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Aynı adlı katmanlar",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parcel-var",
+      "name": "PARSEL",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "nokta-var",
+      "name": "Nokta",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parsel-grubu",
+      "name": "Parsel.shp",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Grup boş: yeni katman ağacın üstünde",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "group": ""
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": null,
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Grup verilmişse o adla açılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "group": "Saha ölçüsü"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-saha-olcusu"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-saha-olcusu",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-saha-olcusu": {
+        "name": "Saha ölçüsü",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "skipLayers dosyanın tek katmanını bırakırsa alınacak nesne kalmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "skipLayers": [
+       "nokta"
+      ]
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "nokta.shp dosyasının seçilen katmanlarında nesne yok; skipLayers'ı denetleyin.",
+       "path": "skipLayers"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "TM36 dosya TM36 projeye çevirme istenmeden de alınır; reproject boşuna istenmişse yok sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-nokta-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-nokta-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-nokta-shp": {
+        "name": "nokta.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki .prj: çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-wgs84.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "parsel-wgs84.shp EPSG:4326 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:4326'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki parseller reproject ile projenin sistemine çevrilir (PROJ, EPSG:5261)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-wgs84.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-wgs84.shp",
+       "bytes": 536,
+       "sha256": "78f094d61a613db558048dbaa8efdb88f22b6279b0d09f5f4107e7a97f9d9840",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel-wgs84"
+       ],
+       "targets": {
+        "parsel-wgs84": "import-parsel-wgs84"
+       },
+       "layers": [
+        {
+         "id": "import-parsel-wgs84",
+         "name": "parsel-wgs84"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "GCS_WGS_1984",
+        "source": "prj",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-parsel-wgs84-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.00000000006,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.00000000023,
+          "y": 4420019.999999999
+         },
+         {
+          "x": 487020.0000000006,
+          "y": 4420000.000000001
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0000000002,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0000000005,
+            "y": 4420005.0
+           },
+           {
+            "x": 487009.9999999998,
+            "y": 4420010.000000001
+           },
+           {
+            "x": 487004.99999999977,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.00000000006,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0000000002,
+            "y": 4420010.0
+           },
+           {
+            "x": 487039.99999999977,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487099.9999999999,
+          "y": 4420000.0
+         },
+         {
+          "x": 487099.99999999977,
+          "y": 4420010.0
+         },
+         {
+          "x": 487109.9999999998,
+          "y": 4420010.0
+         },
+         {
+          "x": 487109.9999999998,
+          "y": 4419999.999999999
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel-wgs84": {
+        "name": "parsel-wgs84",
+        "type": "layer",
+        "parent": "import-parsel-wgs84-shp",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-wgs84-shp": {
+        "name": "parsel-wgs84.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "WGS 84'teki noktalar çevrilirken kotları olduğu gibi kalır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta-wgs84.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta-wgs84.shp",
+       "bytes": 136,
+       "sha256": "5f3224dec477248826838f96f17d05b93ac8fb59182aa24134d4a5425920956e",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta-wgs84"
+       ],
+       "targets": {
+        "nokta-wgs84": "import-nokta-wgs84"
+       },
+       "layers": [
+        {
+         "id": "import-nokta-wgs84",
+         "name": "nokta-wgs84"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "GCS_WGS_1984",
+        "source": "prj",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "moved": {
+        "from": 4326,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-nokta-wgs84-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta-wgs84",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.500000001
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta-wgs84": {
+        "name": "nokta-wgs84",
+        "type": "layer",
+        "parent": "import-nokta-wgs84-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-nokta-wgs84-shp": {
+        "name": "nokta-wgs84.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "WGS 84 / UTM 36N'deki alanlar (delikli, Z'li) çevrilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/alanlarz.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "alanlarz.shp",
+       "bytes": 644,
+       "sha256": "be960729cf55fd28f4a5d5323622667c382b5a4316676a6264a4969514aff286",
+       "objects": 1,
+       "sourceLayers": [
+        "alanlarz"
+       ],
+       "targets": {
+        "alanlarz": "import-alanlarz"
+       },
+       "layers": [
+        {
+         "id": "import-alanlarz",
+         "name": "alanlarz"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS_1984_UTM_Zone_36N",
+        "source": "prj",
+        "srid": 32636
+       },
+       "srid": 32636,
+       "moved": {
+        "from": 32636,
+        "to": 5256,
+        "via": "EPSG:5261",
+        "accuracy": 1.0,
+        "unofficial": false,
+        "text": "±1 m, EPSG:5261",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-alanlarz-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-alanlarz",
+        "kind": "polygon",
+        "attrs": {
+         "AD": "Café Rüzgâr",
+         "KOD": "17"
+        },
+        "pts": [
+         {
+          "x": 230527.66873391933,
+          "y": 4426518.0080583235
+         },
+         {
+          "x": 230531.03532249032,
+          "y": 4426618.080657814
+         },
+         {
+          "x": 230631.10788824648,
+          "y": 4426614.714039883
+         },
+         {
+          "x": 230627.74130405183,
+          "y": 4426514.641503489
+         }
+        ],
+        "zs": [
+         910.0,
+         912.5,
+         915.0,
+         911.25
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 230538.01264974603,
+            "y": 4426527.678662158
+           },
+           {
+            "x": 230558.0271674706,
+            "y": 4426527.005349667
+           },
+           {
+            "x": 230558.7004811364,
+            "y": 4426547.019866042
+           },
+           {
+            "x": 230538.6859635868,
+            "y": 4426547.693181057
+           }
+          ],
+          "zs": [
+           910.5,
+           910.75,
+           911.0,
+           911.5
+          ]
+         },
+         {
+          "pts": [
+           {
+            "x": 230590.24942333275,
+            "y": 4426576.515192245
+           },
+           {
+            "x": 230610.01375287212,
+            "y": 4426575.850290303
+           },
+           {
+            "x": 230600.56314322283,
+            "y": 4426596.4558499865
+           }
+          ],
+          "zs": [
+           913.0,
+           913.25,
+           914.0
+          ]
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-alanlarz": {
+        "name": "alanlarz",
+        "type": "layer",
+        "parent": "import-alanlarz-shp",
+        "fields": [
+         {
+          "name": "AD",
+          "kind": "text",
+          "length": 30
+         },
+         {
+          "name": "KOD",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-alanlarz-shp": {
+        "name": "alanlarz.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "WGS 84 / UTM 36N dosyası çevirme istenmeden alınmaz",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/alanlarz.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "alanlarz.shp EPSG:32636 sisteminde, proje EPSG:5256. Koordinatların projenin sistemine çevrilmesi için reproject verin ya da projeyi EPSG:32636'de açın.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "ED50 / TM30'daki yollar resmî olmayan dönüşümle çevrilir: crs_unofficial, doğruluk ±2.1 m",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/yollar.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "yollar.shp",
+       "bytes": 432,
+       "sha256": "4c2a7fb91fabcca0568f35af508c82f6a90b79f8efe21ac96f0b6e1a713480ae",
+       "objects": 2,
+       "sourceLayers": [
+        "yollar"
+       ],
+       "targets": {
+        "yollar": "import-yollar"
+       },
+       "layers": [
+        {
+         "id": "import-yollar",
+         "name": "yollar"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "ED50 / TM30",
+        "source": "prj",
+        "srid": 2320
+       },
+       "srid": 2320,
+       "moved": {
+        "from": 2320,
+        "to": 5256,
+        "via": "EPSG:1783 + EPSG:5260",
+        "accuracy": 2.1,
+        "unofficial": true,
+        "text": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil",
+        "moved": 2,
+        "left": 0
+       },
+       "group": "import-yollar-shp"
+      },
+      "warnings": [
+       {
+        "code": "crs_unofficial",
+        "message": "yollar.shp koordinatları resmî olmayan bir dönüşümle projenin sistemine çevrildi (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil); resmî dönüşümü olan bir dosya gerekiyorsa dosyayı o dönüşümle çevirip verin.",
+        "path": "reproject"
+       },
+       {
+        "code": "import_losses",
+        "message": "$any"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yollar",
+        "kind": "polyline",
+        "attrs": {
+         "AD": "Atatürk Bulvarı",
+         "ŞERİT": "4",
+         "KAPLAMA": "Asfalt"
+        },
+        "pts": [
+         {
+          "x": -90136.01442927145,
+          "y": 4563066.723031136
+         },
+         {
+          "x": -90032.10834206,
+          "y": 4563110.131605151
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": -89929.25603619893,
+            "y": 4563152.85786459
+           },
+           {
+            "x": -89873.11544716358,
+            "y": 4563229.760662695
+           },
+           {
+            "x": -89791.28944790282,
+            "y": 4563254.058156355
+           },
+           {
+            "x": -89715.0300974861,
+            "y": 4563339.889404646
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-yollar",
+        "kind": "polyline",
+        "attrs": {
+         "AD": "Gökçe Ağaçlı Yolu",
+         "ŞERİT": "2",
+         "KAPLAMA": "Stabilize"
+        },
+        "pts": [
+         {
+          "x": -89500.8734609636,
+          "y": 4563525.918152012
+         },
+         {
+          "x": -89445.31176254095,
+          "y": 4563598.079020443
+         },
+         {
+          "x": -89393.27701082325,
+          "y": 4563619.148027675
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yollar": {
+        "name": "yollar",
+        "type": "layer",
+        "parent": "import-yollar-shp",
+        "fields": [
+         {
+          "name": "AD",
+          "kind": "text",
+          "length": 50
+         },
+         {
+          "name": "ŞERİT",
+          "kind": "integer"
+         },
+         {
+          "name": "KAPLAMA",
+          "kind": "text",
+          "length": 20
+         }
+        ]
+       },
+       "import-yollar-shp": {
+        "name": "yollar.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ]
+  },
+  {
+   "name": "ED50 projesine TUREF dosyası: datum dönüşümü ve doğruluğu",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "nokta.shp",
+       "bytes": 136,
+       "sha256": "43994d9e5f3a435a9ba9201575216dfff83ea1a594c983e93bda3e82e032b548",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "moved": {
+        "from": 5256,
+        "to": 2320,
+        "via": "EPSG:1783 + EPSG:5260",
+        "accuracy": 2.1,
+        "unofficial": true,
+        "text": "±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil",
+        "moved": 1,
+        "left": 0
+       },
+       "group": "import-nokta-shp"
+      },
+      "warnings": [
+       {
+        "code": "crs_unofficial",
+        "message": "nokta.shp koordinatları resmî olmayan bir dönüşümle projenin sistemine çevrildi (±2.1 m, EPSG:1783 + EPSG:5260; resmî dönüşüm değil); resmî dönüşümü olan bir dosya gerekiyorsa dosyayı o dönüşümle çevirip verin.",
+        "path": "reproject"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 1000197.441017776,
+         "y": 4436584.379646146
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-nokta-shp",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-nokta-shp": {
+        "name": "nokta.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     },
+     "within": 1e-06
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "ED50 / TM30",
+    "settings": {
+     "srid": 2320,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "srid dosyanın .prj'sini ezer: crs_overridden, koordinatlar verilen sistemde sayılır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-wgs84.shp",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-wgs84.shp",
+       "bytes": 536,
+       "sha256": "78f094d61a613db558048dbaa8efdb88f22b6279b0d09f5f4107e7a97f9d9840",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel-wgs84"
+       ],
+       "targets": {
+        "parsel-wgs84": "import-parsel-wgs84"
+       },
+       "layers": [
+        {
+         "id": "import-parsel-wgs84",
+         "name": "parsel-wgs84"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "GCS_WGS_1984",
+        "source": "prj",
+        "srid": 4326
+       },
+       "srid": 5256,
+       "group": "import-parsel-wgs84-shp"
+      },
+      "warnings": [
+       {
+        "code": "crs_overridden",
+        "message": "parsel-wgs84.shp EPSG:4326 diyor; srid ile EPSG:5256 verildi: koordinatlar EPSG:5256 sayıldı, dönüştürülmeden (reproject verilirse yalnız EPSG:5256'den projenin sistemine çevrilir).",
+        "path": "srid"
+       }
+      ]
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 35.84795465201611,
+          "y": 39.91407934114472
+         },
+         {
+          "x": 35.847954253723735,
+          "y": 39.914259467164634
+         },
+         {
+          "x": 35.84818816948183,
+          "y": 39.91425977363374
+         },
+         {
+          "x": 35.84818856716145,
+          "y": 39.9140796476119
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 35.84801303126765,
+            "y": 39.914124449311366
+           },
+           {
+            "x": 35.84807151009217,
+            "y": 39.91412452594304
+           },
+           {
+            "x": 35.84807141059578,
+            "y": 39.91416955744843
+           },
+           {
+            "x": 35.84801293173296,
+            "y": 39.91416948081665
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 35.84830552473546,
+            "y": 39.91407980066854
+           },
+           {
+            "x": 35.84842228377738,
+            "y": 39.91417001661981
+           },
+           {
+            "x": 35.84842248231036,
+            "y": 39.914079953607214
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 35.84912422777854,
+          "y": 39.914080868762106
+         },
+         {
+          "x": 35.849124030164674,
+          "y": 39.91417093177761
+         },
+         {
+          "x": 35.849240987899,
+          "y": 39.91417108389104
+         },
+         {
+          "x": 35.84924118535968,
+          "y": 39.91408102087505
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel-wgs84": {
+        "name": "parsel-wgs84",
+        "type": "layer",
+        "parent": "import-parsel-wgs84-shp",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-wgs84-shp": {
+        "name": "parsel-wgs84.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan .prj için srid verilirse alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/karisik.shp",
+      "srid": 5256
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "karisik.shp",
+       "bytes": 220,
+       "sha256": "c92a19a13e671c47b4223b92c60f2ff6135c001c874358513bf465714bc979c1",
+       "objects": 3,
+       "sourceLayers": [
+        "karisik"
+       ],
+       "targets": {
+        "karisik": "import-karisik"
+       },
+       "layers": [
+        {
+         "id": "import-karisik",
+         "name": "karisik"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "WGS_1984_Lambert_Conformal_Conic",
+        "source": "prj"
+       },
+       "srid": 5256,
+       "group": "import-karisik-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-karisik",
+        "kind": "point",
+        "attrs": {
+         "AD": "Bir",
+         "NO": "1"
+        },
+        "p": {
+         "x": 500100.0,
+         "y": 4400100.0
+        }
+       },
+       "3": {
+        "layerId": "import-karisik",
+        "kind": "point",
+        "attrs": {
+         "AD": "Uc",
+         "NO": "3"
+        },
+        "p": {
+         "x": 500200.5,
+         "y": 4400200.5
+        }
+       },
+       "4": {
+        "layerId": "import-karisik",
+        "kind": "point",
+        "attrs": {},
+        "p": {
+         "x": 500300.25,
+         "y": 4400300.75
+        }
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-karisik": {
+        "name": "karisik",
+        "type": "layer",
+        "parent": "import-karisik-shp",
+        "fields": [
+         {
+          "name": "AD",
+          "kind": "text",
+          "length": 10
+         },
+         {
+          "name": "NO",
+          "kind": "integer"
+         }
+        ]
+       },
+       "import-karisik-shp": {
+        "name": "karisik.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Okunamayan .prj: crs_unknown",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:formats/v1/gis/karisik.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_unknown",
+       "message": "karisik.shp'nin koordinat sistemi okunamadı (“WGS_1984_Lambert_Conformal_Conic”). Koordinatların hangi sistemde olduğunu srid ile verin.",
+       "path": "srid"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Yerel proje her dosyanın koordinatlarını olduğu gibi alır (WGS 84 dosya dahil)",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-wgs84.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel-wgs84.shp",
+       "bytes": 536,
+       "sha256": "78f094d61a613db558048dbaa8efdb88f22b6279b0d09f5f4107e7a97f9d9840",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel-wgs84"
+       ],
+       "targets": {
+        "parsel-wgs84": "import-parsel-wgs84"
+       },
+       "layers": [
+        {
+         "id": "import-parsel-wgs84",
+         "name": "parsel-wgs84"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "GCS_WGS_1984",
+        "source": "prj",
+        "srid": 4326
+       },
+       "srid": 4326,
+       "group": "import-parsel-wgs84-shp"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Çağlayan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 35.84795465201611,
+          "y": 39.91407934114472
+         },
+         {
+          "x": 35.847954253723735,
+          "y": 39.914259467164634
+         },
+         {
+          "x": 35.84818816948183,
+          "y": 39.91425977363374
+         },
+         {
+          "x": 35.84818856716145,
+          "y": 39.9140796476119
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 35.84801303126765,
+            "y": 39.914124449311366
+           },
+           {
+            "x": 35.84807151009217,
+            "y": 39.91412452594304
+           },
+           {
+            "x": 35.84807141059578,
+            "y": 39.91416955744843
+           },
+           {
+            "x": 35.84801293173296,
+            "y": 39.91416948081665
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 35.84830552473546,
+            "y": 39.91407980066854
+           },
+           {
+            "x": 35.84842228377738,
+            "y": 39.91417001661981
+           },
+           {
+            "x": 35.84842248231036,
+            "y": 39.914079953607214
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel-wgs84",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Işık-Ğüşöç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 35.84912422777854,
+          "y": 39.914080868762106
+         },
+         {
+          "x": 35.849124030164674,
+          "y": 39.91417093177761
+         },
+         {
+          "x": 35.849240987899,
+          "y": 39.91417108389104
+         },
+         {
+          "x": 35.84924118535968,
+          "y": 39.91408102087505
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel-wgs84": {
+        "name": "parsel-wgs84",
+        "type": "layer",
+        "parent": "import-parsel-wgs84-shp",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-wgs84-shp": {
+        "name": "parsel-wgs84.shp",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Yerel projede reproject çevirecek sistem olmadığından reddedilir",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel-wgs84.shp",
+      "reproject": true
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "crs_mismatch",
+       "message": "parsel-wgs84.shp EPSG:4326 sisteminde; projenin koordinat sistemi yok (yerel proje), çevrilecek bir sistem yok. Projeyi bir koordinat sisteminde açın ya da reproject vermeyin: koordinatlar olduğu gibi alınır.",
+       "path": "reproject"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Yerel proje",
+    "settings": {
+     "srid": 0,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "cad",
+     "drawingUnit": "m"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "kilitli",
+      "name": "Kilitli",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "grup",
+      "name": "Grup",
+      "type": "group",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Zip: tek katmanlı arşiv",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.zip"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "parsel.zip",
+       "bytes": 1102,
+       "sha256": "ad693340508be96c3cf91506114f2ef7cda8b237b96fa363fe3c3b658041f80a",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-parsel-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Ça?layan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "I??k-?ü?öç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-parsel-zip",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-parsel-zip": {
+        "name": "parsel.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: üç katmanlı arşivin her katmanı bir katman olur",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanlar.zip"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanlar.zip",
+       "bytes": 2848,
+       "sha256": "6a861615a2fb5bef295fb1b814e226deade10c964c8da72b82ce1264ec5d2b37",
+       "objects": 5,
+       "sourceLayers": [
+        "parsel",
+        "yol",
+        "nokta"
+       ],
+       "targets": {
+        "parsel": "import-parsel",
+        "yol": "import-yol",
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        },
+        {
+         "id": "import-yol",
+         "name": "yol"
+        },
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanlar-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4,
+       5,
+       6
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Ça?layan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "I??k-?ü?öç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         }
+        ]
+       },
+       "4": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "5": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "6": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-katmanlar-zip": {
+        "name": "katmanlar.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: entry arşivdeki yolla bir katmanı seçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanlar.zip",
+      "entry": "veri/yol.shp"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanlar.zip",
+       "bytes": 2848,
+       "sha256": "6a861615a2fb5bef295fb1b814e226deade10c964c8da72b82ce1264ec5d2b37",
+       "objects": 2,
+       "sourceLayers": [
+        "yol"
+       ],
+       "targets": {
+        "yol": "import-yol"
+       },
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanlar-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0,
+        "ma": 0.0,
+        "mb": 10.0
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-katmanlar-zip": {
+        "name": "katmanlar.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: entry katmanın adıyla da seçer",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanlar.zip",
+      "entry": "NOKTA"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanlar.zip",
+       "bytes": 2848,
+       "sha256": "6a861615a2fb5bef295fb1b814e226deade10c964c8da72b82ce1264ec5d2b37",
+       "objects": 1,
+       "sourceLayers": [
+        "nokta"
+       ],
+       "targets": {
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanlar-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-katmanlar-zip": {
+        "name": "katmanlar.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: skipLayers arşivin bir katmanını bırakır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanlar.zip",
+      "skipLayers": [
+       "parsel"
+      ]
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "katmanlar.zip",
+       "bytes": 2848,
+       "sha256": "6a861615a2fb5bef295fb1b814e226deade10c964c8da72b82ce1264ec5d2b37",
+       "objects": 3,
+       "sourceLayers": [
+        "parsel",
+        "yol",
+        "nokta"
+       ],
+       "targets": {
+        "yol": "import-yol",
+        "nokta": "import-nokta"
+       },
+       "layers": [
+        {
+         "id": "import-yol",
+         "name": "yol"
+        },
+        {
+         "id": "import-nokta",
+         "name": "nokta"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-katmanlar-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3,
+       4
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-yol",
+        "kind": "polyline",
+        "attrs": {
+         "ad": "Atatürk Cd."
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487050.0,
+          "y": 4420050.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420060.0
+         }
+        ],
+        "zs": [
+         10.0,
+         12.0,
+         15.0
+        ],
+        "ms": [
+         0.0,
+         50.0,
+         101.0
+        ]
+       },
+       "3": {
+        "layerId": "import-yol",
+        "kind": "line",
+        "attrs": {},
+        "a": {
+         "x": 487000.0,
+         "y": 4420070.0
+        },
+        "b": {
+         "x": 487010.0,
+         "y": 4420070.0
+        },
+        "za": 0.0,
+        "zb": 1.0,
+        "ma": 0.0,
+        "mb": 10.0
+       },
+       "4": {
+        "layerId": "import-nokta",
+        "kind": "point",
+        "attrs": {
+         "ad": "N1",
+         "kot": "101.750000000000000"
+        },
+        "p": {
+         "x": 487001.25,
+         "y": 4420001.5
+        },
+        "z": 101.75
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-yol": {
+        "name": "yol",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-nokta": {
+        "name": "nokta",
+        "type": "layer",
+        "parent": "import-katmanlar-zip",
+        "fields": [
+         {
+          "name": "ad",
+          "kind": "text",
+          "length": 254
+         },
+         {
+          "name": "kot",
+          "kind": "decimal",
+          "scale": 15
+         }
+        ]
+       },
+       "import-katmanlar-zip": {
+        "name": "katmanlar.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: olmayan entry",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/katmanlar.zip",
+      "entry": "yok"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entry_not_found",
+       "message": "“yok” katmanı arşivde yok; arşivdeki katmanlar: veri/parsel, veri/yol, veri/nokta.",
+       "path": "entry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: aynı adlı iki katman entry ister",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/ayni-ad.zip"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "entry_not_found",
+       "message": "Arşivde aynı adlı birden çok katman var (parsel, parsel); entry ile birinin arşivdeki yolunu verin.",
+       "path": "entry"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip: aynı adlı katmanlardan biri yoluyla alınır",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/ayni-ad.zip",
+      "entry": "b/parsel"
+     },
+     "result": {
+      "status": "completed",
+      "output": {
+       "file": "ayni-ad.zip",
+       "bytes": 2214,
+       "sha256": "d250a05fea3ee66b9afd93be234fb986b124dd398aefe850f56f46cfe258cd14",
+       "objects": 2,
+       "sourceLayers": [
+        "parsel"
+       ],
+       "targets": {
+        "parsel": "import-parsel"
+       },
+       "layers": [
+        {
+         "id": "import-parsel",
+         "name": "parsel"
+        }
+       ],
+       "report": "$any",
+       "revision": "$current",
+       "declared": {
+        "text": "TUREF_TM36",
+        "source": "prj",
+        "srid": 5256
+       },
+       "srid": 5256,
+       "group": "import-ayni-ad-zip"
+      },
+      "warnings": []
+     },
+     "expect": {
+      "ids": [
+       1,
+       2,
+       3
+      ],
+      "fields": {
+       "2": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "Ça?layan",
+         "parsel_no": "5",
+         "alan": "1234.559999999999945",
+         "kimlik": "9007199254740993",
+         "tescil": "2024-02-29",
+         "guncelleme": "2024-03-01T10:20:30Z",
+         "tapulu": "true"
+        },
+        "pts": [
+         {
+          "x": 487000.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487000.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420020.0
+         },
+         {
+          "x": 487020.0,
+          "y": 4420000.0
+         }
+        ],
+        "holes": [
+         {
+          "pts": [
+           {
+            "x": 487005.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420005.0
+           },
+           {
+            "x": 487010.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487005.0,
+            "y": 4420010.0
+           }
+          ]
+         }
+        ],
+        "parts": [
+         {
+          "pts": [
+           {
+            "x": 487030.0,
+            "y": 4420000.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420010.0
+           },
+           {
+            "x": 487040.0,
+            "y": 4420000.0
+           }
+          ]
+         }
+        ]
+       },
+       "3": {
+        "layerId": "import-parsel",
+        "kind": "polygon",
+        "attrs": {
+         "ada": "I??k-?ü?öç",
+         "parsel_no": "*********",
+         "alan": "************************",
+         "kimlik": "******************",
+         "tapulu": "false"
+        },
+        "pts": [
+         {
+          "x": 487100.0,
+          "y": 4420000.0
+         },
+         {
+          "x": 487100.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420010.0
+         },
+         {
+          "x": 487110.0,
+          "y": 4420000.0
+         }
+        ]
+       }
+      },
+      "revision": "changed",
+      "canUndo": true,
+      "nodes": {
+       "import-parsel": {
+        "name": "parsel",
+        "type": "layer",
+        "parent": "import-ayni-ad-zip",
+        "fields": [
+         {
+          "name": "ada",
+          "kind": "text",
+          "length": 40
+         },
+         {
+          "name": "parsel_no",
+          "kind": "integer"
+         },
+         {
+          "name": "alan",
+          "kind": "decimal",
+          "scale": 15
+         },
+         {
+          "name": "kimlik",
+          "kind": "decimal",
+          "scale": 0
+         },
+         {
+          "name": "tescil",
+          "kind": "date"
+         },
+         {
+          "name": "guncelleme",
+          "kind": "text",
+          "length": 29
+         },
+         {
+          "name": "tapulu",
+          "kind": "boolean"
+         },
+         {
+          "name": "not",
+          "kind": "text",
+          "length": 254
+         }
+        ]
+       },
+       "import-ayni-ad-zip": {
+        "name": "ayni-ad.zip",
+        "type": "group",
+        "parent": null
+       }
+      }
+     }
+    }
+   ]
+  },
+  {
+   "name": "Kilitli hedef katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "layer": "kilitli"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "“Kilitli” katmanı kilitli; kilidi Katmanlar panelinden açın ya da başka bir katman verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Aynı adlı katman kilitliyse",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_locked",
+       "message": "Dosyanın “parsel” katmanı çizimdeki aynı adlı “parsel” katmanına gider ama o katman kilitli. Kilidi açın, katmanı skipLayers ile dışarıda bırakın ya da layers ile başka bir katmana yönlendirin.",
+       "path": "layers"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ],
+   "setup": {
+    "format": "kentos.document",
+    "version": 1,
+    "name": "Aynı adlı kilitli katman",
+    "settings": {
+     "srid": 5256,
+     "lengthDecimals": 3,
+     "areaDecimals": 2,
+     "areaUnit": "m2",
+     "angleUnit": "grad",
+     "plotScale": 1000,
+     "workspace": "gis"
+    },
+    "origin": {
+     "x": 0.0,
+     "y": 0.0
+    },
+    "layers": [
+     {
+      "id": "cizim",
+      "name": "Çizim",
+      "type": "layer",
+      "visible": true,
+      "locked": false,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     },
+     {
+      "id": "parcel-kilitli",
+      "name": "parsel",
+      "type": "layer",
+      "visible": true,
+      "locked": true,
+      "expanded": true,
+      "style": {
+       "color": "fg",
+       "lineType": "continuous",
+       "lineWeight": 0.25
+      },
+      "children": []
+     }
+    ],
+    "activeLayer": "cizim",
+    "entities": [
+     {
+      "kind": "point",
+      "id": 1,
+      "layerId": "cizim",
+      "attrs": {},
+      "p": {
+       "x": 487500.0,
+       "y": 4420500.0
+      }
+     }
+    ],
+    "styles": {
+     "items": [],
+     "categories": []
+    }
+   }
+  },
+  {
+   "name": "Hedef bir grup",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "layer": "grup"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "not_a_layer",
+       "message": "“Grup” bir grup; nesneler yalnız katmana konur. Grubun altındaki bir katmanı verin.",
+       "path": "layer"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan hedef katman",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/nokta.shp",
+      "layers": {
+       "nokta": "yok"
+      }
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "layer_not_found",
+       "message": "“yok” kimlikli katman çizimde yok; “nokta” katmanının nesnelerini var olan bir katmanın kimliğine yönlendirin.",
+       "path": "layers.nokta"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Boş Shapefile",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bos.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "nothing_to_import",
+       "message": "bos.shp dosyasında alınacak nesne yok.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile olmayan .shp",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bozuk.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "bozuk.shp Shapefile olarak okunamadı: “.shp” dosyası 100 baytlık başlıktan kısa (24 bayt): Shapefile değil ya da yarım kalmış.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Zip olmayan .zip",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bozuk.zip"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "bozuk.zip Shapefile olarak okunamadı: Zip arşivi bozuk: sonundaki dizin kaydı bulunamadı. Arşivi yeniden oluşturup deneyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Shapefile'sız zip",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/bos.zip"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "import_unreadable",
+       "message": "bos.zip Shapefile olarak okunamadı: Zip arşivinde Shapefile (.shp) yok. Arşivde .shp, .shx ve .dbf dosyaları olmalı.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm bir tamsayı değilse",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp",
+      "expectedRevision": "abc"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_revision",
+       "message": "Beklenen sürüm “abc” geçerli bir sürüm değil; sürüm “12” gibi bir tamsayı yazısıdır. Sürümü belgeden ya da komutun planından alın.",
+       "path": "expectedRevision"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Beklenen sürüm değişmişse çatışma",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.shp",
+      "expectedRevision": "999"
+     },
+     "result": {
+      "status": "conflict",
+      "error": {
+       "code": "revision_conflict",
+       "message": "Çizim bu komut hazırlandıktan sonra değişti; hiçbir şey yazılmadı. Komutu çizimin şimdiki hâline göre yeniden hazırlayın.",
+       "path": "expectedRevision",
+       "revision": "$current"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/yok.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "file_not_found",
+       "message": "$fixture:gis-import/v1/yok.shp yok; dosyanın yolunu denetleyin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Göreli yol",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "veri/parsel.shp"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“veri/parsel.shp” mutlak bir dosya yolu değil; okunacak dosyanın tam yolunu verin (/klasör/ad.shp).",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Klasör",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "$fixture:gis-import/v1 bir klasör; okunacak Shapefile dosyasının adını da verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  },
+  {
+   "name": "Uzantısı .shp ya da .zip olmayan dosya",
+   "steps": [
+    {
+     "op": "execute",
+     "input": {
+      "path": "$fixture:gis-import/v1/parsel.dbf"
+     },
+     "result": {
+      "status": "failed",
+      "error": {
+       "code": "invalid_file_path",
+       "message": "“$fixture:gis-import/v1/parsel.dbf” bir Shapefile'ın .shp'si ya da .zip arşivi değil; katmanın .shp dosyasının ya da arşivin yolunu verin.",
+       "path": "path"
+      }
+     },
+     "expect": {
+      "ids": [
+       1
+      ],
+      "revision": "same",
+      "canUndo": false
+     }
+    }
+   ]
+  }
+ ]
+}

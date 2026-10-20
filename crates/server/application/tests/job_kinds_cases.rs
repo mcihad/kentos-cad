@@ -64,6 +64,9 @@ fn a_files_name_says_its_format_and_the_format_its_command() {
                 "fgb" => "fgb",
                 "gml" => "gml",
                 "csv" => "csv",
+                "shp" => "zip",
+                "geojson" => "geojson",
+                "kml" => "kml",
                 _ => "dxf",
             }),
             "{name}"

@@ -761,6 +761,9 @@ fn command_tool(c: &Value) -> Value {
             | "file.export.atlas"
             | "file.import.csv"
             | "file.import.fgb"
+            | "file.import.shp"
+            | "file.import.geojson"
+            | "file.import.kml"
             | "file.import.gml"
             // A derived dataset's file is written over with `overwrite` (docs/adr/0530).
             | "file.export.gis"

@@ -1522,13 +1522,13 @@
   },
   {
    "name": "parsel.zip",
-   "format": null,
-   "command": null
+   "format": "shp",
+   "command": "file.import.shp"
   },
   {
    "name": "parsel.geojson",
-   "format": null,
-   "command": null
+   "format": "geojson",
+   "command": "file.import.geojson"
   },
   {
    "name": "parsel.kcad",
@@ -1539,6 +1539,41 @@
    "name": "",
    "format": null,
    "command": null
+  },
+  {
+   "name": "PARSEL.ZIP",
+   "format": "shp",
+   "command": "file.import.shp"
+  },
+  {
+   "name": "arsiv.tar.zip",
+   "format": "shp",
+   "command": "file.import.shp"
+  },
+  {
+   "name": "noktalar.json",
+   "format": "geojson",
+   "command": "file.import.geojson"
+  },
+  {
+   "name": "NOKTALAR.GeoJSON",
+   "format": "geojson",
+   "command": "file.import.geojson"
+  },
+  {
+   "name": "yerler.kml",
+   "format": "kml",
+   "command": "file.import.kml"
+  },
+  {
+   "name": "yerler.KMZ",
+   "format": "kml",
+   "command": "file.import.kml"
+  },
+  {
+   "name": "yerler.kmz",
+   "format": "kml",
+   "command": "file.import.kml"
   }
  ],
  "memory": [
