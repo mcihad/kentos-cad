@@ -4103,6 +4103,20 @@
    "tests": 0
   },
   {
+   "id": "mesh.query",
+   "kind": "command",
+   "title": "Mesh sor…",
+   "level": "query",
+   "via": [],
+   "operation": null,
+   "python": "kentos.cad.meshes.query",
+   "mcp": "cad.meshes.query",
+   "note": "Pencere yeri ve anı komuta verir; yüzü kalıcı kimliğiyle ve veri setlerinin değerlerini gösterir (ADR 0552).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "network.manage",
    "kind": "command",
    "title": "Ağlar…",
@@ -4149,6 +4163,20 @@
    "tests": 0
   },
   {
+   "id": "pointcloud.profile",
+   "kind": "command",
+   "title": "Nokta bulutu profili…",
+   "level": "query",
+   "via": [],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.profile",
+   "mcp": "cad.pointclouds.profile",
+   "note": "Pencere seçili yolu, genişliği ve adımı komuta verir ve istasyonları gösterir (ADR 0552).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
    "id": "pointcloud.query",
    "kind": "command",
    "title": "Nokta bulutu XYZ sor",
@@ -4158,6 +4186,20 @@
    "python": "kentos.cad.pointclouds.query",
    "mcp": "cad.pointclouds.query",
    "note": "Araç kendi dizinleriyle en yakın noktayı bulur; komut aynı noktayı dosyanın tam çözünürlüğünde kalıcı kimliğiyle verir (ADR 0536).",
+   "scope": "shared",
+   "desktop": "implemented",
+   "tests": 0
+  },
+  {
+   "id": "pointcloud.region",
+   "kind": "command",
+   "title": "Nokta bulutu alan istatistiği…",
+   "level": "query",
+   "via": [],
+   "operation": null,
+   "python": "kentos.cad.pointclouds.region",
+   "mcp": "cad.pointclouds.region",
+   "note": "Pencere seçili alanı komuta verir ve cevabını gösterir; dosyalar kaynağın tam çözünürlüğünde okunur (ADR 0552).",
    "scope": "shared",
    "desktop": "implemented",
    "tests": 0

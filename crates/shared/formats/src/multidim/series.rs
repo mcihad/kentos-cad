@@ -25,6 +25,17 @@ const RUN_MOST: u64 = 1 << 20;
 /// The most values a series reads (steps × points × the values a point reads).
 pub const VALUES_MOST: u64 = 20_000_000;
 
+/// Which of a dataset's steps a series reads (docs/adr/0552).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Steps {
+    /// Every step of the time dimension; a dataset without one is refused ([`NO_TIME`]).
+    All,
+    /// One step of the time dimension; a dataset without one is refused.
+    One(usize),
+    /// The slice as it is: the dataset's one step, the slice's own when it has a time dimension.
+    Slice,
+}
+
 /// How a point's value is made.
 #[derive(Clone, Copy, Debug)]
 enum Pick {
@@ -62,6 +73,9 @@ pub struct Series {
     /// The time dimension's name and its values (ms since 1970).
     pub time_name: String,
     pub times: Vec<f64>,
+    /// The first step read and how many (a series of every step: 0 and the times' count).
+    pub first: usize,
+    pub count: usize,
     picks: Vec<Pick>,
     /// Each step's each point's values' offsets: a grid's one; a mesh's
     /// places' (x, then y for a vector), then its face's mask.
@@ -91,6 +105,19 @@ impl Cube {
         affine: [f64; 6],
         nodata: Option<f64>,
         points: &[[f64; 2]],
+    ) -> Result<Series, RasterError> {
+        self.series_of(part, affine, nodata, points, Steps::All)
+    }
+
+    /// [`Cube::series`] of the steps `steps` names (docs/adr/0552: one step of a time dimension, or a dataset's
+    /// slice as it is, without a time dimension).
+    pub fn series_of(
+        &mut self,
+        part: &Part,
+        affine: [f64; 6],
+        nodata: Option<f64>,
+        points: &[[f64; 2]],
+        which: Steps,
     ) -> Result<Series, RasterError> {
         let h = self.header.clone();
         let var = |name: &str| {
@@ -145,11 +172,27 @@ impl Cube {
         };
         let slice = self.slice_of(part, &dims)?;
         let slice_dims = self.slice_dims_of(&dims)?;
-        let Some(tk) = slice_dims.iter().position(|d| d.time) else {
+        let tk = slice_dims.iter().position(|d| d.time);
+        if tk.is_none() && which != Steps::Slice {
             return Err(RasterError::new(NO_TIME));
+        }
+        let times = tk.map_or_else(Vec::new, |k| slice_dims[k].values.clone());
+        let range = match (which, tk) {
+            (Steps::All, _) => 0..times.len(),
+            (Steps::One(i), _) => {
+                if i >= times.len() {
+                    return Err(RasterError::new(format!(
+                        "Zaman boyutunun {} adımı var; {}. adım yok.",
+                        times.len(),
+                        i + 1
+                    )));
+                }
+                i..i + 1
+            }
+            (Steps::Slice, Some(k)) => slice[k] as usize..slice[k] as usize + 1,
+            (Steps::Slice, None) => 0..1,
         };
-        let times = slice_dims[tk].values.clone();
-        let steps = times.len();
+        let steps = range.len();
         // Where each point's value comes from.
         let grid = match &part.mesh {
             None => Some(self.grid_shape(&part.variable)?),
@@ -218,9 +261,11 @@ impl Cube {
             .as_deref()
             .and_then(|m| self.dataset(m, &part.variable))
             .and_then(|d| d.mask.clone());
-        for s in 0..steps {
+        for s in range.clone() {
             let mut idx = slice.clone();
-            idx[tk] = s as u64;
+            if let Some(tk) = tk {
+                idx[tk] = s as u64;
+            }
             for (k, p) in picks.iter().enumerate() {
                 starts.push(offsets.len());
                 match (p, &grid, &mesh) {
@@ -282,8 +327,10 @@ impl Cube {
         }
         Ok(Series {
             runs,
-            time_name: slice_dims[tk].name.clone(),
+            time_name: tk.map_or_else(String::new, |k| slice_dims[k].name.clone()),
             times,
+            first: range.start,
+            count: steps,
             picks,
             offsets,
             starts,
@@ -323,8 +370,8 @@ impl Series {
     pub fn values(&self) -> Result<Vec<Vec<f64>>, RasterError> {
         let n = self.picks.len();
         let missing = || RasterError::new("Zaman serisinin değerleri eksik okundu.");
-        let mut out = Vec::with_capacity(self.times.len());
-        for s in 0..self.times.len() {
+        let mut out = Vec::with_capacity(self.count);
+        for s in 0..self.count {
             let mut row = Vec::with_capacity(n);
             for (k, p) in self.picks.iter().enumerate() {
                 let from = self.starts[s * n + k];

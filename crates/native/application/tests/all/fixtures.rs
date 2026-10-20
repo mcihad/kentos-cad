@@ -37,6 +37,8 @@ use kentos_native_application::profiles::{apply as profiles_apply, check as prof
 use kentos_native_application::standards::{apply as standards_apply, check as standards_check};
 use kentos_native_application::fields_write;
 use kentos_native_application::{stac_host, stac_prepare, stac_search};
+use kentos_native_application::meshes::{describe as meshes_describe, query as meshes_query};
+use kentos_native_application::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use kentos_native_application::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
 use kentos_native_application::time_query;
 use kentos_native_application::{processing_batch, processing_run, processing_tools};
@@ -922,6 +924,30 @@ impl Input for kentos_commands::StacPrepare {
 }
 
 impl Input for kentos_commands::PointCloudsDescribe {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::PointCloudsRegion {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::PointCloudsProfile {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::MeshesDescribe {
+    fn number(&mut self, _path: &str) -> Option<&mut f64> {
+        None
+    }
+}
+
+impl Input for kentos_commands::MeshesQuery {
     fn number(&mut self, _path: &str) -> Option<&mut f64> {
         None
     }
@@ -3155,6 +3181,18 @@ fn run_op(
         }
         kentos_commands::CAD_TIME_QUERY => {
             run!(time_query, kentos_commands::TimeQuery)
+        }
+        kentos_commands::CAD_POINTCLOUDS_REGION => {
+            run!(pointclouds_region, kentos_commands::PointCloudsRegion)
+        }
+        kentos_commands::CAD_POINTCLOUDS_PROFILE => {
+            run!(pointclouds_profile, kentos_commands::PointCloudsProfile)
+        }
+        kentos_commands::CAD_MESHES_DESCRIBE => {
+            run!(meshes_describe, kentos_commands::MeshesDescribe)
+        }
+        kentos_commands::CAD_MESHES_QUERY => {
+            run!(meshes_query, kentos_commands::MeshesQuery)
         }
         kentos_commands::CAD_POINTCLOUDS_QUERY => {
             run!(pointclouds_query, kentos_commands::PointCloudsQuery)

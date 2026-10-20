@@ -36,6 +36,102 @@ pub(crate) fn stretch_name(s: RasterStretch) -> &'static str {
     }
 }
 
+/// A mesh raster described as `cad.meshes.describe` says it (docs/adr/0552), read once a session for each file.
+fn mesh_described(doc: &Document, r: &RasterEntity) -> kentos_commands::MeshDescribed {
+    use std::collections::HashMap;
+    use std::sync::{Mutex, OnceLock, PoisonError};
+    static SEEN: OnceLock<Mutex<HashMap<String, kentos_commands::MeshDescribed>>> = OnceLock::new();
+    let key = format!(
+        "{:?}|{:?}|{:?}|{:?}",
+        r.raster.file,
+        r.raster.asset,
+        r.raster.dataset.as_ref().map(|d| (&d.variable, &d.mesh, d.slice())),
+        doc.path
+    );
+    let seen = SEEN.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Some(d) = seen.lock().unwrap_or_else(PoisonError::into_inner).get(&key) {
+        return d.clone();
+    }
+    let d = kentos_native_application::meshes::described(
+        &doc.model,
+        doc.path.as_deref().and_then(|p| p.to_str()),
+        r,
+    );
+    seen.lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .insert(key, d.clone());
+    d
+}
+
+/// A mesh's rows past the nodes and faces (docs/adr/0552): its edges and triangles, area and mean edge, its system
+/// and its datasets with the time steps they have.
+fn mesh_rows(doc: &Document, r: &RasterEntity) -> Vec<Row> {
+    if r.raster.dataset.as_ref().is_none_or(|d| d.mesh.is_none()) {
+        return Vec::new();
+    }
+    let d = mesh_described(doc, r);
+    if !d.read {
+        return vec![Row::text(
+            "Mesh dosyası",
+            format!("Okunamadı: {}", d.why.unwrap_or_default()),
+        )];
+    }
+    let group = |n: u64| crate::crs::grouped(n as f64);
+    let mut out = vec![Row::text(
+        "Kenar ve üçgen",
+        format!("{} kenar, {} üçgen", group(d.edges), group(d.triangles)),
+    )];
+    if let (Some(area), Some(edge)) = (d.area, d.mean_edge) {
+        out.push(Row::text(
+            "Yüzlerin alanı",
+            format!(
+                "{}; kenarların ortalaması {}",
+                crate::crs::js_number(area),
+                crate::crs::js_number(edge)
+            ),
+        ));
+    }
+    out.push(Row::text(
+        "Mesh sistemi",
+        match (d.epsg, d.geographic) {
+            (Some(e), true) => format!("EPSG:{e} (enlem boylam)"),
+            (Some(e), false) => format!("EPSG:{e}"),
+            (None, _) => "Dosya söylemiyor".to_owned(),
+        },
+    ));
+    let names: Vec<String> = d
+        .datasets
+        .iter()
+        .map(|s| match &s.vector {
+            Some(v) => format!("{} / {v}", s.variable),
+            None => s.variable.clone(),
+        })
+        .collect();
+    out.push(Row::text(
+        "Veri setleri",
+        format!("{}: {}", d.datasets.len(), names.join(", ")),
+    ));
+    let shown = r.raster.dataset.as_ref().map(|s| s.variable.as_str());
+    if let Some(time) = d
+        .datasets
+        .iter()
+        .filter(|s| shown.is_none_or(|v| v == s.variable))
+        .flat_map(|s| &s.dims)
+        .find(|x| x.time)
+    {
+        out.push(Row::text(
+            "Zaman adımları",
+            format!(
+                "{} adım, {} – {}",
+                time.count,
+                time.first_label.clone().unwrap_or_default(),
+                time.last_label.clone().unwrap_or_default()
+            ),
+        ));
+    }
+    out
+}
+
 /// The rows of one raster; editors unless its layer is locked.
 pub(super) fn rows(
     doc: &Document,
@@ -143,6 +239,7 @@ pub(super) fn rows(
             ));
         }
     }
+    out.extend(mesh_rows(doc, r));
     out.push(Row::text("Görünüş", render_name(x.style.render)).editor(style));
     if x.style.stretch != RasterStretch::None {
         out.push(Row::text("Gerdirme", stretch_name(x.style.stretch)));

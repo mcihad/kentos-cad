@@ -552119,6 +552119,17 @@
                 "type": "integer",
                 "x-unit": "epsg"
               },
+              "summary": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudSummary"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A cloud of several files (a virtual point cloud) summed up: totals and where the files disagree; none for a\ncloud of one source (docs/adr/0552)."
+              },
               "uid": {
                 "type": "string"
               }
@@ -552154,6 +552165,34 @@
               "name",
               "kind",
               "size"
+            ],
+            "type": "object"
+          },
+          "CloudMismatch": {
+            "description": "A place the sources of one cloud disagree: what differs, which sources, in words.",
+            "properties": {
+              "kind": {
+                "description": "`epsg`, `vertical`, `point_format`, `gps_time`, `scale`, `extra` (the sources' systems, format, time, scale or\nextra dimensions differ), `count`, `bounds` (a source's header disagrees with the cloud's record of it) or\n`overlap` (two files' boxes cover the same ground).",
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sources": {
+                "description": "The sources it concerns (their places in the cloud's sources, 0 and up).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "kind",
+              "sources",
+              "message"
             ],
             "type": "object"
           },
@@ -552384,6 +552423,65 @@
               "bounds"
             ],
             "type": "object"
+          },
+          "CloudSummary": {
+            "description": "The sources of a cloud together (docs/adr/0552).",
+            "properties": {
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`: the sources' boxes together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "count": {
+                "description": "The points of all the sources (a header's count where it was read, else the cloud's record of it).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "epsg": {
+                "description": "The horizontal system's EPSG code every read source names; none when they name none or differ.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "mismatches": {
+                "items": {
+                  "$ref": "#/$defs/CloudMismatch"
+                },
+                "type": "array"
+              },
+              "readable": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sources": {
+                "description": "The sources, and how many of them were read (a header).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "sources",
+              "readable",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
           }
         },
         "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -552434,6 +552532,17 @@
                 "type": "integer",
                 "x-unit": "epsg"
               },
+              "summary": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudSummary"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "A cloud of several files (a virtual point cloud) summed up: totals and where the files disagree; none for a\ncloud of one source (docs/adr/0552)."
+              },
               "uid": {
                 "type": "string"
               }
@@ -552469,6 +552578,34 @@
               "name",
               "kind",
               "size"
+            ],
+            "type": "object"
+          },
+          "CloudMismatch": {
+            "description": "A place the sources of one cloud disagree: what differs, which sources, in words.",
+            "properties": {
+              "kind": {
+                "description": "`epsg`, `vertical`, `point_format`, `gps_time`, `scale`, `extra` (the sources' systems, format, time, scale or\nextra dimensions differ), `count`, `bounds` (a source's header disagrees with the cloud's record of it) or\n`overlap` (two files' boxes cover the same ground).",
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "sources": {
+                "description": "The sources it concerns (their places in the cloud's sources, 0 and up).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              }
+            },
+            "required": [
+              "kind",
+              "sources",
+              "message"
             ],
             "type": "object"
           },
@@ -552695,6 +552832,65 @@
             "required": [
               "read",
               "kind",
+              "count",
+              "bounds"
+            ],
+            "type": "object"
+          },
+          "CloudSummary": {
+            "description": "The sources of a cloud together (docs/adr/0552).",
+            "properties": {
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]`: the sources' boxes together.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": "array",
+                "x-unit": "system"
+              },
+              "count": {
+                "description": "The points of all the sources (a header's count where it was read, else the cloud's record of it).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "epsg": {
+                "description": "The horizontal system's EPSG code every read source names; none when they name none or differ.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "mismatches": {
+                "items": {
+                  "$ref": "#/$defs/CloudMismatch"
+                },
+                "type": "array"
+              },
+              "readable": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "sources": {
+                "description": "The sources, and how many of them were read (a header).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              }
+            },
+            "required": [
+              "sources",
+              "readable",
               "count",
               "bounds"
             ],
@@ -553166,6 +553362,2196 @@
               "y": 4400120.0
             },
             "radius": 0.5
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.pointclouds.region",
+      "version": 1,
+      "title": "Nokta bulutu alan istatistiği",
+      "summary": "Bir alanın (ring: planda en az üç köşeli halka, kapalı sayılır; holes: delikler) içindeki nokta bulutu noktalarının istatistiğini kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. Sınırdaki nokta alanın içindedir, bir deliğin kesin içindeki dışındadır. Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır. COPC'de yalnız alanın kutusuna değen düğümler, LAS ve LAZ'da kutusu alanın kutusuna değen dosya bütün okunur. Cevap bulut başına ve toplam: nokta sayısı, içerdeki noktaların kutusu, yükseklik ve yoğunluk değerlerinin en küçüğü, en büyüğü ve ortalaması (toplam tam), sınıf başına nokta sayısı; alanın büyüklüğü (halka eksi delikler; halka basit sayılır), alan başına nokta (density) ve bakılan nokta sayısı (read). Bir çağrıda en çok 200 milyon nokta okunur (too_many_cloud_points). Metin bulutu ve okunamayan kaynak uyarıyla atlanır (cloud_source_unreadable).",
+      "aliases": [
+        "bulutalan",
+        "bulutistatistik"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.region` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,\n`invalid_cloud_area`, `too_many_cloud_points`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's file, a relative source's folder (the host gives it).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "holes": {
+            "description": "Holes of the area: a point strictly inside one is outside the area (its boundary is inside).",
+            "items": {
+              "items": {
+                "$ref": "#/$defs/Vec2"
+              },
+              "type": "array"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "ring": {
+            "description": "The area's outer ring in plan, at least three vertices; implicitly closed (a repeated last vertex is dropped).\nA point on the boundary is inside.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "The point clouds looked in; none: every visible one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "ring"
+        ],
+        "title": "PointCloudsRegion",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CloudRange": {
+            "description": "A value's smallest, largest and mean.",
+            "properties": {
+              "max": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "mean": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "mean"
+            ],
+            "type": "object"
+          },
+          "CloudRegionPart": {
+            "description": "One point cloud's share of an area.",
+            "properties": {
+              "read": {
+                "description": "The points of this cloud's sources looked at.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stats": {
+                "$ref": "#/$defs/CloudStats"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "read",
+              "stats"
+            ],
+            "type": "object"
+          },
+          "CloudStats": {
+            "description": "What the points inside an area are.",
+            "properties": {
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]` of the points inside; none when there are none.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "classes": {
+                "additionalProperties": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Each classification code (as text) and its points.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "intensity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "z": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights (the mean summed exactly)."
+              }
+            },
+            "required": [
+              "count",
+              "classes"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.region` v1.",
+        "properties": {
+          "area": {
+            "description": "The area: the ring's, less the holes' (the polygon is taken as simple).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "clouds": {
+            "description": "Each cloud looked in, in the asked order (or the drawing's).",
+            "items": {
+              "$ref": "#/$defs/CloudRegionPart"
+            },
+            "type": "array"
+          },
+          "density": {
+            "description": "The points per unit of area, all the clouds together; none when there are none.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "read": {
+            "description": "The points looked at, all the clouds together.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "total": {
+            "$ref": "#/$defs/CloudStats",
+            "description": "All the clouds together."
+          }
+        },
+        "required": [
+          "area",
+          "read",
+          "total",
+          "clouds",
+          "revision"
+        ],
+        "title": "PointCloudsRegioned",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CloudRange": {
+            "description": "A value's smallest, largest and mean.",
+            "properties": {
+              "max": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "mean": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "mean"
+            ],
+            "type": "object"
+          },
+          "CloudRegionPart": {
+            "description": "One point cloud's share of an area.",
+            "properties": {
+              "read": {
+                "description": "The points of this cloud's sources looked at.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "stats": {
+                "$ref": "#/$defs/CloudStats"
+              },
+              "uid": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "uid",
+              "read",
+              "stats"
+            ],
+            "type": "object"
+          },
+          "CloudStats": {
+            "description": "What the points inside an area are.",
+            "properties": {
+              "bounds": {
+                "description": "`[x₁, y₁, z₁, x₂, y₂, z₂]` of the points inside; none when there are none.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 6,
+                "minItems": 6,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "length"
+              },
+              "classes": {
+                "additionalProperties": {
+                  "format": "uint64",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "description": "Each classification code (as text) and its points.",
+                "type": "object",
+                "x-unit": "count"
+              },
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "intensity": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "z": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights (the mean summed exactly)."
+              }
+            },
+            "required": [
+              "count",
+              "classes"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.region` v1.",
+        "properties": {
+          "area": {
+            "description": "The area: the ring's, less the holes' (the polygon is taken as simple).",
+            "format": "double",
+            "type": "number",
+            "x-unit": "area"
+          },
+          "clouds": {
+            "description": "Each cloud looked in, in the asked order (or the drawing's).",
+            "items": {
+              "$ref": "#/$defs/CloudRegionPart"
+            },
+            "type": "array"
+          },
+          "density": {
+            "description": "The points per unit of area, all the clouds together; none when there are none.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "read": {
+            "description": "The points looked at, all the clouds together.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "total": {
+            "$ref": "#/$defs/CloudStats",
+            "description": "All the clouds together."
+          }
+        },
+        "required": [
+          "area",
+          "read",
+          "total",
+          "clouds",
+          "revision"
+        ],
+        "title": "PointCloudsRegioned",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "pointcloud"
+            ],
+            "refusedWith": "not_a_pointcloud"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_cloud_area",
+          "too_many_cloud_points"
+        ],
+        "warnings": [
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir parselin içindeki noktaların istatistiği",
+          "input": {
+            "ring": [
+              {
+                "x": 500100.0,
+                "y": 4400100.0
+              },
+              {
+                "x": 500140.0,
+                "y": 4400100.0
+              },
+              {
+                "x": 500140.0,
+                "y": 4400130.0
+              },
+              {
+                "x": 500100.0,
+                "y": 4400130.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.pointclouds.profile",
+      "version": 1,
+      "title": "Nokta bulutu profili",
+      "summary": "Bir yolun (path: planda en az iki köşe) çevresindeki koridorda (width: yolun iki yanında toplam genişlik; uçlar yuvarlak) nokta bulutu noktalarını istasyonlara (step: yol boyunca adım) ayırır, kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. Noktanın istasyonu, yolun en yakın doğru parçasındaki ayağının yol boyunca uzaklığıdır (eşit uzaklıkta önceki parça); ofseti yolun solunda artıdır. İstasyon yolun başından sayılır, [from, to) aralıklıdır, son istasyon yolun ucunu da içerir. Cevap yolun uzunluğunu, koridordaki nokta sayısını, her istasyonun (boş olanlar dahil) nokta sayısını ve yükseklik değerlerinin en küçüğünü, en büyüğünü ve ortalamasını, bakılan nokta sayısını (read) verir; points ile noktalar da (kalıcı kimlik, istasyon, ofset, yer, sınıf) istasyona göre sıralı listelenir. En çok 100 000 istasyon (too_many_stations) ve 100 000 listelenen nokta (too_many_listed_points). COPC'de yalnız koridorun bir parçasının kutusuna değen düğümler okunur. Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır.",
+      "aliases": [
+        "bulutprofil",
+        "bulutkesit"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.pointclouds.profile` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_pointcloud`,\n`invalid_corridor`, `too_many_stations`, `too_many_cloud_points`, `too_many_listed_points`.",
+        "properties": {
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "description": "The path in plan, at least two vertices, no two in a row the same.",
+            "items": {
+              "$ref": "#/$defs/Vec2"
+            },
+            "type": "array",
+            "x-unit": "length"
+          },
+          "points": {
+            "description": "Also list the points (station, offset, place, class), by station.",
+            "type": "boolean"
+          },
+          "step": {
+            "description": "The stations' step along the path, above 0.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "uids": {
+            "description": "The point clouds looked in; none: every visible one.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "width": {
+            "description": "The corridor's width: the points within half of it of the path (a rounded end), above 0.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          }
+        },
+        "required": [
+          "path",
+          "width",
+          "step"
+        ],
+        "title": "PointCloudsProfile",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "CloudRange": {
+            "description": "A value's smallest, largest and mean.",
+            "properties": {
+              "max": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "mean": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "mean"
+            ],
+            "type": "object"
+          },
+          "ProfileBin": {
+            "description": "One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).",
+            "properties": {
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "from": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "to": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights; none when no point falls in the station."
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "count"
+            ],
+            "type": "object"
+          },
+          "ProfilePoint": {
+            "description": "A point of the corridor: its lasting id, its place along the path and its facts.",
+            "properties": {
+              "class": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "cloud": {
+                "type": "string"
+              },
+              "index": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "offset": {
+                "description": "The distance from the path, positive on its left.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "source": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "station": {
+                "description": "The distance along the path of the point's foot on the path.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "cloud",
+              "source",
+              "index",
+              "station",
+              "offset",
+              "x",
+              "y",
+              "z",
+              "class"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.profile` v1.",
+        "properties": {
+          "bins": {
+            "description": "Every station, empty ones too, from the path's start.",
+            "items": {
+              "$ref": "#/$defs/ProfileBin"
+            },
+            "type": "array"
+          },
+          "count": {
+            "description": "The points in the corridor, all the clouds together.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "length": {
+            "description": "The path's length.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "points": {
+            "description": "With `points`: the corridor's points by station, then by cloud, source and place.",
+            "items": {
+              "$ref": "#/$defs/ProfilePoint"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The points looked at.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "length",
+          "count",
+          "read",
+          "bins",
+          "revision"
+        ],
+        "title": "PointCloudsProfiled",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "CloudRange": {
+            "description": "A value's smallest, largest and mean.",
+            "properties": {
+              "max": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "mean": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "min": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "min",
+              "max",
+              "mean"
+            ],
+            "type": "object"
+          },
+          "ProfileBin": {
+            "description": "One station of a profile: the points whose station lies in [`from`, `to`) (the last includes the path's end).",
+            "properties": {
+              "count": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "from": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "to": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/CloudRange"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "The heights; none when no point falls in the station."
+              }
+            },
+            "required": [
+              "from",
+              "to",
+              "count"
+            ],
+            "type": "object"
+          },
+          "ProfilePoint": {
+            "description": "A point of the corridor: its lasting id, its place along the path and its facts.",
+            "properties": {
+              "class": {
+                "format": "uint8",
+                "maximum": 255,
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "cloud": {
+                "type": "string"
+              },
+              "index": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "offset": {
+                "description": "The distance from the path, positive on its left.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "source": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "station": {
+                "description": "The distance along the path of the point's foot on the path.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "x": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "y": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              },
+              "z": {
+                "format": "double",
+                "type": "number",
+                "x-unit": "length"
+              }
+            },
+            "required": [
+              "cloud",
+              "source",
+              "index",
+              "station",
+              "offset",
+              "x",
+              "y",
+              "z",
+              "class"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.pointclouds.profile` v1.",
+        "properties": {
+          "bins": {
+            "description": "Every station, empty ones too, from the path's start.",
+            "items": {
+              "$ref": "#/$defs/ProfileBin"
+            },
+            "type": "array"
+          },
+          "count": {
+            "description": "The points in the corridor, all the clouds together.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "length": {
+            "description": "The path's length.",
+            "format": "double",
+            "type": "number",
+            "x-unit": "length"
+          },
+          "points": {
+            "description": "With `points`: the corridor's points by station, then by cloud, source and place.",
+            "items": {
+              "$ref": "#/$defs/ProfilePoint"
+            },
+            "type": "array"
+          },
+          "read": {
+            "description": "The points looked at.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "length",
+          "count",
+          "read",
+          "bins",
+          "revision"
+        ],
+        "title": "PointCloudsProfiled",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "pointcloud"
+            ],
+            "refusedWith": "not_a_pointcloud"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_pointcloud",
+          "invalid_corridor",
+          "too_many_stations",
+          "too_many_cloud_points",
+          "too_many_listed_points"
+        ],
+        "warnings": [
+          "cloud_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir yolun 4 m genişliğindeki koridorunda 10 m'lik istasyonlar",
+          "input": {
+            "path": [
+              {
+                "x": 500100.0,
+                "y": 4400100.0
+              },
+              {
+                "x": 500160.0,
+                "y": 4400100.0
+              }
+            ],
+            "step": 10.0,
+            "width": 4.0
+          }
+        }
+      ]
+    },
+    {
+      "id": "cad.meshes.describe",
+      "version": 1,
+      "title": "Meshin bilgisi",
+      "summary": "Çizimin mesh rasterlerinin (uids; yoksa hepsi, çizimin sırasıyla) dosyasının başlığını ve ağını okur ve söyler; çizimi değiştirmez. Mesh: düğüm, yüz, kenar ve üçgen sayısı, kutusu, yüzlerinin toplam alanı, kenarlarının ortalama uzunluğu, koordinat sistemi (EPSG, coğrafi mi) ve veri setleri: değişkeni (vektörün x bileşeni; y bileşeni), adı ve birimi, düğümde mi yüzde mi, boyutları (zaman boyutu ayrıca: adım sayısı, ilk ve son an ve nasıl yazıldıkları); rasterin gösterdiği veri seti ve adımları. Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. NetCDF-4, HDF5, GRIB ve Zarr okunmaz (neden iletide).",
+      "aliases": [
+        "meshbilgi",
+        "agbilgisi"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.meshes.describe` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`.",
+        "properties": {
+          "drawing": {
+            "description": "The open drawing's file, a relative source's folder (the host gives it).",
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "uids": {
+            "description": "The mesh rasters (persistent ids); none: every mesh of the drawing, in the drawing's order.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "title": "MeshesDescribe",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MeshDatasetInfo": {
+            "description": "A dataset of a mesh.",
+            "properties": {
+              "dims": {
+                "description": "Its dimensions besides the places, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/MeshDimension"
+                },
+                "type": "array"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "longName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location"
+            ],
+            "type": "object"
+          },
+          "MeshDescribed": {
+            "description": "One mesh described.",
+            "properties": {
+              "area": {
+                "description": "The faces' area, together, in the mesh's system's unit squared.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "asset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "`[x₁, y₁, x₂, y₂]` in the mesh's system.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "datasets": {
+                "items": {
+                  "$ref": "#/$defs/MeshDatasetInfo"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "The faces' edges, each once.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "epsg": {
+                "description": "The mesh's EPSG code, when the file names one.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "faces": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "geographic": {
+                "description": "The coordinates are longitude and latitude.",
+                "type": "boolean"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "meanEdge": {
+                "description": "The edges' mean length.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "mesh": {
+                "description": "The topology's name in the file.",
+                "type": "string"
+              },
+              "nodes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "notes": {
+                "description": "What the file holds that is not read, and why.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "read": {
+                "description": "Whether the file's mesh was read; when not, `why`.",
+                "type": "boolean"
+              },
+              "shown": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MeshShown"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the raster shows."
+              },
+              "srid": {
+                "description": "The raster's system in the project (0: none).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "triangles": {
+                "description": "The faces as triangles (a face of n nodes is n − 2).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uid": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "why": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "mesh",
+              "read",
+              "nodes",
+              "faces",
+              "edges",
+              "triangles",
+              "geographic",
+              "srid",
+              "datasets"
+            ],
+            "type": "object"
+          },
+          "MeshDimension": {
+            "description": "One of a dataset's dimensions besides its places: a time or another (a layer).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "first": {
+                "description": "The first and last value (a time's in milliseconds since 1970).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "firstLabel": {
+                "description": "The first and last value as the windows say them (a time as the time slider does).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "last": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "lastLabel": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments (milliseconds since 1970).",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "count",
+              "time"
+            ],
+            "type": "object"
+          },
+          "MeshShown": {
+            "description": "The slice a mesh raster shows: the dataset and each of its dimensions' step.",
+            "properties": {
+              "steps": {
+                "description": "The step of each of the dataset's dimensions besides the places.",
+                "items": {
+                  "$ref": "#/$defs/MeshStepOf"
+                },
+                "type": "array"
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
+          "MeshStepOf": {
+            "description": "A dimension's step shown.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "description": "The value at the step as the windows say it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "index"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.describe` v1.",
+        "properties": {
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/MeshDescribed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "meshes",
+          "revision"
+        ],
+        "title": "MeshesDescribed",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MeshDatasetInfo": {
+            "description": "A dataset of a mesh.",
+            "properties": {
+              "dims": {
+                "description": "Its dimensions besides the places, in the file's order.",
+                "items": {
+                  "$ref": "#/$defs/MeshDimension"
+                },
+                "type": "array"
+              },
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "longName": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "variable": {
+                "description": "The variable (a vector's x component).",
+                "type": "string"
+              },
+              "vector": {
+                "description": "A vector's y component.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location"
+            ],
+            "type": "object"
+          },
+          "MeshDescribed": {
+            "description": "One mesh described.",
+            "properties": {
+              "area": {
+                "description": "The faces' area, together, in the mesh's system's unit squared.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "asset": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "bbox": {
+                "description": "`[x₁, y₁, x₂, y₂]` in the mesh's system.",
+                "items": {
+                  "format": "double",
+                  "type": "number"
+                },
+                "maxItems": 4,
+                "minItems": 4,
+                "type": [
+                  "array",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "datasets": {
+                "items": {
+                  "$ref": "#/$defs/MeshDatasetInfo"
+                },
+                "type": "array"
+              },
+              "edges": {
+                "description": "The faces' edges, each once.",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "epsg": {
+                "description": "The mesh's EPSG code, when the file names one.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "epsg"
+              },
+              "faces": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "file": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "geographic": {
+                "description": "The coordinates are longitude and latitude.",
+                "type": "boolean"
+              },
+              "layer": {
+                "type": "string"
+              },
+              "meanEdge": {
+                "description": "The edges' mean length.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "system"
+              },
+              "mesh": {
+                "description": "The topology's name in the file.",
+                "type": "string"
+              },
+              "nodes": {
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "notes": {
+                "description": "What the file holds that is not read, and why.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "read": {
+                "description": "Whether the file's mesh was read; when not, `why`.",
+                "type": "boolean"
+              },
+              "shown": {
+                "anyOf": [
+                  {
+                    "$ref": "#/$defs/MeshShown"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "What the raster shows."
+              },
+              "srid": {
+                "description": "The raster's system in the project (0: none).",
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "epsg"
+              },
+              "triangles": {
+                "description": "The faces as triangles (a face of n nodes is n − 2).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "uid": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "why": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "uid",
+              "layer",
+              "mesh",
+              "read",
+              "nodes",
+              "faces",
+              "edges",
+              "triangles",
+              "geographic",
+              "srid",
+              "datasets"
+            ],
+            "type": "object"
+          },
+          "MeshDimension": {
+            "description": "One of a dataset's dimensions besides its places: a time or another (a layer).",
+            "properties": {
+              "count": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "count"
+              },
+              "first": {
+                "description": "The first and last value (a time's in milliseconds since 1970).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "firstLabel": {
+                "description": "The first and last value as the windows say them (a time as the time slider does).",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "last": {
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "lastLabel": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              },
+              "time": {
+                "description": "The values are a CF time axis's moments (milliseconds since 1970).",
+                "type": "boolean"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "count",
+              "time"
+            ],
+            "type": "object"
+          },
+          "MeshShown": {
+            "description": "The slice a mesh raster shows: the dataset and each of its dimensions' step.",
+            "properties": {
+              "steps": {
+                "description": "The step of each of the dataset's dimensions besides the places.",
+                "items": {
+                  "$ref": "#/$defs/MeshStepOf"
+                },
+                "type": "array"
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable"
+            ],
+            "type": "object"
+          },
+          "MeshStepOf": {
+            "description": "A dimension's step shown.",
+            "properties": {
+              "index": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "label": {
+                "description": "The value at the step as the windows say it.",
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "index"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.describe` v1.",
+        "properties": {
+          "meshes": {
+            "items": {
+              "$ref": "#/$defs/MeshDescribed"
+            },
+            "type": "array"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          }
+        },
+        "required": [
+          "meshes",
+          "revision"
+        ],
+        "title": "MeshesDescribed",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "raster"
+            ],
+            "refusedWith": "not_a_mesh"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_mesh"
+        ],
+        "warnings": [
+          "mesh_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bütün meshlerin bilgisi",
+          "input": {}
+        }
+      ]
+    },
+    {
+      "id": "cad.meshes.query",
+      "version": 1,
+      "title": "Mesh sor",
+      "summary": "Bir yerin (at) hangi mesh yüzünde olduğunu ve veri setlerinin o yerdeki değerlerini söyler; çizimi değiştirmez. Yüz kesin bulunur (kapalı alanı yeri tutan üçgenlerin en küçük sıralısı); kalıcı kimliği meshin kalıcı kimliği (mesh), dosyadaki ağın adı (topology) ve yüzün dosyadaki sırasıdır (face); düğümleri ve alanı da söylenir. Değer: düğümdeki veri setinde üçgende doğrusal ara değer, yüzdeki veri setinde yüzün değeri, vektörde büyüklüğü; değer yoksa ya da yüz kapalıysa (maske 0) değer yok. time (1970'ten beri milisaniye) verilirse her veri setinin ondan önceki ya da onda olan son zaman adımının değeri okunur, ilk adımdan öncesinde değer yok; verilmezse rasterin gösterdiği adımlar. series ile zaman boyutlu her veri setinin her adımdaki değeri de verilir. Meshler uids sırasıyla (yoksa görünenler) bakılır, yeri tutan ilki cevaplar. Dosyadan yalnız gereken değerler okunur (read); bir çağrıda en çok 2 milyon değer (too_many_mesh_values).",
+      "aliases": [
+        "meshsor",
+        "agsor"
+      ],
+      "effect": "query",
+      "hosts": [
+        "desktop"
+      ],
+      "headless": true,
+      "requires": [
+        "document"
+      ],
+      "permissions": [],
+      "undo": "none",
+      "cost": "interactive",
+      "input": {
+        "$defs": {
+          "Vec2": {
+            "description": "A point in world units: x = east (Y, sağa), y = north (X, yukarı).",
+            "properties": {
+              "x": {
+                "format": "double",
+                "type": "number"
+              },
+              "y": {
+                "format": "double",
+                "type": "number"
+              }
+            },
+            "required": [
+              "x",
+              "y"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "additionalProperties": false,
+        "description": "Input of `cad.meshes.query` v1. Refusals: `invalid_uid`, `entity_not_found`, `not_a_mesh`,\n`mesh_variable_not_found`, `invalid_moment`, `too_many_mesh_values`.",
+        "properties": {
+          "at": {
+            "$ref": "#/$defs/Vec2",
+            "description": "The place in plan, in the mesh's system.",
+            "x-unit": "length"
+          },
+          "drawing": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "series": {
+            "description": "Also answer each time-stepped dataset's value at every step.",
+            "type": "boolean"
+          },
+          "time": {
+            "description": "The moment of the values (milliseconds since 1970): each dataset's last time step at or before it; before its\nfirst, no value. None: the steps the raster shows.",
+            "format": "double",
+            "type": [
+              "number",
+              "null"
+            ],
+            "x-unit": "value"
+          },
+          "uids": {
+            "description": "The meshes looked in, in this order; none: every visible mesh of the drawing. The first whose face holds the\nplace answers.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "variables": {
+            "description": "The datasets (variables) asked; none: every dataset of the mesh.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "at"
+        ],
+        "title": "MeshesQuery",
+        "type": "object"
+      },
+      "output": {
+        "$defs": {
+          "MeshFace": {
+            "description": "The face found: its lasting id and what it is.",
+            "properties": {
+              "area": {
+                "description": "The face's area.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "face": {
+                "description": "The face's place in the file's face order (0 and up).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "mesh": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The face's nodes in the file's order (each from 0, in the file's node order).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "topology": {
+                "description": "The topology's name in the file.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "face",
+              "nodes",
+              "area"
+            ],
+            "type": "object"
+          },
+          "MeshStepValue": {
+            "description": "One step of a series.",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "step": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "time": {
+                "description": "The step's moment (milliseconds since 1970) and as the windows say it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "value": {
+                "description": "None where the dataset has no value at the place and step.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "step",
+              "time",
+              "label"
+            ],
+            "type": "object"
+          },
+          "MeshValue": {
+            "description": "A dataset's value at the place.",
+            "properties": {
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "series": {
+                "description": "With `series`: the value at every step.",
+                "items": {
+                  "$ref": "#/$defs/MeshStepValue"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The time step the value is of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "description": "The step's moment (milliseconds since 1970).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "description": "None where the dataset has no value at the place (missing, an inactive face, no step at the moment).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.query` v1: the face (none outside every mesh) and the values.",
+        "properties": {
+          "face": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MeshFace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read": {
+            "description": "The values read from the file.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/$defs/MeshValue"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "read",
+          "revision"
+        ],
+        "title": "MeshesQueried",
+        "type": "object"
+      },
+      "plan": {
+        "$defs": {
+          "MeshFace": {
+            "description": "The face found: its lasting id and what it is.",
+            "properties": {
+              "area": {
+                "description": "The face's area.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "system"
+              },
+              "face": {
+                "description": "The face's place in the file's face order (0 and up).",
+                "format": "uint64",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "mesh": {
+                "description": "The mesh raster's persistent id.",
+                "type": "string"
+              },
+              "nodes": {
+                "description": "The face's nodes in the file's order (each from 0, in the file's node order).",
+                "items": {
+                  "format": "uint32",
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "type": "array",
+                "x-unit": "index"
+              },
+              "topology": {
+                "description": "The topology's name in the file.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "mesh",
+              "topology",
+              "face",
+              "nodes",
+              "area"
+            ],
+            "type": "object"
+          },
+          "MeshStepValue": {
+            "description": "One step of a series.",
+            "properties": {
+              "label": {
+                "type": "string"
+              },
+              "step": {
+                "format": "uint32",
+                "minimum": 0,
+                "type": "integer",
+                "x-unit": "index"
+              },
+              "time": {
+                "description": "The step's moment (milliseconds since 1970) and as the windows say it.",
+                "format": "double",
+                "type": "number",
+                "x-unit": "value"
+              },
+              "value": {
+                "description": "None where the dataset has no value at the place and step.",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              }
+            },
+            "required": [
+              "step",
+              "time",
+              "label"
+            ],
+            "type": "object"
+          },
+          "MeshValue": {
+            "description": "A dataset's value at the place.",
+            "properties": {
+              "location": {
+                "description": "`node` or `face`.",
+                "type": "string"
+              },
+              "series": {
+                "description": "With `series`: the value at every step.",
+                "items": {
+                  "$ref": "#/$defs/MeshStepValue"
+                },
+                "type": "array"
+              },
+              "step": {
+                "description": "The time step the value is of, when the dataset has a time dimension.",
+                "format": "uint32",
+                "minimum": 0,
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "x-unit": "index"
+              },
+              "time": {
+                "description": "The step's moment (milliseconds since 1970).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "units": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value": {
+                "description": "None where the dataset has no value at the place (missing, an inactive face, no step at the moment).",
+                "format": "double",
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "x-unit": "value"
+              },
+              "variable": {
+                "type": "string"
+              },
+              "vector": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "variable",
+              "location"
+            ],
+            "type": "object"
+          }
+        },
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "description": "Output of `cad.meshes.query` v1: the face (none outside every mesh) and the values.",
+        "properties": {
+          "face": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/MeshFace"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "read": {
+            "description": "The values read from the file.",
+            "format": "uint64",
+            "minimum": 0,
+            "type": "integer",
+            "x-unit": "count"
+          },
+          "revision": {
+            "description": "^(0|[1-9][0-9]*)$",
+            "type": "string"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/$defs/MeshValue"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "read",
+          "revision"
+        ],
+        "title": "MeshesQueried",
+        "type": "object"
+      },
+      "capabilities": {
+        "targets": [
+          {
+            "kinds": [
+              "raster"
+            ],
+            "refusedWith": "not_a_mesh"
+          }
+        ],
+        "refusals": [
+          "invalid_uid",
+          "entity_not_found",
+          "not_a_mesh",
+          "mesh_variable_not_found",
+          "too_many_mesh_values"
+        ],
+        "warnings": [
+          "mesh_source_unreadable"
+        ]
+      },
+      "examples": [
+        {
+          "title": "Bir yerin yüzü ve değerleri",
+          "input": {
+            "at": {
+              "x": 500012.0,
+              "y": 4420010.0
+            }
           }
         }
       ]
@@ -1052165,6 +1054551,54 @@
       "kind": "warning",
       "retryable": false,
       "meaning": "Bulutun bir kaynağı okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu."
+    },
+    {
+      "code": "not_a_mesh",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Verilen nesne bir mesh (ağ) rasteri değil."
+    },
+    {
+      "code": "mesh_source_unreadable",
+      "kind": "warning",
+      "retryable": false,
+      "meaning": "Bir meshin dosyası okunamadı (bulunamadı, adreste ya da bozuk); öbürleri okundu."
+    },
+    {
+      "code": "mesh_variable_not_found",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Meshte böyle bir veri seti yok."
+    },
+    {
+      "code": "too_many_mesh_values",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Sorgu bir çağrının okuyabileceğinden çok değer okurdu."
+    },
+    {
+      "code": "invalid_cloud_area",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Alan en az üç köşeli, alanı sıfırdan büyük bir halka olmalı."
+    },
+    {
+      "code": "invalid_corridor",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Profilin yolu en az iki köşeli, genişliği ve adımı sıfırdan büyük olmalı."
+    },
+    {
+      "code": "too_many_stations",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Profilin istasyon sayısı bir çağrının cevaplayabileceğinden çok."
+    },
+    {
+      "code": "too_many_listed_points",
+      "kind": "failed",
+      "retryable": false,
+      "meaning": "Profilin koridorundaki nokta sayısı listelenebilecek en çoktan fazla."
     },
     {
       "code": "not_temporal",

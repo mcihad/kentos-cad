@@ -1477,6 +1477,34 @@ const ENTRIES: &[Entry] = &[
         warnings: &["cloud_source_unreadable"],
         targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
     },
+    // Nokta bulutunun alan ve profil sorgusu, meshin bilgisi ve sorgusu (docs/adr/0552).
+    Entry {
+        id: "cad.pointclouds.region",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_cloud_area", "too_many_cloud_points"]],
+        warnings: &["cloud_source_unreadable"],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
+    Entry {
+        id: "cad.pointclouds.profile",
+        refusals: &[
+            &["invalid_uid", "entity_not_found", "not_a_pointcloud", "invalid_corridor", "too_many_stations"],
+            &["too_many_cloud_points", "too_many_listed_points"],
+        ],
+        warnings: &["cloud_source_unreadable"],
+        targets: || vec![target(None, &["pointcloud"], &[], Some("not_a_pointcloud"), None)],
+    },
+    Entry {
+        id: "cad.meshes.describe",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_mesh"]],
+        warnings: &["mesh_source_unreadable"],
+        targets: || vec![target(None, &["raster"], &[], Some("not_a_mesh"), None)],
+    },
+    Entry {
+        id: "cad.meshes.query",
+        refusals: &[&["invalid_uid", "entity_not_found", "not_a_mesh", "mesh_variable_not_found", "too_many_mesh_values"]],
+        warnings: &["mesh_source_unreadable"],
+        targets: || vec![target(None, &["raster"], &[], Some("not_a_mesh"), None)],
+    },
     // STAC keşfi ve veri hazırlama (docs/adr/0528).
     Entry {
         id: "cad.stac.search",

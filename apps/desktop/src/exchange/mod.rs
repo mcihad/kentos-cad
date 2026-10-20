@@ -17,6 +17,9 @@
 //! messages are [`Event`]s. A late answer to an older read, or to a window
 //! closed since, carries a generation and is dropped.
 
+mod area_queries;
+#[cfg(test)]
+mod area_tests;
 pub mod apply;
 mod atlas_export;
 #[cfg(test)]
@@ -148,6 +151,10 @@ pub enum Window {
     GmlExport(gml_exchange::ExportState),
     GmlImport(gml_exchange::ImportState),
     XyzExport(xyz_exchange::ExportState),
+    /// Nokta bulutu alan istatistiği, Nokta bulutu profili and Mesh sor (docs/adr/0552).
+    CloudRegion(area_queries::RegionState),
+    CloudProfile(area_queries::ProfileState),
+    MeshQuery(area_queries::MeshState),
     /// PDF içe aktar (docs/adr/0352); boxed: the plan it holds.
     PdfImport(Box<pdf_import::State>),
     /// GIS türevi dışa aktar and GIS türevini denetle (docs/adr/0530).
@@ -181,6 +188,7 @@ pub enum Event {
     Fgb(fgb_exchange::Event),
     Gml(gml_exchange::Event),
     Xyz(xyz_exchange::Event),
+    Area(area_queries::Event),
     Atlas(atlas_export::Event),
     GisExport(gis_export::Event),
     GisCheck(gis_check::Event),
@@ -191,7 +199,7 @@ pub enum Event {
 }
 
 /// The web command ids this module runs.
-pub const COMMANDS: [&str; 32] = [
+pub const COMMANDS: [&str; 35] = [
     "file.export.atlas",
     "file.import.dxf",
     "file.import.ncz",
@@ -219,6 +227,9 @@ pub const COMMANDS: [&str; 32] = [
     "file.export.gml",
     "file.import.gml",
     "file.export.xyz",
+    "pointcloud.region",
+    "pointcloud.profile",
+    "mesh.query",
     "file.export.gis",
     "gis.derivation",
     "source.link",
@@ -269,6 +280,9 @@ impl App {
             "file.export.gml" => self.gml_export_open(),
             "file.import.gml" => self.gml_import_pick(),
             "file.export.xyz" => self.xyz_export_open(),
+            "pointcloud.region" => self.region_open(),
+            "pointcloud.profile" => self.profile_open(),
+            "mesh.query" => self.mesh_query_open(),
             "file.import.fgb" => self.fgb_import_pick(),
             "file.export.atlas" => self.atlas_export_open(),
             "file.export.gis" => self.gis_export_open(),
@@ -461,6 +475,7 @@ impl App {
             Event::Fgb(e) => self.fgb_event(e),
             Event::Gml(e) => self.gml_event(e),
             Event::Xyz(e) => self.xyz_event(e),
+            Event::Area(e) => self.area_event(e),
             Event::Atlas(e) => self.atlas_export_event(e),
             Event::GisExport(e) => self.gis_export_event(e),
             Event::GisCheck(e) => self.gis_check_event(e),
@@ -511,6 +526,9 @@ impl App {
             Some(Window::GmlExport(s)) => self.gml_export_view(s),
             Some(Window::GmlImport(s)) => self.gml_import_view(s),
             Some(Window::XyzExport(s)) => self.xyz_export_view(s),
+            Some(Window::CloudRegion(s)) => self.region_view(s),
+            Some(Window::CloudProfile(s)) => self.profile_view(s),
+            Some(Window::MeshQuery(s)) => self.mesh_view(s),
             Some(Window::GisExport(s)) => self.gis_export_view(s),
             Some(Window::GisCheck(s)) => self.gis_check_view(s),
             Some(Window::PdfImport(s)) => self.pdf_import_view(s),

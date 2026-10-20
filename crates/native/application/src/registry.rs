@@ -35,8 +35,13 @@ use kentos_commands::{JoinsEdit, JoinsQuery};
 use crate::fields_write;
 use crate::{processing_batch, processing_run, processing_tools};
 use crate::{stac_prepare, stac_search};
+use crate::meshes::{describe as meshes_describe, query as meshes_query};
+use crate::pointcloud_areas::{profile as pointclouds_profile, region as pointclouds_region};
 use crate::pointclouds::{describe as pointclouds_describe, query as pointclouds_query};
-use kentos_commands::{PointCloudsDescribe, PointCloudsQuery, TimeQuery};
+use kentos_commands::{
+    MeshesDescribe, MeshesQuery, PointCloudsDescribe, PointCloudsProfile, PointCloudsQuery,
+    PointCloudsRegion, TimeQuery,
+};
 use crate::time_query;
 use kentos_commands::{StacPrepare, StacSearch};
 use crate::sources::{describe as sources_describe, edit as sources_edit, reconcile as sources_reconcile, relate as sources_relate, sync as sources_sync};
@@ -171,6 +176,10 @@ macro_rules! by_command {
             kentos_commands::CAD_STAC_PREPARE => $then!(stac_prepare, StacPrepare),
             kentos_commands::CAD_POINTCLOUDS_DESCRIBE => $then!(pointclouds_describe, PointCloudsDescribe),
             kentos_commands::CAD_POINTCLOUDS_QUERY => $then!(pointclouds_query, PointCloudsQuery),
+            kentos_commands::CAD_POINTCLOUDS_REGION => $then!(pointclouds_region, PointCloudsRegion),
+            kentos_commands::CAD_POINTCLOUDS_PROFILE => $then!(pointclouds_profile, PointCloudsProfile),
+            kentos_commands::CAD_MESHES_DESCRIBE => $then!(meshes_describe, MeshesDescribe),
+            kentos_commands::CAD_MESHES_QUERY => $then!(meshes_query, MeshesQuery),
             kentos_commands::CAD_TIME_QUERY => $then!(time_query, TimeQuery),
             kentos_commands::CAD_INSERTS_CLIP => $then!(inserts_clip, InsertsClip),
             kentos_commands::CAD_RASTERS_GEOREF => $then!(rasters_georef, RastersGeoref),

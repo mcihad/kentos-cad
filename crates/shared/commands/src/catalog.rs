@@ -2908,6 +2908,122 @@ pub fn catalog() -> CommandCatalog {
                 output: None,
             }],
         },
+        // A point cloud's statistics in an area and profile along a line at the source's resolution, a mesh's metadata and
+        // the face and values at a place and time (docs/adr/0552), held together by
+        // fixtures/commands/v1/cad.pointclouds.{region,profile}.json and cad.meshes.{describe,query}.json.
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_REGION.into(),
+            version: crate::CAD_POINTCLOUDS_REGION_VERSION,
+            title: "Nokta bulutu alan istatistiği".into(),
+            summary: "Bir alanın (ring: planda en az üç köşeli halka, kapalı sayılır; holes: delikler) içindeki nokta bulutu noktalarının istatistiğini kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. \
+                      Sınırdaki nokta alanın içindedir, bir deliğin kesin içindeki dışındadır. Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır. COPC'de yalnız alanın kutusuna değen düğümler, LAS ve LAZ'da kutusu alanın kutusuna değen dosya bütün okunur. \
+                      Cevap bulut başına ve toplam: nokta sayısı, içerdeki noktaların kutusu, yükseklik ve yoğunluk değerlerinin en küçüğü, en büyüğü ve ortalaması (toplam tam), sınıf başına nokta sayısı; alanın büyüklüğü (halka eksi delikler; halka basit sayılır), alan başına nokta (density) ve bakılan nokta sayısı (read). Bir çağrıda en çok 200 milyon nokta okunur (too_many_cloud_points). Metin bulutu ve okunamayan kaynak uyarıyla atlanır (cloud_source_unreadable)."
+                .into(),
+            aliases: vec!["bulutalan".into(), "bulutistatistik".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointCloudsRegion>(),
+            output: schema::<crate::PointCloudsRegioned>(),
+            plan: Some(schema::<crate::PointCloudsRegioned>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir parselin içindeki noktaların istatistiği".into(),
+                input: json!({
+                    "ring": [
+                        { "x": 500100.0, "y": 4400100.0 }, { "x": 500140.0, "y": 4400100.0 },
+                        { "x": 500140.0, "y": 4400130.0 }, { "x": 500100.0, "y": 4400130.0 }
+                    ]
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_POINTCLOUDS_PROFILE.into(),
+            version: crate::CAD_POINTCLOUDS_PROFILE_VERSION,
+            title: "Nokta bulutu profili".into(),
+            summary: "Bir yolun (path: planda en az iki köşe) çevresindeki koridorda (width: yolun iki yanında toplam genişlik; uçlar yuvarlak) nokta bulutu noktalarını istasyonlara (step: yol boyunca adım) ayırır, kaynağın tam çözünürlüğünde okur (çizimin ayrıntı düzeyi değil); çizimi değiştirmez. \
+                      Noktanın istasyonu, yolun en yakın doğru parçasındaki ayağının yol boyunca uzaklığıdır (eşit uzaklıkta önceki parça); ofseti yolun solunda artıdır. İstasyon yolun başından sayılır, [from, to) aralıklıdır, son istasyon yolun ucunu da içerir. \
+                      Cevap yolun uzunluğunu, koridordaki nokta sayısını, her istasyonun (boş olanlar dahil) nokta sayısını ve yükseklik değerlerinin en küçüğünü, en büyüğünü ve ortalamasını, bakılan nokta sayısını (read) verir; points ile noktalar da (kalıcı kimlik, istasyon, ofset, yer, sınıf) istasyona göre sıralı listelenir. En çok 100 000 istasyon (too_many_stations) ve 100 000 listelenen nokta (too_many_listed_points). COPC'de yalnız koridorun bir parçasının kutusuna değen düğümler okunur. Bulutlar uids ile verilir, verilmezse görünen bulutlar bakılır."
+                .into(),
+            aliases: vec!["bulutprofil".into(), "bulutkesit".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::PointCloudsProfile>(),
+            output: schema::<crate::PointCloudsProfiled>(),
+            plan: Some(schema::<crate::PointCloudsProfiled>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir yolun 4 m genişliğindeki koridorunda 10 m'lik istasyonlar".into(),
+                input: json!({
+                    "path": [{ "x": 500100.0, "y": 4400100.0 }, { "x": 500160.0, "y": 4400100.0 }],
+                    "width": 4.0,
+                    "step": 10.0
+                }),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_MESHES_DESCRIBE.into(),
+            version: crate::CAD_MESHES_DESCRIBE_VERSION,
+            title: "Meshin bilgisi".into(),
+            summary: "Çizimin mesh rasterlerinin (uids; yoksa hepsi, çizimin sırasıyla) dosyasının başlığını ve ağını okur ve söyler; çizimi değiştirmez. \
+                      Mesh: düğüm, yüz, kenar ve üçgen sayısı, kutusu, yüzlerinin toplam alanı, kenarlarının ortalama uzunluğu, koordinat sistemi (EPSG, coğrafi mi) ve veri setleri: değişkeni (vektörün x bileşeni; y bileşeni), adı ve birimi, düğümde mi yüzde mi, boyutları (zaman boyutu ayrıca: adım sayısı, ilk ve son an ve nasıl yazıldıkları); rasterin gösterdiği veri seti ve adımları. \
+                      Mesh, NetCDF dosyasındaki UGRID ağıdır (2DM ve DAT Mesh ekle'de böyle bir dosyaya çevrilir). Okunamayan dosya (bulunamadı, bozuk) why ile söylenir ve uyarılır (mesh_source_unreadable); öbürleri okunur. Dosya projenin öbür bağları gibi aranır; drawing açık çizimin dosyasıdır. NetCDF-4, HDF5, GRIB ve Zarr okunmaz (neden iletide)."
+                .into(),
+            aliases: vec!["meshbilgi".into(), "agbilgisi".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::MeshesDescribe>(),
+            output: schema::<crate::MeshesDescribed>(),
+            plan: Some(schema::<crate::MeshesDescribed>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bütün meshlerin bilgisi".into(),
+                input: json!({}),
+                output: None,
+            }],
+        },
+        CommandDescriptor {
+            id: crate::CAD_MESHES_QUERY.into(),
+            version: crate::CAD_MESHES_QUERY_VERSION,
+            title: "Mesh sor".into(),
+            summary: "Bir yerin (at) hangi mesh yüzünde olduğunu ve veri setlerinin o yerdeki değerlerini söyler; çizimi değiştirmez. \
+                      Yüz kesin bulunur (kapalı alanı yeri tutan üçgenlerin en küçük sıralısı); kalıcı kimliği meshin kalıcı kimliği (mesh), dosyadaki ağın adı (topology) ve yüzün dosyadaki sırasıdır (face); düğümleri ve alanı da söylenir. Değer: düğümdeki veri setinde üçgende doğrusal ara değer, yüzdeki veri setinde yüzün değeri, vektörde büyüklüğü; değer yoksa ya da yüz kapalıysa (maske 0) değer yok. \
+                      time (1970'ten beri milisaniye) verilirse her veri setinin ondan önceki ya da onda olan son zaman adımının değeri okunur, ilk adımdan öncesinde değer yok; verilmezse rasterin gösterdiği adımlar. series ile zaman boyutlu her veri setinin her adımdaki değeri de verilir. Meshler uids sırasıyla (yoksa görünenler) bakılır, yeri tutan ilki cevaplar. Dosyadan yalnız gereken değerler okunur (read); bir çağrıda en çok 2 milyon değer (too_many_mesh_values)."
+                .into(),
+            aliases: vec!["meshsor".into(), "agsor".into()],
+            effect: CommandEffect::Query,
+            hosts: vec![CommandHost::Desktop],
+            headless: true,
+            requires: vec![CommandRequirement::Document],
+            permissions: vec![],
+            undo: CommandUndo::None,
+            cost: CommandCost::Interactive,
+            input: schema::<crate::MeshesQuery>(),
+            output: schema::<crate::MeshesQueried>(),
+            plan: Some(schema::<crate::MeshesQueried>()),
+            capabilities: None,
+            examples: vec![CommandExample {
+                title: "Bir yerin yüzü ve değerleri".into(),
+                input: json!({ "at": { "x": 500012.0, "y": 4420010.0 } }),
+                output: None,
+            }],
+        },
         CommandDescriptor {
             id: crate::CAD_STAC_SEARCH.into(),
             version: crate::CAD_STAC_SEARCH_VERSION,
@@ -8474,6 +8590,18 @@ mod tests {
                     }
                     crate::CAD_POINTCLOUDS_QUERY => {
                         serde_json::from_value::<crate::PointCloudsQuery>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POINTCLOUDS_REGION => {
+                        serde_json::from_value::<crate::PointCloudsRegion>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_POINTCLOUDS_PROFILE => {
+                        serde_json::from_value::<crate::PointCloudsProfile>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_MESHES_DESCRIBE => {
+                        serde_json::from_value::<crate::MeshesDescribe>(e.input.clone()).map(|_| ())
+                    }
+                    crate::CAD_MESHES_QUERY => {
+                        serde_json::from_value::<crate::MeshesQuery>(e.input.clone()).map(|_| ())
                     }
                     crate::CAD_SCHEDULES_CREATE => {
                         serde_json::from_value::<crate::SchedulesCreate>(e.input.clone()).map(|_| ())
